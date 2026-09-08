@@ -623,6 +623,15 @@ namespace ErikwnkWFUI
             }
         }
 
+        /// <summary>An indeterminate <see cref="Controls.Spinner"/> - a rotating accent arc for "loading …" states. Only animates while visible.</summary>
+        public static class Spinners
+        {
+            public static Spinner CreateStandard(int size = 24)
+            {
+                return UISpinnerFactory.CreateStandard(size);
+            }
+        }
+
         /// <summary>
         /// ErikwnkWFUI's own bundled icons (Web/Folder/Document/Application),
         /// plus <see cref="LoadEmbedded"/> for loading your own app's icon

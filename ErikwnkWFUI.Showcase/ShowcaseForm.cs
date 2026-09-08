@@ -310,6 +310,7 @@ namespace ErikwnkWFUI.Showcase
             AddProgressBarsSection(table);
             AddSliderBarSection(table);
             AddSlimProgressBarsSection(table);
+            AddSpinnerSection(table);
             AddTextBoxesSection(table);
             AddToggleSwitchesSection(table);
             AddVolumeSliderSection(table);
@@ -572,6 +573,18 @@ namespace ErikwnkWFUI.Showcase
             SliderBar sliderDisabled = UIStyles.SliderBars.CreateStandard(0.65);
             sliderDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", slider, sliderDisabled);
+        }
+
+        // Indeterminate - it just spins, so the second column shows a bigger
+        // one with a heavier stroke rather than a disabled state.
+        private void AddSpinnerSection(PropertyTable table)
+        {
+            table.AddSection("Spinner");
+
+            Spinner small = UIStyles.Spinners.CreateStandard();
+            Spinner large = UIStyles.Spinners.CreateStandard(40);
+            large.Thickness = 5;
+            AddTwoColumnRow(table, "CreateStandard", small, large);
         }
 
         // VolumeSlider adds its own drag-value popup on top of SliderBar -
