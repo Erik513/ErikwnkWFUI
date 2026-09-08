@@ -595,6 +595,12 @@ namespace ErikwnkWFUI.Showcase
             AddSpinnerRow(table, "CreatePrimary",
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
+
+            Spinner progress = UIStyles.Spinners.CreatePrimary(40, 4);
+            progress.Progress = 42;
+            Spinner progressFull = UIStyles.Spinners.CreatePrimary(40, 4);
+            progressFull.Progress = 100;
+            AddSpinnerRow(table, "Progress", progress, progressFull);
         }
 
         private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b)

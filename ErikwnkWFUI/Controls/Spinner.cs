@@ -10,7 +10,8 @@ namespace ErikwnkWFUI.Controls
     /// An indeterminate loading spinner: an accent-coloured arc rotating over a
     /// faint full ring. Owner-drawn, theme-aware, transparent background. Only
     /// animates while it is actually visible, so an off-screen or hidden one
-    /// costs nothing.
+    /// costs nothing. Set <see cref="Progress"/> to also show a load percentage
+    /// in the centre.
     /// </summary>
     public class Spinner : Control
     {
@@ -23,6 +24,7 @@ namespace ErikwnkWFUI.Controls
         private float _arcSweep = 300f;
         private bool _accent;
         private Color? _arcColor;
+        private int? _progress;
 
         public Spinner()
         {
@@ -75,6 +77,33 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _arcColor = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// An optional load percentage drawn (bold) in the centre of the ring
+        /// while the arc keeps spinning. Null (the default) shows nothing; a
+        /// value is clamped to 0..100. The digits auto-scale to the ring, so a
+        /// small spinner needs to be a few px larger than usual to stay legible.
+        /// </summary>
+        public int? Progress
+        {
+            get { return _progress; }
+            set
+            {
+                if (value.HasValue)
+                {
+                    int v = value.Value;
+                    if (v < 0)
+                        v = 0;
+                    if (v > 100)
+                        v = 100;
+                    value = v;
+                }
+                if (_progress == value)
+                    return;
+                _progress = value;
                 Invalidate();
             }
         }
@@ -174,6 +203,46 @@ namespace ErikwnkWFUI.Controls
                 arc.StartCap = LineCap.Round;
                 arc.EndCap = LineCap.Round;
                 g.DrawArc(arc, ring, _angle, _arcSweep);
+            }
+
+            if (_progress.HasValue)
+            {
+                DrawProgressText(g, ring, t, _progress.Value.ToString());
+            }
+        }
+
+        // The digits sit inside the ring stroke; the widest they may get is the
+        // inner diameter, so the font is measured down until "100" fits.
+        private void DrawProgressText(Graphics g, RectangleF ring, float stroke, string text)
+        {
+            float inner = ring.Width - stroke * 2f - 2f;
+            if (inner <= 3f)
+                return;
+
+            Color textColor = Enabled ? UIStyles.Colors.TextPrimary : UIStyles.Colors.TextDisabled;
+
+            float size = inner * 0.7f;
+            for (int i = 0; i < 8; i++)
+            {
+                Font font = new Font(Font.FontFamily, size, FontStyle.Bold, GraphicsUnit.Pixel);
+                SizeF measured = g.MeasureString(text, font);
+                bool fits = measured.Width <= inner && measured.Height <= inner;
+                if (fits || size <= 4f)
+                {
+                    using (font)
+                    using (SolidBrush brush = new SolidBrush(textColor))
+                    using (StringFormat sf = new StringFormat
+                    {
+                        Alignment = StringAlignment.Center,
+                        LineAlignment = StringAlignment.Center
+                    })
+                    {
+                        g.DrawString(text, font, brush, ring, sf);
+                    }
+                    return;
+                }
+                font.Dispose();
+                size *= 0.85f;
             }
         }
 
