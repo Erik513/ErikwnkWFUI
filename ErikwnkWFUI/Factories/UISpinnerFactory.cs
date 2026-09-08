@@ -9,6 +9,13 @@ namespace ErikwnkWFUI.Factories
     {
         // Plain rotating spinners - colour variants mirror UISlimProgressBarFactory.
 
+        // Neutral grey by default; set Spinner.ArcColor for any other colour
+        // (CreateGreen/CreatePrimary just preset one).
+        public static Spinner CreateStandard(int size = 24, int thickness = 0)
+        {
+            return Configure(size, thickness, delegate(Spinner s) { });
+        }
+
         public static Spinner CreateGreen(int size = 24, int thickness = 0)
         {
             return Configure(size, thickness, delegate(Spinner s) { s.ArcColor = UIColors.Green; });
@@ -23,6 +30,11 @@ namespace ErikwnkWFUI.Factories
         // load advances). The status one also colours the arc red -> yellow ->
         // green by that value; a plain "status" spinner without a number makes
         // no sense, so there is no non-progress CreateStatus.
+
+        public static Spinner CreateProgressStandard(int size = 24, int thickness = 0)
+        {
+            return WithProgress(CreateStandard(size, thickness));
+        }
 
         public static Spinner CreateProgressGreen(int size = 24, int thickness = 0)
         {

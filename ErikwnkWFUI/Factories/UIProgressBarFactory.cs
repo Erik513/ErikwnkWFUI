@@ -9,12 +9,22 @@ namespace ErikwnkWFUI.Factories
     {
         // Named by color, matching UIButtonFactory's CreateStandard/
         // CreatePrimary/CreateGreen/CreateRed convention - "Transparent" is
-        // a uniform suffix for the no-border/blend-in variant of each
-        // color, rather than something only the green bar has. Previously
-        // this was CreateStandard/CreateTransparent, which meant "Standard"
-        // silently meant "green" here while meaning "neutral gray" for
-        // buttons - the same word, two different colors depending on which
-        // factory you were looking at.
+        // a uniform suffix for the no-border/blend-in variant of each color.
+        // CreateStandard is a neutral grey (adjust via ForeColor), the same
+        // meaning "Standard" has for buttons and sliders; CreateGreen/
+        // CreatePrimary just preset a specific fill instead.
+        public static ProgressBar CreateStandard()
+        {
+            return Create(UIColors.DisabledGray, drawBorder: true);
+        }
+
+        // CreateStandard's grey fill with CreateGreenTransparent's
+        // no-border/blend-in look.
+        public static ProgressBar CreateStandardTransparent()
+        {
+            return Create(UIColors.DisabledGray, drawBorder: false);
+        }
+
         public static ProgressBar CreateGreen()
         {
             return Create(UIColors.Green, drawBorder: true);

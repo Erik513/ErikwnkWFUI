@@ -486,6 +486,22 @@ namespace ErikwnkWFUI.Showcase
             // left out of the animation and kept at one fixed value - the
             // point of that column is to show the disabled look clearly,
             // which a constantly-changing bar would undercut.
+            ProgressBar greyBar = UIStyles.ProgressBars.CreateStandard();
+            AnimateProgressBar(v => greyBar.Value = v);
+            ProgressBar greyDisabled = UIStyles.ProgressBars.CreateStandard();
+            greyDisabled.Value = 65;
+            greyDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard", greyBar, greyDisabled);
+
+            ProgressBar greyTransparentBar = UIStyles.ProgressBars.CreateStandardTransparent();
+            greyTransparentBar.BackColor = UIColors.BackgroundLight;
+            AnimateProgressBar(v => greyTransparentBar.Value = v);
+            ProgressBar greyTransparentDisabled = UIStyles.ProgressBars.CreateStandardTransparent();
+            greyTransparentDisabled.Value = 40;
+            greyTransparentDisabled.BackColor = UIColors.BackgroundLight;
+            greyTransparentDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandardTransparent", greyTransparentBar, greyTransparentDisabled);
+
             ProgressBar standardBar = UIStyles.ProgressBars.CreateGreen();
             AnimateProgressBar(v => standardBar.Value = v);
             ProgressBar disabledBar = UIStyles.ProgressBars.CreateGreen();
@@ -539,6 +555,13 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddSection("SlimProgressBars");
 
+            SlimProgressBar slimGreyBar = UIStyles.SlimProgressBars.CreateStandard();
+            AnimateProgressBar(v => slimGreyBar.Value = v);
+            SlimProgressBar slimGreyDisabled = UIStyles.SlimProgressBars.CreateStandard();
+            slimGreyDisabled.Value = 65;
+            slimGreyDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard", slimGreyBar, slimGreyDisabled);
+
             SlimProgressBar slimGreenBar = UIStyles.SlimProgressBars.CreateGreen();
             AnimateProgressBar(v => slimGreenBar.Value = v);
             SlimProgressBar slimGreenDisabled = UIStyles.SlimProgressBars.CreateGreen();
@@ -590,6 +613,10 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddSection("Spinner");
 
+            AddSpinnerRow(table, "CreateStandard",
+                UIStyles.Spinners.CreateStandard(),
+                UIStyles.Spinners.CreateStandard(40, 5));
+
             AddSpinnerRow(table, "CreateGreen",
                 UIStyles.Spinners.CreateGreen(),
                 UIStyles.Spinners.CreateGreen(40, 5));
@@ -598,6 +625,8 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
 
+            AddAnimatedSpinnerRow(table, "CreateProgressStandard",
+                UIStyles.Spinners.CreateProgressStandard(40, 4));
             AddAnimatedSpinnerRow(table, "CreateProgressGreen",
                 UIStyles.Spinners.CreateProgressGreen(40, 4));
             AddAnimatedSpinnerRow(table, "CreateProgressPrimary",
