@@ -374,6 +374,17 @@ namespace ErikwnkWFUI.Controls
                 control.Margin = new Padding(0);
                 return;
             }
+
+            // A Spinner is a fixed square - Fill would stretch it wide and its
+            // circle would just sit centred in the extra width. Left-anchor it
+            // at its natural size like the Button/CheckBox cases above.
+            if (control is Spinner)
+            {
+                control.Dock = DockStyle.None;
+                control.Anchor = AnchorStyles.Left;
+                control.Margin = new Padding(0);
+                return;
+            }
             if (control is NumericUpDown)
             {
                 control.Dock = DockStyle.Left;

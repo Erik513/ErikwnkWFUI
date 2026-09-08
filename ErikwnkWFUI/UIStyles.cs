@@ -637,21 +637,46 @@ namespace ErikwnkWFUI
             }
         }
 
-        /// <summary>An indeterminate <see cref="Controls.Spinner"/> - a rotating accent arc for "loading …" states. Only animates while visible.</summary>
+        /// <summary>
+        /// A rotating <see cref="Controls.Spinner"/> for "loading …" states (only
+        /// animates while visible). Plain variants are green or the theme accent;
+        /// the <c>CreateProgress*</c> versions also show a percentage in the
+        /// centre - raise <see cref="Spinner.Progress"/> as the load advances -
+        /// and <see cref="CreateProgressStatus"/> additionally blends the arc
+        /// red → yellow → green by that value, like <see cref="SlimProgressBars"/>.
+        /// </summary>
         public static class Spinners
         {
-            /// <summary>A fixed neutral-grey spinner.</summary>
+            /// <summary>A fixed green spinner.</summary>
             /// <param name="size">Width and height in px (the spinner is always square).</param>
             /// <param name="thickness">Stroke width in px; 0 scales it to <paramref name="size"/>.</param>
-            public static Spinner CreateStandard(int size = 24, int thickness = 0)
+            public static Spinner CreateGreen(int size = 24, int thickness = 0)
             {
-                return UISpinnerFactory.CreateStandard(size, thickness);
+                return UISpinnerFactory.CreateGreen(size, thickness);
             }
 
-            /// <summary>Same, but the arc follows the theme accent. Any other colour: set <see cref="Spinner.ArcColor"/> on a <see cref="CreateStandard"/> one.</summary>
+            /// <summary>The arc follows the theme accent.</summary>
             public static Spinner CreatePrimary(int size = 24, int thickness = 0)
             {
                 return UISpinnerFactory.CreatePrimary(size, thickness);
+            }
+
+            /// <summary>A green spinner that also shows a percentage in the centre (starts at 0).</summary>
+            public static Spinner CreateProgressGreen(int size = 24, int thickness = 0)
+            {
+                return UISpinnerFactory.CreateProgressGreen(size, thickness);
+            }
+
+            /// <summary>An accent spinner that also shows a percentage in the centre (starts at 0).</summary>
+            public static Spinner CreateProgressPrimary(int size = 24, int thickness = 0)
+            {
+                return UISpinnerFactory.CreateProgressPrimary(size, thickness);
+            }
+
+            /// <summary>Shows a percentage in the centre; the arc is a solid colour blended red (0) → yellow → green (100) by that value.</summary>
+            public static Spinner CreateProgressStatus(int size = 24, int thickness = 0)
+            {
+                return UISpinnerFactory.CreateProgressStatus(size, thickness);
             }
         }
 

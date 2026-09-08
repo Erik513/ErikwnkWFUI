@@ -580,34 +580,44 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreatePrimary", sliderAccent, sliderAccentDisabled);
         }
 
-        // One row per factory method (grey vs. accent); the two columns show a
-        // default and a bigger, heavier-stroke one. Indeterminate, so there's no
-        // enabled/disabled pair to demo. The control always draws a centred
-        // circle, so the stretched 50/50 columns the other rows use are fine.
+        // The plain rows show a default and a bigger, heavier-stroke one in two
+        // 50/50 columns. The CreateProgress* rows are a single spinner whose
+        // percentage counts up on the shared animation timer (like the
+        // ProgressBar rows) - that's the only way to see CreateProgressStatus
+        // shift red -> yellow -> green. The control always draws a centred
+        // circle, so a stretched column is fine.
         private void AddSpinnerSection(PropertyTable table)
         {
             table.AddSection("Spinner");
 
-            AddSpinnerRow(table, "CreateStandard",
-                UIStyles.Spinners.CreateStandard(),
-                UIStyles.Spinners.CreateStandard(40, 5));
+            AddSpinnerRow(table, "CreateGreen",
+                UIStyles.Spinners.CreateGreen(),
+                UIStyles.Spinners.CreateGreen(40, 5));
 
             AddSpinnerRow(table, "CreatePrimary",
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
 
-            Spinner progress = UIStyles.Spinners.CreatePrimary(40, 4);
-            progress.Progress = 42;
-            Spinner progressFull = UIStyles.Spinners.CreatePrimary(40, 4);
-            progressFull.Progress = 100;
-            AddSpinnerRow(table, "Progress", progress, progressFull);
+            AddAnimatedSpinnerRow(table, "CreateProgressGreen",
+                UIStyles.Spinners.CreateProgressGreen(40, 4));
+            AddAnimatedSpinnerRow(table, "CreateProgressPrimary",
+                UIStyles.Spinners.CreateProgressPrimary(40, 4));
+            AddAnimatedSpinnerRow(table, "CreateProgressStatus",
+                UIStyles.Spinners.CreateProgressStatus(40, 4));
         }
 
         private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b)
         {
-            a.Anchor = AnchorStyles.None;
-            b.Anchor = AnchorStyles.None;
+            a.Anchor = AnchorStyles.Left;
+            b.Anchor = AnchorStyles.Left;
             AddTwoColumnRow(table, label, a, b);
+        }
+
+        private void AddAnimatedSpinnerRow(PropertyTable table, string label, Spinner spinner)
+        {
+            spinner.Anchor = AnchorStyles.Left;
+            AnimateProgressBar(v => spinner.Progress = v);
+            table.AddRow(label, UIColumn.Percent(spinner, TwoColumnPercent));
         }
 
         // VolumeSlider adds its own drag-value popup on top of SliderBar -
