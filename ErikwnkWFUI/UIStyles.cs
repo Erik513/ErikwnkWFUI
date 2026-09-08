@@ -626,9 +626,17 @@ namespace ErikwnkWFUI
         /// <summary>An indeterminate <see cref="Controls.Spinner"/> - a rotating accent arc for "loading …" states. Only animates while visible.</summary>
         public static class Spinners
         {
-            public static Spinner CreateStandard(int size = 24)
+            /// <summary>A fixed neutral-grey spinner.</summary>
+            /// <param name="thickness">Stroke width in px; 0 scales it to <paramref name="size"/>.</param>
+            public static Spinner CreateStandard(int size = 24, int thickness = 0)
             {
-                return UISpinnerFactory.CreateStandard(size);
+                return UISpinnerFactory.CreateStandard(size, thickness);
+            }
+
+            /// <summary>Same, but the arc follows the theme accent. Any other colour: set <see cref="Spinner.ArcColor"/> on a <see cref="CreateStandard"/> one.</summary>
+            public static Spinner CreatePrimary(int size = 24, int thickness = 0)
+            {
+                return UISpinnerFactory.CreatePrimary(size, thickness);
             }
         }
 

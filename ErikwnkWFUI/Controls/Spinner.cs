@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -20,6 +21,8 @@ namespace ErikwnkWFUI.Controls
         private float _angle;
         private int _thickness;
         private float _arcSweep = 300f;
+        private bool _accent;
+        private Color? _arcColor;
 
         public Spinner()
         {
@@ -46,6 +49,32 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _thickness = Math.Max(0, value);
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// True = the arc follows the live theme accent
+        /// (<see cref="UIStyles.Colors.Primary"/>); false (the default) = a
+        /// fixed neutral grey. Ignored when <see cref="ArcColor"/> is set.
+        /// </summary>
+        public bool Accent
+        {
+            get { return _accent; }
+            set
+            {
+                _accent = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>An explicit arc colour, overriding <see cref="Accent"/>. Null (the default) uses the accent/grey rule.</summary>
+        public Color? ArcColor
+        {
+            get { return _arcColor; }
+            set
+            {
+                _arcColor = value;
                 Invalidate();
             }
         }
@@ -115,14 +144,26 @@ namespace ErikwnkWFUI.Controls
 
             float t = EffectiveThickness;
             float inset = t / 2f + 1f;
+
+            // Always a circle, centred - a non-square control (e.g. stretched by
+            // a table cell) draws the ring in the largest square that fits, not
+            // an ellipse.
+            float d = Math.Min(Width, Height);
             RectangleF ring = new RectangleF(
-                inset, inset, Width - inset * 2f, Height - inset * 2f);
+                (Width - d) / 2f + inset,
+                (Height - d) / 2f + inset,
+                d - inset * 2f,
+                d - inset * 2f);
 
             if (ring.Width <= 0f || ring.Height <= 0f)
                 return;
 
             Color trackColor = UIStyles.Colors.BorderMedium;
-            Color arcColor = Enabled ? UIStyles.Colors.Primary : UIStyles.Colors.TextDisabled;
+            Color arcColor =
+                !Enabled ? UIStyles.Colors.TextDisabled :
+                _arcColor.HasValue ? _arcColor.Value :
+                _accent ? UIStyles.Colors.Primary :
+                UIColors.DisabledGray;
 
             using (Pen track = new Pen(trackColor, t))
             {

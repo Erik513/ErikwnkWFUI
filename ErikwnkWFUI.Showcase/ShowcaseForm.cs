@@ -575,16 +575,28 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateStandard", slider, sliderDisabled);
         }
 
-        // Indeterminate - it just spins, so the second column shows a bigger
-        // one with a heavier stroke rather than a disabled state.
+        // One row per factory method (grey vs. accent); the two columns show a
+        // default and a bigger, heavier-stroke one. Indeterminate, so there's no
+        // enabled/disabled pair to demo. The control always draws a centred
+        // circle, so the stretched 50/50 columns the other rows use are fine.
         private void AddSpinnerSection(PropertyTable table)
         {
             table.AddSection("Spinner");
 
-            Spinner small = UIStyles.Spinners.CreateStandard();
-            Spinner large = UIStyles.Spinners.CreateStandard(40);
-            large.Thickness = 5;
-            AddTwoColumnRow(table, "CreateStandard", small, large);
+            AddSpinnerRow(table, "CreateStandard",
+                UIStyles.Spinners.CreateStandard(),
+                UIStyles.Spinners.CreateStandard(40, 5));
+
+            AddSpinnerRow(table, "CreatePrimary",
+                UIStyles.Spinners.CreatePrimary(),
+                UIStyles.Spinners.CreatePrimary(40, 5));
+        }
+
+        private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b)
+        {
+            a.Anchor = AnchorStyles.None;
+            b.Anchor = AnchorStyles.None;
+            AddTwoColumnRow(table, label, a, b);
         }
 
         // VolumeSlider adds its own drag-value popup on top of SliderBar -
