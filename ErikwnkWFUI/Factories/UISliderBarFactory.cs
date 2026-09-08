@@ -12,5 +12,12 @@ namespace ErikwnkWFUI.Factories
                 Value = value
             };
         }
+
+        public static SliderBar CreatePrimary(double value = 0, double maximum = 1.0)
+        {
+            SliderBar slider = CreateStandard(value, maximum);
+            slider.Accent = true;
+            return slider;
+        }
     }
 }

@@ -573,6 +573,11 @@ namespace ErikwnkWFUI.Showcase
             SliderBar sliderDisabled = UIStyles.SliderBars.CreateStandard(0.65);
             sliderDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", slider, sliderDisabled);
+
+            SliderBar sliderAccent = UIStyles.SliderBars.CreatePrimary(0.4);
+            SliderBar sliderAccentDisabled = UIStyles.SliderBars.CreatePrimary(0.65);
+            sliderAccentDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimary", sliderAccent, sliderAccentDisabled);
         }
 
         // One row per factory method (grey vs. accent); the two columns show a
@@ -611,6 +616,11 @@ namespace ErikwnkWFUI.Showcase
             VolumeSlider volumeDisabled = UIStyles.VolumeSliders.CreateStandard(0.65);
             volumeDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", volume, volumeDisabled);
+
+            VolumeSlider volumeAccent = UIStyles.VolumeSliders.CreatePrimary(0.4);
+            VolumeSlider volumeAccentDisabled = UIStyles.VolumeSliders.CreatePrimary(0.65);
+            volumeAccentDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimary", volumeAccent, volumeAccentDisabled);
         }
 
         // Applies the current animation percentage immediately (so the bar

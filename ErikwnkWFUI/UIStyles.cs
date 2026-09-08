@@ -608,18 +608,32 @@ namespace ErikwnkWFUI
         /// <summary>A slim, theme-matching horizontal <see cref="Controls.SliderBar"/> (WinForms has none of its own).</summary>
         public static class SliderBars
         {
+            /// <summary>A fixed neutral-grey slider. Any other colour: set <see cref="SliderBar.FillColor"/> on one of these.</summary>
             public static SliderBar CreateStandard(double value = 0, double maximum = 1.0)
             {
                 return UISliderBarFactory.CreateStandard(value, maximum);
+            }
+
+            /// <summary>Same, but the fill and thumb follow the theme accent.</summary>
+            public static SliderBar CreatePrimary(double value = 0, double maximum = 1.0)
+            {
+                return UISliderBarFactory.CreatePrimary(value, maximum);
             }
         }
 
         /// <summary>A <see cref="Controls.VolumeSlider"/> - a <see cref="Controls.SliderBar"/> fixed to 0..1 that shows the current percentage in a small popup while dragged.</summary>
         public static class VolumeSliders
         {
+            /// <summary>A fixed neutral-grey volume slider. Any other colour: set <see cref="SliderBar.FillColor"/> on one of these.</summary>
             public static VolumeSlider CreateStandard(double value = 0)
             {
                 return UIVolumeSliderFactory.CreateStandard(value);
+            }
+
+            /// <summary>Same, but the fill and thumb follow the theme accent.</summary>
+            public static VolumeSlider CreatePrimary(double value = 0)
+            {
+                return UIVolumeSliderFactory.CreatePrimary(value);
             }
         }
 
@@ -627,6 +641,7 @@ namespace ErikwnkWFUI
         public static class Spinners
         {
             /// <summary>A fixed neutral-grey spinner.</summary>
+            /// <param name="size">Width and height in px (the spinner is always square).</param>
             /// <param name="thickness">Stroke width in px; 0 scales it to <paramref name="size"/>.</param>
             public static Spinner CreateStandard(int size = 24, int thickness = 0)
             {

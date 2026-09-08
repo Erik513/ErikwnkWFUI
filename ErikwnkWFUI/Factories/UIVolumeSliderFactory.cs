@@ -13,5 +13,12 @@ namespace ErikwnkWFUI.Factories
                 Value = value
             };
         }
+
+        public static VolumeSlider CreatePrimary(double value = 0)
+        {
+            VolumeSlider slider = CreateStandard(value);
+            slider.Accent = true;
+            return slider;
+        }
     }
 }

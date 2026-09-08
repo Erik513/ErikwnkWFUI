@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -17,6 +18,8 @@ namespace ErikwnkWFUI.Controls
         private double _maximum = 1.0;
         private bool _dragging;
         private bool _hover;
+        private bool _accent;
+        private Color? _fillColor;
 
         private const int TrackHeight = 4;
         private const int ThumbRadius = 6;
@@ -56,6 +59,24 @@ namespace ErikwnkWFUI.Controls
         public bool IsDragging
         {
             get { return _dragging; }
+        }
+
+        /// <summary>
+        /// True = the filled part and thumb follow the live theme accent
+        /// (<see cref="UIStyles.Colors.Primary"/>); false (the default) = a fixed
+        /// neutral grey. Ignored when <see cref="FillColor"/> is set.
+        /// </summary>
+        public bool Accent
+        {
+            get { return _accent; }
+            set { _accent = value; Invalidate(); }
+        }
+
+        /// <summary>An explicit fill/thumb colour, overriding <see cref="Accent"/>. Null (the default) uses the accent/grey rule.</summary>
+        public Color? FillColor
+        {
+            get { return _fillColor; }
+            set { _fillColor = value; Invalidate(); }
         }
 
         public double Maximum
@@ -242,7 +263,11 @@ namespace ErikwnkWFUI.Controls
             int thumbX = TrackLeft + (int)Math.Round(frac * TrackWidth);
 
             Color trackColor = UIStyles.Colors.BorderMedium;
-            Color fillColor = Enabled ? UIStyles.Colors.Primary : UIStyles.Colors.TextDisabled;
+            Color fillColor =
+                !Enabled ? UIStyles.Colors.TextDisabled :
+                _fillColor.HasValue ? _fillColor.Value :
+                _accent ? UIStyles.Colors.Primary :
+                UIColors.DisabledGray;
 
             using (SolidBrush track = new SolidBrush(trackColor))
             {
