@@ -55,7 +55,7 @@ namespace ErikwnkWFUI.Controls
         private int _hoveredDeleteRowIndex = -1;
 
         /// <summary>Fixed width of the optional delete-row column (see <see cref="ShowDeleteRowColumn"/>), in case a consumer needs to reserve space for it in its own column-width math.</summary>
-        public const int DeleteRowColumnWidth = 32;
+        public const int DeleteRowColumnWidth = 40;
 
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
@@ -154,7 +154,11 @@ namespace ErikwnkWFUI.Controls
                     DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn
                     {
                         Name = "__deleteRow",
-                        HeaderText = string.Empty,
+                        // The Delete key does the same thing (see
+                        // ProcessDataGridViewKey below) - naming that
+                        // shortcut here doubles as the clearest possible
+                        // label for what clicking the column does.
+                        HeaderText = UIStrings.Get("DataGridView.DeleteRowHeader"),
                         ReadOnly = true,
                         Resizable = DataGridViewTriState.False,
                         SortMode = DataGridViewColumnSortMode.NotSortable,
@@ -165,10 +169,10 @@ namespace ErikwnkWFUI.Controls
                     column.DefaultCellStyle.ForeColor = UIColors.Red;
                     column.DefaultCellStyle.SelectionForeColor = UIColors.Red;
                     column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
-                    // Explains the icon on hover, since the header itself
-                    // stays blank (see HeaderText above) to match the
-                    // column's narrow, icon-only width.
+                    // The tooltip spells out what the header's short
+                    // shortcut name only hints at.
                     column.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.DeleteRow");
 
                     // Assigned before Add() - OnColumnAdded below checks
@@ -232,13 +236,13 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
-        // Keeps the delete-row column's header tooltip (its only text,
-        // since the header itself stays blank) in whatever language the
-        // rest of the app just switched to.
+        // Keeps the delete-row column's header text and tooltip in
+        // whatever language the rest of the app just switched to.
         private void OnUIStringsLanguageChanged(object sender, EventArgs e)
         {
             if (_deleteRowColumn != null)
             {
+                _deleteRowColumn.HeaderText = UIStrings.Get("DataGridView.DeleteRowHeader");
                 _deleteRowColumn.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.DeleteRow");
             }
         }

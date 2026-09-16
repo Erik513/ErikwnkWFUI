@@ -63,6 +63,7 @@ namespace ErikwnkWFUI.Styles
             ["ListView.WithHeaderSuffix"] = " (with header)",
 
             ["DataGridView.DeleteRow"] = "Delete row",
+            ["DataGridView.DeleteRowHeader"] = "Del",
         };
 
         private static readonly Dictionary<string, string> German = new Dictionary<string, string>
@@ -92,6 +93,7 @@ namespace ErikwnkWFUI.Styles
             ["ListView.WithHeaderSuffix"] = " (mit Kopfzeile)",
 
             ["DataGridView.DeleteRow"] = "Zeile löschen",
+            ["DataGridView.DeleteRowHeader"] = "Entf",
         };
 
         public static string Get(string key)
