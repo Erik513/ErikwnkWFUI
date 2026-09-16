@@ -51,6 +51,10 @@ namespace ErikwnkWFUI.Controls
         private SortOrder _sortOrder = SortOrder.None;
         private bool _clearSelectionOnNextVisible;
         private bool _isApplyingInternalDataChange;
+        private DataGridViewColumn _deleteRowColumn;
+
+        /// <summary>Fixed width of the optional delete-row column (see <see cref="ShowDeleteRowColumn"/>), in case a consumer needs to reserve space for it in its own column-width math.</summary>
+        public const int DeleteRowColumnWidth = 32;
 
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
@@ -116,6 +120,69 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public bool SortingEnabled { get; set; } = true;
 
+        /// <summary>
+        /// Whether a small "delete this row" button column is shown, pinned
+        /// as the rightmost column regardless of what else is added
+        /// afterward. Off by default - a consumer opts in any time after
+        /// construction (typically right after adding its own columns).
+        /// The column's own cells are never selectable (clicking one only
+        /// ever deletes that row, same as selecting a row and pressing
+        /// Delete already does) and it's never sortable. Also respects
+        /// <see cref="System.Windows.Forms.DataGridView.AllowUserToDeleteRows"/>:
+        /// clicking the button does nothing while that's false.
+        /// </summary>
+        public bool ShowDeleteRowColumn
+        {
+            get => _deleteRowColumn != null;
+            set
+            {
+                if (value == (_deleteRowColumn != null))
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    // A plain text column rather than DataGridViewButtonColumn -
+                    // a button cell's face/border draws with the OS's own flat-
+                    // button chrome regardless of DefaultCellStyle (a thin
+                    // light/white edge stayed visible around the glyph even
+                    // with FlatStyle.Flat), so the "X" couldn't be made fully
+                    // red that way. Plain text has no such chrome: ForeColor
+                    // below is the only color involved.
+                    DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn
+                    {
+                        Name = "__deleteRow",
+                        HeaderText = string.Empty,
+                        ReadOnly = true,
+                        Resizable = DataGridViewTriState.False,
+                        SortMode = DataGridViewColumnSortMode.NotSortable,
+                        Width = DeleteRowColumnWidth,
+                        MinimumWidth = DeleteRowColumnWidth
+                    };
+
+                    column.DefaultCellStyle.ForeColor = UIColors.Red;
+                    column.DefaultCellStyle.SelectionForeColor = UIColors.Red;
+                    column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+                    // Explains the icon on hover, since the header itself
+                    // stays blank (see HeaderText above) to match the
+                    // column's narrow, icon-only width.
+                    column.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.DeleteRow");
+
+                    // Assigned before Add() - OnColumnAdded below checks
+                    // this field to recognize the column as it comes in.
+                    _deleteRowColumn = column;
+                    Columns.Add(column);
+                }
+                else
+                {
+                    Columns.Remove(_deleteRowColumn);
+                    _deleteRowColumn = null;
+                }
+            }
+        }
+
         public DataGridView()
         {
             _alternateRowBackColor = Darken(_rowBackColor, 5);
@@ -151,6 +218,28 @@ namespace ErikwnkWFUI.Controls
             ApplyStyles();
 
             MouseDown += HandleMouseDown;
+            UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        // Keeps the delete-row column's header tooltip (its only text,
+        // since the header itself stays blank) in whatever language the
+        // rest of the app just switched to.
+        private void OnUIStringsLanguageChanged(object sender, EventArgs e)
+        {
+            if (_deleteRowColumn != null)
+            {
+                _deleteRowColumn.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.DeleteRow");
+            }
         }
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
@@ -236,6 +325,24 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnColumnAdded(e);
 
+            if (e.Column == _deleteRowColumn)
+            {
+                // SortMode/width etc. are already set on the column object
+                // itself (see ShowDeleteRowColumn) - only the display
+                // position needs handling here, same as below.
+                e.Column.DisplayIndex = Columns.Count - 1;
+                return;
+            }
+
+            if (_deleteRowColumn != null)
+            {
+                // A consumer adding a content column after already opting
+                // into the delete column - keep the delete column pinned
+                // as the rightmost one rather than letting the new column
+                // land to its right.
+                _deleteRowColumn.DisplayIndex = Columns.Count - 1;
+            }
+
             if (!SortingEnabled)
             {
                 return;
@@ -261,7 +368,9 @@ namespace ErikwnkWFUI.Controls
             ClearSelection();
             CurrentCell = null;
 
-            if (SortingEnabled && e.Button == MouseButtons.Left && e.ColumnIndex >= 0)
+            bool isDeleteRowColumn = _deleteRowColumn != null && e.ColumnIndex == _deleteRowColumn.Index;
+
+            if (SortingEnabled && e.Button == MouseButtons.Left && e.ColumnIndex >= 0 && !isDeleteRowColumn)
             {
                 CycleSort(e.ColumnIndex);
             }
@@ -302,8 +411,73 @@ namespace ErikwnkWFUI.Controls
             // itself happens, so clearing immediately after it - still
             // within the same synchronous mouse-down handling, before the
             // control repaints - is what actually keeps it from showing.
+            //
+            // The delete-row column's own data cells (RowIndex >= 0) are
+            // deliberately NOT cleared here the same way, even though they're
+            // meant to look unselectable too: nulling CurrentCell mid-press
+            // interferes with DataGridViewButtonColumn's own press/click
+            // tracking, so the button stopped raising OnCellContentClick
+            // below. Those cells get the "unselectable" look a different
+            // way instead - ShowDeleteRowColumn gives the column matching
+            // Selection*Color values, so even when one technically becomes
+            // CurrentCell, it's visually indistinguishable from unselected.
             ClearSelection();
             CurrentCell = null;
+        }
+
+        // The delete-row column is a plain read-only text column showing a
+        // static "X" glyph (see FormatDeleteRowCellText) rather than a
+        // DataGridViewButtonColumn, so a genuine cell click is what
+        // triggers deletion here, not CellContentClick (that event is
+        // specific to button/checkbox column content).
+        protected override void OnCellClick(DataGridViewCellEventArgs e)
+        {
+            base.OnCellClick(e);
+
+            if (_deleteRowColumn == null ||
+                e.ColumnIndex != _deleteRowColumn.Index ||
+                e.RowIndex < 0 ||
+                !AllowUserToDeleteRows)
+            {
+                return;
+            }
+
+            int rowIndex = e.RowIndex;
+
+            // Deferred rather than deleted right here: this fires from
+            // inside the clicked cell's own click handling (still on the
+            // call stack), and ApplyBatchedDataSourceChange's
+            // ResetBindings rebuilds the entire Rows collection - including
+            // discarding the very row/cell whose click handling is what's
+            // currently running. BeginInvoke runs the delete once that
+            // finishes unwinding instead of while it's still live.
+            if (IsHandleCreated)
+            {
+                BeginInvoke(new Action(() => DeleteRowAt(rowIndex)));
+            }
+        }
+
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+
+            if (_deleteRowColumn != null &&
+                e.ColumnIndex == _deleteRowColumn.Index &&
+                e.RowIndex >= 0 &&
+                !Rows[e.RowIndex].IsNewRow)
+            {
+                e.Value = "✕";
+                e.FormattingApplied = true;
+
+                // AlternatingRowsDefaultCellStyle outranks Column.DefaultCellStyle
+                // for odd-indexed rows, so every other row's "X" was coming out
+                // in the normal row text color instead of red. Setting it here,
+                // on the cell style actually used for this paint pass, outranks
+                // both. Background is left alone - it should keep matching
+                // whatever the row's own (possibly alternating) color is.
+                e.CellStyle.ForeColor = UIColors.Red;
+                e.CellStyle.SelectionForeColor = UIColors.Red;
+            }
         }
 
         /// <summary>
@@ -331,22 +505,36 @@ namespace ErikwnkWFUI.Controls
 
         private void DeleteSelectedRows()
         {
+            HashSet<int> rowIndexes = new HashSet<int>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (cell.RowIndex >= 0)
+                {
+                    rowIndexes.Add(cell.RowIndex);
+                }
+            }
+
+            DeleteRows(rowIndexes);
+        }
+
+        private void DeleteRowAt(int rowIndex)
+        {
+            DeleteRows(new[] { rowIndex });
+        }
+
+        private void DeleteRows(IEnumerable<int> rowIndexes)
+        {
             if (!(DataSource is IList list))
             {
                 return;
             }
 
             List<object> itemsToRemove = new List<object>();
-            HashSet<int> seenRowIndexes = new HashSet<int>();
 
-            foreach (DataGridViewCell cell in SelectedCells)
+            foreach (int rowIndex in rowIndexes)
             {
-                if (cell.RowIndex < 0 || !seenRowIndexes.Add(cell.RowIndex))
-                {
-                    continue;
-                }
-
-                DataGridViewRow row = Rows[cell.RowIndex];
+                DataGridViewRow row = Rows[rowIndex];
 
                 // The "type here to add a row" placeholder has no
                 // DataBoundItem yet - nothing to remove from the data

@@ -61,6 +61,8 @@ namespace ErikwnkWFUI.Styles
             ["ListView.RowCopied"] = "Row copied",
             ["ListView.RowsCopied"] = "{0} rows copied",
             ["ListView.WithHeaderSuffix"] = " (with header)",
+
+            ["DataGridView.DeleteRow"] = "Delete row",
         };
 
         private static readonly Dictionary<string, string> German = new Dictionary<string, string>
@@ -88,6 +90,8 @@ namespace ErikwnkWFUI.Styles
             ["ListView.RowCopied"] = "Zeile kopiert",
             ["ListView.RowsCopied"] = "{0} Zeilen kopiert",
             ["ListView.WithHeaderSuffix"] = " (mit Kopfzeile)",
+
+            ["DataGridView.DeleteRow"] = "Zeile löschen",
         };
 
         public static string Get(string key)
