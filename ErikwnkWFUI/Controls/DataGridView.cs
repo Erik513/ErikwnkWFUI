@@ -135,7 +135,12 @@ namespace ErikwnkWFUI.Controls
             EnableHeadersVisualStyles = false;
 
             AllowUserToAddRows = false;
-            AllowUserToDeleteRows = false;
+
+            // The base property doubles as this control's own opt-out for
+            // row deletion (see ProcessDataGridViewKey) - a consumer that
+            // doesn't want rows deletable sets this false, same as they
+            // would on a stock DataGridView.
+            AllowUserToDeleteRows = true;
             AllowUserToResizeRows = false;
             MultiSelect = true;
             SelectionMode = DataGridViewSelectionMode.CellSelect;
@@ -302,6 +307,73 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// Deletes whichever rows have a selected cell when Delete is
+        /// pressed - RowHeadersVisible is false on this control (see the
+        /// constructor), so the base DataGridView's own Delete handling
+        /// (which acts on <see cref="System.Windows.Forms.DataGridView.SelectedRows"/>,
+        /// populated by clicking a row header) never has anything to act on; this reads
+        /// <see cref="System.Windows.Forms.DataGridView.SelectedCells"/>
+        /// instead; clicking any cell in a row is already how the rest of
+        /// this control's interactions treat "that row" as selected.
+        /// </summary>
+        protected override bool ProcessDataGridViewKey(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete &&
+                AllowUserToDeleteRows &&
+                !IsCurrentCellInEditMode)
+            {
+                DeleteSelectedRows();
+                return true;
+            }
+
+            return base.ProcessDataGridViewKey(e);
+        }
+
+        private void DeleteSelectedRows()
+        {
+            if (!(DataSource is IList list))
+            {
+                return;
+            }
+
+            List<object> itemsToRemove = new List<object>();
+            HashSet<int> seenRowIndexes = new HashSet<int>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (cell.RowIndex < 0 || !seenRowIndexes.Add(cell.RowIndex))
+                {
+                    continue;
+                }
+
+                DataGridViewRow row = Rows[cell.RowIndex];
+
+                // The "type here to add a row" placeholder has no
+                // DataBoundItem yet - nothing to remove from the data
+                // source, and IsNewRow confirms it isn't a real row.
+                if (row.IsNewRow || row.DataBoundItem == null)
+                {
+                    continue;
+                }
+
+                itemsToRemove.Add(row.DataBoundItem);
+            }
+
+            if (itemsToRemove.Count == 0)
+            {
+                return;
+            }
+
+            ApplyBatchedDataSourceChange(list, () =>
+            {
+                foreach (object item in itemsToRemove)
+                {
+                    list.Remove(item);
+                }
+            });
+        }
+
+        /// <summary>
         /// Three-state header click: ascending, then descending, then back
         /// to the order rows were in when last bound - clicking a different
         /// column starts that column fresh at ascending.
@@ -405,6 +477,31 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
+            ApplyBatchedDataSourceChange(list, () =>
+            {
+                list.Clear();
+
+                foreach (object item in desiredOrder)
+                {
+                    list.Add(item);
+                }
+            });
+        }
+
+        // Shared by ReorderDataSource and DeleteSelectedRows: runs a
+        // multi-step change against the bound list (list.Clear()+Add() for
+        // a reorder, list.Remove() per item for a delete) with change
+        // notifications suppressed, then raises exactly one Reset via
+        // ResetBindings() at the end (both BindingList&lt;T&gt; members -
+        // public and protected respectively, reached via reflection the
+        // same way EnableDoubleBuffering reaches a protected Control
+        // property). Without this, each individual Clear()/Add()/Remove()
+        // call gets picked up and repainted immediately - including
+        // whatever intermediate state DataGridView reacts to along the
+        // way (e.g. the list being briefly empty mid-reorder) - which is
+        // what previously showed up as the first row flashing "selected".
+        private void ApplyBatchedDataSourceChange(IList list, Action mutate)
+        {
             object dataSource = DataSource;
             Type dataSourceType = dataSource.GetType();
 
@@ -424,26 +521,21 @@ namespace ErikwnkWFUI.Controls
 
             try
             {
-                list.Clear();
-
-                foreach (object item in desiredOrder)
-                {
-                    list.Add(item);
-                }
+                mutate();
             }
             finally
             {
                 // Stays true through ResetBindings() below, not just the
-                // Clear()/Add() loop above - ResetBindings() is what
-                // actually raises the (suppressed-until-now) Reset
-                // notification, so it re-enters OnDataBindingComplete on
-                // this same call stack. Flipping the flag off before that
-                // would let that reentrant call run the "fresh bind"
-                // bookkeeping again mid-sort - wiping out the glyph/order
-                // CycleSort just set, and calling ClearSelection() /
-                // CurrentCell = null while the grid is mid-reset, which is
-                // exactly the kind of reentrant state change DataGridView
-                // can throw InvalidOperationException over.
+                // mutation above - ResetBindings() is what actually raises
+                // the (suppressed-until-now) Reset notification, so it
+                // re-enters OnDataBindingComplete on this same call stack.
+                // Flipping the flag off before that would let that
+                // reentrant call run the "fresh bind" bookkeeping again
+                // mid-change - wiping out the glyph/sort-order CycleSort
+                // just set, and calling ClearSelection() / CurrentCell =
+                // null while the grid is mid-reset, which is exactly the
+                // kind of reentrant state change DataGridView can throw
+                // InvalidOperationException over.
                 if (canSuppressEvents)
                 {
                     raiseEventsProperty.SetValue(dataSource, previousRaiseEvents);
