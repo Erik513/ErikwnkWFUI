@@ -348,6 +348,21 @@ namespace ErikwnkWFUI.Controls
                 _deleteRowColumn.DisplayIndex = Columns.Count - 1;
             }
 
+            // Windows shows a cell's accessible "default action" as a hover
+            // hint on its own (independent of ShowCellToolTips) whenever a
+            // cell has no other accessible name to show instead - which is
+            // exactly an empty, editable cell. For a plain DataGridViewTextBoxCell
+            // that default action is a bare, unhelpful "Edit"/"Bearbeiten"
+            // regardless of what the column actually holds, so it's replaced
+            // here with nothing (or, for the "type here to add a row"
+            // placeholder specifically, something that actually explains
+            // what clicking there does).
+            if (e.Column.CellTemplate is DataGridViewTextBoxCell &&
+                !(e.Column.CellTemplate is EditHintTextBoxCell))
+            {
+                e.Column.CellTemplate = new EditHintTextBoxCell();
+            }
+
             if (!SortingEnabled)
             {
                 return;
@@ -967,6 +982,46 @@ namespace ErikwnkWFUI.Controls
                 Math.Min(255, color.R + amount),
                 Math.Min(255, color.G + amount),
                 Math.Min(255, color.B + amount));
+        }
+
+        // See OnColumnAdded - a plain DataGridViewTextBoxCell whose accessible
+        // "default action" is blank instead of Windows' own generic "Edit",
+        // except on the "type here to add a row" placeholder, which gets one
+        // that actually says what it's for.
+        private sealed class EditHintTextBoxCell : DataGridViewTextBoxCell
+        {
+            protected override AccessibleObject CreateAccessibilityInstance()
+            {
+                return new EditHintCellAccessibleObject(this);
+            }
+
+            private sealed class EditHintCellAccessibleObject : DataGridViewTextBoxCellAccessibleObject
+            {
+                public EditHintCellAccessibleObject(DataGridViewCell owner) : base(owner)
+                {
+                }
+
+                public override string DefaultAction
+                {
+                    get
+                    {
+                        // OwningRow.IsNewRow would be the obvious way to
+                        // check this, but OwningRow is null whenever the
+                        // cell belongs to a shared row - an internal
+                        // DataGridView memory optimization for rows that
+                        // aren't current/selected/displayed, which most
+                        // rows are most of the time. RowIndex still works
+                        // for a shared row, so that's compared against
+                        // NewRowIndex (the placeholder's row index, or -1
+                        // if there isn't one) instead.
+                        System.Windows.Forms.DataGridView dataGridView = Owner.DataGridView;
+
+                        return dataGridView != null && Owner.RowIndex == dataGridView.NewRowIndex
+                            ? UIStrings.Get("DataGridView.AddRow")
+                            : string.Empty;
+                    }
+                }
+            }
         }
     }
 }

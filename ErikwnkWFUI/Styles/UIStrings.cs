@@ -64,6 +64,7 @@ namespace ErikwnkWFUI.Styles
 
             ["DataGridView.DeleteRow"] = "Delete row",
             ["DataGridView.DeleteRowHeader"] = "Del",
+            ["DataGridView.AddRow"] = "Add row",
         };
 
         private static readonly Dictionary<string, string> German = new Dictionary<string, string>
@@ -94,6 +95,7 @@ namespace ErikwnkWFUI.Styles
 
             ["DataGridView.DeleteRow"] = "Zeile löschen",
             ["DataGridView.DeleteRowHeader"] = "Entf",
+            ["DataGridView.AddRow"] = "Zeile hinzufügen",
         };
 
         public static string Get(string key)
