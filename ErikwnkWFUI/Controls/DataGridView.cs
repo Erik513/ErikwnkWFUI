@@ -467,34 +467,43 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnCellFormatting(e);
 
-            if (_deleteRowColumn != null &&
-                e.ColumnIndex == _deleteRowColumn.Index &&
-                e.RowIndex >= 0 &&
-                !Rows[e.RowIndex].IsNewRow)
+            if (_deleteRowColumn == null || e.ColumnIndex != _deleteRowColumn.Index || e.RowIndex < 0)
             {
-                e.Value = "✕";
-                e.FormattingApplied = true;
-
-                // AlternatingRowsDefaultCellStyle outranks Column.DefaultCellStyle
-                // for odd-indexed rows, so every other row's "X" was coming out
-                // in the normal row text color instead of red. Setting it here,
-                // on the cell style actually used for this paint pass, outranks
-                // both.
-                Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
-                    ? Lighten(UIColors.Red, 40)
-                    : UIColors.Red;
-                e.CellStyle.ForeColor = foreColor;
-                e.CellStyle.SelectionForeColor = foreColor;
-
-                // e.CellStyle.BackColor is already whatever this row's own
-                // resting color is (normal or alternating - see the
-                // OnCellMouseDown comment above for why CurrentCell can't
-                // just be kept off this cell instead), so this doesn't hardcode
-                // a color of its own - it only carries that same value over to
-                // SelectionBackColor, so a press here never shows the grid's
-                // real (green) selection color.
-                e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+                return;
             }
+
+            // Applies to every cell in the column, including the "type here
+            // to add a row" placeholder (IsNewRow) - that one shows no "X"
+            // below (nothing to delete there yet), but it's still a cell in
+            // this column, and pressing it showed the same real (green)
+            // selection color this same fix already covers for real rows.
+            // e.CellStyle.BackColor is already whatever this row's own
+            // resting color is (normal or alternating - see the
+            // OnCellMouseDown comment above for why CurrentCell can't just
+            // be kept off this cell instead), so this doesn't hardcode a
+            // color of its own - it only carries that same value over to
+            // SelectionBackColor, so a press here never shows the grid's
+            // real (green) selection color.
+            e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+
+            if (Rows[e.RowIndex].IsNewRow)
+            {
+                return;
+            }
+
+            e.Value = "✕";
+            e.FormattingApplied = true;
+
+            // AlternatingRowsDefaultCellStyle outranks Column.DefaultCellStyle
+            // for odd-indexed rows, so every other row's "X" was coming out
+            // in the normal row text color instead of red. Setting it here,
+            // on the cell style actually used for this paint pass, outranks
+            // both.
+            Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
+                ? Lighten(UIColors.Red, 40)
+                : UIColors.Red;
+            e.CellStyle.ForeColor = foreColor;
+            e.CellStyle.SelectionForeColor = foreColor;
         }
 
         protected override void OnCellMouseEnter(DataGridViewCellEventArgs e)
