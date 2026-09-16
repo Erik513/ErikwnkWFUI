@@ -52,6 +52,7 @@ namespace ErikwnkWFUI.Controls
         private bool _clearSelectionOnNextVisible;
         private bool _isApplyingInternalDataChange;
         private DataGridViewColumn _deleteRowColumn;
+        private int _hoveredDeleteRowIndex = -1;
 
         /// <summary>Fixed width of the optional delete-row column (see <see cref="ShowDeleteRowColumn"/>), in case a consumer needs to reserve space for it in its own column-width math.</summary>
         public const int DeleteRowColumnWidth = 32;
@@ -413,14 +414,15 @@ namespace ErikwnkWFUI.Controls
             // control repaints - is what actually keeps it from showing.
             //
             // The delete-row column's own data cells (RowIndex >= 0) are
-            // deliberately NOT cleared here the same way, even though they're
-            // meant to look unselectable too: nulling CurrentCell mid-press
-            // interferes with DataGridViewButtonColumn's own press/click
-            // tracking, so the button stopped raising OnCellContentClick
-            // below. Those cells get the "unselectable" look a different
-            // way instead - ShowDeleteRowColumn gives the column matching
-            // Selection*Color values, so even when one technically becomes
-            // CurrentCell, it's visually indistinguishable from unselected.
+            // deliberately NOT cleared here the same way, even now that the
+            // column is a plain DataGridViewTextBoxColumn rather than a
+            // DataGridViewButtonColumn: nulling CurrentCell mid-press turned
+            // out to still swallow the click (tried it - OnCellClick below
+            // stopped firing), so this is a DataGridView-wide press-tracking
+            // quirk, not something specific to button cells. Those cells get
+            // the "unselectable" look a different way instead - see
+            // OnCellFormatting, which keeps SelectionBackColor matching
+            // whatever that row's own resting background already is.
             ClearSelection();
             CurrentCell = null;
         }
@@ -473,10 +475,47 @@ namespace ErikwnkWFUI.Controls
                 // for odd-indexed rows, so every other row's "X" was coming out
                 // in the normal row text color instead of red. Setting it here,
                 // on the cell style actually used for this paint pass, outranks
-                // both. Background is left alone - it should keep matching
-                // whatever the row's own (possibly alternating) color is.
-                e.CellStyle.ForeColor = UIColors.Red;
-                e.CellStyle.SelectionForeColor = UIColors.Red;
+                // both.
+                Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
+                    ? Lighten(UIColors.Red, 40)
+                    : UIColors.Red;
+                e.CellStyle.ForeColor = foreColor;
+                e.CellStyle.SelectionForeColor = foreColor;
+
+                // e.CellStyle.BackColor is already whatever this row's own
+                // resting color is (normal or alternating - see the
+                // OnCellMouseDown comment above for why CurrentCell can't
+                // just be kept off this cell instead), so this doesn't hardcode
+                // a color of its own - it only carries that same value over to
+                // SelectionBackColor, so a press here never shows the grid's
+                // real (green) selection color.
+                e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+            }
+        }
+
+        protected override void OnCellMouseEnter(DataGridViewCellEventArgs e)
+        {
+            base.OnCellMouseEnter(e);
+
+            if (_deleteRowColumn != null &&
+                e.ColumnIndex == _deleteRowColumn.Index &&
+                e.RowIndex >= 0)
+            {
+                _hoveredDeleteRowIndex = e.RowIndex;
+                InvalidateCell(e.ColumnIndex, e.RowIndex);
+            }
+        }
+
+        protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
+        {
+            base.OnCellMouseLeave(e);
+
+            if (_deleteRowColumn != null &&
+                e.ColumnIndex == _deleteRowColumn.Index &&
+                e.RowIndex == _hoveredDeleteRowIndex)
+            {
+                _hoveredDeleteRowIndex = -1;
+                InvalidateCell(e.ColumnIndex, e.RowIndex);
             }
         }
 
@@ -690,6 +729,14 @@ namespace ErikwnkWFUI.Controls
         // what previously showed up as the first row flashing "selected".
         private void ApplyBatchedDataSourceChange(IList list, Action mutate)
         {
+            // Rows can shift position without the mouse moving (e.g. the
+            // hovered row itself gets deleted, or a sort reorders things
+            // underneath the cursor) - no mouse-move means no fresh
+            // OnCellMouseEnter/Leave to correct a now-stale index, so drop
+            // the hover highlight instead of risking it landing on the
+            // wrong row.
+            _hoveredDeleteRowIndex = -1;
+
             object dataSource = DataSource;
             Type dataSourceType = dataSource.GetType();
 
@@ -899,6 +946,14 @@ namespace ErikwnkWFUI.Controls
                 Math.Max(0, color.R - amount),
                 Math.Max(0, color.G - amount),
                 Math.Max(0, color.B - amount));
+        }
+
+        private static Color Lighten(Color color, int amount)
+        {
+            return Color.FromArgb(
+                Math.Min(255, color.R + amount),
+                Math.Min(255, color.G + amount),
+                Math.Min(255, color.B + amount));
         }
     }
 }
