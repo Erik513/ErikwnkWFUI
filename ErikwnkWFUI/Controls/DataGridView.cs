@@ -547,6 +547,27 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Base DataGridView's own IsInputKey already claims Ctrl+C this
+        // same way (that's what having ClipboardCopyMode enabled actually
+        // does under the hood) - returning true here is what stops Windows
+        // treating a key as an unclaimed shortcut/mnemonic and keeps it
+        // routing to this control's own OnKeyDown below instead, which is
+        // where Ctrl+V/Ctrl+X actually get handled.
+        protected override bool IsInputKey(Keys keyData)
+        {
+            if ((keyData & Keys.Control) == Keys.Control)
+            {
+                Keys keyCode = keyData & Keys.KeyCode;
+
+                if (keyCode == Keys.V || keyCode == Keys.X)
+                {
+                    return true;
+                }
+            }
+
+            return base.IsInputKey(keyData);
+        }
+
         /// <summary>
         /// Deletes whichever rows have a selected cell when Delete is
         /// pressed - RowHeadersVisible is false on this control (see the
@@ -568,6 +589,344 @@ namespace ErikwnkWFUI.Controls
             }
 
             return base.ProcessDataGridViewKey(e);
+        }
+
+        // Not handled in ProcessDataGridViewKey above like Delete is: the
+        // base class's own OnKeyDown only ever forwards a fixed set of keys
+        // into ProcessDataGridViewKey at all (navigation keys, plus C for
+        // its own Ctrl+C support) - V and X aren't in that set, so putting
+        // this there like Delete would silently never run. OnKeyDown itself
+        // is the actual hook base.OnKeyDown uses to decide that forwarding,
+        // so intercepting Ctrl+V/Ctrl+X here, before calling base.OnKeyDown,
+        // reaches them reliably instead.
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Control && !IsCurrentCellInEditMode && !ReadOnly)
+            {
+                if (e.KeyCode == Keys.X)
+                {
+                    CutSelectionToClipboard();
+                    e.Handled = true;
+                    return;
+                }
+
+                if (e.KeyCode == Keys.V)
+                {
+                    PasteFromClipboard();
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        // Overriding this (rather than building clipboard text by hand)
+        // fixes copy for Ctrl+C too, not just Cut below - the base class's
+        // own Ctrl+C (ProcessInsertKey) calls this same virtual method to
+        // build what it puts on the clipboard. The delete column's cells
+        // have real values ("✕") and can end up selected like any other
+        // cell (e.g. a drag-select spanning the whole row), but there's
+        // nothing meaningful to copy from a column that only ever deletes
+        // rows - so its cells are excluded here regardless of how the
+        // request came in.
+        public override DataObject GetClipboardContent()
+        {
+            if (_deleteRowColumn == null)
+            {
+                return base.GetClipboardContent();
+            }
+
+            List<DataGridViewCell> deleteColumnCells = new List<DataGridViewCell>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (cell.ColumnIndex == _deleteRowColumn.Index)
+                {
+                    deleteColumnCells.Add(cell);
+                }
+            }
+
+            if (deleteColumnCells.Count == 0)
+            {
+                return base.GetClipboardContent();
+            }
+
+            foreach (DataGridViewCell cell in deleteColumnCells)
+            {
+                cell.Selected = false;
+            }
+
+            try
+            {
+                return base.GetClipboardContent();
+            }
+            finally
+            {
+                foreach (DataGridViewCell cell in deleteColumnCells)
+                {
+                    cell.Selected = true;
+                }
+            }
+        }
+
+        // Cut = copy (via the same clipboard content the base class's own
+        // Ctrl+C builds) then clear, rather than deleting the row outright -
+        // that's a different, already-existing action (see Delete above).
+        private void CutSelectionToClipboard()
+        {
+            if (SelectedCells.Count == 0)
+            {
+                return;
+            }
+
+            DataObject clipboardContent = GetClipboardContent();
+
+            if (clipboardContent != null)
+            {
+                Clipboard.SetDataObject(clipboardContent);
+            }
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (!cell.ReadOnly && cell.RowIndex >= 0 && !Rows[cell.RowIndex].IsNewRow)
+                {
+                    cell.Value = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Pastes tab-separated, newline-separated text (what Excel, Word -
+        /// copying a table - and this grid's own Ctrl+C all put on the
+        /// clipboard as plain text) starting at the top-left of the
+        /// current selection. Only the selected rows are overwritten in
+        /// place; a pasted block taller than the selection gets the extra
+        /// rows inserted right after it, via the bound list's own
+        /// <see cref="IBindingList.AddNew"/>, rather than overwriting
+        /// whatever real rows happened to already be sitting there.
+        /// </summary>
+        private void PasteFromClipboard()
+        {
+            if (!Clipboard.ContainsText())
+            {
+                return;
+            }
+
+            string text = Clipboard.GetText();
+
+            if (string.IsNullOrEmpty(text) || !(DataSource is IList list))
+            {
+                return;
+            }
+
+            string[] pastedRows = text.Replace("\r\n", "\n").Replace("\r", "\n").TrimEnd('\n').Split('\n');
+
+            if (pastedRows.Length == 0)
+            {
+                return;
+            }
+
+            List<DataGridViewColumn> targetColumns = GetPasteTargetColumns();
+
+            if (targetColumns.Count == 0)
+            {
+                return;
+            }
+
+            // Anchored at the top-left of the current SELECTION, not just
+            // CurrentCell - CurrentCell is whichever cell was clicked or
+            // navigated to LAST within a multi-cell selection (e.g. the
+            // far corner of a drag-select or a Shift+Right extension), not
+            // necessarily where the selection starts, so using it alone
+            // put paste in the wrong column/row whenever more than one
+            // cell was selected. The delete column is never a valid anchor
+            // (nothing to paste into it), same as it's never a paste
+            // target below.
+            int minRowIndex = int.MaxValue;
+            DataGridViewColumn minColumn = null;
+            HashSet<int> selectedRealRowIndexes = new HashSet<int>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                {
+                    continue;
+                }
+
+                if (cell.RowIndex < minRowIndex)
+                {
+                    minRowIndex = cell.RowIndex;
+                }
+
+                if (cell.RowIndex < list.Count)
+                {
+                    selectedRealRowIndexes.Add(cell.RowIndex);
+                }
+
+                DataGridViewColumn column = Columns[cell.ColumnIndex];
+
+                if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
+                {
+                    minColumn = column;
+                }
+            }
+
+            if (minColumn == null && CurrentCell != null)
+            {
+                minRowIndex = CurrentCell.RowIndex;
+                minColumn = CurrentCell.OwningColumn;
+
+                if (CurrentCell.RowIndex < list.Count)
+                {
+                    selectedRealRowIndexes.Add(CurrentCell.RowIndex);
+                }
+            }
+
+            int startColumnIndex = minColumn != null ? targetColumns.IndexOf(minColumn) : -1;
+
+            if (startColumnIndex < 0)
+            {
+                startColumnIndex = 0;
+            }
+
+            // Pasting while the "type here to add a row" placeholder is
+            // part of the anchor starts a new row rather than overwriting
+            // the placeholder itself - same starting point as list.Count,
+            // one past the last real row.
+            int startDataRowIndex = minRowIndex != int.MaxValue && !Rows[minRowIndex].IsNewRow
+                ? minRowIndex
+                : list.Count;
+
+            // Only the rows actually selected get overwritten in place - a
+            // paste block taller than the selection gets the rest INSERTED
+            // right after it instead of overwriting whatever real rows
+            // happened to already be sitting there (e.g. pasting 10 rows
+            // onto a 4-row selection in the middle of a 20-row list must
+            // not clobber rows 5-10 of someone's existing data; it should
+            // push them down by 6 instead).
+            int overflowRowCount = pastedRows.Length - selectedRealRowIndexes.Count;
+
+            if (overflowRowCount > 0)
+            {
+                IBindingList bindingList = list as IBindingList;
+
+                if (bindingList == null || !bindingList.AllowNew)
+                {
+                    // Can't grow the list - still worth filling whatever
+                    // existing rows the paste does reach below.
+                    pastedRows = Trim(pastedRows, list.Count - startDataRowIndex);
+                }
+                else
+                {
+                    int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
+
+                    // Adding every needed row through the same
+                    // suppress-events-then-ResetBindings-once helper
+                    // CycleSort/DeleteRows already use, rather than
+                    // mutating the list directly here one row at a time:
+                    // with change notifications live, each individual
+                    // mutation reenters the grid's own binding-complete
+                    // handling while still inside this key-press handler
+                    // (the same kind of reentrancy that caused real
+                    // crashes for sort/delete before they went through
+                    // this helper).
+                    ApplyBatchedDataSourceChange(list, () =>
+                    {
+                        // AddNew() only ever appends at the true end of
+                        // the list - inserting the new rows at an
+                        // arbitrary computed index directly turned out not
+                        // to be reliable. Instead, whatever's currently
+                        // sitting at/after the insertion point is set
+                        // aside first (removing from the end backwards
+                        // keeps every remaining index below it stable),
+                        // the new blank rows are appended normally, and
+                        // the set-aside rows go back on at the end - the
+                        // net result is the same (new rows land exactly
+                        // at insertAtIndex, everything after shifts down)
+                        // without ever needing an Insert at a hand-picked
+                        // index.
+                        List<object> displacedItems = new List<object>();
+
+                        for (int i = list.Count - 1; i >= insertAtIndex; i--)
+                        {
+                            displacedItems.Insert(0, list[i]);
+                            list.RemoveAt(i);
+                        }
+
+                        for (int i = 0; i < overflowRowCount; i++)
+                        {
+                            bindingList.AddNew();
+                        }
+
+                        foreach (object displacedItem in displacedItems)
+                        {
+                            list.Add(displacedItem);
+                        }
+                    });
+                }
+            }
+
+            for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
+            {
+                int dataRowIndex = startDataRowIndex + rowOffset;
+
+                if (dataRowIndex >= list.Count)
+                {
+                    break;
+                }
+
+                string[] cellValues = pastedRows[rowOffset].Split('\t');
+
+                for (int columnOffset = 0;
+                    columnOffset < cellValues.Length && startColumnIndex + columnOffset < targetColumns.Count;
+                    columnOffset++)
+                {
+                    DataGridViewColumn column = targetColumns[startColumnIndex + columnOffset];
+                    DataGridViewCell cell = Rows[dataRowIndex].Cells[column.Index];
+
+                    if (!cell.ReadOnly)
+                    {
+                        cell.Value = cellValues[columnOffset];
+                    }
+                }
+            }
+        }
+
+        private static string[] Trim(string[] values, int maxLength)
+        {
+            if (maxLength >= values.Length)
+            {
+                return values;
+            }
+
+            if (maxLength <= 0)
+            {
+                return Array.Empty<string>();
+            }
+
+            string[] trimmed = new string[maxLength];
+            Array.Copy(values, trimmed, maxLength);
+            return trimmed;
+        }
+
+        // Every data column in display order - the optional delete column
+        // (see ShowDeleteRowColumn) is never a paste target, there's
+        // nothing meaningful to paste into it.
+        private List<DataGridViewColumn> GetPasteTargetColumns()
+        {
+            List<DataGridViewColumn> columns = new List<DataGridViewColumn>();
+
+            foreach (DataGridViewColumn column in Columns)
+            {
+                if (column != _deleteRowColumn)
+                {
+                    columns.Add(column);
+                }
+            }
+
+            columns.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
+            return columns;
         }
 
         private void DeleteSelectedRows()
