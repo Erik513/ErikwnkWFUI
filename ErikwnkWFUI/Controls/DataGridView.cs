@@ -790,11 +790,20 @@ namespace ErikwnkWFUI.Controls
                 startColumnIndex = 0;
             }
 
-            // Pasting while the "type here to add a row" placeholder is
-            // part of the anchor starts a new row rather than overwriting
-            // the placeholder itself - same starting point as list.Count,
-            // one past the last real row.
-            int startDataRowIndex = minRowIndex != int.MaxValue && !Rows[minRowIndex].IsNewRow
+            // Same "does this row already have a real backing item"
+            // check selectedRealRowIndexes uses below (cell.RowIndex <
+            // list.Count), not Rows[minRowIndex].IsNewRow - clicking into
+            // the "type here to add a row" placeholder turns out to make
+            // WinForms call IBindingList.AddNew() on the bound list right
+            // then, growing list.Count immediately, well before
+            // IsNewRow ever stops reporting true for that row (that only
+            // happens once the add is actually committed, e.g. by typing
+            // into it). Using IsNewRow here disagreed with
+            // selectedRealRowIndexes about whether that same row counted
+            // as "real" - it doesn't matter for this method whether
+            // WinForms still considers the row uncommitted, only whether
+            // it already has a list item to write into.
+            int startDataRowIndex = minRowIndex != int.MaxValue && minRowIndex < list.Count
                 ? minRowIndex
                 : list.Count;
 
@@ -806,91 +815,121 @@ namespace ErikwnkWFUI.Controls
             // not clobber rows 5-10 of someone's existing data; it should
             // push them down by 6 instead).
             int overflowRowCount = pastedRows.Length - selectedRealRowIndexes.Count;
+            IBindingList bindingList = list as IBindingList;
 
-            if (overflowRowCount > 0)
+            if (overflowRowCount > 0 && (bindingList == null || !bindingList.AllowNew))
             {
-                IBindingList bindingList = list as IBindingList;
-
-                if (bindingList == null || !bindingList.AllowNew)
-                {
-                    // Can't grow the list - still worth filling whatever
-                    // existing rows the paste does reach below.
-                    pastedRows = Trim(pastedRows, list.Count - startDataRowIndex);
-                }
-                else
-                {
-                    int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
-
-                    // Adding every needed row through the same
-                    // suppress-events-then-ResetBindings-once helper
-                    // CycleSort/DeleteRows already use, rather than
-                    // mutating the list directly here one row at a time:
-                    // with change notifications live, each individual
-                    // mutation reenters the grid's own binding-complete
-                    // handling while still inside this key-press handler
-                    // (the same kind of reentrancy that caused real
-                    // crashes for sort/delete before they went through
-                    // this helper).
-                    ApplyBatchedDataSourceChange(list, () =>
-                    {
-                        // AddNew() only ever appends at the true end of
-                        // the list - inserting the new rows at an
-                        // arbitrary computed index directly turned out not
-                        // to be reliable. Instead, whatever's currently
-                        // sitting at/after the insertion point is set
-                        // aside first (removing from the end backwards
-                        // keeps every remaining index below it stable),
-                        // the new blank rows are appended normally, and
-                        // the set-aside rows go back on at the end - the
-                        // net result is the same (new rows land exactly
-                        // at insertAtIndex, everything after shifts down)
-                        // without ever needing an Insert at a hand-picked
-                        // index.
-                        List<object> displacedItems = new List<object>();
-
-                        for (int i = list.Count - 1; i >= insertAtIndex; i--)
-                        {
-                            displacedItems.Insert(0, list[i]);
-                            list.RemoveAt(i);
-                        }
-
-                        for (int i = 0; i < overflowRowCount; i++)
-                        {
-                            bindingList.AddNew();
-                        }
-
-                        foreach (object displacedItem in displacedItems)
-                        {
-                            list.Add(displacedItem);
-                        }
-                    });
-                }
+                // Can't grow the list - still worth filling whatever
+                // existing rows the paste does reach below.
+                pastedRows = Trim(pastedRows, list.Count - startDataRowIndex);
+                overflowRowCount = 0;
             }
 
-            for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
+            // Growing the list AND writing the pasted values both happen
+            // inside this one suppress-events-then-ResetBindings-once
+            // helper (CycleSort/DeleteRows already use it) rather than as
+            // two separate steps:
+            //
+            // - Reentrancy: with change notifications live, each
+            //   individual mutation reenters the grid's own
+            //   binding-complete handling while still inside this
+            //   key-press handler (the same kind of reentrancy that
+            //   caused real crashes for sort/delete before they went
+            //   through this helper).
+            //
+            // - New rows vanishing: a first version of this wrote pasted
+            //   values afterward, through DataGridViewCell.Value, once
+            //   the grid had already rebound and displayed the freshly
+            //   added blank rows. BindingList&lt;T&gt; treats whatever
+            //   AddNew() just added as still cancellable until something
+            //   commits it - normally a side effect of the grid's own
+            //   edit-commit handling once a user types into a cell - and
+            //   setting Value programmatically doesn't trigger that same
+            //   commit. The row silently vanished the next time focus
+            //   moved elsewhere, as if the add had been cancelled - even
+            //   calling BindingList&lt;T&gt;.EndNew() by hand right after
+            //   AddNew() didn't stop it, so something in the grid's own
+            //   side of this (separate from BindingList's own pending-add
+            //   tracking) was still involved. Setting the pasted values
+            //   directly on the bound objects here instead - before
+            //   ResetBindings ever shows the grid a "freshly added, still
+            //   empty" row at all - sidesteps that whole lifecycle: the
+            //   row only ever appears already complete.
+            ApplyBatchedDataSourceChange(list, () =>
             {
-                int dataRowIndex = startDataRowIndex + rowOffset;
-
-                if (dataRowIndex >= list.Count)
+                if (overflowRowCount > 0)
                 {
-                    break;
-                }
+                    // Removing/inserting at a hand-picked index one row at
+                    // a time (an earlier version of this) left the grid's
+                    // own internal row/cell bookkeeping corrupted even
+                    // though the list ended up with the right contents -
+                    // later clicks into the grid threw
+                    // InvalidOperationException out of WinForms' own code.
+                    // Clear() + re-Add() in the exact final order instead
+                    // is the same rebuild-from-scratch pattern
+                    // ReorderDataSource already uses safely for sorting,
+                    // without that corruption.
+                    int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
+                    List<object> originalItems = new List<object>(list.Count);
 
-                string[] cellValues = pastedRows[rowOffset].Split('\t');
-
-                for (int columnOffset = 0;
-                    columnOffset < cellValues.Length && startColumnIndex + columnOffset < targetColumns.Count;
-                    columnOffset++)
-                {
-                    DataGridViewColumn column = targetColumns[startColumnIndex + columnOffset];
-                    DataGridViewCell cell = Rows[dataRowIndex].Cells[column.Index];
-
-                    if (!cell.ReadOnly)
+                    foreach (object item in list)
                     {
-                        cell.Value = cellValues[columnOffset];
+                        originalItems.Add(item);
+                    }
+
+                    List<object> newItems = new List<object>(overflowRowCount);
+
+                    for (int i = 0; i < overflowRowCount; i++)
+                    {
+                        newItems.Add(bindingList.AddNew());
+                    }
+
+                    list.Clear();
+
+                    for (int i = 0; i < insertAtIndex; i++)
+                    {
+                        list.Add(originalItems[i]);
+                    }
+
+                    foreach (object newItem in newItems)
+                    {
+                        list.Add(newItem);
+                    }
+
+                    for (int i = insertAtIndex; i < originalItems.Count; i++)
+                    {
+                        list.Add(originalItems[i]);
                     }
                 }
-            }
+
+                for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
+                {
+                    int dataRowIndex = startDataRowIndex + rowOffset;
+
+                    if (dataRowIndex >= list.Count)
+                    {
+                        break;
+                    }
+
+                    object targetItem = list[dataRowIndex];
+                    string[] cellValues = pastedRows[rowOffset].Split('\t');
+
+                    for (int columnOffset = 0;
+                        columnOffset < cellValues.Length && startColumnIndex + columnOffset < targetColumns.Count;
+                        columnOffset++)
+                    {
+                        DataGridViewColumn column = targetColumns[startColumnIndex + columnOffset];
+
+                        if (column.ReadOnly || string.IsNullOrEmpty(column.DataPropertyName))
+                        {
+                            continue;
+                        }
+
+                        PropertyInfo property = targetItem.GetType().GetProperty(column.DataPropertyName);
+                        property?.SetValue(targetItem, cellValues[columnOffset]);
+                    }
+                }
+            });
         }
 
         private static string[] Trim(string[] values, int maxLength)
