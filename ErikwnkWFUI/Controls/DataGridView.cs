@@ -64,6 +64,8 @@ namespace ErikwnkWFUI.Controls
         private ToolStripMenuItem _contextMenuDeleteRowsItem;
         private ToolStripMenuItem _contextMenuInsertRowAboveItem;
         private ToolStripMenuItem _contextMenuInsertRowBelowItem;
+        private readonly Dictionary<DataGridViewColumn, IComparer> _columnSortComparers =
+            new Dictionary<DataGridViewColumn, IComparer>();
 
         /// <summary>Fixed width of the optional delete-row column (see <see cref="ShowDeleteRowColumn"/>), in case a consumer needs to reserve space for it in its own column-width math.</summary>
         public const int DeleteRowColumnWidth = 40;
@@ -131,6 +133,42 @@ namespace ErikwnkWFUI.Controls
         /// something a consumer sets.
         /// </summary>
         public bool SortingEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Registers a custom comparer for a specific column, used by
+        /// column-header sorting (see <see cref="SortingEnabled"/>/
+        /// <see cref="CycleSort"/>) instead of the default comparison
+        /// (<see cref="IComparable"/>, falling back to case-insensitive
+        /// string comparison) - useful for a column whose cell values
+        /// don't sort correctly as plain strings/IComparables on their
+        /// own, e.g. dates stored in a non-lexicographic text format, or
+        /// numbers stored as strings. The comparer receives the two
+        /// cells' raw <see cref="DataGridViewCell.Value"/> objects and is
+        /// expected to compare them in plain ascending order - this
+        /// control still applies ascending/descending itself, the same
+        /// way it already does for the default comparison, so a
+        /// registered comparer never needs to know which direction is
+        /// currently active. Pass <c>null</c> as <paramref name="comparer"/>
+        /// to remove one and revert that column to the default. Set any
+        /// time after the column exists; not tied to binding order the
+        /// way <see cref="SortingEnabled"/> is.
+        /// </summary>
+        public void SetSortComparer(DataGridViewColumn column, IComparer comparer)
+        {
+            if (column == null)
+            {
+                throw new ArgumentNullException(nameof(column));
+            }
+
+            if (comparer == null)
+            {
+                _columnSortComparers.Remove(column);
+            }
+            else
+            {
+                _columnSortComparers[column] = comparer;
+            }
+        }
 
         /// <summary>
         /// Whether a small "delete this row" button column is shown, pinned
@@ -1633,7 +1671,16 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
-            itemsWithValues.Sort((a, b) => CompareCellValues(a.Value, b.Value, direction));
+            // A custom comparer (see SetSortComparer) always compares in
+            // plain ascending order - direction is applied the same way
+            // regardless of whether the default comparison or a
+            // registered one is doing the actual comparing, so a
+            // consumer's comparer never has to care which one is active.
+            _columnSortComparers.TryGetValue(Columns[columnIndex], out IComparer customComparer);
+
+            itemsWithValues.Sort((a, b) => customComparer != null
+                ? customComparer.Compare(a.Value, b.Value) * direction
+                : CompareCellValues(a.Value, b.Value, direction));
 
             List<object> ordered = new List<object>(itemsWithValues.Count);
 
