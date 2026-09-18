@@ -440,6 +440,98 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Forces a repaint on every selection change - a rapid drag that
+        // extends the selection back and forth across many cells (not
+        // specific to the placeholder, or anything else in this file)
+        // could leave an earlier cell's highlight stuck stale: still
+        // actually Selected, just not repainted to show it, until
+        // something else forces a repaint. Only ever asks for a repaint
+        // here - never touches Selected/SelectedCells itself - so this
+        // carries none of the reentrancy risk that came from actually
+        // mutating selection state from within this same event (see the
+        // remarks below on the placeholder specifically).
+        protected override void OnSelectionChanged(EventArgs e)
+        {
+            base.OnSelectionChanged(e);
+            Invalidate();
+        }
+
+        // The "type here to add a row" placeholder is left exactly as
+        // selectable as stock DataGridView already makes it - a drag-
+        // select or Ctrl+A reaching down that far selects it like any
+        // other row, same as it always would. An earlier version of this
+        // fought that instead (forcing it back out of SelectedCells
+        // on every selection change), which fixed one bug but caused a
+        // worse one: reading/mutating selection state from within
+        // OnSelectionChanged while WinForms' own selection-building loop
+        // was still actively extending a drag turned out to disturb that
+        // loop badly enough to drop the drag's own anchor cell from the
+        // final selection entirely. The actual correctness problems this
+        // was trying to solve - copy/paste/clear/delete treating the
+        // placeholder as real data - are handled individually at each of
+        // those call sites instead (see GetClipboardContent,
+        // PasteFromClipboard, ClearSelectedCellValues, DeleteRows), each
+        // already checking IsNewRow or list membership on its own terms;
+        // none of them need the placeholder to be actually unselectable
+        // for that.
+        //
+        // The one thing genuinely worth cleaning up here: merely having
+        // moved through the placeholder at all - a drag passing over it,
+        // Ctrl+A, arrow-keying past it, not just clicking directly into
+        // it - already makes WinForms call IBindingList.AddNew() on the
+        // bound list (same cause as InsertBlankRow/PasteFromClipboard).
+        // If nothing was actually typed there, that leaves a genuinely
+        // blank item sitting in the list, invisible for now (that row
+        // still reports IsNewRow == true, same as ever, until something
+        // commits it) - but no longer just a harmless placeholder either:
+        // anything that later rebuilds the grid from the list's current
+        // contents (e.g. a paste) reveals it as a genuine extra blank
+        // row. Leaving the row - rather than every keystroke within it -
+        // is the natural, standard point to settle whether it should
+        // stick around: RowValidating/CellEndEdit (which is what commits
+        // a real edit) already runs before RowLeave, so by the time this
+        // fires, CancelNew is a documented no-op for a row that was
+        // actually typed into - it only undoes an add nobody meant to
+        // make. Deferred via BeginInvoke since CancelNew's own list
+        // mutation would otherwise reenter this same row-leave handling
+        // while it's still on the call stack.
+        protected override void OnRowLeave(DataGridViewCellEventArgs e)
+        {
+            base.OnRowLeave(e);
+
+            if (e.RowIndex != NewRowIndex || !IsHandleCreated)
+            {
+                return;
+            }
+
+            BeginInvoke(new Action(() =>
+            {
+                if (!(DataSource is ICancelAddNew cancelAddNew) || !(DataSource is IList list) || list.Count == 0)
+                {
+                    return;
+                }
+
+                int countBeforeCancel = list.Count;
+                cancelAddNew.CancelNew(list.Count - 1);
+
+                if (list.Count < countBeforeCancel)
+                {
+                    // A pending add really was cancelled (the no-op case,
+                    // e.g. the user actually typed a new row and moved
+                    // on, leaves list.Count unchanged and skips this) -
+                    // CancelNew's own list-shrink is itself enough of a
+                    // change to make WinForms pick some "current" cell of
+                    // its own afterward (observed: the first cell of what
+                    // was the last real row), which nobody asked for.
+                    // Sweeping it up here, rather than leaving it for
+                    // whatever happens to run next, keeps this contained
+                    // to exactly the case it caused.
+                    ClearSelection();
+                    CurrentCell = null;
+                }
+            }));
+        }
+
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseDown(e);
@@ -690,35 +782,45 @@ namespace ErikwnkWFUI.Controls
         // Overriding this (rather than building clipboard text by hand)
         // fixes copy for Ctrl+C too, not just Cut below - the base class's
         // own Ctrl+C (ProcessInsertKey) calls this same virtual method to
-        // build what it puts on the clipboard. The delete column's cells
-        // have real values ("✕") and can end up selected like any other
-        // cell (e.g. a drag-select spanning the whole row), but there's
-        // nothing meaningful to copy from a column that only ever deletes
-        // rows - so its cells are excluded here regardless of how the
-        // request came in.
+        // build what it puts on the clipboard. Two kinds of cells are
+        // excluded here regardless of how the request came in:
+        //
+        // - The delete column's: real values ("✕") and can end up
+        //   selected like any other cell (e.g. a drag-select spanning the
+        //   whole row), but there's nothing meaningful to copy from a
+        //   column that only ever deletes rows.
+        //
+        // - The "type here to add a row" placeholder's: left fully
+        //   selectable like any other row (see the remarks on
+        //   OnRowLeave), so a drag-select or Ctrl+A reaching down that
+        //   far selects it same as stock DataGridView always would - but
+        //   it's still entirely blank, so copying it along would put one
+        //   extra, entirely blank row on the clipboard, and from there
+        //   into whatever gets pasted.
+        //
+        // Both are only excluded from the copied TEXT, not left
+        // deselected afterward - restored in the `finally` below either
+        // way, so the visible selection looks exactly like it would
+        // without this override.
         public override DataObject GetClipboardContent()
         {
-            if (_deleteRowColumn == null)
-            {
-                return base.GetClipboardContent();
-            }
-
-            List<DataGridViewCell> deleteColumnCells = new List<DataGridViewCell>();
+            List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (cell.ColumnIndex == _deleteRowColumn.Index)
+                if ((_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index) ||
+                    Rows[cell.RowIndex].IsNewRow)
                 {
-                    deleteColumnCells.Add(cell);
+                    excludedCells.Add(cell);
                 }
             }
 
-            if (deleteColumnCells.Count == 0)
+            if (excludedCells.Count == 0)
             {
                 return base.GetClipboardContent();
             }
 
-            foreach (DataGridViewCell cell in deleteColumnCells)
+            foreach (DataGridViewCell cell in excludedCells)
             {
                 cell.Selected = false;
             }
@@ -729,7 +831,7 @@ namespace ErikwnkWFUI.Controls
             }
             finally
             {
-                foreach (DataGridViewCell cell in deleteColumnCells)
+                foreach (DataGridViewCell cell in excludedCells)
                 {
                     cell.Selected = true;
                 }
