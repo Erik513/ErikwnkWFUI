@@ -55,6 +55,7 @@ namespace ErikwnkWFUI.Controls
         private int _hoveredDeleteRowIndex = -1;
         private int _contextMenuRowIndex = -1;
         private int _contextMenuColumnIndex = -1;
+        private bool _contextMenuRowWasPlaceholder;
         private ToolStripMenuItem _contextMenuCutItem;
         private ToolStripMenuItem _contextMenuCopyItem;
         private ToolStripMenuItem _contextMenuPasteItem;
@@ -447,6 +448,15 @@ namespace ErikwnkWFUI.Controls
             {
                 _contextMenuRowIndex = e.RowIndex;
                 _contextMenuColumnIndex = e.ColumnIndex;
+
+                // IsNewRow, not a list.Count comparison, on purpose - see
+                // InsertBlankRow for why: right-clicking the placeholder
+                // itself can already grow the bound list by one before
+                // that method ever runs, but IsNewRow still reports true
+                // for it regardless (it only flips once the add is
+                // actually committed), so this captures "was this really
+                // the placeholder when clicked" reliably either way.
+                _contextMenuRowWasPlaceholder = e.RowIndex >= 0 && Rows[e.RowIndex].IsNewRow;
 
                 bool isDeleteColumnCell = _deleteRowColumn != null && e.ColumnIndex == _deleteRowColumn.Index;
 
@@ -1130,10 +1140,11 @@ namespace ErikwnkWFUI.Controls
                 // on the delete column (its own left-click already
                 // deletes the row; none of Cut/Copy/Paste/Clear/insert
                 // make sense on it either). The "type here to add a row"
-                // placeholder still gets a menu - Paste and "insert row
-                // above" both make sense there - just with its row-scoped
-                // items (Cut/Copy/Clear/Delete/insert row *below*, which
-                // would mean past the placeholder) disabled below.
+                // placeholder still gets a menu - Paste still makes sense
+                // there - just with every row-scoped item disabled below,
+                // including both insert options: typing into the
+                // placeholder is already how a row gets added there, so
+                // there's nothing left for "insert row above/below" to do.
                 bool onDeleteColumn = _deleteRowColumn != null && _contextMenuColumnIndex == _deleteRowColumn.Index;
 
                 if (_contextMenuRowIndex < 0 || onDeleteColumn)
@@ -1142,7 +1153,14 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                bool onRealRow = _contextMenuRowIndex < (DataSource as IList)?.Count;
+                // _contextMenuRowWasPlaceholder (captured from IsNewRow at
+                // click time), not a list.Count comparison here - the
+                // right-click itself can already grow the bound list by
+                // one before this Opening handler ever runs (see
+                // InsertBlankRow), which would make a plain "row index <
+                // list.Count" check wrongly call the placeholder a real
+                // row too.
+                bool onRealRow = !_contextMenuRowWasPlaceholder;
                 bool hasSelection = SelectedCells.Count > 0;
 
                 _contextMenuCutItem.Enabled = hasSelection && !ReadOnly && onRealRow;
@@ -1150,7 +1168,7 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
                 _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
-                _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows;
+                _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows && onRealRow;
                 _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && onRealRow;
             };
 
@@ -1162,11 +1180,11 @@ namespace ErikwnkWFUI.Controls
         // rebuild PasteFromClipboard's own row-insertion uses, for the
         // same reasons (reentrancy while still inside this event handler,
         // and a freshly AddNew()'d row otherwise being left in a
-        // still-cancellable state the grid can silently drop later).
-        // rowIndex == list.Count (the "type here to add a row" placeholder)
-        // is a valid target for "above" - the context menu itself never
-        // offers "below" there, since that would mean past the
-        // placeholder.
+        // still-cancellable state the grid can silently drop later). The
+        // context menu itself never offers either direction for the "type
+        // here to add a row" placeholder - typing into it is already how
+        // a row gets added there - but the guard below still covers it
+        // defensively in case this is ever called some other way.
         private void InsertBlankRow(int rowIndex, bool above)
         {
             if (!(DataSource is IList list) || rowIndex < 0 || rowIndex > list.Count)
@@ -1175,6 +1193,17 @@ namespace ErikwnkWFUI.Controls
             }
 
             if (!(list is IBindingList bindingList) || !bindingList.AllowNew)
+            {
+                return;
+            }
+
+            // Right-clicking (or even just clicking) the placeholder
+            // itself already makes WinForms call IBindingList.AddNew() on
+            // the bound list on its own - same cause as the paste bug
+            // this same pattern fixed earlier (see PasteFromClipboard). If
+            // that already grew the list past rowIndex, adding another row
+            // here would insert two for one call.
+            if (_contextMenuRowWasPlaceholder && rowIndex < list.Count)
             {
                 return;
             }
