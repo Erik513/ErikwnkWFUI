@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
@@ -838,19 +838,15 @@ namespace ErikwnkWFUI.Showcase
 
             // Demonstrates actual DataSource binding - the one thing a
             // plain ListView (and anything built on it, like
-            // ListView) simply cannot do at all.
-            var source = new DataTable();
-            source.Columns.Add("Track");
-            source.Columns.Add("Artist");
-            source.Columns.Add("Length");
-            source.Rows.Add("Sample Song", "Sample Artist", "3:42");
-            source.Rows.Add("Another Track", "Someone Else", "4:15");
-            source.Rows.Add("Third One", "Someone Else", "2:58");
-
-            var grid = UIStyles.DataGridViews.CreateStandard(source);
+            // ListView) simply cannot do at all. A BindingList<T>, not a
+            // DataTable - column-header sorting rewrites the bound list
+            // itself (see ReadOnlyDataGridView.ReorderDataSource), which
+            // needs an IList data source; a DataTable isn't one, so
+            // sorting silently did nothing against it here.
+            var grid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks());
             grid.Dock = DockStyle.Fill;
 
-            var disabledGrid = UIStyles.DataGridViews.CreateStandard(source.Copy());
+            var disabledGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks());
             disabledGrid.Dock = DockStyle.Fill;
             disabledGrid.Enabled = false;
 
@@ -859,6 +855,45 @@ namespace ErikwnkWFUI.Showcase
                 180,
                 UIColumn.Percent(grid, 50),
                 UIColumn.Percent(disabledGrid, 50));
+
+            // The lighter of the two - column-header sorting still works,
+            // but no adding/deleting/cutting/pasting rows, no delete-row
+            // column, no right-click menu. Same DataSource shape as above
+            // so the only difference on screen is what CreateStandard adds
+            // on top of this.
+            var readOnlyGrid = UIStyles.DataGridViews.CreateReadOnly(CreateSampleTracks());
+            readOnlyGrid.Dock = DockStyle.Fill;
+
+            var disabledReadOnlyGrid = UIStyles.DataGridViews.CreateReadOnly(CreateSampleTracks());
+            disabledReadOnlyGrid.Dock = DockStyle.Fill;
+            disabledReadOnlyGrid.Enabled = false;
+
+            table.AddRow(
+                "CreateReadOnly",
+                180,
+                UIColumn.Percent(readOnlyGrid, 50),
+                UIColumn.Percent(disabledReadOnlyGrid, 50));
+        }
+
+        // A fresh list each call - CreateStandard/CreateReadOnly bind
+        // their own independent DataSource, and a BindingList<T> (unlike
+        // DataTable) has no built-in Copy() to hand out separate
+        // instances backed by the same starting values instead.
+        private static BindingList<SampleTrack> CreateSampleTracks()
+        {
+            return new BindingList<SampleTrack>
+            {
+                new SampleTrack { Track = "Sample Song", Artist = "Sample Artist", Length = "3:42" },
+                new SampleTrack { Track = "Another Track", Artist = "Someone Else", Length = "4:15" },
+                new SampleTrack { Track = "Third One", Artist = "Someone Else", Length = "2:58" },
+            };
+        }
+
+        private sealed class SampleTrack
+        {
+            public string Track { get; set; }
+            public string Artist { get; set; }
+            public string Length { get; set; }
         }
 
         private void AddPopupsSection(PropertyTable table)

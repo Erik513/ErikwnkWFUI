@@ -261,9 +261,16 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="System.Windows.Forms.DataGridView"/> for data bound via <see cref="System.Windows.Forms.DataGridView.DataSource"/> - the control to reach for when rows come from a bound source rather than being added by hand.</summary>
         public static class DataGridViews
         {
+            /// <summary>The editable variant - row adding/deleting, an optional delete-row column, clipboard cut/copy/paste, and a right-click context menu. Use <see cref="CreateReadOnly"/> instead for a grid that only ever shows data.</summary>
             public static System.Windows.Forms.DataGridView CreateStandard(object dataSource = null)
             {
                 return UIDataGridViewFactory.CreateStandard(dataSource);
+            }
+
+            /// <summary>The display-only variant - column-header sorting, but no editing. Use <see cref="CreateStandard"/> instead for a grid that needs to be editable.</summary>
+            public static System.Windows.Forms.DataGridView CreateReadOnly(object dataSource = null)
+            {
+                return UIDataGridViewFactory.CreateReadOnly(dataSource);
             }
         }
 

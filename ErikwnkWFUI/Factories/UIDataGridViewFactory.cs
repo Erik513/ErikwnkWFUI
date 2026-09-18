@@ -15,5 +15,13 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource
             };
         }
+
+        public static DataGridView CreateReadOnly(object dataSource = null)
+        {
+            return new Controls.ReadOnlyDataGridView
+            {
+                DataSource = dataSource
+            };
+        }
     }
 }
