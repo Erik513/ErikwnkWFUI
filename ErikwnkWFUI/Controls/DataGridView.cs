@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -1036,24 +1037,10 @@ namespace ErikwnkWFUI.Controls
             {
                 if (overflowRowCount > 0)
                 {
-                    // Removing/inserting at a hand-picked index one row at
-                    // a time (an earlier version of this) left the grid's
-                    // own internal row/cell bookkeeping corrupted even
-                    // though the list ended up with the right contents -
-                    // later clicks into the grid threw
-                    // InvalidOperationException out of WinForms' own code.
-                    // Clear() + re-Add() in the exact final order instead
-                    // is the same rebuild-from-scratch pattern
-                    // ReorderDataSource already uses safely for sorting,
-                    // without that corruption.
+                    // See InsertItemsAt for why this rebuilds via Clear() +
+                    // re-Add() rather than list.Insert() at a hand-picked
+                    // index.
                     int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
-                    List<object> originalItems = new List<object>(list.Count);
-
-                    foreach (object item in list)
-                    {
-                        originalItems.Add(item);
-                    }
-
                     List<object> newItems = new List<object>(overflowRowCount);
 
                     for (int i = 0; i < overflowRowCount; i++)
@@ -1061,23 +1048,20 @@ namespace ErikwnkWFUI.Controls
                         newItems.Add(bindingList.AddNew());
                     }
 
-                    list.Clear();
-
-                    for (int i = 0; i < insertAtIndex; i++)
-                    {
-                        list.Add(originalItems[i]);
-                    }
-
-                    foreach (object newItem in newItems)
-                    {
-                        list.Add(newItem);
-                    }
-
-                    for (int i = insertAtIndex; i < originalItems.Count; i++)
-                    {
-                        list.Add(originalItems[i]);
-                    }
+                    InsertItemsAt(list, insertAtIndex, newItems);
                 }
+
+                // Looked up once per (item type, property name) rather
+                // than once per pasted cell - GetProperty for the same
+                // column resolves to the same PropertyInfo on every row
+                // for the common case of a homogeneous bound list, so
+                // repeating that lookup per row was pure waste on a paste
+                // of any real size. Keyed by the item's own runtime type
+                // (not just the property name) so a list that genuinely
+                // mixes item types - unusual, but IList doesn't rule it
+                // out - still resolves correctly per item.
+                Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache =
+                    new Dictionary<(Type, string), PropertyInfo>();
 
                 for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
                 {
@@ -1089,6 +1073,7 @@ namespace ErikwnkWFUI.Controls
                     }
 
                     object targetItem = list[dataRowIndex];
+                    Type targetItemType = targetItem.GetType();
                     string[] cellValues = pastedRows[rowOffset].Split('\t');
 
                     for (int columnOffset = 0;
@@ -1102,7 +1087,14 @@ namespace ErikwnkWFUI.Controls
                             continue;
                         }
 
-                        PropertyInfo property = targetItem.GetType().GetProperty(column.DataPropertyName);
+                        (Type, string) propertyCacheKey = (targetItemType, column.DataPropertyName);
+
+                        if (!propertyCache.TryGetValue(propertyCacheKey, out PropertyInfo property))
+                        {
+                            property = targetItemType.GetProperty(column.DataPropertyName);
+                            propertyCache[propertyCacheKey] = property;
+                        }
+
                         property?.SetValue(targetItem, cellValues[columnOffset]);
                     }
                 }
@@ -1314,28 +1306,8 @@ namespace ErikwnkWFUI.Controls
 
             ApplyBatchedDataSourceChange(list, () =>
             {
-                List<object> originalItems = new List<object>(list.Count);
-
-                foreach (object item in list)
-                {
-                    originalItems.Add(item);
-                }
-
                 object newItem = bindingList.AddNew();
-
-                list.Clear();
-
-                for (int i = 0; i < insertAtIndex; i++)
-                {
-                    list.Add(originalItems[i]);
-                }
-
-                list.Add(newItem);
-
-                for (int i = insertAtIndex; i < originalItems.Count; i++)
-                {
-                    list.Add(originalItems[i]);
-                }
+                InsertItemsAt(list, insertAtIndex, new[] { newItem });
             });
         }
 
@@ -1494,6 +1466,73 @@ namespace ErikwnkWFUI.Controls
         private static readonly BindingFlags AnyInstanceMember =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
+        private readonly struct DataSourceReflectionInfo
+        {
+            public DataSourceReflectionInfo(PropertyInfo raiseListChangedEventsProperty, MethodInfo resetBindingsMethod)
+            {
+                RaiseListChangedEventsProperty = raiseListChangedEventsProperty;
+                ResetBindingsMethod = resetBindingsMethod;
+            }
+
+            public PropertyInfo RaiseListChangedEventsProperty { get; }
+            public MethodInfo ResetBindingsMethod { get; }
+        }
+
+        // GetProperty/GetMethod do their own metadata lookup every call -
+        // cheap next to an actual UI interaction, but ApplyBatchedDataSourceChange
+        // below repeats it on every single sort/delete/paste/insert, always
+        // asking the same question about the same handful of DataSource
+        // types a given app actually binds. Caching by Type (shared across
+        // every instance of this control - the reflected members are the
+        // same regardless of which grid asked) turns that into a one-time
+        // cost per type instead.
+        private static readonly ConcurrentDictionary<Type, DataSourceReflectionInfo> DataSourceReflectionCache =
+            new ConcurrentDictionary<Type, DataSourceReflectionInfo>();
+
+        private static DataSourceReflectionInfo GetDataSourceReflectionInfo(Type dataSourceType)
+        {
+            return DataSourceReflectionCache.GetOrAdd(dataSourceType, type => new DataSourceReflectionInfo(
+                type.GetProperty("RaiseListChangedEvents", AnyInstanceMember),
+                type.GetMethod("ResetBindings", AnyInstanceMember, null, Type.EmptyTypes, null)));
+        }
+
+        // Inserts newItems at insertAtIndex via the same Clear() + re-Add()
+        // in the exact final order that both InsertBlankRow and
+        // PasteFromClipboard's own row-growth need it for - a direct
+        // list.Insert(index, item) at a hand-picked index was tried first
+        // and found to corrupt the grid's internal row/cell bookkeeping
+        // even though the resulting list CONTENTS were correct (a later,
+        // unrelated click threw InvalidOperationException out of WinForms'
+        // own code). Callers are expected to already be running inside an
+        // ApplyBatchedDataSourceChange batch - this only rewrites the list,
+        // it doesn't suppress/replay change notifications itself.
+        private static void InsertItemsAt(IList list, int insertAtIndex, IEnumerable<object> newItems)
+        {
+            List<object> originalItems = new List<object>(list.Count);
+
+            foreach (object item in list)
+            {
+                originalItems.Add(item);
+            }
+
+            list.Clear();
+
+            for (int i = 0; i < insertAtIndex; i++)
+            {
+                list.Add(originalItems[i]);
+            }
+
+            foreach (object newItem in newItems)
+            {
+                list.Add(newItem);
+            }
+
+            for (int i = insertAtIndex; i < originalItems.Count; i++)
+            {
+                list.Add(originalItems[i]);
+            }
+        }
+
         private void ReorderDataSource(List<object> desiredOrder)
         {
             if (!(DataSource is IList list))
@@ -1535,10 +1574,8 @@ namespace ErikwnkWFUI.Controls
             _hoveredDeleteRowIndex = -1;
 
             object dataSource = DataSource;
-            Type dataSourceType = dataSource.GetType();
-
-            PropertyInfo raiseEventsProperty =
-                dataSourceType.GetProperty("RaiseListChangedEvents", AnyInstanceMember);
+            DataSourceReflectionInfo reflectionInfo = GetDataSourceReflectionInfo(dataSource.GetType());
+            PropertyInfo raiseEventsProperty = reflectionInfo.RaiseListChangedEventsProperty;
             bool canSuppressEvents =
                 raiseEventsProperty != null && raiseEventsProperty.CanRead && raiseEventsProperty.CanWrite;
             bool previousRaiseEvents = true;
@@ -1571,15 +1608,7 @@ namespace ErikwnkWFUI.Controls
                 if (canSuppressEvents)
                 {
                     raiseEventsProperty.SetValue(dataSource, previousRaiseEvents);
-
-                    MethodInfo resetBindingsMethod = dataSourceType.GetMethod(
-                        "ResetBindings",
-                        AnyInstanceMember,
-                        null,
-                        Type.EmptyTypes,
-                        null);
-
-                    resetBindingsMethod?.Invoke(dataSource, null);
+                    reflectionInfo.ResetBindingsMethod?.Invoke(dataSource, null);
                 }
 
                 _isApplyingInternalDataChange = false;
