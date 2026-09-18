@@ -780,8 +780,16 @@ namespace ErikwnkWFUI.Controls
                 {
                     // See InsertItemsAt for why this rebuilds via Clear() +
                     // re-Add() rather than list.Insert() at a hand-picked
-                    // index.
+                    // index, and why originalItems has to be snapshotted
+                    // before AddNew() below, not derived from list after.
                     int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
+                    List<object> originalItems = new List<object>(list.Count);
+
+                    foreach (object item in list)
+                    {
+                        originalItems.Add(item);
+                    }
+
                     List<object> newItems = new List<object>(overflowRowCount);
 
                     for (int i = 0; i < overflowRowCount; i++)
@@ -789,7 +797,7 @@ namespace ErikwnkWFUI.Controls
                         newItems.Add(bindingList.AddNew());
                     }
 
-                    InsertItemsAt(list, insertAtIndex, newItems);
+                    InsertItemsAt(list, originalItems, insertAtIndex, newItems);
                 }
 
                 // Looked up once per (item type, property name) rather
@@ -891,6 +899,54 @@ namespace ErikwnkWFUI.Controls
             return false;
         }
 
+        // "Insert row above/below" (see BuildContextMenu) needs the top
+        // and bottom of the WHOLE current selection, not just the single
+        // row that happened to be right-clicked (_contextMenuRowIndex) -
+        // right-clicking a row that's already part of a larger selection
+        // leaves that selection intact (see OnCellMouseDown), so
+        // right-clicking anywhere within a multi-row selection has to
+        // insert above its topmost row / below its bottommost row, not
+        // wherever the cursor happened to land inside it. Returns false
+        // (leaving both out parameters unset) when nothing is selected -
+        // shouldn't normally happen for a row-targeted right-click (see
+        // OnCellMouseDown), but callers fall back to _contextMenuRowIndex
+        // for that case regardless.
+        private bool TryGetSelectedRowIndexRange(out int minRowIndex, out int maxRowIndex)
+        {
+            minRowIndex = int.MaxValue;
+            maxRowIndex = -1;
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                {
+                    continue;
+                }
+
+                // The placeholder is left fully selectable like any other
+                // row (see the remarks on OnRowLeave) - a drag-select
+                // reaching down that far could otherwise make this treat
+                // it as the selection's bottommost row, and "insert row
+                // below" would then try inserting past it.
+                if (Rows[cell.RowIndex].IsNewRow)
+                {
+                    continue;
+                }
+
+                if (cell.RowIndex < minRowIndex)
+                {
+                    minRowIndex = cell.RowIndex;
+                }
+
+                if (cell.RowIndex > maxRowIndex)
+                {
+                    maxRowIndex = cell.RowIndex;
+                }
+            }
+
+            return maxRowIndex >= 0;
+        }
+
         // Selects every data cell in a row (skipping the delete column, if
         // shown - it isn't a meaningful part of "this row is selected" the
         // way the right-click handling above means it), making the actual
@@ -951,11 +1007,23 @@ namespace ErikwnkWFUI.Controls
             _contextMenuInsertRowAboveItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuInsertRowAbove"),
                 null,
-                (sender, e) => InsertBlankRow(_contextMenuRowIndex, above: true));
+                (sender, e) =>
+                {
+                    int rowIndex = TryGetSelectedRowIndexRange(out int minRowIndex, out int _)
+                        ? minRowIndex
+                        : _contextMenuRowIndex;
+                    InsertBlankRow(rowIndex, above: true);
+                });
             _contextMenuInsertRowBelowItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuInsertRowBelow"),
                 null,
-                (sender, e) => InsertBlankRow(_contextMenuRowIndex, above: false));
+                (sender, e) =>
+                {
+                    int rowIndex = TryGetSelectedRowIndexRange(out int _, out int maxRowIndex)
+                        ? maxRowIndex
+                        : _contextMenuRowIndex;
+                    InsertBlankRow(rowIndex, above: false);
+                });
 
             menu.Items.Add(_contextMenuCutItem);
             menu.Items.Add(_contextMenuCopyItem);
@@ -976,10 +1044,12 @@ namespace ErikwnkWFUI.Controls
                 // deletes the row; none of Cut/Copy/Paste/Clear/insert
                 // make sense on it either). The "type here to add a row"
                 // placeholder still gets a menu - Paste still makes sense
-                // there - just with every row-scoped item disabled below,
-                // including both insert options: typing into the
-                // placeholder is already how a row gets added there, so
-                // there's nothing left for "insert row above/below" to do.
+                // there, and so can insert row above/below if it's part
+                // of a larger selection that also reaches real rows (see
+                // hasRealRowSelected below) - only the row-scoped items
+                // tied to a specific real row (Cut/Copy/Clear/Delete
+                // selected rows) are unconditionally disabled below when
+                // the clicked row itself was the placeholder.
                 bool onDeleteColumn = _deleteRowColumn != null && _contextMenuColumnIndex == _deleteRowColumn.Index;
 
                 if (_contextMenuRowIndex < 0 || onDeleteColumn)
@@ -1003,8 +1073,20 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
                 _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
-                _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows && onRealRow;
-                _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && onRealRow;
+
+                // Not onRealRow here - that's about whether the row
+                // actually right-clicked was the placeholder, but insert
+                // above/below now act on the whole selection's topmost/
+                // bottommost row (see TryGetSelectedRowIndexRange), not
+                // the clicked row itself. Right-clicking the placeholder
+                // while it's part of a larger selection that also has
+                // real rows in it (a drag reaching down that far) should
+                // still offer both, targeting those real rows - only
+                // disabled when there's genuinely no real row anywhere in
+                // the selection to insert relative to.
+                bool hasRealRowSelected = TryGetSelectedRowIndexRange(out int _, out int _);
+                _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows && hasRealRowSelected;
+                _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && hasRealRowSelected;
             };
 
             return menu;
@@ -1047,8 +1129,15 @@ namespace ErikwnkWFUI.Controls
 
             ApplyBatchedDataSourceChange(list, () =>
             {
+                List<object> originalItems = new List<object>(list.Count);
+
+                foreach (object item in list)
+                {
+                    originalItems.Add(item);
+                }
+
                 object newItem = bindingList.AddNew();
-                InsertItemsAt(list, insertAtIndex, new[] { newItem });
+                InsertItemsAt(list, originalItems, insertAtIndex, new[] { newItem });
             });
         }
 

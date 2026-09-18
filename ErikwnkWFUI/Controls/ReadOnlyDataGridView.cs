@@ -557,21 +557,22 @@ namespace ErikwnkWFUI.Controls
         // grid's internal row/cell bookkeeping even though the resulting
         // list CONTENTS were correct (a later, unrelated click threw
         // InvalidOperationException out of WinForms' own code). Used by
-        // ReorderDataSource above for a plain reorder, and reused by
         // DataGridView's own row-growing editing operations (paste,
         // insert row above/below) for the same reason. Callers are
         // expected to already be running inside an
         // ApplyBatchedDataSourceChange batch - this only rewrites the
         // list, it doesn't suppress/replay change notifications itself.
-        protected static void InsertItemsAt(IList list, int insertAtIndex, IEnumerable<object> newItems)
+        //
+        // originalItems is a snapshot the CALLER takes, not one this
+        // method derives from list itself - list already contains
+        // newItems by the time every caller here gets to call this
+        // (AddNew() appends to the bound list immediately, before this
+        // runs). Snapshotting list at that point would already include
+        // them at the tail, and the trailing copy loop below would then
+        // re-add that same tail - duplicating every one of newItems once.
+        protected static void InsertItemsAt(
+            IList list, List<object> originalItems, int insertAtIndex, IEnumerable<object> newItems)
         {
-            List<object> originalItems = new List<object>(list.Count);
-
-            foreach (object item in list)
-            {
-                originalItems.Add(item);
-            }
-
             list.Clear();
 
             for (int i = 0; i < insertAtIndex; i++)
