@@ -65,6 +65,13 @@ namespace ErikwnkWFUI.Styles
             ["DataGridView.DeleteRow"] = "Delete row",
             ["DataGridView.DeleteRowHeader"] = "Del",
             ["DataGridView.AddRow"] = "Add row",
+            ["DataGridView.ContextMenuCut"] = "Cut",
+            ["DataGridView.ContextMenuCopy"] = "Copy",
+            ["DataGridView.ContextMenuPaste"] = "Paste",
+            ["DataGridView.ContextMenuClear"] = "Delete",
+            ["DataGridView.ContextMenuDeleteRows"] = "Delete selected rows",
+            ["DataGridView.ContextMenuInsertRowAbove"] = "Insert row above",
+            ["DataGridView.ContextMenuInsertRowBelow"] = "Insert row below",
         };
 
         private static readonly Dictionary<string, string> German = new Dictionary<string, string>
@@ -96,6 +103,13 @@ namespace ErikwnkWFUI.Styles
             ["DataGridView.DeleteRow"] = "Zeile löschen",
             ["DataGridView.DeleteRowHeader"] = "Entf",
             ["DataGridView.AddRow"] = "Zeile hinzufügen",
+            ["DataGridView.ContextMenuCut"] = "Ausschneiden",
+            ["DataGridView.ContextMenuCopy"] = "Kopieren",
+            ["DataGridView.ContextMenuPaste"] = "Einfügen",
+            ["DataGridView.ContextMenuClear"] = "Löschen",
+            ["DataGridView.ContextMenuDeleteRows"] = "Ausgewählte Zeilen löschen",
+            ["DataGridView.ContextMenuInsertRowAbove"] = "Zeile oberhalb hinzufügen",
+            ["DataGridView.ContextMenuInsertRowBelow"] = "Zeile unterhalb hinzufügen",
         };
 
         public static string Get(string key)

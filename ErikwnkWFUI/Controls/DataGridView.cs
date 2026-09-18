@@ -53,6 +53,15 @@ namespace ErikwnkWFUI.Controls
         private bool _isApplyingInternalDataChange;
         private DataGridViewColumn _deleteRowColumn;
         private int _hoveredDeleteRowIndex = -1;
+        private int _contextMenuRowIndex = -1;
+        private int _contextMenuColumnIndex = -1;
+        private ToolStripMenuItem _contextMenuCutItem;
+        private ToolStripMenuItem _contextMenuCopyItem;
+        private ToolStripMenuItem _contextMenuPasteItem;
+        private ToolStripMenuItem _contextMenuClearItem;
+        private ToolStripMenuItem _contextMenuDeleteRowsItem;
+        private ToolStripMenuItem _contextMenuInsertRowAboveItem;
+        private ToolStripMenuItem _contextMenuInsertRowBelowItem;
 
         /// <summary>Fixed width of the optional delete-row column (see <see cref="ShowDeleteRowColumn"/>), in case a consumer needs to reserve space for it in its own column-width math.</summary>
         public const int DeleteRowColumnWidth = 40;
@@ -224,6 +233,7 @@ namespace ErikwnkWFUI.Controls
 
             MouseDown += HandleMouseDown;
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
+            ContextMenuStrip = BuildContextMenu();
         }
 
         protected override void Dispose(bool disposing)
@@ -236,14 +246,26 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
-        // Keeps the delete-row column's header text and tooltip in
-        // whatever language the rest of the app just switched to.
+        // Keeps the delete-row column's header text/tooltip, and the
+        // context menu's own item text, in whatever language the rest of
+        // the app just switched to.
         private void OnUIStringsLanguageChanged(object sender, EventArgs e)
         {
             if (_deleteRowColumn != null)
             {
                 _deleteRowColumn.HeaderText = UIStrings.Get("DataGridView.DeleteRowHeader");
                 _deleteRowColumn.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.DeleteRow");
+            }
+
+            if (_contextMenuCutItem != null)
+            {
+                _contextMenuCutItem.Text = UIStrings.Get("DataGridView.ContextMenuCut");
+                _contextMenuCopyItem.Text = UIStrings.Get("DataGridView.ContextMenuCopy");
+                _contextMenuPasteItem.Text = UIStrings.Get("DataGridView.ContextMenuPaste");
+                _contextMenuClearItem.Text = UIStrings.Get("DataGridView.ContextMenuClear");
+                _contextMenuDeleteRowsItem.Text = UIStrings.Get("DataGridView.ContextMenuDeleteRows");
+                _contextMenuInsertRowAboveItem.Text = UIStrings.Get("DataGridView.ContextMenuInsertRowAbove");
+                _contextMenuInsertRowBelowItem.Text = UIStrings.Get("DataGridView.ContextMenuInsertRowBelow");
             }
         }
 
@@ -408,12 +430,46 @@ namespace ErikwnkWFUI.Controls
             {
                 ClearSelection();
                 CurrentCell = null;
+
+                if (e.Button == MouseButtons.Right)
+                {
+                    _contextMenuRowIndex = -1;
+                    _contextMenuColumnIndex = -1;
+                }
             }
         }
 
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseDown(e);
+
+            if (e.Button == MouseButtons.Right)
+            {
+                _contextMenuRowIndex = e.RowIndex;
+                _contextMenuColumnIndex = e.ColumnIndex;
+
+                bool isDeleteColumnCell = _deleteRowColumn != null && e.ColumnIndex == _deleteRowColumn.Index;
+
+                // Right-clicking a row that isn't already part of the
+                // current selection replaces it with just that row -
+                // otherwise the context menu's row-scoped actions (Cut,
+                // Delete selected rows, ...) would silently apply to
+                // whatever was selected before, not the row actually
+                // under the cursor. A row already part of a larger
+                // selection is left alone, so right-clicking within an
+                // existing multi-row selection keeps it intact. This
+                // still runs for the "type here to add a row" placeholder
+                // (its own row-scoped actions are disabled below, but
+                // Paste and "insert row above" both still make sense
+                // there, and both read the current selection to know
+                // where to act) - only the delete column is skipped, same
+                // as the menu's own Opening handler below never showing a
+                // menu there at all.
+                if (e.RowIndex >= 0 && !isDeleteColumnCell && !IsRowSelected(e.RowIndex))
+                {
+                    SelectRow(e.RowIndex, e.ColumnIndex);
+                }
+            }
 
             if (e.RowIndex != -1)
             {
@@ -687,6 +743,15 @@ namespace ErikwnkWFUI.Controls
                 Clipboard.SetDataObject(clipboardContent);
             }
 
+            ClearSelectedCellValues();
+        }
+
+        // Just the "clear" half of Cut - its own context-menu entry
+        // ("Delete", as in clear the cell contents, not delete the row -
+        // that's the separate "Delete selected rows" entry) needs it
+        // without also touching the clipboard.
+        private void ClearSelectedCellValues()
+        {
             foreach (DataGridViewCell cell in SelectedCells)
             {
                 if (!cell.ReadOnly && cell.RowIndex >= 0 && !Rows[cell.RowIndex].IsNewRow)
@@ -966,6 +1031,181 @@ namespace ErikwnkWFUI.Controls
 
             columns.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
             return columns;
+        }
+
+        private bool IsRowSelected(int rowIndex)
+        {
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (cell.RowIndex == rowIndex)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Selects every data cell in a row (skipping the delete column, if
+        // shown - it isn't a meaningful part of "this row is selected" the
+        // way the right-click handling above means it), making the actual
+        // cell that was clicked current - not just whichever one happens
+        // to be first - so the current cell stays under the cursor instead
+        // of jumping to the row's first column.
+        private void SelectRow(int rowIndex, int clickedColumnIndex)
+        {
+            ClearSelection();
+
+            DataGridViewCell firstCell = null;
+            DataGridViewCell clickedCell = null;
+
+            foreach (DataGridViewColumn column in Columns)
+            {
+                if (column == _deleteRowColumn)
+                {
+                    continue;
+                }
+
+                DataGridViewCell cell = Rows[rowIndex].Cells[column.Index];
+                cell.Selected = true;
+                firstCell = firstCell ?? cell;
+
+                if (column.Index == clickedColumnIndex)
+                {
+                    clickedCell = cell;
+                }
+            }
+
+            CurrentCell = clickedCell ?? firstCell;
+        }
+
+        private ContextMenuStrip BuildContextMenu()
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
+
+            _contextMenuCutItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCut"), null, (sender, e) => CutSelectionToClipboard());
+            _contextMenuCopyItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopy"),
+                null,
+                (sender, e) =>
+                {
+                    DataObject clipboardContent = GetClipboardContent();
+
+                    if (clipboardContent != null)
+                    {
+                        Clipboard.SetDataObject(clipboardContent);
+                    }
+                });
+            _contextMenuPasteItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuPaste"), null, (sender, e) => PasteFromClipboard());
+            _contextMenuClearItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuClear"), null, (sender, e) => ClearSelectedCellValues());
+            _contextMenuDeleteRowsItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuDeleteRows"), null, (sender, e) => DeleteSelectedRows());
+            _contextMenuInsertRowAboveItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuInsertRowAbove"),
+                null,
+                (sender, e) => InsertBlankRow(_contextMenuRowIndex, above: true));
+            _contextMenuInsertRowBelowItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuInsertRowBelow"),
+                null,
+                (sender, e) => InsertBlankRow(_contextMenuRowIndex, above: false));
+
+            menu.Items.Add(_contextMenuCutItem);
+            menu.Items.Add(_contextMenuCopyItem);
+            menu.Items.Add(_contextMenuPasteItem);
+            menu.Items.Add(_contextMenuClearItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(_contextMenuDeleteRowsItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(_contextMenuInsertRowAboveItem);
+            menu.Items.Add(_contextMenuInsertRowBelowItem);
+
+            menu.Opening += (sender, e) =>
+            {
+                // No menu at all - not just disabled items - when the
+                // right-click wasn't on any row (the header and empty
+                // space below the rows both report RowIndex -1), or was
+                // on the delete column (its own left-click already
+                // deletes the row; none of Cut/Copy/Paste/Clear/insert
+                // make sense on it either). The "type here to add a row"
+                // placeholder still gets a menu - Paste and "insert row
+                // above" both make sense there - just with its row-scoped
+                // items (Cut/Copy/Clear/Delete/insert row *below*, which
+                // would mean past the placeholder) disabled below.
+                bool onDeleteColumn = _deleteRowColumn != null && _contextMenuColumnIndex == _deleteRowColumn.Index;
+
+                if (_contextMenuRowIndex < 0 || onDeleteColumn)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                bool onRealRow = _contextMenuRowIndex < (DataSource as IList)?.Count;
+                bool hasSelection = SelectedCells.Count > 0;
+
+                _contextMenuCutItem.Enabled = hasSelection && !ReadOnly && onRealRow;
+                _contextMenuCopyItem.Enabled = hasSelection && onRealRow;
+                _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
+                _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
+                _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
+                _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows;
+                _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && onRealRow;
+            };
+
+            return menu;
+        }
+
+        // Inserts one blank row immediately above or below rowIndex,
+        // through the same batched suppress-events-then-ResetBindings-once
+        // rebuild PasteFromClipboard's own row-insertion uses, for the
+        // same reasons (reentrancy while still inside this event handler,
+        // and a freshly AddNew()'d row otherwise being left in a
+        // still-cancellable state the grid can silently drop later).
+        // rowIndex == list.Count (the "type here to add a row" placeholder)
+        // is a valid target for "above" - the context menu itself never
+        // offers "below" there, since that would mean past the
+        // placeholder.
+        private void InsertBlankRow(int rowIndex, bool above)
+        {
+            if (!(DataSource is IList list) || rowIndex < 0 || rowIndex > list.Count)
+            {
+                return;
+            }
+
+            if (!(list is IBindingList bindingList) || !bindingList.AllowNew)
+            {
+                return;
+            }
+
+            int insertAtIndex = above ? rowIndex : rowIndex + 1;
+
+            ApplyBatchedDataSourceChange(list, () =>
+            {
+                List<object> originalItems = new List<object>(list.Count);
+
+                foreach (object item in list)
+                {
+                    originalItems.Add(item);
+                }
+
+                object newItem = bindingList.AddNew();
+
+                list.Clear();
+
+                for (int i = 0; i < insertAtIndex; i++)
+                {
+                    list.Add(originalItems[i]);
+                }
+
+                list.Add(newItem);
+
+                for (int i = insertAtIndex; i < originalItems.Count; i++)
+                {
+                    list.Add(originalItems[i]);
+                }
+            });
         }
 
         private void DeleteSelectedRows()
