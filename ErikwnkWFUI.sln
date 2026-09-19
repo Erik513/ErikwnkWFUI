@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErikwnkWFUI", "ErikwnkWFUI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErikwnkWFUI.Showcase", "ErikwnkWFUI.Showcase\ErikwnkWFUI.Showcase.csproj", "{37CA0C99-8D4E-43FC-A47B-324D96E3567F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErikwnkWFUI.Tests", "ErikwnkWFUI.Tests\ErikwnkWFUI.Tests.csproj", "{D6A95747-1D2F-47F1-BBA6-AB5517CDE662}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{37CA0C99-8D4E-43FC-A47B-324D96E3567F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37CA0C99-8D4E-43FC-A47B-324D96E3567F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37CA0C99-8D4E-43FC-A47B-324D96E3567F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6A95747-1D2F-47F1-BBA6-AB5517CDE662}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6A95747-1D2F-47F1-BBA6-AB5517CDE662}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6A95747-1D2F-47F1-BBA6-AB5517CDE662}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6A95747-1D2F-47F1-BBA6-AB5517CDE662}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

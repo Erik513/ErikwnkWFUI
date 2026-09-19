@@ -183,6 +183,7 @@ namespace ErikwnkWFUI.Controls
             // both back to what it actually needs in its own constructor.
             ReadOnly = true;
             AllowUserToAddRows = false;
+            AllowUserToDeleteRows = false;
 
             AllowUserToResizeRows = false;
             MultiSelect = true;
@@ -360,10 +361,38 @@ namespace ErikwnkWFUI.Controls
         // Selected, just not repainted to show it, until something else
         // forces a repaint. Only ever asks for a repaint here - never
         // touches Selected/SelectedCells itself.
+        //
+        // Coalesced rather than an immediate Invalidate() on every single
+        // tick - SelectionChanged fires repeatedly (once per mouse-move)
+        // during a fast drag-select, and a full-control repaint that often
+        // was wasted work; at most one repaint stays queued at a time.
+        private bool _selectionRepaintPending;
+
         protected override void OnSelectionChanged(EventArgs e)
         {
             base.OnSelectionChanged(e);
-            Invalidate();
+
+            if (!IsHandleCreated)
+            {
+                Invalidate();
+                return;
+            }
+
+            if (_selectionRepaintPending)
+            {
+                return;
+            }
+
+            _selectionRepaintPending = true;
+            BeginInvoke(new System.Windows.Forms.MethodInvoker(() =>
+            {
+                _selectionRepaintPending = false;
+
+                if (!IsDisposed)
+                {
+                    Invalidate();
+                }
+            }));
         }
 
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)

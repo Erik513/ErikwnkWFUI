@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -36,6 +37,38 @@ namespace ErikwnkWFUI.Controls
         private int _hoveredDeleteRowIndex = -1;
         private int _contextMenuRowIndex = -1;
         private int _contextMenuColumnIndex = -1;
+
+        // The one, single way this class ever decides "is this row the
+        // 'type here to add a row' placeholder, not real data" - every
+        // command that must only ever act on real rows (copy, cut, clear,
+        // paste, delete, insert-above/below, the context menu's own
+        // enable-state) goes through this, never IsNewRow/DataBoundItem/a
+        // list.Count comparison directly. NewRowIndex is WinForms' own
+        // authoritative answer to "which row index is currently the
+        // placeholder" (-1 when AllowUserToAddRows is off) - unlike
+        // IsNewRow or DataBoundItem, which can each disagree about a row
+        // that's mid-way through becoming real (e.g. merely tabbing or
+        // drag-selecting through the placeholder, with nothing typed into
+        // it, already makes WinForms call IBindingList.AddNew() on the
+        // bound list on its own), NewRowIndex stays correct through all of
+        // that, which is exactly why every one of those commands now
+        // shares this. A previous version of this file used three
+        // different, deliberately non-interchangeable checks for this
+        // instead, picked per call site by timing - that fragmentation
+        // caused real bugs here more than once (paste crashes, vanishing/
+        // duplicate rows, insert-above/below silently no-opping), which is
+        // the whole reason this exists now.
+        private bool IsPlaceholderRowIndex(int rowIndex)
+        {
+            return rowIndex >= 0 && rowIndex == NewRowIndex;
+        }
+
+        // Captured at mouse-down time (see OnCellMouseDown) via
+        // IsPlaceholderRowIndex - still needed as a snapshot, not just a
+        // live re-check, because NewRowIndex itself can move between the
+        // click and whenever the context menu's Opening handler or a menu
+        // item's click actually runs (e.g. the click itself may already
+        // have advanced it).
         private bool _contextMenuRowWasPlaceholder;
         private ToolStripMenuItem _contextMenuCutItem;
         private ToolStripMenuItem _contextMenuCopyItem;
@@ -126,6 +159,7 @@ namespace ErikwnkWFUI.Controls
             // DataGridView.
             ReadOnly = false;
             AllowUserToDeleteRows = true;
+            AllowUserToAddRows = true;
 
             MouseDown += HandleContextMenuMouseDown;
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
@@ -302,14 +336,7 @@ namespace ErikwnkWFUI.Controls
             _contextMenuRowIndex = e.RowIndex;
             _contextMenuColumnIndex = e.ColumnIndex;
 
-            // IsNewRow, not a list.Count comparison, on purpose - see
-            // InsertBlankRow for why: right-clicking the placeholder
-            // itself can already grow the bound list by one before
-            // that method ever runs, but IsNewRow still reports true
-            // for it regardless (it only flips once the add is
-            // actually committed), so this captures "was this really
-            // the placeholder when clicked" reliably either way.
-            _contextMenuRowWasPlaceholder = e.RowIndex >= 0 && Rows[e.RowIndex].IsNewRow;
+            _contextMenuRowWasPlaceholder = IsPlaceholderRowIndex(e.RowIndex);
 
             bool isDeleteColumnCell = _deleteRowColumn != null && e.ColumnIndex == _deleteRowColumn.Index;
 
@@ -351,7 +378,13 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            int rowIndex = e.RowIndex;
+            // Captured as the actual bound item, not just e.RowIndex - the
+            // delete itself is deferred (see below), and if two delete-glyph
+            // clicks land before either deferred call runs, resolving by a
+            // raw row index later would hit whatever row has shifted into
+            // that index after the first delete already ran, not the row
+            // that was actually clicked.
+            object item = Rows[e.RowIndex].DataBoundItem;
 
             // Deferred rather than deleted right here: this fires from
             // inside the clicked cell's own click handling (still on the
@@ -362,7 +395,7 @@ namespace ErikwnkWFUI.Controls
             // finishes unwinding instead of while it's still live.
             if (IsHandleCreated)
             {
-                BeginInvoke(new Action(() => DeleteRowAt(rowIndex)));
+                BeginInvoke(new Action(() => DeleteItem(item)));
             }
         }
 
@@ -389,7 +422,7 @@ namespace ErikwnkWFUI.Controls
             // real (green) selection color.
             e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
 
-            if (Rows[e.RowIndex].IsNewRow)
+            if (IsPlaceholderRowIndex(e.RowIndex))
             {
                 return;
             }
@@ -454,7 +487,13 @@ namespace ErikwnkWFUI.Controls
         // where Ctrl+V/Ctrl+X actually get handled.
         protected override bool IsInputKey(Keys keyData)
         {
-            if ((keyData & Keys.Control) == Keys.Control)
+            // Matches OnKeyDown's own !ReadOnly condition below - claiming
+            // these keys on a ReadOnly grid (where OnKeyDown never acts on
+            // them anyway) would just swallow Ctrl+V/Ctrl+X silently
+            // instead of letting them pass through as an unclaimed
+            // shortcut, same as before this control had any clipboard
+            // support at all.
+            if (!ReadOnly && (keyData & Keys.Control) == Keys.Control)
             {
                 Keys keyCode = keyData & Keys.KeyCode;
 
@@ -551,7 +590,7 @@ namespace ErikwnkWFUI.Controls
             foreach (DataGridViewCell cell in SelectedCells)
             {
                 if ((_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index) ||
-                    Rows[cell.RowIndex].IsNewRow)
+                    IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     excludedCells.Add(cell);
                 }
@@ -608,7 +647,7 @@ namespace ErikwnkWFUI.Controls
         {
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (!cell.ReadOnly && cell.RowIndex >= 0 && !Rows[cell.RowIndex].IsNewRow)
+                if (!cell.ReadOnly && cell.RowIndex >= 0 && !IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     cell.Value = null;
                 }
@@ -666,8 +705,30 @@ namespace ErikwnkWFUI.Controls
             DataGridViewColumn minColumn = null;
             HashSet<int> selectedRealRowIndexes = new HashSet<int>();
 
+            // Set when the placeholder was part of what got interacted
+            // with (selected, or left as CurrentCell) - merely that, with
+            // nothing typed, already made WinForms call
+            // IBindingList.AddNew() on the bound list on its own (see
+            // InsertBlankRow's own comment on this). The placeholder
+            // itself is still correctly excluded everywhere below either
+            // way; this only tracks whether that now-pending, still-empty
+            // item needs cancelling so it doesn't linger as a permanent
+            // stray row once this method is done (see where it's used,
+            // further down).
+            bool placeholderWasTouched = false;
+
             foreach (DataGridViewCell cell in SelectedCells)
             {
+                // The placeholder is never a paste target, same as the
+                // delete column - a selection that includes it (e.g. a
+                // drag-select or Ctrl+A reaching down that far) must only
+                // ever affect the real rows above it.
+                if (IsPlaceholderRowIndex(cell.RowIndex))
+                {
+                    placeholderWasTouched = true;
+                    continue;
+                }
+
                 if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
                 {
                     continue;
@@ -678,10 +739,7 @@ namespace ErikwnkWFUI.Controls
                     minRowIndex = cell.RowIndex;
                 }
 
-                if (cell.RowIndex < list.Count)
-                {
-                    selectedRealRowIndexes.Add(cell.RowIndex);
-                }
+                selectedRealRowIndexes.Add(cell.RowIndex);
 
                 DataGridViewColumn column = Columns[cell.ColumnIndex];
 
@@ -693,11 +751,14 @@ namespace ErikwnkWFUI.Controls
 
             if (minColumn == null && CurrentCell != null)
             {
-                minRowIndex = CurrentCell.RowIndex;
-                minColumn = CurrentCell.OwningColumn;
-
-                if (CurrentCell.RowIndex < list.Count)
+                if (IsPlaceholderRowIndex(CurrentCell.RowIndex))
                 {
+                    placeholderWasTouched = true;
+                }
+                else
+                {
+                    minRowIndex = CurrentCell.RowIndex;
+                    minColumn = CurrentCell.OwningColumn;
                     selectedRealRowIndexes.Add(CurrentCell.RowIndex);
                 }
             }
@@ -709,23 +770,6 @@ namespace ErikwnkWFUI.Controls
                 startColumnIndex = 0;
             }
 
-            // Same "does this row already have a real backing item"
-            // check selectedRealRowIndexes uses below (cell.RowIndex <
-            // list.Count), not Rows[minRowIndex].IsNewRow - clicking into
-            // the "type here to add a row" placeholder turns out to make
-            // WinForms call IBindingList.AddNew() on the bound list right
-            // then, growing list.Count immediately, well before
-            // IsNewRow ever stops reporting true for that row (that only
-            // happens once the add is actually committed, e.g. by typing
-            // into it). Using IsNewRow here disagreed with
-            // selectedRealRowIndexes about whether that same row counted
-            // as "real" - it doesn't matter for this method whether
-            // WinForms still considers the row uncommitted, only whether
-            // it already has a list item to write into.
-            int startDataRowIndex = minRowIndex != int.MaxValue && minRowIndex < list.Count
-                ? minRowIndex
-                : list.Count;
-
             // Only the rows actually selected get overwritten in place - a
             // paste block taller than the selection gets the rest INSERTED
             // right after it instead of overwriting whatever real rows
@@ -733,16 +777,15 @@ namespace ErikwnkWFUI.Controls
             // onto a 4-row selection in the middle of a 20-row list must
             // not clobber rows 5-10 of someone's existing data; it should
             // push them down by 6 instead).
-            int overflowRowCount = pastedRows.Length - selectedRealRowIndexes.Count;
-            IBindingList bindingList = list as IBindingList;
+            // Sorted so the write loop below can target the actual
+            // selected rows in order, not just walk sequentially from
+            // startDataRowIndex - a non-contiguous selection (e.g. rows 0
+            // and 5 only) must overwrite exactly those rows, not rows 0
+            // and 1.
+            List<int> sortedSelectedRowIndexes = new List<int>(selectedRealRowIndexes);
+            sortedSelectedRowIndexes.Sort();
 
-            if (overflowRowCount > 0 && (bindingList == null || !bindingList.AllowNew))
-            {
-                // Can't grow the list - still worth filling whatever
-                // existing rows the paste does reach below.
-                pastedRows = Trim(pastedRows, list.Count - startDataRowIndex);
-                overflowRowCount = 0;
-            }
+            IBindingList bindingList = list as IBindingList;
 
             // Growing the list AND writing the pasted values both happen
             // inside this one suppress-events-then-ResetBindings-once
@@ -776,13 +819,52 @@ namespace ErikwnkWFUI.Controls
             //   row only ever appears already complete.
             ApplyBatchedDataSourceChange(list, () =>
             {
+                // Discards a pending-but-abandoned placeholder add before
+                // anything below reads list.Count - the placeholder is
+                // purely a visual way to add rows by typing, and pasting
+                // instead of typing means that pending item was never
+                // really wanted (same reasoning as DeleteRows' own
+                // placeholderIndexesToCancel). Must run first, before
+                // anything below reads list.Count - startDataRowIndex's own
+                // fallback (nothing selected -> append at the end) and the
+                // overflow/trim math right after it both need to see the
+                // post-cancel count, not the stale one from before this
+                // batch started.
+                if (placeholderWasTouched && list is ICancelAddNew cancelAddNew)
+                {
+                    cancelAddNew.CancelNew(list.Count - 1);
+                }
+
+                // Every index in selectedRealRowIndexes/minRowIndex is
+                // already guaranteed to be a real row (the placeholder was
+                // excluded above, before either was ever populated) -
+                // nothing selected at all (a plain append at the end of
+                // the list) is the only remaining case minRowIndex's
+                // sentinel has to cover.
+                int startDataRowIndex = minRowIndex != int.MaxValue ? minRowIndex : list.Count;
+
+                // Where overflow rows land once InsertItemsAt grows the
+                // list - computed here (not just inside the overflow
+                // branch below) so the write loop can use the same value
+                // regardless of whether growth actually happened.
+                int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
+
+                int overflowRowCount = pastedRows.Length - selectedRealRowIndexes.Count;
+
+                if (overflowRowCount > 0 && (bindingList == null || !bindingList.AllowNew))
+                {
+                    // Can't grow the list - still worth filling whatever
+                    // existing rows the paste does reach below.
+                    pastedRows = Trim(pastedRows, list.Count - startDataRowIndex);
+                    overflowRowCount = 0;
+                }
+
                 if (overflowRowCount > 0)
                 {
                     // See InsertItemsAt for why this rebuilds via Clear() +
                     // re-Add() rather than list.Insert() at a hand-picked
                     // index, and why originalItems has to be snapshotted
                     // before AddNew() below, not derived from list after.
-                    int insertAtIndex = startDataRowIndex + selectedRealRowIndexes.Count;
                     List<object> originalItems = new List<object>(list.Count);
 
                     foreach (object item in list)
@@ -814,7 +896,13 @@ namespace ErikwnkWFUI.Controls
 
                 for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
                 {
-                    int dataRowIndex = startDataRowIndex + rowOffset;
+                    // Write into the actually-selected rows first, in
+                    // ascending order (not sequentially from
+                    // startDataRowIndex), then into the newly-inserted
+                    // overflow rows once the selection is exhausted.
+                    int dataRowIndex = rowOffset < sortedSelectedRowIndexes.Count
+                        ? sortedSelectedRowIndexes[rowOffset]
+                        : insertAtIndex + (rowOffset - sortedSelectedRowIndexes.Count);
 
                     if (dataRowIndex >= list.Count)
                     {
@@ -844,10 +932,61 @@ namespace ErikwnkWFUI.Controls
                             propertyCache[propertyCacheKey] = property;
                         }
 
-                        property?.SetValue(targetItem, cellValues[columnOffset]);
+                        if (property == null)
+                        {
+                            continue;
+                        }
+
+                        // Pasted text is always a raw string - property is
+                        // whatever type the bound item's own property
+                        // actually is (int, decimal, bool, an enum, ...).
+                        // SetValue throws instead of converting on its own,
+                        // so pasting into any non-string column threw
+                        // before this. A cell that fails to convert (e.g.
+                        // pasting "abc" into a number column) is skipped
+                        // rather than aborting the whole paste, the same
+                        // "best effort" spirit as the rest of this method.
+                        if (TryConvertPastedValue(cellValues[columnOffset], property.PropertyType, out object convertedValue))
+                        {
+                            property.SetValue(targetItem, convertedValue);
+                        }
                     }
                 }
             });
+        }
+
+        private static bool TryConvertPastedValue(string text, Type targetType, out object convertedValue)
+        {
+            Type underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            if (string.IsNullOrEmpty(text))
+            {
+                // Blank pasted into a nullable/reference column clears it;
+                // a non-nullable value type has no such thing as "blank",
+                // so that cell is left alone instead of guessing a default.
+                bool canBeNull = targetType != underlyingType || !underlyingType.IsValueType;
+                convertedValue = null;
+                return canBeNull;
+            }
+
+            if (underlyingType == typeof(string))
+            {
+                convertedValue = text;
+                return true;
+            }
+
+            try
+            {
+                convertedValue = underlyingType.IsEnum
+                    ? Enum.Parse(underlyingType, text, ignoreCase: true)
+                    : Convert.ChangeType(text, underlyingType, CultureInfo.InvariantCulture);
+                return true;
+            }
+            catch (Exception ex) when (ex is FormatException || ex is InvalidCastException || ex is OverflowException || ex is ArgumentException)
+            {
+                convertedValue = null;
+                return false;
+            }
         }
 
         private static string[] Trim(string[] values, int maxLength)
@@ -928,7 +1067,7 @@ namespace ErikwnkWFUI.Controls
                 // reaching down that far could otherwise make this treat
                 // it as the selection's bottommost row, and "insert row
                 // below" would then try inserting past it.
-                if (Rows[cell.RowIndex].IsNewRow)
+                if (IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     continue;
                 }
@@ -1058,13 +1197,6 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                // _contextMenuRowWasPlaceholder (captured from IsNewRow at
-                // click time), not a list.Count comparison here - the
-                // right-click itself can already grow the bound list by
-                // one before this Opening handler ever runs (see
-                // InsertBlankRow), which would make a plain "row index <
-                // list.Count" check wrongly call the placeholder a real
-                // row too.
                 bool onRealRow = !_contextMenuRowWasPlaceholder;
                 bool hasSelection = SelectedCells.Count > 0;
 
@@ -1119,8 +1251,13 @@ namespace ErikwnkWFUI.Controls
             // the bound list on its own - same cause as the paste bug
             // this same pattern fixed earlier (see PasteFromClipboard). If
             // that already grew the list past rowIndex, adding another row
-            // here would insert two for one call.
-            if (_contextMenuRowWasPlaceholder && rowIndex < list.Count)
+            // here would insert two for one call. Only skips when rowIndex
+            // is the SAME row that was actually right-clicked
+            // (_contextMenuRowIndex) - rowIndex can also be a different,
+            // real row resolved from a multi-row selection that happens to
+            // include the placeholder (see TryGetSelectedRowIndexRange),
+            // and that row was never auto-grown by the click at all.
+            if (_contextMenuRowWasPlaceholder && rowIndex == _contextMenuRowIndex && rowIndex < list.Count)
             {
                 return;
             }
@@ -1156,9 +1293,14 @@ namespace ErikwnkWFUI.Controls
             DeleteRows(rowIndexes);
         }
 
-        private void DeleteRowAt(int rowIndex)
+        private void DeleteItem(object item)
         {
-            DeleteRows(new[] { rowIndex });
+            if (item == null || !(DataSource is IList list))
+            {
+                return;
+            }
+
+            ApplyBatchedDataSourceChange(list, () => list.Remove(item));
         }
 
         private void DeleteRows(IEnumerable<int> rowIndexes)
@@ -1168,33 +1310,74 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            List<object> itemsToRemove = new List<object>();
+            HashSet<int> indexesToRemove = new HashSet<int>();
+            HashSet<int> placeholderIndexesToCancel = new HashSet<int>();
 
             foreach (int rowIndex in rowIndexes)
             {
-                DataGridViewRow row = Rows[rowIndex];
-
-                // The "type here to add a row" placeholder has no
-                // DataBoundItem yet - nothing to remove from the data
-                // source, and IsNewRow confirms it isn't a real row.
-                if (row.IsNewRow || row.DataBoundItem == null)
+                // The placeholder has nothing to remove from the data
+                // source. Selecting it - even just landing CurrentCell on
+                // it as part of a larger selection, no typing required -
+                // already makes WinForms call IBindingList.AddNew() on the
+                // bound list on its own, the same as a real click does
+                // (see InsertBlankRow's own comment on this). Left alone,
+                // that still-empty pending item would never get cleaned up
+                // and would sit in the data source forever as a permanent
+                // stray blank row - CancelNew below discards it instead,
+                // same as WinForms' own native handling does when a
+                // pending add is abandoned rather than committed.
+                if (IsPlaceholderRowIndex(rowIndex))
                 {
+                    placeholderIndexesToCancel.Add(rowIndex);
                     continue;
                 }
 
-                itemsToRemove.Add(row.DataBoundItem);
+                indexesToRemove.Add(rowIndex);
             }
 
-            if (itemsToRemove.Count == 0)
+            if (indexesToRemove.Count == 0 && placeholderIndexesToCancel.Count == 0)
             {
                 return;
             }
 
             ApplyBatchedDataSourceChange(list, () =>
             {
-                foreach (object item in itemsToRemove)
+                // Cancelled first, not folded into the rebuild loop below -
+                // the placeholder is always the LAST row, so discarding its
+                // still-pending item (if any) never shifts the position of
+                // any real row indexesToRemove refers to.
+                if (list is ICancelAddNew cancelAddNew)
                 {
-                    list.Remove(item);
+                    foreach (int placeholderIndex in placeholderIndexesToCancel)
+                    {
+                        cancelAddNew.CancelNew(placeholderIndex);
+                    }
+                }
+
+                // Single filtering pass instead of one list.Remove(item)
+                // call per row - Remove is an O(n) IndexOf-then-shift on
+                // List<T>/BindingList<T>, so removing m rows that way costs
+                // O(n*m) instead of the O(n) this rebuild does. Filtered by
+                // POSITION, not by item identity/HashSet<object> - two
+                // different rows can legitimately be bound to the exact
+                // same object reference, and a set of items would then
+                // remove every occurrence instead of just the one(s)
+                // actually selected.
+                List<object> remainingItems = new List<object>(list.Count);
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (!indexesToRemove.Contains(i))
+                    {
+                        remainingItems.Add(list[i]);
+                    }
+                }
+
+                list.Clear();
+
+                foreach (object item in remainingItems)
+                {
+                    list.Add(item);
                 }
             });
         }
