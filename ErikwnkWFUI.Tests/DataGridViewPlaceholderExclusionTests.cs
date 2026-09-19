@@ -62,6 +62,34 @@ public class DataGridViewPlaceholderExclusionTests
     }
 
     [Fact]
+    public void Paste_SecondColumnOfPlaceholderSelected_PastesIntoThatColumn()
+    {
+        // Regression test: excluding the placeholder ROW from paste
+        // targeting also wiped out which COLUMN had been selected on it -
+        // selecting column 2 of the placeholder and pasting a single value
+        // ended up writing it into column 1 of the newly appended row
+        // instead, because the column anchor was only ever tracked
+        // alongside the row-exclusion check, not independently of it.
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+            using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+
+            int placeholderIndex = grid.Rows.Count - 1;
+
+            // Column 1 is "Value" (the int column), not "Name".
+            GridTestHelpers.SelectCells(grid, (placeholderIndex, 1));
+            Clipboard.SetText("42");
+
+            grid.InvokePrivate("PasteFromClipboard");
+
+            Assert.Equal(2, items.Count);
+            Assert.Equal("", items[1].Name);
+            Assert.Equal(42, items[1].Value);
+        });
+    }
+
+    [Fact]
     public void Paste_RealRowsPlusPlaceholderSelected_OnlyOverwritesTheRealRows()
     {
         StaThread.Run(() =>

@@ -719,18 +719,31 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                // The placeholder is never a paste target, same as the
-                // delete column - a selection that includes it (e.g. a
+                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                {
+                    continue;
+                }
+
+                // The COLUMN anchor is tracked regardless of whether this
+                // cell's row is the placeholder - selecting column 2 of
+                // the placeholder and pasting must still start at column
+                // 2 for whatever real row the paste ends up writing/
+                // inserting, not silently fall back to column 0 just
+                // because that particular cell's row got excluded below.
+                DataGridViewColumn column = Columns[cell.ColumnIndex];
+
+                if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
+                {
+                    minColumn = column;
+                }
+
+                // The placeholder is never a paste target itself, same as
+                // the delete column - a selection that includes it (e.g. a
                 // drag-select or Ctrl+A reaching down that far) must only
                 // ever affect the real rows above it.
                 if (IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     placeholderWasTouched = true;
-                    continue;
-                }
-
-                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
-                {
                     continue;
                 }
 
@@ -740,17 +753,12 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 selectedRealRowIndexes.Add(cell.RowIndex);
-
-                DataGridViewColumn column = Columns[cell.ColumnIndex];
-
-                if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
-                {
-                    minColumn = column;
-                }
             }
 
             if (minColumn == null && CurrentCell != null)
             {
+                minColumn = CurrentCell.OwningColumn;
+
                 if (IsPlaceholderRowIndex(CurrentCell.RowIndex))
                 {
                     placeholderWasTouched = true;
@@ -758,7 +766,6 @@ namespace ErikwnkWFUI.Controls
                 else
                 {
                     minRowIndex = CurrentCell.RowIndex;
-                    minColumn = CurrentCell.OwningColumn;
                     selectedRealRowIndexes.Add(CurrentCell.RowIndex);
                 }
             }
