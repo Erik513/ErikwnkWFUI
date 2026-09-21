@@ -689,10 +689,12 @@ namespace ErikwnkWFUI.Controls
             CurrentCell = null;
 
             _pendingReorderColumnIndex = -1;
-            _isResizingColumn = false;
-            _suppressNextHeaderClickSort = false;
 
-            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0)
+            // The border/resize check itself now lives in OnMouseDown
+            // below, not here - see its own remarks on why. Only the
+            // reorder-arming stays here, since it genuinely needs a real
+            // column under the cursor to have anything to drag at all.
+            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0 || _isResizingColumn)
             {
                 return;
             }
@@ -702,40 +704,6 @@ namespace ErikwnkWFUI.Controls
             // that entirely rather than adding the cell's own display
             // rectangle back in.
             int controlX = PointToClient(Cursor.Position).X;
-            int logicalX = controlX + HorizontalScrollingOffset;
-
-            // A border always wins over starting a reorder drag, whether
-            // or not it turns out resizable - a locked column's border
-            // should do nothing at all, not fall through into moving the
-            // column instead.
-            if (TryGetColumnAtBorder(logicalX, out DataGridViewColumn borderColumn))
-            {
-                // The mouse still went down and (typically) back up on the
-                // same header cell either way, which is exactly what
-                // OnColumnHeaderMouseClick's own click detection is built
-                // to catch - pressing right on a border was never actually
-                // aiming to sort that column, whether or not a real resize
-                // ends up happening from here.
-                _suppressNextHeaderClickSort = true;
-
-                if (IsColumnResizable(borderColumn))
-                {
-                    _isResizingColumn = true;
-                    _resizeColumnIndex = borderColumn.Index;
-                    _resizeStartX = controlX;
-                    _resizeStartWidth = borderColumn.Width;
-
-                    // Keeps this tracking correctly even if a fast drag
-                    // carries the cursor outside the grid's own bounds -
-                    // without it, MouseMove/MouseUp simply stop arriving
-                    // once the cursor leaves this control's screen area,
-                    // leaving the resize stuck "in progress" until some
-                    // unrelated later click happens to reset it.
-                    Capture = true;
-                }
-
-                return;
-            }
 
             // !AllowDrop also covers the MTA case the constructor's own
             // apartment-state check guards against - without a registered
@@ -747,6 +715,76 @@ namespace ErikwnkWFUI.Controls
 
             _pendingReorderColumnIndex = e.ColumnIndex;
             _pendingReorderStartX = controlX;
+        }
+
+        // The border/resize check used to live in OnCellMouseDown above,
+        // gated behind e.ColumnIndex >= 0 - past the last column's own
+        // right edge, in the empty header space beyond every real column,
+        // DataGridView reports RowIndex -1 (still "the header") but
+        // ColumnIndex -1 too (no column there), so that check silently
+        // never ran there at all. OnCellMouseMove's own hover cursor never
+        // had this problem (it computes its own control-relative X instead
+        // of trusting e.ColumnIndex - see its own TryGetColumnAtBorder
+        // call), which is exactly why the VSplit hint could show out there
+        // while actually pressing down to start a resize from that same
+        // spot silently did nothing. This plain Control-level MouseDown -
+        // not tied to resolving a cell at all - is the fix, the same
+        // reasoning as OnMouseUp/OnMouseMove already needed it for ending/
+        // continuing a resize. e.Y < ColumnHeadersHeight stands in for
+        // "RowIndex == -1" here, since MouseEventArgs has no such thing.
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            _isResizingColumn = false;
+            _suppressNextHeaderClickSort = false;
+
+            if (e.Button != MouseButtons.Left || e.Y >= ColumnHeadersHeight)
+            {
+                return;
+            }
+
+            int controlX = PointToClient(Cursor.Position).X;
+            int logicalX = controlX + HorizontalScrollingOffset;
+
+            if (!TryGetColumnAtBorder(logicalX, out DataGridViewColumn borderColumn))
+            {
+                return;
+            }
+
+            // A border always wins over a reorder drag OnCellMouseDown may
+            // already have armed for this same press (a real cell right at
+            // a border can resolve to either handler depending on exactly
+            // which pixel, and either could end up running first) - a
+            // locked column's border should do nothing at all, not fall
+            // through into moving the column instead.
+            _pendingReorderColumnIndex = -1;
+
+            // The mouse still went down and (typically) back up on the
+            // same header cell either way, which is exactly what
+            // OnColumnHeaderMouseClick's own click detection is built to
+            // catch - pressing right on a border was never actually
+            // aiming to sort that column, whether or not a real resize
+            // ends up happening from here.
+            _suppressNextHeaderClickSort = true;
+
+            if (!IsColumnResizable(borderColumn))
+            {
+                return;
+            }
+
+            _isResizingColumn = true;
+            _resizeColumnIndex = borderColumn.Index;
+            _resizeStartX = controlX;
+            _resizeStartWidth = borderColumn.Width;
+
+            // Keeps this tracking correctly even if a fast drag carries
+            // the cursor outside the grid's own bounds - without it,
+            // MouseMove/MouseUp simply stop arriving once the cursor
+            // leaves this control's screen area, leaving the resize stuck
+            // "in progress" until some unrelated later click happens to
+            // reset it.
+            Capture = true;
         }
 
         protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
