@@ -305,10 +305,22 @@ namespace ErikwnkWFUI.Controls
             // Column reordering is hand-rolled (see HeaderInputSubclass and
             // OnDragOver/OnDragDrop below) instead of using the native
             // drag - see ColumnReorderIndicatorColor's doc comment for why.
-            // AllowDrop is this control's own DoDragDrop-based reorder, not
-            // an app-facing external drag-and-drop target.
             AllowColumnReorder = false;
-            AllowDrop = true;
+
+            // AllowDrop is only ever needed for that same hand-rolled drag,
+            // not an app-facing drop target. Registering a drop target
+            // needs an STA thread (true for any real WinForms UI thread) -
+            // confirmed on DataGridView's own identical fix that setting
+            // this on an MTA one (e.g. a test harness thread with no
+            // message loop) doesn't throw, but can silently block for many
+            // seconds while the underlying OLE registration retries.
+            // Skipped entirely off STA, where the drag itself couldn't
+            // have worked anyway - HeaderInputSubclass.OnMouseDown checks
+            // AllowDrop itself and never arms a drag if this never got set.
+            if (System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA)
+            {
+                AllowDrop = true;
+            }
             BorderStyle = BorderStyle.None;
             BackColor = UIColors.BackgroundDark;
             ForeColor = _rowForeColor;
@@ -2416,7 +2428,11 @@ namespace ErikwnkWFUI.Controls
                 // suppress the click-to-sort that follows it.
                 _owner._suppressNextColumnClickSort = false;
 
-                if (_owner.Columns.Count == 0 || _owner.IsNearColumnBorder(x))
+                // !AllowDrop also covers the MTA case the constructor's own
+                // apartment-state check guards against - without a
+                // registered drop target, DoDragDrop has nothing to hand
+                // the drag to.
+                if (!_owner.AllowDrop || _owner.Columns.Count == 0 || _owner.IsNearColumnBorder(x))
                 {
                     return;
                 }

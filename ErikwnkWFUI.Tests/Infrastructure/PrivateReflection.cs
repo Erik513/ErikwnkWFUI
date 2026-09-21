@@ -16,6 +16,23 @@ internal static class PrivateReflection
 {
     private const BindingFlags InstanceNonPublic = BindingFlags.Instance | BindingFlags.NonPublic;
 
+    // DeclaredOnly on top of the usual Instance|NonPublic - without it,
+    // GetMethod(name, flags) (the overload that doesn't take parameter
+    // types) throws AmbiguousMatchException the moment a type declares a
+    // private/protected member sharing a base class member's name but not
+    // its signature - confirmed live for ListView's own OnColumnWidthChanging
+    // handler (object, ColumnWidthChangingEventArgs), which collides on name
+    // alone with System.Windows.Forms.ListView's own protected event-raiser
+    // OnColumnWidthChanging(ColumnWidthChangingEventArgs) despite taking a
+    // different number of parameters - GetMethod(name, flags) doesn't
+    // disambiguate by signature at all, it just throws. DeclaredOnly still
+    // combines correctly with the manual per-type walk below (still finds a
+    // private member declared on some ANCESTOR type, e.g. DataGridView's own
+    // PasteFromClipboard when target is a TestableDataGridView subclass) -
+    // each individual GetMethod call in the loop just stops considering any
+    // OTHER type's same-named members as candidates.
+    private const BindingFlags InstanceNonPublicDeclaredOnly = InstanceNonPublic | BindingFlags.DeclaredOnly;
+
     // GetMethod/GetField with just Instance|NonPublic only look at members
     // DECLARED on the exact type - a private member declared on a base
     // class (e.g. DataGridView's own PasteFromClipboard, when target is a
@@ -26,7 +43,7 @@ internal static class PrivateReflection
     {
         for (Type? current = type; current != null; current = current.BaseType)
         {
-            MethodInfo? method = current.GetMethod(methodName, InstanceNonPublic);
+            MethodInfo? method = current.GetMethod(methodName, InstanceNonPublicDeclaredOnly);
             if (method != null)
             {
                 return method;
@@ -40,7 +57,7 @@ internal static class PrivateReflection
     {
         for (Type? current = type; current != null; current = current.BaseType)
         {
-            FieldInfo? field = current.GetField(fieldName, InstanceNonPublic);
+            FieldInfo? field = current.GetField(fieldName, InstanceNonPublicDeclaredOnly);
             if (field != null)
             {
                 return field;
