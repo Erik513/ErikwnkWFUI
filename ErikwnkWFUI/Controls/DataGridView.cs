@@ -145,6 +145,14 @@ namespace ErikwnkWFUI.Controls
                     // it's excluded from reordering the same way it's
                     // already excluded from resizing (Resizable above).
                     SetColumnReorderable(column.Index, false);
+
+                    // Resizable above is a fixed native width hint, but
+                    // resizing itself is hand-rolled and tracked separately
+                    // (see AllowColumnResizing's own remarks on why it
+                    // can't just read that property back) - excluded here
+                    // too, or the fixed width from Resizable/MinimumWidth/
+                    // Width above would just get dragged away again.
+                    SetColumnResizable(column.Index, false);
                 }
                 else
                 {

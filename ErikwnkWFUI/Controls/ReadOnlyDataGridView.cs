@@ -48,6 +48,13 @@ namespace ErikwnkWFUI.Controls
         private int _dragInsertBeforeDisplayIndex = -1;
         private int _pendingReorderColumnIndex = -1;
         private int _pendingReorderStartX;
+        private bool _allowColumnResizing = true;
+        private readonly HashSet<int> _nonResizableColumns = new HashSet<int>();
+        private bool _isResizingColumn;
+        private int _resizeColumnIndex = -1;
+        private int _resizeStartX;
+        private int _resizeStartWidth;
+        private bool _suppressNextHeaderClickSort;
 
         // Snapshot of DataBoundItem references in the order they were bound,
         // captured on each fresh bind/reset - lets a header click's third
@@ -175,6 +182,65 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// Master switch for whether ANY column can be resized by dragging
+        /// its header border - mirrors <see cref="ListView.AllowColumnResizing"/>.
+        /// Per-column overrides via <see cref="SetColumnResizable"/> still
+        /// apply among whichever columns this allows; setting this false
+        /// overrides all of them. Defaults to true.
+        /// </summary>
+        /// <remarks>
+        /// Resizing is fully hand-rolled (OnCellMouseDown/OnCellMouseMove
+        /// below), same as reordering and for a related but different
+        /// reason: <see cref="System.Windows.Forms.DataGridView.AllowUserToResizeColumns"/>'s
+        /// own native resize-drag was confirmed live to NOT repaint the
+        /// column as it's being resized - only a thin guideline moves with
+        /// the cursor, and the actual width is applied (and the grid
+        /// repainted) once, on mouse-up. ListView's own column resize
+        /// doesn't have this gap - it's backed by comctl32's own Header
+        /// common control, which repaints continuously on its own, so
+        /// there was nothing to hand-roll there. That native property is
+        /// deliberately left false (see the constructor); this one governs
+        /// the owned implementation instead. Per-column resizability is
+        /// tracked separately (<see cref="_nonResizableColumns"/>), not via
+        /// the existing native <see cref="DataGridViewColumn.Resizable"/> -
+        /// that property's own getter falls back to this control's
+        /// (permanently false) AllowUserToResizeColumns whenever a column
+        /// never had it explicitly set, which would otherwise make every
+        /// ordinary column silently read back as "not resizable" the
+        /// moment the native switch went false.
+        /// </remarks>
+        public bool AllowColumnResizing
+        {
+            get => _allowColumnResizing;
+            set => _allowColumnResizing = value;
+        }
+
+        /// <summary>
+        /// Configurable per column, independent of
+        /// <see cref="AllowColumnResizing"/>: a column can be locked at its
+        /// current width entirely (e.g. <see cref="DataGridView"/>'s own
+        /// delete-row column) while the rest can still be freely resized.
+        /// Mirrors <see cref="ListView.SetColumnResizable"/>.
+        /// </summary>
+        public void SetColumnResizable(int columnIndex, bool resizable)
+        {
+            if (resizable)
+            {
+                _nonResizableColumns.Remove(columnIndex);
+            }
+            else
+            {
+                _nonResizableColumns.Add(columnIndex);
+            }
+        }
+
+        /// <summary>Mirrors <see cref="ListView.IsColumnResizable"/> - see <see cref="AllowColumnResizing"/>/<see cref="SetColumnResizable"/>.</summary>
+        public bool IsColumnResizable(int columnIndex)
+        {
+            return _allowColumnResizing && !_nonResizableColumns.Contains(columnIndex);
+        }
+
+        /// <summary>
         /// Whether clicking a column header cycles it through ascending,
         /// descending, and original row order (see the "Column header
         /// sorting" remarks on <see cref="CycleSort"/>). Defaults to true;
@@ -270,6 +336,12 @@ namespace ErikwnkWFUI.Controls
             // OnCellMouseMove/OnDragOver/OnDragDrop below) rather than using
             // this native switch.
             AllowUserToOrderColumns = false;
+
+            // Same treatment, see AllowColumnResizing's own remarks - its
+            // native resize-drag doesn't repaint the column live while
+            // dragging, only on mouse-up, so this is hand-rolled instead
+            // (same OnCellMouseDown/OnCellMouseMove below).
+            AllowUserToResizeColumns = false;
 
             // AllowDrop is only ever needed for that same hand-rolled drag,
             // not an app-facing drop target - and only actually settable
@@ -426,6 +498,20 @@ namespace ErikwnkWFUI.Controls
             ClearSelection();
             CurrentCell = null;
 
+            // Regression test: resizing (or even just pressing down right
+            // on top of) a column border still counts as a "click" on
+            // whichever header cell that border belongs to as far as
+            // DataGridView's own click detection is concerned - without
+            // this, finishing a resize drag by releasing the mouse also
+            // silently cycled that column's sort, since the resize itself
+            // is hand-rolled (OnCellMouseDown/OnCellMouseMove) and never
+            // told DataGridView's own click machinery to stay out of it.
+            if (_suppressNextHeaderClickSort)
+            {
+                _suppressNextHeaderClickSort = false;
+                return;
+            }
+
             bool isSortableColumn =
                 e.ColumnIndex >= 0 && Columns[e.ColumnIndex].SortMode != DataGridViewColumnSortMode.NotSortable;
 
@@ -514,11 +600,10 @@ namespace ErikwnkWFUI.Controls
             CurrentCell = null;
 
             _pendingReorderColumnIndex = -1;
+            _isResizingColumn = false;
+            _suppressNextHeaderClickSort = false;
 
-            // !AllowDrop also covers the MTA case the constructor's own
-            // apartment-state check guards against - without a registered
-            // drop target, DoDragDrop has nothing to hand the drag to.
-            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0 || !AllowDrop || !IsColumnReorderable(e.ColumnIndex))
+            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0)
             {
                 return;
             }
@@ -528,12 +613,45 @@ namespace ErikwnkWFUI.Controls
             // that entirely rather than adding the cell's own display
             // rectangle back in.
             int controlX = PointToClient(Cursor.Position).X;
+            int logicalX = controlX + HorizontalScrollingOffset;
 
-            // Resize grips live on the same header cells this would
-            // otherwise start a reorder drag from - skipped here so a
-            // width-resize drag (still fully native, unaffected by any of
-            // this) never gets hijacked into a reorder attempt instead.
-            if (IsNearColumnBorder(controlX + HorizontalScrollingOffset))
+            // A border always wins over starting a reorder drag, whether
+            // or not it turns out resizable - a locked column's border
+            // should do nothing at all, not fall through into moving the
+            // column instead.
+            if (TryGetColumnAtBorder(logicalX, out DataGridViewColumn borderColumn))
+            {
+                // The mouse still went down and (typically) back up on the
+                // same header cell either way, which is exactly what
+                // OnColumnHeaderMouseClick's own click detection is built
+                // to catch - pressing right on a border was never actually
+                // aiming to sort that column, whether or not a real resize
+                // ends up happening from here.
+                _suppressNextHeaderClickSort = true;
+
+                if (IsColumnResizable(borderColumn))
+                {
+                    _isResizingColumn = true;
+                    _resizeColumnIndex = borderColumn.Index;
+                    _resizeStartX = controlX;
+                    _resizeStartWidth = borderColumn.Width;
+
+                    // Keeps this tracking correctly even if a fast drag
+                    // carries the cursor outside the grid's own bounds -
+                    // without it, MouseMove/MouseUp simply stop arriving
+                    // once the cursor leaves this control's screen area,
+                    // leaving the resize stuck "in progress" until some
+                    // unrelated later click happens to reset it.
+                    Capture = true;
+                }
+
+                return;
+            }
+
+            // !AllowDrop also covers the MTA case the constructor's own
+            // apartment-state check guards against - without a registered
+            // drop target, DoDragDrop has nothing to hand the drag to.
+            if (!AllowDrop || !IsColumnReorderable(e.ColumnIndex))
             {
                 return;
             }
@@ -546,20 +664,36 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnCellMouseMove(e);
 
-            if (_pendingReorderColumnIndex < 0 || _isDraggingColumn || e.RowIndex != -1)
+            if (_isResizingColumn)
+            {
+                ApplyLiveColumnResize();
+                return;
+            }
+
+            if (e.RowIndex != -1)
             {
                 return;
             }
 
             int controlX = PointToClient(Cursor.Position).X;
-            if (Math.Abs(controlX - _pendingReorderStartX) < SystemInformation.DragSize.Width)
+
+            if (_pendingReorderColumnIndex >= 0 && !_isDraggingColumn &&
+                Math.Abs(controlX - _pendingReorderStartX) >= SystemInformation.DragSize.Width)
             {
+                int columnIndex = _pendingReorderColumnIndex;
+                _pendingReorderColumnIndex = -1;
+                BeginColumnDragDrop(columnIndex);
                 return;
             }
 
-            int columnIndex = _pendingReorderColumnIndex;
-            _pendingReorderColumnIndex = -1;
-            BeginColumnDragDrop(columnIndex);
+            // Hover-only cursor hint for a resizable border - the native
+            // resize cursor is gone along with the native resize itself
+            // (see AllowUserToResizeColumns in the constructor), so this
+            // control has to show its own now, the same way it already
+            // draws its own reorder insertion line instead of a native one.
+            bool overResizableBorder = TryGetColumnAtBorder(controlX + HorizontalScrollingOffset, out DataGridViewColumn hoveredColumn) &&
+                IsColumnResizable(hoveredColumn);
+            Cursor = overResizableBorder ? Cursors.VSplit : Cursors.Default;
         }
 
         protected override void OnCellMouseUp(DataGridViewCellMouseEventArgs e)
@@ -576,6 +710,36 @@ namespace ErikwnkWFUI.Controls
             // control see a matching MouseUp/Click of its own once the drag
             // starts, so there's nothing here that needs to suppress it.
             _pendingReorderColumnIndex = -1;
+
+            if (_isResizingColumn)
+            {
+                _isResizingColumn = false;
+                _resizeColumnIndex = -1;
+                Capture = false;
+            }
+        }
+
+        // Applies the column's new width directly, on every single
+        // mouse-move tick while a resize is in progress - unlike
+        // DataGridView's own native resize-drag (confirmed live to only
+        // move a guideline and apply the real width once, on mouse-up),
+        // setting Width here goes through the ordinary property-changed
+        // path (not the native drag's own internal one), which repaints
+        // normally on each call - there's no DoDragDrop-style blocking
+        // loop starving the message queue the way there is for the
+        // reorder line, so no separate forced Update() is needed here the
+        // way OnDragOver's own live-repaint fix needed one.
+        private void ApplyLiveColumnResize()
+        {
+            int controlX = PointToClient(Cursor.Position).X;
+            int delta = controlX - _resizeStartX;
+            int minimumWidth = Columns[_resizeColumnIndex].MinimumWidth;
+            int newWidth = Math.Max(minimumWidth, _resizeStartWidth + delta);
+
+            if (Columns[_resizeColumnIndex].Width != newWidth)
+            {
+                Columns[_resizeColumnIndex].Width = newWidth;
+            }
         }
 
         // Called once OnCellMouseMove sees the drag threshold exceeded.
@@ -666,25 +830,36 @@ namespace ErikwnkWFUI.Controls
             return ordered;
         }
 
+        private bool IsColumnResizable(DataGridViewColumn column)
+        {
+            return IsColumnResizable(column.Index);
+        }
+
         // x is in "logical" (unscrolled) space - cumulative column widths
         // from DisplayIndex 0, same space GetColumnDropInsertionIndex uses -
         // callers convert from control-relative coordinates by adding
         // HorizontalScrollingOffset first, since this control (unlike
         // ListView's native header) can scroll its columns independently
-        // of where they're actually drawn.
-        private bool IsNearColumnBorder(int x)
+        // of where they're actually drawn. Resizability itself is a
+        // separate question from being AT a border at all (see
+        // IsColumnResizable) - a locked column still has to block a
+        // reorder drag from starting there, it just doesn't also start a
+        // resize.
+        private bool TryGetColumnAtBorder(int x, out DataGridViewColumn column)
         {
             const int resizeGripWidth = 5;
             int cumulativeWidth = 0;
-            foreach (DataGridViewColumn column in GetColumnsInDisplayOrder())
+            foreach (DataGridViewColumn candidate in GetColumnsInDisplayOrder())
             {
-                cumulativeWidth += column.Width;
+                cumulativeWidth += candidate.Width;
                 if (Math.Abs(x - cumulativeWidth) <= resizeGripWidth)
                 {
+                    column = candidate;
                     return true;
                 }
             }
 
+            column = null;
             return false;
         }
 
