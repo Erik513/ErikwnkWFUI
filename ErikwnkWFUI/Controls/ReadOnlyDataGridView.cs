@@ -793,13 +793,9 @@ namespace ErikwnkWFUI.Controls
 
             // An active resize is tracked from the plain Control-level
             // OnMouseMove below instead, not here - see its own remarks on
-            // why.
-            if (_isResizingColumn)
-            {
-                return;
-            }
-
-            if (e.RowIndex != -1)
+            // why. The hover cursor hint moved there too, for the same
+            // underlying reason - see OnMouseMove's own remarks.
+            if (_isResizingColumn || e.RowIndex != -1)
             {
                 return;
             }
@@ -812,17 +808,7 @@ namespace ErikwnkWFUI.Controls
                 int columnIndex = _pendingReorderColumnIndex;
                 _pendingReorderColumnIndex = -1;
                 BeginColumnDragDrop(columnIndex);
-                return;
             }
-
-            // Hover-only cursor hint for a resizable border - the native
-            // resize cursor is gone along with the native resize itself
-            // (see AllowUserToResizeColumns in the constructor), so this
-            // control has to show its own now, the same way it already
-            // draws its own reorder insertion line instead of a native one.
-            bool overResizableBorder = TryGetColumnAtBorder(controlX + HorizontalScrollingOffset, out DataGridViewColumn hoveredColumn) &&
-                IsColumnResizable(hoveredColumn);
-            Cursor = overResizableBorder ? Cursors.VSplit : Cursors.Default;
         }
 
         protected override void OnCellMouseUp(DataGridViewCellMouseEventArgs e)
@@ -869,6 +855,28 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // A second, independent safety net for the same "Cursor is a
+        // whole-control property" problem EndColumnResize's own reset
+        // covers (see its own remarks) - this one for hovering a border
+        // (arming nothing yet, just showing VSplit) and then leaving the
+        // control entirely without ever resizing at all, which leaves
+        // nothing to trigger that reset. Skipped while a resize is
+        // actually in progress - Capture keeps this control receiving
+        // mouse events even once the cursor is physically outside its
+        // bounds, and MouseLeave still fires for that, but flipping the
+        // cursor back to Default mid-drag would fight the still-accurate
+        // VSplit hint for no reason; EndColumnResize's own reset already
+        // covers the moment the drag actually ends, wherever that is.
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+
+            if (!_isResizingColumn)
+            {
+                Cursor = Cursors.Default;
+            }
+        }
+
         // An active resize is tracked here, not from OnCellMouseMove, for
         // exactly the same reason OnMouseUp above is: confirmed live that
         // widening the LAST column specifically made resizing intermittently
@@ -885,18 +893,39 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnMouseMove(e);
 
-            if (!_isResizingColumn)
+            if (_isResizingColumn)
+            {
+                if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
+                {
+                    EndColumnResize();
+                    return;
+                }
+
+                ApplyLiveColumnResize();
+                return;
+            }
+
+            // Hover-only cursor hint for a resizable border - moved here
+            // from OnCellMouseMove for the same reason OnMouseDown's own
+            // border/resize check moved out of OnCellMouseDown: past the
+            // last column's own right edge, in the empty header space
+            // beyond every real column, CellMouseMove never fires at all,
+            // so a hint set while still over the actual border tolerance
+            // (back when CellMouseMove still fired, right at the column's
+            // own edge) could never be cleared again once the cursor kept
+            // moving right past it - it just stayed VSplit for the WHOLE
+            // remaining empty area instead of only the real tolerance
+            // zone. e.Y < ColumnHeadersHeight stands in for "RowIndex ==
+            // -1" here, the same substitution OnMouseDown already needed.
+            if (e.Y >= ColumnHeadersHeight)
             {
                 return;
             }
 
-            if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
-            {
-                EndColumnResize();
-                return;
-            }
-
-            ApplyLiveColumnResize();
+            int controlX = PointToClient(Cursor.Position).X;
+            bool overResizableBorder = TryGetColumnAtBorder(controlX + HorizontalScrollingOffset, out DataGridViewColumn hoveredColumn) &&
+                IsColumnResizable(hoveredColumn);
+            Cursor = overResizableBorder ? Cursors.VSplit : Cursors.Default;
         }
 
         private void EndColumnResize()
@@ -904,6 +933,19 @@ namespace ErikwnkWFUI.Controls
             _isResizingColumn = false;
             _resizeColumnIndex = -1;
             Capture = false;
+
+            // Cursor is a whole-control property, not a per-pixel one -
+            // once OnCellMouseMove's hover check (or arming the resize
+            // itself) sets it to VSplit, it stays VSplit everywhere on
+            // this control, for however long, until something explicitly
+            // sets it back. That "something" was only ever the next hover
+            // recalculation - fine as long as one actually happens before
+            // the cursor leaves, but confirmed live that moving the mouse
+            // off the control right after finishing a resize (nothing left
+            // to fire a recalculation over) leaves it stuck on VSplit.
+            // Resetting the moment a resize actually ends, regardless of
+            // where the cursor is, means there's nothing left to get stuck.
+            Cursor = Cursors.Default;
         }
 
         // Applies the column's new width directly, on every single
