@@ -435,6 +435,18 @@ namespace ErikwnkWFUI.Controls
                 AllowDrop = true;
             }
 
+            // Without this, resizing the control (e.g. its containing Form
+            // being resized, if this is docked/anchored to it) only
+            // invalidates the newly-exposed strip, the standard WinForms
+            // default - everything already visible before the resize is
+            // assumed still valid and left unpainted until something else
+            // happens to invalidate it, which can leave stale content
+            // (including the outer frame - see WndProc's own WM_PAINT hook
+            // - sitting at its old position/size for a moment). ListView
+            // already sets this same style for the same reason (see its
+            // own SetStyle call); this control never had it.
+            SetStyle(ControlStyles.ResizeRedraw, true);
+
             EnableDoubleBuffering();
             ApplyStyles();
 
