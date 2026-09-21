@@ -741,29 +741,11 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnCellMouseMove(e);
 
+            // An active resize is tracked from the plain Control-level
+            // OnMouseMove below instead, not here - see its own remarks on
+            // why.
             if (_isResizingColumn)
             {
-                // Regression test: releasing the mouse button outside this
-                // control's own bounds (still dragging when the cursor
-                // left it) never reached OnCellMouseUp at all - DataGridView
-                // apparently only raises that once it can resolve a cell
-                // under the cursor, and there wasn't one out there despite
-                // Capture still routing the message here. The resize state
-                // was left permanently armed, so just hovering back in
-                // (with the button already released, no click needed) kept
-                // right on resizing from nothing but that stale state.
-                // Checking the CURRENT button state directly here, instead
-                // of only ever trusting a MouseUp callback to tell us it
-                // ended, means a stray "still resizing" flag gets noticed
-                // and cleaned up the moment anything moves the mouse again,
-                // regardless of why the real MouseUp was missed.
-                if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
-                {
-                    EndColumnResize();
-                    return;
-                }
-
-                ApplyLiveColumnResize();
                 return;
             }
 
@@ -824,7 +806,7 @@ namespace ErikwnkWFUI.Controls
         // cursor, and there wasn't one out there). This one is the same
         // message either way, just not conditioned on resolving a cell
         // first, so it reliably fires regardless of where the cursor
-        // ends up. OnCellMouseMove's own button-state check (see its own
+        // ends up. OnMouseMove's own button-state check (see its own
         // remarks) is the other half of this same fix, for the case where
         // even this somehow doesn't run before the cursor moves again.
         protected override void OnMouseUp(MouseEventArgs e)
@@ -835,6 +817,36 @@ namespace ErikwnkWFUI.Controls
             {
                 EndColumnResize();
             }
+        }
+
+        // An active resize is tracked here, not from OnCellMouseMove, for
+        // exactly the same reason OnMouseUp above is: confirmed live that
+        // widening the LAST column specifically made resizing intermittently
+        // stop responding while the button was still held. Widening it
+        // means the cursor is naturally ahead of that column's own
+        // (not-yet-updated) right edge, past every real cell entirely -
+        // CellMouseMove, needing an actual cell to resolve under the
+        // cursor the same way CellMouseUp needs one, simply never fires
+        // for that position, so ApplyLiveColumnResize never got called
+        // for it. Any OTHER column's right edge still has the NEXT
+        // column's own cell sitting there to catch it, which is why only
+        // the last column ever showed this.
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            if (!_isResizingColumn)
+            {
+                return;
+            }
+
+            if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
+            {
+                EndColumnResize();
+                return;
+            }
+
+            ApplyLiveColumnResize();
         }
 
         private void EndColumnResize()
@@ -1155,27 +1167,33 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            bool isSortedColumn = e.ColumnIndex == _sortedColumnIndex && _sortOrder != SortOrder.None;
-            bool isDragInsertionTarget = _isDraggingColumn && _dragInsertBeforeDisplayIndex >= 0;
-
-            if (!isSortedColumn && !isDragInsertionTarget)
-            {
-                return;
-            }
-
-            // The default header painting (background/border/text) has to
-            // happen FIRST and be marked Handled here, same reason as
-            // always with this trick - anything drawn before this point in
-            // the method would otherwise just get painted over once
-            // DataGridView's own default painting runs right after this
-            // event handler returns (confirmed live: the insertion line
-            // below drew, then immediately vanished, because it used to
-            // run before this call).
+            // The default header painting (background/native border/text)
+            // has to happen FIRST and be marked Handled here, same reason
+            // as always with this trick - anything drawn before this
+            // point in the method would otherwise just get painted over
+            // once DataGridView's own default painting runs right after
+            // this event handler returns (confirmed live: the insertion
+            // line below drew, then immediately vanished, because it used
+            // to run before this call).
             e.Paint(e.ClipBounds, e.PaintParts);
             e.Handled = true;
 
+            // Every header cell's own border is redrawn here in
+            // BorderColor - not the native ColumnHeadersBorderStyle one
+            // (GridColor-driven, and GridColor is deliberately fixed - see
+            // its own remarks on why), the same way ListView's own
+            // OnDrawColumnHeader draws its header divider in BorderColor
+            // regardless of what its (non-existent, for data rows) grid
+            // lines look like. Together, every cell's own rectangle forms
+            // one continuous frame around the whole header strip, matching
+            // ListView's own look - CreatePrimary's header now reads as
+            // accent-colored the same way ListView's does, while the
+            // gridlines between actual rows underneath stay neutral.
+            DrawHeaderCellBorder(e);
+
             DrawColumnDragInsertionLine(e);
 
+            bool isSortedColumn = e.ColumnIndex == _sortedColumnIndex && _sortOrder != SortOrder.None;
             if (!isSortedColumn)
             {
                 return;
@@ -1194,6 +1212,19 @@ namespace ErikwnkWFUI.Controls
                 float x = e.CellBounds.Right - rightMargin - glyphSize.Width;
                 float y = e.CellBounds.Top + (e.CellBounds.Height - glyphSize.Height) / 2f;
                 e.Graphics.DrawString(glyph, Font, brush, x, y);
+            }
+        }
+
+        private void DrawHeaderCellBorder(DataGridViewCellPaintingEventArgs e)
+        {
+            using (Pen pen = new Pen(BorderColor))
+            {
+                e.Graphics.DrawRectangle(
+                    pen,
+                    e.CellBounds.Left,
+                    e.CellBounds.Top,
+                    e.CellBounds.Width - 1,
+                    e.CellBounds.Height - 1);
             }
         }
 
