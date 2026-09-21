@@ -441,8 +441,8 @@ namespace ErikwnkWFUI.Controls
             // default - everything already visible before the resize is
             // assumed still valid and left unpainted until something else
             // happens to invalidate it, which can leave stale content
-            // (including the outer frame - see WndProc's own WM_PAINT hook
-            // - sitting at its old position/size for a moment). ListView
+            // (including the outer frame - see OnPaint below - sitting at
+            // its old position/size for a moment). ListView
             // already sets this same style for the same reason (see its
             // own SetStyle call); this control never had it.
             SetStyle(ControlStyles.ResizeRedraw, true);
@@ -873,11 +873,12 @@ namespace ErikwnkWFUI.Controls
         // DataGridView's own native resize-drag (confirmed live to only
         // move a guideline and apply the real width once, on mouse-up),
         // setting Width here goes through the ordinary property-changed
-        // path (not the native drag's own internal one), which repaints
-        // normally on each call - there's no DoDragDrop-style blocking
-        // loop starving the message queue the way there is for the
-        // reorder line, so no separate forced Update() is needed here the
-        // way OnDragOver's own live-repaint fix needed one.
+        // path, which repaints normally on each call rather than only
+        // once at the end, through the same OnPaint/e.Graphics path the
+        // border itself now draws through (see OnPaint's own remarks) -
+        // no separate LockWindowUpdate dance needed here the way WndProc's
+        // own WM_VSCROLL/HSCROLL/MOUSEWHEEL handling still needs one:
+        // this never bypasses OnPaint the way a native scroll blit does.
         private void ApplyLiveColumnResize()
         {
             int controlX = PointToClient(Cursor.Position).X;
@@ -1517,32 +1518,28 @@ namespace ErikwnkWFUI.Controls
                 StringComparison.CurrentCultureIgnoreCase) * direction;
         }
 
-        // BorderStyle is None - this draws a light frame around the whole
-        // control instead, matching ListView's own BorderColor and using
-        // the exact same technique. A first attempt drew this via a plain
-        // OnPaint override instead, on the theory that DataGridView (fully
-        // managed, unlike ListView's wrapped native comctl32 control)
-        // wouldn't have ListView's own reason for needing the lower-level
-        // approach - confirmed wrong live: scrolling still visibly made
-        // the border vanish/redraw incorrectly, meaning DataGridView's own
-        // scroll handling also shifts existing pixels natively (likely
-        // ScrollWindowEx-style, same as ListView's) rather than going
-        // through OnPaint for every scrolled frame. Selecting a cell had
-        // the same problem for the same underlying reason: an edge cell's
-        // own repaint doesn't guarantee this override runs again for
-        // exactly that same paint cycle in every case. Draws straight onto
-        // the client DC right after WM_PAINT/the scroll messages finish,
-        // same as ListView.
-        private const int WM_PAINT = 0x000F;
+        // BorderStyle is None - OnPaint below draws a light frame around
+        // the whole control instead. Only WM_VSCROLL/HSCROLL/MOUSEWHEEL
+        // need the lower-level WndProc treatment (DataGridView's own
+        // scroll handling shifts existing pixels natively - likely
+        // ScrollWindowEx-style - bypassing OnPaint for the scrolled
+        // region, the same reason ListView needs the same trick for its
+        // own border). A resize, a selection change, or anything else
+        // that invalidates part of this control goes through an ordinary
+        // WM_PAINT/OnPaint cycle with no such bypass - a first attempt
+        // drew the border from that same WM_PAINT via a raw, unbuffered
+        // GetDC call instead of from here, on the theory that keeping one
+        // single mechanism for every case (rather than "OnPaint normally,
+        // except also here") would be simpler to reason about. Confirmed
+        // wrong live the opposite way: resizing a column visibly flickered
+        // the border specifically THERE, most likely exactly because that
+        // raw draw runs independently of - and isn't necessarily presented
+        // to the screen in the same compositor frame as - DataGridView's
+        // own buffered content painting, unlike drawing through this same
+        // e.Graphics both use together.
         private const int WM_VSCROLL = 0x0115;
         private const int WM_HSCROLL = 0x0114;
         private const int WM_MOUSEWHEEL = 0x020A;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern IntPtr GetDC(IntPtr hWnd);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool LockWindowUpdate(IntPtr hWndLock);
@@ -1563,9 +1560,12 @@ namespace ErikwnkWFUI.Controls
                 // nothing incorrect can flash through no matter the
                 // mechanism - then a forced synchronous repaint (Update(),
                 // not just Invalidate()) once unlocked means the very
-                // first frame the user actually sees is the corrected one.
-                // Exactly ListView's own WndProc technique for this same
-                // class of problem.
+                // first frame the user actually sees is the corrected one,
+                // painted normally through OnPaint below (this is a real,
+                // ordinary WM_PAINT dispatch once it fires - nothing about
+                // it bypasses that pipeline, only the native scroll blit
+                // this exists to work around does). Exactly ListView's own
+                // WndProc technique for this same class of problem.
                 LockWindowUpdate(Handle);
                 try
                 {
@@ -1582,45 +1582,33 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+        }
 
-            if (m.Msg != WM_PAINT || ClientSize.Width <= 1 || ClientSize.Height <= 1)
+        // Drawn through the same e.Graphics DataGridView's own content
+        // painting uses - see WndProc's own remarks on why this replaced
+        // an earlier, raw-GetDC version of the same border. Clipped by
+        // .NET to whatever e.ClipRectangle already is for a given paint,
+        // the same as any other OnPaint override - a partial repaint that
+        // doesn't reach the outer edge just means this DrawRectangle call
+        // is a no-op there, no cost worth specifically avoiding.
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (ClientSize.Width <= 1 || ClientSize.Height <= 1)
             {
                 return;
             }
 
-            // Redrawn on every real WM_PAINT, deliberately - matches
-            // ListView's own reasoning: this control can still repaint
-            // parts of the border's own pixels through paths this class
-            // doesn't get a hook into at all (e.g. its own native focus
-            // rectangle around a selected cell), so a "only when something
-            // relevant changed" version of this would leave the border
-            // silently wrong after a selection change, same as ListView's
-            // own history already found the hard way.
-            IntPtr dc = GetDC(Handle);
-            if (dc == IntPtr.Zero)
+            using (Pen pen = new Pen(BorderColor))
             {
-                return;
-            }
-
-            try
-            {
-                using (Graphics g = Graphics.FromHdc(dc))
-                using (Pen pen = new Pen(BorderColor))
-                {
-                    // ClientSize, not Width/Height - Width/Height are this
-                    // control's FULL outer bounds, which include a native
-                    // scrollbar's own strip when one is visible. A border
-                    // drawn at Width - 1 would land exactly under that
-                    // scrollbar, which then paints over it - invisible,
-                    // not missing.
-                    int right = ClientSize.Width - 1;
-                    int bottom = ClientSize.Height - 1;
-                    g.DrawRectangle(pen, 0, 0, right, bottom);
-                }
-            }
-            finally
-            {
-                ReleaseDC(Handle, dc);
+                // ClientSize, not Width/Height - Width/Height are this
+                // control's FULL outer bounds, which include a native
+                // scrollbar's own strip when one is visible. A border
+                // drawn at Width - 1 would land exactly under that
+                // scrollbar, which then paints over it - invisible, not
+                // missing.
+                e.Graphics.DrawRectangle(pen, 0, 0, ClientSize.Width - 1, ClientSize.Height - 1);
             }
         }
 
