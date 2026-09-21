@@ -139,6 +139,12 @@ namespace ErikwnkWFUI.Controls
                     // this field to recognize the column as it comes in.
                     _deleteRowColumn = column;
                     Columns.Add(column);
+
+                    // Pinned rightmost (see OnColumnAdded below) - dragging
+                    // it to reorder would fight that pinning right back, so
+                    // it's excluded from reordering the same way it's
+                    // already excluded from resizing (Resizable above).
+                    SetColumnReorderable(column.Index, false);
                 }
                 else
                 {

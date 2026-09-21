@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -38,6 +39,15 @@ namespace ErikwnkWFUI.Controls
         private Color _rowForeColor = UIColors.TextPrimary;
         private Color _selectionBackColorOverride;
         private bool _selectionBackColorIsOverridden;
+        private bool _allowColumnReordering = true;
+        private readonly HashSet<int> _nonReorderableColumns = new HashSet<int>();
+        private Color _columnReorderIndicatorColorOverride;
+        private bool _columnReorderIndicatorColorIsOverridden;
+        private bool _isDraggingColumn;
+        private int _dragColumnIndex = -1;
+        private int _dragInsertBeforeDisplayIndex = -1;
+        private int _pendingReorderColumnIndex = -1;
+        private int _pendingReorderStartX;
 
         // Snapshot of DataBoundItem references in the order they were bound,
         // captured on each fresh bind/reset - lets a header click's third
@@ -97,6 +107,70 @@ namespace ErikwnkWFUI.Controls
                 _selectionBackColorOverride = value;
                 _selectionBackColorIsOverridden = true;
                 ApplyStyles();
+            }
+        }
+
+        /// <summary>
+        /// Master switch for whether ANY column can be dragged to reorder
+        /// it at all - mirrors <see cref="ListView.AllowColumnReordering"/>.
+        /// Per-column overrides via <see cref="SetColumnReorderable"/>
+        /// still apply among whichever columns this allows; setting this
+        /// false overrides all of them. Defaults to true.
+        /// </summary>
+        /// <remarks>
+        /// Reordering is fully hand-rolled the same way as ListView's own
+        /// (see <see cref="ColumnReorderIndicatorColor"/> for why) rather
+        /// than using <see cref="System.Windows.Forms.DataGridView.AllowUserToOrderColumns"/> -
+        /// that hands the drag feedback to DataGridView's own internal
+        /// drawing, which always looks like plain Windows chrome with no
+        /// way to recolor it to match this control's theme. That native
+        /// property is deliberately left false (see the constructor); this
+        /// one governs the owned implementation instead.
+        /// </remarks>
+        public bool AllowColumnReordering
+        {
+            get => _allowColumnReordering;
+            set => _allowColumnReordering = value;
+        }
+
+        /// <summary>
+        /// Configurable per column, independent of
+        /// <see cref="AllowColumnReordering"/>: a column can be pinned in
+        /// place (e.g. <see cref="DataGridView"/>'s own delete-row column,
+        /// always pinned rightmost) while the rest can still be freely
+        /// dragged into a new order.
+        /// </summary>
+        public void SetColumnReorderable(int columnIndex, bool reorderable)
+        {
+            if (reorderable)
+            {
+                _nonReorderableColumns.Remove(columnIndex);
+            }
+            else
+            {
+                _nonReorderableColumns.Add(columnIndex);
+            }
+        }
+
+        public bool IsColumnReorderable(int columnIndex)
+        {
+            return _allowColumnReordering && !_nonReorderableColumns.Contains(columnIndex);
+        }
+
+        /// <summary>
+        /// Color of the vertical line the header shows while a column is
+        /// being dragged to reorder it. Follows the current accent
+        /// (<see cref="UIColors.Primary"/>) live until explicitly set, same
+        /// pattern as <see cref="SelectionBackColor"/> and ListView's own
+        /// ColumnReorderIndicatorColor.
+        /// </summary>
+        public Color ColumnReorderIndicatorColor
+        {
+            get => _columnReorderIndicatorColorIsOverridden ? _columnReorderIndicatorColorOverride : UIColors.Primary;
+            set
+            {
+                _columnReorderIndicatorColorOverride = value;
+                _columnReorderIndicatorColorIsOverridden = true;
             }
         }
 
@@ -190,6 +264,27 @@ namespace ErikwnkWFUI.Controls
             SelectionMode = DataGridViewSelectionMode.CellSelect;
             Font = UIFonts.Normal;
             RowTemplate.Height = Font.Height + 12;
+
+            // Left false deliberately - see AllowColumnReordering's own
+            // remarks on why reordering is hand-rolled instead (OnCellMouseDown/
+            // OnCellMouseMove/OnDragOver/OnDragDrop below) rather than using
+            // this native switch.
+            AllowUserToOrderColumns = false;
+
+            // AllowDrop is only ever needed for that same hand-rolled drag,
+            // not an app-facing drop target - and only actually settable
+            // for it here. Registering a drop target needs an STA thread
+            // (true for any real WinForms UI thread) - confirmed live that
+            // setting this on an MTA one (e.g. a test harness thread with
+            // no message loop) doesn't throw, but can silently block for
+            // many seconds while the underlying OLE registration retries.
+            // Skipped entirely off STA, where the drag itself couldn't
+            // have worked anyway - OnCellMouseDown below checks AllowDrop
+            // itself and never arms a drag if this never got set.
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                AllowDrop = true;
+            }
 
             EnableDoubleBuffering();
             ApplyStyles();
@@ -417,6 +512,262 @@ namespace ErikwnkWFUI.Controls
             // control repaints - is what actually keeps it from showing.
             ClearSelection();
             CurrentCell = null;
+
+            _pendingReorderColumnIndex = -1;
+
+            // !AllowDrop also covers the MTA case the constructor's own
+            // apartment-state check guards against - without a registered
+            // drop target, DoDragDrop has nothing to hand the drag to.
+            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0 || !AllowDrop || !IsColumnReorderable(e.ColumnIndex))
+            {
+                return;
+            }
+
+            // DataGridViewCellMouseEventArgs.X/Y are relative to the CELL,
+            // not the control - PointToClient(Cursor.Position) sidesteps
+            // that entirely rather than adding the cell's own display
+            // rectangle back in.
+            int controlX = PointToClient(Cursor.Position).X;
+
+            // Resize grips live on the same header cells this would
+            // otherwise start a reorder drag from - skipped here so a
+            // width-resize drag (still fully native, unaffected by any of
+            // this) never gets hijacked into a reorder attempt instead.
+            if (IsNearColumnBorder(controlX + HorizontalScrollingOffset))
+            {
+                return;
+            }
+
+            _pendingReorderColumnIndex = e.ColumnIndex;
+            _pendingReorderStartX = controlX;
+        }
+
+        protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
+        {
+            base.OnCellMouseMove(e);
+
+            if (_pendingReorderColumnIndex < 0 || _isDraggingColumn || e.RowIndex != -1)
+            {
+                return;
+            }
+
+            int controlX = PointToClient(Cursor.Position).X;
+            if (Math.Abs(controlX - _pendingReorderStartX) < SystemInformation.DragSize.Width)
+            {
+                return;
+            }
+
+            int columnIndex = _pendingReorderColumnIndex;
+            _pendingReorderColumnIndex = -1;
+            BeginColumnDragDrop(columnIndex);
+        }
+
+        protected override void OnCellMouseUp(DataGridViewCellMouseEventArgs e)
+        {
+            base.OnCellMouseUp(e);
+
+            // A plain click (never exceeded the drag threshold) just clears
+            // the pending state - nothing to reorder, nothing to undo,
+            // since BeginColumnDragDrop is only ever called once
+            // OnCellMouseMove sees the threshold exceeded. The header's own
+            // click-to-sort (OnColumnHeaderMouseClick) is unaffected either
+            // way: a real reorder drag is handed off to DoDragDrop below,
+            // which - like any OLE drag-drop - never lets the originating
+            // control see a matching MouseUp/Click of its own once the drag
+            // starts, so there's nothing here that needs to suppress it.
+            _pendingReorderColumnIndex = -1;
+        }
+
+        // Called once OnCellMouseMove sees the drag threshold exceeded.
+        // From here on, tracking the rest of the drag is handed off to
+        // WinForms' own DoDragDrop/OnDragOver/OnDragDrop - the same
+        // mechanism ListView's own column reorder uses, and ListBox's own
+        // item-reorder drag before that.
+        private void BeginColumnDragDrop(int columnIndex)
+        {
+            _dragColumnIndex = columnIndex;
+            _isDraggingColumn = true;
+            _dragInsertBeforeDisplayIndex = -1;
+
+            try
+            {
+                DoDragDrop(columnIndex, DragDropEffects.Move);
+            }
+            finally
+            {
+                // Covers every way the drag can end, including a cancelled
+                // drag (Escape, or dropped somewhere OnDragDrop never
+                // fires) - OnDragDrop itself only needs to perform the
+                // actual move, not reset this shared state.
+                _isDraggingColumn = false;
+                _dragColumnIndex = -1;
+                _dragInsertBeforeDisplayIndex = -1;
+
+                // Unlike ListView, the header here isn't a separate native
+                // child window - it's painted by this control's own
+                // OnCellPainting, so a plain Invalidate() is enough to
+                // make the insertion line disappear.
+                Invalidate();
+            }
+        }
+
+        protected override void OnDragOver(DragEventArgs drgevent)
+        {
+            if (!_isDraggingColumn)
+            {
+                base.OnDragOver(drgevent);
+                return;
+            }
+
+            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
+            int insertBefore = GetColumnDropInsertionIndex(point.X + HorizontalScrollingOffset);
+
+            drgevent.Effect = DragDropEffects.Move;
+
+            if (insertBefore != _dragInsertBeforeDisplayIndex)
+            {
+                _dragInsertBeforeDisplayIndex = insertBefore;
+                Invalidate();
+            }
+
+            base.OnDragOver(drgevent);
+        }
+
+        protected override void OnDragDrop(DragEventArgs drgevent)
+        {
+            if (_dragColumnIndex >= 0 && _dragInsertBeforeDisplayIndex >= 0)
+            {
+                MoveColumnToDisplayIndex(_dragColumnIndex, _dragInsertBeforeDisplayIndex);
+            }
+
+            base.OnDragDrop(drgevent);
+        }
+
+        protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
+        {
+            if (_isDraggingColumn)
+            {
+                gfbevent.UseDefaultCursors = false;
+                Cursor.Current = Cursors.SizeWE;
+            }
+
+            base.OnGiveFeedback(gfbevent);
+        }
+
+        private List<DataGridViewColumn> GetColumnsInDisplayOrder()
+        {
+            List<DataGridViewColumn> ordered = new List<DataGridViewColumn>();
+            foreach (DataGridViewColumn column in Columns)
+            {
+                ordered.Add(column);
+            }
+
+            ordered.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
+            return ordered;
+        }
+
+        // x is in "logical" (unscrolled) space - cumulative column widths
+        // from DisplayIndex 0, same space GetColumnDropInsertionIndex uses -
+        // callers convert from control-relative coordinates by adding
+        // HorizontalScrollingOffset first, since this control (unlike
+        // ListView's native header) can scroll its columns independently
+        // of where they're actually drawn.
+        private bool IsNearColumnBorder(int x)
+        {
+            const int resizeGripWidth = 5;
+            int cumulativeWidth = 0;
+            foreach (DataGridViewColumn column in GetColumnsInDisplayOrder())
+            {
+                cumulativeWidth += column.Width;
+                if (Math.Abs(x - cumulativeWidth) <= resizeGripWidth)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Where a column dropped at x would be inserted, expressed as
+        // "insert before this display index" - the boundary flips at each
+        // column's midpoint rather than its edges, so the insertion line
+        // snaps to whichever side of the hovered column the cursor is
+        // actually closer to, matching ListView's own GetColumnDropInsertionIndex.
+        private int GetColumnDropInsertionIndex(int x)
+        {
+            List<DataGridViewColumn> orderedColumns = GetColumnsInDisplayOrder();
+            int cumulativeWidth = 0;
+            for (int displayIndex = 0; displayIndex < orderedColumns.Count; displayIndex++)
+            {
+                int columnWidth = orderedColumns[displayIndex].Width;
+                if (x < cumulativeWidth + columnWidth / 2)
+                {
+                    return displayIndex;
+                }
+
+                cumulativeWidth += columnWidth;
+            }
+
+            return orderedColumns.Count;
+        }
+
+        // insertBeforeDisplayIndex is expressed in the ORIGINAL display
+        // order (before the dragged column is removed from its old slot) -
+        // the standard "move to before index P" -> "target index"
+        // adjustment (subtract one if P is past the column's own current
+        // position) is needed because DisplayIndex's setter moves the
+        // column to an absolute position, and removing it from its old
+        // slot first would shift everything after that slot left by one.
+        // Mirrors ListView's own MoveColumnToDisplayIndex.
+        private void MoveColumnToDisplayIndex(int columnIndex, int insertBeforeDisplayIndex)
+        {
+            if (columnIndex < 0 || columnIndex >= Columns.Count)
+            {
+                return;
+            }
+
+            DataGridViewColumn column = Columns[columnIndex];
+            int originalDisplayIndex = column.DisplayIndex;
+            int targetDisplayIndex = insertBeforeDisplayIndex > originalDisplayIndex
+                ? insertBeforeDisplayIndex - 1
+                : insertBeforeDisplayIndex;
+
+            if (targetDisplayIndex == originalDisplayIndex)
+            {
+                return;
+            }
+
+            column.DisplayIndex = targetDisplayIndex;
+        }
+
+        // Drawn as part of the same OnCellPainting pass as the header
+        // cell's own normal (native) painting, rather than replacing it -
+        // exactly one header cell's left edge lines up with
+        // _dragInsertBeforeDisplayIndex (or, for "insert after the last
+        // column", the last cell's right edge), so at most one of these two
+        // checks ever draws anything per call. Mirrors ListView's own
+        // DrawColumnDragInsertionLine.
+        private void DrawColumnDragInsertionLine(DataGridViewCellPaintingEventArgs e)
+        {
+            if (!_isDraggingColumn || _dragInsertBeforeDisplayIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+
+            DataGridViewColumn column = Columns[e.ColumnIndex];
+            const int lineWidth = 2;
+
+            using (SolidBrush brush = new SolidBrush(ColumnReorderIndicatorColor))
+            {
+                if (column.DisplayIndex == _dragInsertBeforeDisplayIndex)
+                {
+                    e.Graphics.FillRectangle(brush, e.CellBounds.Left, e.CellBounds.Top, lineWidth, e.CellBounds.Height);
+                }
+                else if (_dragInsertBeforeDisplayIndex == Columns.Count && column.DisplayIndex == Columns.Count - 1)
+                {
+                    e.Graphics.FillRectangle(brush, e.CellBounds.Right - lineWidth, e.CellBounds.Top, lineWidth, e.CellBounds.Height);
+                }
+            }
         }
 
         /// <summary>
@@ -499,13 +850,36 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnCellPainting(e);
 
-            if (e.RowIndex != -1 || e.ColumnIndex != _sortedColumnIndex || _sortOrder == SortOrder.None)
+            if (e.RowIndex != -1)
             {
                 return;
             }
 
+            bool isSortedColumn = e.ColumnIndex == _sortedColumnIndex && _sortOrder != SortOrder.None;
+            bool isDragInsertionTarget = _isDraggingColumn && _dragInsertBeforeDisplayIndex >= 0;
+
+            if (!isSortedColumn && !isDragInsertionTarget)
+            {
+                return;
+            }
+
+            // The default header painting (background/border/text) has to
+            // happen FIRST and be marked Handled here, same reason as
+            // always with this trick - anything drawn before this point in
+            // the method would otherwise just get painted over once
+            // DataGridView's own default painting runs right after this
+            // event handler returns (confirmed live: the insertion line
+            // below drew, then immediately vanished, because it used to
+            // run before this call).
             e.Paint(e.ClipBounds, e.PaintParts);
             e.Handled = true;
+
+            DrawColumnDragInsertionLine(e);
+
+            if (!isSortedColumn)
+            {
+                return;
+            }
 
             // Ascending points down, descending points up - the opposite
             // of what might seem obvious, but matches what was actually
