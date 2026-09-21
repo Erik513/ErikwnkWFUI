@@ -1495,6 +1495,8 @@ namespace ErikwnkWFUI.Controls
             BeginInvoke(new MethodInvoker(ApplyFillColumn));
         }
 
+        private const int ResizeGripWidth = 5;
+
         // The resize grip (a few pixels either side of a column boundary)
         // is left entirely to the native header - only clicks clearly
         // inside a column's body start our own reorder drag, so resizing
@@ -1502,18 +1504,7 @@ namespace ErikwnkWFUI.Controls
         // accidentally hijacked into a reorder attempt.
         private bool IsNearColumnBorder(int x)
         {
-            const int resizeGripWidth = 5;
-            var cumulativeWidth = 0;
-            foreach (var column in GetColumnsInDisplayOrder())
-            {
-                cumulativeWidth += column.Width;
-                if (Math.Abs(x - cumulativeWidth) <= resizeGripWidth)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out _);
         }
 
         // comctl32's header control has no concept of "this specific
@@ -1526,18 +1517,8 @@ namespace ErikwnkWFUI.Controls
         // resizability actually governs this specific boundary.
         private bool IsNearNonResizableColumnBorder(int x)
         {
-            const int resizeGripWidth = 5;
-            var cumulativeWidth = 0;
-            foreach (var column in GetColumnsInDisplayOrder())
-            {
-                cumulativeWidth += column.Width;
-                if (Math.Abs(x - cumulativeWidth) <= resizeGripWidth)
-                {
-                    return !IsColumnResizable(column.Index);
-                }
-            }
-
-            return false;
+            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out ColumnHeader column) &&
+                !IsColumnResizable(column.Index);
         }
 
         // Mirrors DataGridView's own GetColumnDropInsertionIndex - see

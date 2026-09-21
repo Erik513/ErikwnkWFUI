@@ -73,5 +73,35 @@ namespace ErikwnkWFUI.Controls
 
             return targetDisplayIndex == originalDisplayIndex ? (int?)null : targetDisplayIndex;
         }
+
+        // Whichever column's own right border sits within gripWidth pixels
+        // of x, if any - both controls hand-roll their own version of "am I
+        // near a resize grip" this same way (walk columns in display order,
+        // accumulate width, compare against the running total), just for
+        // different reasons: DataGridView uses this to actually arm and
+        // drive its own hand-rolled resize; ListView's resize is entirely
+        // native, so it only needs this to know whether to suppress the
+        // resize cursor over a non-resizable column's border (comctl32
+        // shows it regardless) - see each caller for how they use the
+        // result differently. x must already be in the same coordinate
+        // space as every column's own width (see GetDropInsertionIndex's
+        // own remarks on that). columnsInDisplayOrder is expected already
+        // ordered (see OrderByDisplayIndex above).
+        public static bool TryGetColumnAtBorder<T>(List<T> columnsInDisplayOrder, Func<T, int> widthOf, int x, int gripWidth, out T column)
+        {
+            int cumulativeWidth = 0;
+            foreach (T candidate in columnsInDisplayOrder)
+            {
+                cumulativeWidth += widthOf(candidate);
+                if (Math.Abs(x - cumulativeWidth) <= gripWidth)
+                {
+                    column = candidate;
+                    return true;
+                }
+            }
+
+            column = default;
+            return false;
+        }
     }
 }

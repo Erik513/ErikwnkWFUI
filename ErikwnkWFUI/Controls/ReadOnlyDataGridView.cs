@@ -1065,6 +1065,8 @@ namespace ErikwnkWFUI.Controls
             return IsColumnResizable(column.Index);
         }
 
+        private const int ResizeGripWidth = 5;
+
         // x is in "logical" (unscrolled) space - cumulative column widths
         // from DisplayIndex 0, same space GetColumnDropInsertionIndex uses -
         // callers convert from control-relative coordinates by adding
@@ -1077,20 +1079,7 @@ namespace ErikwnkWFUI.Controls
         // resize.
         private bool TryGetColumnAtBorder(int x, out DataGridViewColumn column)
         {
-            const int resizeGripWidth = 5;
-            int cumulativeWidth = 0;
-            foreach (DataGridViewColumn candidate in GetColumnsInDisplayOrder())
-            {
-                cumulativeWidth += candidate.Width;
-                if (Math.Abs(x - cumulativeWidth) <= resizeGripWidth)
-                {
-                    column = candidate;
-                    return true;
-                }
-            }
-
-            column = null;
-            return false;
+            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out column);
         }
 
         // x is in "logical" (unscrolled) space - see this method's own
