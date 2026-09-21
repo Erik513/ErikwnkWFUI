@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -97,6 +98,13 @@ namespace ErikwnkWFUI.Controls
         private readonly ToolTip _cellToolTip = new ToolTip { InitialDelay = 400, ReshowDelay = 100, AutoPopDelay = 8000, ShowAlways = true };
         private int _toolTipRow = -1;
         private int _toolTipDisplayColumn = -1;
+
+        private readonly HashSet<int> _nonSortableColumns = new HashSet<int>();
+        private readonly Dictionary<ColumnHeader, IComparer> _columnSortComparers = new Dictionary<ColumnHeader, IComparer>();
+        private List<ListViewItem> _originalOrder;
+        private int _sortedColumnIndex = -1;
+        private SortOrder _sortOrder = SortOrder.None;
+        private bool _suppressNextColumnClickSort;
 
         /// <summary>No column can be resized narrower than this.</summary>
         public int MinimumColumnWidth
@@ -305,7 +313,15 @@ namespace ErikwnkWFUI.Controls
             BackColor = UIColors.BackgroundDark;
             ForeColor = _rowForeColor;
             Font = UIFonts.Normal;
-            HeaderStyle = ColumnHeaderStyle.Nonclickable;
+            // Clickable, not Nonclickable, so ColumnClick/OnColumnClick
+            // actually fires for header-click sorting below (see
+            // SortingEnabled) - a Nonclickable header doesn't generate
+            // click notifications at all, native "pressed" chrome or not.
+            // OwnerDraw draws every header pixel itself regardless of this
+            // setting (see OnDrawColumnHeader), so switching this on never
+            // risked bringing back any native 3D-pressed visual - there's
+            // nothing native left in the paint path for it to affect.
+            HeaderStyle = ColumnHeaderStyle.Clickable;
             OwnerDraw = true;
 
             _alternateRowBackColor = Darken(_rowBackColor, 5);
@@ -443,6 +459,69 @@ namespace ErikwnkWFUI.Controls
         public bool IsColumnReorderable(int columnIndex)
         {
             return _allowColumnReordering && !_nonReorderableColumns.Contains(columnIndex);
+        }
+
+        /// <summary>
+        /// Whether clicking a column header cycles it through ascending,
+        /// descending, and original item order - mirrors
+        /// <see cref="Controls.ReadOnlyDataGridView.SortingEnabled"/>. Defaults
+        /// to true. Turn a single column off instead via
+        /// <see cref="SetColumnSortable"/> if only that one shouldn't sort.
+        /// </summary>
+        public bool SortingEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Configurable per column, independent of <see cref="SortingEnabled"/> -
+        /// a column can be excluded from sorting (e.g. one showing icons or
+        /// actions rather than comparable data) while the rest stay sortable.
+        /// </summary>
+        public void SetColumnSortable(int columnIndex, bool sortable)
+        {
+            if (sortable)
+            {
+                _nonSortableColumns.Remove(columnIndex);
+            }
+            else
+            {
+                _nonSortableColumns.Add(columnIndex);
+            }
+        }
+
+        public bool IsColumnSortable(int columnIndex)
+        {
+            return SortingEnabled && !_nonSortableColumns.Contains(columnIndex);
+        }
+
+        /// <summary>
+        /// Registers a custom comparer for a specific column, used by
+        /// column-header sorting instead of the default comparison (numeric
+        /// if both sides parse as a number, case-insensitive text
+        /// otherwise) - mirrors <see cref="Controls.ReadOnlyDataGridView.SetSortComparer"/>,
+        /// adapted for this control's own row shape: the comparer receives
+        /// the two <see cref="ListViewItem"/>s being compared (not just the
+        /// sorted column's own text), so it can read any of their SubItems
+        /// or a domain object stashed in <see cref="ListViewItem.Tag"/> if
+        /// that's more meaningful for that column than its displayed text.
+        /// It's expected to compare in plain ascending order - this control
+        /// still applies ascending/descending itself. Pass <c>null</c> as
+        /// <paramref name="comparer"/> to remove one and revert that column
+        /// to the default.
+        /// </summary>
+        public void SetSortComparer(ColumnHeader column, IComparer comparer)
+        {
+            if (column == null)
+            {
+                throw new ArgumentNullException(nameof(column));
+            }
+
+            if (comparer == null)
+            {
+                _columnSortComparers.Remove(column);
+            }
+            else
+            {
+                _columnSortComparers[column] = comparer;
+            }
         }
 
         /// <summary>
@@ -1048,7 +1127,206 @@ namespace ErikwnkWFUI.Controls
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
+            DrawSortGlyph(e);
             DrawColumnDragInsertionLine(e);
+        }
+
+        // A plain Unicode triangle character, drawn in the header's own
+        // text color, right-aligned in the sorted column's header cell -
+        // mirrors ReadOnlyDataGridView's own DrawSortGlyph (see its remarks
+        // on why a font glyph rather than a hand-built polygon).
+        private void DrawSortGlyph(DrawListViewColumnHeaderEventArgs e)
+        {
+            if (e.Header.Index != _sortedColumnIndex || _sortOrder == SortOrder.None)
+            {
+                return;
+            }
+
+            // Ascending points down, descending points up - matches
+            // ReadOnlyDataGridView's own glyph direction, for the same
+            // look across both controls.
+            string glyph = _sortOrder == SortOrder.Ascending ? "▼" : "▲";
+
+            const int rightMargin = 4;
+
+            using (Brush brush = new SolidBrush(_headerForeColor))
+            {
+                SizeF glyphSize = e.Graphics.MeasureString(glyph, Font);
+                float x = e.Bounds.Right - rightMargin - glyphSize.Width;
+                float y = e.Bounds.Top + (e.Bounds.Height - glyphSize.Height) / 2f;
+                e.Graphics.DrawString(glyph, Font, brush, x, y);
+            }
+        }
+
+        protected override void OnColumnClick(ColumnClickEventArgs e)
+        {
+            base.OnColumnClick(e);
+
+            if (_suppressNextColumnClickSort)
+            {
+                _suppressNextColumnClickSort = false;
+                return;
+            }
+
+            if (!IsColumnSortable(e.Column))
+            {
+                return;
+            }
+
+            CycleSort(e.Column);
+        }
+
+        /// <summary>
+        /// Three-state header click: ascending, then descending, then back
+        /// to the order items were in the first time this was ever called -
+        /// mirrors ReadOnlyDataGridView's own CycleSort. Clicking a
+        /// different column starts that column fresh at ascending.
+        /// </summary>
+        private void CycleSort(int columnIndex)
+        {
+            if (_sortedColumnIndex < 0)
+            {
+                // About to sort from a clean/unsorted state - snapshot now.
+                // Unlike DataGridView (which captures this once per fresh
+                // DataSource bind/Reset), this control has no such event to
+                // hook - it's just a plain Items collection an app adds to
+                // directly - so the snapshot is taken lazily, right before
+                // it's first actually needed, and reused across every
+                // subsequent sort cycle until the user cycles all the way
+                // back to "original" (see below) and starts sorting again.
+                _originalOrder = new List<ListViewItem>(Items.Cast<ListViewItem>());
+            }
+
+            if (columnIndex != _sortedColumnIndex)
+            {
+                _sortedColumnIndex = columnIndex;
+                _sortOrder = SortOrder.Ascending;
+            }
+            else if (_sortOrder == SortOrder.Ascending)
+            {
+                _sortOrder = SortOrder.Descending;
+            }
+            else if (_sortOrder == SortOrder.Descending)
+            {
+                _sortOrder = SortOrder.None;
+            }
+            else
+            {
+                _sortOrder = SortOrder.Ascending;
+            }
+
+            if (_sortOrder == SortOrder.None)
+            {
+                _sortedColumnIndex = -1;
+                ApplyItemOrder(BuildOriginalOrder());
+            }
+            else
+            {
+                ApplyItemOrder(BuildSortedOrder(columnIndex, _sortOrder));
+            }
+
+            // Matches ReadOnlyDataGridView's own ClearSelection()/CurrentCell
+            // = null after a sort - the rows themselves just moved out from
+            // under whatever was selected, so keeping a stale selection
+            // pointed at the wrong row would be actively misleading.
+            foreach (ListViewItem item in Items)
+            {
+                item.Selected = false;
+            }
+
+            InvalidateHeader();
+        }
+
+        // BeginUpdate/EndUpdate - this control's own equivalent of
+        // ReadOnlyDataGridView's ApplyBatchedDataSourceChange, suppressing
+        // the native control's own per-item repaint/layout while every item
+        // is removed and re-added, then repainting once at the end instead
+        // of once per item.
+        private void ApplyItemOrder(List<ListViewItem> desiredOrder)
+        {
+            BeginUpdate();
+            try
+            {
+                Items.Clear();
+                Items.AddRange(desiredOrder.ToArray());
+            }
+            finally
+            {
+                EndUpdate();
+            }
+        }
+
+        // Mirrors ReadOnlyDataGridView's own BuildSortedOrder - the default
+        // comparison tries a numeric compare first (so "10" sorts after
+        // "9", not before it, the way plain string comparison would put
+        // it), falling back to case-insensitive text. DataGridView gets
+        // this almost for free from its bound cells' own typed values;
+        // this control's rows are plain ListViewItem/SubItem text with no
+        // typed value at all, so there's no such default to inherit from -
+        // a registered comparer (see SetSortComparer) is the way to sort a
+        // column by something other than either of those two.
+        private List<ListViewItem> BuildSortedOrder(int columnIndex, SortOrder sortOrder)
+        {
+            int direction = sortOrder == SortOrder.Descending ? -1 : 1;
+            List<ListViewItem> items = new List<ListViewItem>(Items.Cast<ListViewItem>());
+
+            _columnSortComparers.TryGetValue(Columns[columnIndex], out IComparer customComparer);
+
+            items.Sort((a, b) => customComparer != null
+                ? customComparer.Compare(a, b) * direction
+                : CompareItemText(GetSubItemText(a, columnIndex), GetSubItemText(b, columnIndex), direction));
+
+            return items;
+        }
+
+        // Items added after the last snapshot (e.g. one the app appended
+        // while already sorted) sort after every item that was present at
+        // that snapshot, rather than colliding at index -1 - mirrors
+        // ReadOnlyDataGridView's own BuildOriginalOrder.
+        private List<ListViewItem> BuildOriginalOrder()
+        {
+            List<KeyValuePair<ListViewItem, int>> itemsWithIndex = new List<KeyValuePair<ListViewItem, int>>();
+
+            foreach (ListViewItem item in Items)
+            {
+                int index = _originalOrder.IndexOf(item);
+                itemsWithIndex.Add(new KeyValuePair<ListViewItem, int>(
+                    item, index >= 0 ? index : _originalOrder.Count));
+            }
+
+            itemsWithIndex.Sort((a, b) => a.Value.CompareTo(b.Value));
+
+            List<ListViewItem> ordered = new List<ListViewItem>(itemsWithIndex.Count);
+
+            foreach (KeyValuePair<ListViewItem, int> pair in itemsWithIndex)
+            {
+                ordered.Add(pair.Key);
+            }
+
+            return ordered;
+        }
+
+        private static string GetSubItemText(ListViewItem item, int columnIndex)
+        {
+            return columnIndex < item.SubItems.Count ? item.SubItems[columnIndex].Text : string.Empty;
+        }
+
+        // "Row 2" before "Row 10", not after - a plain string compare (or
+        // even parsing each cell as a whole number, tried first and found
+        // wrong here: "Row 1" isn't a number at all, only a number-shaped
+        // SUBSTRING of it is) sorts lexicographically, putting "Row 10"
+        // right after "Row 1" and before "Row 2". StrCmpLogicalW is the
+        // exact native function Windows Explorer's own file listing sorts
+        // names with - comparing embedded numeric runs numerically and
+        // everything else as text - so text columns here already sort the
+        // same way Explorer would sort the same strings, matching this
+        // control's own stated goal of behaving like Explorer's list view.
+        [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+        private static extern int StrCmpLogicalW(string psz1, string psz2);
+
+        private static int CompareItemText(string textX, string textY, int direction)
+        {
+            return StrCmpLogicalW(textX ?? string.Empty, textY ?? string.Empty) * direction;
         }
 
         // Drawn as part of the same owner-draw pass as the header cell
@@ -1227,6 +1505,15 @@ namespace ErikwnkWFUI.Controls
             _dragColumnIndex = columnIndex;
             _isDraggingColumn = true;
             _dragInsertBeforeDisplayIndex = -1;
+
+            // A real drag still goes down and (typically) back up on the
+            // same header cell as far as the native header's own click
+            // detection is concerned - confirmed on DataGridView's own
+            // hand-rolled resize that this can silently trigger a sort as
+            // a side effect of finishing the gesture; suppressing it
+            // pre-emptively here for the same reason before a user ever
+            // has to find it independently on this control too.
+            _suppressNextColumnClickSort = true;
 
             try
             {
@@ -2131,6 +2418,11 @@ namespace ErikwnkWFUI.Controls
             private void OnMouseDown(int x)
             {
                 _pendingColumnIndex = -1;
+
+                // Any new press starts fresh - only an actual drag that
+                // makes it all the way to BeginColumnDragDrop should ever
+                // suppress the click-to-sort that follows it.
+                _owner._suppressNextColumnClickSort = false;
 
                 if (_owner.Columns.Count == 0 || _owner.IsNearColumnBorder(x))
                 {
