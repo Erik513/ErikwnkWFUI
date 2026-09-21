@@ -1068,31 +1068,14 @@ namespace ErikwnkWFUI.Controls
             DrawColumnDragInsertionLine(e);
         }
 
-        // A plain Unicode triangle character, drawn in the header's own
-        // text color, right-aligned in the sorted column's header cell -
-        // mirrors ReadOnlyDataGridView's own DrawSortGlyph (see its remarks
-        // on why a font glyph rather than a hand-built polygon).
         private void DrawSortGlyph(DrawListViewColumnHeaderEventArgs e)
         {
-            if (e.Header.Index != _sortedColumnIndex || _sortOrder == SortOrder.None)
+            if (e.Header.Index != _sortedColumnIndex)
             {
                 return;
             }
 
-            // Ascending points down, descending points up - matches
-            // ReadOnlyDataGridView's own glyph direction, for the same
-            // look across both controls.
-            string glyph = _sortOrder == SortOrder.Ascending ? "▼" : "▲";
-
-            const int rightMargin = 4;
-
-            using (Brush brush = new SolidBrush(_headerForeColor))
-            {
-                SizeF glyphSize = e.Graphics.MeasureString(glyph, Font);
-                float x = e.Bounds.Right - rightMargin - glyphSize.Width;
-                float y = e.Bounds.Top + (e.Bounds.Height - glyphSize.Height) / 2f;
-                e.Graphics.DrawString(glyph, Font, brush, x, y);
-            }
+            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.Bounds, Font, _headerForeColor, _sortOrder);
         }
 
         protected override void OnColumnClick(ColumnClickEventArgs e)

@@ -1198,22 +1198,15 @@ namespace ErikwnkWFUI.Controls
             CurrentCell = null;
         }
 
-        // A plain Unicode triangle character, drawn in the header's own
-        // text color, right-aligned in the sorted column's header cell -
-        // not the native SortGlyphDirection glyph (still set, for AT/
-        // screen-reader purposes, but not what this actually reads to
-        // draw): that glyph rides on the OS's own visual-style painting,
-        // which EnableHeadersVisualStyles = false deliberately opts out
-        // of everywhere else on this control (so its own
+        // ColumnHeaderPainting.DrawSortGlyph below draws its own triangle,
+        // not the native SortGlyphDirection glyph (still set on the column,
+        // for AT/screen-reader purposes, but not what actually paints here):
+        // that glyph rides on the OS's own visual-style painting, which
+        // EnableHeadersVisualStyles = false deliberately opts out of
+        // everywhere else on this control (so its own
         // ColumnHeadersDefaultCellStyle colors apply instead of the OS
         // theme) - confirmed live that with it off, the native glyph
-        // doesn't paint at all, not even faintly. A character from the
-        // font, rather than a hand-built polygon, means the font's own
-        // hinting/anti-aliasing draws it correctly and symmetrically in
-        // both directions for free - an earlier version of this filled a
-        // polygon by hand instead, which needed its own anti-aliasing
-        // just to stop the two directions rasterizing at visibly
-        // different sizes.
+        // doesn't paint at all, not even faintly.
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             base.OnCellPainting(e);
@@ -1249,26 +1242,12 @@ namespace ErikwnkWFUI.Controls
 
             DrawColumnDragInsertionLine(e);
 
-            bool isSortedColumn = e.ColumnIndex == _sortedColumnIndex && _sortOrder != SortOrder.None;
-            if (!isSortedColumn)
+            if (e.ColumnIndex != _sortedColumnIndex)
             {
                 return;
             }
 
-            // Ascending points down, descending points up - the opposite
-            // of what might seem obvious, but matches what was actually
-            // asked for here.
-            string glyph = _sortOrder == SortOrder.Ascending ? "▼" : "▲";
-
-            const int rightMargin = 4;
-
-            using (Brush brush = new SolidBrush(_headerForeColor))
-            {
-                SizeF glyphSize = e.Graphics.MeasureString(glyph, Font);
-                float x = e.CellBounds.Right - rightMargin - glyphSize.Width;
-                float y = e.CellBounds.Top + (e.CellBounds.Height - glyphSize.Height) / 2f;
-                e.Graphics.DrawString(glyph, Font, brush, x, y);
-            }
+            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.CellBounds, Font, _headerForeColor, _sortOrder);
         }
 
         private void DrawHeaderCellBorder(DataGridViewCellPaintingEventArgs e)
