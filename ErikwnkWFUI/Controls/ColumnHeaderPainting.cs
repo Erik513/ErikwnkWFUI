@@ -44,5 +44,48 @@ namespace ErikwnkWFUI.Controls
                 graphics.DrawString(glyph, font, brush, x, y);
             }
         }
+
+        // Exactly one header cell's left edge lines up with
+        // dragInsertBeforeDisplayIndex (or, for "insert after the last
+        // column", the last cell's right edge), so at most one of the two
+        // branches below ever draws anything for a given call - callers
+        // paint every header cell during a drag, so this runs once per
+        // cell and is a no-op for all but (at most) one of them. A filled
+        // rectangle rather than a DrawLine pen - a pen is centered on its
+        // coordinate, so a line drawn exactly at the first column's left
+        // edge (x=0, or the cell's own Left) would have half its width
+        // clipped off, making that one position look thinner than every
+        // other. A no-op when nothing is being dragged
+        // (dragInsertBeforeDisplayIndex &lt; 0), so a caller can call this
+        // unconditionally once it already knows a drag might be in
+        // progress, regardless of whether this specific call turns out to
+        // need it.
+        public static void DrawColumnDragInsertionLine(
+            Graphics graphics,
+            Rectangle bounds,
+            int columnDisplayIndex,
+            int columnCount,
+            int dragInsertBeforeDisplayIndex,
+            Color indicatorColor)
+        {
+            if (dragInsertBeforeDisplayIndex < 0)
+            {
+                return;
+            }
+
+            const int lineWidth = 2;
+
+            using (SolidBrush brush = new SolidBrush(indicatorColor))
+            {
+                if (columnDisplayIndex == dragInsertBeforeDisplayIndex)
+                {
+                    graphics.FillRectangle(brush, bounds.Left, bounds.Top, lineWidth, bounds.Height);
+                }
+                else if (dragInsertBeforeDisplayIndex == columnCount && columnDisplayIndex == columnCount - 1)
+                {
+                    graphics.FillRectangle(brush, bounds.Right - lineWidth, bounds.Top, lineWidth, bounds.Height);
+                }
+            }
+        }
     }
 }

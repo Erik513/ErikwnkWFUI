@@ -1109,33 +1109,18 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Drawn as part of the same OnCellPainting pass as the header
-        // cell's own normal (native) painting, rather than replacing it -
-        // exactly one header cell's left edge lines up with
-        // _dragInsertBeforeDisplayIndex (or, for "insert after the last
-        // column", the last cell's right edge), so at most one of these two
-        // checks ever draws anything per call. Mirrors ListView's own
-        // DrawColumnDragInsertionLine.
+        // cell's own normal (native) painting, rather than replacing it.
+        // Mirrors ListView's own DrawColumnDragInsertionLine.
         private void DrawColumnDragInsertionLine(DataGridViewCellPaintingEventArgs e)
         {
-            if (!_isDraggingColumn || _dragInsertBeforeDisplayIndex < 0 || e.ColumnIndex < 0)
+            if (!_isDraggingColumn || e.ColumnIndex < 0)
             {
                 return;
             }
 
             DataGridViewColumn column = Columns[e.ColumnIndex];
-            const int lineWidth = 2;
-
-            using (SolidBrush brush = new SolidBrush(ColumnReorderIndicatorColor))
-            {
-                if (column.DisplayIndex == _dragInsertBeforeDisplayIndex)
-                {
-                    e.Graphics.FillRectangle(brush, e.CellBounds.Left, e.CellBounds.Top, lineWidth, e.CellBounds.Height);
-                }
-                else if (_dragInsertBeforeDisplayIndex == Columns.Count && column.DisplayIndex == Columns.Count - 1)
-                {
-                    e.Graphics.FillRectangle(brush, e.CellBounds.Right - lineWidth, e.CellBounds.Top, lineWidth, e.CellBounds.Height);
-                }
-            }
+            ColumnHeaderPainting.DrawColumnDragInsertionLine(
+                e.Graphics, e.CellBounds, column.DisplayIndex, Columns.Count, _dragInsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
         }
 
         /// <summary>

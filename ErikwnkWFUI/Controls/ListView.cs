@@ -1252,39 +1252,17 @@ namespace ErikwnkWFUI.Controls
         // Drawn as part of the same owner-draw pass as the header cell
         // itself (rather than as a separate overlay) so it's fully in our
         // own hands, unlike the native AllowColumnReorder line this
-        // replaced - see ColumnReorderIndicatorColor's doc comment. Exactly
-        // one header cell's left edge lines up with
-        // _dragInsertBeforeDisplayIndex (or, for "insert after the last
-        // column", the last cell's right edge), so at most one of these two
-        // checks ever draws anything per call.
+        // replaced - see ColumnReorderIndicatorColor's doc comment. Mirrors
+        // DataGridView's own DrawColumnDragInsertionLine.
         private void DrawColumnDragInsertionLine(DrawListViewColumnHeaderEventArgs e)
         {
-            if (!_isDraggingColumn || _dragInsertBeforeDisplayIndex < 0)
+            if (!_isDraggingColumn)
             {
                 return;
             }
 
-            // A filled rectangle rather than a DrawLine pen - a pen is
-            // centered on its coordinate, so a line drawn exactly at x=0
-            // (the very first column's left edge) has half its width
-            // clipped off the visible header entirely, making the leftmost
-            // position look noticeably thinner than every other one. A
-            // rectangle has no such centering ambiguity: it always occupies
-            // exactly [x, x + lineWidth), fully visible regardless of which
-            // edge it's flush against.
-            const int lineWidth = 2;
-
-            using (var brush = new SolidBrush(ColumnReorderIndicatorColor))
-            {
-                if (e.Header.DisplayIndex == _dragInsertBeforeDisplayIndex)
-                {
-                    e.Graphics.FillRectangle(brush, e.Bounds.Left, e.Bounds.Top, lineWidth, e.Bounds.Height);
-                }
-                else if (_dragInsertBeforeDisplayIndex == Columns.Count && e.Header.DisplayIndex == Columns.Count - 1)
-                {
-                    e.Graphics.FillRectangle(brush, e.Bounds.Right - lineWidth, e.Bounds.Top, lineWidth, e.Bounds.Height);
-                }
-            }
+            ColumnHeaderPainting.DrawColumnDragInsertionLine(
+                e.Graphics, e.Bounds, e.Header.DisplayIndex, Columns.Count, _dragInsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
         }
 
         private static void OnDrawItem(object sender, DrawListViewItemEventArgs e)
