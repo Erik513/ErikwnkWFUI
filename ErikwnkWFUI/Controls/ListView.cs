@@ -1550,28 +1550,13 @@ namespace ErikwnkWFUI.Controls
             return false;
         }
 
-        // Where a column dropped at x would be inserted, expressed as
-        // "insert before this display index" - the boundary flips at each
-        // column's midpoint rather than its edges, so the insertion line
-        // snaps to whichever side of the hovered column the cursor is
-        // actually closer to (matching the feel of the native drag this
-        // replaced), not just "whichever column the cursor is over".
+        // Mirrors DataGridView's own GetColumnDropInsertionIndex - see
+        // ColumnLayoutMath.GetDropInsertionIndex's own remarks on the
+        // coordinate space this expects x in.
         private int GetColumnDropInsertionIndex(int x)
         {
             var orderedColumns = GetColumnsInDisplayOrder();
-            var cumulativeWidth = 0;
-            for (var displayIndex = 0; displayIndex < orderedColumns.Count; displayIndex++)
-            {
-                var columnWidth = orderedColumns[displayIndex].Width;
-                if (x < cumulativeWidth + columnWidth / 2)
-                {
-                    return displayIndex;
-                }
-
-                cumulativeWidth += columnWidth;
-            }
-
-            return orderedColumns.Count;
+            return ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
         }
 
         // Native click behavior always ends up with just the clicked item

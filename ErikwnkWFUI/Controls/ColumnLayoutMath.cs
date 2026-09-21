@@ -24,5 +24,33 @@ namespace ErikwnkWFUI.Controls
             columns.Sort((first, second) => displayIndexOf(first).CompareTo(displayIndexOf(second)));
             return columns;
         }
+
+        // Where a column dropped at x would be inserted, expressed as
+        // "insert before this display index" - the boundary flips at each
+        // column's midpoint rather than its edges, so the insertion line
+        // snaps to whichever side of the hovered column the cursor is
+        // actually closer to. x and every column's own width must already
+        // be in the same coordinate space - DataGridView additionally
+        // folds in HorizontalScrollingOffset before calling this (see its
+        // own caller), since it can scroll its columns independently of
+        // where they're drawn; ListView's header can't scroll independently
+        // like that, so it passes x as-is. columnsInDisplayOrder is
+        // expected already ordered (see OrderByDisplayIndex above).
+        public static int GetDropInsertionIndex<T>(List<T> columnsInDisplayOrder, Func<T, int> widthOf, int x)
+        {
+            int cumulativeWidth = 0;
+            for (int displayIndex = 0; displayIndex < columnsInDisplayOrder.Count; displayIndex++)
+            {
+                int columnWidth = widthOf(columnsInDisplayOrder[displayIndex]);
+                if (x < cumulativeWidth + columnWidth / 2)
+                {
+                    return displayIndex;
+                }
+
+                cumulativeWidth += columnWidth;
+            }
+
+            return columnsInDisplayOrder.Count;
+        }
     }
 }

@@ -1093,27 +1093,12 @@ namespace ErikwnkWFUI.Controls
             return false;
         }
 
-        // Where a column dropped at x would be inserted, expressed as
-        // "insert before this display index" - the boundary flips at each
-        // column's midpoint rather than its edges, so the insertion line
-        // snaps to whichever side of the hovered column the cursor is
-        // actually closer to, matching ListView's own GetColumnDropInsertionIndex.
+        // x is in "logical" (unscrolled) space - see this method's own
+        // caller for why. Mirrors ListView's own GetColumnDropInsertionIndex.
         private int GetColumnDropInsertionIndex(int x)
         {
             List<DataGridViewColumn> orderedColumns = GetColumnsInDisplayOrder();
-            int cumulativeWidth = 0;
-            for (int displayIndex = 0; displayIndex < orderedColumns.Count; displayIndex++)
-            {
-                int columnWidth = orderedColumns[displayIndex].Width;
-                if (x < cumulativeWidth + columnWidth / 2)
-                {
-                    return displayIndex;
-                }
-
-                cumulativeWidth += columnWidth;
-            }
-
-            return orderedColumns.Count;
+            return ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
         }
 
         // insertBeforeDisplayIndex is expressed in the ORIGINAL display
