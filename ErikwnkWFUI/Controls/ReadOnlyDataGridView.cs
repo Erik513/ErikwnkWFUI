@@ -26,7 +26,7 @@ namespace ErikwnkWFUI.Controls
     /// <remarks>
     /// Consumers never need to spell out
     /// <c>ErikwnkWFUI.Controls.ReadOnlyDataGridView</c>: go through
-    /// <see cref="UIStyles.DataGridViews.CreateReadOnly"/>, which hands back
+    /// <see cref="UIStyles.DataGridViews.CreateReadOnlyStandard"/>, which hands back
     /// a plain <see cref="System.Windows.Forms.DataGridView"/>-typed
     /// reference.
     /// </remarks>
@@ -39,6 +39,8 @@ namespace ErikwnkWFUI.Controls
         private Color _rowForeColor = UIColors.TextPrimary;
         private Color _selectionBackColorOverride;
         private bool _selectionBackColorIsOverridden;
+        private Color _borderColorOverride;
+        private bool _borderColorIsOverridden;
         private bool _allowColumnReordering = true;
         private readonly HashSet<int> _nonReorderableColumns = new HashSet<int>();
         private Color _columnReorderIndicatorColorOverride;
@@ -50,6 +52,7 @@ namespace ErikwnkWFUI.Controls
         private int _pendingReorderStartX;
         private bool _allowColumnResizing = true;
         private readonly HashSet<int> _nonResizableColumns = new HashSet<int>();
+        private int _minimumColumnWidth = DefaultMinimumColumnWidth;
         private bool _isResizingColumn;
         private int _resizeColumnIndex = -1;
         private int _resizeStartX;
@@ -82,6 +85,36 @@ namespace ErikwnkWFUI.Controls
             set { _headerForeColor = value; ApplyStyles(); }
         }
 
+        /// <summary>
+        /// Color of the whole control's outer frame only - the gridlines
+        /// BETWEEN cells (this control's own <c>GridColor</c>) stay a fixed
+        /// neutral color regardless, so <c>CreatePrimary</c> doesn't turn
+        /// every row separator into a wash of accent color too; only
+        /// ListView's equivalent <see cref="ListView.BorderColor"/> drives
+        /// both its frame and its header cell dividers with one color,
+        /// since ListView never draws anything resembling gridlines
+        /// between actual rows in the first place. Defaults to
+        /// <see cref="UIColors.BorderMedium"/> - a fixed, neutral border
+        /// regardless of the current accent, matching this control's
+        /// original, unconditional look
+        /// (<see cref="Factories.UIDataGridViewFactory.CreateStandard"/>/
+        /// <see cref="Factories.UIDataGridViewFactory.CreateReadOnlyStandard"/>
+        /// still get exactly that, unchanged).
+        /// <see cref="Factories.UIDataGridViewFactory.CreatePrimary"/> sets
+        /// this to <see cref="UIColors.Primary"/> instead, the same way
+        /// ListView's own CreatePrimary does.
+        /// </summary>
+        public Color BorderColor
+        {
+            get => _borderColorIsOverridden ? _borderColorOverride : UIColors.BorderMedium;
+            set
+            {
+                _borderColorOverride = value;
+                _borderColorIsOverridden = true;
+                ApplyStyles();
+            }
+        }
+
         /// <summary>Background color of a normal (not selected) row. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color RowBackColor
         {
@@ -89,7 +122,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _rowBackColor = value;
-                _alternateRowBackColor = Darken(value, 5);
+                _alternateRowBackColor = UIColors.Darken(value, 5);
                 ApplyStyles();
             }
         }
@@ -216,6 +249,34 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// No column can be resized narrower than this - mirrors
+        /// <see cref="ListView.MinimumColumnWidth"/>. Whichever of this or
+        /// the column's own native <see cref="DataGridViewColumn.MinimumWidth"/>
+        /// is larger actually applies.
+        /// </summary>
+        /// <remarks>
+        /// A column's native MinimumWidth defaults to a few pixels - fine
+        /// for WinForms' own resize-drag, which always keeps the border
+        /// wherever the column's own edge currently is, but this control's
+        /// hand-rolled one (see AllowColumnResizing's own remarks on why)
+        /// finds that edge by proximity, within a small pixel radius of
+        /// each border. Once a column got down anywhere near that native
+        /// floor, the radii around its own left and right borders started
+        /// overlapping, so a drag meant for one of them intermittently
+        /// grabbed the other instead - confirmed live as "resizing gets
+        /// stuck around 5-10px, and never responds correctly again from
+        /// there." This default is comfortably larger than that radius on
+        /// either side, so the overlap that causes it is never reachable.
+        /// </remarks>
+        public int MinimumColumnWidth
+        {
+            get => _minimumColumnWidth;
+            set => _minimumColumnWidth = Math.Max(1, value);
+        }
+
+        private const int DefaultMinimumColumnWidth = 40;
+
+        /// <summary>
         /// Configurable per column, independent of
         /// <see cref="AllowColumnResizing"/>: a column can be locked at its
         /// current width entirely (e.g. <see cref="DataGridView"/>'s own
@@ -302,14 +363,30 @@ namespace ErikwnkWFUI.Controls
 
         public ReadOnlyDataGridView()
         {
-            _alternateRowBackColor = Darken(_rowBackColor, 5);
+            _alternateRowBackColor = UIColors.Darken(_rowBackColor, 5);
 
             BackgroundColor = UIColors.BackgroundDark;
+
+            // Fixed, independent of BorderColor - only the OUTER frame
+            // (see OnPaint below) follows BorderColor/the accent in
+            // CreatePrimary; the gridlines BETWEEN cells stay this same
+            // neutral color regardless, so CreatePrimary doesn't turn every
+            // row separator into a wash of accent color too.
             GridColor = UIColors.BorderMedium;
+
+            // BorderStyle stays None regardless - this control draws its
+            // own outer frame instead (see OnPaint below), the same way
+            // ListView draws its own instead of using a native BorderStyle.
             BorderStyle = BorderStyle.None;
             CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
             RowHeadersVisible = false;
+
+            // The header row's own height is not something this control
+            // wants a user casually dragging - EnableResizing (the native
+            // default) also has no minimum-height floor of its own, so it
+            // can be dragged down to where header text starts clipping.
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
 
             // Without this, the column headers ignore
             // ColumnHeadersDefaultCellStyle entirely and always render
@@ -733,7 +810,7 @@ namespace ErikwnkWFUI.Controls
         {
             int controlX = PointToClient(Cursor.Position).X;
             int delta = controlX - _resizeStartX;
-            int minimumWidth = Columns[_resizeColumnIndex].MinimumWidth;
+            int minimumWidth = Math.Max(_minimumColumnWidth, Columns[_resizeColumnIndex].MinimumWidth);
             int newWidth = Math.Max(minimumWidth, _resizeStartWidth + delta);
 
             if (Columns[_resizeColumnIndex].Width != newWidth)
@@ -1349,6 +1426,113 @@ namespace ErikwnkWFUI.Controls
                 StringComparison.CurrentCultureIgnoreCase) * direction;
         }
 
+        // BorderStyle is None - this draws a light frame around the whole
+        // control instead, matching ListView's own BorderColor and using
+        // the exact same technique. A first attempt drew this via a plain
+        // OnPaint override instead, on the theory that DataGridView (fully
+        // managed, unlike ListView's wrapped native comctl32 control)
+        // wouldn't have ListView's own reason for needing the lower-level
+        // approach - confirmed wrong live: scrolling still visibly made
+        // the border vanish/redraw incorrectly, meaning DataGridView's own
+        // scroll handling also shifts existing pixels natively (likely
+        // ScrollWindowEx-style, same as ListView's) rather than going
+        // through OnPaint for every scrolled frame. Selecting a cell had
+        // the same problem for the same underlying reason: an edge cell's
+        // own repaint doesn't guarantee this override runs again for
+        // exactly that same paint cycle in every case. Draws straight onto
+        // the client DC right after WM_PAINT/the scroll messages finish,
+        // same as ListView.
+        private const int WM_PAINT = 0x000F;
+        private const int WM_VSCROLL = 0x0115;
+        private const int WM_HSCROLL = 0x0114;
+        private const int WM_MOUSEWHEEL = 0x020A;
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr GetDC(IntPtr hWnd);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool LockWindowUpdate(IntPtr hWndLock);
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
+            {
+                // base.WndProc below runs this control's own scroll
+                // handling SYNCHRONOUSLY, including whatever partial
+                // pixel-shifting repaint it does internally - by the time
+                // control returns here, that frame (with the border
+                // missing/stale along the scrolled edge) has already
+                // reached the screen once. LockWindowUpdate blocks ANY
+                // pixel of this window from reaching the screen at the GDI
+                // level while locked, regardless of how the control
+                // internally decides to paint during the scroll, so
+                // nothing incorrect can flash through no matter the
+                // mechanism - then a forced synchronous repaint (Update(),
+                // not just Invalidate()) once unlocked means the very
+                // first frame the user actually sees is the corrected one.
+                // Exactly ListView's own WndProc technique for this same
+                // class of problem.
+                LockWindowUpdate(Handle);
+                try
+                {
+                    base.WndProc(ref m);
+                }
+                finally
+                {
+                    LockWindowUpdate(IntPtr.Zero);
+                }
+
+                Invalidate();
+                Update();
+                return;
+            }
+
+            base.WndProc(ref m);
+
+            if (m.Msg != WM_PAINT || ClientSize.Width <= 1 || ClientSize.Height <= 1)
+            {
+                return;
+            }
+
+            // Redrawn on every real WM_PAINT, deliberately - matches
+            // ListView's own reasoning: this control can still repaint
+            // parts of the border's own pixels through paths this class
+            // doesn't get a hook into at all (e.g. its own native focus
+            // rectangle around a selected cell), so a "only when something
+            // relevant changed" version of this would leave the border
+            // silently wrong after a selection change, same as ListView's
+            // own history already found the hard way.
+            IntPtr dc = GetDC(Handle);
+            if (dc == IntPtr.Zero)
+            {
+                return;
+            }
+
+            try
+            {
+                using (Graphics g = Graphics.FromHdc(dc))
+                using (Pen pen = new Pen(BorderColor))
+                {
+                    // ClientSize, not Width/Height - Width/Height are this
+                    // control's FULL outer bounds, which include a native
+                    // scrollbar's own strip when one is visible. A border
+                    // drawn at Width - 1 would land exactly under that
+                    // scrollbar, which then paints over it - invisible,
+                    // not missing.
+                    int right = ClientSize.Width - 1;
+                    int bottom = ClientSize.Height - 1;
+                    g.DrawRectangle(pen, 0, 0, right, bottom);
+                }
+            }
+            finally
+            {
+                ReleaseDC(Handle, dc);
+            }
+        }
+
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -1399,22 +1583,6 @@ namespace ErikwnkWFUI.Controls
             typeof(Control)
                 .GetProperty("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(this, true, null);
-        }
-
-        protected static Color Darken(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Max(0, color.R - amount),
-                Math.Max(0, color.G - amount),
-                Math.Max(0, color.B - amount));
-        }
-
-        protected static Color Lighten(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Min(255, color.R + amount),
-                Math.Min(255, color.G + amount),
-                Math.Min(255, color.B + amount));
         }
 
         // See OnColumnAdded - a plain DataGridViewTextBoxCell whose accessible

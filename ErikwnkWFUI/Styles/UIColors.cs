@@ -232,5 +232,29 @@ namespace ErikwnkWFUI.Styles
                 color.G + (int)((255 - color.G) * amount),
                 color.B + (int)((255 - color.B) * amount));
         }
+
+        // Flat RGB-unit variants - a different blend than the fractional
+        // (0-1 "amount") private overloads just above, which this palette's
+        // own generation uses to derive Primary/Secondary shades from the
+        // accent. These exist for the much smaller "row N alternates with a
+        // slightly darker shade of row N-1" case several controls
+        // (ListBox, ListView, ReadOnlyDataGridView) each used to carry
+        // their own identical copy of - consolidated here since the exact
+        // same formula doesn't belong duplicated three times over.
+        public static Color Darken(Color color, int amount)
+        {
+            return Color.FromArgb(
+                Math.Max(0, color.R - amount),
+                Math.Max(0, color.G - amount),
+                Math.Max(0, color.B - amount));
+        }
+
+        public static Color Lighten(Color color, int amount)
+        {
+            return Color.FromArgb(
+                Math.Min(255, color.R + amount),
+                Math.Min(255, color.G + amount),
+                Math.Min(255, color.B + amount));
+        }
     }
 }

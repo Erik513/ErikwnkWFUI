@@ -138,7 +138,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _rowBackColor = value;
-                _alternateRowBackColor = Darken(value, 5);
+                _alternateRowBackColor = UIColors.Darken(value, 5);
                 Invalidate();
             }
         }
@@ -324,7 +324,7 @@ namespace ErikwnkWFUI.Controls
             HeaderStyle = ColumnHeaderStyle.Clickable;
             OwnerDraw = true;
 
-            _alternateRowBackColor = Darken(_rowBackColor, 5);
+            _alternateRowBackColor = UIColors.Darken(_rowBackColor, 5);
 
             SetStyle(
                 ControlStyles.OptimizedDoubleBuffer |
@@ -2289,14 +2289,6 @@ namespace ErikwnkWFUI.Controls
                     }
                     return;
             }
-        }
-
-        private static Color Darken(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Max(0, color.R - amount),
-                Math.Max(0, color.G - amount),
-                Math.Max(0, color.B - amount));
         }
 
         // Subclasses the ListView's own header child window (class

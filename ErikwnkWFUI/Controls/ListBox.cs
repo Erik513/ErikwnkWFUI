@@ -220,7 +220,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _itemBackColor = value;
-                _alternateItemBackColor = Darken(_itemBackColor, 5);
+                _alternateItemBackColor = UIColors.Darken(_itemBackColor, 5);
                 Invalidate();
             }
         }
@@ -260,7 +260,7 @@ namespace ErikwnkWFUI.Controls
 
         public ListBox()
         {
-            _alternateItemBackColor = Darken(_itemBackColor, 5);
+            _alternateItemBackColor = UIColors.Darken(_itemBackColor, 5);
 
             DrawMode = DrawMode.OwnerDrawFixed;
             ItemHeight = _itemHeight;
@@ -861,14 +861,6 @@ namespace ErikwnkWFUI.Controls
             typeof(Control)
                 .GetProperty("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance)
                 ?.SetValue(this, true, null);
-        }
-
-        private static Color Darken(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Max(0, color.R - amount),
-                Math.Max(0, color.G - amount),
-                Math.Max(0, color.B - amount));
         }
     }
 }

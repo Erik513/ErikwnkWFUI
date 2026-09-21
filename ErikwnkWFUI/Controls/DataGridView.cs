@@ -450,7 +450,7 @@ namespace ErikwnkWFUI.Controls
             // on the cell style actually used for this paint pass, outranks
             // both.
             Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
-                ? Lighten(UIColors.Red, 40)
+                ? UIColors.Lighten(UIColors.Red, 40)
                 : UIColors.Red;
             e.CellStyle.ForeColor = foreColor;
             e.CellStyle.SelectionForeColor = foreColor;

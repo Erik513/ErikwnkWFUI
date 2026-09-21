@@ -843,36 +843,87 @@ namespace ErikwnkWFUI.Showcase
             // itself (see ReadOnlyDataGridView.ReorderDataSource), which
             // needs an IList data source; a DataTable isn't one, so
             // sorting silently did nothing against it here.
-            var grid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks());
-            grid.Dock = DockStyle.Fill;
+            AddEditableDataGridRow(table, "CreateStandard", UIStyles.DataGridViews.CreateStandard);
+            AddEditableDataGridRow(table, "CreatePrimary", UIStyles.DataGridViews.CreatePrimary);
 
-            var disabledGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks());
-            disabledGrid.Dock = DockStyle.Fill;
-            disabledGrid.Enabled = false;
-
-            table.AddRow(
-                "CreateStandard",
-                180,
-                UIColumn.Percent(grid, 50),
-                UIColumn.Percent(disabledGrid, 50));
-
-            // The lighter of the two - column-header sorting still works,
-            // but no adding/deleting/cutting/pasting rows, no delete-row
-            // column, no right-click menu. Same DataSource shape as above
-            // so the only difference on screen is what CreateStandard adds
-            // on top of this.
-            var readOnlyGrid = UIStyles.DataGridViews.CreateReadOnly(CreateSampleTracks());
+            // The lighter of the two variants above - column-header sorting
+            // still works, but no adding/deleting/cutting/pasting rows, so
+            // neither the delete-row column nor the "type here to add a
+            // row" placeholder the editable rows above demo has anything
+            // to show here.
+            var readOnlyGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks());
             readOnlyGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(readOnlyGrid);
 
-            var disabledReadOnlyGrid = UIStyles.DataGridViews.CreateReadOnly(CreateSampleTracks());
+            var disabledReadOnlyGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks());
             disabledReadOnlyGrid.Dock = DockStyle.Fill;
             disabledReadOnlyGrid.Enabled = false;
+            NarrowLengthColumn(disabledReadOnlyGrid);
 
             table.AddRow(
-                "CreateReadOnly",
+                "CreateReadOnlyStandard",
                 180,
                 UIColumn.Percent(readOnlyGrid, 50),
                 UIColumn.Percent(disabledReadOnlyGrid, 50));
+
+            var readOnlyPrimaryGrid = UIStyles.DataGridViews.CreateReadOnlyPrimary(CreateSampleTracks());
+            readOnlyPrimaryGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(readOnlyPrimaryGrid);
+
+            var disabledReadOnlyPrimaryGrid = UIStyles.DataGridViews.CreateReadOnlyPrimary(CreateSampleTracks());
+            disabledReadOnlyPrimaryGrid.Dock = DockStyle.Fill;
+            disabledReadOnlyPrimaryGrid.Enabled = false;
+            NarrowLengthColumn(disabledReadOnlyPrimaryGrid);
+
+            table.AddRow(
+                "CreateReadOnlyPrimary",
+                180,
+                UIColumn.Percent(readOnlyPrimaryGrid, 50),
+                UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
+        }
+
+        // "Length" only ever holds a short "m:ss" string - narrowed so the
+        // three grids sharing one row here (each barely a third of the
+        // row's own width, unlike the two-up ReadOnly rows below) don't
+        // need a horizontal scrollbar just to fit a column whose default
+        // auto-generated width is far wider than its content ever needs.
+        private static void NarrowLengthColumn(System.Windows.Forms.DataGridView grid)
+        {
+            if (grid.Columns["Length"] != null)
+            {
+                grid.Columns["Length"].Width = 55;
+            }
+        }
+
+        // Same three states for both CreateStandard and CreatePrimary -
+        // plain, with the delete-row column also shown (the "type here to
+        // add a row" placeholder is already there either way, on by default
+        // for the editable variant), and disabled.
+        private void AddEditableDataGridRow(
+            PropertyTable table,
+            string labelText,
+            Func<object, System.Windows.Forms.DataGridView> createGrid)
+        {
+            var grid = createGrid(CreateSampleTracks());
+            grid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(grid);
+
+            var gridWithDeleteColumn = (ErikwnkWFUI.Controls.DataGridView)createGrid(CreateSampleTracks());
+            gridWithDeleteColumn.Dock = DockStyle.Fill;
+            gridWithDeleteColumn.ShowDeleteRowColumn = true;
+            NarrowLengthColumn(gridWithDeleteColumn);
+
+            var disabledGrid = createGrid(CreateSampleTracks());
+            disabledGrid.Dock = DockStyle.Fill;
+            disabledGrid.Enabled = false;
+            NarrowLengthColumn(disabledGrid);
+
+            table.AddRow(
+                labelText,
+                180,
+                UIColumn.Percent(grid, 34),
+                UIColumn.Percent(gridWithDeleteColumn, 33),
+                UIColumn.Percent(disabledGrid, 33));
         }
 
         // A fresh list each call - CreateStandard/CreateReadOnly bind

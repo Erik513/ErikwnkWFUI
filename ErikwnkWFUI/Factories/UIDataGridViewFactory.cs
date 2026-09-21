@@ -1,4 +1,5 @@
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -16,11 +17,36 @@ namespace ErikwnkWFUI.Factories
             };
         }
 
-        public static DataGridView CreateReadOnly(object dataSource = null)
+        public static DataGridView CreateReadOnlyStandard(object dataSource = null)
         {
             return new Controls.ReadOnlyDataGridView
             {
                 DataSource = dataSource
+            };
+        }
+
+        // Same editable control CreateStandard returns, framed (and
+        // gridlined - see ReadOnlyDataGridView.BorderColor) in the current
+        // accent color instead of the fixed neutral border CreateStandard
+        // keeps - mirrors UIListViewFactory.CreatePrimary.
+        public static DataGridView CreatePrimary(object dataSource = null)
+        {
+            return new Controls.DataGridView
+            {
+                DataSource = dataSource,
+                BorderColor = UIColors.Primary
+            };
+        }
+
+        // Same read-only control CreateReadOnlyStandard returns, framed in
+        // the current accent color instead - the read-only counterpart to
+        // CreatePrimary, same as CreateReadOnlyStandard is to CreateStandard.
+        public static DataGridView CreateReadOnlyPrimary(object dataSource = null)
+        {
+            return new Controls.ReadOnlyDataGridView
+            {
+                DataSource = dataSource,
+                BorderColor = UIColors.Primary
             };
         }
     }
