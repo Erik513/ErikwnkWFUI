@@ -743,6 +743,26 @@ namespace ErikwnkWFUI.Controls
 
             if (_isResizingColumn)
             {
+                // Regression test: releasing the mouse button outside this
+                // control's own bounds (still dragging when the cursor
+                // left it) never reached OnCellMouseUp at all - DataGridView
+                // apparently only raises that once it can resolve a cell
+                // under the cursor, and there wasn't one out there despite
+                // Capture still routing the message here. The resize state
+                // was left permanently armed, so just hovering back in
+                // (with the button already released, no click needed) kept
+                // right on resizing from nothing but that stale state.
+                // Checking the CURRENT button state directly here, instead
+                // of only ever trusting a MouseUp callback to tell us it
+                // ended, means a stray "still resizing" flag gets noticed
+                // and cleaned up the moment anything moves the mouse again,
+                // regardless of why the real MouseUp was missed.
+                if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
+                {
+                    EndColumnResize();
+                    return;
+                }
+
                 ApplyLiveColumnResize();
                 return;
             }
@@ -790,10 +810,38 @@ namespace ErikwnkWFUI.Controls
 
             if (_isResizingColumn)
             {
-                _isResizingColumn = false;
-                _resizeColumnIndex = -1;
-                Capture = false;
+                EndColumnResize();
             }
+        }
+
+        // Also ends an in-progress resize on the plain Control-level
+        // MouseUp, not just OnCellMouseUp above - confirmed live that
+        // OnCellMouseUp/CellMouseUp simply never fires for a MouseUp whose
+        // cursor is outside this control's own bounds at the time (this
+        // control's Capture still routes the underlying message here
+        // regardless, but DataGridView apparently only raises the CELL-
+        // level event once it can resolve an actual cell under the
+        // cursor, and there wasn't one out there). This one is the same
+        // message either way, just not conditioned on resolving a cell
+        // first, so it reliably fires regardless of where the cursor
+        // ends up. OnCellMouseMove's own button-state check (see its own
+        // remarks) is the other half of this same fix, for the case where
+        // even this somehow doesn't run before the cursor moves again.
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            if (_isResizingColumn)
+            {
+                EndColumnResize();
+            }
+        }
+
+        private void EndColumnResize()
+        {
+            _isResizingColumn = false;
+            _resizeColumnIndex = -1;
+            Capture = false;
         }
 
         // Applies the column's new width directly, on every single
