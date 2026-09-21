@@ -692,6 +692,47 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
+            // Copying exactly one cell, then pasting into a selection of
+            // more than one, fills every selected cell with that same
+            // value (standard spreadsheet "fill" behavior) instead of
+            // anchoring at the top-left and only ever writing the one
+            // value there. Copying more than one cell never fills/tiles a
+            // larger selection this way, regardless of its size - it's
+            // always just anchored at the top-left and extends from there
+            // (same as always), matching Excel's own paste behavior.
+            if (pastedRows.Length == 1 && pastedRows[0].Split('\t').Length == 1)
+            {
+                // Captured as plain (row, column) index pairs, not the
+                // DataGridViewCell references themselves - FillCellsWithValue
+                // cancels a pending placeholder add before writing, and a
+                // DataGridViewCell held onto across that mutation turned out
+                // to no longer resolve to the row it was read from.
+                List<(int RowIndex, int ColumnIndex)> fillTargetCells = new List<(int, int)>();
+                bool fillTouchedPlaceholder = false;
+
+                foreach (DataGridViewCell cell in SelectedCells)
+                {
+                    if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                    {
+                        continue;
+                    }
+
+                    if (IsPlaceholderRowIndex(cell.RowIndex))
+                    {
+                        fillTouchedPlaceholder = true;
+                        continue;
+                    }
+
+                    fillTargetCells.Add((cell.RowIndex, cell.ColumnIndex));
+                }
+
+                if (fillTargetCells.Count > 1)
+                {
+                    FillCellsWithValue(list, fillTargetCells, pastedRows[0], fillTouchedPlaceholder);
+                    return;
+                }
+            }
+
             // Anchored at the top-left of the current SELECTION, not just
             // CurrentCell - CurrentCell is whichever cell was clicked or
             // navigated to LAST within a multi-cell selection (e.g. the
@@ -994,6 +1035,63 @@ namespace ErikwnkWFUI.Controls
                 convertedValue = null;
                 return false;
             }
+        }
+
+        // Writes the same value into every one of targetCells (the "fill"
+        // path PasteFromClipboard uses when exactly one cell was copied
+        // into a selection of more than one) - never grows the list, since
+        // every cell here is already a real, existing row.
+        private void FillCellsWithValue(IList list, List<(int RowIndex, int ColumnIndex)> targetCells, string value, bool cancelPendingPlaceholder)
+        {
+            ApplyBatchedDataSourceChange(list, () =>
+            {
+                // Same reasoning as PasteFromClipboard's own placeholder
+                // cancellation - a pending add from merely including the
+                // placeholder in the selection was never really wanted
+                // once the user pastes instead of types.
+                if (cancelPendingPlaceholder && list is ICancelAddNew cancelAddNew)
+                {
+                    cancelAddNew.CancelNew(list.Count - 1);
+                }
+
+                Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache =
+                    new Dictionary<(Type, string), PropertyInfo>();
+
+                foreach ((int rowIndex, int columnIndex) in targetCells)
+                {
+                    if (rowIndex >= list.Count)
+                    {
+                        continue;
+                    }
+
+                    DataGridViewColumn column = Columns[columnIndex];
+
+                    if (column.ReadOnly || string.IsNullOrEmpty(column.DataPropertyName))
+                    {
+                        continue;
+                    }
+
+                    object targetItem = list[rowIndex];
+                    Type targetItemType = targetItem.GetType();
+                    (Type, string) propertyCacheKey = (targetItemType, column.DataPropertyName);
+
+                    if (!propertyCache.TryGetValue(propertyCacheKey, out PropertyInfo property))
+                    {
+                        property = targetItemType.GetProperty(column.DataPropertyName);
+                        propertyCache[propertyCacheKey] = property;
+                    }
+
+                    if (property == null)
+                    {
+                        continue;
+                    }
+
+                    if (TryConvertPastedValue(value, property.PropertyType, out object convertedValue))
+                    {
+                        property.SetValue(targetItem, convertedValue);
+                    }
+                }
+            });
         }
 
         private static string[] Trim(string[] values, int maxLength)

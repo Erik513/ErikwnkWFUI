@@ -10,6 +10,7 @@ namespace ErikwnkWFUI.Tests;
 /// selection - these all now go through the single IsPlaceholderRowIndex
 /// helper instead of each having its own, sometimes-disagreeing check.
 /// </summary>
+[Collection(ClipboardTestCollection.Name)]
 public class DataGridViewPlaceholderExclusionTests
 {
     [Fact]
