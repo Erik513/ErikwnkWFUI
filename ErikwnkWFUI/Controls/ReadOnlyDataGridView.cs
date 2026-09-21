@@ -919,6 +919,7 @@ namespace ErikwnkWFUI.Controls
             // -1" here, the same substitution OnMouseDown already needed.
             if (e.Y >= ColumnHeadersHeight)
             {
+                Cursor = Cursors.Default;
                 return;
             }
 
