@@ -86,10 +86,17 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Color of the whole control's outer frame only - the gridlines
-        /// BETWEEN cells (this control's own <c>GridColor</c>) stay a fixed
-        /// neutral color regardless, so <c>CreatePrimary</c> doesn't turn
-        /// every row separator into a wash of accent color too; only
+        /// Color of each column header cell's own border only - the
+        /// gridlines BETWEEN data cells (this control's own
+        /// <c>GridColor</c>) stay a fixed neutral color regardless, so
+        /// <c>CreatePrimary</c> doesn't turn every row separator into a wash
+        /// of accent color too. There used to also be a hand-drawn outer
+        /// frame around the whole control following this same color, but a
+        /// real, native in-place editing control (a child window, always on
+        /// top of anything this control's own OnPaint draws) sitting at a
+        /// grid edge - the first/last row or column - hid it completely
+        /// while editing that cell, with no way to draw around a window
+        /// that's actually there; removed rather than left broken. Only
         /// ListView's equivalent <see cref="ListView.BorderColor"/> drives
         /// both its frame and its header cell dividers with one color,
         /// since ListView never draws anything resembling gridlines
@@ -367,16 +374,14 @@ namespace ErikwnkWFUI.Controls
 
             BackgroundColor = UIColors.BackgroundDark;
 
-            // Fixed, independent of BorderColor - only the OUTER frame
-            // (see OnPaint below) follows BorderColor/the accent in
-            // CreatePrimary; the gridlines BETWEEN cells stay this same
-            // neutral color regardless, so CreatePrimary doesn't turn every
-            // row separator into a wash of accent color too.
+            // Fixed, independent of BorderColor - only each header cell's
+            // own border (see DrawHeaderCellBorder below) follows
+            // BorderColor/the accent in CreatePrimary; the gridlines
+            // BETWEEN cells stay this same neutral color regardless, so
+            // CreatePrimary doesn't turn every row separator into a wash of
+            // accent color too.
             GridColor = UIColors.BorderMedium;
 
-            // BorderStyle stays None regardless - this control draws its
-            // own outer frame instead (see OnPaint below), the same way
-            // ListView draws its own instead of using a native BorderStyle.
             BorderStyle = BorderStyle.None;
             CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
             ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
@@ -440,11 +445,10 @@ namespace ErikwnkWFUI.Controls
             // invalidates the newly-exposed strip, the standard WinForms
             // default - everything already visible before the resize is
             // assumed still valid and left unpainted until something else
-            // happens to invalidate it, which can leave stale content
-            // (including the outer frame - see OnPaint below - sitting at
-            // its old position/size for a moment). ListView
-            // already sets this same style for the same reason (see its
-            // own SetStyle call); this control never had it.
+            // happens to invalidate it, which can leave stale header-border
+            // content sitting at its old position/size for a moment.
+            // ListView already sets this same style for the same reason
+            // (see its own SetStyle call); this control never had it.
             SetStyle(ControlStyles.ResizeRedraw, true);
 
             EnableDoubleBuffering();
@@ -954,12 +958,8 @@ namespace ErikwnkWFUI.Controls
         // DataGridView's own native resize-drag (confirmed live to only
         // move a guideline and apply the real width once, on mouse-up),
         // setting Width here goes through the ordinary property-changed
-        // path, which repaints normally on each call rather than only
-        // once at the end, through the same OnPaint/e.Graphics path the
-        // border itself now draws through (see OnPaint's own remarks) -
-        // no separate LockWindowUpdate dance needed here the way WndProc's
-        // own WM_VSCROLL/HSCROLL/MOUSEWHEEL handling still needs one:
-        // this never bypasses OnPaint the way a native scroll blit does.
+        // path, which repaints normally on each call rather than only once
+        // at the end.
         private void ApplyLiveColumnResize()
         {
             int controlX = PointToClient(Cursor.Position).X;
@@ -1597,100 +1597,6 @@ namespace ErikwnkWFUI.Controls
                 Convert.ToString(valueX),
                 Convert.ToString(valueY),
                 StringComparison.CurrentCultureIgnoreCase) * direction;
-        }
-
-        // BorderStyle is None - OnPaint below draws a light frame around
-        // the whole control instead. Only WM_VSCROLL/HSCROLL/MOUSEWHEEL
-        // need the lower-level WndProc treatment (DataGridView's own
-        // scroll handling shifts existing pixels natively - likely
-        // ScrollWindowEx-style - bypassing OnPaint for the scrolled
-        // region, the same reason ListView needs the same trick for its
-        // own border). A resize, a selection change, or anything else
-        // that invalidates part of this control goes through an ordinary
-        // WM_PAINT/OnPaint cycle with no such bypass - a first attempt
-        // drew the border from that same WM_PAINT via a raw, unbuffered
-        // GetDC call instead of from here, on the theory that keeping one
-        // single mechanism for every case (rather than "OnPaint normally,
-        // except also here") would be simpler to reason about. Confirmed
-        // wrong live the opposite way: resizing a column visibly flickered
-        // the border specifically THERE, most likely exactly because that
-        // raw draw runs independently of - and isn't necessarily presented
-        // to the screen in the same compositor frame as - DataGridView's
-        // own buffered content painting, unlike drawing through this same
-        // e.Graphics both use together.
-        private const int WM_VSCROLL = 0x0115;
-        private const int WM_HSCROLL = 0x0114;
-        private const int WM_MOUSEWHEEL = 0x020A;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool LockWindowUpdate(IntPtr hWndLock);
-
-        protected override void WndProc(ref Message m)
-        {
-            if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
-            {
-                // base.WndProc below runs this control's own scroll
-                // handling SYNCHRONOUSLY, including whatever partial
-                // pixel-shifting repaint it does internally - by the time
-                // control returns here, that frame (with the border
-                // missing/stale along the scrolled edge) has already
-                // reached the screen once. LockWindowUpdate blocks ANY
-                // pixel of this window from reaching the screen at the GDI
-                // level while locked, regardless of how the control
-                // internally decides to paint during the scroll, so
-                // nothing incorrect can flash through no matter the
-                // mechanism - then a forced synchronous repaint (Update(),
-                // not just Invalidate()) once unlocked means the very
-                // first frame the user actually sees is the corrected one,
-                // painted normally through OnPaint below (this is a real,
-                // ordinary WM_PAINT dispatch once it fires - nothing about
-                // it bypasses that pipeline, only the native scroll blit
-                // this exists to work around does). Exactly ListView's own
-                // WndProc technique for this same class of problem.
-                LockWindowUpdate(Handle);
-                try
-                {
-                    base.WndProc(ref m);
-                }
-                finally
-                {
-                    LockWindowUpdate(IntPtr.Zero);
-                }
-
-                Invalidate();
-                Update();
-                return;
-            }
-
-            base.WndProc(ref m);
-        }
-
-        // Drawn through the same e.Graphics DataGridView's own content
-        // painting uses - see WndProc's own remarks on why this replaced
-        // an earlier, raw-GetDC version of the same border. Clipped by
-        // .NET to whatever e.ClipRectangle already is for a given paint,
-        // the same as any other OnPaint override - a partial repaint that
-        // doesn't reach the outer edge just means this DrawRectangle call
-        // is a no-op there, no cost worth specifically avoiding.
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            if (ClientSize.Width <= 1 || ClientSize.Height <= 1)
-            {
-                return;
-            }
-
-            using (Pen pen = new Pen(BorderColor))
-            {
-                // ClientSize, not Width/Height - Width/Height are this
-                // control's FULL outer bounds, which include a native
-                // scrollbar's own strip when one is visible. A border
-                // drawn at Width - 1 would land exactly under that
-                // scrollbar, which then paints over it - invisible, not
-                // missing.
-                e.Graphics.DrawRectangle(pen, 0, 0, ClientSize.Width - 1, ClientSize.Height - 1);
-            }
         }
 
         protected override void OnFontChanged(EventArgs e)
