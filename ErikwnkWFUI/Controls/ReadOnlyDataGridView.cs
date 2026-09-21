@@ -1437,6 +1437,20 @@ namespace ErikwnkWFUI.Controls
         {
             OnApplyingBatchedDataSourceChange();
 
+            // ResetBindingsMethod below is exactly what DataGridView treats
+            // as a fresh rebind - the same Reset notification a brand new
+            // DataSource assignment would raise - which snaps the scroll
+            // position back to the top-left the same way a real rebind
+            // does, even though this change (a sort, a paste, a row
+            // insert/delete) has nothing to do with actually rebinding.
+            // Capturing both scroll properties before the change and
+            // restoring them after (clamped to whatever's still valid once
+            // the row count has potentially changed) is what keeps this
+            // from silently scrolling the user back to the top of a long
+            // grid on every one of those operations.
+            int firstDisplayedScrollingRowIndex = Rows.Count > 0 ? FirstDisplayedScrollingRowIndex : -1;
+            int horizontalScrollingOffset = HorizontalScrollingOffset;
+
             object dataSource = DataSource;
             DataSourceReflectionInfo reflectionInfo = GetDataSourceReflectionInfo(dataSource.GetType());
             PropertyInfo raiseEventsProperty = reflectionInfo.RaiseListChangedEventsProperty;
@@ -1477,6 +1491,18 @@ namespace ErikwnkWFUI.Controls
 
                 _isApplyingInternalDataChange = false;
             }
+
+            // FirstDisplayedScrollingRowIndex throws for an out-of-range
+            // value rather than clamping itself (unlike
+            // HorizontalScrollingOffset, which clamps silently) - guarded
+            // for both an empty grid (nothing to scroll to) and a row
+            // count that shrank (e.g. a delete) past where it used to be.
+            if (firstDisplayedScrollingRowIndex >= 0 && Rows.Count > 0)
+            {
+                FirstDisplayedScrollingRowIndex = Math.Min(firstDisplayedScrollingRowIndex, Rows.Count - 1);
+            }
+
+            HorizontalScrollingOffset = horizontalScrollingOffset;
 
             ClearSelection();
             CurrentCell = null;
