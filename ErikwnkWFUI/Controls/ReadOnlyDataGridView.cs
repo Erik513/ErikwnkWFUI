@@ -1051,14 +1051,13 @@ namespace ErikwnkWFUI.Controls
 
         private List<DataGridViewColumn> GetColumnsInDisplayOrder()
         {
-            List<DataGridViewColumn> ordered = new List<DataGridViewColumn>();
+            List<DataGridViewColumn> columns = new List<DataGridViewColumn>();
             foreach (DataGridViewColumn column in Columns)
             {
-                ordered.Add(column);
+                columns.Add(column);
             }
 
-            ordered.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
-            return ordered;
+            return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
         }
 
         private bool IsColumnResizable(DataGridViewColumn column)

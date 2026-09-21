@@ -924,14 +924,13 @@ namespace ErikwnkWFUI.Controls
 
         private List<ColumnHeader> GetColumnsInDisplayOrder()
         {
-            var ordered = new List<ColumnHeader>();
+            var columns = new List<ColumnHeader>();
             foreach (ColumnHeader column in Columns)
             {
-                ordered.Add(column);
+                columns.Add(column);
             }
 
-            ordered.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
-            return ordered;
+            return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
         }
 
         // Every column, including the fill one, otherwise has a plain
