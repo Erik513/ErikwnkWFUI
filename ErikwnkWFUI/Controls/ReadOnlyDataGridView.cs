@@ -1101,13 +1101,6 @@ namespace ErikwnkWFUI.Controls
             return ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
         }
 
-        // insertBeforeDisplayIndex is expressed in the ORIGINAL display
-        // order (before the dragged column is removed from its old slot) -
-        // the standard "move to before index P" -> "target index"
-        // adjustment (subtract one if P is past the column's own current
-        // position) is needed because DisplayIndex's setter moves the
-        // column to an absolute position, and removing it from its old
-        // slot first would shift everything after that slot left by one.
         // Mirrors ListView's own MoveColumnToDisplayIndex.
         private void MoveColumnToDisplayIndex(int columnIndex, int insertBeforeDisplayIndex)
         {
@@ -1117,17 +1110,13 @@ namespace ErikwnkWFUI.Controls
             }
 
             DataGridViewColumn column = Columns[columnIndex];
-            int originalDisplayIndex = column.DisplayIndex;
-            int targetDisplayIndex = insertBeforeDisplayIndex > originalDisplayIndex
-                ? insertBeforeDisplayIndex - 1
-                : insertBeforeDisplayIndex;
-
-            if (targetDisplayIndex == originalDisplayIndex)
+            int? targetDisplayIndex = ColumnLayoutMath.GetMoveTargetDisplayIndex(column.DisplayIndex, insertBeforeDisplayIndex);
+            if (targetDisplayIndex == null)
             {
                 return;
             }
 
-            column.DisplayIndex = targetDisplayIndex;
+            column.DisplayIndex = targetDisplayIndex.Value;
         }
 
         // Drawn as part of the same OnCellPainting pass as the header

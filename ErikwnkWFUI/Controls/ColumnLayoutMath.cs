@@ -52,5 +52,26 @@ namespace ErikwnkWFUI.Controls
 
             return columnsInDisplayOrder.Count;
         }
+
+        // insertBeforeDisplayIndex is expressed in the ORIGINAL display
+        // order (before the dragged column is removed from its old slot) -
+        // the standard "move to before index P" -> "target index"
+        // adjustment (subtract one if P is past the column's own current
+        // position) is needed because DisplayIndex's setter moves the
+        // column to an absolute position, and removing it from its old
+        // slot first would shift everything after that slot left by one.
+        // Returns null for a no-op move (already exactly there) - the
+        // caller's own DisplayIndex assignment (and whatever it does
+        // afterward) is a real property set with real side effects on
+        // both controls, worth skipping entirely rather than reassigning
+        // to the same value.
+        public static int? GetMoveTargetDisplayIndex(int originalDisplayIndex, int insertBeforeDisplayIndex)
+        {
+            int targetDisplayIndex = insertBeforeDisplayIndex > originalDisplayIndex
+                ? insertBeforeDisplayIndex - 1
+                : insertBeforeDisplayIndex;
+
+            return targetDisplayIndex == originalDisplayIndex ? (int?)null : targetDisplayIndex;
+        }
     }
 }
