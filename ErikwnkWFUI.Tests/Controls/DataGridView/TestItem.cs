@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>Plain bindable row shape used by the DataGridView tests - two auto-generated columns, Name and Value.</summary>
 public sealed class TestItem

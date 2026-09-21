@@ -1,8 +1,9 @@
 using System.ComponentModel;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
 /// Column reordering is hand-rolled (mirroring ListView's own - see

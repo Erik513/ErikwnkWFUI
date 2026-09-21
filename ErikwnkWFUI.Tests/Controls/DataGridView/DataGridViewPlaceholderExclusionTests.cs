@@ -1,8 +1,9 @@
 using System.ComponentModel;
 using System.Windows.Forms;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
 /// The placeholder ("type here to add a row") must never be touched by

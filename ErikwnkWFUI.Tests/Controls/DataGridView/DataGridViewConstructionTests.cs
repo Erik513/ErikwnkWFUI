@@ -1,7 +1,7 @@
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
 /// Locks down the two constructors' defaults - the editable/read-only split

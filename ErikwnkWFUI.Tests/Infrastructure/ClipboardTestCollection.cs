@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// The Windows clipboard is a single process/system-global resource - xUnit

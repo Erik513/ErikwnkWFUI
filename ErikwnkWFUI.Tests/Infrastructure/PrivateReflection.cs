@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// Invokes DataGridView's own private editing operations (PasteFromClipboard,

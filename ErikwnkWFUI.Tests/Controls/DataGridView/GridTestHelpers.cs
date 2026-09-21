@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 internal static class GridTestHelpers
 {

@@ -1,6 +1,6 @@
 using System.Windows.Forms;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>IsInputKey - decides whether Ctrl+V/Ctrl+X reach this control's own OnKeyDown at all, or pass through as an unclaimed shortcut.</summary>
 public class DataGridViewKeyHandlingTests

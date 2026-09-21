@@ -1,9 +1,10 @@
 using System.ComponentModel;
 using System.Windows.Forms;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
 /// Column resizing is hand-rolled (OnCellMouseDown/OnCellMouseMove) instead

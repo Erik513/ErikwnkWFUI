@@ -1,6 +1,6 @@
 using System.Runtime.ExceptionServices;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// Runs an action on a dedicated STA thread and rethrows whatever it threw -

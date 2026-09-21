@@ -1,7 +1,7 @@
 using System.Windows.Forms;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
 /// Exposes a couple of protected members needed to drive DataGridView's

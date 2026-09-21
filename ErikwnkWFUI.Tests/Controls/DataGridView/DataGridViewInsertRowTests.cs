@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using ErikwnkWFUI.Tests.Infrastructure;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>InsertBlankRow, invoked via reflection - only ever reached from the "Insert row above/below" context menu items in real use.</summary>
 public class DataGridViewInsertRowTests

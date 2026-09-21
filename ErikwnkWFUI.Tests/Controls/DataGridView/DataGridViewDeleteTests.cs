@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using ErikwnkWFUI.Tests.Infrastructure;
 
-namespace ErikwnkWFUI.Tests;
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>DeleteRows/DeleteItem, invoked via reflection - only ever reached from the Delete key, the context menu, or the pinned delete-row column in real use.</summary>
 public class DataGridViewDeleteTests
