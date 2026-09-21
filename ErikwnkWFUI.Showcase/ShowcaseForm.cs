@@ -895,10 +895,13 @@ namespace ErikwnkWFUI.Showcase
             }
         }
 
-        // Same three states for both CreateStandard and CreatePrimary -
-        // plain, with the delete-row column also shown (the "type here to
-        // add a row" placeholder is already there either way, on by default
-        // for the editable variant), and disabled.
+        // Two states for both CreateStandard and CreatePrimary - plain
+        // (without the "type here to add a row" placeholder) and with the
+        // delete-row column (which keeps it, being the one state actually
+        // meant to show off adding as well as deleting rows). No disabled
+        // state here - the ReadOnlyStandard/ReadOnlyPrimary rows below
+        // already demo one each; a third, editable-but-disabled grid would
+        // just be the same thing shown twice.
         private void AddEditableDataGridRow(
             PropertyTable table,
             string labelText,
@@ -906,6 +909,7 @@ namespace ErikwnkWFUI.Showcase
         {
             var grid = createGrid(CreateSampleTracks());
             grid.Dock = DockStyle.Fill;
+            grid.AllowUserToAddRows = false;
             NarrowLengthColumn(grid);
 
             var gridWithDeleteColumn = (ErikwnkWFUI.Controls.DataGridView)createGrid(CreateSampleTracks());
@@ -913,17 +917,11 @@ namespace ErikwnkWFUI.Showcase
             gridWithDeleteColumn.ShowDeleteRowColumn = true;
             NarrowLengthColumn(gridWithDeleteColumn);
 
-            var disabledGrid = createGrid(CreateSampleTracks());
-            disabledGrid.Dock = DockStyle.Fill;
-            disabledGrid.Enabled = false;
-            NarrowLengthColumn(disabledGrid);
-
             table.AddRow(
                 labelText,
                 180,
-                UIColumn.Percent(grid, 34),
-                UIColumn.Percent(gridWithDeleteColumn, 33),
-                UIColumn.Percent(disabledGrid, 33));
+                UIColumn.Percent(grid, 50),
+                UIColumn.Percent(gridWithDeleteColumn, 50));
         }
 
         // A fresh list each call - CreateStandard/CreateReadOnly bind
