@@ -201,9 +201,18 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Color of the whole control's "frame": the outer border's left,
-        /// right, and bottom edges (see WndProc) and each header cell's own
-        /// divider (OnDrawColumnHeader), which together form the top edge.
+        /// Color of each column header cell's own border (OnDrawColumnHeader).
+        /// There used to also be a hand-drawn outer frame around the whole
+        /// control following this same color, drawn straight onto the
+        /// client DC after every native WM_PAINT since the list content
+        /// itself is natively painted and never goes through .NET's own
+        /// OnPaint. Removed to match <see cref="ReadOnlyDataGridView.BorderColor"/>
+        /// - its DataGridView equivalent had to go first, because a real
+        /// native in-place editing control (a genuine child window) sitting
+        /// at the grid's edge always painted on top of that outer frame
+        /// with no way to redraw underneath it; dropping it here too keeps
+        /// both controls' border behavior consistent even though ListView
+        /// itself has no in-place cell editing to trigger that exact case.
         /// Defaults to <see cref="UIColors.BorderMedium"/> - a fixed,
         /// neutral border regardless of the current accent, matching this
         /// control's original, unconditional look
@@ -616,13 +625,13 @@ namespace ErikwnkWFUI.Controls
             // Guards against a one-off glitch seen on the very first theme
             // switch that rebuilds this control (not on plain construction) -
             // the initial WM_PAINT right after a handle is (re)created can
-            // land before layout/theme colors have fully settled, so the
-            // outer border drawn there (see WndProc) could momentarily use
-            // stale values. Deferring one tick, the same way ApplyFillColumn
-            // already gets deferred elsewhere in this class after a native
-            // reorder, guarantees at least one more repaint once everything
-            // has actually settled, without needing the user to trigger a
-            // second redraw themselves (e.g. by resizing).
+            // land before layout/theme colors have fully settled, so header
+            // colors painted there (OnDrawColumnHeader) could momentarily
+            // use stale values. Deferring one tick, the same way
+            // ApplyFillColumn already gets deferred elsewhere in this class
+            // after a native reorder, guarantees at least one more repaint
+            // once everything has actually settled, without needing the
+            // user to trigger a second redraw themselves (e.g. by resizing).
             BeginInvoke(new MethodInvoker(Invalidate));
 
             // Deferred for the same reason - _headerHeight only reflects
@@ -750,23 +759,6 @@ namespace ErikwnkWFUI.Controls
             return Font.Height + 6;
         }
 
-        // BorderStyle is None - this draws a light frame around the whole
-        // control instead, matching the border each header column already
-        // gets (OnDrawColumnHeader). Since the list content itself is
-        // natively painted (WM_PAINT bypasses .NET's owner-draw pipeline
-        // for everything except what DrawItem/DrawSubItem/DrawColumnHeader
-        // already hook), the border can't be added via OnPaint either -
-        // it's drawn straight onto the client dc right after the native
-        // paint finishes, the same technique used to fix a stray native
-        // border on ProgressBar earlier in this codebase's history.
-        private const int WM_PAINT = 0x000F;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern System.IntPtr GetDC(System.IntPtr hWnd);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int ReleaseDC(System.IntPtr hWnd, System.IntPtr hDC);
-
         // Scrolling (scrollbar drag/click, mouse wheel, or a keyboard
         // scroll) makes the native ListView shift its existing pixels with
         // ScrollWindowEx and then repaint only the newly-exposed strip -
@@ -826,72 +818,6 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
-
-            if (m.Msg != WM_PAINT || ClientSize.Width <= 1 || ClientSize.Height <= 1)
-            {
-                return;
-            }
-
-            // Redrawn on every real WM_PAINT, deliberately - a "only when
-            // something relevant changed" version of this (tried, then
-            // reverted) turned out to not be safe: comctl32 can still
-            // repaint parts of the border's own pixels through paths this
-            // class doesn't get a hook into at all - e.g. its own native
-            // focus rectangle around the selected/focused item - even
-            // though ordinary row content is fully reserved from ever
-            // doing so (see GetSubItemBounds' left/right/bottom insets).
-            // Skipping the redraw there left the border silently wrong
-            // (or, for BorderColor, just not applied at all) after a
-            // selection change. Redrawing unconditionally costs three
-            // cheap DrawLine calls and is the one approach confirmed
-            // correct throughout this control's history.
-            System.IntPtr dc = GetDC(Handle);
-            if (dc == System.IntPtr.Zero)
-            {
-                return;
-            }
-
-            try
-            {
-                using (Graphics g = Graphics.FromHdc(dc))
-                using (Pen pen = new Pen(BorderColor))
-                {
-                    // Skips the whole header strip (y < _headerHeight)
-                    // entirely, not just its top edge - the header sits
-                    // there as its own separate native child window,
-                    // repainting completely independently of this
-                    // WM_PAINT, and OnDrawColumnHeader already draws a full
-                    // border around every column through the normal
-                    // owner-draw path (no native-paint race possible
-                    // there). A real glitch was seen specifically near the
-                    // top-left - right where a rectangle spanning the full
-                    // height used to overlap that independently-repainting
-                    // area - so this leaves that whole strip to the one
-                    // place already drawing it correctly, rather than
-                    // trying to coexist with it.
-                    //
-                    // Right/bottom edges use ClientSize, not Width/Height -
-                    // Width/Height are the control's FULL outer bounds,
-                    // which include the native vertical scrollbar's own
-                    // strip when it's visible (see IsPointOnScrollBar's own
-                    // comment on that gap). A right border drawn at
-                    // Width - 1 landed exactly under the scrollbar itself,
-                    // which then painted over it - invisible, not missing.
-                    // ClientSize already excludes that strip, matching
-                    // where the actual row content already stops (see
-                    // GetSubItemBounds' own right/bottom insets).
-                    int right = ClientSize.Width - 1;
-                    int bottom = ClientSize.Height - 1;
-                    int top = Math.Min(_headerHeight, bottom);
-                    g.DrawLine(pen, 0, top, 0, bottom);
-                    g.DrawLine(pen, right, top, right, bottom);
-                    g.DrawLine(pen, 0, bottom, right, bottom);
-                }
-            }
-            finally
-            {
-                ReleaseDC(Handle, dc);
-            }
         }
 
         private void OnColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
@@ -1449,53 +1375,8 @@ namespace ErikwnkWFUI.Controls
             }
 
             var width = column.Width;
-
-            // The leftmost column only is inset 1px on its own left edge -
-            // reserves that pixel column exclusively for the outer border
-            // (see WndProc's own comment on why that border exists), so row
-            // content painting can never overwrite it. Without this,
-            // something about hovering a row repaints its background and
-            // erases the border pixel at x=0 with nothing left to redraw it
-            // afterward - confirmed by comparing screenshots before and
-            // after hovering the first row. Every other column's bounds
-            // are completely unaffected, so this can't misalign anything
-            // with the header's own (unshifted) column positions.
-            if (column.DisplayIndex == 0)
-            {
-                left += 1;
-                width -= 1;
-            }
-
-            // Same trick, same reason, for the RIGHT edge - the rightmost
-            // column's content otherwise reaches all the way to
-            // ClientSize.Width - 1, the exact pixel column WndProc's
-            // border draws its own right edge on. Reserving it here means
-            // no row content can ever paint into it either, matching the
-            // left column's own inset above.
-            if (column.DisplayIndex == Columns.Count - 1)
-            {
-                width -= 1;
-            }
-
             var top = fallbackVerticalBounds.Top;
             var height = fallbackVerticalBounds.Height;
-
-            // Same trick, same reason, for the BOTTOM edge - the row that
-            // ends at (or is cut off by) the very bottom of the client area
-            // otherwise paints straight into the exact pixel row WndProc's
-            // border draws its bottom edge on, and any later repaint of
-            // just that row (a hover, a click, a key press, ...) erases the
-            // border there the same way an unprotected left edge used to.
-            // Reserving this one pixel row for the border, the same way
-            // the left column already reserves one pixel column, means
-            // nothing native can ever paint over it in the first place -
-            // no repaint-ordering trick can race a pixel that's simply
-            // never drawn into by anything else.
-            var maxBottom = ClientSize.Height - 1;
-            if (top + height > maxBottom)
-            {
-                height = Math.Max(0, maxBottom - top);
-            }
 
             return new Rectangle(left, top, width, height);
         }
