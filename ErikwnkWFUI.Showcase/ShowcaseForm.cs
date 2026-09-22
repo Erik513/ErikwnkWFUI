@@ -735,6 +735,8 @@ namespace ErikwnkWFUI.Showcase
             listBox.Items.Add("First item");
             listBox.Items.Add("Second item");
             listBox.Items.Add("Third item (drag to reorder)");
+            listBox.Items.Add("A much longer item whose text wraps onto a second line instead of getting cut off");
+            listBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
 
             table.AddRow("CreateStandard", 260, listBox);
 
@@ -745,6 +747,8 @@ namespace ErikwnkWFUI.Showcase
             primaryListBox.Items.Add("First item");
             primaryListBox.Items.Add("Second item");
             primaryListBox.Items.Add("Third item (drag to reorder)");
+            primaryListBox.Items.Add("A much longer item whose text wraps onto a second line instead of getting cut off");
+            primaryListBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
 
             table.AddRow("CreatePrimary", 260, primaryListBox);
         }
