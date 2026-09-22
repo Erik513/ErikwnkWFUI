@@ -58,6 +58,7 @@ namespace ErikwnkWFUI.Controls
         private bool _isDragging;
         private Point _dragStartPoint;
         private int _dragInsertPosition = -1;
+        private int _pendingToggleDeselectIndex = -1;
 
         private Func<object, string> _displayTextProvider;
         private string _displayTextMember;
@@ -314,6 +315,40 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseMove(e);
         }
 
+        // A native ListBox commits its own click-to-select synchronously as
+        // part of its native WM_LBUTTONDOWN handling - which happens
+        // BEFORE OnMouseDown/MouseDown ever fires, unlike ListView's own
+        // toggle-deselect (SysListView32 doesn't commit until mouse-up,
+        // which is why that one CAN check this from OnMouseDown/a MouseDown
+        // handler). Checking SelectedIndex from OnMouseDown here would
+        // always see the NEW selection already applied - confirmed live:
+        // every plain click toggled straight back off on release, not just
+        // a second click on an already-selected item, because by the time
+        // OnMouseDown ran, the item just clicked was already "the current
+        // selection" regardless of what it was before. Intercepting the
+        // raw message here, before base.WndProc forwards it to the native
+        // control, is the only point that still sees the pre-click state.
+        private const int WM_LBUTTONDOWN = 0x0201;
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_LBUTTONDOWN)
+            {
+                CapturePendingToggleDeselect(m.LParam);
+            }
+
+            base.WndProc(ref m);
+        }
+
+        private void CapturePendingToggleDeselect(IntPtr lParam)
+        {
+            int x = unchecked((short)(long)lParam);
+            int y = unchecked((short)((long)lParam >> 16));
+            int index = IndexFromPoint(new Point(x, y));
+
+            _pendingToggleDeselectIndex = index != -1 && index == SelectedIndex ? index : -1;
+        }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             int index = IndexFromPoint(e.Location);
@@ -334,6 +369,22 @@ namespace ErikwnkWFUI.Controls
         protected override void OnMouseUp(MouseEventArgs e)
         {
             ResetDragState();
+
+            int pendingIndex = _pendingToggleDeselectIndex;
+            _pendingToggleDeselectIndex = -1;
+
+            // Only deselects if the button actually came back up on the
+            // same item that was already selected going in - this control
+            // is always single-select (see ClearSelected's own remarks)
+            // with no drag-select gesture of its own to distinguish from,
+            // unlike ListView's equivalent toggle-deselect, so a plain
+            // "still the same item" check is enough here.
+            if (pendingIndex >= 0 && e.Button == MouseButtons.Left &&
+                IndexFromPoint(e.Location) == pendingIndex && SelectedIndex == pendingIndex)
+            {
+                ClearSelected();
+            }
+
             base.OnMouseUp(e);
         }
 
