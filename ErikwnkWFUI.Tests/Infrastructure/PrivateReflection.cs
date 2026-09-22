@@ -81,6 +81,27 @@ internal static class PrivateReflection
         }
     }
 
+    // Same as the void overload above, for the (rarer) case a test needs
+    // the private method's own return value - e.g. a pure calculation like
+    // ListBox's GetBackColor/GetInsertPosition, not just a side effect on
+    // some field. An explicit array passed as args (rather than relying on
+    // the params expansion) is the same array Invoke writes any out/ref
+    // parameter back into, so a caller can still read those afterward.
+    public static T? InvokePrivate<T>(this object target, string methodName, params object?[] args)
+    {
+        MethodInfo method = FindMethod(target.GetType(), methodName);
+
+        try
+        {
+            return (T?)method.Invoke(target, args);
+        }
+        catch (TargetInvocationException ex) when (ex.InnerException != null)
+        {
+            System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
+            return default;
+        }
+    }
+
     public static T? GetPrivateField<T>(this object target, string fieldName)
     {
         return (T?)FindField(target.GetType(), fieldName).GetValue(target);
