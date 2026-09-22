@@ -503,6 +503,18 @@ namespace ErikwnkWFUI
                     allowReorder,
                     showEnumeration);
             }
+
+            /// <summary>Like <see cref="CreateStandard"/> but selection/drag-indicator-colored in the current accent instead of the fixed neutral gray - mirrors <see cref="ListViews.CreatePrimary"/>.</summary>
+            public static Controls.ListBox CreatePrimary(
+                string displayTextMember = null,
+                bool allowReorder = false,
+                bool showEnumeration = false)
+            {
+                return UIListBoxFactory.CreatePrimary(
+                    displayTextMember,
+                    allowReorder,
+                    showEnumeration);
+            }
         }
 
         /// <summary>A <see cref="Controls.ListBox"/> wrapped with an optional header bar - see <see cref="ListBoxes"/> for the list box on its own.</summary>
@@ -516,6 +528,22 @@ namespace ErikwnkWFUI
                 ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
             {
                 return UIListBoxControlFactory.CreateStandard(
+                    headerTitle,
+                    displayTextMember,
+                    allowReorder,
+                    showEnumeration,
+                    headerTextAlign);
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but selection/drag-indicator-colored in the current accent instead of the fixed neutral gray - mirrors <see cref="ListBoxes.CreatePrimary"/>.</summary>
+            public static ListBoxControl CreatePrimary(
+                string headerTitle = null,
+                string displayTextMember = null,
+                bool allowReorder = false,
+                bool showEnumeration = false,
+                ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
+            {
+                return UIListBoxControlFactory.CreatePrimary(
                     headerTitle,
                     displayTextMember,
                     allowReorder,

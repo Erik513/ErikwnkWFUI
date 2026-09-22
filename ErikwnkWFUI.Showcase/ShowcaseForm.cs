@@ -737,6 +737,16 @@ namespace ErikwnkWFUI.Showcase
             listBox.Items.Add("Third item (drag to reorder)");
 
             table.AddRow("CreateStandard", 260, listBox);
+
+            ListBoxControl primaryListBox = UIStyles.ListBoxControls.CreatePrimary(
+                "Sample list",
+                allowReorder: true,
+                showEnumeration: true);
+            primaryListBox.Items.Add("First item");
+            primaryListBox.Items.Add("Second item");
+            primaryListBox.Items.Add("Third item (drag to reorder)");
+
+            table.AddRow("CreatePrimary", 260, primaryListBox);
         }
 
         private void AddListViewSection(PropertyTable table)
