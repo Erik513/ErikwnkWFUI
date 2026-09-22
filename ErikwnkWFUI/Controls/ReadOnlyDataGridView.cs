@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
-using System.Threading;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -402,18 +401,10 @@ namespace ErikwnkWFUI.Controls
 
             // AllowDrop is only ever needed for that same hand-rolled drag,
             // not an app-facing drop target - and only actually settable
-            // for it here. Registering a drop target needs an STA thread
-            // (true for any real WinForms UI thread) - confirmed live that
-            // setting this on an MTA one (e.g. a test harness thread with
-            // no message loop) doesn't throw, but can silently block for
-            // many seconds while the underlying OLE registration retries.
-            // Skipped entirely off STA, where the drag itself couldn't
-            // have worked anyway - OnCellMouseDown below checks AllowDrop
-            // itself and never arms a drag if this never got set.
-            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-            {
-                AllowDrop = true;
-            }
+            // for it here (see DragDropSupport for why it's apartment-state
+            // gated). OnCellMouseDown below checks AllowDrop itself and
+            // never arms a drag if this never got set.
+            DragDropSupport.EnableDropIfSta(this);
 
             // Without this, resizing the control (e.g. its containing Form
             // being resized, if this is docked/anchored to it) only

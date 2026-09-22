@@ -306,19 +306,11 @@ namespace ErikwnkWFUI.Controls
             AllowColumnReorder = false;
 
             // AllowDrop is only ever needed for that same hand-rolled drag,
-            // not an app-facing drop target. Registering a drop target
-            // needs an STA thread (true for any real WinForms UI thread) -
-            // confirmed on DataGridView's own identical fix that setting
-            // this on an MTA one (e.g. a test harness thread with no
-            // message loop) doesn't throw, but can silently block for many
-            // seconds while the underlying OLE registration retries.
-            // Skipped entirely off STA, where the drag itself couldn't
-            // have worked anyway - HeaderInputSubclass.OnMouseDown checks
-            // AllowDrop itself and never arms a drag if this never got set.
-            if (System.Threading.Thread.CurrentThread.GetApartmentState() == System.Threading.ApartmentState.STA)
-            {
-                AllowDrop = true;
-            }
+            // not an app-facing drop target (see DragDropSupport for why
+            // it's apartment-state gated) - HeaderInputSubclass.OnMouseDown
+            // checks AllowDrop itself and never arms a drag if this never
+            // got set.
+            DragDropSupport.EnableDropIfSta(this);
             BorderStyle = BorderStyle.None;
             BackColor = UIColors.BackgroundDark;
             ForeColor = _rowForeColor;
