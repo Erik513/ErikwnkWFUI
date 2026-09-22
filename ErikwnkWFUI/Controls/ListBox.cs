@@ -160,8 +160,13 @@ namespace ErikwnkWFUI.Controls
             get => _itemHeight;
             set
             {
-                _itemHeight = value;
-                ItemHeight = value;
+                // The native ItemHeight setter itself only rejects a
+                // negative value, not zero - but EnsureItemVisible divides
+                // ClientSize.Height by this during a drag, which a zero
+                // height would turn into a DivideByZeroException the
+                // moment a user actually dragged an item to reorder it.
+                _itemHeight = Math.Max(1, value);
+                ItemHeight = _itemHeight;
                 Invalidate();
             }
         }
@@ -810,7 +815,13 @@ namespace ErikwnkWFUI.Controls
         {
             using (Pen pen = new Pen(DragIndicatorColor, 3))
             {
-                graphics.DrawLine(pen, 0, y, Width, y);
+                // ClientSize, not Width - Width is this control's FULL
+                // outer bounds, which includes a native vertical
+                // scrollbar's own strip when one is visible. A line drawn
+                // all the way to Width would run underneath that
+                // scrollbar instead of stopping at the actual content
+                // area's own right edge.
+                graphics.DrawLine(pen, 0, y, ClientSize.Width, y);
             }
         }
 

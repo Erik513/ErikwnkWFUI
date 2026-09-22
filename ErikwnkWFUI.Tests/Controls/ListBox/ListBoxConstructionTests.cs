@@ -70,4 +70,21 @@ public class ListBoxConstructionTests
         Assert.Equal(UIColors.BorderLight, listBox.SelectedBackColor);
         Assert.Equal(UIColors.BorderLight, listBox.DragIndicatorColor);
     }
+
+    // The native ItemHeight setter itself only rejects a negative value,
+    // not zero - but EnsureItemVisible divides ClientSize.Height by this
+    // during a drag, which a zero height would turn into a
+    // DivideByZeroException the moment a user actually dragged an item.
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void ItemHeightCustom_ClampsToAtLeastOne(int requestedHeight)
+    {
+        using WfuiListBox listBox = new WfuiListBox
+        {
+            ItemHeightCustom = requestedHeight
+        };
+
+        Assert.Equal(1, listBox.ItemHeightCustom);
+    }
 }
