@@ -1199,31 +1199,12 @@ namespace ErikwnkWFUI.Controls
             return items;
         }
 
-        // Items added after the last snapshot (e.g. one the app appended
-        // while already sorted) sort after every item that was present at
-        // that snapshot, rather than colliding at index -1 - mirrors
-        // ReadOnlyDataGridView's own BuildOriginalOrder.
+        // Mirrors DataGridView's own BuildOriginalOrder (see
+        // ItemOrderMath.BuildOriginalOrder for the shared "unindexed items
+        // sort last" logic both use).
         private List<ListViewItem> BuildOriginalOrder()
         {
-            List<KeyValuePair<ListViewItem, int>> itemsWithIndex = new List<KeyValuePair<ListViewItem, int>>();
-
-            foreach (ListViewItem item in Items)
-            {
-                int index = _originalOrder.IndexOf(item);
-                itemsWithIndex.Add(new KeyValuePair<ListViewItem, int>(
-                    item, index >= 0 ? index : _originalOrder.Count));
-            }
-
-            itemsWithIndex.Sort((a, b) => a.Value.CompareTo(b.Value));
-
-            List<ListViewItem> ordered = new List<ListViewItem>(itemsWithIndex.Count);
-
-            foreach (KeyValuePair<ListViewItem, int> pair in itemsWithIndex)
-            {
-                ordered.Add(pair.Key);
-            }
-
-            return ordered;
+            return ItemOrderMath.BuildOriginalOrder(Items.Cast<ListViewItem>(), _originalOrder);
         }
 
         private static string GetSubItemText(ListViewItem item, int columnIndex)

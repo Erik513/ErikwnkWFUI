@@ -1484,34 +1484,21 @@ namespace ErikwnkWFUI.Controls
 
         // Rows added after the last bind/reset (e.g. a new row the user just
         // typed into) sort after every row that was present at that
-        // snapshot, rather than colliding at index -1.
+        // snapshot, rather than colliding at index -1 (see
+        // ItemOrderMath.BuildOriginalOrder). Mirrors ListView's own
+        // BuildOriginalOrder.
         private List<object> BuildOriginalOrder()
         {
-            List<KeyValuePair<object, int>> itemsWithIndex = new List<KeyValuePair<object, int>>();
-
+            List<object> dataBoundItems = new List<object>();
             foreach (DataGridViewRow row in Rows)
             {
-                if (row.DataBoundItem == null)
+                if (row.DataBoundItem != null)
                 {
-                    continue;
+                    dataBoundItems.Add(row.DataBoundItem);
                 }
-
-                int index = _originalOrder.IndexOf(row.DataBoundItem);
-                itemsWithIndex.Add(new KeyValuePair<object, int>(
-                    row.DataBoundItem,
-                    index >= 0 ? index : _originalOrder.Count));
             }
 
-            itemsWithIndex.Sort((a, b) => a.Value.CompareTo(b.Value));
-
-            List<object> ordered = new List<object>(itemsWithIndex.Count);
-
-            foreach (KeyValuePair<object, int> pair in itemsWithIndex)
-            {
-                ordered.Add(pair.Key);
-            }
-
-            return ordered;
+            return ItemOrderMath.BuildOriginalOrder(dataBoundItems, _originalOrder);
         }
 
         private static int CompareCellValues(object valueX, object valueY, int direction)
