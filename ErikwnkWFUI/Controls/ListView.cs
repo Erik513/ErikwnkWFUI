@@ -74,8 +74,7 @@ namespace ErikwnkWFUI.Controls
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
         private Color _rowForeColor = UIColors.TextPrimary;
-        private Color _selectionOverlayColorOverride;
-        private bool _selectionOverlayColorIsOverridden;
+        private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => UIColors.Selection);
         private Color _headerBackColor = UIColors.BackgroundDarkElevated;
         private Color _headerForeColor = UIColors.TextTertiary;
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
@@ -84,10 +83,8 @@ namespace ErikwnkWFUI.Controls
         private readonly HashSet<int> _nonReorderableColumns = new HashSet<int>();
         private bool _allowColumnReordering = true;
         private bool _allowColumnResizing = true;
-        private Color _columnReorderIndicatorColorOverride;
-        private bool _columnReorderIndicatorColorIsOverridden;
-        private Color _borderColorOverride;
-        private bool _borderColorIsOverridden;
+        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.Primary);
+        private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
@@ -167,11 +164,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color SelectionOverlayColor
         {
-            get { return _selectionOverlayColorIsOverridden ? _selectionOverlayColorOverride : UIColors.Selection; }
+            get { return _selectionOverlayColor.Value; }
             set
             {
-                _selectionOverlayColorOverride = value;
-                _selectionOverlayColorIsOverridden = true;
+                _selectionOverlayColor.Set(value);
                 Invalidate();
             }
         }
@@ -192,12 +188,8 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color ColumnReorderIndicatorColor
         {
-            get { return _columnReorderIndicatorColorIsOverridden ? _columnReorderIndicatorColorOverride : UIColors.Primary; }
-            set
-            {
-                _columnReorderIndicatorColorOverride = value;
-                _columnReorderIndicatorColorIsOverridden = true;
-            }
+            get { return _columnReorderIndicatorColor.Value; }
+            set { _columnReorderIndicatorColor.Set(value); }
         }
 
         /// <summary>
@@ -223,11 +215,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color BorderColor
         {
-            get { return _borderColorIsOverridden ? _borderColorOverride : UIColors.BorderMedium; }
+            get { return _borderColor.Value; }
             set
             {
-                _borderColorOverride = value;
-                _borderColorIsOverridden = true;
+                _borderColor.Set(value);
                 Invalidate();
             }
         }

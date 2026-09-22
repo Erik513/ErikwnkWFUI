@@ -37,14 +37,11 @@ namespace ErikwnkWFUI.Controls
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
         private Color _rowForeColor = UIColors.TextPrimary;
-        private Color _selectionBackColorOverride;
-        private bool _selectionBackColorIsOverridden;
-        private Color _borderColorOverride;
-        private bool _borderColorIsOverridden;
+        private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.Primary);
+        private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private bool _allowColumnReordering = true;
         private readonly HashSet<int> _nonReorderableColumns = new HashSet<int>();
-        private Color _columnReorderIndicatorColorOverride;
-        private bool _columnReorderIndicatorColorIsOverridden;
+        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.Primary);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
@@ -113,11 +110,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color BorderColor
         {
-            get => _borderColorIsOverridden ? _borderColorOverride : UIColors.BorderMedium;
+            get => _borderColor.Value;
             set
             {
-                _borderColorOverride = value;
-                _borderColorIsOverridden = true;
+                _borderColor.Set(value);
                 ApplyStyles();
             }
         }
@@ -148,11 +144,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color SelectionBackColor
         {
-            get => _selectionBackColorIsOverridden ? _selectionBackColorOverride : UIColors.Primary;
+            get => _selectionBackColor.Value;
             set
             {
-                _selectionBackColorOverride = value;
-                _selectionBackColorIsOverridden = true;
+                _selectionBackColor.Set(value);
                 ApplyStyles();
             }
         }
@@ -213,12 +208,8 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color ColumnReorderIndicatorColor
         {
-            get => _columnReorderIndicatorColorIsOverridden ? _columnReorderIndicatorColorOverride : UIColors.Primary;
-            set
-            {
-                _columnReorderIndicatorColorOverride = value;
-                _columnReorderIndicatorColorIsOverridden = true;
-            }
+            get => _columnReorderIndicatorColor.Value;
+            set => _columnReorderIndicatorColor.Set(value);
         }
 
         /// <summary>
