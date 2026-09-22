@@ -42,10 +42,10 @@ namespace ErikwnkWFUI.Controls
         private Color _itemBackColor = UIColors.BackgroundMedium;
         private Color _alternateItemBackColor;
         private Color _itemForeColor = UIColors.TextPrimary;
-        private Color _selectedBackColor = UIColors.Primary;
+        private readonly ThemeColor _selectedBackColor = new ThemeColor(() => UIColors.BorderLight);
         private Color _hoverBackColor = UIColors.BackgroundLight;
         private Color _dragHandleColor = UIColors.TextTertiary;
-        private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.PrimaryLight);
+        private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private Color _disabledForeColor = UIColors.TextDisabled;
         private Color _disabledBackColor = UIColors.BackgroundDarkElevated;
 
@@ -168,11 +168,11 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Color of the horizontal line shown at the drop position while
-        /// dragging an item to reorder it. Follows the current accent
-        /// (PrimaryLight) live until explicitly set - it used to be a plain
-        /// field snapshotted once at construction, so an app that changed
-        /// its accent after building the list still saw the drag indicator
-        /// in whatever accent was active when the list was first created.
+        /// dragging an item to reorder it. Defaults to a fixed, neutral
+        /// gray (<see cref="UIColors.BorderLight"/>), matching this
+        /// control's own <see cref="SelectedBackColor"/> - set this
+        /// explicitly (e.g. to <see cref="UIColors.Primary"/>) for an
+        /// accent-colored indicator instead.
         /// </summary>
         public Color DragIndicatorColor
         {
@@ -207,18 +207,20 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Background color of the selected item. Defaults to the current
-        /// accent color (<see cref="UIColors.Primary"/>) - override this
-        /// specifically rather than calling <c>UIStyles.Colors.SetAccent</c>
-        /// if you only want to change selection, not every accent-colored
-        /// control in the app.
+        /// Background color of the selected item. Defaults to a fixed,
+        /// neutral gray (<see cref="UIColors.BorderLight"/>), not the
+        /// current accent - set this explicitly (e.g. to
+        /// <see cref="UIColors.Primary"/>) for an accent-colored selection
+        /// instead, matching <see cref="ReadOnlyDataGridView.SelectionBackColor"/>/
+        /// <see cref="ListView.SelectionOverlayColor"/>'s own
+        /// CreateStandard/CreatePrimary split.
         /// </summary>
         public Color SelectedBackColor
         {
-            get => _selectedBackColor;
+            get => _selectedBackColor.Value;
             set
             {
-                _selectedBackColor = value;
+                _selectedBackColor.Set(value);
                 Invalidate();
             }
         }
@@ -846,7 +848,7 @@ namespace ErikwnkWFUI.Controls
         private Color GetBackColor(int index, bool isSelected, bool isHovered, bool isDisabled)
         {
             if (isSelected)
-                return _selectedBackColor;
+                return _selectedBackColor.Value;
 
             if (isHovered)
                 return _hoverBackColor;
@@ -865,7 +867,7 @@ namespace ErikwnkWFUI.Controls
             // white) so a custom/accent SelectedBackColor - which might be
             // bright, e.g. yellow - always gets readable text.
             if (isSelected)
-                return UIColors.GetContrastingForeColor(_selectedBackColor);
+                return UIColors.GetContrastingForeColor(_selectedBackColor.Value);
 
             if (isDisabled)
                 return _disabledForeColor;
