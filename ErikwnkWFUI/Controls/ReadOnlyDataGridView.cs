@@ -36,10 +36,10 @@ namespace ErikwnkWFUI.Controls
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
         private Color _rowForeColor = UIColors.TextPrimary;
-        private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.Primary);
+        private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.BorderLight);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
-        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.Primary);
+        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
@@ -135,9 +135,12 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Background color of a selected cell/row. Follows the current
-        /// accent (<see cref="UIColors.Primary"/>) live until explicitly
-        /// set - same pattern as ListView's SelectionOverlayColor.
+        /// Background color of a selected cell/row. Defaults to a fixed,
+        /// neutral gray (<see cref="UIColors.BorderLight"/>), not the
+        /// current accent - <see cref="Factories.UIDataGridViewFactory.CreatePrimary"/>/
+        /// <see cref="Factories.UIDataGridViewFactory.CreateReadOnlyPrimary"/>
+        /// set this to <see cref="UIColors.Primary"/> explicitly instead,
+        /// same pattern as ListView's SelectionOverlayColor.
         /// </summary>
         public Color SelectionBackColor
         {
@@ -191,10 +194,10 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Color of the vertical line the header shows while a column is
-        /// being dragged to reorder it. Follows the current accent
-        /// (<see cref="UIColors.Primary"/>) live until explicitly set, same
-        /// pattern as <see cref="SelectionBackColor"/> and ListView's own
-        /// ColumnReorderIndicatorColor.
+        /// being dragged to reorder it. Defaults to a fixed, neutral gray
+        /// (<see cref="UIColors.BorderLight"/>), not the current accent -
+        /// same pattern as <see cref="SelectionBackColor"/> and ListView's
+        /// own ColumnReorderIndicatorColor.
         /// </summary>
         public Color ColumnReorderIndicatorColor
         {

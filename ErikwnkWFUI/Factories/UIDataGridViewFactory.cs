@@ -26,27 +26,33 @@ namespace ErikwnkWFUI.Factories
         }
 
         // Same editable control CreateStandard returns, framed (and
-        // gridlined - see ReadOnlyDataGridView.BorderColor) in the current
-        // accent color instead of the fixed neutral border CreateStandard
-        // keeps - mirrors UIListViewFactory.CreatePrimary.
+        // gridlined - see ReadOnlyDataGridView.BorderColor), selection-
+        // highlighted, and reorder-line-colored in the current accent
+        // instead of the fixed neutral gray CreateStandard keeps for all
+        // three - mirrors UIListViewFactory.CreatePrimary.
         public static DataGridView CreatePrimary(object dataSource = null)
         {
             return new Controls.DataGridView
             {
                 DataSource = dataSource,
-                BorderColor = UIColors.Primary
+                BorderColor = UIColors.Primary,
+                SelectionBackColor = UIColors.Primary,
+                ColumnReorderIndicatorColor = UIColors.Primary
             };
         }
 
-        // Same read-only control CreateReadOnlyStandard returns, framed in
-        // the current accent color instead - the read-only counterpart to
-        // CreatePrimary, same as CreateReadOnlyStandard is to CreateStandard.
+        // Same read-only control CreateReadOnlyStandard returns, framed/
+        // highlighted in the current accent instead - the read-only
+        // counterpart to CreatePrimary, same as CreateReadOnlyStandard is
+        // to CreateStandard.
         public static DataGridView CreateReadOnlyPrimary(object dataSource = null)
         {
             return new Controls.ReadOnlyDataGridView
             {
                 DataSource = dataSource,
-                BorderColor = UIColors.Primary
+                BorderColor = UIColors.Primary,
+                SelectionBackColor = UIColors.Primary,
+                ColumnReorderIndicatorColor = UIColors.Primary
             };
         }
     }
