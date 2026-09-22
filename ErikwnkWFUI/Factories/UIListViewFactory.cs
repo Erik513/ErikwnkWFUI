@@ -14,11 +14,17 @@ namespace ErikwnkWFUI.Factories
             return new Controls.ListView();
         }
 
-        // Same control, framed in the current accent color instead of the
-        // fixed neutral border CreateStandard keeps.
+        // Same control, framed/selection-highlighted/reorder-line-colored
+        // in the current accent instead of the fixed neutral gray
+        // CreateStandard keeps for all three.
         public static ListView CreatePrimary()
         {
-            return new Controls.ListView { BorderColor = UIColors.Primary };
+            return new Controls.ListView
+            {
+                BorderColor = UIColors.Primary,
+                SelectionOverlayColor = UIColors.Selection,
+                ColumnReorderIndicatorColor = UIColors.Primary
+            };
         }
     }
 }

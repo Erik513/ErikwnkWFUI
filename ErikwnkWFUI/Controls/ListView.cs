@@ -74,14 +74,19 @@ namespace ErikwnkWFUI.Controls
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
         private Color _rowForeColor = UIColors.TextPrimary;
-        private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => UIColors.Selection);
+        // A translucent gray, not an opaque one - matches the translucent
+        // accent UIColors.Selection this replaces as CreateStandard's own
+        // default (same alpha), so the row's own color still shows through
+        // underneath a selection here too, just tinted gray instead of the
+        // accent until CreatePrimary/a consumer sets this explicitly.
+        private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => Color.FromArgb(60, UIColors.BorderLight));
         private Color _headerBackColor = UIColors.BackgroundDarkElevated;
         private Color _headerForeColor = UIColors.TextTertiary;
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
         private int _fillColumnIndex = -1;
         private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
-        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.Primary);
+        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
@@ -151,14 +156,14 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Painted on top of a selected cell's normal background rather than
-        /// replacing it outright - <see cref="UIColors.Selection"/> is a
-        /// translucent blue for exactly this, so the row's own (e.g.
-        /// severity) color still shows through underneath a selection.
-        /// Follows the current accent live until explicitly set - it used to
-        /// be a plain field snapshotted once at construction (like
-        /// ListBox's DragIndicatorColor before the same fix), so an
-        /// app that changed its accent after building the list still showed
-        /// the default blue regardless.
+        /// replacing it outright - defaults to a translucent gray (not the
+        /// current accent), so the row's own (e.g. severity) color still
+        /// shows through underneath a selection, without implying selected
+        /// rows are somehow accent-colored the way
+        /// <see cref="Factories.UIListViewFactory.CreatePrimary"/>'s should
+        /// be. Set this to <see cref="UIColors.Selection"/> - the
+        /// translucent accent CreatePrimary sets it to - for that
+        /// accent-colored look instead.
         /// </summary>
         public Color SelectionOverlayColor
         {
@@ -172,8 +177,9 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Color of the vertical line the header shows while a column is
-        /// being dragged to reorder it. Follows the current accent live
-        /// until explicitly set, same as <see cref="SelectionOverlayColor"/>.
+        /// being dragged to reorder it. Defaults to a fixed, neutral gray
+        /// (<see cref="UIColors.BorderLight"/>), not the current accent -
+        /// same pattern as <see cref="SelectionOverlayColor"/>.
         /// Column reordering is fully hand-rolled (see the mouse handlers
         /// below) rather than using <see cref="System.Windows.Forms.ListView.AllowColumnReorder"/>
         /// - that hands the whole drag to the native Win32 header control
