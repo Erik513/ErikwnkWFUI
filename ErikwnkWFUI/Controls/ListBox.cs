@@ -45,8 +45,7 @@ namespace ErikwnkWFUI.Controls
         private Color _selectedBackColor = UIColors.Primary;
         private Color _hoverBackColor = UIColors.BackgroundLight;
         private Color _dragHandleColor = UIColors.TextTertiary;
-        private Color _dragIndicatorColorOverride;
-        private bool _dragIndicatorColorIsOverridden;
+        private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.PrimaryLight);
         private Color _disabledForeColor = UIColors.TextDisabled;
         private Color _disabledBackColor = UIColors.BackgroundDarkElevated;
 
@@ -136,7 +135,20 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _allowReorder = value;
-                AllowDrop = value;
+
+                if (value)
+                {
+                    // See the constructor's own remarks on why enabling
+                    // this is apartment-state gated - disabling it
+                    // (AllowDrop = false, the other branch below) doesn't
+                    // register anything, so it has no such risk.
+                    DragDropSupport.EnableDropIfSta(this);
+                }
+                else
+                {
+                    AllowDrop = false;
+                }
+
                 Invalidate();
             }
         }
@@ -163,13 +175,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color DragIndicatorColor
         {
-            get => _dragIndicatorColorIsOverridden
-                ? _dragIndicatorColorOverride
-                : UIColors.PrimaryLight;
+            get => _dragIndicatorColor.Value;
             set
             {
-                _dragIndicatorColorOverride = value;
-                _dragIndicatorColorIsOverridden = true;
+                _dragIndicatorColor.Set(value);
                 Invalidate();
             }
         }
@@ -269,7 +278,22 @@ namespace ErikwnkWFUI.Controls
             BorderStyle = BorderStyle.None;
             Font = UIFonts.Normal;
             IntegralHeight = false;
-            AllowDrop = _allowReorder;
+
+            // AllowDrop registers this control as an OLE drop target
+            // (needed here since TryStartDrag's own DoDragDrop below drops
+            // back onto this same control) - that registration needs an
+            // STA thread (true for any real WinForms UI thread), and was
+            // confirmed on DataGridView's/ListView's own identical fix to
+            // silently block for many seconds on an MTA one (e.g. a test
+            // harness thread with no message loop) instead of throwing.
+            // _allowReorder is always true here (nothing sets it to false
+            // before this line runs), so this always attempts to enable it,
+            // same as the plain assignment this replaced - just skipped
+            // entirely off STA, where the drag couldn't have worked anyway.
+            if (_allowReorder)
+            {
+                DragDropSupport.EnableDropIfSta(this);
+            }
 
             SetStyle(
                 ControlStyles.OptimizedDoubleBuffer |
