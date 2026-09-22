@@ -39,16 +39,14 @@ namespace ErikwnkWFUI.Controls
         private Color _rowForeColor = UIColors.TextPrimary;
         private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.Primary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
-        private bool _allowColumnReordering = true;
-        private readonly HashSet<int> _nonReorderableColumns = new HashSet<int>();
+        private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.Primary);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
         private int _pendingReorderColumnIndex = -1;
         private int _pendingReorderStartX;
-        private bool _allowColumnResizing = true;
-        private readonly HashSet<int> _nonResizableColumns = new HashSet<int>();
+        private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
         private bool _isResizingColumn;
         private int _resizeColumnIndex = -1;
@@ -171,8 +169,8 @@ namespace ErikwnkWFUI.Controls
         /// </remarks>
         public bool AllowColumnReordering
         {
-            get => _allowColumnReordering;
-            set => _allowColumnReordering = value;
+            get => _columnReordering.AllowedByDefault;
+            set => _columnReordering.AllowedByDefault = value;
         }
 
         /// <summary>
@@ -184,19 +182,12 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public void SetColumnReorderable(int columnIndex, bool reorderable)
         {
-            if (reorderable)
-            {
-                _nonReorderableColumns.Remove(columnIndex);
-            }
-            else
-            {
-                _nonReorderableColumns.Add(columnIndex);
-            }
+            _columnReordering.SetAllowed(columnIndex, reorderable);
         }
 
         public bool IsColumnReorderable(int columnIndex)
         {
-            return _allowColumnReordering && !_nonReorderableColumns.Contains(columnIndex);
+            return _columnReordering.IsAllowed(columnIndex);
         }
 
         /// <summary>
@@ -232,7 +223,7 @@ namespace ErikwnkWFUI.Controls
         /// there was nothing to hand-roll there. That native property is
         /// deliberately left false (see the constructor); this one governs
         /// the owned implementation instead. Per-column resizability is
-        /// tracked separately (<see cref="_nonResizableColumns"/>), not via
+        /// tracked separately (<see cref="_columnResizing"/>), not via
         /// the existing native <see cref="DataGridViewColumn.Resizable"/> -
         /// that property's own getter falls back to this control's
         /// (permanently false) AllowUserToResizeColumns whenever a column
@@ -242,8 +233,8 @@ namespace ErikwnkWFUI.Controls
         /// </remarks>
         public bool AllowColumnResizing
         {
-            get => _allowColumnResizing;
-            set => _allowColumnResizing = value;
+            get => _columnResizing.AllowedByDefault;
+            set => _columnResizing.AllowedByDefault = value;
         }
 
         /// <summary>
@@ -283,20 +274,13 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public void SetColumnResizable(int columnIndex, bool resizable)
         {
-            if (resizable)
-            {
-                _nonResizableColumns.Remove(columnIndex);
-            }
-            else
-            {
-                _nonResizableColumns.Add(columnIndex);
-            }
+            _columnResizing.SetAllowed(columnIndex, resizable);
         }
 
         /// <summary>Mirrors <see cref="ListView.IsColumnResizable"/> - see <see cref="AllowColumnResizing"/>/<see cref="SetColumnResizable"/>.</summary>
         public bool IsColumnResizable(int columnIndex)
         {
-            return _allowColumnResizing && !_nonResizableColumns.Contains(columnIndex);
+            return _columnResizing.IsAllowed(columnIndex);
         }
 
         /// <summary>
