@@ -84,7 +84,7 @@ namespace ErikwnkWFUI.Forms
             BackColor = UIColors.PrimaryDark;
             TopMost = true;
             ShowInTaskbar = false;
-            Opacity = 0.90;
+            Opacity = 0.80; // testing a stronger value than the previous 0.90
         }
 
         private void CreateControls()

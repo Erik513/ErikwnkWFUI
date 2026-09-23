@@ -65,7 +65,6 @@ namespace ErikwnkWFUI.Forms
 
                     AutoSize = false;
                     Padding = new Padding(0);
-                    Opacity = 0.90;   // match ToastForm
                     ApplyCompactSize();
                 }
             }
@@ -497,6 +496,7 @@ namespace ErikwnkWFUI.Forms
 
             DoubleBuffered = true;
             BackColor = UIColors.PrimaryDark;
+            Opacity = 0.80; // match ToastForm (testing a stronger value than the previous 0.90)
             Padding = new Padding(12);
 
             AutoSize = true;
