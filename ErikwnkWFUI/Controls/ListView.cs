@@ -59,6 +59,7 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultMinimumColumnWidth = 40;
 
         private int _headerHeight = 24;
+        private int _lastColumnHeaderRightEdge;
         private int _pendingToggleDeselectItemIndex = -1;
         private readonly Timer _toggleDeselectSettleTimer;
         private int _toggleDeselectWatchIndex = -1;
@@ -798,6 +799,16 @@ namespace ErikwnkWFUI.Controls
                     new Rectangle(e.Bounds.X + 7, e.Bounds.Y, Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height),
                     _headerForeColor,
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            }
+
+            // Whichever column is currently rightmost - tracked here since
+            // HeaderInputSubclass (see FillHeaderTrailingBackground) has no
+            // other way to know where the actual columns end, only where
+            // its own native window does.
+            var orderedColumns = GetColumnsInDisplayOrder();
+            if (orderedColumns.Count > 0 && orderedColumns[orderedColumns.Count - 1] == e.Header)
+            {
+                _lastColumnHeaderRightEdge = e.Bounds.Right;
             }
 
             DrawSortGlyph(e);
@@ -1807,6 +1818,7 @@ namespace ErikwnkWFUI.Controls
             private const int WM_LBUTTONUP = 0x0202;
             private const int WM_CANCELMODE = 0x001F;
             private const int WM_CAPTURECHANGED = 0x0215;
+            private const int WM_PAINT = 0x000F;
             private const int LVM_FIRST = 0x1000;
             private const int LVM_GETHEADER = LVM_FIRST + 31;
 
@@ -1824,6 +1836,15 @@ namespace ErikwnkWFUI.Controls
                 public uint Flags;
                 public int Item;
             }
+
+            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+            private struct Rect
+            {
+                public int Left, Top, Right, Bottom;
+            }
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern bool GetClientRect(System.IntPtr hWnd, out Rect rect);
 
             [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
             private static extern System.IntPtr SendMessage(System.IntPtr window, int message, System.IntPtr wParam, ref HeaderHitTest hit);
@@ -1943,12 +1964,48 @@ namespace ErikwnkWFUI.Controls
                         // threshold exceeded.
                         _pendingColumnIndex = -1;
                         break;
+
+                    case WM_PAINT:
+                        FillHeaderTrailingBackground();
+                        break;
                 }
             }
 
             private static int GetX(System.IntPtr lParam)
             {
                 return unchecked((short)((long)lParam & 0xFFFF));
+            }
+
+            // The header only ever paints itself for each actual column's
+            // own item rect - drawing past that from inside
+            // OnDrawColumnHeader (tried first) never showed up at all, so
+            // whatever comctl32 hands that per-item custom-draw call
+            // apparently clips to the item's own rect regardless of what
+            // the Graphics object is asked to fill. Painting here instead,
+            // straight onto the header's own DC once base.WndProc has
+            // already finished the native paint (including every
+            // DrawColumnHeader call) for this message, isn't clipped that
+            // way - RedrawWindow/InvalidateHeaderNow above already relies
+            // on painting the header's real window directly for the same
+            // reason.
+            private void FillHeaderTrailingBackground()
+            {
+                if (_owner.Columns.Count == 0 || !GetClientRect(Handle, out Rect clientRect))
+                {
+                    return;
+                }
+
+                var rightEdge = _owner._lastColumnHeaderRightEdge;
+                if (rightEdge >= clientRect.Right)
+                {
+                    return;
+                }
+
+                using (var graphics = Graphics.FromHwnd(Handle))
+                using (var background = new SolidBrush(_owner.HeaderBackColor))
+                {
+                    graphics.FillRectangle(background, rightEdge, clientRect.Top, clientRect.Right - rightEdge, clientRect.Bottom - clientRect.Top);
+                }
             }
 
             private bool TryBeginResize(System.IntPtr coordinates)
