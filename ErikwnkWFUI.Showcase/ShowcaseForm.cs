@@ -29,6 +29,9 @@ namespace ErikwnkWFUI.Showcase
     // needed.
     public class ShowcaseForm : StyledForm
     {
+        // Gray is here for anyone who just wants a neutral look without
+        // knowing CreateStandard already defaults to gray - see
+        // UIAccentColors.Gray for why it's close, not pixel-identical.
         private static readonly (string Name, Color Color)[] AccentPresets =
         {
             ("Blue", UIAccentColors.Blue),

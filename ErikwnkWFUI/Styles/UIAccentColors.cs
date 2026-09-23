@@ -26,6 +26,12 @@ namespace ErikwnkWFUI.Styles
         public static readonly Color Magenta = Color.FromArgb(170, 40, 130);
         public static readonly Color Pink = Color.FromArgb(200, 60, 110);
         public static readonly Color Brown = Color.FromArgb(120, 75, 45);
+        // Close to, but not pixel-identical with, CreateStandard's own
+        // fixed neutral (UIColors.BorderLight) - CreatePrimary derives its
+        // hover/pressed shades from this by percentage, so they land at
+        // slightly different values than CreateStandard's own dedicated
+        // ones. Good enough for someone who just wants "gray" without
+        // knowing CreateStandard already defaults to it.
         public static readonly Color Gray = Color.FromArgb(90, 90, 90);
         public static readonly Color White = Color.FromArgb(230, 230, 230);
 
