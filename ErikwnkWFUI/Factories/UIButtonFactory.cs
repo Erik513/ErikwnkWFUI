@@ -128,7 +128,7 @@ namespace ErikwnkWFUI.Factories
             button.FlatAppearance.MouseDownBackColor = mouseDownBackColor;
 
             SetEnabledStyle(button, backColor, foreColor, fixedForeColor);
-            SetPressedForeColor(button, foreColor, mouseDownBackColor, fixedForeColor);
+            SetPressedForeColor(button, foreColor, fixedForeColor);
             AddToolTip(button, tooltip);
 
             button.Paint += OnButtonPaint;
@@ -182,11 +182,18 @@ namespace ErikwnkWFUI.Factories
         // color captured at construction time), since callers are free
         // to recolor a button after creation (e.g. DealOrNoDeal's price
         // buttons set ForeColor = Black on top of this factory's default).
-        private static void SetPressedForeColor(Button button, Color idleForeColor, Color pressedBackColor, bool fixedForeColor)
+        //
+        // Reads button.FlatAppearance.MouseDownBackColor fresh on every
+        // press rather than taking a color parameter captured once at
+        // construction - TitleBarControl.RefreshTheme() pokes that
+        // property directly on an already-built button (to follow a later
+        // theme/accent switch) without going through this factory again,
+        // so a captured-once value would go stale: pressed text kept
+        // contrasting against whatever the ORIGINAL accent's press color
+        // was, not the current one - confirmed live as invisible
+        // white-on-white once the accent itself turned white.
+        private static void SetPressedForeColor(Button button, Color idleForeColor, bool fixedForeColor)
         {
-            Color pressedForeColor = fixedForeColor
-                ? idleForeColor
-                : UIColors.GetContrastingForeColor(pressedBackColor);
             bool isPressed = false;
             Color restoreForeColor = idleForeColor;
 
@@ -197,6 +204,10 @@ namespace ErikwnkWFUI.Factories
 
                 restoreForeColor = button.ForeColor;
                 isPressed = true;
+
+                Color pressedForeColor = fixedForeColor
+                    ? restoreForeColor
+                    : UIColors.GetContrastingForeColor(button.FlatAppearance.MouseDownBackColor);
 
                 if (restoreForeColor != pressedForeColor)
                     button.ForeColor = pressedForeColor;
