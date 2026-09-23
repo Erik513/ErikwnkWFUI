@@ -469,13 +469,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Turns on the native ListView's own double buffering. Without it,
-        // scrolling an owner-drawn ListView can leave stray gray streaks:
-        // comctl32 scrolls existing pixels via ScrollWindowEx and repaints
-        // only the newly exposed strip, which can visibly lag a frame
-        // behind. DoubleBuffered/ControlStyles only cover .NET's own
-        // OnPaint, which this control's row content never goes through -
-        // this native flag is the only fix, and has no public .NET API.
+        // Turns on the native ListView's own double buffering - without it,
+        // scrolling can leave stray gray streaks, since owner-drawn content
+        // doesn't go through .NET's own OnPaint/DoubleBuffered at all.
         private const int LVM_FIRST = 0x1000;
         private const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
         private const int LVS_EX_DOUBLEBUFFER = 0x00010000;
@@ -537,10 +533,9 @@ namespace ErikwnkWFUI.Controls
                 _headerInputSubclass.AssignHandle(headerHandle);
             }
 
-            // The first paint right after a handle (re)creation can land
-            // before theme colors have settled (seen on a theme switch,
-            // not plain construction) - defer one tick so OnDrawColumnHeader
-            // repaints with the final colors instead of stale ones.
+            // The first paint after a handle recreate (e.g. a theme switch)
+            // can land before colors have settled - defer one tick to
+            // repaint with the final ones.
             BeginInvoke(new MethodInvoker(Invalidate));
         }
 
@@ -552,12 +547,9 @@ namespace ErikwnkWFUI.Controls
             base.OnHandleDestroyed(e);
         }
 
-        // Scrolling shifts pixels via ScrollWindowEx and repaints only the
-        // newly exposed strip - for an owner-drawn control that can leave
-        // a stray gray edge behind for a frame (only seen scrolling down).
-        // Forcing a full repaint on every scroll message instead trades
-        // that partial blit for a clean redraw; LVS_EX_DOUBLEBUFFER keeps
-        // it from flickering.
+        // Scrolling can leave a stray gray edge behind for a frame (native
+        // partial-repaint artifact on an owner-drawn control) - forcing a
+        // full repaint on every scroll message gets rid of it.
         private const int WM_VSCROLL = 0x0115;
         private const int WM_HSCROLL = 0x0114;
         private const int WM_MOUSEWHEEL = 0x020A;
@@ -569,15 +561,10 @@ namespace ErikwnkWFUI.Controls
         {
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
             {
-                // base.WndProc runs the native scroll handling
-                // synchronously, including its glitchy partial repaint -
-                // by the time it returns, that bad frame already reached
-                // the screen once, so invalidating afterward still let it
-                // flash for a frame. LockWindowUpdate blocks any pixel of
-                // this window (and its children, including the header)
-                // from reaching the screen while locked, regardless of how
-                // the native control paints - Update() then forces the
-                // corrected frame to show immediately.
+                // LockWindowUpdate blocks any pixel of this window (and its
+                // header) from reaching the screen while the native scroll
+                // handling runs - plain Invalidate() afterward still let
+                // the bad frame flash through first.
                 LockWindowUpdate(Handle);
                 try
                 {
@@ -763,14 +750,8 @@ namespace ErikwnkWFUI.Controls
         {
             if (_sortedColumnIndex < 0)
             {
-                // About to sort from a clean/unsorted state - snapshot now.
-                // Unlike DataGridView (which captures this once per fresh
-                // DataSource bind/Reset), this control has no such event to
-                // hook - it's just a plain Items collection an app adds to
-                // directly - so the snapshot is taken lazily, right before
-                // it's first actually needed, and reused across every
-                // subsequent sort cycle until the user cycles all the way
-                // back to "original" (see below) and starts sorting again.
+                // Snapshot the unsorted order lazily, on first sort - there's
+                // no DataSource/Reset event to hook here like DataGridView has.
                 _originalOrder = new List<ListViewItem>(Items.Cast<ListViewItem>());
             }
 
@@ -833,15 +814,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Mirrors ReadOnlyDataGridView's own BuildSortedOrder - the default
-        // comparison tries a numeric compare first (so "10" sorts after
-        // "9", not before it, the way plain string comparison would put
-        // it), falling back to case-insensitive text. DataGridView gets
-        // this almost for free from its bound cells' own typed values;
-        // this control's rows are plain ListViewItem/SubItem text with no
-        // typed value at all, so there's no such default to inherit from -
-        // a registered comparer (see SetSortComparer) is the way to sort a
-        // column by something other than either of those two.
+        // Mirrors ReadOnlyDataGridView's own BuildSortedOrder, adapted for
+        // plain text SubItems instead of typed bound cell values - see
+        // SetSortComparer for sorting by anything else.
         private List<ListViewItem> BuildSortedOrder(int columnIndex, SortOrder sortOrder)
         {
             int direction = sortOrder == SortOrder.Descending ? -1 : 1;
@@ -937,11 +912,8 @@ namespace ErikwnkWFUI.Controls
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
         }
 
-        // Flat gray when disabled - every control in this library mutes
-        // this same way (see ReadOnlyDataGridView.ApplyStyles). Applied at
-        // paint time rather than by overwriting _rowForeColor/item.ForeColor,
-        // so a re-enabled control (or an item with its own custom color)
-        // isn't left stuck on gray.
+        // Flat gray when disabled, same as ReadOnlyDataGridView.ApplyStyles -
+        // applied at paint time so nothing needs restoring once re-enabled.
         private Color GetEffectiveColor(Color normalColor)
         {
             return Enabled ? normalColor : UIColors.DisabledGray;
@@ -955,12 +927,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Called from HeaderInputSubclass once a header click passes the
-        // drag threshold (detection has to happen there - the header is
-        // its own native child window, not this control). From here,
-        // WinForms' own DoDragDrop/OnDragOver/OnDragDrop - the same
-        // mechanism ListBox uses for item reordering - drives the rest as
-        // a native OLE drag, independent of which child window the cursor
-        // is over.
+        // drag threshold. From here, WinForms' own DoDragDrop/OnDragOver/
+        // OnDragDrop - the same mechanism ListBox uses for item reordering -
+        // drives the rest as a native OLE drag.
         private void BeginColumnDragDrop(int columnIndex)
         {
             _dragColumnIndex = columnIndex;
@@ -1095,12 +1064,10 @@ namespace ErikwnkWFUI.Controls
             return new ListViewHitTestInfo(item, null, ListViewHitTestLocations.None);
         }
 
-        // Native click behavior always selects just the clicked item - it
-        // never toggles an already-selected item back off. This restores
-        // that one piece: remember at MouseDown whether the pressed item
-        // was the sole selection, and deselect it if MouseUp lands back on
-        // the same item (not a drag elsewhere). Everything else about
-        // native selection - drag-select, Ctrl/Shift-click - stays untouched.
+        // Native click never toggles an already-selected item back off -
+        // this restores that: remember at MouseDown whether the pressed
+        // item was the sole selection, and deselect it if MouseUp lands
+        // back on the same item (not a drag elsewhere).
         private void OnListViewMouseDownForToggleDeselect(object sender, MouseEventArgs e)
         {
             _pendingToggleDeselectItemIndex = -1;
@@ -1140,14 +1107,10 @@ namespace ErikwnkWFUI.Controls
                 hitTest.Item.Selected = false;
 
                 // comctl32 arms a "click to rename" timer for any press on
-                // an item that's already selected and focused, regardless
-                // of LabelEdit - it fires ~1s later and re-selects the
-                // item, undoing the deselect above. Nothing preempts that
-                // timer directly, but ItemSelectionChanged fires the
-                // instant it does, so reverting it there (see
-                // OnItemSelectionChangedForToggleDeselect) reacts
-                // immediately instead of guessing a delay. This timer is
-                // only a safety net in case that reselect never happens.
+                // an already-selected, focused item - it fires ~1s later
+                // and re-selects the item, undoing the deselect above.
+                // OnItemSelectionChangedForToggleDeselect reverts that the
+                // instant it fires; this timer is just the safety net.
                 _toggleDeselectWatchIndex = pendingIndex;
                 _toggleDeselectSettleTimer.Stop();
                 _toggleDeselectSettleTimer.Start();
@@ -1179,18 +1142,13 @@ namespace ErikwnkWFUI.Controls
             _toggleDeselectWatchIndex = -1;
         }
 
-        // Native marquee-select only arms for a press that starts on empty
-        // space - a press on an item is reserved for an OLE item drag
-        // that's never wired up here. This fills that gap: a plain press
-        // on a row, then moving to a different row while still held,
-        // selects everything between them, the way Explorer's own
-        // drag-select feels.
-        //
-        // Tracking after the initial press runs on a poll timer instead of
-        // MouseMove/MouseUp, since those can stop arriving once the drag
-        // cursor leaves this control's bounds - which would break
-        // auto-scroll past an edge. Unlike a control-lifetime poll, this
-        // one only runs for the duration of one actual drag.
+        // Native marquee-select only arms for a press on empty space, not
+        // on an item - this fills that gap: a plain press on a row, then
+        // moving to a different row while held, selects everything between
+        // them (Explorer-style drag-select). Tracked via a poll timer
+        // instead of MouseMove/MouseUp, since those can stop arriving once
+        // the drag leaves this control's bounds, which would break
+        // auto-scroll past an edge.
         private void OnListViewMouseDownForRowRangeDrag(object sender, MouseEventArgs e)
         {
             _isRowRangeDragging = false;
@@ -1265,12 +1223,9 @@ namespace ErikwnkWFUI.Controls
 
             var location = PointToClient(Cursor.Position);
 
-            // Auto-scrolls past either edge, like native marquee-select -
-            // purely a visual aid. GetNearestRowIndex below already
-            // clamps to the true first/last row in the whole list (not
-            // just the currently visible ones) the moment the cursor
-            // passes either edge, so the range itself is already correct;
-            // scrolling just lets the user see it happening.
+            // Purely a visual aid - GetNearestRowIndex below already
+            // clamps to the true first/last row regardless of scroll
+            // position, so the selection itself doesn't depend on this.
             int direction = location.Y < _headerHeight ? -1 : location.Y >= ClientSize.Height ? 1 : 0;
             _rowRangeAutoScrollDirection = direction;
 
@@ -1566,12 +1521,9 @@ namespace ErikwnkWFUI.Controls
                 plainTextBuilder.AppendLine(string.Join("\t", cells));
             }
 
-            // Plain text is the universal fallback (any app that only reads
-            // text gets the tab-separated rows, exactly as before). "HTML
-            // Format" rides alongside it on the same clipboard payload so
-            // that apps which understand it - Word, Outlook, browsers,
-            // Excel, most chat/notes apps - paste an actual bordered table
-            // instead of raw tab characters.
+            // Plain text is the universal fallback; "HTML Format" rides
+            // alongside it so apps that understand it (Word, Outlook,
+            // browsers, Excel, ...) paste an actual table instead.
             var dataObject = new DataObject();
             dataObject.SetText(plainTextBuilder.ToString(), TextDataFormat.UnicodeText);
             dataObject.SetData(DataFormats.Html, BuildCfHtmlTable(headerCells, rows));
@@ -1748,11 +1700,8 @@ namespace ErikwnkWFUI.Controls
                 return SendMessage(listViewHandle, LVM_GETHEADER, System.IntPtr.Zero, System.IntPtr.Zero);
             }
 
-            // The header is a separate native child window - this
-            // control's own Invalidate() doesn't reach it, so without this
-            // the drag insertion line would never actually redraw during a
-            // drag. RedrawWindow forces an immediate repaint instead of
-            // just marking it dirty.
+            // The header is a separate native window - Invalidate() on the
+            // owner doesn't reach it, so this forces an immediate repaint.
             public void InvalidateHeaderNow()
             {
                 RedrawWindow(Handle, System.IntPtr.Zero, System.IntPtr.Zero, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
@@ -1796,13 +1745,10 @@ namespace ErikwnkWFUI.Controls
                         break;
 
                     case WM_MOUSEMOVE:
-                        // Runs AFTER base.WndProc, not via WM_SETCURSOR -
-                        // the header sets its own resize cursor directly
-                        // from its own mouse-move handling (a common
-                        // comctl32 pattern), so intercepting WM_SETCURSOR
-                        // first just meant native code overwrote it moments
-                        // later. Letting native go first and correcting
-                        // after means our cursor is the one that sticks.
+                        // Runs after base.WndProc: the header sets its own
+                        // resize cursor from its own mouse-move handling,
+                        // so correcting it after (not via WM_SETCURSOR
+                        // first) is what actually sticks.
                         TrySuppressResizeCursor(GetX(m.LParam));
                         OnMouseMove(GetX(m.LParam));
                         break;
@@ -1827,12 +1773,10 @@ namespace ErikwnkWFUI.Controls
                 return unchecked((short)((long)lParam & 0xFFFF));
             }
 
-            // Drawing past a column's own rect from inside
-            // OnDrawColumnHeader (tried first) never showed up at all -
-            // comctl32 clips per-item custom-draw to that item's rect.
-            // Painting straight onto the header's own DC here, after
-            // base.WndProc has already finished the native paint for this
-            // message, isn't clipped that way.
+            // comctl32 clips per-item custom-draw to that item's own rect,
+            // so drawing past a column's edge from OnDrawColumnHeader never
+            // showed up - painting straight onto the header's DC here isn't
+            // clipped that way.
             private void FillHeaderTrailingBackground()
             {
                 if (_owner.Columns.Count == 0 || !GetClientRect(Handle, out Rect clientRect))
@@ -1985,13 +1929,10 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Clears the selection when a left-button press lands anywhere
-        // else in the app - a message filter sees every message before its
-        // target window does. A press on this control's own handle
-        // (client area or its scrollbar) is never "outside"; the header is
-        // a separate native window and needs its own exclusion. A click in
-        // a different app doesn't resolve to a Control at all via
-        // FromChildHandle, so it's naturally excluded too.
+        // Clears the selection on a left-button press anywhere else in the
+        // app. This control's own handle (client area or scrollbar) is
+        // never "outside"; the header is a separate native window and
+        // needs its own exclusion.
         private sealed class OutsideClickDeselectFilter : IMessageFilter
         {
             private const int WM_LBUTTONDOWN = 0x0201;
