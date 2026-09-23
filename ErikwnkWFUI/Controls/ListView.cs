@@ -23,36 +23,28 @@ namespace ErikwnkWFUI.Controls
     }
 
     /// <summary>
-    /// A dark-themed, multi-column ListView (Details view) with completely
-    /// standard, native row selection - click, Ctrl+click, Shift+click, and
-    /// the native rubber-band drag (including its own auto-scroll past an
-    /// edge) all work exactly like Explorer's own list view, since they
-    /// simply are Explorer's own list view under the hood. Only the visuals
-    /// (row/header colors, fonts, the selection overlay) are this control's
-    /// own - selection itself is left entirely to
+    /// A dark-themed, multi-column ListView (Details view). Row selection -
+    /// click, Ctrl+click, Shift+click, rubber-band drag with auto-scroll -
+    /// is entirely native, left to
     /// <see cref="System.Windows.Forms.ListView.MultiSelect"/> and
-    /// <see cref="System.Windows.Forms.ListView.SelectedItems"/>, not
-    /// reimplemented by hand.
+    /// <see cref="System.Windows.Forms.ListView.SelectedItems"/>. Only the
+    /// visuals (row/header colors, fonts, the selection overlay) are this
+    /// control's own.
     /// <list type="bullet">
     /// <item>Hovering a cell whose text is wider than its column shows the full text in a tooltip.</item>
     /// </list>
-    /// Ctrl+C copies every selected row (tab-separated columns, one line
-    /// per row, no header line - meant to be pasted as plain data). Ctrl+
-    /// Shift+C copies the same rows with a leading row of column names, for
-    /// pasting as a proper table. Both also place an HTML table on the
-    /// clipboard alongside the plain text, so apps that understand it (Word,
-    /// Outlook, browsers, Excel, ...) paste an actual bordered table instead
-    /// of raw tab characters; plain-text-only targets still get the tab-
-    /// separated fallback. The right-click menu only shows "Copy selection"
-    /// and "Copy all" at the top level; hovering either opens a submenu with
-    /// the plain action again plus "As table". Every copy is confirmed with
-    /// a <see cref="Forms.ToastForm"/>.
+    /// Ctrl+C copies every selected row as tab-separated columns; Ctrl+Shift+C
+    /// does the same with a leading row of column names. Both also put an
+    /// HTML table on the clipboard alongside the plain text, so apps that
+    /// understand it (Word, Outlook, browsers, Excel, ...) paste an actual
+    /// table instead of raw tabs. The right-click menu shows "Copy
+    /// selection"/"Copy all", each with a submenu for the plain action or
+    /// "As table". Every copy is confirmed with a <see cref="Forms.ToastForm"/>.
     /// </summary>
     /// <remarks>
-    /// Named the same as its own base class, same as
-    /// <see cref="Controls.DataGridView"/> and <see cref="Controls.ListBox"/>
-    /// - the base type reference below stays fully qualified so the class
-    /// doesn't try to inherit from itself.
+    /// Named the same as its own base class, like <see cref="Controls.DataGridView"/>
+    /// and <see cref="Controls.ListBox"/> - the base type reference below
+    /// stays fully qualified so the class doesn't try to inherit from itself.
     /// </remarks>
     public class ListView : System.Windows.Forms.ListView
     {
@@ -73,15 +65,10 @@ namespace ErikwnkWFUI.Controls
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
         private Color _rowForeColor = UIColors.TextPrimary;
-        // A translucent gray, not an opaque one - matches the translucent
-        // accent UIColors.Selection this replaces as CreateStandard's own
-        // default, so the row's own color still shows through underneath a
-        // selection here too, just tinted gray instead of the accent until
-        // CreatePrimary/a consumer sets this explicitly. A higher alpha
-        // than UIColors.Selection's own 60 - confirmed live, gray (unlike
-        // the accent blue) doesn't stand out from an ordinary row's own
-        // shade nearly as much at the same opacity, so CreateStandard's
-        // selected row was barely distinguishable from an unselected one.
+        // Translucent gray so a row's own color still shows through under a
+        // selection; CreatePrimary switches this to the accent. Alpha is
+        // higher than UIColors.Selection's 60 - gray blends into a row's
+        // own shade much more than blue does at the same opacity.
         private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => Color.FromArgb(130, UIColors.BorderLight));
         private Color _headerBackColor = UIColors.BackgroundDarkElevated;
         private Color _headerForeColor = UIColors.TextTertiary;
@@ -142,15 +129,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Painted on top of a selected cell's normal background rather than
-        /// replacing it outright - defaults to a translucent gray (not the
-        /// current accent), so the row's own (e.g. severity) color still
-        /// shows through underneath a selection, without implying selected
-        /// rows are somehow accent-colored the way
-        /// <see cref="Factories.UIListViewFactory.CreatePrimary"/>'s should
-        /// be. Set this to <see cref="UIColors.Selection"/> - the
-        /// translucent accent CreatePrimary sets it to - for that
-        /// accent-colored look instead.
+        /// Painted on top of a selected cell instead of replacing its
+        /// background, so a row's own color (e.g. severity) still shows
+        /// through. Defaults to translucent gray;
+        /// <see cref="Factories.UIListViewFactory.CreatePrimary"/> sets it
+        /// to <see cref="UIColors.Selection"/> for an accent-colored look.
         /// </summary>
         public Color SelectionOverlayColor
         {
@@ -163,19 +146,13 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Color of the vertical line the header shows while a column is
-        /// being dragged to reorder it. Defaults to a fixed, neutral gray
-        /// (<see cref="UIColors.BorderLight"/>), not the current accent -
-        /// same pattern as <see cref="SelectionOverlayColor"/>.
-        /// Column reordering is fully hand-rolled (see the mouse handlers
-        /// below) rather than using <see cref="System.Windows.Forms.ListView.AllowColumnReorder"/>
-        /// - that hands the whole drag to the native Win32 header control
-        /// (comctl32), which draws its own insertion line as native chrome
-        /// with no public API to recolor, and (confirmed by instrumenting a
-        /// live drag) draws it in a way that isn't reliably interceptable by
-        /// subclassing at all. Owning the whole gesture means this line is
-        /// just an ordinary part of <see cref="OnDrawColumnHeader"/>'s
-        /// existing owner-draw painting - no native chrome involved.
+        /// Color of the line shown while dragging a column to reorder it.
+        /// Defaults to a fixed neutral gray, same pattern as
+        /// <see cref="SelectionOverlayColor"/>. Column reordering is
+        /// hand-rolled instead of using
+        /// <see cref="System.Windows.Forms.ListView.AllowColumnReorder"/>,
+        /// since the native drag line is comctl32 chrome with no way to
+        /// recolor or reliably intercept.
         /// </summary>
         public Color ColumnReorderIndicatorColor
         {
@@ -184,25 +161,10 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Color of each column header cell's own border (OnDrawColumnHeader).
-        /// There used to also be a hand-drawn outer frame around the whole
-        /// control following this same color, drawn straight onto the
-        /// client DC after every native WM_PAINT since the list content
-        /// itself is natively painted and never goes through .NET's own
-        /// OnPaint. Removed to match <see cref="ReadOnlyDataGridView.BorderColor"/>
-        /// - its DataGridView equivalent had to go first, because a real
-        /// native in-place editing control (a genuine child window) sitting
-        /// at the grid's edge always painted on top of that outer frame
-        /// with no way to redraw underneath it; dropping it here too keeps
-        /// both controls' border behavior consistent even though ListView
-        /// itself has no in-place cell editing to trigger that exact case.
-        /// Defaults to <see cref="UIColors.BorderMedium"/> - a fixed,
-        /// neutral border regardless of the current accent, matching this
-        /// control's original, unconditional look
-        /// (<see cref="Factories.UIListViewFactory.CreateStandard"/> still
-        /// gets exactly that, unchanged). <see cref="Factories.UIListViewFactory.CreatePrimary"/>
-        /// sets this to <see cref="UIColors.Primary"/> instead for a
-        /// variant framed entirely in the current accent color.
+        /// Color of each column header cell's own border. Defaults to
+        /// <see cref="UIColors.BorderMedium"/> regardless of the current
+        /// accent; <see cref="Factories.UIListViewFactory.CreatePrimary"/>
+        /// sets this to <see cref="UIColors.Primary"/> instead.
         /// </summary>
         public Color BorderColor
         {
@@ -246,11 +208,9 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Font HeaderFont
         {
-            // Always a fresh instance - OnDrawColumnHeader disposes whatever
-            // it gets from this getter after each paint, which would
-            // silently dispose the caller's own Font object (breaking every
-            // paint after the first) if this ever handed that instance back
-            // directly instead of a clone.
+            // Returns a clone - OnDrawColumnHeader disposes the Font it
+            // gets each paint, which would kill a shared instance after
+            // the first use.
             get { return _headerFontOverride != null ? (Font)_headerFontOverride.Clone() : new Font(Font, FontStyle.Bold); }
             set
             {
@@ -297,24 +257,18 @@ namespace ErikwnkWFUI.Controls
             // drag - see ColumnReorderIndicatorColor's doc comment for why.
             AllowColumnReorder = false;
 
-            // AllowDrop is only ever needed for that same hand-rolled drag,
-            // not an app-facing drop target (see DragDropSupport for why
-            // it's apartment-state gated) - HeaderInputSubclass.OnMouseDown
-            // checks AllowDrop itself and never arms a drag if this never
-            // got set.
+            // AllowDrop only supports that hand-rolled drag, not an
+            // app-facing drop target - see DragDropSupport for the
+            // apartment-state gating.
             DragDropSupport.EnableDropIfSta(this);
             BorderStyle = BorderStyle.None;
             BackColor = UIColors.BackgroundDark;
             ForeColor = _rowForeColor;
             Font = UIFonts.Normal;
-            // Clickable, not Nonclickable, so ColumnClick/OnColumnClick
-            // actually fires for header-click sorting below (see
-            // SortingEnabled) - a Nonclickable header doesn't generate
-            // click notifications at all, native "pressed" chrome or not.
-            // OwnerDraw draws every header pixel itself regardless of this
-            // setting (see OnDrawColumnHeader), so switching this on never
-            // risked bringing back any native 3D-pressed visual - there's
-            // nothing native left in the paint path for it to affect.
+            // Clickable so ColumnClick actually fires for header sorting
+            // (see SortingEnabled). OwnerDraw paints every header pixel
+            // regardless, so there's no native "pressed" chrome to worry
+            // about.
             HeaderStyle = ColumnHeaderStyle.Clickable;
             OwnerDraw = true;
 
@@ -353,11 +307,9 @@ namespace ErikwnkWFUI.Controls
 
             ContextMenuStrip = BuildContextMenu();
 
-            // Reacts to a left-button press landing on any OTHER window in
-            // this app - a message filter, not a poll, so this doesn't
-            // bring back the kind of hand-rolled per-tick tracking the
-            // selection rewrite just got rid of. See
-            // OutsideClickDeselectFilter for what counts as "outside".
+            // Message filter, not a poll, for "a click happened somewhere
+            // else" - see OutsideClickDeselectFilter for what counts as
+            // outside.
             _outsideClickDeselectFilter = new OutsideClickDeselectFilter(this);
             Application.AddMessageFilter(_outsideClickDeselectFilter);
         }
@@ -378,20 +330,10 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Configurable per column, independent of <see cref="MinimumColumnWidth"/> - a
-        /// column can be locked at its current width entirely (e.g. a
-        /// narrow status/quality column that should never accidentally get
-        /// dragged to something illegible) while others stay freely
-        /// resizable.
-        /// </summary>
-        /// <summary>
-        /// Master switch for whether ANY column can be resized at all -
-        /// simpler than calling <see cref="SetColumnResizable"/> for every
-        /// column when the answer is "none of them". Per-column overrides
-        /// via <see cref="SetColumnResizable"/> still apply among whichever
-        /// columns this allows; setting this false overrides all of them
-        /// (nothing becomes resizable no matter what they say). Defaults to
-        /// true, matching this control's previous unconditional behavior.
+        /// Master switch for whether any column can be resized at all.
+        /// <see cref="SetColumnResizable"/> still applies per column among
+        /// whichever this allows; false overrides everything. Defaults to
+        /// true.
         /// </summary>
         public bool AllowColumnResizing
         {
@@ -400,13 +342,10 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Master switch for whether ANY column can be dragged to reorder
-        /// it at all - simpler than calling <see cref="SetColumnReorderable"/>
-        /// for every column when the answer is "none of them". Per-column
-        /// overrides via <see cref="SetColumnReorderable"/> still apply
-        /// among whichever columns this allows; setting this false
-        /// overrides all of them. Defaults to true, matching this control's
-        /// previous unconditional behavior.
+        /// Master switch for whether any column can be dragged to reorder
+        /// at all. <see cref="SetColumnReorderable"/> still applies per
+        /// column among whichever this allows; false overrides everything.
+        /// Defaults to true.
         /// </summary>
         public bool AllowColumnReordering
         {
@@ -414,6 +353,11 @@ namespace ErikwnkWFUI.Controls
             set => _columnReordering.AllowedByDefault = value;
         }
 
+        /// <summary>
+        /// Per-column override, independent of <see cref="MinimumColumnWidth"/> -
+        /// locks a column at its current width (e.g. a narrow status
+        /// column) while others stay resizable.
+        /// </summary>
         public void SetColumnResizable(int columnIndex, bool resizable)
         {
             _columnResizing.SetAllowed(columnIndex, resizable);
@@ -425,10 +369,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Configurable per column, independent of <see cref="AllowColumnReordering"/>:
-        /// a column can be pinned in place (e.g. a leading "Time"/"Metric"
-        /// column that should always stay leftmost) while the rest can
-        /// still be freely dragged into a new order.
+        /// Per-column override, independent of <see cref="AllowColumnReordering"/> -
+        /// pins a column in place (e.g. a leading "Time" column) while the
+        /// rest can still be dragged into a new order.
         /// </summary>
         public void SetColumnReorderable(int columnIndex, bool reorderable)
         {
@@ -472,19 +415,14 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Registers a custom comparer for a specific column, used by
-        /// column-header sorting instead of the default comparison (numeric
-        /// if both sides parse as a number, case-insensitive text
-        /// otherwise) - mirrors <see cref="Controls.ReadOnlyDataGridView.SetSortComparer"/>,
-        /// adapted for this control's own row shape: the comparer receives
-        /// the two <see cref="ListViewItem"/>s being compared (not just the
-        /// sorted column's own text), so it can read any of their SubItems
-        /// or a domain object stashed in <see cref="ListViewItem.Tag"/> if
-        /// that's more meaningful for that column than its displayed text.
-        /// It's expected to compare in plain ascending order - this control
-        /// still applies ascending/descending itself. Pass <c>null</c> as
-        /// <paramref name="comparer"/> to remove one and revert that column
-        /// to the default.
+        /// Registers a custom comparer for a column's header-click sort,
+        /// replacing the default (numeric if both sides parse as numbers,
+        /// case-insensitive text otherwise). The comparer receives the two
+        /// <see cref="ListViewItem"/>s being compared, so it can read other
+        /// SubItems or <see cref="ListViewItem.Tag"/> instead of just the
+        /// sorted column's text. Compare in plain ascending order - this
+        /// control applies descending itself. Pass <c>null</c> to remove a
+        /// comparer and revert that column to the default.
         /// </summary>
         public void SetSortComparer(ColumnHeader column, IComparer comparer)
         {
@@ -526,19 +464,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // LVM_SETEXTENDEDLISTVIEWSTYLE / LVS_EX_DOUBLEBUFFER - turns on the
-        // native ListView's OWN internal double buffering. Without this,
-        // scrolling an owner-drawn ListView (this control draws every cell
-        // itself via DrawSubItem) can leave stray gray streaks/lines behind:
-        // comctl32 scrolls existing content with ScrollWindowEx and then
-        // repaints only the newly-exposed strip directly to screen, and that
-        // strip's owner-draw callbacks can visibly lag behind the blit for
-        // a frame, showing whatever was underneath (typically gray) instead
-        // of this control's own row background. This is the standard fix
-        // for exactly that class of artifact and has no public .NET API -
-        // DoubleBuffered/ControlStyles (already set in the constructor) only
-        // cover .NET's own OnPaint pipeline, which this control's actual
-        // row/cell content never goes through.
+        // Turns on the native ListView's own double buffering. Without it,
+        // scrolling an owner-drawn ListView can leave stray gray streaks:
+        // comctl32 scrolls existing pixels via ScrollWindowEx and repaints
+        // only the newly exposed strip, which can visibly lag a frame
+        // behind. DoubleBuffered/ControlStyles only cover .NET's own
+        // OnPaint, which this control's row content never goes through -
+        // this native flag is the only fix, and has no public .NET API.
         private const int LVM_FIRST = 0x1000;
         private const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
         private const int LVS_EX_DOUBLEBUFFER = 0x00010000;
@@ -584,17 +516,14 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnHandleCreated(e);
 
-            // Re-applied every time the handle is (re)created, same as the
-            // header subclass just below - this extended style lives on the
-            // native control itself, not anything .NET persists across a
-            // handle recreation.
+            // Re-applied on every handle (re)creation - this extended style
+            // lives on the native control, not anything .NET persists
+            // across a recreate.
             SendMessage(Handle, LVM_SETEXTENDEDLISTVIEWSTYLE, (System.IntPtr)LVS_EX_DOUBLEBUFFER, (System.IntPtr)LVS_EX_DOUBLEBUFFER);
 
-            // The header is a separate native child window (class
-            // "SysHeader32"), recreated along with the ListView's own handle -
-            // re-attach every time rather than once in the constructor. See
-            // HeaderInputSubclass for why column-reorder dragging is hooked
-            // here instead of this control's own mouse events.
+            // The header is a separate native child window ("SysHeader32"),
+            // recreated along with this control's own handle - reattach
+            // every time instead of once in the constructor.
             _headerInputSubclass?.ReleaseHandle();
             System.IntPtr headerHandle = HeaderInputSubclass.GetHeaderHandle(Handle);
             if (headerHandle != System.IntPtr.Zero)
@@ -603,17 +532,11 @@ namespace ErikwnkWFUI.Controls
                 _headerInputSubclass.AssignHandle(headerHandle);
             }
 
-            // Guards against a one-off glitch seen on the very first theme
-            // switch that rebuilds this control (not on plain construction) -
-            // the initial paint right after a handle is (re)created can
-            // land before layout/theme colors have fully settled, so header
-            // colors painted there (OnDrawColumnHeader) could momentarily
-            // use stale values. Deferring one tick guarantees at least one
-            // more repaint once everything has actually settled, without
-            // needing the user to trigger a second redraw themselves (e.g.
-            // by resizing).
+            // The first paint right after a handle (re)creation can land
+            // before theme colors have settled (seen on a theme switch,
+            // not plain construction) - defer one tick so OnDrawColumnHeader
+            // repaints with the final colors instead of stale ones.
             BeginInvoke(new MethodInvoker(Invalidate));
-
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -624,19 +547,12 @@ namespace ErikwnkWFUI.Controls
             base.OnHandleDestroyed(e);
         }
 
-        // Scrolling (scrollbar drag/click, mouse wheel, or a keyboard
-        // scroll) makes the native ListView shift its existing pixels with
-        // ScrollWindowEx and then repaint only the newly-exposed strip -
-        // for an owner-drawn control that can leave a stray gray edge
-        // behind at the seam, confirmed to only happen scrolling DOWN
-        // (matching a blit/seam bug rather than anything in the actual
-        // per-cell drawing logic in OnDrawSubItem, which isn't direction-
-        // dependent). Forcing a full repaint on every scroll message,
-        // instead of trusting that partial blit-based update, redraws
-        // every visible row fresh and gets rid of it. LVS_EX_DOUBLEBUFFER
-        // above keeps this from re-introducing the flicker the partial
-        // blit was originally meant to avoid.
-        //
+        // Scrolling shifts pixels via ScrollWindowEx and repaints only the
+        // newly exposed strip - for an owner-drawn control that can leave
+        // a stray gray edge behind for a frame (only seen scrolling down).
+        // Forcing a full repaint on every scroll message instead trades
+        // that partial blit for a clean redraw; LVS_EX_DOUBLEBUFFER keeps
+        // it from flickering.
         private const int WM_VSCROLL = 0x0115;
         private const int WM_HSCROLL = 0x0114;
         private const int WM_MOUSEWHEEL = 0x020A;
@@ -648,25 +564,15 @@ namespace ErikwnkWFUI.Controls
         {
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
             {
-                // base.WndProc below runs the native control's own scroll
-                // handling SYNCHRONOUSLY, including its glitchy partial
-                // ScrollWindowEx-based repaint - by the time control
-                // returns here, that bad frame has already reached the
-                // screen once, so invalidating afterward (an earlier
-                // attempt) still let it flash for a frame before the
-                // corrected repaint replaced it. A WM_SETREDRAW(FALSE)
-                // suppression around that same call (also tried) still let
-                // an occasional frame through - LVS_EX_DOUBLEBUFFER's own
-                // internal presentation isn't fully gated by that flag on
-                // every comctl32 version. LockWindowUpdate is the stronger
-                // guarantee: it blocks ANY pixel of this window (and its
-                // children, including the header) from reaching the screen
-                // at the GDI level while locked, regardless of how the
-                // native control internally decides to paint - so nothing
-                // native can flash through no matter the mechanism.
-                // Re-enabling it and forcing an immediate synchronous
-                // repaint (Update(), not just Invalidate()) means the very
-                // first frame the user actually sees is the corrected one.
+                // base.WndProc runs the native scroll handling
+                // synchronously, including its glitchy partial repaint -
+                // by the time it returns, that bad frame already reached
+                // the screen once, so invalidating afterward still let it
+                // flash for a frame. LockWindowUpdate blocks any pixel of
+                // this window (and its children, including the header)
+                // from reaching the screen while locked, regardless of how
+                // the native control paints - Update() then forces the
+                // corrected frame to show immediately.
                 LockWindowUpdate(Handle);
                 try
                 {
@@ -801,10 +707,9 @@ namespace ErikwnkWFUI.Controls
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
-            // Whichever column is currently rightmost - tracked here since
-            // HeaderInputSubclass (see FillHeaderTrailingBackground) has no
-            // other way to know where the actual columns end, only where
-            // its own native window does.
+            // Track the rightmost column's edge - HeaderInputSubclass needs
+            // this to know where the real columns end, not just where its
+            // own native window does (see FillHeaderTrailingBackground).
             var orderedColumns = GetColumnsInDisplayOrder();
             if (orderedColumns.Count > 0 && orderedColumns[orderedColumns.Count - 1] == e.Header)
             {
@@ -959,16 +864,11 @@ namespace ErikwnkWFUI.Controls
             return columnIndex < item.SubItems.Count ? item.SubItems[columnIndex].Text : string.Empty;
         }
 
-        // "Row 2" before "Row 10", not after - a plain string compare (or
-        // even parsing each cell as a whole number, tried first and found
-        // wrong here: "Row 1" isn't a number at all, only a number-shaped
-        // SUBSTRING of it is) sorts lexicographically, putting "Row 10"
-        // right after "Row 1" and before "Row 2". StrCmpLogicalW is the
-        // exact native function Windows Explorer's own file listing sorts
-        // names with - comparing embedded numeric runs numerically and
-        // everything else as text - so text columns here already sort the
-        // same way Explorer would sort the same strings, matching this
-        // control's own stated goal of behaving like Explorer's list view.
+        // "Row 2" before "Row 10", not after - plain string comparison
+        // sorts lexicographically and puts "Row 10" between them.
+        // StrCmpLogicalW is the same native function Explorer's own file
+        // listing uses: numeric runs compare numerically, everything else
+        // as text.
         [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
         private static extern int StrCmpLogicalW(string psz1, string psz2);
 
@@ -977,11 +877,9 @@ namespace ErikwnkWFUI.Controls
             return StrCmpLogicalW(textX ?? string.Empty, textY ?? string.Empty) * direction;
         }
 
-        // Drawn as part of the same owner-draw pass as the header cell
-        // itself (rather than as a separate overlay) so it's fully in our
-        // own hands, unlike the native AllowColumnReorder line this
-        // replaced - see ColumnReorderIndicatorColor's doc comment. Mirrors
-        // DataGridView's own DrawColumnDragInsertionLine.
+        // Drawn as part of the header cell's own owner-draw pass, not a
+        // separate overlay - see ColumnReorderIndicatorColor's doc comment
+        // for why. Mirrors DataGridView's own DrawColumnDragInsertionLine.
         private void DrawColumnDragInsertionLine(DrawListViewColumnHeaderEventArgs e)
         {
             if (!_isDraggingColumn)
@@ -1034,31 +932,23 @@ namespace ErikwnkWFUI.Controls
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
         }
 
-        // Called from HeaderInputSubclass once a header click has moved
-        // past the drag threshold - a header click lands on the header's
-        // own native child window, not on this control, so detecting the
-        // click/threshold has to happen there (see HeaderInputSubclass).
-        // From here on, though, tracking the rest of the drag is handed
-        // off to WinForms' own DoDragDrop/OnDragOver/OnDragDrop, the same
-        // mechanism ListBox already uses successfully for its own
-        // item-reorder drag - it runs as a native OLE drag-drop operation
-        // independent of which specific child window the cursor happens to
-        // be over, sidestepping the whole header-hwnd-ownership problem
-        // that made hand-rolled WM_MOUSEMOVE/SetCapture tracking (an
-        // earlier attempt here) unreliable.
+        // Called from HeaderInputSubclass once a header click passes the
+        // drag threshold (detection has to happen there - the header is
+        // its own native child window, not this control). From here,
+        // WinForms' own DoDragDrop/OnDragOver/OnDragDrop - the same
+        // mechanism ListBox uses for item reordering - drives the rest as
+        // a native OLE drag, independent of which child window the cursor
+        // is over.
         private void BeginColumnDragDrop(int columnIndex)
         {
             _dragColumnIndex = columnIndex;
             _isDraggingColumn = true;
             _dragInsertBeforeDisplayIndex = -1;
 
-            // A real drag still goes down and (typically) back up on the
-            // same header cell as far as the native header's own click
-            // detection is concerned - confirmed on DataGridView's own
-            // hand-rolled resize that this can silently trigger a sort as
-            // a side effect of finishing the gesture; suppressing it
-            // pre-emptively here for the same reason before a user ever
-            // has to find it independently on this control too.
+            // A drag still ends with mouse-up on a header cell as far as
+            // native click detection is concerned, which can silently
+            // trigger a sort as a side effect - suppress it preemptively,
+            // same as DataGridView's own hand-rolled resize does.
             _suppressNextColumnClickSort = true;
 
             try
@@ -1067,10 +957,9 @@ namespace ErikwnkWFUI.Controls
             }
             finally
             {
-                // Covers every way the drag can end, including a cancelled
-                // drag (Escape, or dropped somewhere OnDragDrop never
-                // fires) - OnDragDrop itself only needs to perform the
-                // actual move, not reset this shared state.
+                // Covers every way the drag can end, including a cancel
+                // (Escape, or a drop where OnDragDrop never fires) -
+                // OnDragDrop itself only needs to perform the move.
                 _isDraggingColumn = false;
                 _dragColumnIndex = -1;
                 _dragInsertBeforeDisplayIndex = -1;
@@ -1080,11 +969,8 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Invalidate() alone only reaches this control's own client area -
-        // the header is a distinct native child window (see
-        // HeaderInputSubclass), so without this the drag insertion line
-        // never actually gets painted (OnDrawColumnHeader simply wouldn't
-        // be called again) even though the underlying drag/drop tracking
-        // itself works fine.
+        // the header is a separate native child window, so without this
+        // the drag insertion line would never actually repaint.
         private void InvalidateHeader()
         {
             Invalidate();
@@ -1145,24 +1031,20 @@ namespace ErikwnkWFUI.Controls
 
         private const int ResizeGripWidth = 5;
 
-        // The resize grip (a few pixels either side of a column boundary)
-        // is left entirely to the native header - only clicks clearly
-        // inside a column's body start our own reorder drag, so resizing
-        // (still native, unaffected by AllowColumnReorder) isn't
+        // The resize grip stays native - only clicks clearly inside a
+        // column's body start our own reorder drag, so resizing isn't
         // accidentally hijacked into a reorder attempt.
         private bool IsNearColumnBorder(int x)
         {
             return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out _);
         }
 
-        // comctl32's header control has no concept of "this specific
-        // column isn't resizable" - it always shows the resize cursor near
-        // any column boundary, regardless of SetColumnResizable. Dragging
-        // is already blocked there (OnColumnWidthChanging cancels it), but
-        // without this the cursor itself would still misleadingly suggest
-        // it's possible. Resizing a boundary adjusts the column to its
-        // LEFT (comctl32's own convention), so that's the column whose
-        // resizability actually governs this specific boundary.
+        // comctl32 always shows the resize cursor near a column boundary,
+        // regardless of SetColumnResizable - dragging is already blocked
+        // (see TryBeginResize/OnColumnWidthChanging), but the cursor would
+        // still lie about it. A boundary resizes the column to its LEFT
+        // (comctl32's own convention), so that's the column whose
+        // resizability governs this specific boundary.
         private bool IsNearNonResizableColumnBorder(int x)
         {
             return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out ColumnHeader column) &&
@@ -1191,29 +1073,20 @@ namespace ErikwnkWFUI.Controls
             return new ListViewHitTestInfo(item, null, ListViewHitTestLocations.None);
         }
 
-        // Native click behavior always ends up with just the clicked item
-        // selected (for a plain click, no modifiers) - it never TOGGLES an
-        // already-selected item back off, the way this control used to
-        // (see the class doc's history). Restoring just that one piece:
-        // remember, at MouseDown, whether the pressed item was already the
-        // sole selected item; if MouseUp lands back on that same item
-        // (i.e. this wasn't a drag to somewhere else), deselect it. Native
-        // selection handling itself is untouched - this only adds a
-        // correction afterward, so drag-select/Ctrl/Shift-click all keep
-        // working exactly as native.
+        // Native click behavior always selects just the clicked item - it
+        // never toggles an already-selected item back off. This restores
+        // that one piece: remember at MouseDown whether the pressed item
+        // was the sole selection, and deselect it if MouseUp lands back on
+        // the same item (not a drag elsewhere). Everything else about
+        // native selection - drag-select, Ctrl/Shift-click - stays untouched.
         private void OnListViewMouseDownForToggleDeselect(object sender, MouseEventArgs e)
         {
             _pendingToggleDeselectItemIndex = -1;
 
-            // Any new press cancels a still-pending watch from a PREVIOUS
-            // toggle-deselect - without this, clicking the same row again
-            // quickly (a legitimate new selection, well within the native
-            // quirk's ~1s window) looked identical to the delayed quirk
-            // itself from OnItemSelectionChangedForToggleDeselect's point
-            // of view, so it silently reverted the new click's selection
-            // too - fast repeated clicking on a row appeared to just do
-            // nothing. Once another press has started, whatever selection
-            // state results from it is trusted as fresh.
+            // A new press cancels any pending watch from a PREVIOUS
+            // toggle-deselect - otherwise a quick second click on the same
+            // row looked identical to the delayed quirk below and got
+            // silently reverted too.
             _toggleDeselectWatchIndex = -1;
             _toggleDeselectSettleTimer.Stop();
 
@@ -1244,20 +1117,15 @@ namespace ErikwnkWFUI.Controls
             {
                 hitTest.Item.Selected = false;
 
-                // comctl32 arms an internal "click to rename" timer for ANY
-                // press on an item that's already both selected AND
-                // focused, regardless of LabelEdit - that timer fires
-                // natively about a second later and re-applies the item's
-                // selected state on its own, silently undoing the deselect
-                // above. There's no way to preempt that timer itself from
-                // managed code, but ItemSelectionChanged fires the instant
-                // it does fire - watching for that and reverting it right
-                // there (see OnItemSelectionChangedForToggleDeselect) reacts
-                // as soon as it happens instead of waiting out a guessed
-                // delay, so the item never visibly sits there re-selected
-                // for the better part of a second. The timer below is only
-                // a safety net that stops the watch if that reselect never
-                // actually happens.
+                // comctl32 arms a "click to rename" timer for any press on
+                // an item that's already selected and focused, regardless
+                // of LabelEdit - it fires ~1s later and re-selects the
+                // item, undoing the deselect above. Nothing preempts that
+                // timer directly, but ItemSelectionChanged fires the
+                // instant it does, so reverting it there (see
+                // OnItemSelectionChangedForToggleDeselect) reacts
+                // immediately instead of guessing a delay. This timer is
+                // only a safety net in case that reselect never happens.
                 _toggleDeselectWatchIndex = pendingIndex;
                 _toggleDeselectSettleTimer.Stop();
                 _toggleDeselectSettleTimer.Start();
@@ -1271,10 +1139,9 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Clear the watch BEFORE reverting - Selected's setter below
-            // raises this same event again (with IsSelected false this
-            // time), and without clearing first that recursive call would
-            // still match the guard above and try to act again.
+            // Clear the watch before reverting - Selected's setter below
+            // raises this same event again, and an uncleared guard would
+            // try to act on it a second time.
             _toggleDeselectWatchIndex = -1;
             _toggleDeselectSettleTimer.Stop();
             e.Item.Selected = false;
@@ -1290,29 +1157,18 @@ namespace ErikwnkWFUI.Controls
             _toggleDeselectWatchIndex = -1;
         }
 
-        // Native ListView's own marquee/rubber-band multi-select only ever
-        // arms for a press that starts on EMPTY space - a press starting ON
-        // an item is reserved internally for a possible OLE item drag
-        // (LVN_BEGINDRAG/ItemDrag), and since that's never wired up here,
-        // dragging from an item natively does nothing beyond the plain
-        // click that already happened on MouseDown. This fills exactly
-        // that gap: a plain (no modifier) press on a real row, followed by
-        // moving the mouse to a different row while still held, selects
-        // every row between the two (replacing whatever was selected
-        // before), the same way Explorer's own drag-select feels.
+        // Native marquee-select only arms for a press that starts on empty
+        // space - a press on an item is reserved for an OLE item drag
+        // that's never wired up here. This fills that gap: a plain press
+        // on a row, then moving to a different row while still held,
+        // selects everything between them, the way Explorer's own
+        // drag-select feels.
         //
-        // A press starting on this control IS reliably delivered here via
-        // MouseDown, so that part still just works. Everything AFTER the
-        // press, though, goes through OnRowRangeDragPollTick instead of
-        // MouseMove/MouseUp - confirmed, the hard way, that native
-        // MouseMove/MouseUp for this control can stop arriving once the
-        // drag cursor leaves its bounds mid-drag (documented at length
-        // earlier in this control's history, the exact reason the old
-        // cell-drag-selection code polled at all) - so a row-range drag
-        // that needs to keep working past an edge (to auto-scroll) can't
-        // rely on them either. Unlike that old poll, THIS one only ever
-        // runs for the duration of one actual drag, started and stopped
-        // right here - not for the control's entire lifetime.
+        // Tracking after the initial press runs on a poll timer instead of
+        // MouseMove/MouseUp, since those can stop arriving once the drag
+        // cursor leaves this control's bounds - which would break
+        // auto-scroll past an edge. Unlike a control-lifetime poll, this
+        // one only runs for the duration of one actual drag.
         private void OnListViewMouseDownForRowRangeDrag(object sender, MouseEventArgs e)
         {
             _isRowRangeDragging = false;
@@ -1339,10 +1195,8 @@ namespace ErikwnkWFUI.Controls
             _rowRangeDragPollTimer.Start();
         }
 
-        // A release landing back on this control still stops things
-        // immediately, rather than waiting up to one poll interval - the
-        // poll tick below is only the fallback for a release that happens
-        // somewhere the native MouseUp never reaches.
+        // A release on this control still stops things immediately - the
+        // poll tick is only the fallback for a release somewhere else.
         private void OnListViewMouseUpForRowRangeDrag(object sender, MouseEventArgs e)
         {
             _isRowRangeDragging = false;
@@ -1351,13 +1205,10 @@ namespace ErikwnkWFUI.Controls
             _rowRangeDragPollTimer.Stop();
         }
 
-        // Scrolls the same way TopItem's setter normally would, but
-        // guarded with the same LockWindowUpdate + forced full repaint
-        // WndProc already uses for WM_VSCROLL/WM_HSCROLL/WM_MOUSEWHEEL.
-        // Assigning TopItem directly scrolls via its own internal call,
-        // not through any of those messages, so it never got that
-        // protection - reintroducing exactly the stray-gray-line seam
-        // artifact those were fixed for, this time during auto-scroll.
+        // Same LockWindowUpdate + forced repaint as WndProc's scroll
+        // handling above - TopItem's setter scrolls via its own path, not
+        // through WM_VSCROLL/HSCROLL/MOUSEWHEEL, so it never got that
+        // protection and could show the same stray-line seam.
         private void ScrollToItemWithoutArtifacts(ListViewItem item)
         {
             LockWindowUpdate(Handle);
@@ -1392,11 +1243,8 @@ namespace ErikwnkWFUI.Controls
 
             var location = PointToClient(Cursor.Position);
 
-            // Auto-scrolling past either edge, the same way native
-            // marquee-select/Explorer itself does - without it, a drag
-            // could only ever reach whatever already happened to be on
-            // screen. This is purely a visual aid, not what actually
-            // gates the selection: GetNearestRowIndex below already
+            // Auto-scrolls past either edge, like native marquee-select -
+            // purely a visual aid. GetNearestRowIndex below already
             // clamps to the true first/last row in the whole list (not
             // just the currently visible ones) the moment the cursor
             // passes either edge, so the range itself is already correct;
@@ -1427,14 +1275,9 @@ namespace ErikwnkWFUI.Controls
             ApplyRowRangeSelection(_rowRangeDragAnchorIndex, currentIndex);
         }
 
-        // Resolves to the item actually under the point if there is one;
-        // otherwise the nearest row in that direction - clamping to the
-        // true first/last row in the whole Items collection (not just
-        // whatever's currently scrolled into view), so a cursor held past
-        // either edge already resolves to the actual end of the list right
-        // away. OnRowRangeDragPollTick's auto-scroll is purely there to
-        // visually reveal that as it happens, not to gate which rows this
-        // can reach.
+        // Resolves to the item under the point, or the nearest row in that
+        // direction - clamped to the true first/last row in the whole
+        // list, not just what's currently scrolled into view.
         private int GetNearestRowIndex(Point location)
         {
             if (Items.Count == 0)
@@ -1884,13 +1727,10 @@ namespace ErikwnkWFUI.Controls
             }
 
             // The header is a separate native child window - this
-            // control's own Invalidate() only schedules a repaint for the
-            // ListView's own client area, which doesn't reach a distinct
-            // child hwnd, so it alone never gets OnDrawColumnHeader (and
-            // therefore the drag insertion line) to actually redraw during
-            // a drag. RedrawWindow with RDW_UPDATENOW forces the header to
-            // repaint immediately rather than just marking it dirty for
-            // whenever it next happens to paint on its own.
+            // control's own Invalidate() doesn't reach it, so without this
+            // the drag insertion line would never actually redraw during a
+            // drag. RedrawWindow forces an immediate repaint instead of
+            // just marking it dirty.
             public void InvalidateHeaderNow()
             {
                 RedrawWindow(Handle, System.IntPtr.Zero, System.IntPtr.Zero, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW);
@@ -1934,22 +1774,13 @@ namespace ErikwnkWFUI.Controls
                         break;
 
                     case WM_MOUSEMOVE:
-                        // Checked AFTER base.WndProc, not via WM_SETCURSOR
-                        // beforehand - an earlier WM_SETCURSOR-based attempt
-                        // never actually suppressed anything, because the
-                        // header sets its resize cursor directly from
-                        // inside its own WM_MOUSEMOVE handling (a common
-                        // comctl32 pattern - hot-tracking controls often
-                        // call SetCursor straight from mouse-move handling
-                        // rather than going through WM_SETCURSOR at all),
-                        // so intercepting WM_SETCURSOR first just meant
-                        // native code set the cursor moments later anyway.
-                        // Letting base run first and then setting our own
-                        // cursor right after is the same "let native act,
-                        // then correct it" approach already used elsewhere
-                        // in this class (the reorder line's color, the
-                        // outer border) - whichever SetCursor call happens
-                        // last is the one that's actually visible.
+                        // Runs AFTER base.WndProc, not via WM_SETCURSOR -
+                        // the header sets its own resize cursor directly
+                        // from its own mouse-move handling (a common
+                        // comctl32 pattern), so intercepting WM_SETCURSOR
+                        // first just meant native code overwrote it moments
+                        // later. Letting native go first and correcting
+                        // after means our cursor is the one that sticks.
                         TrySuppressResizeCursor(GetX(m.LParam));
                         OnMouseMove(GetX(m.LParam));
                         break;
@@ -1957,11 +1788,9 @@ namespace ErikwnkWFUI.Controls
                     case WM_LBUTTONUP:
                     case WM_CANCELMODE:
                     case WM_CAPTURECHANGED:
-                        // A plain click (never exceeded the threshold) just
-                        // clears the pending state - nothing to reorder,
-                        // nothing to undo, since BeginColumnDragDrop is
-                        // only ever called after OnMouseMove sees the
-                        // threshold exceeded.
+                        // A plain click (never past the threshold) just
+                        // clears the pending state - nothing to reorder or
+                        // undo.
                         _pendingColumnIndex = -1;
                         break;
 
@@ -1976,18 +1805,12 @@ namespace ErikwnkWFUI.Controls
                 return unchecked((short)((long)lParam & 0xFFFF));
             }
 
-            // The header only ever paints itself for each actual column's
-            // own item rect - drawing past that from inside
-            // OnDrawColumnHeader (tried first) never showed up at all, so
-            // whatever comctl32 hands that per-item custom-draw call
-            // apparently clips to the item's own rect regardless of what
-            // the Graphics object is asked to fill. Painting here instead,
-            // straight onto the header's own DC once base.WndProc has
-            // already finished the native paint (including every
-            // DrawColumnHeader call) for this message, isn't clipped that
-            // way - RedrawWindow/InvalidateHeaderNow above already relies
-            // on painting the header's real window directly for the same
-            // reason.
+            // Drawing past a column's own rect from inside
+            // OnDrawColumnHeader (tried first) never showed up at all -
+            // comctl32 clips per-item custom-draw to that item's rect.
+            // Painting straight onto the header's own DC here, after
+            // base.WndProc has already finished the native paint for this
+            // message, isn't clipped that way.
             private void FillHeaderTrailingBackground()
             {
                 if (_owner.Columns.Count == 0 || !GetClientRect(Handle, out Rect clientRect))
@@ -2082,15 +1905,14 @@ namespace ErikwnkWFUI.Controls
             {
                 _pendingColumnIndex = -1;
 
-                // Any new press starts fresh - only an actual drag that
-                // makes it all the way to BeginColumnDragDrop should ever
-                // suppress the click-to-sort that follows it.
+                // A new press starts fresh - only a drag that reaches
+                // BeginColumnDragDrop should suppress the click-to-sort
+                // that follows it.
                 _owner._suppressNextColumnClickSort = false;
 
-                // !AllowDrop also covers the MTA case the constructor's own
-                // apartment-state check guards against - without a
-                // registered drop target, DoDragDrop has nothing to hand
-                // the drag to.
+                // !AllowDrop also covers the MTA case guarded in the
+                // constructor - without a drop target, DoDragDrop has
+                // nothing to hand the drag to.
                 if (!_owner.AllowDrop || _owner.Columns.Count == 0 || _owner.IsNearColumnBorder(x))
                 {
                     return;
@@ -2135,29 +1957,19 @@ namespace ErikwnkWFUI.Controls
                 var columnIndex = _pendingColumnIndex;
                 _pendingColumnIndex = -1;
 
-                // DoDragDrop blocks for the duration of the drag, running
-                // its own internal message loop - this call doesn't return
-                // until the drag ends one way or another.
+                // DoDragDrop blocks for the whole drag, running its own
+                // internal message loop.
                 _owner.BeginColumnDragDrop(columnIndex);
             }
         }
 
-        // Clears the selection when a left-button press lands anywhere else
-        // in the app - a Windows message filter sees every message before
-        // its target window does, which is the standard, non-polling way
-        // to react to "a click happened somewhere I'm not". A press
-        // targeting this control's OWN window handle is never "outside",
-        // whether it's WM_LBUTTONDOWN on the client area (a real cell, or
-        // empty space below the last row/beside the last column) or
-        // WM_NCLBUTTONDOWN on its own non-client area (the scrollbar) -
-        // both report m.HWnd as this control's own handle either way. The
-        // header is a separate native child window ("SysHeader32", see
-        // HeaderInputSubclass) so it needs its own explicit exclusion.
-        // Anything else - another control in this form, empty space on the
-        // form, a completely different window elsewhere in this app - is
-        // genuinely "outside" and clears the selection. A click in a
-        // different application entirely doesn't even resolve to a Control
-        // via FromChildHandle, so it's naturally excluded too.
+        // Clears the selection when a left-button press lands anywhere
+        // else in the app - a message filter sees every message before its
+        // target window does. A press on this control's own handle
+        // (client area or its scrollbar) is never "outside"; the header is
+        // a separate native window and needs its own exclusion. A click in
+        // a different app doesn't resolve to a Control at all via
+        // FromChildHandle, so it's naturally excluded too.
         private sealed class OutsideClickDeselectFilter : IMessageFilter
         {
             private const int WM_LBUTTONDOWN = 0x0201;
@@ -2203,12 +2015,9 @@ namespace ErikwnkWFUI.Controls
 
                 if (clickedControl is ToolStripDropDown)
                 {
-                    // A context menu (this control's own, or any of its
-                    // submenus - each one is its own separate native popup
-                    // window) isn't "outside" either - without this, left-
-                    // clicking a menu item (e.g. "Copy selection") cleared
-                    // the very selection that item's own Click handler was
-                    // about to read, before it ever got the chance to.
+                    // A context menu isn't "outside" either - otherwise
+                    // clicking "Copy selection" cleared the very selection
+                    // its own Click handler was about to read.
                     return false;
                 }
 

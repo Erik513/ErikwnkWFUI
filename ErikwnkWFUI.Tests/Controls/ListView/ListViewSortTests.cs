@@ -8,11 +8,9 @@ namespace ErikwnkWFUI.Tests.Controls.ListView;
 
 /// <summary>
 /// OnColumnClick, invoked via reflection with a real ColumnClickEventArgs -
-/// only ever reached from an actual click on the native (Clickable) header
-/// in real use. Same design as ReadOnlyDataGridView's own CycleSort, but
-/// rewritten against this control's own row shape (see CycleSort's own
-/// remarks): no DataSource/IBindingList here, so sorting rewrites the Items
-/// collection directly instead.
+/// only ever reached from a click on the native header in real use. Same
+/// design as ReadOnlyDataGridView's own CycleSort, adapted for this
+/// control's Items collection instead of a DataSource.
 /// </summary>
 public class ListViewSortTests
 {
@@ -68,11 +66,8 @@ public class ListViewSortTests
     [Fact]
     public void HeaderClick_UsesNaturalSortOrder_Row2SortsBeforeRow10()
     {
-        // Regression test: a first version of the default text comparer
-        // tried parsing each cell as a whole number, which missed exactly
-        // this case ("Row 1" isn't a number, only a substring of it is) and
-        // fell back to plain lexicographic string comparison instead,
-        // putting "Row 10" right after "Row 1" and before "Row 2".
+        // A plain string/numeric comparer would put "Row 10" right after
+        // "Row 1" and before "Row 2" - StrCmpLogicalW shouldn't.
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
         listView.Items.Add(new ListViewItem("Row 1"));
         listView.Items.Add(new ListViewItem("Row 10"));
@@ -136,12 +131,9 @@ public class ListViewSortTests
     [Fact]
     public void SuppressNextColumnClickSort_SkipsExactlyOneClick()
     {
-        // Regression test: DataGridView's own hand-rolled column resize
-        // uncovered that its native click detection still counted a
-        // finished drag as a click on whatever header cell it started on -
-        // this control's own hand-rolled column reorder (see
-        // AllowColumnReordering's own remarks) pre-emptively guards
-        // against the exact same class of bug for the same reason.
+        // A finished column-reorder drag still counts as a click on
+        // whatever header cell it started on - this flag suppresses the
+        // sort that would otherwise trigger.
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
         listView.Items.Add(new ListViewItem("B"));
         listView.Items.Add(new ListViewItem("A"));

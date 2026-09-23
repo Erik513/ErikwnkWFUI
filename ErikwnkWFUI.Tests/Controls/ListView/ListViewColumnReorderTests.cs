@@ -4,15 +4,11 @@ using WfuiListView = ErikwnkWFUI.Controls.ListView;
 namespace ErikwnkWFUI.Tests.Controls.ListView;
 
 /// <summary>
-/// Column reordering is hand-rolled (mirroring the later DataGridView port
-/// of this same design - see ReadOnlyDataGridView.AllowColumnReordering) via
-/// a MouseDown/MouseMove threshold check on the header's own native hwnd
-/// (see HeaderInputSubclass) that starts a real DoDragDrop once exceeded -
-/// that part needs an actual OLE drag on the real header window and isn't
-/// practical to drive headlessly, same as DataGridView's own equivalent
-/// (see DataGridViewColumnReorderTests). These tests instead cover the
-/// target-index math (MoveColumnToDisplayIndex, invoked directly via
-/// reflection) and the public reorderable-column API it's gated behind.
+/// Column reordering is a real DoDragDrop started from a mouse threshold
+/// on the header's native hwnd (see HeaderInputSubclass) - not practical
+/// to drive headlessly, same as DataGridView's equivalent. These tests
+/// instead cover the target-index math (MoveColumnToDisplayIndex, invoked
+/// via reflection) and the public reorderable-column API it's gated behind.
 /// </summary>
 public class ListViewColumnReorderTests
 {

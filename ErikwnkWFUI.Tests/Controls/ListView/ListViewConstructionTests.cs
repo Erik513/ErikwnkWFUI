@@ -52,12 +52,12 @@ public class ListViewConstructionTests
         Assert.True(listView.AllowColumnResizing);
     }
 
-    // CreateStandard/CreatePrimary's split (see UIListViewFactory) - the
-    // same "gray until a consumer opts into the accent" contract already
-    // locked down for ListBox/DataGridView.
-    // Translucent (see the field's own comment in ListView.cs) so the
-    // row's own color still shows through underneath a selection - not
-    // BorderLight itself, an alpha-130 tint of it.
+    // CreateStandard/CreatePrimary's "gray until a consumer opts into the
+    // accent" split (see UIListViewFactory) - already locked down for
+    // ListBox/DataGridView.
+
+    // An alpha-130 tint of BorderLight, not the color itself - see the
+    // field's own comment in ListView.cs for why it's translucent.
     [Fact]
     public void SelectionOverlayColor_DefaultsToTranslucentBorderLight()
     {
