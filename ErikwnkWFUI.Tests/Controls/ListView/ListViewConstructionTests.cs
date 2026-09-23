@@ -67,11 +67,11 @@ public class ListViewConstructionTests
     }
 
     [Fact]
-    public void ColumnReorderIndicatorColor_DefaultsToBorderLight()
+    public void ColumnReorderIndicatorColor_DefaultsToTextSecondary()
     {
         using WfuiListView listView = new WfuiListView();
 
-        Assert.Equal(UIColors.BorderLight, listView.ColumnReorderIndicatorColor);
+        Assert.Equal(UIColors.TextSecondary, listView.ColumnReorderIndicatorColor);
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class ListViewConstructionTests
         using WfuiListView listView = (WfuiListView)UIStyles.ListViews.CreateStandard();
 
         Assert.Equal(Color.FromArgb(130, UIColors.BorderLight), listView.SelectionOverlayColor);
-        Assert.Equal(UIColors.BorderLight, listView.ColumnReorderIndicatorColor);
+        Assert.Equal(UIColors.TextSecondary, listView.ColumnReorderIndicatorColor);
         Assert.Equal(UIColors.BorderMedium, listView.BorderColor);
     }
 }

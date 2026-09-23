@@ -75,7 +75,12 @@ namespace ErikwnkWFUI.Controls
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
         private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
-        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
+        // TextSecondary, not BorderLight - a passive grid line can afford
+        // to be subtle, but this marks where a dragged column will land
+        // and needs to actually stand out. BorderLight against the header
+        // background measured under 3:1 contrast, barely brighter than the
+        // ordinary divider line right next to it.
+        private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.TextSecondary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
@@ -703,7 +708,7 @@ namespace ErikwnkWFUI.Controls
                     e.Header.Text,
                     font,
                     new Rectangle(e.Bounds.X + 7, e.Bounds.Y, Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height),
-                    _headerForeColor,
+                    GetEffectiveColor(_headerForeColor),
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
@@ -727,7 +732,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.Bounds, Font, _headerForeColor, _sortOrder);
+            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.Bounds, Font, GetEffectiveColor(_headerForeColor), _sortOrder);
         }
 
         protected override void OnColumnClick(ColumnClickEventArgs e)
@@ -915,7 +920,7 @@ namespace ErikwnkWFUI.Controls
             // the native control, not any hand-tracked range.
             if (e.Item.Selected)
             {
-                using (var overlay = new SolidBrush(SelectionOverlayColor))
+                using (var overlay = new SolidBrush(GetEffectiveColor(SelectionOverlayColor)))
                 {
                     e.Graphics.FillRectangle(overlay, bounds);
                 }
@@ -928,8 +933,25 @@ namespace ErikwnkWFUI.Controls
                 text,
                 e.Item.Font ?? Font,
                 new Rectangle(bounds.X + 6, bounds.Y, Math.Max(0, bounds.Width - 9), bounds.Height),
-                e.Item.ForeColor,
+                GetEffectiveColor(e.Item.ForeColor),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+        }
+
+        // Flat gray when disabled - every control in this library mutes
+        // this same way (see ReadOnlyDataGridView.ApplyStyles). Applied at
+        // paint time rather than by overwriting _rowForeColor/item.ForeColor,
+        // so a re-enabled control (or an item with its own custom color)
+        // isn't left stuck on gray.
+        private Color GetEffectiveColor(Color normalColor)
+        {
+            return Enabled ? normalColor : UIColors.DisabledGray;
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Invalidate();
+            _headerInputSubclass?.InvalidateHeaderNow();
         }
 
         // Called from HeaderInputSubclass once a header click passes the
