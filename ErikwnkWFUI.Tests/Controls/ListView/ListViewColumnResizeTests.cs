@@ -77,11 +77,6 @@ public class ListViewColumnResizeTests
     [Fact]
     public void ColumnWidthChanging_ColumnNotResizable_AlwaysCancelledBackToCurrentWidth()
     {
-        // A second column, so column 0 isn't the (rightmost-by-default)
-        // fill column itself - ApplyFillColumn stretches that one to
-        // whatever space is actually available the moment the handle is
-        // created, which would make its own "current width" here whatever
-        // that happened to resolve to rather than the exact 100 asked for.
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("A", 100), ("B", 100));
         listView.SetColumnResizable(0, false);
 

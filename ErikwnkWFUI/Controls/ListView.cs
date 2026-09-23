@@ -59,8 +59,6 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultMinimumColumnWidth = 40;
 
         private int _headerHeight = 24;
-        private bool _isApplyingFillColumn;
-        private bool _isSnappingHeightToWholeRows;
         private int _pendingToggleDeselectItemIndex = -1;
         private readonly Timer _toggleDeselectSettleTimer;
         private int _toggleDeselectWatchIndex = -1;
@@ -83,7 +81,6 @@ namespace ErikwnkWFUI.Controls
         private Color _headerBackColor = UIColors.BackgroundDarkElevated;
         private Color _headerForeColor = UIColors.TextTertiary;
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
-        private int _fillColumnIndex = -1;
         private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
@@ -115,21 +112,6 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>How a Ctrl+C/Ctrl+Shift+C copy is confirmed. Defaults to <see cref="CopyConfirmationStyle.Toast"/> (unchanged from before this existed).</summary>
         public CopyConfirmationStyle CopyConfirmation { get; set; } = CopyConfirmationStyle.Toast;
-
-        /// <summary>
-        /// Which column stretches to fill any leftover width. -1 (the
-        /// default) means "whichever column is last" - set this explicitly
-        /// if a different column should be the one that stretches instead.
-        /// </summary>
-        public int FillColumnIndex
-        {
-            get { return _fillColumnIndex; }
-            set
-            {
-                _fillColumnIndex = value;
-                ApplyFillColumn();
-            }
-        }
 
         /// <summary>Background color of a normal (not selected) row. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color RowBackColor
@@ -296,7 +278,6 @@ namespace ErikwnkWFUI.Controls
 
                 _rowHeightImageList = new ImageList { ImageSize = new Size(1, value) };
                 SmallImageList = _rowHeightImageList;
-                SnapHeightToWholeRows();
             }
         }
 
@@ -364,7 +345,6 @@ namespace ErikwnkWFUI.Controls
             MouseLeave += OnListViewMouseLeave;
             KeyDown += OnListViewKeyDown;
             ColumnWidthChanging += OnColumnWidthChanging;
-            ColumnWidthChanged += OnColumnWidthChanged;
 
             ContextMenuStrip = BuildContextMenu();
 
@@ -519,11 +499,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Sizes every column (other than the fill column, which stretches
-        /// regardless) to fit its current content and header text, then lets
-        /// the fill column absorb whatever space is left. Call this again
-        /// after rebuilding the rows, since content driving the "right" width
-        /// may have changed.
+        /// Sizes every column to fit its current content and header text.
+        /// Call this again after rebuilding the rows, since content
+        /// driving the "right" width may have changed.
         /// </summary>
         public void AutoFitColumnsToContent()
         {
@@ -532,14 +510,8 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            var fillIndex = GetEffectiveFillColumnIndex();
             for (var index = 0; index < Columns.Count; index++)
             {
-                if (index == fillIndex)
-                {
-                    continue;
-                }
-
                 AutoResizeColumn(index, ColumnHeaderAutoResizeStyle.ColumnContent);
                 var minimumWidth = GetEffectiveMinimumWidth(index);
                 if (Columns[index].Width < minimumWidth)
@@ -547,8 +519,6 @@ namespace ErikwnkWFUI.Controls
                     Columns[index].Width = minimumWidth;
                 }
             }
-
-            ApplyFillColumn();
         }
 
         // LVM_SETEXTENDEDLISTVIEWSTYLE / LVS_EX_DOUBLEBUFFER - turns on the
@@ -571,10 +541,43 @@ namespace ErikwnkWFUI.Controls
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int msg, System.IntPtr wParam, System.IntPtr lParam);
 
+        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+        private struct NativeRectangle
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
+        private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int msg, System.IntPtr wParam, ref NativeRectangle rectangle);
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern int MapWindowPoints(System.IntPtr from, System.IntPtr to, ref NativeRectangle rectangle, uint count);
+
+        private bool TryGetHeaderBounds(int columnIndex, out Rectangle bounds)
+        {
+            bounds = Rectangle.Empty;
+            if (!IsHandleCreated || columnIndex < 0 || columnIndex >= Columns.Count)
+            {
+                return false;
+            }
+
+            var header = HeaderInputSubclass.GetHeaderHandle(Handle);
+            var rectangle = new NativeRectangle();
+            const int HDM_GETITEMRECT = 0x1207;
+            if (header == System.IntPtr.Zero ||
+                SendMessage(header, HDM_GETITEMRECT, (System.IntPtr)columnIndex, ref rectangle) == System.IntPtr.Zero)
+            {
+                return false;
+            }
+
+            MapWindowPoints(header, Handle, ref rectangle, 2);
+            bounds = Rectangle.FromLTRB(rectangle.Left, rectangle.Top, rectangle.Right, rectangle.Bottom);
+            return true;
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            ApplyFillColumn();
 
             // Re-applied every time the handle is (re)created, same as the
             // header subclass just below - this extended style lives on the
@@ -597,21 +600,15 @@ namespace ErikwnkWFUI.Controls
 
             // Guards against a one-off glitch seen on the very first theme
             // switch that rebuilds this control (not on plain construction) -
-            // the initial WM_PAINT right after a handle is (re)created can
+            // the initial paint right after a handle is (re)created can
             // land before layout/theme colors have fully settled, so header
             // colors painted there (OnDrawColumnHeader) could momentarily
-            // use stale values. Deferring one tick, the same way
-            // ApplyFillColumn already gets deferred elsewhere in this class
-            // after a native reorder, guarantees at least one more repaint
-            // once everything has actually settled, without needing the
-            // user to trigger a second redraw themselves (e.g. by resizing).
+            // use stale values. Deferring one tick guarantees at least one
+            // more repaint once everything has actually settled, without
+            // needing the user to trigger a second redraw themselves (e.g.
+            // by resizing).
             BeginInvoke(new MethodInvoker(Invalidate));
 
-            // Deferred for the same reason - _headerHeight only reflects
-            // reality after at least one real header paint, and a row's
-            // own Bounds (GetEffectiveRowHeight) needs the handle to have
-            // actually finished settling too.
-            BeginInvoke(new MethodInvoker(SnapHeightToWholeRows));
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -620,116 +617,6 @@ namespace ErikwnkWFUI.Controls
             _headerInputSubclass = null;
 
             base.OnHandleDestroyed(e);
-        }
-
-        protected override void OnResize(EventArgs e)
-        {
-            base.OnResize(e);
-            ApplyFillColumn();
-            SnapHeightToWholeRows();
-        }
-
-        // Never grows past the height that was actually requested - this
-        // only ever rounds DOWN to the largest whole-row-count height that
-        // still fits within whatever Height/Size the caller set, so the
-        // control can't end up taller than asked for. The point is to make
-        // "a partially visible row at the bottom" - the root condition
-        // every one of the border/repaint artifacts around scrolling a
-        // half-visible row into view ultimately came from - simply never
-        // able to occur in the first place, rather than continuing to
-        // patch each individual symptom of it.
-        private void SnapHeightToWholeRows()
-        {
-            if (_isSnappingHeightToWholeRows || IsDisposed || !IsHandleCreated)
-            {
-                return;
-            }
-
-            var rowHeight = GetEffectiveRowHeight();
-            if (rowHeight <= 0)
-            {
-                return;
-            }
-
-            // A horizontal scrollbar (columns wider than the control) eats
-            // into ClientSize.Height the same way a vertical one eats into
-            // ClientSize.Width (see ApplyFillColumn's own
-            // scrollBarAllowance) - without compensating for it, the
-            // row-count target computed below would shift depending on
-            // whether that scrollbar happens to be showing at this exact
-            // instant. Since setting ClientSize further down can itself be
-            // part of what makes it appear or disappear, that turns into a
-            // feedback loop - confirmed live: widening a column past the
-            // control's own width while it's also being auto-scrolled/
-            // hovered could visibly jitter the bottom edge as this method
-            // kept re-triggering itself with a slightly different target
-            // each time. Adding the allowance back before computing the
-            // row count, then subtracting it again from the actual
-            // ClientSize.Height requested, keeps the "how many whole rows
-            // fit" answer stable regardless of that scrollbar's momentary
-            // visibility.
-            var horizontalScrollBarAllowance = IsHorizontalScrollBarLikelyVisible() ? SystemInformation.HorizontalScrollBarHeight : 0;
-            var availableContentHeight = ClientSize.Height + horizontalScrollBarAllowance - _headerHeight;
-            if (availableContentHeight < rowHeight)
-            {
-                // Not even one full row fits - leave the height alone
-                // rather than collapsing the control down to its header.
-                return;
-            }
-
-            var wholeRowCount = availableContentHeight / rowHeight;
-            var desiredClientHeight = _headerHeight + (wholeRowCount * rowHeight) - horizontalScrollBarAllowance;
-            if (desiredClientHeight == ClientSize.Height)
-            {
-                return;
-            }
-
-            _isSnappingHeightToWholeRows = true;
-            try
-            {
-                ClientSize = new Size(ClientSize.Width, desiredClientHeight);
-            }
-            finally
-            {
-                _isSnappingHeightToWholeRows = false;
-            }
-        }
-
-        // The explicit RowHeight property (if set) is authoritative -
-        // otherwise a real row's own native Bounds.Height is preferred
-        // over a Font-based guess, since it reflects whatever padding/
-        // theming Windows actually applied; the Font-based estimate is
-        // only a fallback for when there's no row yet to measure.
-        private int GetEffectiveRowHeight()
-        {
-            if (RowHeight > 0)
-            {
-                return RowHeight;
-            }
-
-            if (Items.Count > 0)
-            {
-                try
-                {
-                    var height = Items[0].Bounds.Height;
-                    if (height > 0)
-                    {
-                        return height;
-                    }
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                    // GetItemRect can throw if the native control hasn't
-                    // actually finished laying out its items yet - e.g.
-                    // mid-resize, or right after a handle recreation. The
-                    // real native height is worth using when it's actually
-                    // available (more accurate than the estimate below),
-                    // so this just falls through to that estimate instead
-                    // whenever it isn't.
-                }
-            }
-
-            return Font.Height + 6;
         }
 
         // Scrolling (scrollbar drag/click, mouse wheel, or a keyboard
@@ -795,6 +682,9 @@ namespace ErikwnkWFUI.Controls
 
         private void OnColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
         {
+            _headerInputSubclass?.CancelPendingReorder();
+            _suppressNextColumnClickSort = true;
+
             if (!IsColumnResizable(e.ColumnIndex))
             {
                 e.NewWidth = Columns[e.ColumnIndex].Width;
@@ -810,14 +700,9 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // No live cap beyond the minimum-width floor above, for ANY
-            // column - including the fill one. ApplyFillColumn (see its
-            // own comment) only ever GROWS the fill column into genuine
-            // leftover space; it never shrinks it to make room for
-            // another column, so there's nothing left here that needs
-            // preempting live. A column growing past what currently fits
-            // just means a horizontal scrollbar appears, same as a plain,
-            // unmodified ListView.
+            // No live cap beyond the minimum-width floor above. A column
+            // growing past what currently fits just means a horizontal
+            // scrollbar appears, same as a plain, unmodified ListView.
         }
 
         // MinimumColumnWidth is a floor the caller chose, but a column must
@@ -849,52 +734,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Re-applies on ANY column's width change, including the fill
-        // column's own - previously excluded the fill column itself
-        // (assuming a manual resize of it meant "let the user override the
-        // fill width"), but that just left it stuck at whatever smaller
-        // width the user dragged it to instead of snapping back to fill
-        // the leftover space, which is the whole point of it being the
-        // fill column in the first place. _isApplyingFillColumn still
-        // guards against ApplyFillColumn's own width assignment
-        // re-triggering this handler.
-        private void OnColumnWidthChanged(object sender, ColumnWidthChangedEventArgs e)
-        {
-            if (!_isApplyingFillColumn)
-            {
-                ApplyFillColumn();
-            }
-        }
-
-        // The column that fills leftover space is "whichever is last" by
-        // default - once columns can be dragged into a different order
-        // (AllowColumnReorder), "last" has to mean visually rightmost
-        // (DisplayIndex), not whatever its original/data index happened to
-        // be, or the wrong column would keep stretching after a reorder.
-        private int GetEffectiveFillColumnIndex()
-        {
-            if (_fillColumnIndex >= 0 && _fillColumnIndex < Columns.Count)
-            {
-                return _fillColumnIndex;
-            }
-
-            if (Columns.Count == 0)
-            {
-                return -1;
-            }
-
-            var rightmost = Columns[0];
-            foreach (ColumnHeader column in Columns)
-            {
-                if (column.DisplayIndex > rightmost.DisplayIndex)
-                {
-                    rightmost = column;
-                }
-            }
-
-            return rightmost.Index;
-        }
-
         private List<ColumnHeader> GetColumnsInDisplayOrder()
         {
             var columns = new List<ColumnHeader>();
@@ -904,86 +743,6 @@ namespace ErikwnkWFUI.Controls
             }
 
             return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
-        }
-
-        // Every column, including the fill one, otherwise has a plain
-        // fixed size - the fill column only ever GROWS to absorb genuine
-        // leftover space, never shrinks to make room for another column
-        // growing. Widening some other column past what currently fits is
-        // therefore not something this corrects for at all: the total
-        // just exceeds ClientSize.Width at that point, same as it would
-        // for a plain, unmodified ListView, and a horizontal scrollbar
-        // appears normally - no different from any other native control,
-        // and nothing left to fight against comctl32's own scrollbar
-        // management over (several earlier attempts at actively
-        // preventing that overflow - live-capping columns, force-hiding
-        // the scrollbar - either broke native column-resize dragging or
-        // turned out unreliable against comctl32's internal scrollbar
-        // handling; not needing to prevent the overflow at all sidesteps
-        // both).
-        private void ApplyFillColumn()
-        {
-            if (_isApplyingFillColumn || IsDisposed || !IsHandleCreated || Columns.Count == 0)
-            {
-                return;
-            }
-
-            var fillIndex = GetEffectiveFillColumnIndex();
-            var currentWidth = Columns[fillIndex].Width;
-
-            var otherColumnsWidth = 0;
-            for (var index = 0; index < Columns.Count; index++)
-            {
-                if (index != fillIndex)
-                {
-                    otherColumnsWidth += Columns[index].Width;
-                }
-            }
-
-            // ClientSize.Width already excludes the native vertical
-            // scrollbar's own strip when it's visible (confirmed via
-            // IsPointOnScrollBar's own comment on that gap - the
-            // scrollbar lives in the space between ClientSize and this
-            // control's full Size), so no separate allowance is needed
-            // for that here.
-            var availableWidth = ClientSize.Width - otherColumnsWidth;
-            if (availableWidth <= currentWidth)
-            {
-                // No genuine leftover space (or an outright overflow) -
-                // leave the fill column exactly as it is rather than
-                // shrinking it to make room.
-                return;
-            }
-
-            _isApplyingFillColumn = true;
-            try
-            {
-                Columns[fillIndex].Width = availableWidth;
-            }
-            finally
-            {
-                _isApplyingFillColumn = false;
-            }
-        }
-
-        // Used by SnapHeightToWholeRows to compensate for a horizontal
-        // scrollbar's own height. Column widths are always immediately
-        // known (unlike row heights, no native layout to wait on), so this
-        // can just sum them directly rather than estimating.
-        private bool IsHorizontalScrollBarLikelyVisible()
-        {
-            if (Columns.Count == 0)
-            {
-                return false;
-            }
-
-            var totalColumnsWidth = 0;
-            foreach (ColumnHeader column in Columns)
-            {
-                totalColumnsWidth += column.Width;
-            }
-
-            return totalColumnsWidth > ClientSize.Width;
         }
 
         // The top level only ever shows "Copy selection" / "Copy all" -
@@ -1226,23 +985,11 @@ namespace ErikwnkWFUI.Controls
 
         private void OnDrawSubItem(object sender, DrawListViewSubItemEventArgs e)
         {
-            // e.Bounds is only reliable for whichever column the native
-            // control drew FIRST in a given paint pass (normally the
-            // visually leftmost one) - for every other column, once columns
-            // have been reordered at least once, e.Bounds can report stale
-            // position/size left over from a previous layout. Confirmed by
-            // instrumenting every draw call after swapping two columns: text
-            // itself (e.SubItem / e.Item.SubItems[e.ColumnIndex]) was always
-            // correct, but relying on e.Bounds for the non-leftmost swapped
-            // column drew it somewhere invisible - the reported symptom
-            // wasn't wrong data, it was a blank cell. So bounds are computed
-            // from scratch here for every column - left edge is the item's
-            // own left edge plus the width of every column with a smaller
-            // DisplayIndex, exactly mirroring GetColumnIndexAtX's model of
-            // the current visual layout - rather than trusted from the event
-            // at all; only e.Bounds.Top/.Height (unaffected by column order)
-            // are still used.
-            var bounds = GetSubItemBounds(e.Item, Columns[e.ColumnIndex], e.Bounds);
+            // Use the native header layout, including horizontal scrolling
+            // and column reordering, for the cell's horizontal bounds.
+            var bounds = TryGetHeaderBounds(e.ColumnIndex, out Rectangle headerBounds)
+                ? new Rectangle(headerBounds.Left, e.Bounds.Top, headerBounds.Width, e.Bounds.Height)
+                : e.Bounds;
 
             var baseBackColor = e.ItemIndex % 2 == 0 ? _rowBackColor : _alternateRowBackColor;
             using (var background = new SolidBrush(baseBackColor))
@@ -1270,29 +1017,6 @@ namespace ErikwnkWFUI.Controls
                 new Rectangle(bounds.X + 6, bounds.Y, Math.Max(0, bounds.Width - 9), bounds.Height),
                 e.Item.ForeColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
-        }
-
-        // The item's own left edge is always correct regardless of column
-        // order (it's the row's bounds, not any one column's) - from there,
-        // every column with a smaller DisplayIndex than the target column
-        // contributes its full width, giving the target's true current
-        // on-screen left edge without depending on e.Bounds at all.
-        private Rectangle GetSubItemBounds(ListViewItem item, ColumnHeader column, Rectangle fallbackVerticalBounds)
-        {
-            var left = item.Bounds.Left;
-            foreach (ColumnHeader other in Columns)
-            {
-                if (other.DisplayIndex < column.DisplayIndex)
-                {
-                    left += other.Width;
-                }
-            }
-
-            var width = column.Width;
-            var top = fallbackVerticalBounds.Top;
-            var height = fallbackVerticalBounds.Height;
-
-            return new Rectangle(left, top, width, height);
         }
 
         // Called from HeaderInputSubclass once a header click has moved
@@ -1402,12 +1126,6 @@ namespace ErikwnkWFUI.Controls
             }
 
             column.DisplayIndex = targetDisplayIndex.Value;
-
-            // Mirrors the native ColumnReordered handler this replaced -
-            // deferring one tick keeps "which column is now rightmost" (see
-            // GetEffectiveFillColumnIndex) accurate once DisplayIndex has
-            // actually settled.
-            BeginInvoke(new MethodInvoker(ApplyFillColumn));
         }
 
         private const int ResizeGripWidth = 5;
@@ -1445,6 +1163,19 @@ namespace ErikwnkWFUI.Controls
             return ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
         }
 
+        // Callers need only the row. GetItemAt avoids HitTest's unchecked
+        // SubItems[-1] access when native hit testing finds no subitem.
+        private ListViewHitTestInfo SafeHitTest(Point location)
+        {
+            if (!IsHandleCreated || Columns.Count == 0 || !ClientRectangle.Contains(location))
+            {
+                return new ListViewHitTestInfo(null, null, ListViewHitTestLocations.None);
+            }
+
+            var item = GetItemAt(location.X, location.Y);
+            return new ListViewHitTestInfo(item, null, ListViewHitTestLocations.None);
+        }
+
         // Native click behavior always ends up with just the clicked item
         // selected (for a plain click, no modifiers) - it never TOGGLES an
         // already-selected item back off, the way this control used to
@@ -1476,7 +1207,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            var hitTest = HitTest(e.Location);
+            var hitTest = SafeHitTest(e.Location);
             if (hitTest.Item != null && hitTest.Item.Selected && SelectedItems.Count == 1)
             {
                 _pendingToggleDeselectItemIndex = hitTest.Item.Index;
@@ -1493,7 +1224,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            var hitTest = HitTest(e.Location);
+            var hitTest = SafeHitTest(e.Location);
             if (hitTest.Item != null && hitTest.Item.Index == pendingIndex && hitTest.Item.Selected)
             {
                 hitTest.Item.Selected = false;
@@ -1579,7 +1310,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            var hitTest = HitTest(e.Location);
+            var hitTest = SafeHitTest(e.Location);
             if (hitTest.Item == null)
             {
                 // An empty-space press is already native marquee-select's
@@ -1696,7 +1427,7 @@ namespace ErikwnkWFUI.Controls
                 return -1;
             }
 
-            var hitTest = HitTest(location);
+            var hitTest = SafeHitTest(location);
             if (hitTest.Item != null)
             {
                 return hitTest.Item.Index;
@@ -1757,7 +1488,7 @@ namespace ErikwnkWFUI.Controls
         // overflows the column.
         private void OnListViewMouseMoveForToolTip(object sender, MouseEventArgs e)
         {
-            var hitTest = HitTest(e.Location);
+            var hitTest = SafeHitTest(e.Location);
             if (hitTest.Item == null)
             {
                 HideCellToolTip();
@@ -1765,7 +1496,16 @@ namespace ErikwnkWFUI.Controls
             }
 
             var row = hitTest.Item.Index;
-            var displayColumn = GetColumnIndexAtX(e.Location.X);
+            var displayColumn = -1;
+            foreach (ColumnHeader candidate in Columns)
+            {
+                if (TryGetHeaderBounds(candidate.Index, out Rectangle bounds) &&
+                    e.X >= bounds.Left && e.X < bounds.Right)
+                {
+                    displayColumn = candidate.DisplayIndex;
+                    break;
+                }
+            }
             if (row == _toolTipRow && displayColumn == _toolTipDisplayColumn)
             {
                 return;
@@ -2054,31 +1794,44 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Subclasses the ListView's own header child window (class
-        // "SysHeader32") purely to notice a click/drag START in the header
-        // - a click there lands on this separate native child window, not
-        // on the ListView itself, confirmed the hard way: this control's
-        // own MouseDown/MouseMove events never fired for a header click at
-        // all. Once the drag threshold is exceeded, this hands off
-        // entirely to ListView.BeginColumnDragDrop (WinForms'
-        // DoDragDrop/OnDragOver/OnDragDrop, the same mechanism
-        // ListBox already uses for its own item-reorder drag) rather
-        // than continuing to track raw mouse messages here - an earlier
-        // attempt at hand-rolled SetCapture-based tracking fought a losing
-        // battle against the native header repeatedly releasing capture on
-        // its own initiative. Everything else about the header (background,
-        // text, resizing, owner-draw) is untouched.
+        // Header input lives on a separate HWND. Divider drags use screen
+        // deltas for live resizing; other drags retain column reordering.
         private sealed class HeaderInputSubclass : NativeWindow
         {
             private const int WM_LBUTTONDOWN = 0x0201;
             private const int WM_MOUSEMOVE = 0x0200;
             private const int WM_LBUTTONUP = 0x0202;
+            private const int WM_CANCELMODE = 0x001F;
+            private const int WM_CAPTURECHANGED = 0x0215;
             private const int LVM_FIRST = 0x1000;
             private const int LVM_GETHEADER = LVM_FIRST + 31;
 
             private readonly ListView _owner;
             private int _pendingColumnIndex = -1;
             private int _pendingStartX;
+            private ColumnHeader _resizingColumn;
+            private int _resizeStartScreenX;
+            private int _resizeStartWidth;
+
+            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+            private struct HeaderHitTest
+            {
+                public int X, Y;
+                public uint Flags;
+                public int Item;
+            }
+
+            [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
+            private static extern System.IntPtr SendMessage(System.IntPtr window, int message, System.IntPtr wParam, ref HeaderHitTest hit);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern System.IntPtr SetCapture(System.IntPtr window);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern System.IntPtr GetCapture();
+
+            [System.Runtime.InteropServices.DllImport("user32.dll")]
+            private static extern bool ReleaseCapture();
 
             private const uint RDW_INVALIDATE = 0x0001;
             private const uint RDW_ERASE = 0x0004;
@@ -2093,6 +1846,11 @@ namespace ErikwnkWFUI.Controls
             public HeaderInputSubclass(ListView owner)
             {
                 _owner = owner;
+            }
+
+            public void CancelPendingReorder()
+            {
+                _pendingColumnIndex = -1;
             }
 
             public static System.IntPtr GetHeaderHandle(System.IntPtr listViewHandle)
@@ -2115,6 +1873,33 @@ namespace ErikwnkWFUI.Controls
 
             protected override void WndProc(ref Message m)
             {
+                if (m.Msg == WM_LBUTTONDOWN && TryBeginResize(m.LParam))
+                {
+                    m.Result = System.IntPtr.Zero;
+                    return;
+                }
+
+                if (_resizingColumn != null)
+                {
+                    if (m.Msg == WM_MOUSEMOVE || m.Msg == WM_LBUTTONUP)
+                    {
+                        if (m.Msg == WM_LBUTTONUP || (Control.MouseButtons & MouseButtons.Left) != 0)
+                        {
+                            ApplyResize();
+                        }
+                        if (m.Msg == WM_LBUTTONUP || (Control.MouseButtons & MouseButtons.Left) == 0)
+                        {
+                            EndResize();
+                        }
+                        m.Result = System.IntPtr.Zero;
+                        return;
+                    }
+                    if (m.Msg == WM_CANCELMODE || m.Msg == WM_CAPTURECHANGED)
+                    {
+                        EndResize();
+                    }
+                }
+
                 base.WndProc(ref m);
 
                 switch (m.Msg)
@@ -2145,6 +1930,8 @@ namespace ErikwnkWFUI.Controls
                         break;
 
                     case WM_LBUTTONUP:
+                    case WM_CANCELMODE:
+                    case WM_CAPTURECHANGED:
                         // A plain click (never exceeded the threshold) just
                         // clears the pending state - nothing to reorder,
                         // nothing to undo, since BeginColumnDragDrop is
@@ -2158,6 +1945,66 @@ namespace ErikwnkWFUI.Controls
             private static int GetX(System.IntPtr lParam)
             {
                 return unchecked((short)((long)lParam & 0xFFFF));
+            }
+
+            private bool TryBeginResize(System.IntPtr coordinates)
+            {
+                var hit = new HeaderHitTest
+                {
+                    X = GetX(coordinates),
+                    Y = unchecked((short)((long)coordinates >> 16))
+                };
+                const int HDM_HITTEST = 0x1206;
+                const uint DividerFlags = 0x0004 | 0x0008;
+                SendMessage(Handle, HDM_HITTEST, System.IntPtr.Zero, ref hit);
+                if ((hit.Flags & DividerFlags) == 0 || hit.Item < 0 || hit.Item >= _owner.Columns.Count)
+                {
+                    return false;
+                }
+
+                CancelPendingReorder();
+                _owner._suppressNextColumnClickSort = true;
+                if (!_owner.IsColumnResizable(hit.Item))
+                {
+                    return true;
+                }
+
+                _resizingColumn = _owner.Columns[hit.Item];
+                _resizeStartScreenX = Cursor.Position.X;
+                _resizeStartWidth = _resizingColumn.Width;
+                SetCapture(Handle);
+                Cursor.Current = Cursors.SizeWE;
+                return true;
+            }
+
+            private void ApplyResize()
+            {
+                var column = _resizingColumn;
+                if (column == null || column.Index < 0 || column.ListView != _owner)
+                {
+                    EndResize();
+                    return;
+                }
+
+                // A scrolling header changes client coordinates; screen deltas stay 1:1.
+                int width = Math.Max(_owner.GetEffectiveMinimumWidth(column.Index),
+                    _resizeStartWidth + Cursor.Position.X - _resizeStartScreenX);
+                if (column.Width != width)
+                {
+                    column.Width = width;
+                }
+                Cursor.Current = Cursors.SizeWE;
+            }
+
+            private void EndResize()
+            {
+                _resizingColumn = null;
+                CancelPendingReorder();
+                if (GetCapture() == Handle)
+                {
+                    ReleaseCapture();
+                }
+                Cursor.Current = Cursors.Default;
             }
 
             // See the WM_MOUSEMOVE case above for why this runs after
@@ -2202,17 +2049,24 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 _pendingColumnIndex = clickedColumn.Index;
-                _pendingStartX = x;
+                _pendingStartX = Cursor.Position.X;
             }
 
             private void OnMouseMove(int x)
             {
+                if ((Control.MouseButtons & MouseButtons.Left) == 0)
+                {
+                    CancelPendingReorder();
+                    return;
+                }
+
                 if (_pendingColumnIndex < 0 || _owner._isDraggingColumn)
                 {
                     return;
                 }
 
-                if (Math.Abs(x - _pendingStartX) < SystemInformation.DragSize.Width)
+                // Header coordinates move when the ListView scrolls during a drag.
+                if (Math.Abs(Cursor.Position.X - _pendingStartX) < SystemInformation.DragSize.Width)
                 {
                     return;
                 }

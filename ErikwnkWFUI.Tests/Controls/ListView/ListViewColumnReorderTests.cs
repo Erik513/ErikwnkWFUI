@@ -21,16 +21,6 @@ public class ListViewColumnReorderTests
     {
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
 
-        // A genuine move (unlike the SameTargetAsCurrent case below) ends
-        // with a BeginInvoke(ApplyFillColumn) call, which throws unless the
-        // handle already exists - forced here, and only here, rather than
-        // in the shared helper for every test: doing this for every
-        // ListView test in the suite was confirmed live to make the whole
-        // test host process crash outright once enough handles had been
-        // created and disposed within one run (see ListViewTestHelpers'
-        // own remarks on why it deliberately doesn't do this itself).
-        _ = listView.Handle;
-
         Assert.Equal(0, listView.Columns[0].DisplayIndex);
         Assert.Equal(1, listView.Columns[1].DisplayIndex);
 
@@ -46,7 +36,6 @@ public class ListViewColumnReorderTests
     public void MoveColumnToDisplayIndex_MovesColumnToTheFront()
     {
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-        _ = listView.Handle;
 
         listView.InvokePrivate("MoveColumnToDisplayIndex", 1, 0);
 
