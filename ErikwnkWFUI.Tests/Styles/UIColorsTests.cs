@@ -49,4 +49,42 @@ public class UIColorsTests
             UIColors.SetAccent(UIAccentColors.Blue);
         }
     }
+
+    [Fact]
+    public void SetAccent_NeutralAccent_DarkensGentlerThanAHuedOne()
+    {
+        try
+        {
+            // A near-white neutral accent - the extreme BlackOrWhite sits
+            // at in the Dark theme - would otherwise get crushed by the
+            // same percentage that reads fine as a moody dark blue.
+            UIColors.SetAccent(Color.FromArgb(240, 240, 240));
+
+            Assert.Equal(Color.FromArgb(204, 204, 204), UIColors.PrimaryDark);
+            Assert.Equal(Color.FromArgb(168, 168, 168), UIColors.PrimaryDarkDark);
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
+
+    [Fact]
+    public void SetAccent_HuedAccent_KeepsTheOriginalDarkenAmounts()
+    {
+        try
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+
+            Assert.Equal(UIAccentColors.Blue, UIColors.Primary);
+            // (int) truncation of a binary-imprecise 0.7/0.45 multiplier -
+            // not simply 90*0.7=63 and 90*0.45=40.5 rounded.
+            Assert.Equal(Color.FromArgb(0, 62, 110), UIColors.PrimaryDark);
+            Assert.Equal(Color.FromArgb(0, 40, 71), UIColors.PrimaryDarkDark);
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
 }

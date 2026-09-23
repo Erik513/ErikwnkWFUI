@@ -172,8 +172,21 @@ namespace ErikwnkWFUI.Styles
             // dark, so darkening it hard still left a visible dark blue.
             // Doing the same to a bright, near-max-brightness accent (e.g.
             // a bright yellow) would crush it into a muddy brown instead.
-            PrimaryDarkDark = Darken(accent, 0.55);
-            PrimaryDark = Darken(accent, 0.30);
+            //
+            // A neutral (grayscale) accent has no hue to keep it looking
+            // rich once darkened this much - the same percentage that reads
+            // as a moody dark blue just reads as a flat slab of gray, and
+            // BlackOrWhite (near-white in Dark, near-black in Light) sits
+            // right at the brightness extreme where that's most obvious.
+            // Darkening it gentler keeps popups/panels built from these
+            // shades closer to the accent's own brightness instead of
+            // crushing toward black.
+            bool isNeutralAccent = accent.R == accent.G && accent.G == accent.B;
+            double darkDarkAmount = isNeutralAccent ? 0.30 : 0.55;
+            double darkAmount = isNeutralAccent ? 0.15 : 0.30;
+
+            PrimaryDarkDark = Darken(accent, darkDarkAmount);
+            PrimaryDark = Darken(accent, darkAmount);
             Primary = accent;
             PrimaryLight = Lighten(accent, 0.35);
 
@@ -185,10 +198,9 @@ namespace ErikwnkWFUI.Styles
 
             // A hued accent stands out from a row's own gray shade through
             // the hue shift alone, even at a low overlay alpha - a neutral
-            // (grayscale) accent has no hue to lean on, so it needs the
-            // same higher alpha ListView's own CreateStandard selection
-            // default uses for the same reason.
-            bool isNeutralAccent = accent.R == accent.G && accent.G == accent.B;
+            // accent has no hue to lean on, so it needs the same higher
+            // alpha ListView's own CreateStandard selection default uses
+            // for the same reason.
             Selection = Color.FromArgb(isNeutralAccent ? 130 : 60, accent.R, accent.G, accent.B);
 
             AccentForeColor = GetContrastingForeColor(accent);
