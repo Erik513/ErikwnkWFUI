@@ -74,10 +74,14 @@ namespace ErikwnkWFUI.Controls
         private Color _rowForeColor = UIColors.TextPrimary;
         // A translucent gray, not an opaque one - matches the translucent
         // accent UIColors.Selection this replaces as CreateStandard's own
-        // default (same alpha), so the row's own color still shows through
-        // underneath a selection here too, just tinted gray instead of the
-        // accent until CreatePrimary/a consumer sets this explicitly.
-        private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => Color.FromArgb(60, UIColors.BorderLight));
+        // default, so the row's own color still shows through underneath a
+        // selection here too, just tinted gray instead of the accent until
+        // CreatePrimary/a consumer sets this explicitly. A higher alpha
+        // than UIColors.Selection's own 60 - confirmed live, gray (unlike
+        // the accent blue) doesn't stand out from an ordinary row's own
+        // shade nearly as much at the same opacity, so CreateStandard's
+        // selected row was barely distinguishable from an unselected one.
+        private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => Color.FromArgb(130, UIColors.BorderLight));
         private Color _headerBackColor = UIColors.BackgroundDarkElevated;
         private Color _headerForeColor = UIColors.TextTertiary;
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
