@@ -5,12 +5,15 @@ using WfuiListView = ErikwnkWFUI.Controls.ListView;
 namespace ErikwnkWFUI.Tests.Controls.ListView;
 
 /// <summary>
-/// Unlike DataGridView's hand-rolled column resize, this control's own
-/// resize is still fully native - OnColumnWidthChanging (subscribed to the
-/// base ListView's own event) only validates/clamps what comctl32's header
-/// already resized live, it doesn't drive the drag itself. That validation
-/// is what these tests cover, invoking the private handler directly with a
-/// real ColumnWidthChangingEventArgs the same way a live drag would.
+/// Column resize is hand-rolled in HeaderInputSubclass (screen-coordinate
+/// mouse deltas, tracked via SetCapture on the header hwnd) rather than
+/// left to comctl32's own live-drag tracking - not practical to drive
+/// headlessly, same as the reorder drag (see ListViewColumnReorderTests).
+/// Whatever ends up setting a column's Width, though, still goes through
+/// the same OnColumnWidthChanging validation/clamping (subscribed to the
+/// base ListView's own event) - that's what these tests cover, invoking
+/// the private handler directly with a real ColumnWidthChangingEventArgs
+/// the same way a resize would.
 /// </summary>
 public class ListViewColumnResizeTests
 {

@@ -1,4 +1,6 @@
+using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 using WfuiListView = ErikwnkWFUI.Controls.ListView;
 
 namespace ErikwnkWFUI.Tests.Controls.ListView;
@@ -48,5 +50,69 @@ public class ListViewConstructionTests
         using WfuiListView listView = new WfuiListView();
 
         Assert.True(listView.AllowColumnResizing);
+    }
+
+    // CreateStandard/CreatePrimary's split (see UIListViewFactory) - the
+    // same "gray until a consumer opts into the accent" contract already
+    // locked down for ListBox/DataGridView.
+    // Translucent (see the field's own comment in ListView.cs) so the
+    // row's own color still shows through underneath a selection - not
+    // BorderLight itself, an alpha-130 tint of it.
+    [Fact]
+    public void SelectionOverlayColor_DefaultsToTranslucentBorderLight()
+    {
+        using WfuiListView listView = new WfuiListView();
+
+        Assert.Equal(Color.FromArgb(130, UIColors.BorderLight), listView.SelectionOverlayColor);
+    }
+
+    [Fact]
+    public void ColumnReorderIndicatorColor_DefaultsToBorderLight()
+    {
+        using WfuiListView listView = new WfuiListView();
+
+        Assert.Equal(UIColors.BorderLight, listView.ColumnReorderIndicatorColor);
+    }
+
+    [Fact]
+    public void BorderColor_DefaultsToBorderMedium()
+    {
+        using WfuiListView listView = new WfuiListView();
+
+        Assert.Equal(UIColors.BorderMedium, listView.BorderColor);
+    }
+
+    [Fact]
+    public void CreatePrimary_SetsSelectionOverlayColorToAccent()
+    {
+        using WfuiListView listView = (WfuiListView)UIStyles.ListViews.CreatePrimary();
+
+        Assert.Equal(UIColors.Selection, listView.SelectionOverlayColor);
+    }
+
+    [Fact]
+    public void CreatePrimary_SetsColumnReorderIndicatorColorToAccent()
+    {
+        using WfuiListView listView = (WfuiListView)UIStyles.ListViews.CreatePrimary();
+
+        Assert.Equal(UIColors.Primary, listView.ColumnReorderIndicatorColor);
+    }
+
+    [Fact]
+    public void CreatePrimary_SetsBorderColorToAccent()
+    {
+        using WfuiListView listView = (WfuiListView)UIStyles.ListViews.CreatePrimary();
+
+        Assert.Equal(UIColors.Primary, listView.BorderColor);
+    }
+
+    [Fact]
+    public void CreateStandard_KeepsColorsGray()
+    {
+        using WfuiListView listView = (WfuiListView)UIStyles.ListViews.CreateStandard();
+
+        Assert.Equal(Color.FromArgb(130, UIColors.BorderLight), listView.SelectionOverlayColor);
+        Assert.Equal(UIColors.BorderLight, listView.ColumnReorderIndicatorColor);
+        Assert.Equal(UIColors.BorderMedium, listView.BorderColor);
     }
 }
