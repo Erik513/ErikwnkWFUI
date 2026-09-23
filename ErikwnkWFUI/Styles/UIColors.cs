@@ -182,7 +182,14 @@ namespace ErikwnkWFUI.Styles
             SecondaryLight = Lighten(accent, 0.25);
 
             BorderPrimary = accent;
-            Selection = Color.FromArgb(60, accent.R, accent.G, accent.B);
+
+            // A hued accent stands out from a row's own gray shade through
+            // the hue shift alone, even at a low overlay alpha - a neutral
+            // (grayscale) accent has no hue to lean on, so it needs the
+            // same higher alpha ListView's own CreateStandard selection
+            // default uses for the same reason.
+            bool isNeutralAccent = accent.R == accent.G && accent.G == accent.B;
+            Selection = Color.FromArgb(isNeutralAccent ? 130 : 60, accent.R, accent.G, accent.B);
 
             AccentForeColor = GetContrastingForeColor(accent);
         }

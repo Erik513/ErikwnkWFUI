@@ -1,4 +1,5 @@
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListBoxControl = ErikwnkWFUI.Controls.ListBoxControl;
 
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
@@ -10,7 +11,10 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// reaches the same colors ListBoxConstructionTests locks in on the plain
 /// ListBox; the underlying selection/reorder logic itself is ListBox's own
 /// concern, already covered there.
+/// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary,
+/// which UIColorsTests changes via SetAccent.
 /// </summary>
+[Collection(AccentColorTestCollection.Name)]
 public class ListBoxControlTests
 {
     [Fact]

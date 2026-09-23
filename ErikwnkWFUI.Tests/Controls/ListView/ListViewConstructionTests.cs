@@ -1,11 +1,18 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListView = ErikwnkWFUI.Controls.ListView;
 
 namespace ErikwnkWFUI.Tests.Controls.ListView;
 
-/// <summary>Locks down the constructor's defaults, the same reasoning as DataGridViewConstructionTests.</summary>
+/// <summary>
+/// Locks down the constructor's defaults, the same reasoning as
+/// DataGridViewConstructionTests. [Collection] (see AccentColorTestCollection) -
+/// several of these read UIColors.Primary/Selection, which UIColorsTests
+/// changes via SetAccent.
+/// </summary>
+[Collection(AccentColorTestCollection.Name)]
 public class ListViewConstructionTests
 {
     [Fact]

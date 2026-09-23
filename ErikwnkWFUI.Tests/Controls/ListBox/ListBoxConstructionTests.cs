@@ -1,4 +1,5 @@
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListBox = ErikwnkWFUI.Controls.ListBox;
 
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
@@ -8,7 +9,10 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// live accent) and CreatePrimary explicitly overriding them back to the
 /// accent - the exact split this control was missing before CreatePrimary
 /// existed at all (see UIListBoxFactory/UIListBoxControlFactory).
+/// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary,
+/// which UIColorsTests changes via SetAccent.
 /// </summary>
+[Collection(AccentColorTestCollection.Name)]
 public class ListBoxConstructionTests
 {
     [Fact]
