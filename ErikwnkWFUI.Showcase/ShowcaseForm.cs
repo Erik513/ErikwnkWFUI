@@ -32,7 +32,13 @@ namespace ErikwnkWFUI.Showcase
         // Gray is here for anyone who just wants a neutral look without
         // knowing CreateStandard already defaults to gray - see
         // UIAccentColors.Gray for why it's close, not pixel-identical.
-        private static readonly (string Name, Color Color)[] AccentPresets =
+        //
+        // A property, not a field - UIAccentColors.BlackOrWhite resolves
+        // live off whichever theme is currently active, and a static
+        // readonly field here would freeze it at whatever that was the
+        // first time this form was ever built, ignoring later theme
+        // switches.
+        private static (string Name, Color Color)[] AccentPresets => new (string, Color)[]
         {
             ("Blue", UIAccentColors.Blue),
             ("Red", UIAccentColors.Red),
@@ -48,7 +54,7 @@ namespace ErikwnkWFUI.Showcase
             ("Pink", UIAccentColors.Pink),
             ("Brown", UIAccentColors.Brown),
             ("Gray", UIAccentColors.Gray),
-            ("White", UIAccentColors.White)
+            ("Black/White", UIAccentColors.BlackOrWhite)
         };
 
         private Panel _toolbar;

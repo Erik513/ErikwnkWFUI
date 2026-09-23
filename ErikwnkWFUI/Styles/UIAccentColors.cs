@@ -33,12 +33,22 @@ namespace ErikwnkWFUI.Styles
         // ones. Good enough for someone who just wants "gray" without
         // knowing CreateStandard already defaults to it.
         public static readonly Color Gray = Color.FromArgb(90, 90, 90);
-        public static readonly Color White = Color.FromArgb(230, 230, 230);
 
-        public static readonly Color[] All =
+        // A fixed white goes invisible against a light theme's own
+        // near-white background - resolved live off the current theme
+        // instead, the same way UIColors.GetContrastingForeColor already
+        // picks light-or-dark text for a given background. A property, not
+        // a field, so switching themes changes what this returns without
+        // needing to be told to.
+        public static Color BlackOrWhite => UIColors.GetContrastingForeColor(UIColors.BackgroundDark);
+
+        // A property, not a field, for the same reason as BlackOrWhite -
+        // a frozen array would otherwise cache whatever theme was active
+        // the first time this class was touched.
+        public static Color[] All => new[]
         {
             Blue, Red, Orange, Amber, Yellow, Green, Teal,
-            Cyan, Indigo, Purple, Magenta, Pink, Brown, Gray, White
+            Cyan, Indigo, Purple, Magenta, Pink, Brown, Gray, BlackOrWhite
         };
     }
 }
