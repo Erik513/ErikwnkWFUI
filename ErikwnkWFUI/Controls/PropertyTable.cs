@@ -235,7 +235,11 @@ namespace ErikwnkWFUI.Controls
                 RowCount = 3,
                 BackColor = Colors.BackgroundLight,
                 Padding = new Padding(6, 0, 8, 0),
-                Margin = new Padding(0)
+                // 1px, not 0 - leaves the cell panel's own border (see
+                // CreateEditorCellPanel) actually visible all the way
+                // around instead of being completely covered by this
+                // Dock=Fill child.
+                Margin = new Padding(1)
             };
 
             wrapper.ColumnStyles.Add(
@@ -308,7 +312,7 @@ namespace ErikwnkWFUI.Controls
 
         private Panel CreateEditorCellPanel()
         {
-            return new Panel
+            Panel panel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Colors.BackgroundLight,
@@ -320,6 +324,26 @@ namespace ErikwnkWFUI.Controls
                 // there.
                 Margin = new Padding(0, 2, 2, 2)
             };
+
+            // A themed border around each editor cell, independent of how
+            // close BackgroundLight happens to sit next to the surrounding
+            // BackgroundMedium in the active theme - Light theme's own
+            // near-white palette leaves very little room between adjacent
+            // "surface" shades (confirmed live: editor cells read as
+            // indistinguishable from their surroundings there), where Dark
+            // theme's much wider spread never had this problem. A border
+            // reads clearly regardless of how far apart the two fill colors
+            // are. AddControlToCell's own wrapper leaves a 1px margin
+            // around itself specifically so this has room to show through.
+            panel.Paint += (sender, e) =>
+            {
+                using (Pen pen = new Pen(Colors.BorderMedium))
+                {
+                    e.Graphics.DrawRectangle(pen, 0, 0, panel.ClientSize.Width - 1, panel.ClientSize.Height - 1);
+                }
+            };
+
+            return panel;
         }
 
         private void ConfigureEditorControl(Control control)
