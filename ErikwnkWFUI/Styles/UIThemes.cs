@@ -17,13 +17,28 @@ namespace ErikwnkWFUI.Styles
 
         public static readonly UIColorTheme Light = new UIColorTheme
         {
-            BackgroundBlack = Color.FromArgb(243, 243, 243),
-            BackgroundDark = Color.FromArgb(255, 255, 255),
-            BackgroundDarkElevated = Color.FromArgb(235, 235, 235),
-            BackgroundMedium = Color.FromArgb(255, 255, 255),
-            BackgroundMediumElevated = Color.FromArgb(250, 250, 250),
-            BackgroundLight = Color.FromArgb(235, 235, 235),
-            BackgroundLighter = Color.FromArgb(222, 222, 222),
+            // A genuine, monotonically increasing staircase toward white,
+            // mirroring Dark's own strictly-increasing 10/20/25/35/40/50/60
+            // ladder - just inverted, since a light theme's "base" surface
+            // is a visible off-white/gray and its most "elevated" surface
+            // is the one that reaches actual white, not the other way
+            // around. The previous values here weren't a staircase at all
+            // (BackgroundDark and BackgroundMedium were both pure white,
+            // BackgroundDarkElevated and BackgroundLight were identical) -
+            // confirmed live as controls sitting directly on the app's own
+            // background (also near-white) becoming nearly invisible with
+            // no border to fall back on, e.g. ListBoxControl's header
+            // panel (BackgroundDark) against the Showcase's own
+            // BackgroundBlack. Every role here is now a distinct value,
+            // and only the very last one (BackgroundLighter) is actual
+            // pure white - nothing else has nowhere left to go.
+            BackgroundBlack = Color.FromArgb(225, 225, 225),
+            BackgroundDark = Color.FromArgb(236, 236, 236),
+            BackgroundDarkElevated = Color.FromArgb(243, 243, 243),
+            BackgroundMedium = Color.FromArgb(248, 248, 248),
+            BackgroundMediumElevated = Color.FromArgb(251, 251, 251),
+            BackgroundLight = Color.FromArgb(253, 253, 253),
+            BackgroundLighter = Color.FromArgb(255, 255, 255),
 
             TextPrimary = Color.FromArgb(20, 20, 20),
             TextPrimaryDim = Color.FromArgb(45, 45, 45),
