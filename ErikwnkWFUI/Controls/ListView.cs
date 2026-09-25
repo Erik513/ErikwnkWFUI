@@ -553,6 +553,7 @@ namespace ErikwnkWFUI.Controls
         private const int WM_VSCROLL = 0x0115;
         private const int WM_HSCROLL = 0x0114;
         private const int WM_MOUSEWHEEL = 0x020A;
+        private const int WM_PAINT = 0x000F;
 
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         private static extern bool LockWindowUpdate(System.IntPtr hWndLock);
@@ -581,6 +582,40 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            if (m.Msg == WM_PAINT)
+            {
+                FillRowAreaTrailingBackground();
+            }
+        }
+
+        // OnDrawSubItem only ever paints an actual column's own cell -
+        // same gap FillHeaderTrailingBackground fills for the header,
+        // just one native window down: whatever's right of the last
+        // column, below the header, never gets a DrawSubItem call of its
+        // own, so it showed through as this control's plain (darker)
+        // BackColor instead of matching the header's own trailing fill
+        // directly above it. Filled with the same HeaderBackColor so the
+        // whole strip - header and rows - reads as one uninterrupted band
+        // instead of two subtly different darks with a seam between them.
+        private void FillRowAreaTrailingBackground()
+        {
+            if (Columns.Count == 0)
+            {
+                return;
+            }
+
+            var rightEdge = _lastColumnHeaderRightEdge;
+            if (rightEdge >= ClientSize.Width)
+            {
+                return;
+            }
+
+            using (var graphics = Graphics.FromHwnd(Handle))
+            using (var background = new SolidBrush(_headerBackColor))
+            {
+                graphics.FillRectangle(background, rightEdge, _headerHeight, ClientSize.Width - rightEdge, ClientSize.Height - _headerHeight);
+            }
         }
 
         private void OnColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
