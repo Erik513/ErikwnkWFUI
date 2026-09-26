@@ -51,7 +51,6 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultMinimumColumnWidth = 40;
 
         private int _headerHeight = 24;
-        private int _lastColumnHeaderRightEdge;
         private int _pendingToggleDeselectItemIndex = -1;
         private readonly Timer _toggleDeselectSettleTimer;
         private int _toggleDeselectWatchIndex = -1;
@@ -636,7 +635,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            var rightEdge = _lastColumnHeaderRightEdge;
+            var rightEdge = GetColumnsTotalWidth();
             if (rightEdge >= ClientSize.Width)
             {
                 return;
@@ -647,6 +646,30 @@ namespace ErikwnkWFUI.Controls
             {
                 graphics.FillRectangle(background, rightEdge, _headerHeight, ClientSize.Width - rightEdge, ClientSize.Height - _headerHeight);
             }
+        }
+
+        // The columns' combined width, i.e. where the real header/row
+        // content ends and the trailing background begins - computed fresh
+        // from Columns every time, rather than cached from the header's own
+        // DrawColumnHeader event the way this used to work. That cache
+        // (_lastColumnHeaderRightEdge) could go stale: the header and this
+        // control's own row area are two separate native windows that don't
+        // repaint in lockstep, so during a resize drag whichever one
+        // happened to redraw most recently could leave the OTHER window
+        // painting the trailing strip at the wrong x for a frame - or, if
+        // the header simply didn't need to repaint on the drag's very last
+        // step, permanently, since nothing else would ever correct it.
+        // Columns[i].Width is always current the instant a resize sets it,
+        // so this can't go stale the same way.
+        private int GetColumnsTotalWidth()
+        {
+            int total = 0;
+            foreach (ColumnHeader column in Columns)
+            {
+                total += column.Width;
+            }
+
+            return total;
         }
 
         private void OnColumnWidthChanging(object sender, ColumnWidthChangingEventArgs e)
@@ -770,15 +793,6 @@ namespace ErikwnkWFUI.Controls
                     new Rectangle(e.Bounds.X + 7, e.Bounds.Y, Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height),
                     GetEffectiveColor(_headerForeColor),
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
-            }
-
-            // Track the rightmost column's edge - HeaderInputSubclass needs
-            // this to know where the real columns end, not just where its
-            // own native window does (see FillHeaderTrailingBackground).
-            var orderedColumns = GetColumnsInDisplayOrder();
-            if (orderedColumns.Count > 0 && orderedColumns[orderedColumns.Count - 1] == e.Header)
-            {
-                _lastColumnHeaderRightEdge = e.Bounds.Right;
             }
 
             DrawSortGlyph(e);
@@ -1857,7 +1871,7 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                var rightEdge = _owner._lastColumnHeaderRightEdge;
+                var rightEdge = _owner.GetColumnsTotalWidth();
                 if (rightEdge >= clientRect.Right)
                 {
                     return;
@@ -1928,6 +1942,17 @@ namespace ErikwnkWFUI.Controls
                     ReleaseCapture();
                 }
                 Cursor.Current = Cursors.Default;
+
+                // One guaranteed-correct repaint of both windows now that
+                // the drag is over, regardless of whether Windows' own
+                // invalidate-on-resize already repainted either of them for
+                // this exact final width - closes out the case where it
+                // didn't (e.g. only a small strip near the dragged border
+                // was considered dirty), which used to leave the trailing
+                // background wrong until some unrelated repaint fixed it.
+                _owner.Invalidate();
+                _owner.Update();
+                InvalidateHeaderNow();
             }
 
             // See the WM_MOUSEMOVE case above for why this runs after
