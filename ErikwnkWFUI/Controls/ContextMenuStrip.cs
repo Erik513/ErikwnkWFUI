@@ -18,7 +18,7 @@ namespace ErikwnkWFUI.Controls
 
         public ContextMenuStrip()
         {
-            Renderer = CreateRenderer(() => SelectionBackColor);
+            Renderer = CreateRenderer();
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace ErikwnkWFUI.Controls
                     && menuItem.HasDropDownItems
                     && menuItem.DropDown is ToolStripDropDownMenu dropDown)
                 {
-                    dropDown.Renderer = CreateRenderer(() => SelectionBackColor);
+                    dropDown.Renderer = CreateRenderer();
                     dropDown.ShowImageMargin = ShowImageMargin;
 
                     ApplyThemeToSubmenus(menuItem.DropDownItems);
@@ -63,9 +63,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        internal static ToolStripRenderer CreateRenderer(Func<Color> selectionBackColor)
+        // A plain, parameterless factory - nothing outside this class ever
+        // needs a renderer for anything other than THIS menu's own
+        // SelectionBackColor, so there's no reason for a caller to be able
+        // to pass in a different color source.
+        private ToolStripRenderer CreateRenderer()
         {
-            return new ThemedRenderer(selectionBackColor);
+            return new ThemedRenderer(() => SelectionBackColor);
         }
 
         private sealed class ThemedRenderer : ToolStripProfessionalRenderer
@@ -151,13 +155,17 @@ namespace ErikwnkWFUI.Controls
             public override Color MenuItemSelectedGradientBegin => _selectionBackColor();
             public override Color MenuItemSelectedGradientEnd => _selectionBackColor();
 
-            public override Color MenuItemPressedGradientBegin => UIColors.Darken(_selectionBackColor(), 30);
-            public override Color MenuItemPressedGradientMiddle => UIColors.Darken(_selectionBackColor(), 30);
-            public override Color MenuItemPressedGradientEnd => UIColors.Darken(_selectionBackColor(), 30);
+            public override Color MenuItemPressedGradientBegin => PressedFill;
+            public override Color MenuItemPressedGradientMiddle => PressedFill;
+            public override Color MenuItemPressedGradientEnd => PressedFill;
 
             public override Color CheckBackground => UIColors.BackgroundMediumElevated;
             public override Color CheckSelectedBackground => _selectionBackColor();
-            public override Color CheckPressedBackground => UIColors.Darken(_selectionBackColor(), 30);
+            public override Color CheckPressedBackground => PressedFill;
+
+            // A single darkened-fill value backing all four "pressed" roles
+            // above, instead of each repeating the same Darken call.
+            private Color PressedFill => UIColors.Darken(_selectionBackColor(), 30);
         }
     }
 }
