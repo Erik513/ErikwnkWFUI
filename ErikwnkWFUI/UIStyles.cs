@@ -476,6 +476,21 @@ namespace ErikwnkWFUI
             }
         }
 
+        /// <summary>A <see cref="Controls.ContextMenuStrip"/> themed to match the rest of ErikwnkWFUI instead of the plain OS-default popup menu - functionally identical to the native control.</summary>
+        public static class ContextMenus
+        {
+            public static Controls.ContextMenuStrip CreateStandard()
+            {
+                return UIContextMenuStripFactory.CreateStandard();
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but hover/selection-highlighted in the current accent instead of the fixed neutral gray - mirrors <see cref="ListBoxes.CreatePrimary"/>.</summary>
+            public static Controls.ContextMenuStrip CreatePrimary()
+            {
+                return UIContextMenuStripFactory.CreatePrimary();
+            }
+        }
+
         /// <summary>A dark-themed, multi-column <see cref="Controls.ListView"/> (Details view) with spreadsheet-style cell-range selection, hand-rolled column reordering/resizing, and Ctrl+C/Ctrl+Shift+C copy - see the class itself for the full behavior.</summary>
         public static class ListViews
         {

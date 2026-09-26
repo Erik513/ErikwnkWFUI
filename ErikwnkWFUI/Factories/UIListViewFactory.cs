@@ -23,7 +23,8 @@ namespace ErikwnkWFUI.Factories
             {
                 BorderColor = UIColors.Primary,
                 SelectionOverlayColor = UIColors.Selection,
-                ColumnReorderIndicatorColor = UIColors.Primary
+                ColumnReorderIndicatorColor = UIColors.Primary,
+                ContextMenuSelectionColor = UIColors.Primary
             };
         }
     }

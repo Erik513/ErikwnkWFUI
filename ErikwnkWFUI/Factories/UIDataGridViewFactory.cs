@@ -37,7 +37,8 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource,
                 BorderColor = UIColors.Primary,
                 SelectionBackColor = UIColors.Primary,
-                ColumnReorderIndicatorColor = UIColors.Primary
+                ColumnReorderIndicatorColor = UIColors.Primary,
+                ContextMenuSelectionColor = UIColors.Primary
             };
         }
 

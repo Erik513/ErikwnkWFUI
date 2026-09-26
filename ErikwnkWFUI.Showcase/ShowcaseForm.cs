@@ -309,6 +309,7 @@ namespace ErikwnkWFUI.Showcase
             AddButtonsSection(table);
             AddCheckBoxesSection(table);
             AddComboBoxesSection(table);
+            AddContextMenusSection(table);
             AddDataGridSection(table);
             AddLabelsSection(table);
             AddListBoxControlSection(table);
@@ -472,6 +473,45 @@ namespace ErikwnkWFUI.Showcase
             comboDisabled.SelectedIndex = 0;
             comboDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", combo, comboDisabled);
+        }
+
+        private void AddContextMenusSection(PropertyTable table)
+        {
+            table.AddSection("ContextMenuStrip");
+
+            Button standardButton = UIStyles.Buttons.CreateStandard("Right-click here (Standard)", size: new Size(220, 32));
+            standardButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenus.CreateStandard());
+
+            Button primaryButton = UIStyles.Buttons.CreateStandard("Right-click here (Primary)", size: new Size(220, 32));
+            primaryButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenus.CreatePrimary());
+
+            table.AddRow("CreateStandard", standardButton);
+            table.AddRow("CreatePrimary", primaryButton);
+        }
+
+        // Exercises every native ToolStripMenuItem feature (icon, checkmark,
+        // disabled state, separator, submenu) so a look at this demo
+        // confirms the themed renderer handles all of them, not just plain
+        // text items.
+        private ErikwnkWFUI.Controls.ContextMenuStrip BuildDemoContextMenu(ErikwnkWFUI.Controls.ContextMenuStrip menu)
+        {
+            var openItem = new ToolStripMenuItem("Open", UIStyles.Icons.Folder);
+            var saveItem = new ToolStripMenuItem("Save", UIStyles.Icons.Document);
+            var detailsItem = new ToolStripMenuItem("Show details") { CheckOnClick = true, Checked = true };
+            var disabledItem = new ToolStripMenuItem("Disabled item") { Enabled = false };
+
+            var moreItem = new ToolStripMenuItem("More");
+            moreItem.DropDownItems.Add(new ToolStripMenuItem("Sub item 1"));
+            moreItem.DropDownItems.Add(new ToolStripMenuItem("Sub item 2"));
+
+            menu.Items.Add(openItem);
+            menu.Items.Add(saveItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(detailsItem);
+            menu.Items.Add(disabledItem);
+            menu.Items.Add(moreItem);
+
+            return menu;
         }
 
         private void AddNumericUpDownsSection(PropertyTable table)

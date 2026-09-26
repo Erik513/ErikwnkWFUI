@@ -70,6 +70,14 @@ namespace ErikwnkWFUI.Controls
         // item's click actually runs (e.g. the click itself may already
         // have advanced it).
         private bool _contextMenuRowWasPlaceholder;
+        // Matches Controls.ContextMenuStrip's own CreateStandard default -
+        // BuildContextMenu reads this once to seed the menu it builds, and
+        // the property setter below re-pushes a later change into that same
+        // (already-built, cached-on-ContextMenuStrip) menu instance, since
+        // UIDataGridViewFactory.CreatePrimary sets this via an object
+        // initializer, which runs after the constructor already built it -
+        // same pattern as ListView.ContextMenuSelectionColor.
+        private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
         private ToolStripMenuItem _contextMenuCutItem;
         private ToolStripMenuItem _contextMenuCopyItem;
         private ToolStripMenuItem _contextMenuPasteItem;
@@ -158,6 +166,28 @@ namespace ErikwnkWFUI.Controls
                 {
                     Columns.Remove(_deleteRowColumn);
                     _deleteRowColumn = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Background of a hovered/selected item in this grid's own
+        /// right-click context menu. Defaults to a fixed neutral gray,
+        /// matching <see cref="Controls.ContextMenuStrip"/>'s own
+        /// CreateStandard default; <see cref="Factories.UIDataGridViewFactory.CreatePrimary"/>
+        /// sets this to <see cref="UIColors.Primary"/> instead, same pattern
+        /// as <see cref="ReadOnlyDataGridView.BorderColor"/>.
+        /// </summary>
+        public Color ContextMenuSelectionColor
+        {
+            get { return _contextMenuSelectionColor.Value; }
+            set
+            {
+                _contextMenuSelectionColor.Set(value);
+
+                if (ContextMenuStrip is ContextMenuStrip menu)
+                {
+                    menu.SelectionBackColor = value;
                 }
             }
         }
@@ -1240,7 +1270,14 @@ namespace ErikwnkWFUI.Controls
 
         private ContextMenuStrip BuildContextMenu()
         {
-            ContextMenuStrip menu = new ContextMenuStrip();
+            // None of this menu's items ever get an Image, so the native
+            // reserved left-hand icon gutter just showed up as a blank
+            // strip nothing ever used - same fix as ListView.BuildContextMenu.
+            ContextMenuStrip menu = new ContextMenuStrip
+            {
+                ShowImageMargin = false,
+                SelectionBackColor = ContextMenuSelectionColor
+            };
 
             _contextMenuCutItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuCut"), null, (sender, e) => CutSelectionToClipboard());

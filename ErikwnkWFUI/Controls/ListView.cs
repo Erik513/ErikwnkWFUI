@@ -82,6 +82,13 @@ namespace ErikwnkWFUI.Controls
         // ordinary divider line right next to it.
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.TextSecondary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
+        // Matches Controls.ContextMenuStrip's own CreateStandard default -
+        // BuildContextMenu reads this once to seed the menu it builds, and
+        // the property setter below re-pushes a later change into that same
+        // (already-built, cached-on-ContextMenuStrip) menu instance, since
+        // UIListViewFactory.CreatePrimary sets this via an object
+        // initializer, which runs after the constructor already built it.
+        private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
@@ -178,6 +185,28 @@ namespace ErikwnkWFUI.Controls
             {
                 _borderColor.Set(value);
                 Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Background of a hovered/selected item in this ListView's own
+        /// right-click context menu. Defaults to a fixed neutral gray,
+        /// matching <see cref="Controls.ContextMenuStrip"/>'s own
+        /// CreateStandard default; <see cref="Factories.UIListViewFactory.CreatePrimary"/>
+        /// sets this to <see cref="UIColors.Primary"/> instead, same pattern
+        /// as <see cref="BorderColor"/>.
+        /// </summary>
+        public Color ContextMenuSelectionColor
+        {
+            get { return _contextMenuSelectionColor.Value; }
+            set
+            {
+                _contextMenuSelectionColor.Set(value);
+
+                if (ContextMenuStrip is ContextMenuStrip menu)
+                {
+                    menu.SelectionBackColor = value;
+                }
             }
         }
 
@@ -689,7 +718,14 @@ namespace ErikwnkWFUI.Controls
         // plain and "As table".
         private ContextMenuStrip BuildContextMenu()
         {
-            var menu = new ContextMenuStrip();
+            // None of this menu's items (or its submenus) ever get an
+            // Image, so the native reserved left-hand icon gutter just
+            // showed up as a blank strip nothing ever used.
+            var menu = new ContextMenuStrip
+            {
+                ShowImageMargin = false,
+                SelectionBackColor = ContextMenuSelectionColor
+            };
 
             string copySelectionText = UIStrings.Get("ListView.CopySelection");
             string copyAllText = UIStrings.Get("ListView.CopyAll");
@@ -698,12 +734,10 @@ namespace ErikwnkWFUI.Controls
             var copySelection = new ToolStripMenuItem(copySelectionText);
             copySelection.DropDownItems.Add(copySelectionText, null, (sender, e) => CopySelection());
             copySelection.DropDownItems.Add(asTableText, null, (sender, e) => CopySelectionAsTable());
-            ApplySubmenuTheme(copySelection);
 
             var copyAll = new ToolStripMenuItem(copyAllText);
             copyAll.DropDownItems.Add(copyAllText, null, (sender, e) => { SelectAll(); CopySelection(); });
             copyAll.DropDownItems.Add(asTableText, null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
-            ApplySubmenuTheme(copyAll);
 
             menu.Items.Add(copySelection);
             menu.Items.Add(copyAll);
@@ -715,19 +749,6 @@ namespace ErikwnkWFUI.Controls
             };
 
             return menu;
-        }
-
-        // A submenu's popup (ToolStripMenuItem.DropDown) is its own separate
-        // ToolStripDropDownMenu instance the framework creates lazily - it
-        // does not inherit the parent ContextMenuStrip's Renderer, so it
-        // needs the same theming applied explicitly.
-        private static void ApplySubmenuTheme(ToolStripMenuItem item)
-        {
-            if (item.DropDown is ToolStripDropDownMenu dropDown)
-            {
-                dropDown.ShowImageMargin = false;
-                dropDown.Renderer = ErikwnkWFUI.Controls.ContextMenuStrip.CreateRenderer();
-            }
         }
 
         private void OnDrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
