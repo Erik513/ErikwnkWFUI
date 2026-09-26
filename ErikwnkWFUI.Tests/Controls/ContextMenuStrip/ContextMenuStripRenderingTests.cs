@@ -42,12 +42,40 @@ public class ContextMenuStripRenderingTests
         Assert.Equal(UIColors.BackgroundMediumElevated, GetRenderer(menu).ColorTable.ToolStripDropDownBackground);
     }
 
+    // BorderLight, not BorderMedium - measured to have better contrast
+    // against ToolStripDropDownBackground in both themes (see
+    // ContextMenuStrip.ThemedColorTable.MenuBorder's own comment).
     [Fact]
-    public void ColorTable_MenuBorderMatchesBorderMedium()
+    public void ColorTable_MenuBorderMatchesBorderLight()
     {
         using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
 
-        Assert.Equal(UIColors.BorderMedium, GetRenderer(menu).ColorTable.MenuBorder);
+        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.MenuBorder);
+    }
+
+    [Fact]
+    public void ColorTable_SeparatorsMatchBorderLight()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
+
+        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.SeparatorDark);
+        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.SeparatorLight);
+    }
+
+    // MenuItemBorder used to just return the item's own fill color
+    // (_selectionBackColor()) - a border drawn in the exact same color as
+    // the area it outlines is never visible, in any theme or accent. This
+    // locks in that the two are independent instead.
+    [Fact]
+    public void ColorTable_MenuItemBorder_IsIndependentOfSelectionBackColor()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip
+        {
+            SelectionBackColor = Color.FromArgb(11, 22, 33)
+        };
+
+        Assert.NotEqual(menu.SelectionBackColor, GetRenderer(menu).ColorTable.MenuItemBorder);
+        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.MenuItemBorder);
     }
 
     [Fact]

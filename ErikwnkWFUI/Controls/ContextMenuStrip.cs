@@ -119,11 +119,18 @@ namespace ErikwnkWFUI.Controls
             public override Color ImageMarginGradientMiddle => UIColors.BackgroundMediumElevated;
             public override Color ImageMarginGradientEnd => UIColors.BackgroundMediumElevated;
 
-            public override Color MenuBorder => UIColors.BorderMedium;
-            public override Color MenuItemBorder => _selectionBackColor();
+            // BorderLight, not BorderMedium - measured contrast against
+            // ToolStripDropDownBackground (BackgroundMediumElevated): 1.95:1
+            // vs 1.57:1 in Dark, 1.37:1 vs 1.24:1 in Light (Light theme's
+            // BorderLight is, counter to its name, the darkest-valued of
+            // the three border roles - see UIThemes.Light). MenuItemBorder
+            // used to just return the item's own fill color, making the
+            // "border" literally invisible against what it outlines.
+            public override Color MenuBorder => UIColors.BorderLight;
+            public override Color MenuItemBorder => UIColors.BorderLight;
 
-            public override Color SeparatorDark => UIColors.BorderMedium;
-            public override Color SeparatorLight => UIColors.BorderMedium;
+            public override Color SeparatorDark => UIColors.BorderLight;
+            public override Color SeparatorLight => UIColors.BorderLight;
 
             public override Color MenuItemSelectedGradientBegin => _selectionBackColor();
             public override Color MenuItemSelectedGradientEnd => _selectionBackColor();
