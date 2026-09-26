@@ -70,13 +70,14 @@ namespace ErikwnkWFUI.Controls
         // item's click actually runs (e.g. the click itself may already
         // have advanced it).
         private bool _contextMenuRowWasPlaceholder;
-        // Matches Controls.ContextMenuStrip's own CreateStandard default -
-        // BuildContextMenu reads this once to seed the menu it builds, and
-        // the property setter below re-pushes a later change into that same
-        // (already-built, cached-on-ContextMenuStrip) menu instance, since
-        // UIDataGridViewFactory.CreatePrimary sets this via an object
-        // initializer, which runs after the constructor already built it -
-        // same pattern as ListView.ContextMenuSelectionColor.
+        // Matches Controls.ContextMenuStrip's own CreateStandard default.
+        // BuildContextMenu reads this once, when it builds the menu in the
+        // constructor. The property setter below also pushes a later
+        // change straight into that already-built menu (found via the
+        // inherited ContextMenuStrip property) - needed because
+        // UIDataGridViewFactory.CreatePrimary sets this through an object
+        // initializer, which only runs after the constructor already built
+        // the menu - same pattern as ListView.ContextMenuSelectionColor.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
         private ToolStripMenuItem _contextMenuCutItem;
         private ToolStripMenuItem _contextMenuCopyItem;

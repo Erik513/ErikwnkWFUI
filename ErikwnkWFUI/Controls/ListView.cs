@@ -82,12 +82,14 @@ namespace ErikwnkWFUI.Controls
         // ordinary divider line right next to it.
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.TextSecondary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
-        // Matches Controls.ContextMenuStrip's own CreateStandard default -
-        // BuildContextMenu reads this once to seed the menu it builds, and
-        // the property setter below re-pushes a later change into that same
-        // (already-built, cached-on-ContextMenuStrip) menu instance, since
-        // UIListViewFactory.CreatePrimary sets this via an object
-        // initializer, which runs after the constructor already built it.
+        // Matches Controls.ContextMenuStrip's own CreateStandard default.
+        // BuildContextMenu reads this once, when it builds the menu in the
+        // constructor. The property setter below also pushes a later
+        // change straight into that already-built menu (found via the
+        // inherited ContextMenuStrip property) - needed because
+        // UIListViewFactory.CreatePrimary sets this through an object
+        // initializer, which only runs after the constructor already built
+        // the menu.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
         private bool _isDraggingColumn;
         private int _dragColumnIndex = -1;

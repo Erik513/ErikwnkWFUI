@@ -28,8 +28,9 @@ namespace ErikwnkWFUI.Factories
         // Same editable control CreateStandard returns, framed (and
         // gridlined - see ReadOnlyDataGridView.BorderColor), selection-
         // highlighted, and reorder-line-colored in the current accent
-        // instead of the fixed neutral gray CreateStandard keeps for all
-        // three - mirrors UIListViewFactory.CreatePrimary.
+        // instead of the fixed neutral gray CreateStandard keeps -
+        // including this grid's own built-in right-click context menu.
+        // Mirrors UIListViewFactory.CreatePrimary.
         public static DataGridView CreatePrimary(object dataSource = null)
         {
             return new Controls.DataGridView

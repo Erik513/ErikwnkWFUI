@@ -16,7 +16,8 @@ namespace ErikwnkWFUI.Factories
 
         // Same control, framed/selection-highlighted/reorder-line-colored
         // in the current accent instead of the fixed neutral gray
-        // CreateStandard keeps for all three.
+        // CreateStandard keeps - including this ListView's own built-in
+        // right-click context menu.
         public static ListView CreatePrimary()
         {
             return new Controls.ListView
