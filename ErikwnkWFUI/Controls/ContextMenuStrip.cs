@@ -123,14 +123,30 @@ namespace ErikwnkWFUI.Controls
             // ToolStripDropDownBackground (BackgroundMediumElevated): 1.95:1
             // vs 1.57:1 in Dark, 1.37:1 vs 1.24:1 in Light (Light theme's
             // BorderLight is, counter to its name, the darkest-valued of
-            // the three border roles - see UIThemes.Light). MenuItemBorder
-            // used to just return the item's own fill color, making the
-            // "border" literally invisible against what it outlines.
+            // the three border roles - see UIThemes.Light).
             public override Color MenuBorder => UIColors.BorderLight;
-            public override Color MenuItemBorder => UIColors.BorderLight;
 
             public override Color SeparatorDark => UIColors.BorderLight;
             public override Color SeparatorLight => UIColors.BorderLight;
+
+            // Derived from the CURRENT fill rather than a fixed role - a
+            // fixed UIColors.BorderLight border coincidentally equals
+            // CreateStandard's own default fill (SelectionBackColor also
+            // defaults to BorderLight), which made the border invisible
+            // again for exactly the most common case. Shifting away from
+            // the fill's own brightness (darker if the fill is light enough
+            // for dark text, lighter otherwise) keeps the two visually
+            // distinct no matter what SelectionBackColor is set to - gray,
+            // an accent color, or anything a consumer picks.
+            public override Color MenuItemBorder
+            {
+                get
+                {
+                    Color fill = _selectionBackColor();
+                    bool fillIsLight = UIColors.GetContrastingForeColor(fill) == UIColors.DarkForeColor;
+                    return fillIsLight ? UIColors.Darken(fill, 40) : UIColors.Lighten(fill, 40);
+                }
+            }
 
             public override Color MenuItemSelectedGradientBegin => _selectionBackColor();
             public override Color MenuItemSelectedGradientEnd => _selectionBackColor();

@@ -64,10 +64,22 @@ public class ContextMenuStripRenderingTests
 
     // MenuItemBorder used to just return the item's own fill color
     // (_selectionBackColor()) - a border drawn in the exact same color as
-    // the area it outlines is never visible, in any theme or accent. This
-    // locks in that the two are independent instead.
+    // the area it outlines is never visible, in any theme or accent. A
+    // later fix (a fixed UIColors.BorderLight) still coincided with
+    // CreateStandard's own default fill, since SelectionBackColor also
+    // defaults to BorderLight - so it's derived from the CURRENT fill now,
+    // shifted away from that fill's own brightness, which stays distinct
+    // regardless of what SelectionBackColor is set to.
     [Fact]
-    public void ColorTable_MenuItemBorder_IsIndependentOfSelectionBackColor()
+    public void ColorTable_MenuItemBorder_DiffersFromDefaultSelectionBackColor()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
+
+        Assert.NotEqual(menu.SelectionBackColor, GetRenderer(menu).ColorTable.MenuItemBorder);
+    }
+
+    [Fact]
+    public void ColorTable_MenuItemBorder_DiffersFromAnyExplicitSelectionBackColor()
     {
         using WfuiContextMenuStrip menu = new WfuiContextMenuStrip
         {
@@ -75,7 +87,36 @@ public class ContextMenuStripRenderingTests
         };
 
         Assert.NotEqual(menu.SelectionBackColor, GetRenderer(menu).ColorTable.MenuItemBorder);
-        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.MenuItemBorder);
+    }
+
+    // A light-enough fill (dark text would be readable on it) gets a
+    // darker border; a dark-enough fill gets a lighter one - either way,
+    // the border moves away from the fill's own brightness instead of
+    // toward it, which is what keeps the two visually distinct.
+    [Fact]
+    public void ColorTable_MenuItemBorder_DarkensALightFill()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip
+        {
+            SelectionBackColor = Color.FromArgb(230, 230, 230)
+        };
+
+        Color border = GetRenderer(menu).ColorTable.MenuItemBorder;
+
+        Assert.True(border.R < menu.SelectionBackColor.R);
+    }
+
+    [Fact]
+    public void ColorTable_MenuItemBorder_LightensADarkFill()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip
+        {
+            SelectionBackColor = Color.FromArgb(20, 20, 20)
+        };
+
+        Color border = GetRenderer(menu).ColorTable.MenuItemBorder;
+
+        Assert.True(border.R > menu.SelectionBackColor.R);
     }
 
     [Fact]
