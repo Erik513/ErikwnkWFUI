@@ -698,10 +698,12 @@ namespace ErikwnkWFUI.Controls
             var copySelection = new ToolStripMenuItem(copySelectionText);
             copySelection.DropDownItems.Add(copySelectionText, null, (sender, e) => CopySelection());
             copySelection.DropDownItems.Add(asTableText, null, (sender, e) => CopySelectionAsTable());
+            ApplySubmenuTheme(copySelection);
 
             var copyAll = new ToolStripMenuItem(copyAllText);
             copyAll.DropDownItems.Add(copyAllText, null, (sender, e) => { SelectAll(); CopySelection(); });
             copyAll.DropDownItems.Add(asTableText, null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
+            ApplySubmenuTheme(copyAll);
 
             menu.Items.Add(copySelection);
             menu.Items.Add(copyAll);
@@ -713,6 +715,19 @@ namespace ErikwnkWFUI.Controls
             };
 
             return menu;
+        }
+
+        // A submenu's popup (ToolStripMenuItem.DropDown) is its own separate
+        // ToolStripDropDownMenu instance the framework creates lazily - it
+        // does not inherit the parent ContextMenuStrip's Renderer, so it
+        // needs the same theming applied explicitly.
+        private static void ApplySubmenuTheme(ToolStripMenuItem item)
+        {
+            if (item.DropDown is ToolStripDropDownMenu dropDown)
+            {
+                dropDown.ShowImageMargin = false;
+                dropDown.Renderer = ErikwnkWFUI.Controls.ContextMenuStrip.CreateRenderer();
+            }
         }
 
         private void OnDrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
