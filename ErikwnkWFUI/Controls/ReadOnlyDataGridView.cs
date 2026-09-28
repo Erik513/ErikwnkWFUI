@@ -64,6 +64,7 @@ namespace ErikwnkWFUI.Controls
         private bool _isApplyingInternalDataChange;
         private readonly Dictionary<DataGridViewColumn, IComparer> _columnSortComparers =
             new Dictionary<DataGridViewColumn, IComparer>();
+        private DataGridViewColumn _enumerationColumn;
 
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
@@ -345,6 +346,161 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>
+        /// Whether an optional "#" row-number column is shown, pinned as
+        /// the LEFTMOST column regardless of what else is added afterward -
+        /// the mirror image of <see cref="DataGridView.ShowDeleteRowColumn"/>'s
+        /// own rightmost pinning. Off by default - a consumer opts in any
+        /// time after construction. Each row's number is always its
+        /// CURRENT position (1-based, top to bottom): sorting, inserting,
+        /// or deleting rows renumbers automatically. The column IS
+        /// sortable (unlike the delete column) - clicking it sorts by
+        /// whatever position each row held right before the click, so
+        /// ascending is a no-op (already in that order), descending
+        /// reverses the current row order, and a third click restores the
+        /// original bind order, same as any other column's cycle. Its
+        /// width is fixed (not user-resizable, matching the delete
+        /// column), but automatically wide enough for however many digits
+        /// the current row count needs - 150 rows gets a column sized for
+        /// "150", not padded for some arbitrary maximum.
+        /// </summary>
+        public bool ShowEnumeration
+        {
+            get => _enumerationColumn != null;
+            set
+            {
+                if (value == (_enumerationColumn != null))
+                {
+                    return;
+                }
+
+                if (value)
+                {
+                    DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn
+                    {
+                        Name = "__enumeration",
+                        HeaderText = UIStrings.Get("DataGridView.EnumerationHeader"),
+                        ReadOnly = true,
+                        Resizable = DataGridViewTriState.False,
+                        ValueType = typeof(int)
+                    };
+
+                    column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                    column.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.RowNumber");
+
+                    // Assigned before Add() - OnColumnAdded below checks
+                    // this field to recognize the column as it comes in,
+                    // same pattern as DataGridView's own delete column.
+                    _enumerationColumn = column;
+                    Columns.Add(column);
+
+                    // Pinned leftmost (see OnColumnAdded below) and never
+                    // user-resizable, same reasoning as the delete column -
+                    // Resizable above is a fixed native width hint, but
+                    // resizing itself is hand-rolled and tracked
+                    // separately (see AllowColumnResizing's own remarks),
+                    // so it's excluded here too.
+                    SetColumnReorderable(column.Index, false);
+                    SetColumnResizable(column.Index, false);
+
+                    RenumberEnumeration();
+                }
+                else
+                {
+                    Columns.Remove(_enumerationColumn);
+                    _enumerationColumn = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether <paramref name="columnIndex"/> is the optional
+        /// enumeration column (see <see cref="ShowEnumeration"/>) - exposed
+        /// so <see cref="DataGridView"/> can exclude it from copy/paste/the
+        /// right-click menu the same way it already excludes its own
+        /// delete-row column, without the backing field itself needing to
+        /// be any more visible than that.
+        /// </summary>
+        protected bool IsEnumerationColumn(int columnIndex)
+        {
+            return _enumerationColumn != null && columnIndex == _enumerationColumn.Index;
+        }
+
+        private const int EnumerationColumnPadding = 20;
+
+        // The displayed number for each row is always its CURRENT position -
+        // recomputed here from scratch rather than tracked incrementally,
+        // since every operation that could change row order or count (a
+        // fresh bind, a sort, DataGridView's own paste/insert/delete) already
+        // funnels through either this property's own setter (toggling the
+        // column on) or OnDataBindingComplete below exactly once. IsNewRow
+        // (the "type here to add a row" placeholder, only ever present on a
+        // DataGridView with AllowUserToAddRows enabled) is left blank, same
+        // as the delete column shows nothing there - nothing to number yet.
+        private void RenumberEnumeration()
+        {
+            if (_enumerationColumn == null)
+            {
+                return;
+            }
+
+            int columnIndex = _enumerationColumn.Index;
+
+            int realRowCount = 0;
+            foreach (DataGridViewRow row in Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    realRowCount++;
+                }
+            }
+
+            // Counts down from the row count instead of up from 1 while
+            // this column is itself the active DESCENDING sort column -
+            // otherwise a click that reverses the row order (confirmed live
+            // that it does - see CycleSort/ReorderDataSource) had no visible
+            // effect on the numbers themselves, since renumbering to match
+            // whatever the new top-to-bottom order is always produced the
+            // same 1..N sequence regardless of which direction the rows
+            // actually got reordered in. Every other case (ascending, no
+            // active sort, or a DIFFERENT column being sorted) still just
+            // counts up - this column's job there is "which visual row is
+            // this", unrelated to what's being sorted.
+            bool countDown = columnIndex == _sortedColumnIndex && _sortOrder == SortOrder.Descending;
+            int number = countDown ? realRowCount : 1;
+
+            foreach (DataGridViewRow row in Rows)
+            {
+                if (row.IsNewRow)
+                {
+                    row.Cells[columnIndex].Value = null;
+                    continue;
+                }
+
+                row.Cells[columnIndex].Value = number;
+                number += countDown ? -1 : 1;
+            }
+
+            _enumerationColumn.Width = GetEnumerationColumnWidth(Rows.Count);
+        }
+
+        // Rows.Count, not the real (possibly one-smaller, once the
+        // placeholder is excluded) count of numbered rows - the difference
+        // is at most one digit's worth of slack, and this avoids needing to
+        // special-case AllowUserToAddRows here just to shave that off.
+        private int GetEnumerationColumnWidth(int rowCount)
+        {
+            int digitCount = Math.Max(1, rowCount.ToString().Length);
+            string widest = new string('9', digitCount);
+
+            using (Font font = new Font(Font, FontStyle.Bold))
+            {
+                Size textSize = TextRenderer.MeasureText(widest, font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding);
+                return textSize.Width + EnumerationColumnPadding;
+            }
+        }
+
         public ReadOnlyDataGridView()
         {
             _alternateRowBackColor = UIColors.Darken(_rowBackColor, 5);
@@ -424,6 +580,53 @@ namespace ErikwnkWFUI.Controls
             ApplyStyles();
 
             MouseDown += HandleMouseDown;
+
+            UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        // Keeps the enumeration column's header/tooltip in whatever
+        // language the rest of the app just switched to - mirrors
+        // DataGridView's own OnUIStringsLanguageChanged for the delete
+        // column, moved down here since ShowEnumeration lives on this
+        // (base) class instead.
+        private void OnUIStringsLanguageChanged(object sender, EventArgs e)
+        {
+            if (_enumerationColumn == null)
+            {
+                return;
+            }
+
+            UpdateEnumerationHeaderText();
+            _enumerationColumn.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.RowNumber");
+        }
+
+        // "#" normally, but blank while this column is itself the active
+        // sort column - ColumnHeaderPainting.DrawSortGlyph already draws
+        // the ascending/descending arrow there regardless (the sort itself
+        // creates that on its own, independent of this), and showing "#"
+        // right next to a direction-flipping arrow read as if the "#"
+        // itself was changing. Reverts back to "#" on the third click
+        // (SortOrder.None, back to original bind order) same as any other
+        // column losing the glyph.
+        private void UpdateEnumerationHeaderText()
+        {
+            if (_enumerationColumn == null)
+            {
+                return;
+            }
+
+            bool isActiveSortColumn = _enumerationColumn.Index == _sortedColumnIndex && _sortOrder != SortOrder.None;
+            _enumerationColumn.HeaderText = isActiveSortColumn ? string.Empty : UIStrings.Get("DataGridView.EnumerationHeader");
         }
 
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
@@ -436,6 +639,15 @@ namespace ErikwnkWFUI.Controls
             // whatever just got bound in, not just whatever existed at
             // construction time.
             ApplyStyles();
+
+            // Every row-order/count-changing operation - a fresh bind, a
+            // sort (CycleSort/ReorderDataSource below), or one of
+            // DataGridView's own paste/insert/delete operations in a
+            // subclass - ends up here via ResetBindings(), so renumbering
+            // unconditionally (not just for a fresh bind, like the
+            // bookkeeping below the early-return guard) is what keeps this
+            // column's numbers live-correct after every one of them.
+            RenumberEnumeration();
 
             if (_isApplyingInternalDataChange)
             {
@@ -483,7 +695,23 @@ namespace ErikwnkWFUI.Controls
                 {
                     column.HeaderCell.SortGlyphDirection = SortOrder.None;
                 }
+
+                UpdateEnumerationHeaderText();
             }
+        }
+
+        // The "type here to add a row" placeholder committing to a real row
+        // (AllowUserToAddRows, only ever true on DataGridView) goes through
+        // WinForms' own IBindingList.AddNew()/commit flow directly, never
+        // through ApplyBatchedDataSourceChange/ResetBindings() - so
+        // OnDataBindingComplete's own renumber above never runs for it,
+        // and the enumeration column was left showing stale numbers (and
+        // no number at all for the newly-committed row) until some
+        // unrelated sort/insert/delete happened to trigger a renumber.
+        protected override void OnUserAddedRow(DataGridViewRowEventArgs e)
+        {
+            base.OnUserAddedRow(e);
+            RenumberEnumeration();
         }
 
         protected override void OnVisibleChanged(EventArgs e)
@@ -526,6 +754,23 @@ namespace ErikwnkWFUI.Controls
                 !(e.Column.CellTemplate is EditHintTextBoxCell))
             {
                 e.Column.CellTemplate = new EditHintTextBoxCell();
+            }
+
+            // Pinned leftmost regardless of SortingEnabled (unlike the
+            // SortMode logic below, which the early return right after this
+            // skips entirely when sorting is off) - a consumer disabling
+            // sorting for the whole grid doesn't mean the row-number column
+            // should stop being pinned in place. Re-applied on every add
+            // (not just when the enumeration column itself comes in), same
+            // defensive "always re-assert the pin" approach as
+            // DataGridView's own rightmost delete column.
+            if (e.Column == _enumerationColumn)
+            {
+                e.Column.DisplayIndex = 0;
+            }
+            else if (_enumerationColumn != null)
+            {
+                _enumerationColumn.DisplayIndex = 0;
             }
 
             if (!SortingEnabled)
@@ -1132,10 +1377,25 @@ namespace ErikwnkWFUI.Controls
                 // Still set for AT/screen-reader purposes (this is the
                 // property they'd actually look at), but not what the
                 // arrow on screen is drawn from - see OnCellPainting's own
-                // remarks on why.
-                Columns[columnIndex].HeaderCell.SortGlyphDirection = _sortOrder;
+                // remarks on why. Skipped for the enumeration column
+                // specifically - confirmed live that combining this native
+                // property with an EMPTY HeaderText (see
+                // UpdateEnumerationHeaderText) makes WinForms' own default
+                // header painting draw a second, native glyph on top of
+                // ColumnHeaderPainting.DrawSortGlyph's own, the two
+                // overlapping into a single "bowtie" blob instead of one
+                // clean triangle. Every other column keeps real header
+                // text, where this same combination never showed that
+                // extra glyph at all.
+                if (!IsEnumerationColumn(columnIndex))
+                {
+                    Columns[columnIndex].HeaderCell.SortGlyphDirection = _sortOrder;
+                }
+
                 ReorderDataSource(BuildSortedOrder(columnIndex, _sortOrder));
             }
+
+            UpdateEnumerationHeaderText();
 
             // Redundant with Invalidate() already happening as a side
             // effect of ClearSelection()/CurrentCell = null below (via
@@ -1148,8 +1408,37 @@ namespace ErikwnkWFUI.Controls
             // RowIndex against it.
             InvalidateCell(columnIndex, -1);
 
+            // Whole-header repaint, forced synchronous rather than left for
+            // the next WM_PAINT - the enumeration column's HeaderText just
+            // changed (see UpdateEnumerationHeaderText) and every header
+            // cell's own SortGlyphDirection/border can change too, so a
+            // single-cell InvalidateCell isn't always enough to guarantee
+            // the whole row is actually repainted before this method
+            // returns.
+            Invalidate();
+            Update();
+
             ClearSelection();
             CurrentCell = null;
+        }
+
+        // Visually neutral, matching DataGridView's own delete-row column -
+        // WinForms has no built-in "this column can't be selected" switch,
+        // so a click still technically moves CurrentCell there, but giving
+        // it the exact same SelectionBackColor/ForeColor as its own resting
+        // colors means it never actually LOOKS selected, reading as a
+        // passive label instead of a normal data cell.
+        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
+        {
+            base.OnCellFormatting(e);
+
+            if (_enumerationColumn == null || e.ColumnIndex != _enumerationColumn.Index || e.RowIndex < 0)
+            {
+                return;
+            }
+
+            e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+            e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
         }
 
         // ColumnHeaderPainting.DrawSortGlyph below draws its own triangle,

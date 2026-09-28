@@ -63,6 +63,21 @@ namespace ErikwnkWFUI.Controls
             return rowIndex >= 0 && rowIndex == NewRowIndex;
         }
 
+        // A column whose cells hold no real data of the bound item's own -
+        // the delete-row button, and (from ReadOnlyDataGridView) the
+        // optional enumeration number - excluded everywhere a copy/paste/
+        // right-click action would otherwise treat it like an ordinary
+        // data column. Replaces what used to be a separate
+        // "_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index"
+        // check repeated at each of these call sites on its own, which is
+        // exactly why the enumeration column was still copyable/pasteable/
+        // right-clickable despite being ReadOnly - ReadOnly alone only
+        // blocks editing, none of these.
+        private bool IsSystemColumn(int columnIndex)
+        {
+            return (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index) || IsEnumerationColumn(columnIndex);
+        }
+
         // Captured at mouse-down time (see OnCellMouseDown) via
         // IsPlaceholderRowIndex - still needed as a snapshot, not just a
         // live re-check, because NewRowIndex itself can move between the
@@ -383,7 +398,7 @@ namespace ErikwnkWFUI.Controls
 
             _contextMenuRowWasPlaceholder = IsPlaceholderRowIndex(e.RowIndex);
 
-            bool isDeleteColumnCell = _deleteRowColumn != null && e.ColumnIndex == _deleteRowColumn.Index;
+            bool isSystemColumnCell = IsSystemColumn(e.ColumnIndex);
 
             // Right-clicking a row that isn't already part of the
             // current selection replaces it with just that row -
@@ -397,10 +412,10 @@ namespace ErikwnkWFUI.Controls
             // (its own row-scoped actions are disabled below, but
             // Paste and "insert row above" both still make sense
             // there, and both read the current selection to know
-            // where to act) - only the delete column is skipped, same
-            // as the menu's own Opening handler below never showing a
-            // menu there at all.
-            if (e.RowIndex >= 0 && !isDeleteColumnCell && !IsRowSelected(e.RowIndex))
+            // where to act) - only the delete/enumeration columns are
+            // skipped, same as the menu's own Opening handler below
+            // never showing a menu there at all.
+            if (e.RowIndex >= 0 && !isSystemColumnCell && !IsRowSelected(e.RowIndex))
             {
                 SelectRow(e.RowIndex, e.ColumnIndex);
             }
@@ -634,8 +649,7 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if ((_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index) ||
-                    IsPlaceholderRowIndex(cell.RowIndex))
+                if (IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     excludedCells.Add(cell);
                 }
@@ -757,7 +771,7 @@ namespace ErikwnkWFUI.Controls
 
                 foreach (DataGridViewCell cell in SelectedCells)
                 {
-                    if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                    if (IsSystemColumn(cell.ColumnIndex))
                     {
                         continue;
                     }
@@ -805,7 +819,7 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                if (IsSystemColumn(cell.ColumnIndex))
                 {
                     continue;
                 }
@@ -1165,7 +1179,7 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewColumn column in Columns)
             {
-                if (column != _deleteRowColumn)
+                if (!IsSystemColumn(column.Index))
                 {
                     columns.Add(column);
                 }
@@ -1207,7 +1221,7 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (_deleteRowColumn != null && cell.ColumnIndex == _deleteRowColumn.Index)
+                if (IsSystemColumn(cell.ColumnIndex))
                 {
                     continue;
                 }
@@ -1346,9 +1360,9 @@ namespace ErikwnkWFUI.Controls
                 // tied to a specific real row (Cut/Copy/Clear/Delete
                 // selected rows) are unconditionally disabled below when
                 // the clicked row itself was the placeholder.
-                bool onDeleteColumn = _deleteRowColumn != null && _contextMenuColumnIndex == _deleteRowColumn.Index;
+                bool onSystemColumn = IsSystemColumn(_contextMenuColumnIndex);
 
-                if (_contextMenuRowIndex < 0 || onDeleteColumn)
+                if (_contextMenuRowIndex < 0 || onSystemColumn)
                 {
                     e.Cancel = true;
                     return;

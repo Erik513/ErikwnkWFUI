@@ -978,6 +978,9 @@ namespace ErikwnkWFUI.Showcase
             var gridWithDeleteColumn = (ErikwnkWFUI.Controls.DataGridView)createGrid(CreateSampleTracks());
             gridWithDeleteColumn.Dock = DockStyle.Fill;
             gridWithDeleteColumn.ShowDeleteRowColumn = true;
+            // Leftmost "#" alongside the rightmost delete column - shows
+            // the two pinned columns coexist without fighting each other.
+            gridWithDeleteColumn.ShowEnumeration = true;
             NarrowLengthColumn(gridWithDeleteColumn);
 
             table.AddRow(
