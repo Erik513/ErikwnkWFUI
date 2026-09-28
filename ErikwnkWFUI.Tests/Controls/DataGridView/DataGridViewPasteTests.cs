@@ -273,4 +273,59 @@ public class DataGridViewPasteTests
             Assert.Equal("A", items[0].Name);
         });
     }
+
+    // Trim's only call site (below): a paste taller than the selection,
+    // where the bound list can't grow (AllowNew == false) - the overflow
+    // rows have nowhere to go, so they're trimmed off instead of inserted.
+    [Fact]
+    public void Trim_MaxLengthLessThanArrayLength_TruncatesToMaxLength()
+    {
+        using WfuiDataGridView grid = new WfuiDataGridView();
+
+        string[] result = grid.InvokePrivate<string[]>("Trim", new object[] { new[] { "a", "b", "c" }, 2 })!;
+
+        Assert.Equal(new[] { "a", "b" }, result);
+    }
+
+    [Fact]
+    public void Trim_MaxLengthGreaterOrEqualToArrayLength_ReturnsTheSameArray()
+    {
+        string[] input = { "a", "b" };
+        using WfuiDataGridView grid = new WfuiDataGridView();
+
+        string[] result = grid.InvokePrivate<string[]>("Trim", new object[] { input, 5 })!;
+
+        Assert.Same(input, result);
+    }
+
+    [Fact]
+    public void Trim_MaxLengthZeroOrNegative_ReturnsAnEmptyArray()
+    {
+        using WfuiDataGridView grid = new WfuiDataGridView();
+
+        Assert.Empty(grid.InvokePrivate<string[]>("Trim", new object[] { new[] { "a", "b" }, 0 })!);
+        Assert.Empty(grid.InvokePrivate<string[]>("Trim", new object[] { new[] { "a", "b" }, -1 })!);
+    }
+
+    [Fact]
+    public void Paste_TallerThanSelection_ListCannotGrow_TrimsInsteadOfInserting()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+            items.AllowNew = false;
+            using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+
+            GridTestHelpers.SelectCells(grid, (0, 0));
+            Clipboard.SetText("X\t10\nY\t20\nZ\t30");
+
+            grid.InvokePrivate("PasteFromClipboard");
+
+            Assert.Equal(2, items.Count); // never grew past the existing rows
+            Assert.Equal("X", items[0].Name);
+            Assert.Equal(10, items[0].Value);
+            Assert.Equal("Y", items[1].Name);
+            Assert.Equal(20, items[1].Value);
+        });
+    }
 }

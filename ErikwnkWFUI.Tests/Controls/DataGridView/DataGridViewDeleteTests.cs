@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
+using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 
 namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
@@ -132,6 +134,102 @@ public class DataGridViewDeleteTests
         using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
 
         grid.InvokePrivate("DeleteItem", (object?)null);
+
+        Assert.Single(items);
+    }
+
+    // DeleteSelectedRows - the "Delete selected rows" context-menu entry
+    // and the Delete key (see ProcessDataGridViewKey) both funnel through
+    // this: aggregates every selected cell's row index into a set, then
+    // hands that to DeleteRows (already covered on its own above).
+    [Fact]
+    public void DeleteSelectedRows_AggregatesRowIndexesFromEverySelectedCell()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2), ("C", 3));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        GridTestHelpers.SelectCells(grid, (0, 0), (0, 1), (2, 0)); // rows 0 and 2, row 1 untouched
+
+        grid.InvokePrivate("DeleteSelectedRows");
+
+        Assert.Single(items);
+        Assert.Equal("B", items[0].Name);
+    }
+
+    [Fact]
+    public void DeleteSelectedRows_NothingSelected_DoesNothing()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ClearSelection();
+
+        grid.InvokePrivate("DeleteSelectedRows");
+
+        Assert.Single(items);
+    }
+
+    // OnCellClick's own delete-glyph path - the actual entry point a real
+    // click on the pinned delete column goes through in production,
+    // distinct from calling DeleteItem directly above. The delete itself is
+    // deferred via BeginInvoke (see OnCellClick's own remarks on why) -
+    // Application.DoEvents() pumps this thread's message queue once, the
+    // same way OnRowLeave's own deferred cancellation is tested elsewhere.
+    [Fact]
+    public void OnCellClick_DeleteColumnOnARealRow_DeletesItAfterThePump()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        int deleteColumnIndex = grid.Columns["__deleteRow"]!.Index;
+
+        grid.InvokePrivate("OnCellClick", new DataGridViewCellEventArgs(deleteColumnIndex, 0));
+        Application.DoEvents();
+
+        Assert.Single(items);
+        Assert.Equal("B", items[0].Name);
+    }
+
+    [Fact]
+    public void OnCellClick_DeleteColumn_AllowUserToDeleteRowsFalse_DoesNotDelete()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        grid.AllowUserToDeleteRows = false;
+        int deleteColumnIndex = grid.Columns["__deleteRow"]!.Index;
+
+        grid.InvokePrivate("OnCellClick", new DataGridViewCellEventArgs(deleteColumnIndex, 0));
+        Application.DoEvents();
+
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public void OnCellClick_OnAnOrdinaryColumn_DoesNotDelete()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        int nameColumnIndex = grid.Columns["Name"]!.Index;
+
+        grid.InvokePrivate("OnCellClick", new DataGridViewCellEventArgs(nameColumnIndex, 0));
+        Application.DoEvents();
+
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public void OnCellClick_DeleteColumnOnThePlaceholderRow_DoesNothing()
+    {
+        // Nothing is bound to the placeholder yet, so the captured item is
+        // null - matches DeleteItem_NullItem_DoesNothing's own guard.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        int deleteColumnIndex = grid.Columns["__deleteRow"]!.Index;
+        int placeholderIndex = grid.Rows.Count - 1;
+
+        grid.InvokePrivate("OnCellClick", new DataGridViewCellEventArgs(deleteColumnIndex, placeholderIndex));
+        Application.DoEvents();
 
         Assert.Single(items);
     }
