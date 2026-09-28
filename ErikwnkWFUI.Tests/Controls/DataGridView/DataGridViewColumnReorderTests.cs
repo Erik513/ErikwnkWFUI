@@ -12,10 +12,14 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// ReadOnlyDataGridView.AllowColumnReordering) via a MouseDown/MouseMove
 /// threshold check that starts a real DoDragDrop once exceeded - that part
 /// needs an actual OLE drag and isn't practical to drive headlessly. These
-/// tests instead cover the pieces that don't need a live drag: the target-
-/// index math (MoveColumnToDisplayIndex, invoked directly via reflection,
-/// same as PasteFromClipboard/DeleteRows elsewhere in this project) and the
-/// public reorderable-column API it's gated behind.
+/// tests instead cover the pieces that don't need a live drag.
+///
+/// MoveColumnToDisplayIndex delegates to the shared ColumnLayoutMath, and
+/// Is/Set/AllowColumnReorderable to the shared ColumnFeatureSwitch (see
+/// ColumnLayoutMathTests/ColumnFeatureSwitchTests, in the parent Controls
+/// test folder) - the full scenario matrix for both is covered there once
+/// instead of per control; this file keeps just one test each confirming
+/// this control's own methods actually delegate to them.
 /// </summary>
 public class DataGridViewColumnReorderTests
 {
@@ -37,42 +41,6 @@ public class DataGridViewColumnReorderTests
     }
 
     [Fact]
-    public void MoveColumnToDisplayIndex_MovesColumnToTheFront()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        grid.InvokePrivate("MoveColumnToDisplayIndex", 1, 0);
-
-        Assert.Equal(1, grid.Columns["Name"]!.DisplayIndex);
-        Assert.Equal(0, grid.Columns["Value"]!.DisplayIndex);
-    }
-
-    [Fact]
-    public void MoveColumnToDisplayIndex_SameTargetAsCurrent_IsANoOp()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        // "Name" is already at display index 0 - inserting it "before
-        // display index 0" is the same position it's already at.
-        grid.InvokePrivate("MoveColumnToDisplayIndex", 0, 0);
-
-        Assert.Equal(0, grid.Columns["Name"]!.DisplayIndex);
-        Assert.Equal(1, grid.Columns["Value"]!.DisplayIndex);
-    }
-
-    [Fact]
-    public void IsColumnReorderable_DefaultsToTrueForEveryColumn()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        Assert.True(grid.IsColumnReorderable(0));
-        Assert.True(grid.IsColumnReorderable(1));
-    }
-
-    [Fact]
     public void SetColumnReorderable_False_MakesOnlyThatColumnNotReorderable()
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
@@ -86,18 +54,6 @@ public class DataGridViewColumnReorderTests
         // Reversible, same as ListView's own SetColumnReorderable.
         grid.SetColumnReorderable(0, true);
         Assert.True(grid.IsColumnReorderable(0));
-    }
-
-    [Fact]
-    public void AllowColumnReordering_False_OverridesEveryColumnRegardlessOfPerColumnSetting()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        grid.AllowColumnReordering = false;
-
-        Assert.False(grid.IsColumnReorderable(0));
-        Assert.False(grid.IsColumnReorderable(1));
     }
 
     [Fact]

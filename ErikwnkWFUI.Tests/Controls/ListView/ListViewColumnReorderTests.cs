@@ -6,9 +6,14 @@ namespace ErikwnkWFUI.Tests.Controls.ListView;
 /// <summary>
 /// Column reordering is a real DoDragDrop started from a mouse threshold
 /// on the header's native hwnd (see HeaderInputSubclass) - not practical
-/// to drive headlessly, same as DataGridView's equivalent. These tests
-/// instead cover the target-index math (MoveColumnToDisplayIndex, invoked
-/// via reflection) and the public reorderable-column API it's gated behind.
+/// to drive headlessly, same as DataGridView's equivalent.
+///
+/// MoveColumnToDisplayIndex delegates to the shared ColumnLayoutMath, and
+/// Is/Set/AllowColumnReorderable to the shared ColumnFeatureSwitch (see
+/// ColumnLayoutMathTests/ColumnFeatureSwitchTests, in the parent Controls
+/// test folder) - the full scenario matrix for both is covered there once
+/// instead of per control; this file keeps just the two tests below
+/// confirming this control's own methods actually delegate to them.
 /// </summary>
 public class ListViewColumnReorderTests
 {
@@ -29,37 +34,6 @@ public class ListViewColumnReorderTests
     }
 
     [Fact]
-    public void MoveColumnToDisplayIndex_MovesColumnToTheFront()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        listView.InvokePrivate("MoveColumnToDisplayIndex", 1, 0);
-
-        Assert.Equal(1, listView.Columns[0].DisplayIndex);
-        Assert.Equal(0, listView.Columns[1].DisplayIndex);
-    }
-
-    [Fact]
-    public void MoveColumnToDisplayIndex_SameTargetAsCurrent_IsANoOp()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        listView.InvokePrivate("MoveColumnToDisplayIndex", 0, 0);
-
-        Assert.Equal(0, listView.Columns[0].DisplayIndex);
-        Assert.Equal(1, listView.Columns[1].DisplayIndex);
-    }
-
-    [Fact]
-    public void IsColumnReorderable_DefaultsToTrueForEveryColumn()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        Assert.True(listView.IsColumnReorderable(0));
-        Assert.True(listView.IsColumnReorderable(1));
-    }
-
-    [Fact]
     public void SetColumnReorderable_False_MakesOnlyThatColumnNotReorderable()
     {
         using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
@@ -71,16 +45,5 @@ public class ListViewColumnReorderTests
 
         listView.SetColumnReorderable(0, true);
         Assert.True(listView.IsColumnReorderable(0));
-    }
-
-    [Fact]
-    public void AllowColumnReordering_False_OverridesEveryColumnRegardlessOfPerColumnSetting()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        listView.AllowColumnReordering = false;
-
-        Assert.False(listView.IsColumnReorderable(0));
-        Assert.False(listView.IsColumnReorderable(1));
     }
 }

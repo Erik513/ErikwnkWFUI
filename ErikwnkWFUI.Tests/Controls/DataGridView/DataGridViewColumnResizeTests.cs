@@ -16,31 +16,17 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// drive headlessly, same as the reorder drag in
 /// DataGridViewColumnReorderTests - these tests instead cover the
 /// resizable-column API the drag is gated behind.
+///
+/// Is/Set/AllowColumnResizable are thin wrappers over the shared
+/// ColumnFeatureSwitch, and TryGetColumnAtBorder over the shared
+/// ColumnLayoutMath (see ColumnFeatureSwitchTests/ColumnLayoutMathTests, in
+/// the parent Controls test folder) - the full scenario matrix for both is
+/// covered there once instead of per control; this file keeps just one
+/// test each confirming this control's own methods actually delegate to
+/// them.
 /// </summary>
 public class DataGridViewColumnResizeTests
 {
-    [Fact]
-    public void IsColumnResizable_DefaultsToTrueForEveryColumn()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        Assert.True(grid.IsColumnResizable(0));
-        Assert.True(grid.IsColumnResizable(1));
-    }
-
-    [Fact]
-    public void AllowColumnResizing_False_MakesEveryColumnNotResizable()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-
-        grid.AllowColumnResizing = false;
-
-        Assert.False(grid.IsColumnResizable(0));
-        Assert.False(grid.IsColumnResizable(1));
-    }
-
     [Fact]
     public void SetColumnResizable_False_MakesOnlyThatColumnNotResizable()
     {
@@ -132,8 +118,7 @@ public class DataGridViewColumnResizeTests
     // handlers that call it (OnMouseDown/OnMouseMove, both read the live
     // Cursor.Position - see the class remarks on why those aren't tested
     // here) - so the actual border-detection math IS practical to drive
-    // headlessly, via reflection, the same way GetColumnDropInsertionIndex
-    // already is in DataGridViewColumnReorderTests/ReadOnlyDataGridViewEnumerationTests.
+    // headlessly, via reflection.
     [Fact]
     public void TryGetColumnAtBorder_WithinGripToleranceOfAColumnsRightEdge_ReturnsThatColumn()
     {
@@ -146,35 +131,6 @@ public class DataGridViewColumnResizeTests
 
         Assert.True(found);
         Assert.Same(grid.Columns["Name"], args[1]);
-    }
-
-    [Fact]
-    public void TryGetColumnAtBorder_WellInsideAColumn_ReturnsFalse()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.Columns["Name"]!.Width = 100;
-
-        object?[] args = { 50, null };
-        bool found = grid.InvokePrivate<bool>("TryGetColumnAtBorder", args);
-
-        Assert.False(found);
-        Assert.Null(args[1]);
-    }
-
-    [Fact]
-    public void TryGetColumnAtBorder_AtTheSecondColumnsRightEdge_ReturnsTheSecondColumn()
-    {
-        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
-        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.Columns["Name"]!.Width = 100;
-        grid.Columns["Value"]!.Width = 60;
-
-        object?[] args = { 160, null };
-        bool found = grid.InvokePrivate<bool>("TryGetColumnAtBorder", args);
-
-        Assert.True(found);
-        Assert.Same(grid.Columns["Value"], args[1]);
     }
 
     [Fact]

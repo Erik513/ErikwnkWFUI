@@ -10,29 +10,15 @@ namespace ErikwnkWFUI.Tests.Controls.ListView;
 /// practical to drive headlessly. Any width change still goes through
 /// OnColumnWidthChanging's validation/clamping, so that's what these tests
 /// cover, invoking it directly via reflection.
+///
+/// Is/Set/AllowColumnResizable are thin wrappers over the shared
+/// ColumnFeatureSwitch (see ColumnFeatureSwitchTests, in the parent Controls
+/// test folder) - the default/master-switch/re-enable matrix is covered
+/// there once instead of per control; this file keeps just the one test
+/// below confirming this control's own property actually delegates to it.
 /// </summary>
 public class ListViewColumnResizeTests
 {
-    [Fact]
-    public void IsColumnResizable_DefaultsToTrueForEveryColumn()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        Assert.True(listView.IsColumnResizable(0));
-        Assert.True(listView.IsColumnResizable(1));
-    }
-
-    [Fact]
-    public void AllowColumnResizing_False_MakesEveryColumnNotResizable()
-    {
-        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Item", 100), ("Status", 100));
-
-        listView.AllowColumnResizing = false;
-
-        Assert.False(listView.IsColumnResizable(0));
-        Assert.False(listView.IsColumnResizable(1));
-    }
-
     [Fact]
     public void SetColumnResizable_False_MakesOnlyThatColumnNotResizable()
     {
