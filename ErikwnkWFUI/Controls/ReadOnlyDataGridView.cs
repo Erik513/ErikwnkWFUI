@@ -371,14 +371,40 @@ namespace ErikwnkWFUI.Controls
         // the two (or both) actually applies.
         public override DataObject GetClipboardContent()
         {
+            return ExcludingSelectedCells(cell => IsEnumerationColumn(cell.ColumnIndex), () =>
+            {
+                DataObject content = base.GetClipboardContent();
+                ShowCopyConfirmation(SelectedCells.Count);
+                return content;
+            });
+        }
+
+        // Shared by both this override and DataGridView's own (delete
+        // column + placeholder row) - only the exclusion predicate and the
+        // action actually differ between them. `action` (not a hardcoded
+        // call to base.GetClipboardContent() in here) is what lets
+        // DataGridView's own override compose correctly: its own lambda's
+        // "base.GetClipboardContent()" call resolves against DataGridView's
+        // own base (this class), reaching the override just above - calling
+        // that from inside a helper method living HERE would instead reach
+        // straight past it to the native implementation, skipping the
+        // enumeration-column exclusion entirely whenever both this and
+        // ShowEnumeration are in play together.
+        protected T ExcludingSelectedCells<T>(Predicate<DataGridViewCell> exclude, Func<T> action)
+        {
             List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (IsEnumerationColumn(cell.ColumnIndex))
+                if (exclude(cell))
                 {
                     excludedCells.Add(cell);
                 }
+            }
+
+            if (excludedCells.Count == 0)
+            {
+                return action();
             }
 
             foreach (DataGridViewCell cell in excludedCells)
@@ -388,9 +414,7 @@ namespace ErikwnkWFUI.Controls
 
             try
             {
-                DataObject content = base.GetClipboardContent();
-                ShowCopyConfirmation(SelectedCells.Count);
-                return content;
+                return action();
             }
             finally
             {

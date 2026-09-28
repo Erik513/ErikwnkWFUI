@@ -668,37 +668,9 @@ namespace ErikwnkWFUI.Controls
         // without this override.
         public override DataObject GetClipboardContent()
         {
-            List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
-
-            foreach (DataGridViewCell cell in SelectedCells)
-            {
-                if (IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex))
-                {
-                    excludedCells.Add(cell);
-                }
-            }
-
-            if (excludedCells.Count == 0)
-            {
-                return base.GetClipboardContent();
-            }
-
-            foreach (DataGridViewCell cell in excludedCells)
-            {
-                cell.Selected = false;
-            }
-
-            try
-            {
-                return base.GetClipboardContent();
-            }
-            finally
-            {
-                foreach (DataGridViewCell cell in excludedCells)
-                {
-                    cell.Selected = true;
-                }
-            }
+            return ExcludingSelectedCells(
+                cell => IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex),
+                () => base.GetClipboardContent());
         }
 
         // Cut = copy (via the same clipboard content the base class's own
@@ -809,131 +781,13 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Copying exactly one cell, then pasting into a selection of
-            // more than one, fills every selected cell with that same
-            // value (standard spreadsheet "fill" behavior) instead of
-            // anchoring at the top-left and only ever writing the one
-            // value there. Copying more than one cell never fills/tiles a
-            // larger selection this way, regardless of its size - it's
-            // always just anchored at the top-left and extends from there
-            // (same as always), matching Excel's own paste behavior.
-            if (pastedRows.Length == 1 && pastedRows[0].Split('\t').Length == 1)
+            if (TryFillSingleValueIntoSelection(list, pastedRows))
             {
-                // Captured as plain (row, column) index pairs, not the
-                // DataGridViewCell references themselves - FillCellsWithValue
-                // cancels a pending placeholder add before writing, and a
-                // DataGridViewCell held onto across that mutation turned out
-                // to no longer resolve to the row it was read from.
-                List<(int RowIndex, int ColumnIndex)> fillTargetCells = new List<(int, int)>();
-                bool fillTouchedPlaceholder = false;
-
-                foreach (DataGridViewCell cell in SelectedCells)
-                {
-                    if (IsSystemColumn(cell.ColumnIndex))
-                    {
-                        continue;
-                    }
-
-                    if (IsPlaceholderRowIndex(cell.RowIndex))
-                    {
-                        fillTouchedPlaceholder = true;
-                        continue;
-                    }
-
-                    fillTargetCells.Add((cell.RowIndex, cell.ColumnIndex));
-                }
-
-                if (fillTargetCells.Count > 1)
-                {
-                    FillCellsWithValue(list, fillTargetCells, pastedRows[0], fillTouchedPlaceholder);
-                    return;
-                }
+                return;
             }
 
-            // Anchored at the top-left of the current SELECTION, not just
-            // CurrentCell - CurrentCell is whichever cell was clicked or
-            // navigated to LAST within a multi-cell selection (e.g. the
-            // far corner of a drag-select or a Shift+Right extension), not
-            // necessarily where the selection starts, so using it alone
-            // put paste in the wrong column/row whenever more than one
-            // cell was selected. The delete column is never a valid anchor
-            // (nothing to paste into it), same as it's never a paste
-            // target below.
-            int minRowIndex = int.MaxValue;
-            DataGridViewColumn minColumn = null;
-            HashSet<int> selectedRealRowIndexes = new HashSet<int>();
-
-            // Set when the placeholder was part of what got interacted
-            // with (selected, or left as CurrentCell) - merely that, with
-            // nothing typed, already made WinForms call
-            // IBindingList.AddNew() on the bound list on its own (see
-            // InsertBlankRow's own comment on this). The placeholder
-            // itself is still correctly excluded everywhere below either
-            // way; this only tracks whether that now-pending, still-empty
-            // item needs cancelling so it doesn't linger as a permanent
-            // stray row once this method is done (see where it's used,
-            // further down).
-            bool placeholderWasTouched = false;
-
-            foreach (DataGridViewCell cell in SelectedCells)
-            {
-                if (IsSystemColumn(cell.ColumnIndex))
-                {
-                    continue;
-                }
-
-                // The COLUMN anchor is tracked regardless of whether this
-                // cell's row is the placeholder - selecting column 2 of
-                // the placeholder and pasting must still start at column
-                // 2 for whatever real row the paste ends up writing/
-                // inserting, not silently fall back to column 0 just
-                // because that particular cell's row got excluded below.
-                DataGridViewColumn column = Columns[cell.ColumnIndex];
-
-                if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
-                {
-                    minColumn = column;
-                }
-
-                // The placeholder is never a paste target itself, same as
-                // the delete column - a selection that includes it (e.g. a
-                // drag-select or Ctrl+A reaching down that far) must only
-                // ever affect the real rows above it.
-                if (IsPlaceholderRowIndex(cell.RowIndex))
-                {
-                    placeholderWasTouched = true;
-                    continue;
-                }
-
-                if (cell.RowIndex < minRowIndex)
-                {
-                    minRowIndex = cell.RowIndex;
-                }
-
-                selectedRealRowIndexes.Add(cell.RowIndex);
-            }
-
-            if (minColumn == null && CurrentCell != null)
-            {
-                minColumn = CurrentCell.OwningColumn;
-
-                if (IsPlaceholderRowIndex(CurrentCell.RowIndex))
-                {
-                    placeholderWasTouched = true;
-                }
-                else
-                {
-                    minRowIndex = CurrentCell.RowIndex;
-                    selectedRealRowIndexes.Add(CurrentCell.RowIndex);
-                }
-            }
-
-            int startColumnIndex = minColumn != null ? targetColumns.IndexOf(minColumn) : -1;
-
-            if (startColumnIndex < 0)
-            {
-                startColumnIndex = 0;
-            }
+            (int startColumnIndex, int minRowIndex, HashSet<int> selectedRealRowIndexes, bool placeholderWasTouched) =
+                ResolvePasteAnchor(targetColumns);
 
             // E.g. pasting 10 rows onto a 4-row selection in the middle of
             // a 20-row list must not clobber rows 5-10 of someone's
@@ -1022,103 +876,221 @@ namespace ErikwnkWFUI.Controls
 
                 if (overflowRowCount > 0)
                 {
-                    // See InsertItemsAt for why this rebuilds via Clear() +
-                    // re-Add() rather than list.Insert() at a hand-picked
-                    // index, and why originalItems has to be snapshotted
-                    // before AddNew() below, not derived from list after.
-                    List<object> originalItems = new List<object>(list.Count);
-
-                    foreach (object item in list)
-                    {
-                        originalItems.Add(item);
-                    }
-
-                    List<object> newItems = new List<object>(overflowRowCount);
-
-                    for (int i = 0; i < overflowRowCount; i++)
-                    {
-                        newItems.Add(bindingList.AddNew());
-                    }
-
-                    InsertItemsAt(list, originalItems, insertAtIndex, newItems);
+                    InsertOverflowRows(list, bindingList, insertAtIndex, overflowRowCount);
                 }
 
-                // Looked up once per (item type, property name) rather
-                // than once per pasted cell - GetProperty for the same
-                // column resolves to the same PropertyInfo on every row
-                // for the common case of a homogeneous bound list, so
-                // repeating that lookup per row was pure waste on a paste
-                // of any real size. Keyed by the item's own runtime type
-                // (not just the property name) so a list that genuinely
-                // mixes item types - unusual, but IList doesn't rule it
-                // out - still resolves correctly per item.
-                Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache =
-                    new Dictionary<(Type, string), PropertyInfo>();
-
-                for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
-                {
-                    // Write into the actually-selected rows first, in
-                    // ascending order (not sequentially from
-                    // startDataRowIndex), then into the newly-inserted
-                    // overflow rows once the selection is exhausted.
-                    int dataRowIndex = rowOffset < sortedSelectedRowIndexes.Count
-                        ? sortedSelectedRowIndexes[rowOffset]
-                        : insertAtIndex + (rowOffset - sortedSelectedRowIndexes.Count);
-
-                    if (dataRowIndex >= list.Count)
-                    {
-                        break;
-                    }
-
-                    object targetItem = list[dataRowIndex];
-                    Type targetItemType = targetItem.GetType();
-                    string[] cellValues = pastedRows[rowOffset].Split('\t');
-
-                    for (int columnOffset = 0;
-                        columnOffset < cellValues.Length && startColumnIndex + columnOffset < targetColumns.Count;
-                        columnOffset++)
-                    {
-                        DataGridViewColumn column = targetColumns[startColumnIndex + columnOffset];
-
-                        if (column.ReadOnly || string.IsNullOrEmpty(column.DataPropertyName))
-                        {
-                            continue;
-                        }
-
-                        (Type, string) propertyCacheKey = (targetItemType, column.DataPropertyName);
-
-                        if (!propertyCache.TryGetValue(propertyCacheKey, out PropertyInfo property))
-                        {
-                            property = targetItemType.GetProperty(column.DataPropertyName);
-                            propertyCache[propertyCacheKey] = property;
-                        }
-
-                        if (property == null)
-                        {
-                            continue;
-                        }
-
-                        // Pasted text is always a raw string - property is
-                        // whatever type the bound item's own property
-                        // actually is (int, decimal, bool, an enum, ...).
-                        // SetValue throws instead of converting on its own,
-                        // so pasting into any non-string column threw
-                        // before this. A cell that fails to convert (e.g.
-                        // pasting "abc" into a number column) is skipped
-                        // rather than aborting the whole paste, the same
-                        // "best effort" spirit as the rest of this method.
-                        if (TryConvertPastedValue(cellValues[columnOffset], property.PropertyType, out object convertedValue))
-                        {
-                            property.SetValue(targetItem, convertedValue);
-                        }
-                    }
-                }
+                WritePastedValues(list, pastedRows, sortedSelectedRowIndexes, insertAtIndex, targetColumns, startColumnIndex);
             });
 
             string message = pastedRows.Length == 1
                 ? UIStrings.Get("DataGridView.RowPasted")
                 : string.Format(UIStrings.Get("DataGridView.RowsPasted"), pastedRows.Length);
             ShowActionConfirmation(message);
+        }
+
+        // Copying exactly one cell, then pasting into a selection of more
+        // than one, fills every selected cell with that same value
+        // (standard spreadsheet "fill" behavior) instead of anchoring at
+        // the top-left and only ever writing the one value there. Copying
+        // more than one cell never fills/tiles a larger selection this
+        // way, regardless of its size - it's always just anchored at the
+        // top-left and extends from there (same as always), matching
+        // Excel's own paste behavior. Returns true when it actually
+        // handled the paste this way, so PasteFromClipboard knows to skip
+        // its own normal anchor-based paste entirely.
+        private bool TryFillSingleValueIntoSelection(IList list, string[] pastedRows)
+        {
+            if (pastedRows.Length != 1 || pastedRows[0].Split('\t').Length != 1)
+            {
+                return false;
+            }
+
+            // Captured as plain (row, column) index pairs, not the
+            // DataGridViewCell references themselves - FillCellsWithValue
+            // cancels a pending placeholder add before writing, and a
+            // DataGridViewCell held onto across that mutation turned out
+            // to no longer resolve to the row it was read from.
+            List<(int RowIndex, int ColumnIndex)> fillTargetCells = new List<(int, int)>();
+            bool fillTouchedPlaceholder = false;
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (IsSystemColumn(cell.ColumnIndex))
+                {
+                    continue;
+                }
+
+                if (IsPlaceholderRowIndex(cell.RowIndex))
+                {
+                    fillTouchedPlaceholder = true;
+                    continue;
+                }
+
+                fillTargetCells.Add((cell.RowIndex, cell.ColumnIndex));
+            }
+
+            if (fillTargetCells.Count <= 1)
+            {
+                return false;
+            }
+
+            FillCellsWithValue(list, fillTargetCells, pastedRows[0], fillTouchedPlaceholder);
+            return true;
+        }
+
+        // Where a paste anchors: the top-left of the current SELECTION,
+        // not just CurrentCell - CurrentCell is whichever cell was clicked
+        // or navigated to LAST within a multi-cell selection (e.g. the far
+        // corner of a drag-select or a Shift+Right extension), not
+        // necessarily where the selection starts, so using it alone put
+        // paste in the wrong column/row whenever more than one cell was
+        // selected. The delete column is never a valid anchor (nothing to
+        // paste into it), same as it's never a paste target at all (see
+        // GetPasteTargetColumns). PlaceholderWasTouched is set when the
+        // placeholder was part of what got interacted with (selected, or
+        // left as CurrentCell) - merely that, with nothing typed, already
+        // made WinForms call IBindingList.AddNew() on the bound list on
+        // its own (see InsertBlankRow's own comment on this); the
+        // placeholder itself is still correctly excluded from
+        // SelectedRealRowIndexes either way, this only tracks whether that
+        // now-pending, still-empty item needs cancelling so it doesn't
+        // linger as a permanent stray row once the paste is done.
+        private (int StartColumnIndex, int MinRowIndex, HashSet<int> SelectedRealRowIndexes, bool PlaceholderWasTouched)
+            ResolvePasteAnchor(List<DataGridViewColumn> targetColumns)
+        {
+            int minRowIndex = int.MaxValue;
+            DataGridViewColumn minColumn = null;
+            HashSet<int> selectedRealRowIndexes = new HashSet<int>();
+            bool placeholderWasTouched = false;
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (IsSystemColumn(cell.ColumnIndex))
+                {
+                    continue;
+                }
+
+                // The COLUMN anchor is tracked regardless of whether this
+                // cell's row is the placeholder - selecting column 2 of
+                // the placeholder and pasting must still start at column
+                // 2 for whatever real row the paste ends up writing/
+                // inserting, not silently fall back to column 0 just
+                // because that particular cell's row got excluded below.
+                DataGridViewColumn column = Columns[cell.ColumnIndex];
+
+                if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
+                {
+                    minColumn = column;
+                }
+
+                // The placeholder is never a paste target itself, same as
+                // the delete column - a selection that includes it (e.g. a
+                // drag-select or Ctrl+A reaching down that far) must only
+                // ever affect the real rows above it.
+                if (IsPlaceholderRowIndex(cell.RowIndex))
+                {
+                    placeholderWasTouched = true;
+                    continue;
+                }
+
+                if (cell.RowIndex < minRowIndex)
+                {
+                    minRowIndex = cell.RowIndex;
+                }
+
+                selectedRealRowIndexes.Add(cell.RowIndex);
+            }
+
+            if (minColumn == null && CurrentCell != null)
+            {
+                minColumn = CurrentCell.OwningColumn;
+
+                if (IsPlaceholderRowIndex(CurrentCell.RowIndex))
+                {
+                    placeholderWasTouched = true;
+                }
+                else
+                {
+                    minRowIndex = CurrentCell.RowIndex;
+                    selectedRealRowIndexes.Add(CurrentCell.RowIndex);
+                }
+            }
+
+            int startColumnIndex = minColumn != null ? targetColumns.IndexOf(minColumn) : -1;
+
+            if (startColumnIndex < 0)
+            {
+                startColumnIndex = 0;
+            }
+
+            return (startColumnIndex, minRowIndex, selectedRealRowIndexes, placeholderWasTouched);
+        }
+
+        // See InsertItemsAt for why this rebuilds via Clear() + re-Add()
+        // rather than list.Insert() at a hand-picked index, and why
+        // originalItems has to be snapshotted before AddNew() below, not
+        // derived from list after.
+        private void InsertOverflowRows(IList list, IBindingList bindingList, int insertAtIndex, int overflowRowCount)
+        {
+            List<object> originalItems = new List<object>(list.Count);
+
+            foreach (object item in list)
+            {
+                originalItems.Add(item);
+            }
+
+            List<object> newItems = new List<object>(overflowRowCount);
+
+            for (int i = 0; i < overflowRowCount; i++)
+            {
+                newItems.Add(bindingList.AddNew());
+            }
+
+            InsertItemsAt(list, originalItems, insertAtIndex, newItems);
+        }
+
+        private void WritePastedValues(
+            IList list, string[] pastedRows, List<int> sortedSelectedRowIndexes,
+            int insertAtIndex, List<DataGridViewColumn> targetColumns, int startColumnIndex)
+        {
+            // Looked up once per (item type, property name) rather than
+            // once per pasted cell - GetProperty for the same column
+            // resolves to the same PropertyInfo on every row for the
+            // common case of a homogeneous bound list, so repeating that
+            // lookup per row was pure waste on a paste of any real size.
+            // Keyed by the item's own runtime type (not just the property
+            // name) so a list that genuinely mixes item types - unusual,
+            // but IList doesn't rule it out - still resolves correctly per
+            // item.
+            Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache =
+                new Dictionary<(Type, string), PropertyInfo>();
+
+            for (int rowOffset = 0; rowOffset < pastedRows.Length; rowOffset++)
+            {
+                // Write into the actually-selected rows first, in
+                // ascending order (not sequentially from
+                // startDataRowIndex), then into the newly-inserted
+                // overflow rows once the selection is exhausted.
+                int dataRowIndex = rowOffset < sortedSelectedRowIndexes.Count
+                    ? sortedSelectedRowIndexes[rowOffset]
+                    : insertAtIndex + (rowOffset - sortedSelectedRowIndexes.Count);
+
+                if (dataRowIndex >= list.Count)
+                {
+                    break;
+                }
+
+                object targetItem = list[dataRowIndex];
+                string[] cellValues = pastedRows[rowOffset].Split('\t');
+
+                for (int columnOffset = 0;
+                    columnOffset < cellValues.Length && startColumnIndex + columnOffset < targetColumns.Count;
+                    columnOffset++)
+                {
+                    DataGridViewColumn column = targetColumns[startColumnIndex + columnOffset];
+                    TrySetCellValueFromText(targetItem, column, cellValues[columnOffset], propertyCache);
+                }
+            }
         }
 
         private static bool TryConvertPastedValue(string text, Type targetType, out object convertedValue)
@@ -1155,6 +1127,41 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Shared by PasteFromClipboard's own WritePastedValues and
+        // FillCellsWithValue below, which used to each carry an identical
+        // copy of this same cache-lookup-convert-set sequence. ReadOnly/
+        // unbound columns are silently skipped, same as a cell that fails
+        // to convert (e.g. "abc" into a number column) - best effort,
+        // never aborts the whole paste/fill over one bad cell.
+        private static void TrySetCellValueFromText(
+            object targetItem, DataGridViewColumn column, string text,
+            Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache)
+        {
+            if (column.ReadOnly || string.IsNullOrEmpty(column.DataPropertyName))
+            {
+                return;
+            }
+
+            Type targetItemType = targetItem.GetType();
+            (Type, string) propertyCacheKey = (targetItemType, column.DataPropertyName);
+
+            if (!propertyCache.TryGetValue(propertyCacheKey, out PropertyInfo property))
+            {
+                property = targetItemType.GetProperty(column.DataPropertyName);
+                propertyCache[propertyCacheKey] = property;
+            }
+
+            if (property == null)
+            {
+                return;
+            }
+
+            if (TryConvertPastedValue(text, property.PropertyType, out object convertedValue))
+            {
+                property.SetValue(targetItem, convertedValue);
+            }
+        }
+
         // Writes the same value into every one of targetCells (the "fill"
         // path PasteFromClipboard uses when exactly one cell was copied
         // into a selection of more than one) - never grows the list, since
@@ -1182,32 +1189,7 @@ namespace ErikwnkWFUI.Controls
                         continue;
                     }
 
-                    DataGridViewColumn column = Columns[columnIndex];
-
-                    if (column.ReadOnly || string.IsNullOrEmpty(column.DataPropertyName))
-                    {
-                        continue;
-                    }
-
-                    object targetItem = list[rowIndex];
-                    Type targetItemType = targetItem.GetType();
-                    (Type, string) propertyCacheKey = (targetItemType, column.DataPropertyName);
-
-                    if (!propertyCache.TryGetValue(propertyCacheKey, out PropertyInfo property))
-                    {
-                        property = targetItemType.GetProperty(column.DataPropertyName);
-                        propertyCache[propertyCacheKey] = property;
-                    }
-
-                    if (property == null)
-                    {
-                        continue;
-                    }
-
-                    if (TryConvertPastedValue(value, property.PropertyType, out object convertedValue))
-                    {
-                        property.SetValue(targetItem, convertedValue);
-                    }
+                    TrySetCellValueFromText(list[rowIndex], Columns[columnIndex], value, propertyCache);
                 }
             });
 
@@ -1246,8 +1228,7 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
-            columns.Sort((first, second) => first.DisplayIndex.CompareTo(second.DisplayIndex));
-            return columns;
+            return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
         }
 
         private bool IsRowSelected(int rowIndex)
