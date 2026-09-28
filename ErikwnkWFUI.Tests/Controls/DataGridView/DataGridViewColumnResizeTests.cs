@@ -127,4 +127,71 @@ public class DataGridViewColumnResizeTests
         Assert.False(grid.IsColumnResizable(grid.Columns["__deleteRow"]!.Index));
         Assert.True(grid.IsColumnResizable(grid.Columns["Name"]!.Index));
     }
+
+    // TryGetColumnAtBorder itself takes a plain logical x, unlike the
+    // handlers that call it (OnMouseDown/OnMouseMove, both read the live
+    // Cursor.Position - see the class remarks on why those aren't tested
+    // here) - so the actual border-detection math IS practical to drive
+    // headlessly, via reflection, the same way GetColumnDropInsertionIndex
+    // already is in DataGridViewColumnReorderTests/ReadOnlyDataGridViewEnumerationTests.
+    [Fact]
+    public void TryGetColumnAtBorder_WithinGripToleranceOfAColumnsRightEdge_ReturnsThatColumn()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.Columns["Name"]!.Width = 100;
+
+        object?[] args = { 100, null };
+        bool found = grid.InvokePrivate<bool>("TryGetColumnAtBorder", args);
+
+        Assert.True(found);
+        Assert.Same(grid.Columns["Name"], args[1]);
+    }
+
+    [Fact]
+    public void TryGetColumnAtBorder_WellInsideAColumn_ReturnsFalse()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.Columns["Name"]!.Width = 100;
+
+        object?[] args = { 50, null };
+        bool found = grid.InvokePrivate<bool>("TryGetColumnAtBorder", args);
+
+        Assert.False(found);
+        Assert.Null(args[1]);
+    }
+
+    [Fact]
+    public void TryGetColumnAtBorder_AtTheSecondColumnsRightEdge_ReturnsTheSecondColumn()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.Columns["Name"]!.Width = 100;
+        grid.Columns["Value"]!.Width = 60;
+
+        object?[] args = { 160, null };
+        bool found = grid.InvokePrivate<bool>("TryGetColumnAtBorder", args);
+
+        Assert.True(found);
+        Assert.Same(grid.Columns["Value"], args[1]);
+    }
+
+    [Fact]
+    public void EndColumnResize_ResetsResizeStateAndReleasesCaptureAndCursor()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.SetPrivateField("_isResizingColumn", true);
+        grid.SetPrivateField("_resizeColumnIndex", 0);
+        grid.Capture = true;
+        grid.Cursor = Cursors.VSplit;
+
+        grid.InvokePrivate("EndColumnResize");
+
+        Assert.False(grid.GetPrivateField<bool>("_isResizingColumn"));
+        Assert.Equal(-1, grid.GetPrivateField<int>("_resizeColumnIndex"));
+        Assert.False(grid.Capture);
+        Assert.Equal(Cursors.Default, grid.Cursor);
+    }
 }

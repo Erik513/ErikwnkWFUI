@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
@@ -125,5 +127,104 @@ public class DataGridViewColumnReorderTests
 
         Assert.False(grid.IsColumnReorderable(grid.Columns["__deleteRow"]!.Index));
         Assert.True(grid.IsColumnReorderable(grid.Columns["Name"]!.Index));
+    }
+
+    // OnDragOver/OnDragDrop themselves don't need a live drag - only
+    // starting one (BeginColumnDragDrop's own DoDragDrop call, and the
+    // MouseDown/MouseMove threshold check that leads to it) does, per this
+    // class's own remarks above. These drive the two handlers directly via
+    // reflection, with the drag-state fields BeginColumnDragDrop would have
+    // set filled in by hand instead - PointToScreen/PointToClient round-trip
+    // correctly off this control's own real (if invisible) window handle,
+    // so a chosen CONTROL-relative x can be turned into the SCREEN-relative
+    // one DragEventArgs actually carries.
+    [Fact]
+    public void OnDragOver_TracksTheInsertionIndex_AndAllowsTheMove()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.SetPrivateField("_isDraggingColumn", true);
+        grid.SetPrivateField("_dragColumnIndex", 1);
+
+        // x=0 always resolves to "insert before display index 0", the same
+        // width-independent extreme ReadOnlyDataGridViewEnumerationTests'
+        // own GetColumnDropInsertionIndex tests rely on.
+        Point screenPoint = grid.PointToScreen(new Point(0, 5));
+        DragEventArgs args = new DragEventArgs(
+            new DataObject(), 0, screenPoint.X, screenPoint.Y, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(DragDropEffects.Move, args.Effect);
+        Assert.Equal(0, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+    }
+
+    [Fact]
+    public void OnDragOver_FarPastTheLastColumn_TracksInsertionAfterEveryColumn()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.SetPrivateField("_isDraggingColumn", true);
+        grid.SetPrivateField("_dragColumnIndex", 0);
+
+        Point screenPoint = grid.PointToScreen(new Point(100_000, 5));
+        DragEventArgs args = new DragEventArgs(
+            new DataObject(), 0, screenPoint.X, screenPoint.Y, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(2, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+    }
+
+    [Fact]
+    public void OnDragOver_NoDragInProgress_LeavesInsertionIndexAndEffectUntouched()
+    {
+        // Guards against a drag-over event arriving from something OTHER
+        // than this control's own hand-rolled column drag (e.g. a file
+        // dropped from Explorer) - must not touch state or claim the drop.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(DragDropEffects.None, args.Effect);
+        Assert.Equal(-1, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+    }
+
+    [Fact]
+    public void OnDragDrop_MovesTheDraggedColumnToTheTrackedInsertionIndex()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.SetPrivateField("_dragColumnIndex", 0); // "Name"
+        grid.SetPrivateField("_dragInsertBeforeDisplayIndex", 2); // past "Value"
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
+
+        grid.InvokePrivate("OnDragDrop", args);
+
+        Assert.Equal(1, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(0, grid.Columns["Value"]!.DisplayIndex);
+    }
+
+    [Fact]
+    public void OnDragDrop_WithoutAPriorDragOver_DoesNotMoveAnyColumn()
+    {
+        // _dragInsertBeforeDisplayIndex only ever becomes >= 0 via
+        // OnDragOver - a drop that never crossed this control's own
+        // OnDragOver first (its own DragEnter path handles nothing else)
+        // must not move anything.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.SetPrivateField("_dragColumnIndex", 0);
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
+
+        grid.InvokePrivate("OnDragDrop", args);
+
+        Assert.Equal(0, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(1, grid.Columns["Value"]!.DisplayIndex);
     }
 }
