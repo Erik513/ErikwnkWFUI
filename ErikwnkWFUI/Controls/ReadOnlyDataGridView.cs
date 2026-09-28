@@ -1301,7 +1301,37 @@ namespace ErikwnkWFUI.Controls
         private int GetColumnDropInsertionIndex(int x)
         {
             List<DataGridViewColumn> orderedColumns = GetColumnsInDisplayOrder();
-            return ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
+            int insertBeforeDisplayIndex = ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
+            return ClampReorderInsertionIndex(orderedColumns, insertBeforeDisplayIndex);
+        }
+
+        // A real column being dragged must never land ahead of a pinned
+        // leftmost column (ShowEnumeration's own "#" column) or past a
+        // pinned rightmost one (DataGridView's own delete-row column) -
+        // both are already excluded from being the column that STARTS a
+        // drag (see SetColumnReorderable in their own setters), but a drop
+        // target computed purely from cursor position could otherwise still
+        // land in their slot, displacing them there instead. Walks in from
+        // both ends of the CURRENT display order counting how many leading/
+        // trailing columns are non-reorderable, rather than checking the
+        // enumeration/delete columns by name - keeps this working for any
+        // future pinned column the same way, without this class needing to
+        // know DataGridView's own delete-column field exists.
+        private int ClampReorderInsertionIndex(List<DataGridViewColumn> orderedColumns, int insertBeforeDisplayIndex)
+        {
+            int minimum = 0;
+            while (minimum < orderedColumns.Count && !IsColumnReorderable(orderedColumns[minimum].Index))
+            {
+                minimum++;
+            }
+
+            int maximum = orderedColumns.Count;
+            while (maximum > minimum && !IsColumnReorderable(orderedColumns[maximum - 1].Index))
+            {
+                maximum--;
+            }
+
+            return Math.Max(minimum, Math.Min(insertBeforeDisplayIndex, maximum));
         }
 
         // Mirrors ListView's own MoveColumnToDisplayIndex.

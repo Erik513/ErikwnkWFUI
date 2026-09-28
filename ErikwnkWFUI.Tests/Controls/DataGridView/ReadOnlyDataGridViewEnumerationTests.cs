@@ -362,4 +362,70 @@ public class ReadOnlyDataGridViewEnumerationTests
 
         Assert.True(args.Cancel);
     }
+
+    // A real column being dragged must never land ahead of the pinned
+    // leftmost enumeration column or past the pinned rightmost delete
+    // column - both are already excluded from being the column that
+    // STARTS a drag, but the drop TARGET is a separate computation
+    // (GetColumnDropInsertionIndex, invoked directly via reflection since
+    // an actual drag isn't practical to drive headlessly) that used to
+    // have no idea either column existed.
+    [Fact]
+    public void GetColumnDropInsertionIndex_NeverInsertsBeforeTheEnumerationColumn()
+    {
+        using WfuiReadOnlyDataGridView grid = new WfuiReadOnlyDataGridView();
+        grid.ShowEnumeration = true;
+        grid.Columns.Add("Name", "Name");
+        grid.Columns.Add("Value", "Value");
+
+        // x=0 - as far left as a drop target can be, which would normally
+        // mean "insert as the very first column" (display index 0), i.e.
+        // ahead of the enumeration column.
+        int insertionIndex = grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 0);
+
+        Assert.Equal(1, insertionIndex);
+    }
+
+    [Fact]
+    public void GetColumnDropInsertionIndex_NeverInsertsPastTheDeleteColumn()
+    {
+        using WfuiDataGridView grid = new WfuiDataGridView();
+        grid.Columns.Add("Name", "Name");
+        grid.Columns.Add("Value", "Value");
+        grid.ShowDeleteRowColumn = true;
+
+        // Far past every column's cumulative width - would normally mean
+        // "insert as the very last column" (display index 3, past the
+        // delete column at the end).
+        int insertionIndex = grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 100_000);
+
+        Assert.Equal(2, insertionIndex);
+    }
+
+    [Fact]
+    public void GetColumnDropInsertionIndex_ClampsBothEnds_WhenBothPinnedColumnsArePresent()
+    {
+        using WfuiDataGridView grid = new WfuiDataGridView();
+        grid.Columns.Add("Name", "Name");
+        grid.ShowEnumeration = true;
+        grid.ShowDeleteRowColumn = true;
+
+        // Columns end up as: #, Name, delete (display indexes 0, 1, 2).
+        Assert.Equal(1, grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 0));
+        Assert.Equal(2, grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 100_000));
+    }
+
+    // Confirms the clamp is a no-op (not just coincidentally landing on
+    // the same numbers) when neither pinned column exists - the ordinary,
+    // unrestricted reorder behavior every other DataGridView already had.
+    [Fact]
+    public void GetColumnDropInsertionIndex_IsUnclamped_WhenNoPinnedColumnsArePresent()
+    {
+        using WfuiReadOnlyDataGridView grid = new WfuiReadOnlyDataGridView();
+        grid.Columns.Add("Name", "Name");
+        grid.Columns.Add("Value", "Value");
+
+        Assert.Equal(0, grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 0));
+        Assert.Equal(2, grid.InvokePrivate<int>("GetColumnDropInsertionIndex", 100_000));
+    }
 }

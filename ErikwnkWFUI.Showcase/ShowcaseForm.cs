@@ -960,15 +960,21 @@ namespace ErikwnkWFUI.Showcase
 
         // Two states for both CreateStandard and CreatePrimary - plain
         // (without the "type here to add a row" placeholder) and with the
-        // delete-row column (which keeps it, being the one state actually
-        // meant to show off adding as well as deleting rows). No disabled
-        // state here - the ReadOnlyStandard/ReadOnlyPrimary rows below
-        // already demo one each; a third, editable-but-disabled grid would
-        // just be the same thing shown twice.
+        // delete-row/enumeration columns (which keeps the placeholder,
+        // being the one state actually meant to show off adding as well as
+        // deleting rows). No disabled state here - the ReadOnlyStandard/
+        // ReadOnlyPrimary rows below already demo one each; a third,
+        // editable-but-disabled grid would just be the same thing shown
+        // twice. showDeleteColumn/showEnumerationColumn let a caller demo
+        // just one of the two pinned columns instead of always both
+        // together - CreateStandard's own row only shows the enumeration
+        // one, CreatePrimary's shows both coexisting.
         private void AddEditableDataGridRow(
             PropertyTable table,
             string labelText,
-            Func<object, System.Windows.Forms.DataGridView> createGrid)
+            Func<object, System.Windows.Forms.DataGridView> createGrid,
+            bool showDeleteColumn = true,
+            bool showEnumerationColumn = true)
         {
             var grid = createGrid(CreateSampleTracks());
             grid.Dock = DockStyle.Fill;
@@ -977,10 +983,8 @@ namespace ErikwnkWFUI.Showcase
 
             var gridWithDeleteColumn = (ErikwnkWFUI.Controls.DataGridView)createGrid(CreateSampleTracks());
             gridWithDeleteColumn.Dock = DockStyle.Fill;
-            gridWithDeleteColumn.ShowDeleteRowColumn = true;
-            // Leftmost "#" alongside the rightmost delete column - shows
-            // the two pinned columns coexist without fighting each other.
-            gridWithDeleteColumn.ShowEnumeration = true;
+            gridWithDeleteColumn.ShowDeleteRowColumn = showDeleteColumn;
+            gridWithDeleteColumn.ShowEnumeration = showEnumerationColumn;
             NarrowLengthColumn(gridWithDeleteColumn);
 
             table.AddRow(
