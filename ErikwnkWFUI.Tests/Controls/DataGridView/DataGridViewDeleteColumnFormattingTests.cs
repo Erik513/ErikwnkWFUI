@@ -37,8 +37,8 @@ public class DataGridViewDeleteColumnFormattingTests
 
         Assert.Equal("✕", args.Value);
         Assert.True(args.FormattingApplied);
-        Assert.Equal(UIColors.Red, style.ForeColor);
-        Assert.Equal(UIColors.Red, style.SelectionForeColor);
+        Assert.Equal(UIColors.RedLight, style.ForeColor);
+        Assert.Equal(UIColors.RedLight, style.SelectionForeColor);
         Assert.Equal(Color.White, style.SelectionBackColor); // carried over, not the grid's real selection color
     }
 
@@ -74,8 +74,8 @@ public class DataGridViewDeleteColumnFormattingTests
         grid.InvokePrivate("OnCellFormatting", FormatArgs(deleteColumnIndex, 1, hoveredStyle));
         grid.InvokePrivate("OnCellFormatting", FormatArgs(deleteColumnIndex, 0, restingStyle));
 
-        Assert.Equal(UIColors.Lighten(UIColors.Red, 40), hoveredStyle.ForeColor);
-        Assert.Equal(UIColors.Red, restingStyle.ForeColor);
+        Assert.Equal(UIColors.Lighten(UIColors.RedLight, 20), hoveredStyle.ForeColor);
+        Assert.Equal(UIColors.RedLight, restingStyle.ForeColor);
     }
 
     [Fact]

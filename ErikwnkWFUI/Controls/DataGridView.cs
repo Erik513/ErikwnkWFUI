@@ -150,8 +150,15 @@ namespace ErikwnkWFUI.Controls
                         MinimumWidth = DeleteRowColumnWidth
                     };
 
-                    column.DefaultCellStyle.ForeColor = UIColors.Red;
-                    column.DefaultCellStyle.SelectionForeColor = UIColors.Red;
+                    // RedLight, not UIColors.Red - see OnCellFormatting's
+                    // own remarks on why (this is just the column's initial
+                    // default; OnCellFormatting recomputes the same color
+                    // per cell on every paint anyway, but an accessibility
+                    // tool or anything else reading DefaultCellStyle
+                    // directly, before that first format pass, should still
+                    // see the correct color, not the old one).
+                    column.DefaultCellStyle.ForeColor = UIColors.RedLight;
+                    column.DefaultCellStyle.SelectionForeColor = UIColors.RedLight;
                     column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                     column.HeaderCell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
 
@@ -502,9 +509,18 @@ namespace ErikwnkWFUI.Controls
             // in the normal row text color instead of red. Setting it here,
             // on the cell style actually used for this paint pass, outranks
             // both.
+            //
+            // RedLight, not the plain UIColors.Red every other red surface
+            // in this library uses - confirmed via ColorContrastHelperTests'
+            // sibling DataGridViewColorContrastTests that plain Red on this
+            // control's own Dark-theme row background only reaches 2.46:1,
+            // below WCAG's 3:1 floor for a UI glyph like this one. Scoped to
+            // just this glyph rather than changing UIColors.Red itself,
+            // which other surfaces use against their own, different
+            // backgrounds.
             Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
-                ? UIColors.Lighten(UIColors.Red, 40)
-                : UIColors.Red;
+                ? UIColors.Lighten(UIColors.RedLight, 20)
+                : UIColors.RedLight;
             e.CellStyle.ForeColor = foreColor;
             e.CellStyle.SelectionForeColor = foreColor;
         }
