@@ -311,21 +311,17 @@ namespace ErikwnkWFUI.Controls
         // The "type here to add a row" placeholder is left exactly as
         // selectable as stock DataGridView already makes it - a drag-
         // select or Ctrl+A reaching down that far selects it like any
-        // other row, same as it always would. An earlier version of this
-        // fought that instead (forcing it back out of SelectedCells
-        // on every selection change), which fixed one bug but caused a
-        // worse one: reading/mutating selection state from within
-        // OnSelectionChanged while WinForms' own selection-building loop
-        // was still actively extending a drag turned out to disturb that
-        // loop badly enough to drop the drag's own anchor cell from the
-        // final selection entirely. The actual correctness problems this
-        // was trying to solve - copy/paste/clear/delete treating the
-        // placeholder as real data - are handled individually at each of
-        // those call sites instead (see GetClipboardContent,
-        // PasteFromClipboard, ClearSelectedCellValues, DeleteRows), each
-        // already checking IsNewRow or list membership on its own terms;
-        // none of them need the placeholder to be actually unselectable
-        // for that.
+        // other row. An earlier version forced it back out of
+        // SelectedCells on every selection change instead, but reading/
+        // mutating selection state from OnSelectionChanged while WinForms'
+        // own drag-selection loop was still running dropped the drag's own
+        // anchor cell from the final selection entirely. The real
+        // correctness problems this was trying to solve - copy/paste/
+        // clear/delete treating the placeholder as real data - are handled
+        // individually at each of those call sites instead
+        // (GetClipboardContent, PasteFromClipboard, ClearSelectedCellValues,
+        // DeleteRows), each already checking IsNewRow or list membership on
+        // its own terms.
         //
         // The one thing genuinely worth cleaning up here: merely having
         // moved through the placeholder at all - a drag passing over it,
@@ -484,15 +480,13 @@ namespace ErikwnkWFUI.Controls
             // Applies to every cell in the column, including the "type here
             // to add a row" placeholder (IsNewRow) - that one shows no "X"
             // below (nothing to delete there yet), but it's still a cell in
-            // this column, and pressing it showed the same real (green)
-            // selection color this same fix already covers for real rows.
-            // e.CellStyle.BackColor is already whatever this row's own
-            // resting color is (normal or alternating - see the
-            // OnCellMouseDown comment above for why CurrentCell can't just
-            // be kept off this cell instead), so this doesn't hardcode a
-            // color of its own - it only carries that same value over to
-            // SelectionBackColor, so a press here never shows the grid's
-            // real (green) selection color.
+            // this column, and pressing it needs the same fix. e.CellStyle.BackColor
+            // is already whatever this row's own resting color is (normal or
+            // alternating - see the OnCellMouseDown comment above for why
+            // CurrentCell can't just be kept off this cell instead), so this
+            // doesn't hardcode a color of its own - it only carries that same
+            // value over to SelectionBackColor, so a press here never shows
+            // the grid's real (green) selection color.
             e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
 
             if (IsPlaceholderRowIndex(e.RowIndex))
@@ -925,13 +919,9 @@ namespace ErikwnkWFUI.Controls
                 startColumnIndex = 0;
             }
 
-            // Only the rows actually selected get overwritten in place - a
-            // paste block taller than the selection gets the rest INSERTED
-            // right after it instead of overwriting whatever real rows
-            // happened to already be sitting there (e.g. pasting 10 rows
-            // onto a 4-row selection in the middle of a 20-row list must
-            // not clobber rows 5-10 of someone's existing data; it should
-            // push them down by 6 instead).
+            // E.g. pasting 10 rows onto a 4-row selection in the middle of
+            // a 20-row list must not clobber rows 5-10 of someone's
+            // existing data - it should push them down by 6 instead.
             // Sorted so the write loop below can target the actual
             // selected rows in order, not just walk sequentially from
             // startDataRowIndex - a non-contiguous selection (e.g. rows 0
