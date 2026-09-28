@@ -14,10 +14,16 @@ namespace ErikwnkWFUI.Tests.Infrastructure;
 /// </summary>
 internal static class PrivateReflection
 {
-    private const BindingFlags InstanceNonPublic = BindingFlags.Instance | BindingFlags.NonPublic;
+    // Static, not just Instance - InvokePrivate/InvokePrivate&lt;T&gt; are called
+    // on an instance either way (extension-method syntax needs a receiver),
+    // but several private helpers this reaches for are plain static pure
+    // functions (e.g. ListView's own BuildCfHtmlTable/BuildHtmlTable) -
+    // MethodInfo.Invoke ignores the target object for a static method, so
+    // the same call site works for both kinds once both flags are set.
+    private const BindingFlags InstanceNonPublic = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic;
 
-    // DeclaredOnly on top of the usual Instance|NonPublic - without it,
-    // GetMethod(name, flags) (the overload that doesn't take parameter
+    // DeclaredOnly on top of the usual Instance|Static|NonPublic - without
+    // it, GetMethod(name, flags) (the overload that doesn't take parameter
     // types) throws AmbiguousMatchException the moment a type declares a
     // private/protected member sharing a base class member's name but not
     // its signature - confirmed live for ListView's own OnColumnWidthChanging

@@ -451,8 +451,10 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Registers a custom comparer for a column's header-click sort,
-        /// replacing the default (numeric if both sides parse as numbers,
-        /// case-insensitive text otherwise). The comparer receives the two
+        /// replacing the default (the sorted column's own text, compared
+        /// the same "natural" way Windows Explorer's own file listing does -
+        /// see CompareItemText/StrCmpLogicalW - so e.g. "Row 2" sorts before
+        /// "Row 10"). The comparer receives the two
         /// <see cref="ListViewItem"/>s being compared, so it can read other
         /// SubItems or <see cref="ListViewItem.Tag"/> instead of just the
         /// sorted column's text. Compare in plain ascending order - this

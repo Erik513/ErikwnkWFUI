@@ -80,6 +80,27 @@ public class ListViewSortTests
         Assert.Equal("Row 10", listView.Items[2].Text);
     }
 
+    // CompareItemText's own direction multiplier (ascending vs descending)
+    // is only ever exercised indirectly above via a full ascending-then-
+    // descending cycle - this checks it directly, still using natural sort
+    // order (Row 2 before Row 10) so a descending pass has to flip that
+    // ordering too, not just plain alphabetical order.
+    [Fact]
+    public void HeaderClick_Descending_UsesNaturalSortOrderInReverse()
+    {
+        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
+        listView.Items.Add(new ListViewItem("Row 1"));
+        listView.Items.Add(new ListViewItem("Row 10"));
+        listView.Items.Add(new ListViewItem("Row 2"));
+
+        listView.InvokePrivate("OnColumnClick", new ColumnClickEventArgs(0));
+        listView.InvokePrivate("OnColumnClick", new ColumnClickEventArgs(0));
+
+        Assert.Equal("Row 10", listView.Items[0].Text);
+        Assert.Equal("Row 2", listView.Items[1].Text);
+        Assert.Equal("Row 1", listView.Items[2].Text);
+    }
+
     [Fact]
     public void SortingEnabled_False_HeaderClickDoesNotSort()
     {
