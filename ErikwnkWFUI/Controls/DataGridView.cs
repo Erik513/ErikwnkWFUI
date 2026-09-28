@@ -386,6 +386,19 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
         {
+            // Captured BEFORE base.OnCellMouseDown below, not after -
+            // regression fix: this control's SelectionMode is CellSelect,
+            // whose own native mouse-down handling (run by that base call)
+            // already selects the single clicked cell as its own default
+            // behavior. Checking IsRowSelected afterward, as this used to,
+            // meant the row it just clicked always already had ONE selected
+            // cell (the one just clicked) by the time it was checked -
+            // silently skipping SelectRow below for EVERY previously-
+            // unselected row, every time, and leaving just that one cell
+            // selected instead of the whole row the comment below (and the
+            // context menu's own row-scoped actions) actually need.
+            bool rowWasSelectedBeforeThisClick = e.RowIndex >= 0 && IsRowSelected(e.RowIndex);
+
             base.OnCellMouseDown(e);
 
             if (e.Button != MouseButtons.Right)
@@ -415,7 +428,7 @@ namespace ErikwnkWFUI.Controls
             // where to act) - only the delete/enumeration columns are
             // skipped, same as the menu's own Opening handler below
             // never showing a menu there at all.
-            if (e.RowIndex >= 0 && !isSystemColumnCell && !IsRowSelected(e.RowIndex))
+            if (e.RowIndex >= 0 && !isSystemColumnCell && !rowWasSelectedBeforeThisClick)
             {
                 SelectRow(e.RowIndex, e.ColumnIndex);
             }
@@ -1313,7 +1326,6 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 DataGridViewCell cell = Rows[rowIndex].Cells[column.Index];
-                cell.Selected = true;
                 firstCell = firstCell ?? cell;
 
                 if (column.Index == clickedColumnIndex)
@@ -1322,7 +1334,26 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
+            // Regression fix: this control's SelectionMode is CellSelect,
+            // where assigning CurrentCell is itself a side-effecting
+            // operation that collapses SelectedCells down to just the new
+            // current cell - doing this LAST (as this used to) silently
+            // undid every Selected = true the loop above had just made,
+            // leaving only the clicked cell selected instead of the whole
+            // row. Setting it FIRST instead means the loop below, which
+            // selects every remaining cell afterward, is what actually
+            // sticks.
             CurrentCell = clickedCell ?? firstCell;
+
+            foreach (DataGridViewColumn column in Columns)
+            {
+                if (column == _deleteRowColumn)
+                {
+                    continue;
+                }
+
+                Rows[rowIndex].Cells[column.Index].Selected = true;
+            }
         }
 
         private ContextMenuStrip BuildContextMenu()
