@@ -62,4 +62,30 @@ public class ColorContrastHelperTests
 
         Assert.False(meets);
     }
+
+    [Fact]
+    public void Composite_FullyOpaqueForeground_ReturnsForegroundUnchanged()
+    {
+        Color result = ColorContrastHelper.Composite(Color.FromArgb(255, 10, 20, 30), Color.White);
+
+        Assert.Equal(Color.FromArgb(10, 20, 30), result);
+    }
+
+    [Fact]
+    public void Composite_FullyTransparentForeground_ReturnsBackgroundUnchanged()
+    {
+        Color result = ColorContrastHelper.Composite(Color.FromArgb(0, 10, 20, 30), Color.FromArgb(200, 150, 100));
+
+        Assert.Equal(Color.FromArgb(200, 150, 100), result);
+    }
+
+    [Fact]
+    public void Composite_HalfAlphaBlack_OverWhite_IsMidGray()
+    {
+        Color result = ColorContrastHelper.Composite(Color.FromArgb(128, 0, 0, 0), Color.White);
+
+        Assert.InRange(result.R, 125, 130);
+        Assert.InRange(result.G, 125, 130);
+        Assert.InRange(result.B, 125, 130);
+    }
 }

@@ -341,6 +341,7 @@ namespace ErikwnkWFUI.Controls
             ColumnWidthChanging += OnColumnWidthChanging;
 
             ContextMenuStrip = BuildContextMenu();
+            UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
 
             // Message filter, not a poll, for "a click happened somewhere
             // else" - see OutsideClickDeselectFilter for what counts as
@@ -353,6 +354,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
+                UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
                 _cellToolTip.Dispose();
                 _toggleDeselectSettleTimer.Stop();
                 _toggleDeselectSettleTimer.Dispose();
@@ -743,6 +745,17 @@ namespace ErikwnkWFUI.Controls
         // each is a plain submenu parent (native arrow, opens on hover, no
         // split-button chrome) whose flyout holds the actual two actions,
         // plain and "As table".
+        // Kept as fields (rather than BuildContextMenu's own locals) so
+        // OnUIStringsLanguageChanged below can find and re-text them later -
+        // "As table" appears twice (once under each top-level item), so
+        // this is 6 fields for 3 distinct pieces of text, not 3.
+        private ToolStripMenuItem _copySelectionItem;
+        private ToolStripItem _copySelectionPlainItem;
+        private ToolStripItem _copySelectionAsTableItem;
+        private ToolStripMenuItem _copyAllItem;
+        private ToolStripItem _copyAllPlainItem;
+        private ToolStripItem _copyAllAsTableItem;
+
         private ContextMenuStrip BuildContextMenu()
         {
             // None of this menu's items (or its submenus) ever get an
@@ -758,24 +771,47 @@ namespace ErikwnkWFUI.Controls
             string copyAllText = UIStrings.Get("ListView.CopyAll");
             string asTableText = UIStrings.Get("ListView.AsTable");
 
-            var copySelection = new ToolStripMenuItem(copySelectionText);
-            copySelection.DropDownItems.Add(copySelectionText, null, (sender, e) => CopySelection());
-            copySelection.DropDownItems.Add(asTableText, null, (sender, e) => CopySelectionAsTable());
+            _copySelectionItem = new ToolStripMenuItem(copySelectionText);
+            _copySelectionPlainItem = _copySelectionItem.DropDownItems.Add(copySelectionText, null, (sender, e) => CopySelection());
+            _copySelectionAsTableItem = _copySelectionItem.DropDownItems.Add(asTableText, null, (sender, e) => CopySelectionAsTable());
 
-            var copyAll = new ToolStripMenuItem(copyAllText);
-            copyAll.DropDownItems.Add(copyAllText, null, (sender, e) => { SelectAll(); CopySelection(); });
-            copyAll.DropDownItems.Add(asTableText, null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
+            _copyAllItem = new ToolStripMenuItem(copyAllText);
+            _copyAllPlainItem = _copyAllItem.DropDownItems.Add(copyAllText, null, (sender, e) => { SelectAll(); CopySelection(); });
+            _copyAllAsTableItem = _copyAllItem.DropDownItems.Add(asTableText, null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
 
-            menu.Items.Add(copySelection);
-            menu.Items.Add(copyAll);
+            menu.Items.Add(_copySelectionItem);
+            menu.Items.Add(_copyAllItem);
 
             menu.Opening += (sender, e) =>
             {
-                copySelection.Enabled = SelectedItems.Count > 0;
-                copyAll.Enabled = Items.Count > 0;
+                _copySelectionItem.Enabled = SelectedItems.Count > 0;
+                _copyAllItem.Enabled = Items.Count > 0;
             };
 
             return menu;
+        }
+
+        // Keeps the context menu's own text in whatever language the rest
+        // of the app just switched to - mirrors DataGridView's own
+        // OnUIStringsLanguageChanged.
+        private void OnUIStringsLanguageChanged(object sender, EventArgs e)
+        {
+            if (_copySelectionItem == null)
+            {
+                return;
+            }
+
+            string copySelectionText = UIStrings.Get("ListView.CopySelection");
+            string copyAllText = UIStrings.Get("ListView.CopyAll");
+            string asTableText = UIStrings.Get("ListView.AsTable");
+
+            _copySelectionItem.Text = copySelectionText;
+            _copySelectionPlainItem.Text = copySelectionText;
+            _copySelectionAsTableItem.Text = asTableText;
+
+            _copyAllItem.Text = copyAllText;
+            _copyAllPlainItem.Text = copyAllText;
+            _copyAllAsTableItem.Text = asTableText;
         }
 
         private void OnDrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)

@@ -41,6 +41,25 @@ internal static class ColorContrastHelper
         return GetContrastRatio(foreground, background) >= minimumRatio;
     }
 
+    /// <summary>
+    /// Standard alpha "over" compositing - what a translucent overlay
+    /// (e.g. ListView's own SelectionOverlayColor, painted on TOP of a
+    /// row's own color rather than replacing it) actually looks like once
+    /// blended with whatever's underneath, since GetContrastRatio itself
+    /// only makes sense for two already-opaque colors. <paramref name="background"/>
+    /// is assumed fully opaque, same as every real background this gets
+    /// used against.
+    /// </summary>
+    public static Color Composite(Color foreground, Color background)
+    {
+        double alpha = foreground.A / 255.0;
+        int red = (int)Math.Round((foreground.R * alpha) + (background.R * (1 - alpha)));
+        int green = (int)Math.Round((foreground.G * alpha) + (background.G * (1 - alpha)));
+        int blue = (int)Math.Round((foreground.B * alpha) + (background.B * (1 - alpha)));
+
+        return Color.FromArgb(red, green, blue);
+    }
+
     private static double GetRelativeLuminance(Color color)
     {
         double red = ToLinear(color.R);
