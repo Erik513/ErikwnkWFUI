@@ -433,6 +433,16 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
+            OnActionConfirmation(message);
+        }
+
+        // Its own virtual seam (rather than making ShowActionConfirmation
+        // itself virtual) so a test subclass can spy on exactly which
+        // messages actually got displayed - i.e. only the ones that survive
+        // the suppression check above - without being able to observe calls
+        // RunWithSuppressedActionConfirmation swallowed.
+        protected virtual void OnActionConfirmation(string message)
+        {
             CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip);
         }
 
