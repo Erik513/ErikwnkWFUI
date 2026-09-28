@@ -1691,28 +1691,12 @@ namespace ErikwnkWFUI.Controls
             return builder.ToString();
         }
 
+        // Reuses the same ToolTip instance already used for overflow-text
+        // hover previews elsewhere in this class, rather than owning a
+        // second ToolTip component.
         private void ShowCopyToast(string message)
         {
-            switch (CopyConfirmation)
-            {
-                case CopyConfirmationStyle.None:
-                    return;
-
-                case CopyConfirmationStyle.ToolTip:
-                    // Reuses the same ToolTip instance already used for
-                    // overflow-text hover previews elsewhere in this class,
-                    // rather than owning a second ToolTip component.
-                    _cellToolTip.Show(message, this, 12, 12, 2000);
-                    return;
-
-                default:
-                    var owner = FindForm();
-                    if (owner != null)
-                    {
-                        ToastForm.ShowToast(message, owner);
-                    }
-                    return;
-            }
+            CopyConfirmationDisplay.Show(CopyConfirmation, message, this, _cellToolTip);
         }
 
         // Header input lives on a separate HWND. Divider drags use screen

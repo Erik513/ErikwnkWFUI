@@ -65,6 +65,7 @@ namespace ErikwnkWFUI.Controls
         private readonly Dictionary<DataGridViewColumn, IComparer> _columnSortComparers =
             new Dictionary<DataGridViewColumn, IComparer>();
         private DataGridViewColumn _enumerationColumn;
+        private readonly ToolTip _copyConfirmationToolTip = new ToolTip();
 
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
@@ -347,6 +348,118 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// How a copy, or any of DataGridView's own editing actions (cut,
+        /// paste, clear, delete rows, insert row), is confirmed - the same
+        /// three-way choice as <see cref="ListView.CopyConfirmation"/>
+        /// (they share <see cref="CopyConfirmationStyle"/> and the same
+        /// display logic - see <see cref="CopyConfirmationDisplay"/>),
+        /// named more broadly here since this control has more than just
+        /// copying to confirm. Defaults to <see cref="CopyConfirmationStyle.Toast"/>.
+        /// </summary>
+        public CopyConfirmationStyle ActionConfirmation { get; set; } = CopyConfirmationStyle.Toast;
+
+        // Every copy (native Ctrl+C, or DataGridView's own context-menu
+        // Copy/Cut, which both ultimately call this same virtual method)
+        // goes through here - a single choke point for both showing the
+        // confirmation and, if ShowEnumeration is on, keeping its column
+        // out of the copied text. DataGridView's own override (its own
+        // delete column, plus placeholder-row exclusion) wraps this same
+        // method rather than duplicating any of it - deselects ITS
+        // excluded cells first, then calls base (here), which deselects
+        // the enumeration column on top before the real, native copy runs,
+        // so SelectedCells.Count below is already correct for whichever of
+        // the two (or both) actually applies.
+        public override DataObject GetClipboardContent()
+        {
+            List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (IsEnumerationColumn(cell.ColumnIndex))
+                {
+                    excludedCells.Add(cell);
+                }
+            }
+
+            foreach (DataGridViewCell cell in excludedCells)
+            {
+                cell.Selected = false;
+            }
+
+            try
+            {
+                DataObject content = base.GetClipboardContent();
+                ShowCopyConfirmation(SelectedCells.Count);
+                return content;
+            }
+            finally
+            {
+                foreach (DataGridViewCell cell in excludedCells)
+                {
+                    cell.Selected = true;
+                }
+            }
+        }
+
+        private void ShowCopyConfirmation(int copiedCellCount)
+        {
+            if (copiedCellCount <= 0)
+            {
+                return;
+            }
+
+            ShowActionConfirmation(GetCopyConfirmationMessage(copiedCellCount));
+        }
+
+        private static string GetCopyConfirmationMessage(int copiedCellCount)
+        {
+            return copiedCellCount == 1
+                ? UIStrings.Get("DataGridView.CellCopied")
+                : string.Format(UIStrings.Get("DataGridView.CellsCopied"), copiedCellCount);
+        }
+
+        /// <summary>
+        /// Shows <paramref name="message"/> via <see cref="ActionConfirmation"/> -
+        /// the same mechanism <see cref="GetClipboardContent"/> uses for its
+        /// own "copied" message, exposed so <see cref="DataGridView"/> can
+        /// confirm its own editing actions (cut, paste, clear, delete rows,
+        /// insert row) the same way, instead of each carrying its own copy
+        /// of this same three-way Toast/ToolTip/None dispatch.
+        /// </summary>
+        protected void ShowActionConfirmation(string message)
+        {
+            if (_suppressActionConfirmation)
+            {
+                return;
+            }
+
+            CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip);
+        }
+
+        private bool _suppressActionConfirmation;
+
+        /// <summary>
+        /// Runs <paramref name="action"/> with every <see cref="ShowActionConfirmation"/>
+        /// call inside it silenced - for composite operations like Cut
+        /// (copy, then clear) where the individual steps' own "copied"/
+        /// "cleared" messages would otherwise fire before the composite's
+        /// own, single "cut" message does.
+        /// </summary>
+        protected void RunWithSuppressedActionConfirmation(Action action)
+        {
+            bool previous = _suppressActionConfirmation;
+            _suppressActionConfirmation = true;
+            try
+            {
+                action();
+            }
+            finally
+            {
+                _suppressActionConfirmation = previous;
+            }
+        }
+
+        /// <summary>
         /// Whether an optional "#" row-number column is shown, pinned as
         /// the LEFTMOST column regardless of what else is added afterward -
         /// the mirror image of <see cref="DataGridView.ShowDeleteRowColumn"/>'s
@@ -589,6 +702,7 @@ namespace ErikwnkWFUI.Controls
             if (disposing)
             {
                 UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
+                _copyConfirmationToolTip.Dispose();
             }
 
             base.Dispose(disposing);

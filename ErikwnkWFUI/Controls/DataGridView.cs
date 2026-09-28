@@ -681,6 +681,10 @@ namespace ErikwnkWFUI.Controls
         // Cut = copy (via the same clipboard content the base class's own
         // Ctrl+C builds) then clear, rather than deleting the row outright -
         // that's a different, already-existing action (see Delete above).
+        // The copy and clear steps' own confirmations are suppressed here -
+        // "copied" followed by "cleared" would be a confusing double toast,
+        // and neither wording actually says "cut" - so a single, dedicated
+        // "cut" message is shown instead, once, after both steps complete.
         private void CutSelectionToClipboard()
         {
             if (SelectedCells.Count == 0)
@@ -688,29 +692,60 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            DataObject clipboardContent = GetClipboardContent();
+            int clearedCount = 0;
 
-            if (clipboardContent != null)
+            RunWithSuppressedActionConfirmation(() =>
             {
-                Clipboard.SetDataObject(clipboardContent);
+                DataObject clipboardContent = GetClipboardContent();
+
+                if (clipboardContent != null)
+                {
+                    Clipboard.SetDataObject(clipboardContent);
+                }
+
+                clearedCount = ClearSelectedCellValues();
+            });
+
+            if (clearedCount == 0)
+            {
+                return;
             }
 
-            ClearSelectedCellValues();
+            string message = clearedCount == 1
+                ? UIStrings.Get("DataGridView.CellCut")
+                : string.Format(UIStrings.Get("DataGridView.CellsCut"), clearedCount);
+            ShowActionConfirmation(message);
         }
 
         // Just the "clear" half of Cut - its own context-menu entry
         // ("Delete", as in clear the cell contents, not delete the row -
         // that's the separate "Delete selected rows" entry) needs it
-        // without also touching the clipboard.
-        private void ClearSelectedCellValues()
+        // without also touching the clipboard. Returns the cleared count so
+        // Cut can build its own message from it while this method's own
+        // confirmation is suppressed (see RunWithSuppressedActionConfirmation).
+        private int ClearSelectedCellValues()
         {
+            int clearedCount = 0;
+
             foreach (DataGridViewCell cell in SelectedCells)
             {
                 if (!cell.ReadOnly && cell.RowIndex >= 0 && !IsPlaceholderRowIndex(cell.RowIndex))
                 {
                     cell.Value = null;
+                    clearedCount++;
                 }
             }
+
+            if (clearedCount == 0)
+            {
+                return clearedCount;
+            }
+
+            string message = clearedCount == 1
+                ? UIStrings.Get("DataGridView.CellCleared")
+                : string.Format(UIStrings.Get("DataGridView.CellsCleared"), clearedCount);
+            ShowActionConfirmation(message);
+            return clearedCount;
         }
 
         /// <summary>
@@ -1060,6 +1095,11 @@ namespace ErikwnkWFUI.Controls
                     }
                 }
             });
+
+            string message = pastedRows.Length == 1
+                ? UIStrings.Get("DataGridView.RowPasted")
+                : string.Format(UIStrings.Get("DataGridView.RowsPasted"), pastedRows.Length);
+            ShowActionConfirmation(message);
         }
 
         private static bool TryConvertPastedValue(string text, Type targetType, out object convertedValue)
@@ -1151,6 +1191,8 @@ namespace ErikwnkWFUI.Controls
                     }
                 }
             });
+
+            ShowActionConfirmation(string.Format(UIStrings.Get("DataGridView.CellsPasted"), targetCells.Count));
         }
 
         private static string[] Trim(string[] values, int maxLength)
@@ -1447,6 +1489,8 @@ namespace ErikwnkWFUI.Controls
                 object newItem = bindingList.AddNew();
                 InsertItemsAt(list, originalItems, insertAtIndex, new[] { newItem });
             });
+
+            ShowActionConfirmation(UIStrings.Get("DataGridView.RowInserted"));
         }
 
         private void DeleteSelectedRows()
@@ -1472,6 +1516,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             ApplyBatchedDataSourceChange(list, () => list.Remove(item));
+            ShowActionConfirmation(UIStrings.Get("DataGridView.RowDeleted"));
         }
 
         private void DeleteRows(IEnumerable<int> rowIndexes)
@@ -1551,6 +1596,14 @@ namespace ErikwnkWFUI.Controls
                     list.Add(item);
                 }
             });
+
+            if (indexesToRemove.Count > 0)
+            {
+                string message = indexesToRemove.Count == 1
+                    ? UIStrings.Get("DataGridView.RowDeleted")
+                    : string.Format(UIStrings.Get("DataGridView.RowsDeleted"), indexesToRemove.Count);
+                ShowActionConfirmation(message);
+            }
         }
     }
 }
