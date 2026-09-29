@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
@@ -42,10 +44,14 @@ public class DataGridViewLanguageTests
     [InlineData("DataGridView.RowDeleted")]
     [InlineData("DataGridView.RowsDeleted")]
     [InlineData("DataGridView.RowInserted")]
+    [InlineData("DataGridView.RowCut")]
+    [InlineData("DataGridView.RowsCut")]
     [InlineData("DataGridView.ContextMenuCut")]
-    [InlineData("DataGridView.ContextMenuCopy")]
-    [InlineData("DataGridView.ContextMenuCopyWithHeader")]
+    [InlineData("DataGridView.ContextMenuCutRows")]
+    [InlineData("DataGridView.ContextMenuCopySelection")]
+    [InlineData("DataGridView.ContextMenuCopySelectionWithHeader")]
     [InlineData("DataGridView.ContextMenuCopyAll")]
+    [InlineData("DataGridView.ContextMenuCopyAllWithHeader")]
     [InlineData("DataGridView.ContextMenuSelectAll")]
     [InlineData("DataGridView.ContextMenuPaste")]
     [InlineData("DataGridView.ContextMenuClear")]
@@ -55,6 +61,28 @@ public class DataGridViewLanguageTests
     public void Key_IsTranslatedForEveryLanguage(string key)
     {
         LanguageTestHelper.AssertTranslatedForEveryLanguage(key);
+    }
+
+    // The copy entries are meant to look identical in ListView and both
+    // DataGridViews (same flat shape, same wording) - the two controls
+    // keep their own string keys so neither depends on the other's
+    // namespace, which is exactly why nothing but this test would notice
+    // one of them being reworded on its own.
+    [Theory]
+    [InlineData("ListView.CopySelection", "DataGridView.ContextMenuCopySelection")]
+    [InlineData("ListView.CopyAll", "DataGridView.ContextMenuCopyAll")]
+    [InlineData("ListView.CopySelectionWithHeader", "DataGridView.ContextMenuCopySelectionWithHeader")]
+    [InlineData("ListView.CopyAllWithHeader", "DataGridView.ContextMenuCopyAllWithHeader")]
+    [InlineData("ListView.SelectAll", "DataGridView.ContextMenuSelectAll")]
+    public void CopyMenuTexts_MatchListViewsInEveryLanguage(string listViewKey, string dataGridViewKey)
+    {
+        foreach (UILanguage language in LanguageTestHelper.AllLanguages)
+        {
+            LanguageTestHelper.RunWithLanguage(language, () =>
+            {
+                Assert.Equal(UIStrings.Get(listViewKey), UIStrings.Get(dataGridViewKey));
+            });
+        }
     }
 
     [Fact]
@@ -78,26 +106,7 @@ public class DataGridViewLanguageTests
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
-        WfuiContextMenuStrip menu = (WfuiContextMenuStrip)grid.ContextMenuStrip!;
-        string?[] englishTexts = new string?[menu.Items.Count];
-        for (int i = 0; i < menu.Items.Count; i++)
-        {
-            englishTexts[i] = menu.Items[i].Text;
-        }
-
-        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
-        {
-            for (int i = 0; i < menu.Items.Count; i++)
-            {
-                // Separators have no text either way - nothing to compare.
-                if (string.IsNullOrEmpty(englishTexts[i]))
-                {
-                    continue;
-                }
-
-                Assert.NotEqual(englishTexts[i], menu.Items[i].Text);
-            }
-        });
+        AssertEveryMenuTextChangesWithLanguage((WfuiContextMenuStrip)grid.ContextMenuStrip!);
     }
 
     [Fact]
@@ -105,20 +114,43 @@ public class DataGridViewLanguageTests
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        WfuiContextMenuStrip menu = (WfuiContextMenuStrip)grid.ContextMenuStrip!;
-        string?[] englishTexts = new string?[menu.Items.Count];
-        for (int i = 0; i < menu.Items.Count; i++)
-        {
-            englishTexts[i] = menu.Items[i].Text;
-        }
+        AssertEveryMenuTextChangesWithLanguage((WfuiContextMenuStrip)grid.ContextMenuStrip!);
+    }
+
+    // Recursive so a future submenu's children are covered as well, same
+    // shape ListViewLanguageTests walks.
+    private static void AssertEveryMenuTextChangesWithLanguage(WfuiContextMenuStrip menu)
+    {
+        List<(ToolStripItem Item, string EnglishText)> textItems = CollectTextItems(menu.Items);
 
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
         {
-            for (int i = 0; i < menu.Items.Count; i++)
+            foreach ((ToolStripItem item, string englishText) in textItems)
             {
-                Assert.NotEqual(englishTexts[i], menu.Items[i].Text);
+                Assert.NotEqual(englishText, item.Text);
             }
         });
+    }
+
+    private static List<(ToolStripItem, string)> CollectTextItems(ToolStripItemCollection items)
+    {
+        List<(ToolStripItem, string)> result = new List<(ToolStripItem, string)>();
+
+        foreach (ToolStripItem item in items)
+        {
+            // Separators have no text either way - nothing to compare.
+            if (!string.IsNullOrEmpty(item.Text))
+            {
+                result.Add((item, item.Text));
+            }
+
+            if (item is ToolStripDropDownItem dropDown)
+            {
+                result.AddRange(CollectTextItems(dropDown.DropDownItems));
+            }
+        }
+
+        return result;
     }
 
     [Fact]

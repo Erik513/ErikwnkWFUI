@@ -131,4 +131,58 @@ public class ListViewCopyTests
             Assert.Equal("X\tA\r\n", Clipboard.GetText());
         });
     }
+
+    private static System.Windows.Forms.ToolStripMenuItem MenuItem(WfuiListView listView, int index)
+        => (System.Windows.Forms.ToolStripMenuItem)listView.ContextMenuStrip!.Items[index];
+
+    [Fact]
+    public void ContextMenu_IsFlat_WithTheSameEntriesAsTheDataGridViews()
+    {
+        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
+
+        Assert.Equal(7, listView.ContextMenuStrip!.Items.Count);
+        Assert.Equal("Copy", MenuItem(listView, 0).Text);
+        Assert.Equal("Copy with header", MenuItem(listView, 1).Text);
+        Assert.Equal("Copy all", MenuItem(listView, 3).Text);
+        Assert.Equal("Copy all with header", MenuItem(listView, 4).Text);
+        Assert.Equal("Select all", MenuItem(listView, 6).Text);
+        Assert.All(listView.ContextMenuStrip.Items.Cast<System.Windows.Forms.ToolStripItem>(),
+            item => Assert.False(item is System.Windows.Forms.ToolStripDropDownItem d && d.HasDropDownItems));
+    }
+
+    [Fact]
+    public void ContextMenu_EnableStates_FollowSelectionAndItems()
+    {
+        using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
+        listView.ContextMenuStrip!.InvokePrivate("OnOpening", new System.ComponentModel.CancelEventArgs());
+        Assert.All(new[] { 0, 1, 3, 4, 6 }, i => Assert.False(MenuItem(listView, i).Enabled));
+
+        ListViewTestHelpers.AddItem(listView, "A");
+        listView.ContextMenuStrip!.InvokePrivate("OnOpening", new System.ComponentModel.CancelEventArgs());
+        Assert.False(MenuItem(listView, 0).Enabled);
+        Assert.False(MenuItem(listView, 1).Enabled);
+        Assert.True(MenuItem(listView, 3).Enabled);
+        Assert.True(MenuItem(listView, 4).Enabled);
+        Assert.True(MenuItem(listView, 6).Enabled);
+    }
+
+    [Fact]
+    public void ContextMenu_CopyAllWithHeader_PutsHeaderAndEveryRowOnTheClipboard()
+    {
+        StaThread.Run(() =>
+        {
+            using WfuiListView listView = ListViewTestHelpers.CreateListView(("Name", 100));
+            listView.CopyConfirmation = CopyConfirmationStyle.None;
+            ListViewTestHelpers.AddItem(listView, "A");
+            ListViewTestHelpers.AddItem(listView, "B");
+            _ = listView.Handle;
+
+            MenuItem(listView, 4).PerformClick();
+
+            string text = Clipboard.GetText();
+            Assert.StartsWith("Name", text.TrimStart());
+            Assert.Contains("A", text);
+            Assert.Contains("B", text);
+        });
+    }
 }

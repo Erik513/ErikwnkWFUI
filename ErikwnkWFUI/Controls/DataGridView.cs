@@ -66,6 +66,7 @@ namespace ErikwnkWFUI.Controls
         private ToolStripMenuItem _contextMenuPasteItem;
         private ToolStripMenuItem _contextMenuClearItem;
         private ToolStripMenuItem _contextMenuDeleteRowsItem;
+        private ToolStripMenuItem _contextMenuCutRowsItem;
         private ToolStripMenuItem _contextMenuInsertRowAboveItem;
         private ToolStripMenuItem _contextMenuInsertRowBelowItem;
 
@@ -203,6 +204,7 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuCutItem.Text = UIStrings.Get("DataGridView.ContextMenuCut");
                 _contextMenuPasteItem.Text = UIStrings.Get("DataGridView.ContextMenuPaste");
                 _contextMenuClearItem.Text = UIStrings.Get("DataGridView.ContextMenuClear");
+                _contextMenuCutRowsItem.Text = UIStrings.Get("DataGridView.ContextMenuCutRows");
                 _contextMenuDeleteRowsItem.Text = UIStrings.Get("DataGridView.ContextMenuDeleteRows");
                 _contextMenuInsertRowAboveItem.Text = UIStrings.Get("DataGridView.ContextMenuInsertRowAbove");
                 _contextMenuInsertRowBelowItem.Text = UIStrings.Get("DataGridView.ContextMenuInsertRowBelow");
@@ -1176,11 +1178,12 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Adds this class's editing entries to the menu ReadOnlyDataGridView
-        // already built (Copy / Copy with header / Copy all / Select all,
-        // identical in both grids) rather than building a second, separate
-        // menu - so the shared entries can never drift apart between the two.
-        // Cut goes in front, Paste/Clear right after the copy entries (before
-        // Select all), and the row-level entries follow, separated.
+        // already built (Copy selection / Copy all / Select all, identical
+        // in both grids and in ListView) rather than building a second,
+        // separate menu - so the shared entries can never drift apart
+        // between the two. Cut goes in front, Paste/Clear right after the
+        // copy entries (before Select all), and the row-level entries
+        // follow, separated.
         private void AddEditingMenuItems()
         {
             System.Windows.Forms.ContextMenuStrip menu = ContextMenuStrip;
@@ -1191,6 +1194,8 @@ namespace ErikwnkWFUI.Controls
                 UIStrings.Get("DataGridView.ContextMenuPaste"), null, (sender, e) => PasteFromClipboard());
             _contextMenuClearItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuClear"), null, (sender, e) => ClearSelectedCellValues());
+            _contextMenuCutRowsItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCutRows"), null, (sender, e) => CutSelectedRows());
             _contextMenuDeleteRowsItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuDeleteRows"), null, (sender, e) => DeleteSelectedRows());
             _contextMenuInsertRowAboveItem = new ToolStripMenuItem(
@@ -1214,17 +1219,20 @@ namespace ErikwnkWFUI.Controls
                     InsertBlankRow(rowIndex, above: false);
                 });
 
-            // Positions 0..4 are the base menu's Copy / Copy with header /
-            // Copy all / Select all - Cut in front of them, Paste/Clear
-            // between Copy all and Select all.
+            // The base menu holds Copy, Copy with header | Copy all, Copy
+            // all with header | Select all. Cut goes in front, Paste and
+            // Delete right after the copy entries, then the row-level
+            // entries (insert, delete rows) at the end, each group
+            // separated.
             menu.Items.Insert(0, _contextMenuCutItem);
-            menu.Items.Insert(4, _contextMenuPasteItem);
-            menu.Items.Insert(5, _contextMenuClearItem);
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(_contextMenuDeleteRowsItem);
+            menu.Items.Insert(3, _contextMenuPasteItem);
+            menu.Items.Insert(4, _contextMenuClearItem);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(_contextMenuInsertRowAboveItem);
             menu.Items.Add(_contextMenuInsertRowBelowItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(_contextMenuCutRowsItem);
+            menu.Items.Add(_contextMenuDeleteRowsItem);
 
             menu.Opening += (sender, e) =>
             {
@@ -1253,6 +1261,7 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuCutItem.Enabled = hasSelection && !ReadOnly && onRealRow;
                 _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
                 _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
+                _contextMenuCutRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
 
                 // Not onRealRow here - that's about whether the row
@@ -1319,6 +1328,63 @@ namespace ErikwnkWFUI.Controls
             });
 
             ShowActionConfirmation(UIStrings.Get("DataGridView.RowInserted"));
+        }
+
+        // Cut for whole rows: puts every selected row (all of its cells,
+        // not just the ones that happened to be selected) on the clipboard,
+        // then removes those rows - the row-level counterpart of the
+        // cell-level Cut above. Like it, the copy and delete steps' own
+        // confirmations are suppressed in favor of one dedicated "cut"
+        // message.
+        private void CutSelectedRows()
+        {
+            HashSet<int> rowIndexes = new HashSet<int>();
+
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (cell.RowIndex >= 0 && !IsPlaceholderRowIndex(cell.RowIndex))
+                {
+                    rowIndexes.Add(cell.RowIndex);
+                }
+            }
+
+            if (rowIndexes.Count == 0)
+            {
+                return;
+            }
+
+            RunWithSuppressedActionConfirmation(() =>
+            {
+                // Widen the selection to the full rows first so the
+                // clipboard text is the whole row, whatever cells the
+                // user had actually picked.
+                ClearSelection();
+
+                foreach (int rowIndex in rowIndexes)
+                {
+                    foreach (DataGridViewCell cell in Rows[rowIndex].Cells)
+                    {
+                        if (cell.Visible)
+                        {
+                            cell.Selected = true;
+                        }
+                    }
+                }
+
+                DataObject clipboardContent = GetClipboardContent();
+
+                if (clipboardContent != null)
+                {
+                    Clipboard.SetDataObject(clipboardContent);
+                }
+
+                DeleteRows(rowIndexes);
+            });
+
+            string message = rowIndexes.Count == 1
+                ? UIStrings.Get("DataGridView.RowCut")
+                : string.Format(UIStrings.Get("DataGridView.RowsCut"), rowIndexes.Count);
+            ShowActionConfirmation(message);
         }
 
         private void DeleteSelectedRows()

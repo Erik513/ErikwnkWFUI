@@ -13,8 +13,9 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// OnOpening (see ReadOnlyDataGridViewEnumerationTests' own remarks on why -
 /// a real right-click isn't practical to drive headlessly). Menu items are
 /// read back by their fixed Items[] position (see BuildContextMenu's own
-/// Add order: Cut, Copy, CopyWithHeader, CopyAll, Paste, Clear, SelectAll,
-/// separator, DeleteRows, separator, InsertAbove, InsertBelow) rather than by field, since those fields are
+/// Add order: Cut, Copy selection (submenu), Copy all (submenu), Paste,
+/// Clear, SelectAll, separator, DeleteRows, separator, InsertAbove,
+/// InsertBelow) rather than by field, since those fields are
 /// private. Paste's own Clipboard.ContainsText() check means this carries
 /// the same [Collection(ClipboardTestCollection.Name)] every other
 /// clipboard-touching test class does.
@@ -40,13 +41,15 @@ public class DataGridViewContextMenuEnableStateTests
     private static ToolStripMenuItem Cut(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[0];
     private static ToolStripMenuItem Copy(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[1];
     private static ToolStripMenuItem CopyWithHeader(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[2];
-    private static ToolStripMenuItem CopyAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[3];
-    private static ToolStripMenuItem Paste(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[4];
-    private static ToolStripMenuItem Clear(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[5];
-    private static ToolStripMenuItem SelectAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[6];
-    private static ToolStripMenuItem DeleteRows(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[8];
-    private static ToolStripMenuItem InsertAbove(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[10];
-    private static ToolStripMenuItem InsertBelow(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[11];
+    private static ToolStripMenuItem CopyAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[6];
+    private static ToolStripMenuItem CopyAllWithHeader(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[7];
+    private static ToolStripMenuItem Paste(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[3];
+    private static ToolStripMenuItem Clear(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[4];
+    private static ToolStripMenuItem SelectAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[9];
+    private static ToolStripMenuItem CutRows(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[14];
+    private static ToolStripMenuItem DeleteRows(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[15];
+    private static ToolStripMenuItem InsertAbove(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[11];
+    private static ToolStripMenuItem InsertBelow(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[12];
 
     [Fact]
     public void NoSelection_DisablesEverySelectionDependentItem()
@@ -67,6 +70,7 @@ public class DataGridViewContextMenuEnableStateTests
             Assert.False(Copy(menu).Enabled);
             Assert.False(Clear(menu).Enabled);
             Assert.False(DeleteRows(menu).Enabled);
+            Assert.False(CutRows(menu).Enabled);
             // Insert above/below don't need a selected CELL, just a real row
             // somewhere in the selection - with nothing selected at all,
             // TryGetSelectedRowIndexRange finds none either.
@@ -91,6 +95,7 @@ public class DataGridViewContextMenuEnableStateTests
             Assert.True(Copy(menu).Enabled);
             Assert.True(Clear(menu).Enabled);
             Assert.True(DeleteRows(menu).Enabled);
+            Assert.True(CutRows(menu).Enabled);
             Assert.True(InsertAbove(menu).Enabled);
             Assert.True(InsertBelow(menu).Enabled);
         });
@@ -168,6 +173,7 @@ public class DataGridViewContextMenuEnableStateTests
             Assert.False(Copy(menu).Enabled);
             Assert.False(Clear(menu).Enabled);
             Assert.False(DeleteRows(menu).Enabled);
+            Assert.False(CutRows(menu).Enabled);
             // No real row anywhere in the selection to insert relative to.
             Assert.False(InsertAbove(menu).Enabled);
             Assert.False(InsertBelow(menu).Enabled);
@@ -222,7 +228,6 @@ public class DataGridViewContextMenuEnableStateTests
             Open(grid, menu, 0, 0);
 
             Assert.True(Copy(menu).Enabled);
-            Assert.True(CopyWithHeader(menu).Enabled);
             Assert.True(CopyAll(menu).Enabled);
 
             // Right-clicking the placeholder itself: nothing real to copy
@@ -231,7 +236,6 @@ public class DataGridViewContextMenuEnableStateTests
             Open(grid, menu, placeholderIndex, 0);
 
             Assert.False(Copy(menu).Enabled);
-            Assert.False(CopyWithHeader(menu).Enabled);
             Assert.True(CopyAll(menu).Enabled); // still has a real row to copy
         });
     }
@@ -261,6 +265,7 @@ public class DataGridViewContextMenuEnableStateTests
         Open(grid, menu, 0, 0);
 
         Assert.False(DeleteRows(menu).Enabled);
+            Assert.False(CutRows(menu).Enabled);
     }
 
     [Fact]

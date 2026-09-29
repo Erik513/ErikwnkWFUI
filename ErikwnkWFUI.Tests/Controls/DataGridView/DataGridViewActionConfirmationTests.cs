@@ -89,6 +89,42 @@ public class DataGridViewActionConfirmationTests
     }
 
     [Fact]
+    public void CutRows_PutsTheWholeRowOnTheClipboard_RemovesIt_AndShowsOnlyACutMessage()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+            using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
+            // Only the first cell of row 0 selected - the whole row must
+            // still end up on the clipboard.
+            GridTestHelpers.SelectCells(grid, (0, 0));
+
+            grid.InvokePrivate("CutSelectedRows");
+
+            Assert.Equal("A	1", Clipboard.GetText().Trim());
+            Assert.Single(items);
+            Assert.Equal("B", items[0].Name);
+            Assert.Equal(new[] { "Row cut" }, grid.ActionConfirmationMessages);
+        });
+    }
+
+    [Fact]
+    public void CutRows_MultipleRows_ShowsAFormattedPluralMessage()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2), ("C", 3));
+            using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
+            GridTestHelpers.SelectCells(grid, (0, 0), (1, 0));
+
+            grid.InvokePrivate("CutSelectedRows");
+
+            Assert.Single(items);
+            Assert.Equal(new[] { "2 rows cut" }, grid.ActionConfirmationMessages);
+        });
+    }
+
+    [Fact]
     public void Cut_NoSelection_ShowsNoMessage()
     {
         StaThread.Run(() =>

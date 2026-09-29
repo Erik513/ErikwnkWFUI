@@ -741,51 +741,56 @@ namespace ErikwnkWFUI.Controls
             return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
         }
 
-        // The top level only ever shows "Copy selection" / "Copy all" -
-        // each is a plain submenu parent (native arrow, opens on hover, no
-        // split-button chrome) whose flyout holds the actual two actions,
-        // plain and "As table".
-        // Kept as fields (rather than BuildContextMenu's own locals) so
-        // OnUIStringsLanguageChanged below can find and re-text them later -
-        // "As table" appears twice (once under each top-level item), so
-        // this is 6 fields for 3 distinct pieces of text, not 3.
+        // Flat menu, identical in shape and wording to the DataGridViews':
+        // Copy, Copy with header | Copy all, Copy all with header | Select
+        // all. Kept as fields so
+        // OnUIStringsLanguageChanged below can re-text them later.
         private ToolStripMenuItem _copySelectionItem;
-        private ToolStripItem _copySelectionPlainItem;
-        private ToolStripItem _copySelectionAsTableItem;
+        private ToolStripMenuItem _copySelectionWithHeaderItem;
         private ToolStripMenuItem _copyAllItem;
-        private ToolStripItem _copyAllPlainItem;
-        private ToolStripItem _copyAllAsTableItem;
+        private ToolStripMenuItem _copyAllWithHeaderItem;
+        private ToolStripMenuItem _selectAllItem;
 
         private ContextMenuStrip BuildContextMenu()
         {
-            // None of this menu's items (or its submenus) ever get an
-            // Image, so the native reserved left-hand icon gutter just
-            // showed up as a blank strip nothing ever used.
+            // None of this menu's items ever get an Image, so the native
+            // reserved left-hand icon gutter just showed up as a blank
+            // strip nothing ever used.
             var menu = new ContextMenuStrip
             {
                 ShowImageMargin = false,
                 SelectionBackColor = ContextMenuSelectionColor
             };
 
-            string copySelectionText = UIStrings.Get("ListView.CopySelection");
-            string copyAllText = UIStrings.Get("ListView.CopyAll");
-            string asTableText = UIStrings.Get("ListView.AsTable");
-
-            _copySelectionItem = new ToolStripMenuItem(copySelectionText);
-            _copySelectionPlainItem = _copySelectionItem.DropDownItems.Add(copySelectionText, null, (sender, e) => CopySelection());
-            _copySelectionAsTableItem = _copySelectionItem.DropDownItems.Add(asTableText, null, (sender, e) => CopySelectionAsTable());
-
-            _copyAllItem = new ToolStripMenuItem(copyAllText);
-            _copyAllPlainItem = _copyAllItem.DropDownItems.Add(copyAllText, null, (sender, e) => { SelectAll(); CopySelection(); });
-            _copyAllAsTableItem = _copyAllItem.DropDownItems.Add(asTableText, null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
+            _copySelectionItem = new ToolStripMenuItem(
+                UIStrings.Get("ListView.CopySelection"), null, (sender, e) => CopySelection());
+            _copySelectionWithHeaderItem = new ToolStripMenuItem(
+                UIStrings.Get("ListView.CopySelectionWithHeader"), null, (sender, e) => CopySelectionAsTable());
+            _copyAllItem = new ToolStripMenuItem(
+                UIStrings.Get("ListView.CopyAll"), null, (sender, e) => { SelectAll(); CopySelection(); });
+            _copyAllWithHeaderItem = new ToolStripMenuItem(
+                UIStrings.Get("ListView.CopyAllWithHeader"), null, (sender, e) => { SelectAll(); CopySelectionAsTable(); });
+            _selectAllItem = new ToolStripMenuItem(
+                UIStrings.Get("ListView.SelectAll"), null, (sender, e) => SelectAll());
 
             menu.Items.Add(_copySelectionItem);
+            menu.Items.Add(_copySelectionWithHeaderItem);
+            menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(_copyAllItem);
+            menu.Items.Add(_copyAllWithHeaderItem);
+            menu.Items.Add(new ToolStripSeparator());
+            menu.Items.Add(_selectAllItem);
 
             menu.Opening += (sender, e) =>
             {
-                _copySelectionItem.Enabled = SelectedItems.Count > 0;
-                _copyAllItem.Enabled = Items.Count > 0;
+                bool hasSelection = SelectedItems.Count > 0;
+                bool hasItems = Items.Count > 0;
+
+                _copySelectionItem.Enabled = hasSelection;
+                _copySelectionWithHeaderItem.Enabled = hasSelection;
+                _copyAllItem.Enabled = hasItems;
+                _copyAllWithHeaderItem.Enabled = hasItems;
+                _selectAllItem.Enabled = hasItems;
             };
 
             return menu;
@@ -801,17 +806,11 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            string copySelectionText = UIStrings.Get("ListView.CopySelection");
-            string copyAllText = UIStrings.Get("ListView.CopyAll");
-            string asTableText = UIStrings.Get("ListView.AsTable");
-
-            _copySelectionItem.Text = copySelectionText;
-            _copySelectionPlainItem.Text = copySelectionText;
-            _copySelectionAsTableItem.Text = asTableText;
-
-            _copyAllItem.Text = copyAllText;
-            _copyAllPlainItem.Text = copyAllText;
-            _copyAllAsTableItem.Text = asTableText;
+            _copySelectionItem.Text = UIStrings.Get("ListView.CopySelection");
+            _copySelectionWithHeaderItem.Text = UIStrings.Get("ListView.CopySelectionWithHeader");
+            _copyAllItem.Text = UIStrings.Get("ListView.CopyAll");
+            _copyAllWithHeaderItem.Text = UIStrings.Get("ListView.CopyAllWithHeader");
+            _selectAllItem.Text = UIStrings.Get("ListView.SelectAll");
         }
 
         private void OnDrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)

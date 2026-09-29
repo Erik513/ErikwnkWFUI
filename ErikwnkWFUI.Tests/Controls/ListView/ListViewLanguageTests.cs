@@ -19,7 +19,9 @@ public class ListViewLanguageTests
     [Theory]
     [InlineData("ListView.CopySelection")]
     [InlineData("ListView.CopyAll")]
-    [InlineData("ListView.AsTable")]
+    [InlineData("ListView.CopySelectionWithHeader")]
+    [InlineData("ListView.CopyAllWithHeader")]
+    [InlineData("ListView.SelectAll")]
     [InlineData("ListView.RowCopied")]
     [InlineData("ListView.RowsCopied")]
     [InlineData("ListView.WithHeaderSuffix")]
@@ -34,10 +36,8 @@ public class ListViewLanguageTests
         using WfuiListView listView = new WfuiListView();
         WfuiContextMenuStrip menu = (WfuiContextMenuStrip)listView.ContextMenuStrip!;
 
-        // BuildContextMenu nests the real actions ("Copy selection"/"As
-        // table") one level down, inside each top-level item's own
-        // DropDownItems - collected recursively so this doesn't need to
-        // know that shape by hand.
+        // Collected recursively so this doesn't need to know the menu's
+        // shape by hand.
         List<(ToolStripItem Item, string EnglishText)> textItems = CollectTextItems(menu.Items);
 
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>

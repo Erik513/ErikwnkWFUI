@@ -76,9 +76,14 @@ namespace ErikwnkWFUI.Controls
         // object initializer, which only runs after the constructor already
         // built the menu - same pattern as ListView.ContextMenuSelectionColor.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
-        private ToolStripMenuItem _contextMenuCopyItem;
-        private ToolStripMenuItem _contextMenuCopyWithHeaderItem;
+        // Same shape as ListView's own menu: "Copy selection" and "Copy all"
+        // are submenu parents, each holding the plain action and "As table"
+        // (the same content plus a header row) - "As table" appears twice,
+        // so this is 6 items for 3 distinct pieces of text.
+        private ToolStripMenuItem _contextMenuCopySelectionItem;
+        private ToolStripMenuItem _contextMenuCopySelectionWithHeaderItem;
         private ToolStripMenuItem _contextMenuCopyAllItem;
+        private ToolStripMenuItem _contextMenuCopyAllWithHeaderItem;
         private ToolStripMenuItem _contextMenuSelectAllItem;
 
         /// <summary>
@@ -923,12 +928,11 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The menu both grids share: Copy / Copy with header / Copy all /
-        // Select all - everything that still makes sense on a display-only
-        // grid. DataGridView (the editable one) adds its own editing
-        // entries to this same menu instead of building a second one (see
-        // its AddEditingMenuItems), so these four can never drift apart
-        // between the two grids.
+        // The flat menu both grids (and ListView) share: Copy, Copy with
+        // header | Copy all, Copy all with header | Select all - everything that still makes sense on a display-only grid. DataGridView (the editable
+        // one) adds its own editing entries to this same menu instead of
+        // building a second one (see its AddEditingMenuItems), so these
+        // entries can never drift apart between the two grids.
         private ContextMenuStrip BuildContextMenu()
         {
             ContextMenuStrip menu = new ContextMenuStrip
@@ -937,19 +941,27 @@ namespace ErikwnkWFUI.Controls
                 SelectionBackColor = ContextMenuSelectionColor
             };
 
-            _contextMenuCopyItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopy"), null, (sender, e) => CopySelectionToClipboard());
-            _contextMenuCopyWithHeaderItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopyWithHeader"), null,
+            _contextMenuCopySelectionItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopySelection"), null,
+                (sender, e) => CopySelectionToClipboard());
+            _contextMenuCopySelectionWithHeaderItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopySelectionWithHeader"), null,
                 (sender, e) => CopySelectionToClipboard(includeHeader: true));
             _contextMenuCopyAllItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopyAll"), null, (sender, e) => CopyAllToClipboard());
+                UIStrings.Get("DataGridView.ContextMenuCopyAll"), null,
+                (sender, e) => CopyAllToClipboard(includeHeader: false));
+            _contextMenuCopyAllWithHeaderItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopyAllWithHeader"), null,
+                (sender, e) => CopyAllToClipboard(includeHeader: true));
             _contextMenuSelectAllItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuSelectAll"), null, (sender, e) => SelectAll());
 
-            menu.Items.Add(_contextMenuCopyItem);
-            menu.Items.Add(_contextMenuCopyWithHeaderItem);
+            menu.Items.Add(_contextMenuCopySelectionItem);
+            menu.Items.Add(_contextMenuCopySelectionWithHeaderItem);
+            menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(_contextMenuCopyAllItem);
+            menu.Items.Add(_contextMenuCopyAllWithHeaderItem);
+            menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(_contextMenuSelectAllItem);
 
             menu.Opening += (sender, e) =>
@@ -964,15 +976,16 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                bool canCopySelection = SelectedCells.Count > 0 && !_contextMenuRowWasPlaceholder;
-                _contextMenuCopyItem.Enabled = canCopySelection;
-                _contextMenuCopyWithHeaderItem.Enabled = canCopySelection;
+                bool hasSelection = SelectedCells.Count > 0 && !_contextMenuRowWasPlaceholder;
+                _contextMenuCopySelectionItem.Enabled = hasSelection;
+                _contextMenuCopySelectionWithHeaderItem.Enabled = hasSelection;
 
                 // Only worth offering with at least one real row - a grid
                 // holding nothing but the "type here" placeholder (only ever
                 // the editable one) has nothing meaningful to select or copy.
                 int realRowCount = Rows.Count - (NewRowIndex >= 0 ? 1 : 0);
                 _contextMenuCopyAllItem.Enabled = realRowCount > 0;
+                _contextMenuCopyAllWithHeaderItem.Enabled = realRowCount > 0;
                 _contextMenuSelectAllItem.Enabled = realRowCount > 0;
             };
 
@@ -1016,10 +1029,10 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private void CopyAllToClipboard()
+        private void CopyAllToClipboard(bool includeHeader)
         {
             SelectAll();
-            CopySelectionToClipboard(includeHeader: true);
+            CopySelectionToClipboard(includeHeader);
         }
 
         protected override void Dispose(bool disposing)
@@ -1040,11 +1053,12 @@ namespace ErikwnkWFUI.Controls
         // ShowEnumeration and the read-only menu live on this (base) class.
         private void OnUIStringsLanguageChanged(object sender, EventArgs e)
         {
-            if (_contextMenuCopyItem != null)
+            if (_contextMenuCopySelectionItem != null)
             {
-                _contextMenuCopyItem.Text = UIStrings.Get("DataGridView.ContextMenuCopy");
-                _contextMenuCopyWithHeaderItem.Text = UIStrings.Get("DataGridView.ContextMenuCopyWithHeader");
+                _contextMenuCopySelectionItem.Text = UIStrings.Get("DataGridView.ContextMenuCopySelection");
+                _contextMenuCopySelectionWithHeaderItem.Text = UIStrings.Get("DataGridView.ContextMenuCopySelectionWithHeader");
                 _contextMenuCopyAllItem.Text = UIStrings.Get("DataGridView.ContextMenuCopyAll");
+                _contextMenuCopyAllWithHeaderItem.Text = UIStrings.Get("DataGridView.ContextMenuCopyAllWithHeader");
                 _contextMenuSelectAllItem.Text = UIStrings.Get("DataGridView.ContextMenuSelectAll");
             }
 
