@@ -807,14 +807,29 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddSection("TabControl");
 
-            table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard()));
-            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary()));
+            table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3));
+            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3));
+
+            // Enough tabs that they can't all fit in one row: the scroll
+            // arrows show up at the right end of the tab strip.
+            table.AddRow("Overflow (scroll arrows)", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 30));
+
+            System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreatePrimary();
+            multiline.Multiline = true;
+            table.AddRow("Multiline", 140, CreateTabControlDemo(multiline, 12));
+
+            System.Windows.Forms.TabControl bottom =UIStyles.TabControls.CreatePrimary();
+            bottom.Alignment = System.Windows.Forms.TabAlignment.Bottom;
+            table.AddRow("Alignment = Bottom", 140, CreateTabControlDemo(bottom, 3));
         }
 
-        private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs)
+        private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs, int pageCount)
         {
-            foreach (string title in new[] { "Overview", "Details", "Disabled" })
+            string[] titles = { "Overview", "Details", "Disabled" };
+
+            for (int i = 0; i < pageCount; i++)
             {
+                string title = i < titles.Length ? titles[i] : "Tab number " + (i + 1);
                 System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
                 page.Controls.Add(new System.Windows.Forms.Label
                 {
@@ -825,7 +840,11 @@ namespace ErikwnkWFUI.Showcase
                 tabs.TabPages.Add(page);
             }
 
-            tabs.TabPages[2].Enabled = false;
+            if (pageCount == 3)
+            {
+                tabs.TabPages[2].Enabled = false;
+            }
+
             return tabs;
         }
 

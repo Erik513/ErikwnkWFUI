@@ -16,8 +16,11 @@ namespace ErikwnkWFUI.Controls
     /// the base type stays fully qualified so the class doesn't inherit from
     /// itself. Go through <see cref="UIStyles.TabControls.CreateStandard"/> to
     /// get one without spelling out <c>ErikwnkWFUI.Controls.TabControl</c>.
-    /// <see cref="System.Windows.Forms.TabControl.Appearance"/> is not
-    /// supported: tabs are always drawn as tabs, never as buttons.
+    /// Differences from the standard control: <see cref="System.Windows.Forms.TabControl.Appearance"/>
+    /// is not supported (tabs are always drawn as tabs, never as buttons),
+    /// <c>DrawItem</c> is never raised because the control draws everything
+    /// itself, and <see cref="PageBackColor"/> replaces a page's own
+    /// <c>BackColor</c> when the page is added.
     /// </remarks>
     public class TabControl : System.Windows.Forms.TabControl
     {
@@ -44,6 +47,10 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly ThemeColor _pageBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
 
+        private const int WM_PARENTNOTIFY = 0x0210;
+
+        private readonly TabScrollButtons _scrollButtons;
+
         private int _hoveredTabIndex = -1;
 
         /// <summary>
@@ -57,7 +64,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _headerBackColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -68,7 +75,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _tabBackColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -79,7 +86,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _hoverTabBackColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -90,7 +97,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _selectedTabBackColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -101,7 +108,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _tabForeColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -112,7 +119,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _selectedTabForeColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -123,7 +130,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _disabledTabForeColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -139,7 +146,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _accentColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -150,7 +157,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _borderColor.Set(value);
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -162,7 +169,7 @@ namespace ErikwnkWFUI.Controls
             {
                 _pageBackColor.Set(value);
                 ApplyPageBackColor();
-                Invalidate();
+                Repaint();
             }
         }
 
@@ -180,6 +187,45 @@ namespace ErikwnkWFUI.Controls
                 true);
 
             UpdateStyles();
+
+            _scrollButtons = new TabScrollButtons(this);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            // The scroll arrows are a child window the native control creates
+            // on its own, only while the tabs overflow - this is where that
+            // creation shows up.
+            if (m.Msg == WM_PARENTNOTIFY && IsHandleCreated)
+            {
+                _scrollButtons.AttachTo(Handle);
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            _scrollButtons.AttachTo(Handle);
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            base.OnResize(e);
+
+            _scrollButtons.AttachTo(Handle);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _scrollButtons.ReleaseHandle();
+            }
+
+            base.Dispose(disposing);
         }
 
         protected override void OnControlAdded(ControlEventArgs e)
@@ -241,7 +287,7 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnSelectedIndexChanged(e);
 
-            Invalidate();
+            Repaint();
         }
 
         protected override void OnGotFocus(EventArgs e)
@@ -270,6 +316,12 @@ namespace ErikwnkWFUI.Controls
             base.OnEnabledChanged(e);
 
             Invalidate();
+        }
+
+        private void Repaint()
+        {
+            Invalidate();
+            _scrollButtons.Refresh();
         }
 
         private void ApplyPageBackColor()
@@ -581,7 +633,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             int imageWidth = image.Width + (text.Length > 0 ? ImageTextGap : 0);
-            int textWidth = TextRenderer.MeasureText(graphics, text, Font, Size.Empty, flags).Width;
+            int textWidth = MeasureTextWidth(graphics, text);
             int contentWidth = Math.Min(bounds.Width, imageWidth + textWidth);
             int x = bounds.Left + (bounds.Width - contentWidth) / 2;
 
@@ -598,7 +650,7 @@ namespace ErikwnkWFUI.Controls
             int imageHeight = image == null ? 0 : image.Height + (text.Length > 0 ? ImageTextGap : 0);
             int contentHeight = image == null
                 ? bounds.Height
-                : Math.Min(bounds.Height, imageHeight + TextRenderer.MeasureText(graphics, text, Font, Size.Empty, flags).Width);
+                : Math.Min(bounds.Height, imageHeight + MeasureTextWidth(graphics, text));
             int y = bounds.Top + (bounds.Height - contentHeight) / 2;
 
             if (image != null)
@@ -643,6 +695,21 @@ namespace ErikwnkWFUI.Controls
             {
                 graphics.Restore(state);
             }
+        }
+
+        // Measured without the alignment/ellipsis flags - those make the
+        // measurement itself come back too narrow, which cut the text off
+        // on tabs that carry an image.
+        private int MeasureTextWidth(Graphics graphics, string text)
+        {
+            TextFormatFlags flags = TextFormatFlags.NoPadding | TextFormatFlags.SingleLine;
+
+            if (!ShowKeyboardCues)
+            {
+                flags |= TextFormatFlags.HidePrefix;
+            }
+
+            return TextRenderer.MeasureText(graphics, text, Font, Size.Empty, flags).Width;
         }
 
         private Image GetTabImage(TabPage page)

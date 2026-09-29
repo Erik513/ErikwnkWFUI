@@ -351,4 +351,99 @@ public class TabControlTests
         Assert.Equal(Color.FromArgb(200, 100, 50), Pixel(bitmap, onBar.X, onBar.Y));
         Assert.NotEqual(Color.FromArgb(200, 100, 50), Pixel(bitmap, beside.X, beside.Y));
     }
+
+    [Fact]
+    public void Render_DrawsTheTabImageFromTheImageList()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        using Bitmap icon = new Bitmap(16, 16);
+        using (Graphics graphics = Graphics.FromImage(icon))
+        {
+            graphics.Clear(Color.FromArgb(255, 128, 0));
+        }
+
+        using ImageList images = new ImageList();
+        images.Images.Add(icon);
+        tabs.ImageList = images;
+        tabs.TabPages[1].ImageIndex = 0;
+        Rectangle tab = tabs.GetTabRect(1);
+
+        using Bitmap bitmap = Render(tabs);
+
+        bool found = false;
+
+        for (int x = tab.Left; x < tab.Right && !found; x++)
+        {
+            found = Pixel(bitmap, x, tab.Top + tab.Height / 2) == Color.FromArgb(255, 128, 0);
+        }
+
+        Assert.True(found);
+    }
+
+    // ---- layouts the standard control offers ----
+
+    [Fact]
+    public void Multiline_StacksTheTabRows_AboveThePageArea()
+    {
+        using WfuiTabControl tabs = CreateTabs(pageCount: 12);
+        tabs.Width = 200;
+        tabs.Multiline = true;
+
+        Assert.True(tabs.RowCount > 1);
+
+        int lowestTabEdge = 0;
+
+        for (int i = 0; i < tabs.TabCount; i++)
+        {
+            lowestTabEdge = System.Math.Max(lowestTabEdge, tabs.GetTabRect(i).Bottom);
+        }
+
+        Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+        Assert.True(area.Top <= lowestTabEdge);
+        Assert.True(tabs.DisplayRectangle.Top >= lowestTabEdge);
+    }
+
+    [Fact]
+    public void FillToRight_StretchesEveryTabRowAcrossTheControl_AndStillRenders()
+    {
+        using WfuiTabControl tabs = CreateTabs(pageCount: 12);
+        tabs.Width = 200;
+        tabs.Multiline = true;
+        tabs.SizeMode = TabSizeMode.FillToRight;
+
+        using Bitmap bitmap = Render(tabs);
+
+        System.Collections.Generic.Dictionary<int, int> rightEdgeByRow = new System.Collections.Generic.Dictionary<int, int>();
+
+        for (int i = 0; i < tabs.TabCount; i++)
+        {
+            Rectangle rect = tabs.GetTabRect(i);
+            rightEdgeByRow[rect.Top] = System.Math.Max(rightEdgeByRow.ContainsKey(rect.Top) ? rightEdgeByRow[rect.Top] : 0, rect.Right);
+        }
+
+        Assert.All(rightEdgeByRow.Values, right => Assert.True(right >= tabs.Width - 6));
+    }
+
+    [Fact]
+    public void RightToLeftLayout_StillCreatesAndRenders()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.RightToLeft = RightToLeft.Yes;
+        tabs.RightToLeftLayout = true;
+
+        using Bitmap bitmap = Render(tabs);
+
+        Assert.Equal(3, tabs.TabCount);
+    }
+
+    [Fact]
+    public void ToolTips_KeepTheStandardDefault_AndThePagesToolTipText()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+
+        tabs.TabPages[0].ToolTipText = "Hint";
+
+        Assert.True(tabs.ShowToolTips == false);
+        Assert.Equal("Hint", tabs.TabPages[0].ToolTipText);
+    }
 }
