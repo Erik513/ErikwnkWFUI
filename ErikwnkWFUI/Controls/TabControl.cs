@@ -28,6 +28,11 @@ namespace ErikwnkWFUI.Controls
         // DisplayRectangle already excludes.
         private const int NativePageBorder = 4;
 
+        // The native tab strip sits this far in from the control's edges.
+        // The page box keeps the same margin so its edge lines up with the
+        // outer edge of the first tab instead of sticking out past it.
+        private const int NativeStripMargin = 2;
+
         private readonly ThemeColor _headerBackColor = new ThemeColor(() => Color.Transparent);
         private readonly ThemeColor _tabBackColor = new ThemeColor(() => UIColors.BackgroundDark);
         private readonly ThemeColor _hoverTabBackColor = new ThemeColor(() => UIColors.BackgroundLight);
@@ -308,16 +313,18 @@ namespace ErikwnkWFUI.Controls
             return Alignment == TabAlignment.Left || Alignment == TabAlignment.Right;
         }
 
-        // The page contents plus the native border band around them - what
-        // the tab strip leaves over. Its strip-side edge sits a couple of
-        // pixels behind the tabs, which is what lets the selected tab
-        // overlap it.
+        // The page contents plus the border band around them - what the tab
+        // strip leaves over. Its strip-side edge sits a couple of pixels
+        // behind the tabs, which is what lets the selected tab overlap it.
         private Rectangle GetPageAreaBounds()
         {
             Rectangle area = DisplayRectangle;
             area.Inflate(NativePageBorder, NativePageBorder);
 
-            return Rectangle.Intersect(ClientRectangle, area);
+            Rectangle inset = ClientRectangle;
+            inset.Inflate(-NativeStripMargin, -NativeStripMargin);
+
+            return Rectangle.Intersect(inset, area);
         }
 
         // A transparent (or translucent) header lets the parent's own
@@ -385,13 +392,14 @@ namespace ErikwnkWFUI.Controls
 
             bool hovered = index == _hoveredTabIndex;
             TabPage page = TabPages[index];
+            Rectangle outline = selected ? TrimToBorderLine(bounds) : bounds;
 
             using (SolidBrush brush = new SolidBrush(GetTabBackColor(selected, hovered)))
             {
-                graphics.FillRectangle(brush, bounds);
+                graphics.FillRectangle(brush, outline);
             }
 
-            DrawTabBorder(graphics, bounds);
+            DrawTabBorder(graphics, outline);
 
             if (selected)
             {
@@ -440,6 +448,29 @@ namespace ErikwnkWFUI.Controls
 
                 default:
                     return Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, Math.Min(bounds.Bottom, area.Top));
+            }
+        }
+
+        // The selected tab reaches a few pixels behind the page border, but
+        // its outline must end on that border line - carried on further it
+        // pokes out as little stubs into the page.
+        private Rectangle TrimToBorderLine(Rectangle bounds)
+        {
+            Rectangle area = GetPageAreaBounds();
+
+            switch (Alignment)
+            {
+                case TabAlignment.Bottom:
+                    return Rectangle.FromLTRB(bounds.Left, Math.Max(bounds.Top, area.Bottom - 1), bounds.Right, bounds.Bottom);
+
+                case TabAlignment.Left:
+                    return Rectangle.FromLTRB(bounds.Left, bounds.Top, Math.Min(bounds.Right, area.Left + 1), bounds.Bottom);
+
+                case TabAlignment.Right:
+                    return Rectangle.FromLTRB(Math.Max(bounds.Left, area.Right - 1), bounds.Top, bounds.Right, bounds.Bottom);
+
+                default:
+                    return Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, Math.Min(bounds.Bottom, area.Top + 1));
             }
         }
 

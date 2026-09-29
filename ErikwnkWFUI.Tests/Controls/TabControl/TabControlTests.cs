@@ -281,6 +281,34 @@ public class TabControlTests
         Assert.Equal(Color.FromArgb(21, 22, 23), Pixel(bitmap, other.Left + 4, area.Top));
     }
 
+    [Fact]
+    public void PageBox_LinesUpWithTheOuterEdgeOfTheFirstTab()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+
+        Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+
+        Assert.Equal(tabs.GetTabRect(0).Left, area.Left);
+    }
+
+    [Fact]
+    public void Render_SelectedTabOutline_EndsOnThePageBorder_WithoutStubsBelowIt()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.BorderColor = Color.FromArgb(21, 22, 23);
+        tabs.PageBackColor = Color.FromArgb(31, 32, 33);
+        tabs.SelectedTabBackColor = Color.FromArgb(31, 32, 33);
+        Rectangle selected = tabs.GetTabRect(0);
+        Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+
+        using Bitmap bitmap = Render(tabs);
+
+        // The tab's right outline is still there on the border line...
+        Assert.Equal(Color.FromArgb(21, 22, 23), Pixel(bitmap, selected.Right - 1, area.Top));
+        // ...but doesn't continue into the page below it.
+        Assert.Equal(Color.FromArgb(31, 32, 33), Pixel(bitmap, selected.Right - 1, area.Top + 1));
+    }
+
     [Theory]
     [InlineData(TabAlignment.Top)]
     [InlineData(TabAlignment.Bottom)]
