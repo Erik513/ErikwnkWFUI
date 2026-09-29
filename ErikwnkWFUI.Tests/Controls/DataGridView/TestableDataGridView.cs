@@ -5,6 +5,20 @@ using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 
 /// <summary>
+/// ReadOnlyDataGridView counterpart of <see cref="TestableDataGridView"/> -
+/// just enough to drive its own right-click behavior (OnCellMouseDown, now
+/// shared with the editable grid) without a real mouse.
+/// </summary>
+internal sealed class TestableReadOnlyDataGridView : ErikwnkWFUI.Controls.ReadOnlyDataGridView
+{
+    public void RaiseCellMouseDown(int columnIndex, int rowIndex, MouseButtons button)
+    {
+        OnCellMouseDown(new DataGridViewCellMouseEventArgs(
+            columnIndex, rowIndex, 0, 0, new MouseEventArgs(button, 1, 0, 0, 0)));
+    }
+}
+
+/// <summary>
 /// Exposes a couple of protected members needed to drive DataGridView's
 /// context-menu/keyboard behavior directly in a test, without an actual
 /// mouse or a message loop - a subclass can call its own base class's

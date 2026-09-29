@@ -35,47 +35,13 @@ namespace ErikwnkWFUI.Controls
     {
         private DataGridViewColumn _deleteRowColumn;
         private int _hoveredDeleteRowIndex = -1;
-        private int _contextMenuRowIndex = -1;
-        private int _contextMenuColumnIndex = -1;
 
-        // The one, single way this class ever decides "is this row the
-        // 'type here to add a row' placeholder, not real data" - every
-        // command that must only ever act on real rows (copy, cut, clear,
-        // paste, delete, insert-above/below, the context menu's own
-        // enable-state) goes through this, never IsNewRow/DataBoundItem/a
-        // list.Count comparison directly. NewRowIndex is WinForms' own
-        // authoritative answer to "which row index is currently the
-        // placeholder" (-1 when AllowUserToAddRows is off) - unlike
-        // IsNewRow or DataBoundItem, which can each disagree about a row
-        // that's mid-way through becoming real (e.g. merely tabbing or
-        // drag-selecting through the placeholder, with nothing typed into
-        // it, already makes WinForms call IBindingList.AddNew() on the
-        // bound list on its own), NewRowIndex stays correct through all of
-        // that, which is exactly why every one of those commands now
-        // shares this. A previous version of this file used three
-        // different, deliberately non-interchangeable checks for this
-        // instead, picked per call site by timing - that fragmentation
-        // caused real bugs here more than once (paste crashes, vanishing/
-        // duplicate rows, insert-above/below silently no-opping), which is
-        // the whole reason this exists now.
-        private bool IsPlaceholderRowIndex(int rowIndex)
+        // The base class's own IsSystemColumn (the enumeration column) plus
+        // this class's delete-row button - see ReadOnlyDataGridView's own
+        // remarks on what "system column" means everywhere it's used.
+        protected override bool IsSystemColumn(int columnIndex)
         {
-            return rowIndex >= 0 && rowIndex == NewRowIndex;
-        }
-
-        // A column whose cells hold no real data of the bound item's own -
-        // the delete-row button, and (from ReadOnlyDataGridView) the
-        // optional enumeration number - excluded everywhere a copy/paste/
-        // right-click action would otherwise treat it like an ordinary
-        // data column. Replaces what used to be a separate
-        // "_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index"
-        // check repeated at each of these call sites on its own, which is
-        // exactly why the enumeration column was still copyable/pasteable/
-        // right-clickable despite being ReadOnly - ReadOnly alone only
-        // blocks editing, none of these.
-        private bool IsSystemColumn(int columnIndex)
-        {
-            return (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index) || IsEnumerationColumn(columnIndex);
+            return base.IsSystemColumn(columnIndex) || (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index);
         }
 
         // True for a cell that's never a meaningful part of "the selected
@@ -91,22 +57,11 @@ namespace ErikwnkWFUI.Controls
             return IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex);
         }
 
-        // Captured at mouse-down time (see OnCellMouseDown) via
-        // IsPlaceholderRowIndex - still needed as a snapshot, not just a
-        // live re-check, because NewRowIndex itself can move between the
-        // click and whenever the context menu's Opening handler or a menu
-        // item's click actually runs (e.g. the click itself may already
-        // have advanced it).
-        private bool _contextMenuRowWasPlaceholder;
-        // Matches Controls.ContextMenuStrip's own CreateStandard default.
-        // BuildContextMenu reads this once, when it builds the menu in the
-        // constructor. The property setter below also pushes a later
-        // change straight into that already-built menu (found via the
-        // inherited ContextMenuStrip property) - needed because
-        // UIDataGridViewFactory.CreatePrimary sets this through an object
-        // initializer, which only runs after the constructor already built
-        // the menu - same pattern as ListView.ContextMenuSelectionColor.
-        private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
+        // ContextMenuSelectionColor and the right-click row tracking
+        // (_contextMenuRowIndex/_contextMenuColumnIndex/
+        // _contextMenuRowWasPlaceholder, OnCellMouseDown's row selection)
+        // all live on ReadOnlyDataGridView now - it has its own, smaller
+        // right-click menu that needs exactly the same behavior.
         private ToolStripMenuItem _contextMenuCutItem;
         private ToolStripMenuItem _contextMenuCopyItem;
         private ToolStripMenuItem _contextMenuPasteItem;
@@ -206,28 +161,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>
-        /// Background of a hovered/selected item in this grid's own
-        /// right-click context menu. Defaults to a fixed neutral gray,
-        /// matching <see cref="Controls.ContextMenuStrip"/>'s own
-        /// CreateStandard default; <see cref="Factories.UIDataGridViewFactory.CreatePrimary"/>
-        /// sets this to <see cref="UIColors.Primary"/> instead, same pattern
-        /// as <see cref="ReadOnlyDataGridView.BorderColor"/>.
-        /// </summary>
-        public Color ContextMenuSelectionColor
-        {
-            get { return _contextMenuSelectionColor.Value; }
-            set
-            {
-                _contextMenuSelectionColor.Set(value);
-
-                if (ContextMenuStrip is ContextMenuStrip menu)
-                {
-                    menu.SelectionBackColor = value;
-                }
-            }
-        }
-
         public DataGridView()
         {
             // ReadOnlyDataGridView defaults to a display-only grid - this
@@ -241,9 +174,8 @@ namespace ErikwnkWFUI.Controls
             AllowUserToDeleteRows = true;
             AllowUserToAddRows = true;
 
-            MouseDown += HandleContextMenuMouseDown;
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
-            ContextMenuStrip = BuildContextMenu();
+            ReplaceContextMenu(BuildContextMenu());
         }
 
         protected override void Dispose(bool disposing)
@@ -304,27 +236,6 @@ namespace ErikwnkWFUI.Controls
                 // as the rightmost one rather than letting the new column
                 // land to its right.
                 _deleteRowColumn.DisplayIndex = Columns.Count - 1;
-            }
-        }
-
-        // Separate from ReadOnlyDataGridView's own MouseDown subscription
-        // (HandleMouseDown there only clears a stray selection) - this one
-        // only needs to run for a right-click landing on truly empty space
-        // (no cell there at all, so OnCellMouseDown below never fires),
-        // to forget which row/column the context menu was about to target.
-        private void HandleContextMenuMouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Right)
-            {
-                return;
-            }
-
-            HitTestInfo hitTest = HitTest(e.X, e.Y);
-
-            if (hitTest.Type == DataGridViewHitTestType.None)
-            {
-                _contextMenuRowIndex = -1;
-                _contextMenuColumnIndex = -1;
             }
         }
 
@@ -398,64 +309,6 @@ namespace ErikwnkWFUI.Controls
                     CurrentCell = null;
                 }
             }));
-        }
-
-        protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
-        {
-            // Captured BEFORE base.OnCellMouseDown below, not after -
-            // regression fix: this control's SelectionMode is CellSelect,
-            // whose own native mouse-down handling (run by that base call)
-            // already selects the single clicked cell as its own default
-            // behavior. Checking IsRowSelected afterward, as this used to,
-            // meant the row it just clicked always already had ONE selected
-            // cell (the one just clicked) by the time it was checked -
-            // silently skipping SelectRow below for EVERY previously-
-            // unselected row, every time, and leaving just that one cell
-            // selected instead of the whole row the comment below (and the
-            // context menu's own row-scoped actions) actually need.
-            bool rowWasSelectedBeforeThisClick = e.RowIndex >= 0 && IsRowSelected(e.RowIndex);
-
-            // Same reason: moving CurrentCell into the placeholder (which
-            // that base call does for any mouse button) makes WinForms call
-            // IBindingList.AddNew() on its own, after which NewRowIndex
-            // advances past the row that was just clicked - checked
-            // afterward, this would wrongly report "not the placeholder"
-            // and defeat InsertBlankRow's own double-insert guard.
-            bool rowWasPlaceholderBeforeThisClick = IsPlaceholderRowIndex(e.RowIndex);
-
-            base.OnCellMouseDown(e);
-
-            if (e.Button != MouseButtons.Right)
-            {
-                return;
-            }
-
-            _contextMenuRowIndex = e.RowIndex;
-            _contextMenuColumnIndex = e.ColumnIndex;
-
-            _contextMenuRowWasPlaceholder = rowWasPlaceholderBeforeThisClick;
-
-            bool isSystemColumnCell = IsSystemColumn(e.ColumnIndex);
-
-            // Right-clicking a row that isn't already part of the
-            // current selection replaces it with just that row -
-            // otherwise the context menu's row-scoped actions (Cut,
-            // Delete selected rows, ...) would silently apply to
-            // whatever was selected before, not the row actually
-            // under the cursor. A row already part of a larger
-            // selection is left alone, so right-clicking within an
-            // existing multi-row selection keeps it intact. This
-            // still runs for the "type here to add a row" placeholder
-            // (its own row-scoped actions are disabled below, but
-            // Paste and "insert row above" both still make sense
-            // there, and both read the current selection to know
-            // where to act) - only the delete/enumeration columns are
-            // skipped, same as the menu's own Opening handler below
-            // never showing a menu there at all.
-            if (e.RowIndex >= 0 && !isSystemColumnCell && !rowWasSelectedBeforeThisClick)
-            {
-                SelectRow(e.RowIndex, e.ColumnIndex);
-            }
         }
 
         // The delete-row column is a plain read-only text column showing a
@@ -1281,19 +1134,6 @@ namespace ErikwnkWFUI.Controls
             return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
         }
 
-        private bool IsRowSelected(int rowIndex)
-        {
-            foreach (DataGridViewCell cell in SelectedCells)
-            {
-                if (cell.RowIndex == rowIndex)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         // "Insert row above/below" (see BuildContextMenu) needs the top
         // and bottom of the WHOLE current selection, not just the single
         // row that happened to be right-clicked (_contextMenuRowIndex) -
@@ -1337,57 +1177,6 @@ namespace ErikwnkWFUI.Controls
             return maxRowIndex >= 0;
         }
 
-        // Selects every data cell in a row (skipping the delete column, if
-        // shown - it isn't a meaningful part of "this row is selected" the
-        // way the right-click handling above means it), making the actual
-        // cell that was clicked current - not just whichever one happens
-        // to be first - so the current cell stays under the cursor instead
-        // of jumping to the row's first column.
-        private void SelectRow(int rowIndex, int clickedColumnIndex)
-        {
-            ClearSelection();
-
-            DataGridViewCell firstCell = null;
-            DataGridViewCell clickedCell = null;
-
-            foreach (DataGridViewColumn column in Columns)
-            {
-                if (column == _deleteRowColumn)
-                {
-                    continue;
-                }
-
-                DataGridViewCell cell = Rows[rowIndex].Cells[column.Index];
-                firstCell = firstCell ?? cell;
-
-                if (column.Index == clickedColumnIndex)
-                {
-                    clickedCell = cell;
-                }
-            }
-
-            // Regression fix: this control's SelectionMode is CellSelect,
-            // where assigning CurrentCell is itself a side-effecting
-            // operation that collapses SelectedCells down to just the new
-            // current cell - doing this LAST (as this used to) silently
-            // undid every Selected = true the loop above had just made,
-            // leaving only the clicked cell selected instead of the whole
-            // row. Setting it FIRST instead means the loop below, which
-            // selects every remaining cell afterward, is what actually
-            // sticks.
-            CurrentCell = clickedCell ?? firstCell;
-
-            foreach (DataGridViewColumn column in Columns)
-            {
-                if (column == _deleteRowColumn)
-                {
-                    continue;
-                }
-
-                Rows[rowIndex].Cells[column.Index].Selected = true;
-            }
-        }
-
         private ContextMenuStrip BuildContextMenu()
         {
             // None of this menu's items ever get an Image, so the native
@@ -1402,17 +1191,7 @@ namespace ErikwnkWFUI.Controls
             _contextMenuCutItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuCut"), null, (sender, e) => CutSelectionToClipboard());
             _contextMenuCopyItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopy"),
-                null,
-                (sender, e) =>
-                {
-                    DataObject clipboardContent = GetClipboardContent();
-
-                    if (clipboardContent != null)
-                    {
-                        Clipboard.SetDataObject(clipboardContent);
-                    }
-                });
+                UIStrings.Get("DataGridView.ContextMenuCopy"), null, (sender, e) => CopySelectionToClipboard());
             _contextMenuPasteItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuPaste"), null, (sender, e) => PasteFromClipboard());
             _contextMenuClearItem = new ToolStripMenuItem(

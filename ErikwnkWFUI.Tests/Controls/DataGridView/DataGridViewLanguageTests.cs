@@ -44,6 +44,7 @@ public class DataGridViewLanguageTests
     [InlineData("DataGridView.RowInserted")]
     [InlineData("DataGridView.ContextMenuCut")]
     [InlineData("DataGridView.ContextMenuCopy")]
+    [InlineData("DataGridView.ContextMenuSelectAll")]
     [InlineData("DataGridView.ContextMenuPaste")]
     [InlineData("DataGridView.ContextMenuClear")]
     [InlineData("DataGridView.ContextMenuDeleteRows")]
@@ -92,6 +93,27 @@ public class DataGridViewLanguageTests
                     continue;
                 }
 
+                Assert.NotEqual(englishTexts[i], menu.Items[i].Text);
+            }
+        });
+    }
+
+    [Fact]
+    public void ReadOnlyContextMenuItems_Text_UpdateLiveWhenLanguageChanges()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        WfuiContextMenuStrip menu = (WfuiContextMenuStrip)grid.ContextMenuStrip!;
+        string?[] englishTexts = new string?[menu.Items.Count];
+        for (int i = 0; i < menu.Items.Count; i++)
+        {
+            englishTexts[i] = menu.Items[i].Text;
+        }
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            for (int i = 0; i < menu.Items.Count; i++)
+            {
                 Assert.NotEqual(englishTexts[i], menu.Items[i].Text);
             }
         });
