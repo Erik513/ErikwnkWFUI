@@ -64,6 +64,7 @@ namespace ErikwnkWFUI.Styles
             ["ListView.RowsCopied"] = "{0} rows copied",
             ["ListView.WithHeaderSuffix"] = " (with header)",
 
+            ["DataGridView.WithHeaderSuffix"] = " (with header)",
             ["DataGridView.DeleteRow"] = "Delete row",
             ["DataGridView.DeleteRowHeader"] = "Del",
             ["DataGridView.AddRow"] = "Add row",
@@ -125,6 +126,7 @@ namespace ErikwnkWFUI.Styles
             ["ListView.RowsCopied"] = "{0} Zeilen kopiert",
             ["ListView.WithHeaderSuffix"] = " (mit Kopfzeile)",
 
+            ["DataGridView.WithHeaderSuffix"] = " (mit Kopfzeile)",
             ["DataGridView.DeleteRow"] = "Zeile löschen",
             ["DataGridView.DeleteRowHeader"] = "Entf",
             ["DataGridView.AddRow"] = "Zeile hinzufügen",

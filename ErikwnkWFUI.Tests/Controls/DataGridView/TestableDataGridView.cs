@@ -16,6 +16,15 @@ internal sealed class TestableReadOnlyDataGridView : ErikwnkWFUI.Controls.ReadOn
         OnCellMouseDown(new DataGridViewCellMouseEventArgs(
             columnIndex, rowIndex, 0, 0, new MouseEventArgs(button, 1, 0, 0, 0)));
     }
+
+    /// <summary>Every message that actually reached the display step (see TestableDataGridView).</summary>
+    public List<string> ActionConfirmationMessages { get; } = new List<string>();
+
+    protected override void OnActionConfirmation(string message)
+    {
+        ActionConfirmationMessages.Add(message);
+        base.OnActionConfirmation(message);
+    }
 }
 
 /// <summary>

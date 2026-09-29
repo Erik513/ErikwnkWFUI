@@ -476,11 +476,20 @@ namespace ErikwnkWFUI.Controls
             ShowActionConfirmation(GetCopyConfirmationMessage(copiedCellCount));
         }
 
-        private static string GetCopyConfirmationMessage(int copiedCellCount)
+        // Says so when the header text went along too - the same
+        // " (with header)" suffix ListView's own copy toast carries. The
+        // clipboard mode itself is the signal (CopySelectionToClipboard
+        // switches it for the "with header" entries), so a consumer who
+        // sets EnableAlwaysIncludeHeaderText for Ctrl+C gets the suffix too.
+        private string GetCopyConfirmationMessage(int copiedCellCount)
         {
-            return copiedCellCount == 1
+            string message = copiedCellCount == 1
                 ? UIStrings.Get("DataGridView.CellCopied")
                 : string.Format(UIStrings.Get("DataGridView.CellsCopied"), copiedCellCount);
+
+            return ClipboardCopyMode == DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText
+                ? message + UIStrings.Get("DataGridView.WithHeaderSuffix")
+                : message;
         }
 
         /// <summary>

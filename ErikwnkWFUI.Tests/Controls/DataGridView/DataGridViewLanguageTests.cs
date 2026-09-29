@@ -27,6 +27,7 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 public class DataGridViewLanguageTests
 {
     [Theory]
+    [InlineData("DataGridView.WithHeaderSuffix")]
     [InlineData("DataGridView.DeleteRow")]
     [InlineData("DataGridView.DeleteRowHeader")]
     [InlineData("DataGridView.AddRow")]
@@ -74,6 +75,7 @@ public class DataGridViewLanguageTests
     [InlineData("ListView.CopySelectionWithHeader", "DataGridView.ContextMenuCopySelectionWithHeader")]
     [InlineData("ListView.CopyAllWithHeader", "DataGridView.ContextMenuCopyAllWithHeader")]
     [InlineData("ListView.SelectAll", "DataGridView.ContextMenuSelectAll")]
+    [InlineData("ListView.WithHeaderSuffix", "DataGridView.WithHeaderSuffix")]
     public void CopyMenuTexts_MatchListViewsInEveryLanguage(string listViewKey, string dataGridViewKey)
     {
         foreach (UILanguage language in LanguageTestHelper.AllLanguages)

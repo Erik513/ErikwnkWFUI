@@ -257,6 +257,31 @@ public class ReadOnlyDataGridViewContextMenuTests
         });
     }
 
+    // Same wording as ListView's own "... (with header)" copy toast.
+    [Theory]
+    [InlineData(false, "2 cells copied")]
+    [InlineData(true, "2 cells copied (with header)")]
+    public void CopyConfirmation_MentionsTheHeaderOnlyWhenItWentAlong(bool withHeader, string expected)
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("Apple", 42));
+            using TestableReadOnlyDataGridView grid = new TestableReadOnlyDataGridView
+            {
+                BindingContext = new BindingContext(),
+                DataSource = items
+            };
+            _ = grid.Handle;
+            grid.ClearSelection();
+            grid.Rows[0].Cells[0].Selected = true;
+            grid.Rows[0].Cells[1].Selected = true;
+
+            (withHeader ? CopyWithHeader(Menu(grid)) : Copy(Menu(grid))).PerformClick();
+
+            Assert.Equal(new[] { expected }, grid.ActionConfirmationMessages);
+        });
+    }
+
     [Fact]
     public void CopyAsTable_RestoresTheNormalCopyModeAfterwards()
     {
