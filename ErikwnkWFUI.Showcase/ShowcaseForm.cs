@@ -321,6 +321,7 @@ namespace ErikwnkWFUI.Showcase
             AddSliderBarSection(table);
             AddSlimProgressBarsSection(table);
             AddSpinnerSection(table);
+            AddTabControlSection(table);
             AddTextBoxesSection(table);
             AddToggleSwitchesSection(table);
             AddVolumeSliderSection(table);
@@ -800,6 +801,32 @@ namespace ErikwnkWFUI.Showcase
             primaryListBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
 
             table.AddRow("CreatePrimary", 260, primaryListBox);
+        }
+
+        private void AddTabControlSection(PropertyTable table)
+        {
+            table.AddSection("TabControl");
+
+            table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard()));
+            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary()));
+        }
+
+        private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs)
+        {
+            foreach (string title in new[] { "Overview", "Details", "Disabled" })
+            {
+                System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
+                page.Controls.Add(new System.Windows.Forms.Label
+                {
+                    Text = "Content of the " + title + " tab",
+                    AutoSize = true,
+                    Location = new System.Drawing.Point(10, 10)
+                });
+                tabs.TabPages.Add(page);
+            }
+
+            tabs.TabPages[2].Enabled = false;
+            return tabs;
         }
 
         private void AddListViewSection(PropertyTable table)

@@ -532,6 +532,21 @@ namespace ErikwnkWFUI
             }
         }
 
+        /// <summary>A themed <see cref="Controls.TabControl"/> - behaves like the standard one, drawn in the library's own look.</summary>
+        public static class TabControls
+        {
+            public static Controls.TabControl CreateStandard()
+            {
+                return UITabControlFactory.CreateStandard();
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but with the selected tab's bar in the current accent instead of neutral gray - mirrors <see cref="ListBoxes.CreatePrimary"/>.</summary>
+            public static Controls.TabControl CreatePrimary()
+            {
+                return UITabControlFactory.CreatePrimary();
+            }
+        }
+
         /// <summary>A <see cref="Controls.ListBox"/> wrapped with an optional header bar - see <see cref="ListBoxes"/> for the list box on its own.</summary>
         public static class ListBoxControls
         {
