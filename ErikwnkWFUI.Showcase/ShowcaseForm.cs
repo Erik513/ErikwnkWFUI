@@ -808,11 +808,10 @@ namespace ErikwnkWFUI.Showcase
             table.AddSection("TabControl");
 
             table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3));
-            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3));
 
-            // Enough tabs that they can't all fit in one row: the scroll
-            // arrows show up at the right end of the tab strip.
-            table.AddRow("Overflow (scroll arrows)", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 30));
+            // More tabs than fit in one row, so the scroll arrows show up at
+            // the right end of the tab strip.
+            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 30));
 
             System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreatePrimary();
             multiline.Multiline = true;
