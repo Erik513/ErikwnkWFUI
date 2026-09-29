@@ -809,13 +809,16 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3));
 
-            // More tabs than fit in one row, so the scroll arrows show up at
-            // the right end of the tab strip.
-            table.AddRow("CreatePrimary", 140, CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 30));
-
+            // Two ways to handle more tabs than fit in a row: scroll arrows
+            // at the right end of the strip (left), or wrapping onto
+            // several rows (right).
             System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreatePrimary();
             multiline.Multiline = true;
-            table.AddRow("Multiline", 140, CreateTabControlDemo(multiline, 12));
+            table.AddRow(
+                "CreatePrimary",
+                160,
+                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 7, "TabControl with overflow arrows"),
+                CreateTabControlDemo(multiline, 7, "TabControl with Multiline"));
 
             // One row, four editors: PropertyTable splits the row's width
             // between them equally.
@@ -848,7 +851,7 @@ namespace ErikwnkWFUI.Showcase
             return tabs;
         }
 
-        private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs, int pageCount)
+        private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs, int pageCount, string description = null)
         {
             string[] titles = { "Overview", "Details", "Disabled" };
 
@@ -858,7 +861,7 @@ namespace ErikwnkWFUI.Showcase
                 System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
                 page.Controls.Add(new System.Windows.Forms.Label
                 {
-                    Text = "Content of the " + title + " tab",
+                    Text = description ?? "Content of the " + title + " tab",
                     AutoSize = true,
                     Location = new System.Drawing.Point(10, 10)
                 });
