@@ -818,9 +818,35 @@ namespace ErikwnkWFUI.Showcase
             multiline.Multiline = true;
             table.AddRow("Multiline", 140, CreateTabControlDemo(multiline, 12));
 
-            System.Windows.Forms.TabControl bottom =UIStyles.TabControls.CreatePrimary();
-            bottom.Alignment = System.Windows.Forms.TabAlignment.Bottom;
-            table.AddRow("Alignment = Bottom", 140, CreateTabControlDemo(bottom, 3));
+            // One row, four editors: PropertyTable splits the row's width
+            // between them equally.
+            table.AddRow(
+                "Alignment",
+                160,
+                CreateTabAlignmentDemo(System.Windows.Forms.TabAlignment.Top),
+                CreateTabAlignmentDemo(System.Windows.Forms.TabAlignment.Bottom),
+                CreateTabAlignmentDemo(System.Windows.Forms.TabAlignment.Left),
+                CreateTabAlignmentDemo(System.Windows.Forms.TabAlignment.Right));
+        }
+
+        private static System.Windows.Forms.Control CreateTabAlignmentDemo(System.Windows.Forms.TabAlignment alignment)
+        {
+            System.Windows.Forms.TabControl tabs = UIStyles.TabControls.CreatePrimary();
+            tabs.Alignment = alignment;
+
+            foreach (string title in new[] { "Overview", "Details" })
+            {
+                System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
+                page.Controls.Add(new System.Windows.Forms.Label
+                {
+                    Text = "Alignment = " + alignment,
+                    AutoSize = true,
+                    Location = new System.Drawing.Point(10, 10)
+                });
+                tabs.TabPages.Add(page);
+            }
+
+            return tabs;
         }
 
         private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs, int pageCount)
