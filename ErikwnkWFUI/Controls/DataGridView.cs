@@ -78,6 +78,19 @@ namespace ErikwnkWFUI.Controls
             return (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index) || IsEnumerationColumn(columnIndex);
         }
 
+        // True for a cell that's never a meaningful part of "the selected
+        // data" - a system column, or the "type here to add a row"
+        // placeholder - shared by every SelectedCells loop that just needs
+        // to skip both categories outright, without distinguishing which
+        // one excluded a given cell. A couple of other loops (see
+        // TryFillSingleValueIntoSelection/ResolvePasteAnchor) check the two
+        // separately instead, since they need to know specifically whether
+        // the placeholder was touched, not just that a cell was excluded.
+        private bool IsExcludedFromDataSelection(DataGridViewCell cell)
+        {
+            return IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex);
+        }
+
         // Captured at mouse-down time (see OnCellMouseDown) via
         // IsPlaceholderRowIndex - still needed as a snapshot, not just a
         // live re-check, because NewRowIndex itself can move between the
@@ -402,6 +415,14 @@ namespace ErikwnkWFUI.Controls
             // context menu's own row-scoped actions) actually need.
             bool rowWasSelectedBeforeThisClick = e.RowIndex >= 0 && IsRowSelected(e.RowIndex);
 
+            // Same reason: moving CurrentCell into the placeholder (which
+            // that base call does for any mouse button) makes WinForms call
+            // IBindingList.AddNew() on its own, after which NewRowIndex
+            // advances past the row that was just clicked - checked
+            // afterward, this would wrongly report "not the placeholder"
+            // and defeat InsertBlankRow's own double-insert guard.
+            bool rowWasPlaceholderBeforeThisClick = IsPlaceholderRowIndex(e.RowIndex);
+
             base.OnCellMouseDown(e);
 
             if (e.Button != MouseButtons.Right)
@@ -412,7 +433,7 @@ namespace ErikwnkWFUI.Controls
             _contextMenuRowIndex = e.RowIndex;
             _contextMenuColumnIndex = e.ColumnIndex;
 
-            _contextMenuRowWasPlaceholder = IsPlaceholderRowIndex(e.RowIndex);
+            _contextMenuRowWasPlaceholder = rowWasPlaceholderBeforeThisClick;
 
             bool isSystemColumnCell = IsSystemColumn(e.ColumnIndex);
 
@@ -668,9 +689,7 @@ namespace ErikwnkWFUI.Controls
         // without this override.
         public override DataObject GetClipboardContent()
         {
-            return ExcludingSelectedCells(
-                cell => IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex),
-                () => base.GetClipboardContent());
+            return ExcludingSelectedCells(IsExcludedFromDataSelection, () => base.GetClipboardContent());
         }
 
         // Cut = copy (via the same clipboard content the base class's own
@@ -684,6 +703,25 @@ namespace ErikwnkWFUI.Controls
         {
             if (SelectedCells.Count == 0)
             {
+                return;
+            }
+
+            // Nothing here can actually be cleared (e.g. every selected
+            // cell is ReadOnly) - the copy half still puts the values on the
+            // clipboard, same as a plain Ctrl+C on that selection would,
+            // so it keeps its own normal "copied" confirmation instead of
+            // being suppressed in favor of a "cut" message that would
+            // never show (clearedCount would be 0), which used to leave a
+            // successful copy with no feedback at all.
+            if (!HasClearableSelectedCell())
+            {
+                DataObject copyOnlyContent = GetClipboardContent();
+
+                if (copyOnlyContent != null)
+                {
+                    Clipboard.SetDataObject(copyOnlyContent);
+                }
+
                 return;
             }
 
@@ -712,6 +750,24 @@ namespace ErikwnkWFUI.Controls
             ShowActionConfirmation(message);
         }
 
+        private bool IsClearable(DataGridViewCell cell)
+        {
+            return !cell.ReadOnly && cell.RowIndex >= 0 && !IsPlaceholderRowIndex(cell.RowIndex);
+        }
+
+        private bool HasClearableSelectedCell()
+        {
+            foreach (DataGridViewCell cell in SelectedCells)
+            {
+                if (IsClearable(cell))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // Just the "clear" half of Cut - its own context-menu entry
         // ("Delete", as in clear the cell contents, not delete the row -
         // that's the separate "Delete selected rows" entry) needs it
@@ -724,7 +780,7 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (!cell.ReadOnly && cell.RowIndex >= 0 && !IsPlaceholderRowIndex(cell.RowIndex))
+                if (IsClearable(cell))
                 {
                     cell.Value = null;
                     clearedCount++;
@@ -1032,13 +1088,7 @@ namespace ErikwnkWFUI.Controls
         // derived from list after.
         private void InsertOverflowRows(IList list, IBindingList bindingList, int insertAtIndex, int overflowRowCount)
         {
-            List<object> originalItems = new List<object>(list.Count);
-
-            foreach (object item in list)
-            {
-                originalItems.Add(item);
-            }
-
+            List<object> originalItems = SnapshotItems(list);
             List<object> newItems = new List<object>(overflowRowCount);
 
             for (int i = 0; i < overflowRowCount; i++)
@@ -1263,17 +1313,12 @@ namespace ErikwnkWFUI.Controls
 
             foreach (DataGridViewCell cell in SelectedCells)
             {
-                if (IsSystemColumn(cell.ColumnIndex))
-                {
-                    continue;
-                }
-
                 // The placeholder is left fully selectable like any other
                 // row (see the remarks on OnRowLeave) - a drag-select
                 // reaching down that far could otherwise make this treat
                 // it as the selection's bottommost row, and "insert row
                 // below" would then try inserting past it.
-                if (IsPlaceholderRowIndex(cell.RowIndex))
+                if (IsExcludedFromDataSelection(cell))
                 {
                     continue;
                 }
@@ -1497,13 +1542,7 @@ namespace ErikwnkWFUI.Controls
 
             ApplyBatchedDataSourceChange(list, () =>
             {
-                List<object> originalItems = new List<object>(list.Count);
-
-                foreach (object item in list)
-                {
-                    originalItems.Add(item);
-                }
-
+                List<object> originalItems = SnapshotItems(list);
                 object newItem = bindingList.AddNew();
                 InsertItemsAt(list, originalItems, insertAtIndex, new[] { newItem });
             });

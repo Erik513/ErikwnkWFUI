@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -182,5 +183,57 @@ public class DataGridViewColumnReorderTests
 
         Assert.Equal(0, grid.Columns["Name"]!.DisplayIndex);
         Assert.Equal(1, grid.Columns["Value"]!.DisplayIndex);
+    }
+
+    // GetColumnsInDisplayOrder caches its own result (see its own
+    // remarks on why) - these three confirm the cache actually gets
+    // invalidated on every way that order/set can change, not just that
+    // a freshly-built grid resolves correctly (which would pass even with
+    // a cache that's never invalidated at all, since it'd still be
+    // correct the very first time).
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAColumnAddedAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.Columns.Add("Extra", "Extra");
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal(3, ordered.Count);
+        Assert.Contains(ordered, column => column.Name == "Extra");
+    }
+
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAColumnRemovedAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.ShowDeleteRowColumn = false; // removes the delete-row column
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal(2, ordered.Count);
+        Assert.DoesNotContain(ordered, column => column.Name == "__deleteRow");
+    }
+
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAReorderAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.InvokePrivate("MoveColumnToDisplayIndex", 0, 2); // "Name" moves after "Value"
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal("Value", ordered[0].Name);
+        Assert.Equal("Name", ordered[1].Name);
     }
 }

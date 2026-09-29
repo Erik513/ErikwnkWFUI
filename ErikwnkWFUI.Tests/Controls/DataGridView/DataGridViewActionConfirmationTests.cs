@@ -104,11 +104,12 @@ public class DataGridViewActionConfirmationTests
     }
 
     [Fact]
-    public void Cut_ReadOnlyColumnOnly_CopiesButShowsNoMessage()
+    public void Cut_ReadOnlyColumnOnly_FallsBackToAPlainCopyWithItsOwnConfirmation()
     {
-        // Nothing was actually cleared (the only selected cell is
-        // read-only), so there's nothing to confirm as "cut" - matches
-        // ClearSelectedCellValues's own zero-cleared guard.
+        // Nothing can actually be cleared (the only selected cell is
+        // read-only), so there's no "cut" to confirm - but the values
+        // still land on the clipboard exactly like a plain Ctrl+C would,
+        // which must not happen silently.
         StaThread.Run(() =>
         {
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
@@ -118,7 +119,8 @@ public class DataGridViewActionConfirmationTests
 
             grid.InvokePrivate("CutSelectionToClipboard");
 
-            Assert.Empty(grid.ActionConfirmationMessages);
+            Assert.Equal(new[] { "Cell copied" }, grid.ActionConfirmationMessages);
+            Assert.Equal("A", items[0].Name); // untouched, nothing was cleared
         });
     }
 

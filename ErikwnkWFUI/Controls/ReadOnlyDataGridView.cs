@@ -886,6 +886,7 @@ namespace ErikwnkWFUI.Controls
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
             base.OnColumnAdded(e);
+            _columnsInDisplayOrderCache = null;
 
             // Windows shows a cell's accessible "default action" as a hover
             // hint on its own (independent of ShowCellToolTips) whenever a
@@ -1411,15 +1412,47 @@ namespace ErikwnkWFUI.Controls
             base.OnGiveFeedback(gfbevent);
         }
 
+        // Rebuilt only when the column SET or ORDER actually changes (see
+        // the invalidation call sites: OnColumnAdded/OnColumnRemoved/
+        // OnColumnDisplayIndexChanged) - not on every call, which used to
+        // mean allocating and sorting a fresh list on every single header
+        // mouse-move tick (TryGetColumnAtBorder's own hover-cursor check)
+        // and every drag-over tick while reordering. Safe to hand callers
+        // the cached list directly rather than a defensive copy - every
+        // width this list's own entries get queried for (TryGetColumnAtBorder/
+        // GetDropInsertionIndex both take a widthOf delegate) reads
+        // DataGridViewColumn.Width live off the real column each call, not
+        // a snapshotted value, so a column resizing without also reordering
+        // never needs to invalidate this at all.
+        private List<DataGridViewColumn> _columnsInDisplayOrderCache;
+
         private List<DataGridViewColumn> GetColumnsInDisplayOrder()
         {
+            if (_columnsInDisplayOrderCache != null)
+            {
+                return _columnsInDisplayOrderCache;
+            }
+
             List<DataGridViewColumn> columns = new List<DataGridViewColumn>();
             foreach (DataGridViewColumn column in Columns)
             {
                 columns.Add(column);
             }
 
-            return ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
+            _columnsInDisplayOrderCache = ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
+            return _columnsInDisplayOrderCache;
+        }
+
+        protected override void OnColumnRemoved(DataGridViewColumnEventArgs e)
+        {
+            base.OnColumnRemoved(e);
+            _columnsInDisplayOrderCache = null;
+        }
+
+        protected override void OnColumnDisplayIndexChanged(DataGridViewColumnEventArgs e)
+        {
+            base.OnColumnDisplayIndexChanged(e);
+            _columnsInDisplayOrderCache = null;
         }
 
         private bool IsColumnResizable(DataGridViewColumn column)
@@ -1779,6 +1812,21 @@ namespace ErikwnkWFUI.Controls
             {
                 list.Add(originalItems[i]);
             }
+        }
+
+        // The snapshot InsertItemsAt's own originalItems parameter expects
+        // - must be taken BEFORE any AddNew() call the caller makes, per
+        // InsertItemsAt's own remarks above on why.
+        protected static List<object> SnapshotItems(IList list)
+        {
+            List<object> items = new List<object>(list.Count);
+
+            foreach (object item in list)
+            {
+                items.Add(item);
+            }
+
+            return items;
         }
 
         // Runs a multi-step change against the bound list (list.Clear()+Add()
