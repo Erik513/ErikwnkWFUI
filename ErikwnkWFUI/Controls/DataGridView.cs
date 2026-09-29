@@ -63,7 +63,6 @@ namespace ErikwnkWFUI.Controls
         // all live on ReadOnlyDataGridView now - it has its own, smaller
         // right-click menu that needs exactly the same behavior.
         private ToolStripMenuItem _contextMenuCutItem;
-        private ToolStripMenuItem _contextMenuCopyItem;
         private ToolStripMenuItem _contextMenuPasteItem;
         private ToolStripMenuItem _contextMenuClearItem;
         private ToolStripMenuItem _contextMenuDeleteRowsItem;
@@ -175,7 +174,7 @@ namespace ErikwnkWFUI.Controls
             AllowUserToAddRows = true;
 
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
-            ReplaceContextMenu(BuildContextMenu());
+            AddEditingMenuItems();
         }
 
         protected override void Dispose(bool disposing)
@@ -202,7 +201,6 @@ namespace ErikwnkWFUI.Controls
             if (_contextMenuCutItem != null)
             {
                 _contextMenuCutItem.Text = UIStrings.Get("DataGridView.ContextMenuCut");
-                _contextMenuCopyItem.Text = UIStrings.Get("DataGridView.ContextMenuCopy");
                 _contextMenuPasteItem.Text = UIStrings.Get("DataGridView.ContextMenuPaste");
                 _contextMenuClearItem.Text = UIStrings.Get("DataGridView.ContextMenuClear");
                 _contextMenuDeleteRowsItem.Text = UIStrings.Get("DataGridView.ContextMenuDeleteRows");
@@ -1177,21 +1175,18 @@ namespace ErikwnkWFUI.Controls
             return maxRowIndex >= 0;
         }
 
-        private ContextMenuStrip BuildContextMenu()
+        // Adds this class's editing entries to the menu ReadOnlyDataGridView
+        // already built (Copy / Copy with header / Copy all / Select all,
+        // identical in both grids) rather than building a second, separate
+        // menu - so the shared entries can never drift apart between the two.
+        // Cut goes in front, Paste/Clear right after the copy entries (before
+        // Select all), and the row-level entries follow, separated.
+        private void AddEditingMenuItems()
         {
-            // None of this menu's items ever get an Image, so the native
-            // reserved left-hand icon gutter just showed up as a blank
-            // strip nothing ever used - same fix as ListView.BuildContextMenu.
-            ContextMenuStrip menu = new ContextMenuStrip
-            {
-                ShowImageMargin = false,
-                SelectionBackColor = ContextMenuSelectionColor
-            };
+            System.Windows.Forms.ContextMenuStrip menu = ContextMenuStrip;
 
             _contextMenuCutItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuCut"), null, (sender, e) => CutSelectionToClipboard());
-            _contextMenuCopyItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopy"), null, (sender, e) => CopySelectionToClipboard());
             _contextMenuPasteItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuPaste"), null, (sender, e) => PasteFromClipboard());
             _contextMenuClearItem = new ToolStripMenuItem(
@@ -1219,10 +1214,12 @@ namespace ErikwnkWFUI.Controls
                     InsertBlankRow(rowIndex, above: false);
                 });
 
-            menu.Items.Add(_contextMenuCutItem);
-            menu.Items.Add(_contextMenuCopyItem);
-            menu.Items.Add(_contextMenuPasteItem);
-            menu.Items.Add(_contextMenuClearItem);
+            // Positions 0..4 are the base menu's Copy / Copy with header /
+            // Copy all / Select all - Cut in front of them, Paste/Clear
+            // between Copy all and Select all.
+            menu.Items.Insert(0, _contextMenuCutItem);
+            menu.Items.Insert(4, _contextMenuPasteItem);
+            menu.Items.Insert(5, _contextMenuClearItem);
             menu.Items.Add(new ToolStripSeparator());
             menu.Items.Add(_contextMenuDeleteRowsItem);
             menu.Items.Add(new ToolStripSeparator());
@@ -1231,24 +1228,22 @@ namespace ErikwnkWFUI.Controls
 
             menu.Opening += (sender, e) =>
             {
-                // No menu at all - not just disabled items - when the
-                // right-click wasn't on any row (the header and empty
-                // space below the rows both report RowIndex -1), or was
-                // on the delete column (its own left-click already
-                // deletes the row; none of Cut/Copy/Paste/Clear/insert
-                // make sense on it either). The "type here to add a row"
-                // placeholder still gets a menu - Paste still makes sense
-                // there, and so can insert row above/below if it's part
-                // of a larger selection that also reaches real rows (see
-                // hasRealRowSelected below) - only the row-scoped items
-                // tied to a specific real row (Cut/Copy/Clear/Delete
-                // selected rows) are unconditionally disabled below when
-                // the clicked row itself was the placeholder.
-                bool onSystemColumn = IsSystemColumn(_contextMenuColumnIndex);
-
-                if (_contextMenuRowIndex < 0 || onSystemColumn)
+                // The base menu's own Opening handler already ran first and
+                // cancelled the whole menu when the right-click wasn't on
+                // any row (the header and empty space below the rows both
+                // report RowIndex -1) or was on a system column (the delete
+                // column's own left-click already deletes the row; nothing
+                // else makes sense on it either). The "type here to add a
+                // row" placeholder still gets a menu - Paste still makes
+                // sense there, and so can insert row above/below if it's
+                // part of a larger selection that also reaches real rows
+                // (see hasRealRowSelected below) - only the row-scoped items
+                // tied to a specific real row (Cut/Clear/Delete selected
+                // rows, and the base menu's copy entries) are
+                // unconditionally disabled when the clicked row itself was
+                // the placeholder.
+                if (e.Cancel)
                 {
-                    e.Cancel = true;
                     return;
                 }
 
@@ -1256,7 +1251,6 @@ namespace ErikwnkWFUI.Controls
                 bool hasSelection = SelectedCells.Count > 0;
 
                 _contextMenuCutItem.Enabled = hasSelection && !ReadOnly && onRealRow;
-                _contextMenuCopyItem.Enabled = hasSelection && onRealRow;
                 _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
                 _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
@@ -1275,8 +1269,6 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows && hasRealRowSelected;
                 _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && hasRealRowSelected;
             };
-
-            return menu;
         }
 
         // Inserts one blank row immediately above or below rowIndex,

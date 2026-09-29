@@ -44,6 +44,8 @@ public class DataGridViewLanguageTests
     [InlineData("DataGridView.RowInserted")]
     [InlineData("DataGridView.ContextMenuCut")]
     [InlineData("DataGridView.ContextMenuCopy")]
+    [InlineData("DataGridView.ContextMenuCopyWithHeader")]
+    [InlineData("DataGridView.ContextMenuCopyAll")]
     [InlineData("DataGridView.ContextMenuSelectAll")]
     [InlineData("DataGridView.ContextMenuPaste")]
     [InlineData("DataGridView.ContextMenuClear")]

@@ -13,8 +13,8 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// OnOpening (see ReadOnlyDataGridViewEnumerationTests' own remarks on why -
 /// a real right-click isn't practical to drive headlessly). Menu items are
 /// read back by their fixed Items[] position (see BuildContextMenu's own
-/// Add order: Cut, Copy, Paste, Clear, separator, DeleteRows, separator,
-/// InsertAbove, InsertBelow) rather than by field, since those fields are
+/// Add order: Cut, Copy, CopyWithHeader, CopyAll, Paste, Clear, SelectAll,
+/// separator, DeleteRows, separator, InsertAbove, InsertBelow) rather than by field, since those fields are
 /// private. Paste's own Clipboard.ContainsText() check means this carries
 /// the same [Collection(ClipboardTestCollection.Name)] every other
 /// clipboard-touching test class does.
@@ -39,11 +39,14 @@ public class DataGridViewContextMenuEnableStateTests
 
     private static ToolStripMenuItem Cut(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[0];
     private static ToolStripMenuItem Copy(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[1];
-    private static ToolStripMenuItem Paste(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[2];
-    private static ToolStripMenuItem Clear(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[3];
-    private static ToolStripMenuItem DeleteRows(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[5];
-    private static ToolStripMenuItem InsertAbove(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[7];
-    private static ToolStripMenuItem InsertBelow(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[8];
+    private static ToolStripMenuItem CopyWithHeader(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[2];
+    private static ToolStripMenuItem CopyAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[3];
+    private static ToolStripMenuItem Paste(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[4];
+    private static ToolStripMenuItem Clear(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[5];
+    private static ToolStripMenuItem SelectAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[6];
+    private static ToolStripMenuItem DeleteRows(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[8];
+    private static ToolStripMenuItem InsertAbove(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[10];
+    private static ToolStripMenuItem InsertBelow(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[11];
 
     [Fact]
     public void NoSelection_DisablesEverySelectionDependentItem()
@@ -184,6 +187,67 @@ public class DataGridViewContextMenuEnableStateTests
         Assert.False(Cut(menu).Enabled); // the clicked row itself is still the placeholder
         Assert.True(InsertAbove(menu).Enabled); // but a real row IS in the selection
         Assert.True(InsertBelow(menu).Enabled);
+    }
+
+    [Fact]
+    public void SelectAll_WithARealRow_IsEnabled_AndSelectsEveryCellOfEveryRealRow()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+            (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
+            grid.ClearSelection();
+
+            Open(grid, menu, 0, 0);
+            Assert.True(SelectAll(menu).Enabled);
+            SelectAll(menu).PerformClick();
+
+            foreach (int rowIndex in new[] { 0, 1 })
+            {
+                Assert.True(grid.Rows[rowIndex].Cells[0].Selected);
+                Assert.True(grid.Rows[rowIndex].Cells[1].Selected);
+            }
+        });
+    }
+
+    [Fact]
+    public void CopyEntries_FollowSelectionAndPlaceholderJustLikeCopy()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+            (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
+            GridTestHelpers.SelectCells(grid, (0, 0));
+
+            Open(grid, menu, 0, 0);
+
+            Assert.True(Copy(menu).Enabled);
+            Assert.True(CopyWithHeader(menu).Enabled);
+            Assert.True(CopyAll(menu).Enabled);
+
+            // Right-clicking the placeholder itself: nothing real to copy
+            // from "this row", same as plain Copy always did.
+            int placeholderIndex = grid.Rows.Count - 1;
+            Open(grid, menu, placeholderIndex, 0);
+
+            Assert.False(Copy(menu).Enabled);
+            Assert.False(CopyWithHeader(menu).Enabled);
+            Assert.True(CopyAll(menu).Enabled); // still has a real row to copy
+        });
+    }
+
+    [Fact]
+    public void SelectAll_OnAGridHoldingOnlyThePlaceholder_IsDisabled()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems();
+            (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
+
+            Open(grid, menu, 0, 0);
+
+            Assert.False(SelectAll(menu).Enabled);
+        });
     }
 
     [Fact]

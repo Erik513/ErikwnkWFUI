@@ -68,7 +68,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ToolTip _copyConfirmationToolTip = new ToolTip();
 
         // Matches Controls.ContextMenuStrip's own CreateStandard default.
-        // BuildReadOnlyContextMenu reads this once, when it builds the menu
+        // BuildContextMenu reads this once, when it builds the menu
         // in the constructor. The property setter also pushes a later
         // change straight into whichever menu is currently assigned (found
         // via the inherited ContextMenuStrip property) - needed because
@@ -76,8 +76,10 @@ namespace ErikwnkWFUI.Controls
         // object initializer, which only runs after the constructor already
         // built the menu - same pattern as ListView.ContextMenuSelectionColor.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
-        private ToolStripMenuItem _readOnlyCopyItem;
-        private ToolStripMenuItem _readOnlySelectAllItem;
+        private ToolStripMenuItem _contextMenuCopyItem;
+        private ToolStripMenuItem _contextMenuCopyWithHeaderItem;
+        private ToolStripMenuItem _contextMenuCopyAllItem;
+        private ToolStripMenuItem _contextMenuSelectAllItem;
 
         /// <summary>
         /// Background of a hovered/selected item in this grid's own
@@ -764,7 +766,7 @@ namespace ErikwnkWFUI.Controls
             MouseDown += HandleContextMenuMouseDown;
 
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
-            ContextMenuStrip = BuildReadOnlyContextMenu();
+            ContextMenuStrip = BuildContextMenu();
         }
 
         // Which cell the context menu is about to act on - captured at
@@ -921,10 +923,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Nothing here edits anything - just what still makes sense on a
-        // display-only grid. DataGridView (the editable one) replaces this
-        // whole menu with its own (see ReplaceContextMenu).
-        private ContextMenuStrip BuildReadOnlyContextMenu()
+        // The menu both grids share: Copy / Copy with header / Copy all /
+        // Select all - everything that still makes sense on a display-only
+        // grid. DataGridView (the editable one) adds its own editing
+        // entries to this same menu instead of building a second one (see
+        // its AddEditingMenuItems), so these four can never drift apart
+        // between the two grids.
+        private ContextMenuStrip BuildContextMenu()
         {
             ContextMenuStrip menu = new ContextMenuStrip
             {
@@ -932,64 +937,89 @@ namespace ErikwnkWFUI.Controls
                 SelectionBackColor = ContextMenuSelectionColor
             };
 
-            _readOnlyCopyItem = new ToolStripMenuItem(
+            _contextMenuCopyItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuCopy"), null, (sender, e) => CopySelectionToClipboard());
-            _readOnlySelectAllItem = new ToolStripMenuItem(
+            _contextMenuCopyWithHeaderItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopyWithHeader"), null,
+                (sender, e) => CopySelectionToClipboard(includeHeader: true));
+            _contextMenuCopyAllItem = new ToolStripMenuItem(
+                UIStrings.Get("DataGridView.ContextMenuCopyAll"), null, (sender, e) => CopyAllToClipboard());
+            _contextMenuSelectAllItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuSelectAll"), null, (sender, e) => SelectAll());
 
-            menu.Items.Add(_readOnlyCopyItem);
-            menu.Items.Add(_readOnlySelectAllItem);
+            menu.Items.Add(_contextMenuCopyItem);
+            menu.Items.Add(_contextMenuCopyWithHeaderItem);
+            menu.Items.Add(_contextMenuCopyAllItem);
+            menu.Items.Add(_contextMenuSelectAllItem);
 
             menu.Opening += (sender, e) =>
             {
                 // No menu at all - not just disabled items - when the
                 // right-click wasn't on any row (the header and empty space
                 // below the rows both report RowIndex -1) or was on a
-                // system column (the enumeration column) - same as
-                // DataGridView's own menu.
+                // system column (the enumeration/delete column).
                 if (_contextMenuRowIndex < 0 || IsSystemColumn(_contextMenuColumnIndex))
                 {
                     e.Cancel = true;
                     return;
                 }
 
-                _readOnlyCopyItem.Enabled = SelectedCells.Count > 0;
-                _readOnlySelectAllItem.Enabled = Rows.Count > 0;
+                bool canCopySelection = SelectedCells.Count > 0 && !_contextMenuRowWasPlaceholder;
+                _contextMenuCopyItem.Enabled = canCopySelection;
+                _contextMenuCopyWithHeaderItem.Enabled = canCopySelection;
+
+                // Only worth offering with at least one real row - a grid
+                // holding nothing but the "type here" placeholder (only ever
+                // the editable one) has nothing meaningful to select or copy.
+                int realRowCount = Rows.Count - (NewRowIndex >= 0 ? 1 : 0);
+                _contextMenuCopyAllItem.Enabled = realRowCount > 0;
+                _contextMenuSelectAllItem.Enabled = realRowCount > 0;
             };
 
             return menu;
         }
 
-        // Puts the whole selection (minus system columns - see
+        // Puts the selection (minus system columns/the placeholder - see
         // GetClipboardContent) on the clipboard, the same content Ctrl+C
-        // produces - shared by both this class's own menu and DataGridView's.
-        protected void CopySelectionToClipboard()
+        // produces - shared by both grids' menus. includeHeader also puts
+        // the selected columns' header text on top, in display order - the
+        // native default (EnableWithAutoHeaderText) only does that for whole
+        // rows/columns selected via their headers, which this control's
+        // cell selection never produces, so it has to be asked for
+        // explicitly (then put back, so a plain Ctrl+C is unaffected).
+        protected void CopySelectionToClipboard(bool includeHeader = false)
         {
             if (SelectedCells.Count == 0)
             {
                 return;
             }
 
-            DataObject content = GetClipboardContent();
+            DataGridViewClipboardCopyMode previousMode = ClipboardCopyMode;
 
-            if (content != null)
+            if (includeHeader)
             {
-                Clipboard.SetDataObject(content);
+                ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
+            }
+
+            try
+            {
+                DataObject content = GetClipboardContent();
+
+                if (content != null)
+                {
+                    Clipboard.SetDataObject(content);
+                }
+            }
+            finally
+            {
+                ClipboardCopyMode = previousMode;
             }
         }
 
-        // For a subclass that builds its own, fuller menu (DataGridView) -
-        // disposes the read-only one this constructor already built rather
-        // than leaving it orphaned, and drops the references to its items so
-        // the language-change handler doesn't keep re-texting a menu nobody
-        // can see anymore.
-        protected void ReplaceContextMenu(ContextMenuStrip menu)
+        private void CopyAllToClipboard()
         {
-            System.Windows.Forms.ContextMenuStrip previous = ContextMenuStrip;
-            _readOnlyCopyItem = null;
-            _readOnlySelectAllItem = null;
-            ContextMenuStrip = menu;
-            previous?.Dispose();
+            SelectAll();
+            CopySelectionToClipboard(includeHeader: true);
         }
 
         protected override void Dispose(bool disposing)
@@ -1010,10 +1040,12 @@ namespace ErikwnkWFUI.Controls
         // ShowEnumeration and the read-only menu live on this (base) class.
         private void OnUIStringsLanguageChanged(object sender, EventArgs e)
         {
-            if (_readOnlyCopyItem != null)
+            if (_contextMenuCopyItem != null)
             {
-                _readOnlyCopyItem.Text = UIStrings.Get("DataGridView.ContextMenuCopy");
-                _readOnlySelectAllItem.Text = UIStrings.Get("DataGridView.ContextMenuSelectAll");
+                _contextMenuCopyItem.Text = UIStrings.Get("DataGridView.ContextMenuCopy");
+                _contextMenuCopyWithHeaderItem.Text = UIStrings.Get("DataGridView.ContextMenuCopyWithHeader");
+                _contextMenuCopyAllItem.Text = UIStrings.Get("DataGridView.ContextMenuCopyAll");
+                _contextMenuSelectAllItem.Text = UIStrings.Get("DataGridView.ContextMenuSelectAll");
             }
 
             if (_enumerationColumn == null)

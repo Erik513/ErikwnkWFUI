@@ -24,7 +24,11 @@ public class ReadOnlyDataGridViewContextMenuTests
 
     private static ToolStripMenuItem Copy(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[0];
 
-    private static ToolStripMenuItem SelectAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[1];
+    private static ToolStripMenuItem CopyWithHeader(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[1];
+
+    private static ToolStripMenuItem CopyAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[2];
+
+    private static ToolStripMenuItem SelectAll(WfuiContextMenuStrip menu) => (ToolStripMenuItem)menu.Items[3];
 
     // Simulates "row 0, column 0 was right-clicked" (what OnCellMouseDown
     // captures on a real right-click) - without it the menu correctly
@@ -37,13 +41,15 @@ public class ReadOnlyDataGridViewContextMenuTests
     }
 
     [Fact]
-    public void ReadOnlyGrid_HasACopyAndSelectAllMenu()
+    public void ReadOnlyGrid_HasTheFourSharedCopyAndSelectEntries()
     {
         using WfuiReadOnlyDataGridView grid = new WfuiReadOnlyDataGridView();
         WfuiContextMenuStrip menu = Menu(grid);
 
-        Assert.Equal(2, menu.Items.Count);
+        Assert.Equal(4, menu.Items.Count);
         Assert.Equal("Copy", Copy(menu).Text);
+        Assert.Equal("Copy with header", CopyWithHeader(menu).Text);
+        Assert.Equal("Copy all", CopyAll(menu).Text);
         Assert.Equal("Select all", SelectAll(menu).Text);
     }
 
@@ -221,6 +227,105 @@ public class ReadOnlyDataGridViewContextMenuTests
         });
     }
 
+    private static string NormalizedClipboardText() =>
+        Clipboard.GetText().Replace("\r\n", "\n").Trim();
+
+    [Fact]
+    public void CopyWithHeader_PutsTheHeaderTextOnTopOfTheSelection()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("Apple", 42));
+            using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+            grid.ActionConfirmation = ErikwnkWFUI.Controls.CopyConfirmationStyle.None;
+            grid.ClearSelection();
+            grid.Rows[0].Cells[grid.Columns["Name"]!.Index].Selected = true;
+            grid.Rows[0].Cells[grid.Columns["Value"]!.Index].Selected = true;
+
+            CopyWithHeader(Menu(grid)).PerformClick();
+
+            Assert.Equal("Name\tValue\nApple\t42", NormalizedClipboardText());
+        });
+    }
+
+    [Fact]
+    public void CopyWithHeader_RestoresTheNormalCopyModeAfterwards()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("Apple", 42));
+            using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+            grid.ActionConfirmation = ErikwnkWFUI.Controls.CopyConfirmationStyle.None;
+            System.Windows.Forms.DataGridViewClipboardCopyMode before = grid.ClipboardCopyMode;
+            grid.ClearSelection();
+            grid.Rows[0].Cells[0].Selected = true;
+
+            CopyWithHeader(Menu(grid)).PerformClick();
+
+            Assert.Equal(before, grid.ClipboardCopyMode);
+        });
+    }
+
+    [Fact]
+    public void CopyWithHeader_LeavesTheEnumerationColumnAndItsHeaderOut()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("Apple", 42));
+            using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+            grid.ActionConfirmation = ErikwnkWFUI.Controls.CopyConfirmationStyle.None;
+            grid.ShowEnumeration = true;
+            grid.ClearSelection();
+            foreach (DataGridViewCell cell in grid.Rows[0].Cells)
+            {
+                cell.Selected = true;
+            }
+
+            CopyWithHeader(Menu(grid)).PerformClick();
+
+            Assert.Equal("Name\tValue\nApple\t42", NormalizedClipboardText());
+        });
+    }
+
+    [Fact]
+    public void CopyAll_SelectsEverythingAndCopiesItWithTheHeader()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+            using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+            grid.ActionConfirmation = ErikwnkWFUI.Controls.CopyConfirmationStyle.None;
+            grid.ClearSelection();
+
+            CopyAll(Menu(grid)).PerformClick();
+
+            Assert.Equal("Name\tValue\nA\t1\nB\t2", NormalizedClipboardText());
+            Assert.Equal(grid.Rows.Count * grid.Columns.Count, grid.SelectedCells.Count);
+        });
+    }
+
+    [Fact]
+    public void CopyAll_OnTheEditableGrid_LeavesOutThePlaceholderAndTheDeleteColumn()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+            using ErikwnkWFUI.Controls.DataGridView grid = new ErikwnkWFUI.Controls.DataGridView
+            {
+                BindingContext = new BindingContext(),
+                DataSource = items
+            };
+            _ = grid.Handle;
+            grid.ActionConfirmation = ErikwnkWFUI.Controls.CopyConfirmationStyle.None;
+            grid.ShowDeleteRowColumn = true;
+            WfuiContextMenuStrip menu = (WfuiContextMenuStrip)grid.ContextMenuStrip!;
+
+            ((ToolStripMenuItem)menu.Items[3]).PerformClick(); // Copy all
+
+            Assert.Equal("Name\tValue\nA\t1", NormalizedClipboardText());
+        });
+    }
+
     [Fact]
     public void SelectAll_SelectsEveryCell()
     {
@@ -248,9 +353,10 @@ public class ReadOnlyDataGridViewContextMenuTests
     {
         using ErikwnkWFUI.Controls.DataGridView grid = new ErikwnkWFUI.Controls.DataGridView();
 
-        // Cut, Copy, Paste, Clear, separator, DeleteRows, separator,
-        // InsertAbove, InsertBelow - not the read-only Copy/Select all pair.
-        Assert.Equal(9, grid.ContextMenuStrip!.Items.Count);
+        // The four shared entries (Copy, CopyWithHeader, CopyAll, SelectAll)
+        // plus Cut, Paste, Clear, DeleteRows, InsertAbove, InsertBelow and
+        // two separators.
+        Assert.Equal(12, grid.ContextMenuStrip!.Items.Count);
     }
 }
 
