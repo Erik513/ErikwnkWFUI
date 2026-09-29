@@ -954,7 +954,7 @@ namespace ErikwnkWFUI.Controls
                 UIStrings.Get("DataGridView.ContextMenuCopyAllWithHeader"), null,
                 (sender, e) => CopyAllToClipboard(includeHeader: true));
             _contextMenuSelectAllItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuSelectAll"), null, (sender, e) => SelectAll());
+                UIStrings.Get("DataGridView.ContextMenuSelectAll"), null, (sender, e) => SelectAllRealCells());
 
             menu.Items.Add(_contextMenuCopySelectionItem);
             menu.Items.Add(_contextMenuCopySelectionWithHeaderItem);
@@ -1029,9 +1029,40 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private void CopyAllToClipboard(bool includeHeader)
+        // Select all, minus the "type here to add a row" placeholder (only
+        // ever present on the editable grid): it isn't a real row, so it
+        // must not count as selected - neither for the copy/cut/delete
+        // actions that follow, nor visually.
+        private void SelectAllRealCells()
         {
             SelectAll();
+
+            if (NewRowIndex >= 0)
+            {
+                foreach (DataGridViewCell cell in Rows[NewRowIndex].Cells)
+                {
+                    cell.Selected = false;
+                }
+            }
+        }
+
+        // Ctrl+A goes through the same path as the menu entry. Not while a
+        // cell is being edited - there it selects the text in the editor.
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A && !IsCurrentCellInEditMode)
+            {
+                SelectAllRealCells();
+                e.Handled = true;
+                return;
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        private void CopyAllToClipboard(bool includeHeader)
+        {
+            SelectAllRealCells();
             CopySelectionToClipboard(includeHeader);
         }
 

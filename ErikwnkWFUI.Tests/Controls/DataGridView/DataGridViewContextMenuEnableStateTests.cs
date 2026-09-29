@@ -213,6 +213,25 @@ public class DataGridViewContextMenuEnableStateTests
                 Assert.True(grid.Rows[rowIndex].Cells[0].Selected);
                 Assert.True(grid.Rows[rowIndex].Cells[1].Selected);
             }
+
+            // The "type here" placeholder is not a real row.
+            Assert.All(grid.Rows[grid.NewRowIndex].Cells.Cast<DataGridViewCell>(), c => Assert.False(c.Selected));
+        });
+    }
+
+    [Fact]
+    public void CtrlA_SelectsEveryRealCell_ButNotThePlaceholder()
+    {
+        StaThread.Run(() =>
+        {
+            BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
+            (WfuiDataGridView grid, WfuiContextMenuStrip _) = CreateGridWithMenu(items);
+            grid.ClearSelection();
+
+            grid.InvokePrivate("OnKeyDown", new KeyEventArgs(Keys.Control | Keys.A));
+
+            Assert.Equal(2 * grid.Columns.Count, grid.SelectedCells.Count);
+            Assert.All(grid.Rows[grid.NewRowIndex].Cells.Cast<DataGridViewCell>(), c => Assert.False(c.Selected));
         });
     }
 
