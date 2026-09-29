@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
@@ -30,6 +30,20 @@ public class TabScrollButtonsTests
 
     [DllImport("user32.dll")]
     private static extern bool GetWindowRect(System.IntPtr hWnd, out RECT rect);
+
+    [DllImport("user32.dll")]
+    private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int message, System.IntPtr wParam, System.IntPtr lParam);
+
+    private const int WM_HSCROLL = 0x0114;
+    private const int SB_THUMBPOSITION = 4;
+
+    // Scrolls the tab strip the way the arrows do: the native up-down
+    // reports its new position to the tab control.
+    private static void ScrollTo(WfuiTabControl tabs, int position)
+    {
+        SendMessage(tabs.Handle, WM_HSCROLL, (System.IntPtr)(SB_THUMBPOSITION | (position << 16)), GetButtons(tabs).Handle);
+        Application.DoEvents();
+    }
 
     private static Form ShowOverflowingTabs(out WfuiTabControl tabs, TabAlignment alignment = TabAlignment.Top)
     {
@@ -113,6 +127,78 @@ public class TabScrollButtonsTests
             Assert.Equal(Color.FromArgb(51, 52, 53), Color.FromArgb(first.R, first.G, first.B));
             Assert.Equal(Color.FromArgb(51, 52, 53), Color.FromArgb(second.R, second.G, second.B));
             Assert.Equal(Color.FromArgb(61, 62, 63), Color.FromArgb(outline.R, outline.G, outline.B));
+        });
+    }
+
+    [Fact]
+    public void ArrowsSitFlushWithThePageBoxAndTheRowOfTabs_OnTop()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            // Right edge on the box's outer edge, bottom on its border line.
+            Assert.Equal(area.Right, arrows.Right);
+            Assert.Equal(area.Top + 1, arrows.Bottom);
+            Assert.Equal(tabs.GetTabRect(0).Top, arrows.Top);
+        });
+    }
+
+    [Fact]
+    public void ArrowsSitFlushWithThePageBoxAndTheRowOfTabs_OnBottom()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs, TabAlignment.Bottom);
+            Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            Assert.Equal(area.Right, arrows.Right);
+            Assert.Equal(area.Bottom - 1, arrows.Top);
+        });
+    }
+
+    [Fact]
+    public void ArrowsStayInPlace_WhenTheControlIsResized()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+
+            host.ClientSize = new Size(420, 120);
+            Application.DoEvents();
+            Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            Assert.Equal(area.Right, arrows.Right);
+        });
+    }
+
+    [Fact]
+    public void ScrolledOutTabs_AreNotDrawnBeforeTheStripOrBehindTheArrows()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            host.BackColor = Color.FromArgb(71, 72, 73);
+            ScrollTo(tabs, 2);
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            using Bitmap bitmap = new Bitmap(host.ClientSize.Width, host.ClientSize.Height);
+            host.DrawToBitmap(bitmap, new Rectangle(Point.Empty, host.ClientSize));
+
+            Color background = Color.FromArgb(71, 72, 73);
+            int y = tabs.GetTabRect(0).Top + 5;
+
+            // Left of the strip's first pixel column, nothing of a hidden
+            // tab may show; nor may anything right of the arrows.
+            Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(0, y).ToArgb() | unchecked((int)0xFF000000)));
+            Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(1, y).ToArgb() | unchecked((int)0xFF000000)));
+            Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(arrows.Right + 1, y).ToArgb() | unchecked((int)0xFF000000)));
         });
     }
 }

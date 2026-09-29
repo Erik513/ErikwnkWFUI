@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
@@ -24,6 +24,7 @@ namespace ErikwnkWFUI.Controls
 
         private const string ClassName = "msctls_updown32";
 
+        private const int WM_WINDOWPOSCHANGING = 0x0046;
         private const int WM_PAINT = 0x000F;
         private const int WM_ERASEBKGND = 0x0014;
         private const int WM_MOUSEMOVE = 0x0200;
@@ -37,8 +38,14 @@ namespace ErikwnkWFUI.Controls
         private const int UDS_HORZ = 0x0040;
         private const int UDM_GETRANGE32 = 0x0470;
         private const int UDM_GETPOS32 = 0x0472;
+        private const int TCM_ADJUSTRECT = 0x1328;
 
         private const int TME_LEAVE = 0x0002;
+
+        private const int SWP_NOSIZE = 0x0001;
+        private const int SWP_NOMOVE = 0x0002;
+        private const int SWP_NOZORDER = 0x0004;
+        private const int SWP_NOACTIVATE = 0x0010;
 
         private readonly TabControl _owner;
 
@@ -63,7 +70,21 @@ namespace ErikwnkWFUI.Controls
             if (child != IntPtr.Zero)
             {
                 AssignHandle(child);
+                MoveToOwnerPosition();
             }
+        }
+
+        // Where the arrows currently are, in the tab control's client
+        // coordinates - empty while there are none or they're hidden.
+        public Rectangle GetBounds()
+        {
+            if (Handle == IntPtr.Zero || !IsWindowVisible(Handle))
+                return Rectangle.Empty;
+
+            RECT rect;
+            GetWindowRect(Handle, out rect);
+
+            return _owner.RectangleToClient(Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom));
         }
 
         public void Refresh()
@@ -88,10 +109,82 @@ namespace ErikwnkWFUI.Controls
             return inFirstHalf ? Part.First : Part.Second;
         }
 
+        // The native control places the arrows a pixel or two off from the
+        // strip and past the page box's edge - every move it makes is
+        // corrected to the position the owner wants instead.
+        private void MoveToOwnerPosition()
+        {
+            RECT rect;
+            GetWindowRect(Handle, out rect);
+            Point? location = GetDesiredLocation(new Size(rect.Right - rect.Left, rect.Bottom - rect.Top));
+
+            if (location.HasValue)
+            {
+                SetWindowPos(Handle, IntPtr.Zero, location.Value.X, location.Value.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+            }
+        }
+
+        // In the strip's last stretch, flush with the page box's outer edge
+        // and the row of tabs. Null for the vertical alignments, where the
+        // native position is kept. Measured natively rather than through
+        // the managed ClientRectangle/DisplayRectangle: the native control
+        // moves the arrows while it is still handling a resize, when those
+        // managed values haven't caught up yet.
+        private Point? GetDesiredLocation(Size size)
+        {
+            if (_owner.Alignment != TabAlignment.Top && _owner.Alignment != TabAlignment.Bottom)
+                return null;
+
+            IntPtr tabs = GetParent(Handle);
+            RECT client;
+            GetClientRect(tabs, out client);
+
+            RECT display = client;
+            SendMessage(tabs, TCM_ADJUSTRECT, IntPtr.Zero, ref display);
+
+            int right = client.Right - TabControl.NativeStripMargin;
+
+            if (_owner.Alignment == TabAlignment.Top)
+            {
+                int pageTop = Math.Max(TabControl.NativeStripMargin, display.Top - TabControl.NativePageBorder);
+                return new Point(right - size.Width, pageTop + 1 - size.Height);
+            }
+
+            int pageBottom = Math.Min(client.Bottom - TabControl.NativeStripMargin, display.Bottom + TabControl.NativePageBorder);
+            return new Point(right - size.Width, pageBottom - 1);
+        }
+
+        private void CorrectPosition(ref Message m)
+        {
+            WINDOWPOS position = (WINDOWPOS)Marshal.PtrToStructure(m.LParam, typeof(WINDOWPOS));
+
+            if ((position.flags & SWP_NOMOVE) != 0)
+                return;
+
+            RECT rect;
+            GetWindowRect(Handle, out rect);
+            Size size = (position.flags & SWP_NOSIZE) != 0
+                ? new Size(rect.Right - rect.Left, rect.Bottom - rect.Top)
+                : new Size(position.cx, position.cy);
+
+            Point? location = GetDesiredLocation(size);
+
+            if (!location.HasValue)
+                return;
+
+            position.x = location.Value.X;
+            position.y = location.Value.Y;
+            Marshal.StructureToPtr(position, m.LParam, false);
+        }
+
         protected override void WndProc(ref Message m)
         {
             switch (m.Msg)
             {
+                case WM_WINDOWPOSCHANGING:
+                    CorrectPosition(ref m);
+                    break;
+
                 case WM_ERASEBKGND:
                     m.Result = (IntPtr)1;
                     return;
@@ -337,6 +430,18 @@ namespace ErikwnkWFUI.Controls
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        private struct WINDOWPOS
+        {
+            public IntPtr hwnd;
+            public IntPtr hwndInsertAfter;
+            public int x;
+            public int y;
+            public int cx;
+            public int cy;
+            public int flags;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
         private struct PAINTSTRUCT
         {
             public IntPtr hdc;
@@ -365,10 +470,25 @@ namespace ErikwnkWFUI.Controls
         private static extern bool GetClientRect(IntPtr hWnd, out RECT rect);
 
         [DllImport("user32.dll")]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr insertAfter, int x, int y, int cx, int cy, int flags);
+
+        [DllImport("user32.dll")]
         private static extern int GetWindowLong(IntPtr hWnd, int index);
 
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, ref RECT lParam);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetParent(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         private static extern bool InvalidateRect(IntPtr hWnd, IntPtr rect, bool erase);

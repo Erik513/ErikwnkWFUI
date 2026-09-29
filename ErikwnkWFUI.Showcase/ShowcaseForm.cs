@@ -861,7 +861,9 @@ namespace ErikwnkWFUI.Showcase
                 System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
                 page.Controls.Add(new System.Windows.Forms.Label
                 {
-                    Text = description ?? "Content of the " + title + " tab",
+                    Text = description == null
+                        ? "Content of the " + title + " tab"
+                        : title + ": " + description,
                     AutoSize = true,
                     Location = new System.Drawing.Point(10, 10)
                 });

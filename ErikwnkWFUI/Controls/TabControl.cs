@@ -29,12 +29,12 @@ namespace ErikwnkWFUI.Controls
 
         // Width of the native border band around the page contents, which
         // DisplayRectangle already excludes.
-        private const int NativePageBorder = 4;
+        internal const int NativePageBorder = 4;
 
         // The native tab strip sits this far in from the control's edges.
         // The page box keeps the same margin so its edge lines up with the
         // outer edge of the first tab instead of sticking out past it.
-        private const int NativeStripMargin = 2;
+        internal const int NativeStripMargin = 2;
 
         private readonly ThemeColor _headerBackColor = new ThemeColor(() => Color.Transparent);
         private readonly ThemeColor _tabBackColor = new ThemeColor(() => UIColors.BackgroundDark);
@@ -246,6 +246,10 @@ namespace ErikwnkWFUI.Controls
 
             DrawPageArea(e.Graphics);
 
+            // Tabs scrolled out of view keep their (off-strip) rectangles, so
+            // drawing is limited to the stretch of the strip that shows tabs.
+            e.Graphics.SetClip(GetVisibleStripBounds());
+
             // The selected tab goes last: it overlaps its neighbours by a
             // couple of pixels and has to stay on top.
             for (int i = 0; i < TabCount; i++)
@@ -260,6 +264,8 @@ namespace ErikwnkWFUI.Controls
             {
                 DrawTab(e.Graphics, SelectedIndex);
             }
+
+            e.Graphics.ResetClip();
         }
 
         protected override void OnParentBackColorChanged(EventArgs e)
@@ -408,6 +414,25 @@ namespace ErikwnkWFUI.Controls
                     graphics.FillRectangle(brush, ClientRectangle);
                 }
             }
+        }
+
+        // The part of the client area tabs may be drawn in: inside the
+        // strip's margin at the start, and stopping where the scroll arrows
+        // begin at the end.
+        private Rectangle GetVisibleStripBounds()
+        {
+            Rectangle bounds = ClientRectangle;
+            bounds.Inflate(-NativeStripMargin, -NativeStripMargin);
+
+            Rectangle arrows = _scrollButtons.GetBounds();
+
+            if (arrows.IsEmpty)
+                return bounds;
+
+            if (IsVertical())
+                return Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, Math.Min(bounds.Bottom, arrows.Top));
+
+            return Rectangle.FromLTRB(bounds.Left, bounds.Top, Math.Min(bounds.Right, arrows.Left), bounds.Bottom);
         }
 
         private void DrawPageArea(Graphics graphics)
