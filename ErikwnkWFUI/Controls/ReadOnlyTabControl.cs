@@ -226,6 +226,11 @@ namespace ErikwnkWFUI.Controls
 
         public ReadOnlyTabControl()
         {
+            // First, before anything below can resize the control: on the
+            // .NET Framework, setting the font makes the tab control resize
+            // itself while it is still being constructed.
+            _scrollButtons = new TabScrollButtons(this);
+
             Font = UIFonts.Normal;
             ForeColor = UIColors.TextPrimary;
 
@@ -238,8 +243,6 @@ namespace ErikwnkWFUI.Controls
                 true);
 
             UpdateStyles();
-
-            _scrollButtons = new TabScrollButtons(this);
         }
 
         protected override void WndProc(ref Message m)
@@ -275,7 +278,11 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnResize(e);
 
-            _scrollButtons.AttachTo(Handle);
+            // Not before there is a window - reading Handle would create it.
+            if (IsHandleCreated)
+            {
+                _scrollButtons.AttachTo(Handle);
+            }
         }
 
         protected override void Dispose(bool disposing)
