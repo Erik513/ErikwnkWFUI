@@ -23,6 +23,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// state - otherwise "state unchanged after the switch" would prove nothing.
 /// Uses a shown form: focus needs real windows.
 /// </summary>
+[Collection(FocusTestCollection.Name)]
 public class TabControlFocusTests
 {
     [DllImport("user32.dll")]

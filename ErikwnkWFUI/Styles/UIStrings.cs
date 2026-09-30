@@ -56,6 +56,7 @@ namespace ErikwnkWFUI.Styles
             ["InfoPopup.None"] = "None",
 
             ["TabControl.AddTab"] = "Add tab",
+            ["TabControl.RenameTab"] = "Rename tab",
             ["TabControl.CloseTab"] = "Close tab",
             ["TabControl.NewTabTitle"] = "New tab",
 
@@ -122,6 +123,7 @@ namespace ErikwnkWFUI.Styles
             ["InfoPopup.None"] = "Keine",
 
             ["TabControl.AddTab"] = "Tab hinzufügen",
+            ["TabControl.RenameTab"] = "Tab umbenennen",
             ["TabControl.CloseTab"] = "Tab schließen",
             ["TabControl.NewTabTitle"] = "Neuer Tab",
 

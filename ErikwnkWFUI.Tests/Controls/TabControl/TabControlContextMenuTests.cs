@@ -39,7 +39,9 @@ public class TabControlContextMenuTests
 
     private static ToolStripMenuItem AddItem(WfuiTabControl tabs) => (ToolStripMenuItem)Menu(tabs).Items[0];
 
-    private static ToolStripMenuItem CloseItem(WfuiTabControl tabs) => (ToolStripMenuItem)Menu(tabs).Items[1];
+    private static ToolStripMenuItem RenameItem(WfuiTabControl tabs) => (ToolStripMenuItem)Menu(tabs).Items[1];
+
+    private static ToolStripMenuItem CloseItem(WfuiTabControl tabs) => (ToolStripMenuItem)Menu(tabs).Items[2];
 
     private static void RightClick(WfuiTabControl tabs, int tabIndex)
     {
@@ -79,16 +81,17 @@ public class TabControlContextMenuTests
         using WfuiTabControl tabs = new WfuiTabControl();
 
         tabs.AllowUserToAddTabs = false;
+        tabs.AllowUserToCloseTabs = false;
         Assert.NotNull(tabs.ContextMenuStrip);
 
-        tabs.AllowUserToCloseTabs = false;
+        tabs.AllowUserToRenameTabs = false;
         Assert.Null(tabs.ContextMenuStrip);
     }
 
     [Fact]
     public void TurningEditingBackOn_PutsTheMenuBack()
     {
-        using WfuiTabControl tabs = new WfuiTabControl { AllowUserToAddTabs = false, AllowUserToCloseTabs = false };
+        using WfuiTabControl tabs = new WfuiTabControl { AllowUserToAddTabs = false, AllowUserToCloseTabs = false, AllowUserToRenameTabs = false };
 
         tabs.AllowUserToCloseTabs = true;
 
@@ -98,7 +101,7 @@ public class TabControlContextMenuTests
     [Fact]
     public void AMenuTheApplicationAssigned_IsNeverReplaced()
     {
-        using WfuiTabControl tabs = new WfuiTabControl { AllowUserToAddTabs = false, AllowUserToCloseTabs = false };
+        using WfuiTabControl tabs = new WfuiTabControl { AllowUserToAddTabs = false, AllowUserToCloseTabs = false, AllowUserToRenameTabs = false };
         System.Windows.Forms.ContextMenuStrip own = new System.Windows.Forms.ContextMenuStrip();
         tabs.ContextMenuStrip = own;
 
@@ -553,6 +556,7 @@ public class TabControlLanguageTests
 {
     [Theory]
     [InlineData("TabControl.AddTab")]
+    [InlineData("TabControl.RenameTab")]
     [InlineData("TabControl.CloseTab")]
     [InlineData("TabControl.NewTabTitle")]
     public void Key_IsTranslatedForEveryLanguage(string key)
@@ -565,13 +569,16 @@ public class TabControlLanguageTests
     {
         using WfuiTabControl tabs = new WfuiTabControl();
         WfuiContextMenuStrip menu = (WfuiContextMenuStrip)tabs.ContextMenuStrip!;
-        string? addEnglish = menu.Items[0].Text;
-        string? closeEnglish = menu.Items[1].Text;
+        string?[] english = menu.Items.Cast<ToolStripItem>().Select(item => item.Text).ToArray();
 
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
         {
-            Assert.NotEqual(addEnglish, menu.Items[0].Text);
-            Assert.NotEqual(closeEnglish, menu.Items[1].Text);
+            Assert.Equal(3, menu.Items.Count);
+
+            for (int i = 0; i < english.Length; i++)
+            {
+                Assert.NotEqual(english[i], menu.Items[i].Text);
+            }
         });
     }
 

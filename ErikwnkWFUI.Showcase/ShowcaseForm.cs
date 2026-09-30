@@ -818,11 +818,11 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateStandard",
                 140,
-                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3, "Right-click a tab to add or close tabs"));
+                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3, "Right-click a tab to add, rename or close tabs (double-click renames)"));
             table.AddRow(
                 "CreatePrimary",
                 140,
-                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3, "Right-click a tab to add or close tabs"));
+                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3, "Right-click a tab to add, rename or close tabs (double-click renames)"));
 
             // One row, four editors: PropertyTable splits the row's width
             // between them equally.

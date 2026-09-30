@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -18,9 +19,11 @@ namespace ErikwnkWFUI.Controls
     /// <see cref="SelectTabOnRightClick"/>), so it is clear which one the menu
     /// acts on. Closing the selected tab selects the one before it (the next
     /// one when it was the first), and the last remaining tab can never be
-    /// closed.
-    /// Switch either action off with <see cref="AllowUserToAddTabs"/> /
-    /// <see cref="AllowUserToCloseTabs"/>. Use
+    /// closed. "Rename tab" (or a double-click on the tab) turns the tab's
+    /// name into a text box to type the new name straight into: Enter or
+    /// leaving it applies the name, Escape drops it.
+    /// Switch an action off with <see cref="AllowUserToAddTabs"/> /
+    /// <see cref="AllowUserToCloseTabs"/> / <see cref="AllowUserToRenameTabs"/>. Use
     /// <see cref="ReadOnlyTabControl"/> for tabs that cannot be edited at all.
     /// </remarks>
     public class TabControl : ReadOnlyTabControl
@@ -30,6 +33,20 @@ namespace ErikwnkWFUI.Controls
         private bool _allowUserToAddTabs;
         private bool _allowUserToCloseTabs;
         private bool _selectTabOnRightClick = true;
+        private bool _allowUserToRenameTabs;
+        private bool _renameTabOnDoubleClick = true;
+        private bool _renameTabAfterAdding;
+        private ToolStripMenuItem _renameTabItem;
+
+        // The text box that sits on a tab while its name is being edited.
+        private TextBox _renameBox;
+        private int _renameIndex = -1;
+        private RenameClickFilter _renameClickFilter;
+
+        private const int MinimumRenameWidth = 60;
+        private const int DefaultMaxTabNameLength = 40;
+
+        private int _maxTabNameLength = DefaultMaxTabNameLength;
         private ContextMenuStrip _builtInMenu;
         private ToolStripMenuItem _addTabItem;
         private ToolStripMenuItem _closeTabItem;
@@ -45,6 +62,68 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>Raised before a tab is closed from the context menu. Cancel it to keep the tab.</summary>
         public event EventHandler<TabClosingEventArgs> TabClosing;
+
+        /// <summary>Raised before a typed name is applied to a tab. Cancel it to keep the old name, or change <see cref="TabRenamingEventArgs.NewName"/>.</summary>
+        public event EventHandler<TabRenamingEventArgs> TabRenaming;
+
+        /// <summary>Raised after a tab got its new name.</summary>
+        public event EventHandler<TabRenamedEventArgs> TabRenamed;
+
+        /// <summary>Lets the user rename tabs - from the right-click menu and, see <see cref="RenameTabOnDoubleClick"/>, by double-clicking. On by default.</summary>
+        public bool AllowUserToRenameTabs
+        {
+            get => _allowUserToRenameTabs;
+            set
+            {
+                _allowUserToRenameTabs = value;
+                UpdateBuiltInMenu();
+
+                if (!value)
+                {
+                    EndRename(commit: false);
+                }
+            }
+        }
+
+        /// <summary>Whether a double-click on a tab starts renaming it (needs <see cref="AllowUserToRenameTabs"/>). On by default.</summary>
+        public bool RenameTabOnDoubleClick
+        {
+            get => _renameTabOnDoubleClick;
+            set => _renameTabOnDoubleClick = value;
+        }
+
+        /// <summary>Whether a tab added from the menu starts out in rename mode, so it can be named right away. Off by default.</summary>
+        public bool RenameTabAfterAdding
+        {
+            get => _renameTabAfterAdding;
+            set => _renameTabAfterAdding = value;
+        }
+
+        /// <summary>
+        /// The most characters a tab name can have when the user types it -
+        /// the rename box stops accepting more, and a pasted text is cut to
+        /// fit. 40 by default; must be at least 1. Names that are already
+        /// longer are left as they are until they are edited.
+        /// </summary>
+        public int MaxTabNameLength
+        {
+            get => _maxTabNameLength;
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException(nameof(value), "A tab name needs room for at least one character.");
+
+                _maxTabNameLength = value;
+
+                if (_renameBox != null)
+                {
+                    _renameBox.MaxLength = value;
+                }
+            }
+        }
+
+        /// <summary>Whether a tab's name is being edited right now.</summary>
+        public bool IsRenamingTab => _renameBox != null;
 
         /// <summary>Lets the user add tabs from the right-click menu. On by default.</summary>
         public bool AllowUserToAddTabs
@@ -105,6 +184,7 @@ namespace ErikwnkWFUI.Controls
 
             AllowUserToAddTabs = true;
             AllowUserToCloseTabs = true;
+            AllowUserToRenameTabs = true;
         }
 
         protected override void Dispose(bool disposing)
@@ -112,6 +192,7 @@ namespace ErikwnkWFUI.Controls
             if (disposing)
             {
                 UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
+                EndRename(commit: false);
 
                 if (_builtInMenu != null)
                 {
@@ -121,6 +202,47 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.Dispose(disposing);
+        }
+
+        protected override void OnMouseDoubleClick(MouseEventArgs e)
+        {
+            base.OnMouseDoubleClick(e);
+
+            if (e.Button == MouseButtons.Left && _allowUserToRenameTabs && _renameTabOnDoubleClick)
+            {
+                int index = GetTabIndexAt(e.Location);
+
+                if (index >= 0)
+                {
+                    BeginRenameTab(index);
+                }
+            }
+        }
+
+        // Anything that moves the tabs, or changes which one is selected,
+        // ends the edit - the box would be left over a tab it no longer
+        // belongs to.
+        protected override void OnSelectedIndexChanged(EventArgs e)
+        {
+            EndRename(commit: true);
+            base.OnSelectedIndexChanged(e);
+        }
+
+        protected override void OnResize(EventArgs e)
+        {
+            EndRename(commit: true);
+            base.OnResize(e);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            // The strip scrolling (WM_HSCROLL / WM_VSCROLL) moves every tab.
+            if ((m.Msg == 0x0114 || m.Msg == 0x0115) && _renameBox != null)
+            {
+                EndRename(commit: true);
+            }
+
+            base.WndProc(ref m);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -145,7 +267,7 @@ namespace ErikwnkWFUI.Controls
         // which always wins.
         private void UpdateBuiltInMenu()
         {
-            bool wanted = _allowUserToAddTabs || _allowUserToCloseTabs;
+            bool wanted = _allowUserToAddTabs || _allowUserToCloseTabs || _allowUserToRenameTabs;
 
             if (wanted && ContextMenuStrip == null)
             {
@@ -162,6 +284,7 @@ namespace ErikwnkWFUI.Controls
                 _builtInMenu.Dispose();
                 _builtInMenu = null;
                 _addTabItem = null;
+                _renameTabItem = null;
                 _closeTabItem = null;
             }
         }
@@ -175,9 +298,11 @@ namespace ErikwnkWFUI.Controls
             };
 
             _addTabItem = new ToolStripMenuItem(UIStrings.Get("TabControl.AddTab"), null, (sender, e) => AddTabFromMenu());
+            _renameTabItem = new ToolStripMenuItem(UIStrings.Get("TabControl.RenameTab"), null, (sender, e) => RenameTabFromMenu());
             _closeTabItem = new ToolStripMenuItem(UIStrings.Get("TabControl.CloseTab"), null, (sender, e) => CloseTabFromMenu());
 
             menu.Items.Add(_addTabItem);
+            menu.Items.Add(_renameTabItem);
             menu.Items.Add(_closeTabItem);
 
             menu.Opening += (sender, e) =>
@@ -186,6 +311,8 @@ namespace ErikwnkWFUI.Controls
                 _rightClickedTabIndex = -1;
 
                 _addTabItem.Visible = _allowUserToAddTabs;
+                _renameTabItem.Visible = _allowUserToRenameTabs;
+                _renameTabItem.Enabled = _menuTargetIndex >= 0 && _menuTargetIndex < TabCount;
                 _closeTabItem.Visible = _allowUserToCloseTabs;
                 _closeTabItem.Enabled = CanCloseTab(_menuTargetIndex);
             };
@@ -222,6 +349,22 @@ namespace ErikwnkWFUI.Controls
 
             TabPages.Insert(insertAt, args.TabPage);
             SelectedTab = args.TabPage;
+
+            if (_renameTabAfterAdding && _allowUserToRenameTabs)
+            {
+                // After the menu has closed - it hands the focus back to
+                // whatever had it before, which would end the edit again.
+                TabPage added = args.TabPage;
+                BeginInvoke(new Action(() => BeginRenameTab(TabPages.IndexOf(added))));
+            }
+        }
+
+        private void RenameTabFromMenu()
+        {
+            int index = _menuTargetIndex;
+
+            // Same reason as above: the menu is still closing.
+            BeginInvoke(new Action(() => BeginRenameTab(index)));
         }
 
         // Closing the selected tab selects the one before it - or, for the
@@ -259,7 +402,167 @@ namespace ErikwnkWFUI.Controls
                 return;
 
             _addTabItem.Text = UIStrings.Get("TabControl.AddTab");
+            _renameTabItem.Text = UIStrings.Get("TabControl.RenameTab");
             _closeTabItem.Text = UIStrings.Get("TabControl.CloseTab");
+        }
+
+        // ---- renaming in place ----
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SetParent(IntPtr child, IntPtr newParent);
+
+        /// <summary>
+        /// Turns the name of a tab into a text box: type the new name, Enter
+        /// or leaving the box applies it, Escape drops it. The tab is
+        /// selected first. Does nothing without <see cref="AllowUserToRenameTabs"/>.
+        /// </summary>
+        public void BeginRenameTab(int index)
+        {
+            if (!_allowUserToRenameTabs || index < 0 || index >= TabCount || !IsHandleCreated)
+                return;
+
+            EndRename(commit: true);
+
+            if (index != SelectedIndex)
+            {
+                SelectedIndex = index;
+            }
+
+            Rectangle tab = GetTabRect(index);
+            int width = Math.Max(MinimumRenameWidth, tab.Width - 8);
+
+            TextBox box = new TextBox
+            {
+                Text = TabPages[index].Text,
+                BorderStyle = BorderStyle.None,
+                Font = Font,
+                BackColor = SelectedTabBackColor,
+                ForeColor = SelectedTabForeColor,
+                MaxLength = _maxTabNameLength
+            };
+
+            box.Location = new Point(tab.Left + 4, tab.Top + Math.Max(0, (tab.Height - box.PreferredHeight) / 2));
+            box.Width = width;
+
+            box.KeyDown += OnRenameBoxKeyDown;
+            box.LostFocus += (sender, e) => EndRename(commit: true);
+
+            _renameBox = box;
+            _renameIndex = index;
+
+            // Only a control that takes the focus makes the box lose it - a
+            // click on a page's empty area or a label does not, so every
+            // click outside the box has to end the edit by itself.
+            _renameClickFilter = new RenameClickFilter(this, box);
+            Application.AddMessageFilter(_renameClickFilter);
+
+            // A tab control only accepts pages as children, so the box is
+            // attached to its window directly.
+            _ = box.Handle;
+            SetParent(box.Handle, Handle);
+            box.Visible = true;
+            box.SelectAll();
+            box.Focus();
+        }
+
+        private void OnRenameBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.SuppressKeyPress = true;
+                EndRename(commit: true);
+            }
+            else if (e.KeyCode == Keys.Escape)
+            {
+                e.SuppressKeyPress = true;
+                EndRename(commit: false);
+            }
+        }
+
+        private void EndRename(bool commit)
+        {
+            TextBox box = _renameBox;
+
+            if (box == null)
+                return;
+
+            // Cleared first: taking the box away moves the focus, which
+            // would come back in here.
+            int index = _renameIndex;
+            _renameBox = null;
+            _renameIndex = -1;
+
+            if (_renameClickFilter != null)
+            {
+                Application.RemoveMessageFilter(_renameClickFilter);
+                _renameClickFilter = null;
+            }
+
+            string name = box.Text.Trim();
+            box.Dispose();
+
+            if (commit && index >= 0 && index < TabCount && name.Length > 0)
+            {
+                ApplyName(TabPages[index], name);
+            }
+
+            if (IsHandleCreated && !Focused)
+            {
+                Focus();
+            }
+        }
+
+        // Watches the mouse while a name is being edited: a button going down
+        // anywhere but in the box itself ends the edit and applies the name.
+        private sealed class RenameClickFilter : IMessageFilter
+        {
+            private const int WM_LBUTTONDOWN = 0x0201;
+            private const int WM_RBUTTONDOWN = 0x0204;
+            private const int WM_MBUTTONDOWN = 0x0207;
+            private const int WM_XBUTTONDOWN = 0x020B;
+            private const int WM_NCLBUTTONDOWN = 0x00A1;
+            private const int WM_NCRBUTTONDOWN = 0x00A4;
+
+            private readonly TabControl _owner;
+            private readonly TextBox _box;
+
+            public RenameClickFilter(TabControl owner, TextBox box)
+            {
+                _owner = owner;
+                _box = box;
+            }
+
+            public bool PreFilterMessage(ref Message m)
+            {
+                bool isButtonDown =
+                    m.Msg == WM_LBUTTONDOWN || m.Msg == WM_RBUTTONDOWN || m.Msg == WM_MBUTTONDOWN ||
+                    m.Msg == WM_XBUTTONDOWN || m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN;
+
+                if (isButtonDown && _box.IsHandleCreated && m.HWnd != _box.Handle)
+                {
+                    _owner.EndRename(commit: true);
+                }
+
+                // Never swallowed - the click still does what it was meant to.
+                return false;
+            }
+        }
+
+        private void ApplyName(TabPage page, string name)
+        {
+            string oldName = page.Text;
+
+            if (name == oldName)
+                return;
+
+            TabRenamingEventArgs args = new TabRenamingEventArgs(page, oldName, name);
+            TabRenaming?.Invoke(this, args);
+
+            if (args.Cancel || string.IsNullOrWhiteSpace(args.NewName))
+                return;
+
+            page.Text = args.NewName.Trim();
+            TabRenamed?.Invoke(this, new TabRenamedEventArgs(page, oldName));
         }
     }
 }

@@ -48,4 +48,40 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Where the click was, in the tab control's own coordinates.</summary>
         public Point Location { get; }
     }
+
+    /// <summary>Data for <see cref="TabControl.TabRenaming"/>.</summary>
+    public class TabRenamingEventArgs : CancelEventArgs
+    {
+        public TabRenamingEventArgs(TabPage tabPage, string oldName, string newName)
+        {
+            TabPage = tabPage;
+            OldName = oldName;
+            NewName = newName;
+        }
+
+        /// <summary>The page that is being renamed.</summary>
+        public TabPage TabPage { get; }
+
+        /// <summary>The name it has now.</summary>
+        public string OldName { get; }
+
+        /// <summary>The name that was typed. Change it to use a different one; an empty name is ignored.</summary>
+        public string NewName { get; set; }
+    }
+
+    /// <summary>Data for <see cref="TabControl.TabRenamed"/>.</summary>
+    public class TabRenamedEventArgs : EventArgs
+    {
+        public TabRenamedEventArgs(TabPage tabPage, string oldName)
+        {
+            TabPage = tabPage;
+            OldName = oldName;
+        }
+
+        /// <summary>The page that was renamed; <c>Text</c> already holds the new name.</summary>
+        public TabPage TabPage { get; }
+
+        /// <summary>The name it had before.</summary>
+        public string OldName { get; }
+    }
 }
