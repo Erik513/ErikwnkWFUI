@@ -535,15 +535,28 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="Controls.TabControl"/> - behaves like the standard one, drawn in the library's own look.</summary>
         public static class TabControls
         {
+            /// <summary>The editable variant - right-click a tab to add or close tabs. Use <see cref="CreateReadOnlyStandard"/> instead for tabs the user cannot edit.</summary>
             public static Controls.TabControl CreateStandard()
             {
                 return UITabControlFactory.CreateStandard();
             }
 
-            /// <summary>Like <see cref="CreateStandard"/> but with the selected tab's bar in the current accent instead of neutral gray - mirrors <see cref="ListBoxes.CreatePrimary"/>.</summary>
+            /// <summary>The display-only variant - tabs can be switched, not added or closed. Use <see cref="CreateStandard"/> instead for editable tabs.</summary>
+            public static Controls.ReadOnlyTabControl CreateReadOnlyStandard()
+            {
+                return UITabControlFactory.CreateReadOnlyStandard();
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but with the selected tab's bar and the menu selection in the current accent instead of neutral gray - mirrors <see cref="DataGridViews.CreatePrimary"/>.</summary>
             public static Controls.TabControl CreatePrimary()
             {
                 return UITabControlFactory.CreatePrimary();
+            }
+
+            /// <summary>Like <see cref="CreateReadOnlyStandard"/> but with the selected tab's bar in the current accent - the read-only counterpart to <see cref="CreatePrimary"/>.</summary>
+            public static Controls.ReadOnlyTabControl CreateReadOnlyPrimary()
+            {
+                return UITabControlFactory.CreateReadOnlyPrimary();
             }
         }
 

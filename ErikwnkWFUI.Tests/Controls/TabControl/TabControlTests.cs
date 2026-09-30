@@ -4,7 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using WfuiTabControl = ErikwnkWFUI.Controls.TabControl;
+using WfuiTabControl = ErikwnkWFUI.Controls.ReadOnlyTabControl;
 
 namespace ErikwnkWFUI.Tests.Controls.TabControl;
 
@@ -80,11 +80,74 @@ public class TabControlTests
     }
 
     [Fact]
+    public void CreateReadOnlyStandard_KeepsTheAccentBarNeutral()
+    {
+        using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyStandard();
+
+        Assert.Equal(UIColors.BorderLight, tabs.AccentColor);
+    }
+
+    [Fact]
     public void CreatePrimary_ColorsTheAccentBarInTheAccent()
     {
         using WfuiTabControl tabs = UITabControlFactory.CreatePrimary();
 
         Assert.Equal(UIColors.Primary, tabs.AccentColor);
+    }
+
+    [Fact]
+    public void CreateReadOnlyPrimary_ColorsTheAccentBarInTheAccent()
+    {
+        using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyPrimary();
+
+        Assert.Equal(UIColors.Primary, tabs.AccentColor);
+    }
+
+    [Fact]
+    public void TheReadOnlyVariants_HaveNoEditingMenu_TheEditableOnesDo()
+    {
+        using WfuiTabControl readOnlyStandard = UITabControlFactory.CreateReadOnlyStandard();
+        using WfuiTabControl readOnlyPrimary = UITabControlFactory.CreateReadOnlyPrimary();
+        using WfuiTabControl standard = UITabControlFactory.CreateStandard();
+        using WfuiTabControl primary = UITabControlFactory.CreatePrimary();
+
+        Assert.Null(readOnlyStandard.ContextMenuStrip);
+        Assert.Null(readOnlyPrimary.ContextMenuStrip);
+        Assert.NotNull(standard.ContextMenuStrip);
+        Assert.NotNull(primary.ContextMenuStrip);
+    }
+
+    // ---- right-click on a tab (the read-only base raises it too) ----
+
+    [Fact]
+    public void TabRightClick_CarriesThePageItsIndexAndTheLocation()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        System.Collections.Generic.List<ErikwnkWFUI.Controls.TabRightClickEventArgs> clicks =
+            new System.Collections.Generic.List<ErikwnkWFUI.Controls.TabRightClickEventArgs>();
+        tabs.TabRightClick += (s, e) => clicks.Add(e);
+        Rectangle rect = tabs.GetTabRect(1);
+
+        tabs.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Right, 1, rect.Left + 8, rect.Top + 8, 0));
+
+        Assert.Single(clicks);
+        Assert.Equal(1, clicks[0].TabIndex);
+        Assert.Same(tabs.TabPages[1], clicks[0].TabPage);
+        Assert.Equal(new Point(rect.Left + 8, rect.Top + 8), clicks[0].Location);
+    }
+
+    [Fact]
+    public void TabRightClick_IsNotRaised_ForALeftClickOrAClickOffTheTabs()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        int raised = 0;
+        tabs.TabRightClick += (s, e) => raised++;
+        Rectangle rect = tabs.GetTabRect(1);
+
+        tabs.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, rect.Left + 8, rect.Top + 8, 0));
+        tabs.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Right, 1, 290, rect.Top + 8, 0));
+
+        Assert.Equal(0, raised);
     }
 
     [Fact]

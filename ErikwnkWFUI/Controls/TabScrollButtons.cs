@@ -11,7 +11,7 @@ namespace ErikwnkWFUI.Controls
     /// control shows when its tabs don't fit in one row. The arrows stay
     /// the native up-down control (so clicking, holding and scrolling behave
     /// exactly as before) - only its painting is replaced, so it matches the
-    /// <see cref="TabControl"/> it belongs to.
+    /// <see cref="ReadOnlyTabControl"/> it belongs to.
     /// </summary>
     internal sealed class TabScrollButtons : NativeWindow
     {
@@ -50,13 +50,13 @@ namespace ErikwnkWFUI.Controls
         private const int SWP_NOZORDER = 0x0004;
         private const int SWP_NOACTIVATE = 0x0010;
 
-        private readonly TabControl _owner;
+        private readonly ReadOnlyTabControl _owner;
 
         private Part _hotPart;
         private Part _pressedPart;
         private bool _isTrackingMouse;
 
-        public TabScrollButtons(TabControl owner)
+        public TabScrollButtons(ReadOnlyTabControl owner)
         {
             _owner = owner;
         }
@@ -149,15 +149,15 @@ namespace ErikwnkWFUI.Controls
             RECT display = client;
             SendMessage(tabs, TCM_ADJUSTRECT, IntPtr.Zero, ref display);
 
-            int right = client.Right - TabControl.NativeStripMargin;
+            int right = client.Right - ReadOnlyTabControl.NativeStripMargin;
 
             if (_owner.Alignment == TabAlignment.Top)
             {
-                int pageTop = Math.Max(TabControl.NativeStripMargin, display.Top - TabControl.NativePageBorder);
+                int pageTop = Math.Max(ReadOnlyTabControl.NativeStripMargin, display.Top - ReadOnlyTabControl.NativePageBorder);
                 return new Point(right - size.Width, pageTop + 1 - size.Height);
             }
 
-            int pageBottom = Math.Min(client.Bottom - TabControl.NativeStripMargin, display.Bottom + TabControl.NativePageBorder);
+            int pageBottom = Math.Min(client.Bottom - ReadOnlyTabControl.NativeStripMargin, display.Bottom + ReadOnlyTabControl.NativePageBorder);
             return new Point(right - size.Width, pageBottom - 1);
         }
 

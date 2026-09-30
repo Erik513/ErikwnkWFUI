@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace ErikwnkWFUI.Styles
@@ -54,6 +54,10 @@ namespace ErikwnkWFUI.Styles
 
             ["MessageBox.Cancel"] = "Cancel",
             ["InfoPopup.None"] = "None",
+
+            ["TabControl.AddTab"] = "Add tab",
+            ["TabControl.CloseTab"] = "Close tab",
+            ["TabControl.NewTabTitle"] = "New tab",
 
             ["ListView.CopySelection"] = "Copy",
             ["ListView.CopyAll"] = "Copy all",
@@ -116,6 +120,10 @@ namespace ErikwnkWFUI.Styles
 
             ["MessageBox.Cancel"] = "Abbrechen",
             ["InfoPopup.None"] = "Keine",
+
+            ["TabControl.AddTab"] = "Tab hinzufügen",
+            ["TabControl.CloseTab"] = "Tab schließen",
+            ["TabControl.NewTabTitle"] = "Neuer Tab",
 
             ["ListView.CopySelection"] = "Kopieren",
             ["ListView.CopyAll"] = "Alles kopieren",

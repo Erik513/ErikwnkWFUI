@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Tests.Infrastructure;
-using WfuiTabControl = ErikwnkWFUI.Controls.TabControl;
+using WfuiTabControl = ErikwnkWFUI.Controls.ReadOnlyTabControl;
 
 namespace ErikwnkWFUI.Tests.Controls.TabControl;
 

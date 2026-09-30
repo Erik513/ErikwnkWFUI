@@ -796,18 +796,33 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddSection("TabControl");
 
-            table.AddRow("CreateStandard", 140, CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3));
+            // The display-only variants: tabs can be switched, not edited.
+            table.AddRow(
+                "CreateReadOnlyStandard",
+                140,
+                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyStandard(), 3));
 
             // Two ways to handle more tabs than fit in a row: scroll arrows
             // at the right end of the strip (left), or wrapping onto
             // several rows (right).
-            System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreatePrimary();
+            System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreateReadOnlyPrimary();
             multiline.Multiline = true;
             table.AddRow(
-                "CreatePrimary",
+                "CreateReadOnlyPrimary",
                 160,
-                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 7, "TabControl with overflow arrows"),
+                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyPrimary(), 7, "TabControl with overflow arrows"),
                 CreateTabControlDemo(multiline, 7, "TabControl with Multiline"));
+
+            // The editable variants: right-click a tab to add a new one
+            // behind it or close it (the last tab always stays).
+            table.AddRow(
+                "CreateStandard",
+                140,
+                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3, "Right-click a tab to add or close tabs"));
+            table.AddRow(
+                "CreatePrimary",
+                140,
+                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3, "Right-click a tab to add or close tabs"));
 
             // One row, four editors: PropertyTable splits the row's width
             // between them equally.
