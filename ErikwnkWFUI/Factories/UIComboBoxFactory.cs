@@ -4,35 +4,13 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Native;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Factories
 {
     internal static class UIComboBoxFactory
     {
-        [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
-        private static extern int SetWindowTheme(IntPtr hWnd, string pszSubAppName, string pszSubIdList);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetComboBoxInfo(IntPtr hwndCombo, ref ComboBoxInfo pcbi);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Rect
-        {
-            public int Left, Top, Right, Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct ComboBoxInfo
-        {
-            public int cbSize;
-            public Rect rcItem;
-            public Rect rcButton;
-            public int buttonState;
-            public IntPtr hwndCombo;
-            public IntPtr hwndEdit;
-            public IntPtr hwndList;
-        }
-
         public static ComboBox CreateStandard(
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
         {
@@ -120,7 +98,7 @@ namespace ErikwnkWFUI.Factories
 
         private static void UnthemeDropDownList(ComboBox comboBox)
         {
-            ComboBoxInfo info = new ComboBoxInfo { cbSize = Marshal.SizeOf(typeof(ComboBoxInfo)) };
+            NativeComboBoxInfo info = new NativeComboBoxInfo { cbSize = Marshal.SizeOf(typeof(NativeComboBoxInfo)) };
 
             if (GetComboBoxInfo(comboBox.Handle, ref info) && info.hwndList != IntPtr.Zero)
                 SetWindowTheme(info.hwndList, "", "");

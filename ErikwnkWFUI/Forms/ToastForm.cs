@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -181,11 +182,6 @@ namespace ErikwnkWFUI.Forms
         // Region, which never gets that border). On pre-Win11 the call is a
         // silent no-op and the toast is simply a plain rectangle - see
         // InfoPopupForm.ApplyRoundedRegion, which uses the same approach.
-        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-        private const int DWMWCP_ROUND = 2;
-
-        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
         private void ApplyRoundedRegion()
         {

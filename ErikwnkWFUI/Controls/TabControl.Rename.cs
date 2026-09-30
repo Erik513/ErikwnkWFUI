@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
     // Renaming a tab in place with a text box.
     public partial class TabControl : ReadOnlyTabControl
     {
-        [DllImport("user32.dll")]
-        private static extern IntPtr SetParent(IntPtr child, IntPtr newParent);
-
         /// <summary>
         /// Turns the name of a tab into a text box: type the new name, Enter
         /// or leaving the box applies it, Escape drops it. The tab is

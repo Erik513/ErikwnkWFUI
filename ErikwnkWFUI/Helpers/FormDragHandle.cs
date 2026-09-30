@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Helpers
 {
@@ -14,12 +14,6 @@ namespace ErikwnkWFUI.Helpers
         private const int TimerDelay = 30;
         private const int SnapThreshold = 4;
         private const int OffscreenTolerance = 50;
-
-        [DllImport("user32.dll")]
-        private static extern int SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
-
-        [DllImport("user32.dll")]
-        private static extern bool ReleaseCapture();
 
         private bool _mouseDown;
         private Point _mouseDownPosition;

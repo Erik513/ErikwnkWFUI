@@ -9,6 +9,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Native;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -511,21 +513,6 @@ namespace ErikwnkWFUI.Controls
         private const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
         private const int LVS_EX_DOUBLEBUFFER = 0x00010000;
 
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int msg, System.IntPtr wParam, System.IntPtr lParam);
-
-        [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-        private struct NativeRectangle
-        {
-            public int Left, Top, Right, Bottom;
-        }
-
-        [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
-        private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int msg, System.IntPtr wParam, ref NativeRectangle rectangle);
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern int MapWindowPoints(System.IntPtr from, System.IntPtr to, ref NativeRectangle rectangle, uint count);
-
         private bool TryGetHeaderBounds(int columnIndex, out Rectangle bounds)
         {
             bounds = Rectangle.Empty;
@@ -535,7 +522,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             var header = HeaderInputSubclass.GetHeaderHandle(Handle);
-            var rectangle = new NativeRectangle();
+            var rectangle = new NativeRect();
             const int HDM_GETITEMRECT = 0x1207;
             if (header == System.IntPtr.Zero ||
                 SendMessage(header, HDM_GETITEMRECT, (System.IntPtr)columnIndex, ref rectangle) == System.IntPtr.Zero)
@@ -585,13 +572,6 @@ namespace ErikwnkWFUI.Controls
         // Scrolling can leave a stray gray edge behind for a frame (native
         // partial-repaint artifact on an owner-drawn control) - forcing a
         // full repaint on every scroll message gets rid of it.
-        private const int WM_VSCROLL = 0x0115;
-        private const int WM_HSCROLL = 0x0114;
-        private const int WM_MOUSEWHEEL = 0x020A;
-        private const int WM_PAINT = 0x000F;
-
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool LockWindowUpdate(System.IntPtr hWndLock);
 
         protected override void WndProc(ref Message m)
         {
@@ -974,9 +954,6 @@ namespace ErikwnkWFUI.Controls
         // StrCmpLogicalW is the same native function Explorer's own file
         // listing uses: numeric runs compare numerically, everything else
         // as text.
-        [System.Runtime.InteropServices.DllImport("shlwapi.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-        private static extern int StrCmpLogicalW(string psz1, string psz2);
-
         private static int CompareItemText(string textX, string textY, int direction)
         {
             return StrCmpLogicalW(textX ?? string.Empty, textY ?? string.Empty) * direction;
@@ -1739,12 +1716,6 @@ namespace ErikwnkWFUI.Controls
         // deltas for live resizing; other drags retain column reordering.
         private sealed class HeaderInputSubclass : NativeWindow
         {
-            private const int WM_LBUTTONDOWN = 0x0201;
-            private const int WM_MOUSEMOVE = 0x0200;
-            private const int WM_LBUTTONUP = 0x0202;
-            private const int WM_CANCELMODE = 0x001F;
-            private const int WM_CAPTURECHANGED = 0x0215;
-            private const int WM_PAINT = 0x000F;
             private const int LVM_FIRST = 0x1000;
             private const int LVM_GETHEADER = LVM_FIRST + 31;
 
@@ -1755,44 +1726,9 @@ namespace ErikwnkWFUI.Controls
             private int _resizeStartScreenX;
             private int _resizeStartWidth;
 
-            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-            private struct HeaderHitTest
-            {
-                public int X, Y;
-                public uint Flags;
-                public int Item;
-            }
-
-            [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
-            private struct Rect
-            {
-                public int Left, Top, Right, Bottom;
-            }
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern bool GetClientRect(System.IntPtr hWnd, out Rect rect);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
-            private static extern System.IntPtr SendMessage(System.IntPtr window, int message, System.IntPtr wParam, ref HeaderHitTest hit);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern System.IntPtr SetCapture(System.IntPtr window);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern System.IntPtr GetCapture();
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern bool ReleaseCapture();
-
             private const uint RDW_INVALIDATE = 0x0001;
             private const uint RDW_ERASE = 0x0004;
             private const uint RDW_UPDATENOW = 0x0100;
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int msg, System.IntPtr wParam, System.IntPtr lParam);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern bool RedrawWindow(System.IntPtr hWnd, System.IntPtr lprcUpdate, System.IntPtr hrgnUpdate, uint flags);
 
             public HeaderInputSubclass(ListView owner)
             {
@@ -1888,7 +1824,7 @@ namespace ErikwnkWFUI.Controls
             // clipped that way.
             private void FillHeaderTrailingBackground()
             {
-                if (_owner.Columns.Count == 0 || !GetClientRect(Handle, out Rect clientRect))
+                if (_owner.Columns.Count == 0 || !GetClientRect(Handle, out NativeRect clientRect))
                 {
                     return;
                 }
@@ -1908,7 +1844,7 @@ namespace ErikwnkWFUI.Controls
 
             private bool TryBeginResize(System.IntPtr coordinates)
             {
-                var hit = new HeaderHitTest
+                var hit = new NativeHeaderHitTest
                 {
                     X = GetX(coordinates),
                     Y = unchecked((short)((long)coordinates >> 16))

@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using ErikwnkWFUI.Native;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -26,12 +28,7 @@ namespace ErikwnkWFUI.Controls
 
         private const int WM_WINDOWPOSCHANGING = 0x0046;
         private const int WM_WINDOWPOSCHANGED = 0x0047;
-        private const int WM_PAINT = 0x000F;
         private const int WM_ERASEBKGND = 0x0014;
-        private const int WM_MOUSEMOVE = 0x0200;
-        private const int WM_LBUTTONDOWN = 0x0201;
-        private const int WM_LBUTTONUP = 0x0202;
-        private const int WM_CAPTURECHANGED = 0x0215;
         private const int WM_MOUSELEAVE = 0x02A3;
         private const int WM_PRINTCLIENT = 0x0318;
 
@@ -88,7 +85,7 @@ namespace ErikwnkWFUI.Controls
             if (Handle == IntPtr.Zero || !IsWindowVisible(Handle))
                 return Rectangle.Empty;
 
-            RECT rect;
+            NativeRect rect;
             GetWindowRect(Handle, out rect);
 
             return _owner.RectangleToClient(Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom));
@@ -121,7 +118,7 @@ namespace ErikwnkWFUI.Controls
         // corrected to the position the owner wants instead.
         private void MoveToOwnerPosition()
         {
-            RECT rect;
+            NativeRect rect;
             GetWindowRect(Handle, out rect);
             Point? location = GetDesiredLocation(new Size(rect.Right - rect.Left, rect.Bottom - rect.Top));
 
@@ -143,10 +140,10 @@ namespace ErikwnkWFUI.Controls
                 return null;
 
             IntPtr tabs = GetParent(Handle);
-            RECT client;
+            NativeRect client;
             GetClientRect(tabs, out client);
 
-            RECT display = client;
+            NativeRect display = client;
             SendMessage(tabs, TCM_ADJUSTRECT, IntPtr.Zero, ref display);
 
             int right = client.Right - ReadOnlyTabControl.NativeStripMargin;
@@ -163,12 +160,12 @@ namespace ErikwnkWFUI.Controls
 
         private void CorrectPosition(ref Message m)
         {
-            WINDOWPOS position = (WINDOWPOS)Marshal.PtrToStructure(m.LParam, typeof(WINDOWPOS));
+            NativeWindowPos position = (NativeWindowPos)Marshal.PtrToStructure(m.LParam, typeof(NativeWindowPos));
 
             if ((position.flags & SWP_NOMOVE) != 0)
                 return;
 
-            RECT rect;
+            NativeRect rect;
             GetWindowRect(Handle, out rect);
             Size size = (position.flags & SWP_NOSIZE) != 0
                 ? new Size(rect.Right - rect.Left, rect.Bottom - rect.Top)
@@ -254,7 +251,7 @@ namespace ErikwnkWFUI.Controls
 
         private Size GetClientSize()
         {
-            RECT rect;
+            NativeRect rect;
             GetClientRect(Handle, out rect);
             return new Size(rect.Right, rect.Bottom);
         }
@@ -271,9 +268,9 @@ namespace ErikwnkWFUI.Controls
 
             if (!_isTrackingMouse)
             {
-                TRACKMOUSEEVENT track = new TRACKMOUSEEVENT
+                NativeTrackMouseEvent track = new NativeTrackMouseEvent
                 {
-                    cbSize = Marshal.SizeOf(typeof(TRACKMOUSEEVENT)),
+                    cbSize = Marshal.SizeOf(typeof(NativeTrackMouseEvent)),
                     dwFlags = TME_LEAVE,
                     hwndTrack = Handle
                 };
@@ -305,7 +302,7 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintWindow()
         {
-            PAINTSTRUCT paint;
+            NativePaintStruct paint;
             IntPtr hdc = BeginPaint(Handle, out paint);
 
             try
@@ -453,86 +450,5 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct RECT
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct WINDOWPOS
-        {
-            public IntPtr hwnd;
-            public IntPtr hwndInsertAfter;
-            public int x;
-            public int y;
-            public int cx;
-            public int cy;
-            public int flags;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct PAINTSTRUCT
-        {
-            public IntPtr hdc;
-            public bool fErase;
-            public RECT rcPaint;
-            public bool fRestore;
-            public bool fIncUpdate;
-
-            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public byte[] rgbReserved;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct TRACKMOUSEEVENT
-        {
-            public int cbSize;
-            public int dwFlags;
-            public IntPtr hwndTrack;
-            public int dwHoverTime;
-        }
-
-        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr childAfter, string className, string windowTitle);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetClientRect(IntPtr hWnd, out RECT rect);
-
-        [DllImport("user32.dll")]
-        private static extern bool GetWindowRect(IntPtr hWnd, out RECT rect);
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr insertAfter, int x, int y, int cx, int cy, int flags);
-
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int index);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("user32.dll", EntryPoint = "SendMessage")]
-        private static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, ref RECT lParam);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetParent(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool InvalidateRect(IntPtr hWnd, IntPtr rect, bool erase);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr BeginPaint(IntPtr hWnd, out PAINTSTRUCT paint);
-
-        [DllImport("user32.dll")]
-        private static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT paint);
-
-        [DllImport("user32.dll")]
-        private static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT track);
     }
 }

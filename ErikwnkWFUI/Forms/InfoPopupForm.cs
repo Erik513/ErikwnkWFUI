@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -561,12 +562,6 @@ namespace ErikwnkWFUI.Forms
         // identical) - just ask for the small radius. A window Region fights
         // this and leaves one corner square; on Win10 the call is a silent
         // no-op and the popup is simply a plain rectangle.
-        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
-        private const int DWMWCP_ROUND = 2;
-        private const int DWMWCP_ROUNDSMALL = 3;
-
-        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
-        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 
         private void ApplyRoundedRegion()
         {

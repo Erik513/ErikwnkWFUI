@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Helpers
 {
@@ -11,12 +12,6 @@ namespace ErikwnkWFUI.Helpers
     /// </summary>
     public sealed class OutsideClickFilter : IMessageFilter, IDisposable
     {
-        private const int WM_LBUTTONDOWN = 0x0201;
-        private const int WM_RBUTTONDOWN = 0x0204;
-        private const int WM_MBUTTONDOWN = 0x0207;
-        private const int WM_XBUTTONDOWN = 0x020B;
-        private const int WM_NCLBUTTONDOWN = 0x00A1;
-        private const int WM_NCRBUTTONDOWN = 0x00A4;
 
         private readonly Func<IntPtr, bool> _isOutside;
         private readonly Action _onOutsideClick;

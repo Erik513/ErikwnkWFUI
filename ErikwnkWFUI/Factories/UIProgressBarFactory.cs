@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -166,22 +167,9 @@ namespace ErikwnkWFUI.Factories
         // its container.
         private sealed class BorderedProgressBar : ProgressBar
         {
-            private const int WM_PAINT = 0x000F;
 
             private readonly bool _drawBorder;
             private readonly bool _useStatusGradient;
-
-            [System.Runtime.InteropServices.DllImport("uxtheme.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
-            private static extern int SetWindowTheme(
-                System.IntPtr hWnd,
-                string pszSubAppName,
-                string pszSubIdList);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern System.IntPtr GetWindowDC(System.IntPtr hWnd);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll")]
-            private static extern int ReleaseDC(System.IntPtr hWnd, System.IntPtr hDC);
 
             public BorderedProgressBar(bool drawBorder, bool useStatusGradient = false)
             {
