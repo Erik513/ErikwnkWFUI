@@ -17,6 +17,10 @@ namespace ErikwnkWFUI.Showcase
         {
             public string Description;
             public Action<PropertyTable> Fill;
+
+            // A page that is not a description plus a table of variants
+            // (the guide) builds its whole content itself.
+            public Func<Control> Custom;
             public bool Built;
         }
 
@@ -109,6 +113,9 @@ namespace ErikwnkWFUI.Showcase
             // color behind it, which is dark even in the light theme.
             tabs.HeaderBackColor = UIColors.BackgroundMedium;
 
+            // Always first: the guide for someone new to the library.
+            tabs.TabPages.Add(new TabPage("Guide") { Tag = new PageInfo { Custom = CreateGuidePage } });
+
             foreach ((string title, string description, Action<PropertyTable> fill) in GetPages())
             {
                 TabPage page = new TabPage(title)
@@ -141,6 +148,13 @@ namespace ErikwnkWFUI.Showcase
 
             info.Built = true;
             page.SuspendLayout();
+
+            if (info.Custom != null)
+            {
+                page.Controls.Add(info.Custom());
+                page.ResumeLayout();
+                return;
+            }
 
             // Filled first, so the scroll area (and not the description) is
             // what the docking leaves the remaining space to.

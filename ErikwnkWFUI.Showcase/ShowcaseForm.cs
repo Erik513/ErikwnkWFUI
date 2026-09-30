@@ -218,6 +218,26 @@ namespace ErikwnkWFUI.Showcase
             ShowSelectedPage();
         }
 
+        // A theme button looks like the theme it switches to (dark stays
+        // dark, light stays light) whichever theme is active; the one in use
+        // is marked by an accent-colored border instead.
+        private static Button CreateThemeButton(string text, UIColorTheme theme, bool selected)
+        {
+            Button button = UIStyles.Buttons.CreateStandard(text);
+            Color hover = UIColors.IsLight(theme.BackgroundMedium)
+                ? UIColors.Darken(theme.BackgroundMedium, 12)
+                : UIColors.Lighten(theme.BackgroundMedium, 15);
+
+            button.BackColor = theme.BackgroundMedium;
+            button.ForeColor = theme.TextPrimary;
+            button.FlatAppearance.MouseOverBackColor = hover;
+            button.FlatAppearance.MouseDownBackColor = hover;
+            button.FlatAppearance.BorderSize = selected ? 2 : 1;
+            button.FlatAppearance.BorderColor = selected ? UIColors.PrimaryLight : theme.BorderMedium;
+
+            return button;
+        }
+
         private Panel BuildToolbar()
         {
             Panel toolbar = UIStyles.Panels.CreateElevated();
@@ -236,9 +256,7 @@ namespace ErikwnkWFUI.Showcase
             themeLabel.Margin = new Padding(0, 18, 8, 0);
             flow.Controls.Add(themeLabel);
 
-            Button darkButton = !_isLightTheme
-                ? UIStyles.Buttons.CreatePrimary("Dark")
-                : UIStyles.Buttons.CreateStandard("Dark");
+            Button darkButton = CreateThemeButton("Dark", UIThemes.Dark, !_isLightTheme);
             darkButton.Margin = new Padding(0, 10, 6, 0);
             darkButton.Width = 70;
             darkButton.Click += delegate
@@ -249,9 +267,7 @@ namespace ErikwnkWFUI.Showcase
             };
             flow.Controls.Add(darkButton);
 
-            Button lightButton = _isLightTheme
-                ? UIStyles.Buttons.CreatePrimary("Light")
-                : UIStyles.Buttons.CreateStandard("Light");
+            Button lightButton = CreateThemeButton("Light", UIThemes.Light, _isLightTheme);
             lightButton.Margin = new Padding(0, 10, 24, 0);
             lightButton.Width = 70;
             lightButton.Click += delegate
