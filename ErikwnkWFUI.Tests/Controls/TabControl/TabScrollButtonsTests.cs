@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiTabControl = ErikwnkWFUI.Controls.ReadOnlyTabControl;
+using WfuiEditable = ErikwnkWFUI.Controls.TabControl;
 
 namespace ErikwnkWFUI.Tests.Controls.TabControl;
 
@@ -484,5 +485,150 @@ public class TabScrollButtonsTests
         using WfuiTabControl tabs = new WfuiTabControl();
 
         Assert.True(tabs.GetPrivateField<TabScrollButtons>("_scrollButtons")!.GetBounds().IsEmpty);
+    }
+
+    // ---- tooltips: the full name of a cut-off tab, what an arrow does ----
+
+    [Fact]
+    public void ACutOffTab_HasItsFullNameAsToolTip_AFullyVisibleOneHasNone()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            ScrollTo(tabs, 2);
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+            int cutOff = 0;
+            int whole = 0;
+
+            for (int i = 0; i < tabs.TabCount; i++)
+            {
+                Rectangle tab = tabs.GetTabRect(i);
+                string text = tabs.InvokePrivate<string>("GetTabToolTipText", i)!;
+
+                if (tab.Left >= 2 && tab.Right <= arrows.Left)
+                {
+                    whole++;
+                    Assert.Equal("", text);
+                }
+                else if (tab.Right > arrows.Left && tab.Left < arrows.Left)
+                {
+                    cutOff++;
+                    Assert.Equal(tabs.TabPages[i].Text, text);
+                }
+            }
+
+            Assert.True(cutOff > 0);
+            Assert.True(whole > 0);
+        });
+    }
+
+    [Fact]
+    public void WithoutScrolling_NoTabHasAToolTip()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl { Size = new Size(400, 100) };
+        tabs.TabPages.Add("One");
+        tabs.TabPages.Add("Two");
+        _ = tabs.Handle;
+
+        Assert.Equal("", tabs.InvokePrivate<string>("GetTabToolTipText", 0));
+        Assert.Equal("", tabs.InvokePrivate<string>("GetTabToolTipText", 1));
+        Assert.Equal("", tabs.InvokePrivate<string>("GetTabToolTipText", -1));
+        Assert.Equal("", tabs.InvokePrivate<string>("GetTabToolTipText", 9));
+    }
+
+    [Fact]
+    public void WhenTheStandardToolTipsAreOn_TheyAreLeftToTheNativeControl()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.ShowToolTips = true;
+            int last = tabs.TabCount - 1;
+
+            tabs.InvokePrivate("UpdateTabToolTip", last);
+
+            Assert.Equal("", tabs.GetPrivateField<string>("_tabToolTipText"));
+        });
+    }
+
+    [Fact]
+    public void TheLockTextAndTheFullName_ShareOneToolTip_OnTheEditableControl()
+    {
+        StaThread.Run(() =>
+        {
+            using WfuiEditable tabs = new WfuiEditable { Dock = DockStyle.Fill };
+            for (int i = 0; i < 9; i++)
+            {
+                tabs.TabPages.Add("Tab number " + i);
+            }
+
+            tabs.SetTabClosable(tabs.TabPages[0], false);
+            using Form host = new Form
+            {
+                ClientSize = new Size(300, 120),
+                StartPosition = FormStartPosition.Manual,
+                Location = new Point(-3000, -3000),
+                ShowInTaskbar = false,
+                FormBorderStyle = FormBorderStyle.None
+            };
+            host.Controls.Add(tabs);
+            host.Show();
+            Application.DoEvents();
+
+            // A tab that is locked and fully visible: only the lock text.
+            Assert.Equal("This tab cannot be closed", tabs.InvokePrivate<string>("GetTabToolTipText", 0));
+
+            // Scrolled until the locked tab is cut off at the start.
+            SendMessage(tabs.Handle, WM_HSCROLL, (System.IntPtr)(SB_THUMBPOSITION | (1 << 16)), tabs.GetPrivateField<TabScrollButtons>("_scrollButtons")!.Handle);
+            Application.DoEvents();
+            int lockedIndex = 0;
+            string text = tabs.InvokePrivate<string>("GetTabToolTipText", lockedIndex)!;
+
+            Assert.Contains("This tab cannot be closed", text);
+
+            // The full name joins it when the tab is also cut off.
+            if (text.Contains("Tab number 0"))
+            {
+                Assert.Equal("Tab number 0" + System.Environment.NewLine + "This tab cannot be closed", text);
+            }
+        });
+    }
+
+    [Fact]
+    public void HoveringAnArrow_SchedulesItsToolTip_AndLeavingCancelsIt()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            TabScrollButtons buttons = GetButtons(tabs);
+            Rectangle arrows = buttons.GetBounds();
+            System.IntPtr firstHalf = (System.IntPtr)(4 | (8 << 16));
+            System.IntPtr secondHalf = (System.IntPtr)((arrows.Width - 4) | (8 << 16));
+
+            // At the start the back arrow cannot scroll: nothing to say.
+            SendMessage(buttons.Handle, 0x0200, System.IntPtr.Zero, firstHalf);
+            Assert.Equal("", tabs.GetPrivateField<string>("_pendingArrowToolTipText"));
+
+            // The forward arrow can.
+            SendMessage(buttons.Handle, 0x0200, System.IntPtr.Zero, secondHalf);
+            Assert.Equal("Scroll tabs right", tabs.GetPrivateField<string>("_pendingArrowToolTipText"));
+            Assert.True(tabs.GetPrivateField<System.Windows.Forms.Timer>("_arrowToolTipTimer")!.Enabled);
+
+            SendMessage(buttons.Handle, 0x02A3, System.IntPtr.Zero, System.IntPtr.Zero);
+            Assert.Equal("", tabs.GetPrivateField<string>("_pendingArrowToolTipText"));
+            Assert.False(tabs.GetPrivateField<System.Windows.Forms.Timer>("_arrowToolTipTimer")!.Enabled);
+        });
+    }
+
+    [Theory]
+    [InlineData(true, true, "Scroll tabs left")]
+    [InlineData(false, true, "Scroll tabs right")]
+    [InlineData(true, false, "Scroll tabs up")]
+    [InlineData(false, false, "Scroll tabs down")]
+    public void TheArrowToolTipTexts_SayWhichWayItScrolls(bool first, bool horizontal, string expected)
+    {
+        TabScrollButtons.Part part = first ? TabScrollButtons.Part.First : TabScrollButtons.Part.Second;
+
+        Assert.Equal(expected, ErikwnkWFUI.Controls.ReadOnlyTabControl.GetScrollArrowToolTipText(part, horizontal));
     }
 }

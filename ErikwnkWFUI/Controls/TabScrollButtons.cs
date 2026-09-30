@@ -223,6 +223,7 @@ namespace ErikwnkWFUI.Controls
                     _isTrackingMouse = false;
                     _hotPart = Part.None;
                     Refresh();
+                    TellTheOwnerWhatIsHovered();
                     break;
             }
 
@@ -285,6 +286,21 @@ namespace ErikwnkWFUI.Controls
 
             _hotPart = part;
             Refresh();
+            TellTheOwnerWhatIsHovered();
+        }
+
+        // For the tooltip: which half is under the mouse, and where to show
+        // it (just below the arrows, in the tab control's coordinates).
+        private void TellTheOwnerWhatIsHovered()
+        {
+            bool canGoBack;
+            bool canGoForward;
+            GetScrollState(out canGoBack, out canGoForward);
+
+            Rectangle bounds = GetBounds();
+            bool canScroll = _hotPart == Part.First ? canGoBack : canGoForward;
+
+            _owner.OnScrollButtonHover(_hotPart, IsHorizontal(), canScroll, new Point(bounds.Left, bounds.Bottom + 4));
         }
 
         private void PaintWindow()

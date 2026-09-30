@@ -646,7 +646,14 @@ public class TabControlLanguageTests
             "TabControl.AddTab",
             "TabControl.RenameTab",
             "TabControl.CloseTab",
-            "TabControl.NewTabTitle"
+            "TabControl.NewTabTitle",
+            "TabControl.LockedRenameAndClose",
+            "TabControl.LockedRename",
+            "TabControl.LockedClose",
+            "TabControl.ScrollLeft",
+            "TabControl.ScrollRight",
+            "TabControl.ScrollUp",
+            "TabControl.ScrollDown"
         });
     }
 
@@ -681,5 +688,85 @@ public class TabControlLanguageTests
         });
 
         Assert.Equal("Neuer Tab", tabs.TabPages[0].Text);
+    }
+
+    [Fact]
+    public void MenuItems_HaveTheExpectedWording_InEveryLanguage()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        WfuiContextMenuStrip menu = (WfuiContextMenuStrip)tabs.ContextMenuStrip!;
+
+        string[] Texts() => menu.Items.Cast<ToolStripItem>().Select(item => item.Text ?? "").ToArray();
+
+        Assert.Equal(new[] { "Add tab", "Rename tab", "Close tab" }, Texts());
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            Assert.Equal(new[] { "Tab hinzufügen", "Tab umbenennen", "Tab schließen" }, Texts());
+        });
+
+        // And back: the texts follow the language in both directions.
+        Assert.Equal(new[] { "Add tab", "Rename tab", "Close tab" }, Texts());
+    }
+
+    [Fact]
+    public void AMenuThatIsBuiltWhileGerman_IsGermanFromTheStart()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl { AllowUserToAddTabs = false, AllowUserToCloseTabs = false, AllowUserToRenameTabs = false };
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            tabs.AllowUserToAddTabs = true;
+
+            WfuiContextMenuStrip menu = (WfuiContextMenuStrip)tabs.ContextMenuStrip!;
+            Assert.Equal("Tab hinzufügen", menu.Items[0].Text);
+        });
+    }
+
+    [Fact]
+    public void TheToolTipOverALockedTab_FollowsALanguageChangeOnTheNextMouseMove()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        tabs.TabPages.Add("a");
+        tabs.TabPages.Add("b");
+        tabs.SetTabClosable(tabs.TabPages[1], false);
+
+        tabs.InvokePrivate("UpdateTabToolTip", 1);
+        Assert.Equal("This tab cannot be closed", tabs.GetPrivateField<string>("_tabToolTipText"));
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            tabs.InvokePrivate("UpdateTabToolTip", 1);
+            Assert.Equal("Dieser Tab kann nicht geschlossen werden", tabs.GetPrivateField<string>("_tabToolTipText"));
+        });
+    }
+
+    // The language event is static: a control that does not unhook itself
+    // stays alive, and keeps being called, for as long as the app runs.
+    [Fact]
+    public void AControl_UnhooksFromTheLanguageEvent_WhenItIsDisposed()
+    {
+        System.Reflection.FieldInfo field = typeof(UIStrings).GetField("LanguageChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        int Listeners() => ((System.Delegate?)field.GetValue(null))?.GetInvocationList().Length ?? 0;
+        int before = Listeners();
+
+        WfuiTabControl tabs = new WfuiTabControl();
+        int whileAlive = Listeners();
+        tabs.Dispose();
+
+        Assert.Equal(before + 1, whileAlive);
+        Assert.Equal(before, Listeners());
+    }
+
+    [Fact]
+    public void ADisposedControl_IgnoresALanguageChange()
+    {
+        WfuiTabControl tabs = new WfuiTabControl();
+        tabs.Dispose();
+
+        Exception? thrown = Record.Exception(() =>
+            LanguageTestHelper.RunWithLanguage(UILanguage.German, () => { }));
+
+        Assert.Null(thrown);
     }
 }

@@ -62,8 +62,6 @@ namespace ErikwnkWFUI.Controls
         // and an image - so a transparent image of the lock's size is what
         // reserves it; the lock is drawn where that image would be.
         private ImageList _lockSlots;
-        private ToolTip _lockToolTip;
-        private string _lockToolTipText = "";
 
         // Per-tab switches, on top of the control-wide ones: a page that was
         // never touched can be renamed and closed (as far as the control
@@ -299,12 +297,6 @@ namespace ErikwnkWFUI.Controls
                 UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
                 EndRename(commit: false);
 
-                if (_lockToolTip != null)
-                {
-                    _lockToolTip.Dispose();
-                    _lockToolTip = null;
-                }
-
                 if (_lockSlots != null)
                 {
                     if (ImageList == _lockSlots)
@@ -344,20 +336,6 @@ namespace ErikwnkWFUI.Controls
             {
                 SyncLockSlots(removed);
             }
-        }
-
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-
-            UpdateLockToolTip(GetTabIndexAt(e.Location));
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-
-            UpdateLockToolTip(-1);
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)
@@ -738,22 +716,17 @@ namespace ErikwnkWFUI.Controls
             return closeLocked ? UIStrings.Get("TabControl.LockedClose") : "";
         }
 
-        private void UpdateLockToolTip(int index)
+        // The tooltip over a tab: what the base says (the full name of a cut-off
+        // tab) and, below it, what is locked.
+        protected override string GetTabToolTipText(int index)
         {
-            string text = GetLockedToolTipText(index);
+            string name = base.GetTabToolTipText(index);
+            string locked = GetLockedToolTipText(index);
 
-            if (text == _lockToolTipText)
-                return;
+            if (name.Length > 0 && locked.Length > 0)
+                return name + Environment.NewLine + locked;
 
-            _lockToolTipText = text;
-
-            if (_lockToolTip == null)
-            {
-                _lockToolTip = new ToolTip { InitialDelay = 500, ReshowDelay = 100, AutoPopDelay = 5000 };
-                _lockToolTip.ReviveOnFormActivate(this);
-            }
-
-            _lockToolTip.SetToolTip(this, text);
+            return name.Length > 0 ? name : locked;
         }
 
         // ---- renaming in place ----

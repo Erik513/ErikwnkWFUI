@@ -302,17 +302,6 @@ public class TabControlLockIconTests
     }
 
     [Fact]
-    public void EveryKey_IsTranslatedForEveryLanguage()
-    {
-        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[]
-        {
-            "TabControl.LockedRenameAndClose",
-            "TabControl.LockedRename",
-            "TabControl.LockedClose"
-        });
-    }
-
-    [Fact]
     public void TheToolTipText_FollowsTheLanguage()
     {
         using WfuiTabControl tabs = CreateTabs();
