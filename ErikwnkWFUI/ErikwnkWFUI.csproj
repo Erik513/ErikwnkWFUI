@@ -43,46 +43,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
 
-  <!-- net48 keeps referencing the manually-copied ErikwnkCore build
-       output, exactly as before - untouched so SmartRoutine (still on
-       .NET Framework 4.8.1) sees zero change on this leg. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
-    <Reference Include="ErikwnkCore">
-      <HintPath>..\lib\ErikwnkCore\ErikwnkCore.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
-      <HintPath>..\lib\ErikwnkCore\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Buffers">
-      <HintPath>..\lib\ErikwnkCore\System.Buffers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>..\lib\ErikwnkCore\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics.Vectors">
-      <HintPath>..\lib\ErikwnkCore\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>..\lib\ErikwnkCore\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encodings.Web">
-      <HintPath>..\lib\ErikwnkCore\System.Text.Encodings.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Json">
-      <HintPath>..\lib\ErikwnkCore\System.Text.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions">
-      <HintPath>..\lib\ErikwnkCore\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ValueTuple">
-      <HintPath>..\lib\ErikwnkCore\System.ValueTuple.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <!-- net8.0-windows references the sibling ErikwnkCore project
-       directly instead of a manually-copied DLL folder - it already
-       dual-targets net48;net8.0 itself. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+  <!-- ErikwnkCore is referenced as a sibling project (..\..\ErikwnkCore next
+       to this repository) on both targets. It builds for net48 and net8.0
+       itself, and brings its own package dependencies along. -->
+  <ItemGroup>
     <ProjectReference Include="..\..\ErikwnkCore\ErikwnkCore\ErikwnkCore.csproj" />
   </ItemGroup>
 
