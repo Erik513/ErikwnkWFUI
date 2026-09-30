@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -47,6 +48,18 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultMaxTabNameLength = 40;
 
         private int _maxTabNameLength = DefaultMaxTabNameLength;
+
+        // Per-tab switches, on top of the control-wide ones: a page that was
+        // never touched can be renamed and closed (as far as the control
+        // allows it). Weak, so a removed page is not kept alive by it.
+        private sealed class TabPermissions
+        {
+            public bool CanRename = true;
+            public bool CanClose = true;
+        }
+
+        private readonly ConditionalWeakTable<TabPage, TabPermissions> _permissions =
+            new ConditionalWeakTable<TabPage, TabPermissions>();
         private ContextMenuStrip _builtInMenu;
         private ToolStripMenuItem _addTabItem;
         private ToolStripMenuItem _closeTabItem;
@@ -65,6 +78,13 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>Raised before a typed name is applied to a tab. Cancel it to keep the old name, or change <see cref="TabRenamingEventArgs.NewName"/>.</summary>
         public event EventHandler<TabRenamingEventArgs> TabRenaming;
+
+        /// <summary>
+        /// Raised when a rename is about to start - and also when the control
+        /// only checks whether one would be allowed, to enable or disable the
+        /// menu entry. Cancel it to keep that tab's name from being edited.
+        /// </summary>
+        public event EventHandler<TabRenameStartingEventArgs> TabRenameStarting;
 
         /// <summary>Raised after a tab got its new name.</summary>
         public event EventHandler<TabRenamedEventArgs> TabRenamed;
@@ -97,6 +117,51 @@ namespace ErikwnkWFUI.Controls
         {
             get => _renameTabAfterAdding;
             set => _renameTabAfterAdding = value;
+        }
+
+        /// <summary>
+        /// Allows or forbids the user to rename one tab, on top of
+        /// <see cref="AllowUserToRenameTabs"/> (which forbids it for all).
+        /// A tab is renamable until this says otherwise.
+        /// </summary>
+        public void SetTabRenameAllowed(TabPage tabPage, bool allowed)
+        {
+            if (tabPage == null)
+                throw new ArgumentNullException(nameof(tabPage));
+
+            _permissions.GetOrCreateValue(tabPage).CanRename = allowed;
+        }
+
+        /// <summary>Whether <see cref="SetTabRenameAllowed"/> allows renaming this tab. Says nothing about the control-wide switch or <see cref="TabRenameStarting"/>.</summary>
+        public bool IsTabRenameAllowed(TabPage tabPage)
+        {
+            if (tabPage == null)
+                throw new ArgumentNullException(nameof(tabPage));
+
+            return !_permissions.TryGetValue(tabPage, out TabPermissions permissions) || permissions.CanRename;
+        }
+
+        /// <summary>
+        /// Allows or forbids the user to close one tab, on top of
+        /// <see cref="AllowUserToCloseTabs"/> (which forbids it for all).
+        /// A tab is closable until this says otherwise - though never the
+        /// last one left.
+        /// </summary>
+        public void SetTabCloseAllowed(TabPage tabPage, bool allowed)
+        {
+            if (tabPage == null)
+                throw new ArgumentNullException(nameof(tabPage));
+
+            _permissions.GetOrCreateValue(tabPage).CanClose = allowed;
+        }
+
+        /// <summary>Whether <see cref="SetTabCloseAllowed"/> allows closing this tab. Says nothing about the control-wide switch or the last-tab rule.</summary>
+        public bool IsTabCloseAllowed(TabPage tabPage)
+        {
+            if (tabPage == null)
+                throw new ArgumentNullException(nameof(tabPage));
+
+            return !_permissions.TryGetValue(tabPage, out TabPermissions permissions) || permissions.CanClose;
         }
 
         /// <summary>
@@ -312,7 +377,7 @@ namespace ErikwnkWFUI.Controls
 
                 _addTabItem.Visible = _allowUserToAddTabs;
                 _renameTabItem.Visible = _allowUserToRenameTabs;
-                _renameTabItem.Enabled = _menuTargetIndex >= 0 && _menuTargetIndex < TabCount;
+                _renameTabItem.Enabled = CanRenameTab(_menuTargetIndex);
                 _closeTabItem.Visible = _allowUserToCloseTabs;
                 _closeTabItem.Enabled = CanCloseTab(_menuTargetIndex);
             };
@@ -320,10 +385,24 @@ namespace ErikwnkWFUI.Controls
             return menu;
         }
 
-        // A tab can be closed while it exists and is not the last one left.
+        // A tab can be closed while it exists, is not the last one left and
+        // was not locked.
         private bool CanCloseTab(int index)
         {
-            return index >= 0 && index < TabCount && TabCount > 1;
+            return index >= 0 && index < TabCount && TabCount > 1 && IsTabCloseAllowed(TabPages[index]);
+        }
+
+        // A tab can be renamed while it exists, renaming is allowed for it,
+        // and nobody vetoes it through TabRenameStarting.
+        private bool CanRenameTab(int index)
+        {
+            if (index < 0 || index >= TabCount || !IsTabRenameAllowed(TabPages[index]))
+                return false;
+
+            TabRenameStartingEventArgs args = new TabRenameStartingEventArgs(TabPages[index], index);
+            TabRenameStarting?.Invoke(this, args);
+
+            return !args.Cancel;
         }
 
         // The new page goes right behind the tab that was right-clicked, at
@@ -414,12 +493,15 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// Turns the name of a tab into a text box: type the new name, Enter
         /// or leaving the box applies it, Escape drops it. The tab is
-        /// selected first. Does nothing without <see cref="AllowUserToRenameTabs"/>.
+        /// selected first. Returns whether the edit started - it does not
+        /// without <see cref="AllowUserToRenameTabs"/>, for a tab that was
+        /// locked with <see cref="SetTabRenameAllowed"/> or vetoed through
+        /// <see cref="TabRenameStarting"/>.
         /// </summary>
-        public void BeginRenameTab(int index)
+        public bool BeginRenameTab(int index)
         {
-            if (!_allowUserToRenameTabs || index < 0 || index >= TabCount || !IsHandleCreated)
-                return;
+            if (!_allowUserToRenameTabs || !IsHandleCreated || !CanRenameTab(index))
+                return false;
 
             EndRename(commit: true);
 
@@ -463,6 +545,7 @@ namespace ErikwnkWFUI.Controls
             box.Visible = true;
             box.SelectAll();
             box.Focus();
+            return true;
         }
 
         private void OnRenameBoxKeyDown(object sender, KeyEventArgs e)

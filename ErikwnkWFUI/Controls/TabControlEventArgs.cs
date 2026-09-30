@@ -84,4 +84,20 @@ namespace ErikwnkWFUI.Controls
         /// <summary>The name it had before.</summary>
         public string OldName { get; }
     }
+
+    /// <summary>Data for <see cref="TabControl.TabRenameStarting"/>.</summary>
+    public class TabRenameStartingEventArgs : CancelEventArgs
+    {
+        public TabRenameStartingEventArgs(TabPage tabPage, int tabIndex)
+        {
+            TabPage = tabPage;
+            TabIndex = tabIndex;
+        }
+
+        /// <summary>The page whose tab would be renamed.</summary>
+        public TabPage TabPage { get; }
+
+        /// <summary>The index of that tab.</summary>
+        public int TabIndex { get; }
+    }
 }

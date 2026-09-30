@@ -819,10 +819,12 @@ namespace ErikwnkWFUI.Showcase
                 "CreateStandard",
                 140,
                 CreateTabControlDemo(UIStyles.TabControls.CreateStandard(), 3, "Right-click a tab to add, rename or close tabs (double-click renames)"));
-            table.AddRow(
-                "CreatePrimary",
-                140,
-                CreateTabControlDemo(UIStyles.TabControls.CreatePrimary(), 3, "Right-click a tab to add, rename or close tabs (double-click renames)"));
+            // The first tab is locked: it can be neither renamed nor closed.
+            Controls.TabControl lockedFirst = UIStyles.TabControls.CreatePrimary();
+            CreateTabControlDemo(lockedFirst, 3, "First tab is locked: no rename, no close");
+            lockedFirst.SetTabRenameAllowed(lockedFirst.TabPages[0], false);
+            lockedFirst.SetTabCloseAllowed(lockedFirst.TabPages[0], false);
+            table.AddRow("CreatePrimary", 140, lockedFirst);
 
             // One row, four editors: PropertyTable splits the row's width
             // between them equally.

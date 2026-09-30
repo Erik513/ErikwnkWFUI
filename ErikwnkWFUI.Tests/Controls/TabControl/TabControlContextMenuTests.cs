@@ -371,6 +371,63 @@ public class TabControlContextMenuTests
         Assert.True(CloseItem(tabs).Enabled);
     }
 
+    // ---- per tab: close ----
+
+    [Fact]
+    public void ALockedTab_CannotBeClosed_ItsMenuEntryIsDisabled()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+
+        RightClick(tabs, 1);
+        Open(tabs);
+        Assert.False(CloseItem(tabs).Enabled);
+        CloseItem(tabs).PerformClick();
+
+        Assert.Equal(3, tabs.TabCount);
+    }
+
+    [Fact]
+    public void TheOtherTabs_CanStillBeClosed()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+
+        RightClick(tabs, 2);
+        Open(tabs);
+        Assert.True(CloseItem(tabs).Enabled);
+        CloseItem(tabs).PerformClick();
+
+        Assert.Equal(2, tabs.TabCount);
+    }
+
+    [Fact]
+    public void UnlockingATab_MakesItClosableAgain()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabCloseAllowed(tabs.TabPages[1], true);
+
+        RightClick(tabs, 1);
+        Open(tabs);
+
+        Assert.True(CloseItem(tabs).Enabled);
+    }
+
+    [Fact]
+    public void ALockedTab_IsStillAddedBehindAndRenamedLikeAnyOther()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
+
+        RightClick(tabs, 0);
+        Open(tabs);
+        AddItem(tabs).PerformClick();
+
+        Assert.Equal("New tab", tabs.TabPages[1].Text);
+        Assert.True(tabs.IsTabRenameAllowed(tabs.TabPages[0]));
+    }
+
     // ---- one tab always stays ----
 
     [Fact]
