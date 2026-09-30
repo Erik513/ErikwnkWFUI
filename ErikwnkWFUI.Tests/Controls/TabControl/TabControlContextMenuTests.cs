@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using ErikwnkWFUI.Localization;
 using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 using WfuiTabControl = ErikwnkWFUI.Controls.TabControl;
 

@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using ErikwnkWFUI.Styles;
 
-namespace ErikwnkWFUI.Styles
+namespace ErikwnkWFUI.Localization
 {
-    public enum UILanguage
-    {
-        English,
-        German
-    }
-
     /// <summary>
     /// User-facing text for the handful of built-in dialogs/controls that ship
     /// their own copy (update prompt, title bar tooltips). Defaults to English so

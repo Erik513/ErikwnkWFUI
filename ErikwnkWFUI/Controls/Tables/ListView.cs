@@ -10,6 +10,7 @@ using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Native;
+using ErikwnkWFUI.Localization;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls

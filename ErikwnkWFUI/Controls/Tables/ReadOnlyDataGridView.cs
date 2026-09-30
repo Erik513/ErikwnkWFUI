@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Controls
 {

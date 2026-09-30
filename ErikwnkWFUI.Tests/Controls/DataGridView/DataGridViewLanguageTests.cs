@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using ErikwnkWFUI.Localization;
 using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;

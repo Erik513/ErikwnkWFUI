@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Controls
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Tests.Infrastructure;
 

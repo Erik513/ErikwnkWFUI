@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Controls
 {

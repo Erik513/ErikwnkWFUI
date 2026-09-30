@@ -1,4 +1,5 @@
 ﻿using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 using System;
 using System.Drawing;
 using System.Linq;

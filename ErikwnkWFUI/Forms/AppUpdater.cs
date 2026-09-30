@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Localization;
 using ErikwnkCore.Updater;
 
 namespace ErikwnkWFUI.Forms
