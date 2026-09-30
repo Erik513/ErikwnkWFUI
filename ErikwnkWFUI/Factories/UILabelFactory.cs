@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -107,8 +107,19 @@ namespace ErikwnkWFUI.Factories
 
                 TextFormatFlags flags = ToTextFormatFlags(TextAlign);
 
-                if (AutoEllipsis)
-                    flags |= TextFormatFlags.EndEllipsis;
+                // Like the standard label: a fixed-size label either cuts
+                // its text with an ellipsis or wraps it. An auto-sized one
+                // is exactly as big as its text - nothing to cut - and only
+                // wraps when it has a maximum width to wrap at.
+                if (AutoSize)
+                {
+                    if (MaximumSize.Width > 0)
+                        flags |= TextFormatFlags.WordBreak;
+                }
+                else
+                {
+                    flags |= AutoEllipsis ? TextFormatFlags.EndEllipsis : TextFormatFlags.WordBreak;
+                }
 
                 Rectangle textArea = new Rectangle(
                     Padding.Left,
