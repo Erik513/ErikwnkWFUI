@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Controls
     /// like the standard control (same <c>TabPages</c>, keyboard handling,
     /// alignment, multiline rows, images, events) - only the drawing is
     /// replaced with the library's own look. <see cref="TabControl"/> builds
-    /// on this and adds a right-click menu to add and close tabs.
+    /// on this and adds a right-click menu to add, rename and close tabs.
     /// </summary>
     /// <remarks>
     /// Go through <see cref="UIStyles.TabControls.CreateReadOnlyStandard"/> to
@@ -21,7 +21,11 @@ namespace ErikwnkWFUI.Controls
     /// buttons). Both customization routes of the standard control still
     /// work: a page's own <c>BackColor</c> is kept (see
     /// <see cref="PageBackColor"/>), and <c>DrawMode = OwnerDrawFixed</c>
-    /// hands the drawing of each tab to <c>DrawItem</c>.
+    /// hands the drawing of each tab to <c>DrawItem</c>. A tab that sizes
+    /// itself comes out a little larger than the standard control's (about
+    /// 6 px wider and 1 px taller for a short name), because the native
+    /// control lays it out differently once it is painted by the library;
+    /// set <c>ItemSize</c> and <c>Padding</c> for exactly the standard sizes.
     /// </remarks>
     public class ReadOnlyTabControl : System.Windows.Forms.TabControl
     {
@@ -273,10 +277,9 @@ namespace ErikwnkWFUI.Controls
                 _scrollButtons.AttachTo(Handle);
             }
 
-            // The strip scrolling moves the tabs around. The native control
-            // only repaints the part it uncovers and shifts the rest as it
-            // was, which would keep old tab pixels (cut-off names) in the
-            // wrong place - so the whole strip is redrawn.
+            // Scrolling moves every tab, but the native control only repaints
+            // the part it uncovers - old tab pixels would be left in the
+            // wrong place. So everything is redrawn.
             if ((m.Msg == WM_HSCROLL || m.Msg == WM_VSCROLL) && IsHandleCreated)
             {
                 Invalidate();
@@ -406,9 +409,9 @@ namespace ErikwnkWFUI.Controls
             base.OnSelecting(e);
         }
 
-        // The arrow keys along the strip. The native control would step onto
-        // a disabled tab, be refused, and stay put - so it would never get
-        // past one. Handled here to step over them instead.
+        // Arrow keys along the strip. Natively they would step onto a disabled
+        // tab, be refused and stay put, never getting past it - so they skip
+        // disabled tabs here instead.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (!_allowSelectingDisabledTabs && !e.Control && !e.Alt)
@@ -673,11 +676,10 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Text is not reliably held back by the graphics clip - a cut-off
-        // tab's name was seen showing up in the margin beyond the scroll
-        // arrows on screen. So whatever part of the strip is neither tab
-        // area nor arrows is simply painted over with the header background
-        // again.
+        // Text can slip past the graphics clip (seen on screen: a cut-off
+        // name in the margin beyond the scroll arrows). So whatever part of
+        // the strip is neither tab area nor arrows is painted over with the
+        // header background again.
         private void CoverOutsideVisibleStrip(Graphics graphics)
         {
             using (Region cover = new Region(GetTabStripBounds()))
@@ -918,8 +920,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Image and text, centered together. On a vertical strip the text
-        // is rotated to read along the tab, like the standard control.
         /// <summary>
         /// Draws the image of a tab. The default draws it as it is; a
         /// derived control can draw something else in its place.
@@ -948,6 +948,8 @@ namespace ErikwnkWFUI.Controls
         {
         }
 
+        // Image and text, centered together. On a vertical strip the text
+        // is rotated to read along the tab, like the standard control.
         private void DrawTabContent(Graphics graphics, int index, Rectangle bounds, TabPage page, Color foreColor)
         {
             Image image = GetTabImage(page);

@@ -5,7 +5,7 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UITabControlFactory
     {
-        // The editable variant: right-click a tab to add or close tabs.
+        // The editable variant: right-click a tab to add, rename or close tabs.
         public static TabControl CreateStandard()
         {
             return new TabControl();

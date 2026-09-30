@@ -9,12 +9,12 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A <see cref="ReadOnlyTabControl"/> whose user can also add and close
-    /// tabs through a right-click menu in the library's own design.
+    /// A <see cref="ReadOnlyTabControl"/> whose user can also add, rename and
+    /// close tabs, through a right-click menu in the library's own design.
     /// </summary>
     /// <remarks>
-    /// Named the same as its own base class' base, same as
-    /// <see cref="DataGridView"/> next to <see cref="ReadOnlyDataGridView"/>.
+    /// Named like the WinForms control it builds on, the same way
+    /// <see cref="DataGridView"/> sits next to <see cref="ReadOnlyDataGridView"/>.
     /// Right-click a tab: "Add tab" inserts a new page right after that tab
     /// (at the end when the click was not on a tab), "Close tab" closes it.
     /// A right-click also selects the tab (see
@@ -418,9 +418,9 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseDown(e);
         }
 
-        // The library's own themed menu, put in place while either "allow"
-        // switch is on - unless the application assigned a menu of its own,
-        // which always wins.
+        // The library's own menu, in place while any of the Allow... switches
+        // is on - unless the application assigned a menu of its own, which
+        // always wins.
         private void UpdateBuiltInMenu()
         {
             bool wanted = _allowUserToAddTabs || _allowUserToCloseTabs || _allowUserToRenameTabs;
@@ -661,10 +661,9 @@ namespace ErikwnkWFUI.Controls
             base.DrawTabImage(graphics, index, image, bounds, foreColor);
         }
 
-        // The native tab leaves about as much room on each side of its content
-        // as the padlock needs to look out of place - so the padlock and the
-        // name together sit a few pixels left of the center, closing up the
-        // gap on the left.
+        // The native tab leaves about 12 px of padding on each side of its
+        // content. The padlock and the name together sit a few pixels left of
+        // the center, which closes up the gap on the left.
         protected override int GetTabContentOffset(int index)
         {
             return ImageList == _lockSlots && _lockSlots != null && IsSlotImage(index) ? -LockContentShift : 0;

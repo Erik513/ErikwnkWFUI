@@ -535,13 +535,13 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="Controls.TabControl"/> - behaves like the standard one, drawn in the library's own look.</summary>
         public static class TabControls
         {
-            /// <summary>The editable variant - right-click a tab to add or close tabs. Use <see cref="CreateReadOnlyStandard"/> instead for tabs the user cannot edit.</summary>
+            /// <summary>The editable variant - right-click a tab to add, rename or close tabs. Use <see cref="CreateReadOnlyStandard"/> instead for tabs the user cannot edit.</summary>
             public static Controls.TabControl CreateStandard()
             {
                 return UITabControlFactory.CreateStandard();
             }
 
-            /// <summary>The display-only variant - tabs can be switched, not added or closed. Use <see cref="CreateStandard"/> instead for editable tabs.</summary>
+            /// <summary>The display-only variant - tabs can be switched, not added, renamed or closed. Use <see cref="CreateStandard"/> instead for editable tabs.</summary>
             public static Controls.ReadOnlyTabControl CreateReadOnlyStandard()
             {
                 return UITabControlFactory.CreateReadOnlyStandard();

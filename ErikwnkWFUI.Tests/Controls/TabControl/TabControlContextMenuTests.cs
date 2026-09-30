@@ -12,11 +12,11 @@ using WfuiTabControl = ErikwnkWFUI.Controls.TabControl;
 namespace ErikwnkWFUI.Tests.Controls.TabControl;
 
 /// <summary>
-/// The built-in right-click menu (add tab / close tab). Off unless one of
-/// AllowUserToAddTabs/AllowUserToCloseTabs is on, like the standard control
-/// that has no such menu. Opened through the menu's own protected
-/// OnOpening, same as the other controls' menu tests, since a real
-/// right-click isn't practical to drive headlessly.
+/// The built-in right-click menu (add, rename and close tab) of the
+/// editable TabControl: present while any of the Allow... switches is on,
+/// absent on the read-only control. Opened through the menu's own
+/// protected OnOpening, same as the other controls' menu tests, since a
+/// real right-click isn't practical to drive headlessly.
 /// [Collection] (see AccentColorTestCollection): the colors read UIColors.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
