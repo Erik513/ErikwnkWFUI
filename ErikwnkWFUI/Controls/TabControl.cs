@@ -140,18 +140,18 @@ namespace ErikwnkWFUI.Controls
         /// <see cref="AllowUserToRenameTabs"/> (which forbids it for all).
         /// A tab is renamable until this says otherwise.
         /// </summary>
-        public void SetTabRenameAllowed(TabPage tabPage, bool allowed)
+        public void SetTabRenamable(TabPage tabPage, bool renamable)
         {
             if (tabPage == null)
                 throw new ArgumentNullException(nameof(tabPage));
 
-            _permissions.GetOrCreateValue(tabPage).CanRename = allowed;
+            _permissions.GetOrCreateValue(tabPage).CanRename = renamable;
             SyncLockSlots();
             Repaint();
         }
 
-        /// <summary>Whether <see cref="SetTabRenameAllowed"/> allows renaming this tab. Says nothing about the control-wide switch or <see cref="TabRenameStarting"/>.</summary>
-        public bool IsTabRenameAllowed(TabPage tabPage)
+        /// <summary>Whether <see cref="SetTabRenamable"/> allows renaming this tab. Says nothing about the control-wide switch or <see cref="TabRenameStarting"/>.</summary>
+        public bool IsTabRenamable(TabPage tabPage)
         {
             if (tabPage == null)
                 throw new ArgumentNullException(nameof(tabPage));
@@ -165,18 +165,18 @@ namespace ErikwnkWFUI.Controls
         /// A tab is closable until this says otherwise - though never the
         /// last one left.
         /// </summary>
-        public void SetTabCloseAllowed(TabPage tabPage, bool allowed)
+        public void SetTabClosable(TabPage tabPage, bool closable)
         {
             if (tabPage == null)
                 throw new ArgumentNullException(nameof(tabPage));
 
-            _permissions.GetOrCreateValue(tabPage).CanClose = allowed;
+            _permissions.GetOrCreateValue(tabPage).CanClose = closable;
             SyncLockSlots();
             Repaint();
         }
 
-        /// <summary>Whether <see cref="SetTabCloseAllowed"/> allows closing this tab. Says nothing about the control-wide switch or the last-tab rule.</summary>
-        public bool IsTabCloseAllowed(TabPage tabPage)
+        /// <summary>Whether <see cref="SetTabClosable"/> allows closing this tab. Says nothing about the control-wide switch or the last-tab rule.</summary>
+        public bool IsTabClosable(TabPage tabPage)
         {
             if (tabPage == null)
                 throw new ArgumentNullException(nameof(tabPage));
@@ -209,7 +209,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Whether a tab that was locked against renaming or closing (with
-        /// <see cref="SetTabRenameAllowed"/> / <see cref="SetTabCloseAllowed"/>)
+        /// <see cref="SetTabRenamable"/> / <see cref="SetTabClosable"/>)
         /// shows a small padlock in front of its name, and a tooltip saying
         /// what is locked. On by default. The room for the padlock is only
         /// reserved while the control's own <c>ImageList</c> is not in use;
@@ -480,14 +480,14 @@ namespace ErikwnkWFUI.Controls
         // was not locked.
         private bool CanCloseTab(int index)
         {
-            return index >= 0 && index < TabCount && TabCount > 1 && IsTabCloseAllowed(TabPages[index]);
+            return index >= 0 && index < TabCount && TabCount > 1 && IsTabClosable(TabPages[index]);
         }
 
         // A tab can be renamed while it exists, renaming is allowed for it,
         // and nobody vetoes it through TabRenameStarting.
         private bool CanRenameTab(int index)
         {
-            if (index < 0 || index >= TabCount || !IsTabRenameAllowed(TabPages[index]))
+            if (index < 0 || index >= TabCount || !IsTabRenamable(TabPages[index]))
                 return false;
 
             TabRenameStartingEventArgs args = new TabRenameStartingEventArgs(TabPages[index], index);
@@ -580,7 +580,7 @@ namespace ErikwnkWFUI.Controls
 
         private bool IsLocked(TabPage page)
         {
-            return !IsTabRenameAllowed(page) || !IsTabCloseAllowed(page);
+            return !IsTabRenamable(page) || !IsTabClosable(page);
         }
 
         // pageToIgnore: a page that is just being removed and may still be
@@ -727,8 +727,8 @@ namespace ErikwnkWFUI.Controls
                 return "";
 
             TabPage page = TabPages[index];
-            bool renameLocked = !IsTabRenameAllowed(page);
-            bool closeLocked = !IsTabCloseAllowed(page);
+            bool renameLocked = !IsTabRenamable(page);
+            bool closeLocked = !IsTabClosable(page);
 
             if (renameLocked && closeLocked)
                 return UIStrings.Get("TabControl.LockedRenameAndClose");
@@ -767,7 +767,7 @@ namespace ErikwnkWFUI.Controls
         /// or leaving the box applies it, Escape drops it. The tab is
         /// selected first. Returns whether the edit started - it does not
         /// without <see cref="AllowUserToRenameTabs"/>, for a tab that was
-        /// locked with <see cref="SetTabRenameAllowed"/> or vetoed through
+        /// locked with <see cref="SetTabRenamable"/> or vetoed through
         /// <see cref="TabRenameStarting"/>.
         /// </summary>
         public bool BeginRenameTab(int index)

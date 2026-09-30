@@ -76,7 +76,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateStandard();
 
-        Assert.Equal(UIColors.BorderLight, tabs.AccentColor);
+        Assert.Equal(UIColors.BorderLight, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyStandard();
 
-        Assert.Equal(UIColors.BorderLight, tabs.AccentColor);
+        Assert.Equal(UIColors.BorderLight, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreatePrimary();
 
-        Assert.Equal(UIColors.Primary, tabs.AccentColor);
+        Assert.Equal(UIColors.Primary, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyPrimary();
 
-        Assert.Equal(UIColors.Primary, tabs.AccentColor);
+        Assert.Equal(UIColors.Primary, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -155,9 +155,9 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = new WfuiTabControl();
 
-        tabs.AccentColor = Color.Red;
+        tabs.SelectedTabIndicatorColor = Color.Red;
 
-        Assert.Equal(Color.Red, tabs.AccentColor);
+        Assert.Equal(Color.Red, tabs.SelectedTabIndicatorColor);
     }
 
     // ---- pages ----
@@ -381,7 +381,7 @@ public class TabControlTests
     public void Render_PutsTheAccentBarOnTheOuterEdgeOfTheSelectedTab(TabAlignment alignment)
     {
         using WfuiTabControl tabs = CreateTabs(alignment);
-        tabs.AccentColor = Color.FromArgb(200, 100, 50);
+        tabs.SelectedTabIndicatorColor = Color.FromArgb(200, 100, 50);
         Rectangle selected = tabs.GetTabRect(0);
 
         Point onBar;

@@ -823,8 +823,8 @@ namespace ErikwnkWFUI.Showcase
             // The first tab is locked: it can be neither renamed nor closed.
             Controls.TabControl lockedFirst = UIStyles.TabControls.CreatePrimary();
             CreateTabControlDemo(lockedFirst, 3, "First tab is locked: no rename, no close");
-            lockedFirst.SetTabRenameAllowed(lockedFirst.TabPages[0], false);
-            lockedFirst.SetTabCloseAllowed(lockedFirst.TabPages[0], false);
+            lockedFirst.SetTabRenamable(lockedFirst.TabPages[0], false);
+            lockedFirst.SetTabClosable(lockedFirst.TabPages[0], false);
             table.AddRow("CreatePrimary", 140, lockedFirst);
 
             // Everything the tab controls can do, in one tab control: each
@@ -846,8 +846,8 @@ namespace ErikwnkWFUI.Showcase
             // Locked first tab, and every new tab starts out in rename mode.
             Controls.TabControl lockedFirst = UIStyles.TabControls.CreatePrimary();
             CreateTabControlDemo(lockedFirst, 3, "First tab is locked, new tabs start in rename mode");
-            lockedFirst.SetTabRenameAllowed(lockedFirst.TabPages[0], false);
-            lockedFirst.SetTabCloseAllowed(lockedFirst.TabPages[0], false);
+            lockedFirst.SetTabRenamable(lockedFirst.TabPages[0], false);
+            lockedFirst.SetTabClosable(lockedFirst.TabPages[0], false);
             lockedFirst.RenameTabAfterAdding = true;
 
             AddOverviewPage(

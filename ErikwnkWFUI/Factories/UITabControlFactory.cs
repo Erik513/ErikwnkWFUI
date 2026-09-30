@@ -24,7 +24,7 @@ namespace ErikwnkWFUI.Factories
         {
             return new TabControl
             {
-                AccentColor = UIColors.Primary,
+                SelectedTabIndicatorColor = UIColors.Primary,
                 ContextMenuSelectionColor = UIColors.Primary
             };
         }
@@ -33,7 +33,7 @@ namespace ErikwnkWFUI.Factories
         {
             return new ReadOnlyTabControl
             {
-                AccentColor = UIColors.Primary
+                SelectedTabIndicatorColor = UIColors.Primary
             };
         }
     }

@@ -651,8 +651,8 @@ public class TabControlRenameTests
         using WfuiTabControl tabs = new WfuiTabControl();
         tabs.TabPages.Add("a");
 
-        Assert.True(tabs.IsTabRenameAllowed(tabs.TabPages[0]));
-        Assert.True(tabs.IsTabCloseAllowed(tabs.TabPages[0]));
+        Assert.True(tabs.IsTabRenamable(tabs.TabPages[0]));
+        Assert.True(tabs.IsTabClosable(tabs.TabPages[0]));
     }
 
     [Fact]
@@ -661,7 +661,7 @@ public class TabControlRenameTests
         StaThread.Run(() =>
         {
             using Form host = Show(out WfuiTabControl tabs, out TextBox other);
-            tabs.SetTabRenameAllowed(tabs.TabPages[1], false);
+            tabs.SetTabRenamable(tabs.TabPages[1], false);
 
             Assert.False(tabs.BeginRenameTab(1));
             Assert.False(tabs.IsRenamingTab);
@@ -676,7 +676,7 @@ public class TabControlRenameTests
         StaThread.Run(() =>
         {
             using Form host = Show(out WfuiTabControl tabs, out TextBox other);
-            tabs.SetTabRenameAllowed(tabs.TabPages[1], false);
+            tabs.SetTabRenamable(tabs.TabPages[1], false);
 
             DoubleClick(tabs, 1);
 
@@ -690,7 +690,7 @@ public class TabControlRenameTests
         StaThread.Run(() =>
         {
             using Form host = Show(out WfuiTabControl tabs, out TextBox other);
-            tabs.SetTabRenameAllowed(tabs.TabPages[1], false);
+            tabs.SetTabRenamable(tabs.TabPages[1], false);
             WfuiContextMenuStrip menu = (WfuiContextMenuStrip)tabs.ContextMenuStrip!;
             ToolStripMenuItem rename = (ToolStripMenuItem)menu.Items[1];
 
@@ -712,8 +712,8 @@ public class TabControlRenameTests
         StaThread.Run(() =>
         {
             using Form host = Show(out WfuiTabControl tabs, out TextBox other);
-            tabs.SetTabRenameAllowed(tabs.TabPages[1], false);
-            tabs.SetTabRenameAllowed(tabs.TabPages[1], true);
+            tabs.SetTabRenamable(tabs.TabPages[1], false);
+            tabs.SetTabRenamable(tabs.TabPages[1], true);
 
             Assert.True(tabs.BeginRenameTab(1));
         });
@@ -728,7 +728,7 @@ public class TabControlRenameTests
             tabs.AllowUserToRenameTabs = false;
 
             Assert.False(tabs.BeginRenameTab(2));
-            Assert.True(tabs.IsTabRenameAllowed(tabs.TabPages[2]));
+            Assert.True(tabs.IsTabRenamable(tabs.TabPages[2]));
         });
     }
 
@@ -787,10 +787,10 @@ public class TabControlRenameTests
     {
         using WfuiTabControl tabs = new WfuiTabControl();
 
-        Assert.Throws<System.ArgumentNullException>(() => tabs.SetTabRenameAllowed(null!, false));
-        Assert.Throws<System.ArgumentNullException>(() => tabs.IsTabRenameAllowed(null!));
-        Assert.Throws<System.ArgumentNullException>(() => tabs.SetTabCloseAllowed(null!, false));
-        Assert.Throws<System.ArgumentNullException>(() => tabs.IsTabCloseAllowed(null!));
+        Assert.Throws<System.ArgumentNullException>(() => tabs.SetTabRenamable(null!, false));
+        Assert.Throws<System.ArgumentNullException>(() => tabs.IsTabRenamable(null!));
+        Assert.Throws<System.ArgumentNullException>(() => tabs.SetTabClosable(null!, false));
+        Assert.Throws<System.ArgumentNullException>(() => tabs.IsTabClosable(null!));
     }
 
     // ---- double-click ----

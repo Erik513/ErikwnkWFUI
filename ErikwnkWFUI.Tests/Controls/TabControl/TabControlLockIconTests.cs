@@ -42,7 +42,7 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl plain = CreateTabs();
         using WfuiTabControl locked = CreateTabs();
-        locked.SetTabCloseAllowed(locked.TabPages[0], false);
+        locked.SetTabClosable(locked.TabPages[0], false);
 
         Assert.True(locked.GetTabRect(0).Width > plain.GetTabRect(0).Width);
         Assert.Equal(plain.GetTabRect(2).Width, locked.GetTabRect(2).Width);
@@ -56,8 +56,8 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl tabs = CreateTabs();
 
-        tabs.SetTabRenameAllowed(tabs.TabPages[1], !renameLocked);
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], !closeLocked);
+        tabs.SetTabRenamable(tabs.TabPages[1], !renameLocked);
+        tabs.SetTabClosable(tabs.TabPages[1], !closeLocked);
 
         Assert.NotNull(tabs.ImageList);
         Assert.Equal(0, tabs.TabPages[1].ImageIndex);
@@ -69,9 +69,9 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl tabs = CreateTabs();
         int normalWidth = tabs.GetTabRect(0).Width;
-        tabs.SetTabRenameAllowed(tabs.TabPages[0], false);
+        tabs.SetTabRenamable(tabs.TabPages[0], false);
 
-        tabs.SetTabRenameAllowed(tabs.TabPages[0], true);
+        tabs.SetTabRenamable(tabs.TabPages[0], true);
 
         Assert.Null(tabs.ImageList);
         Assert.Equal(-1, tabs.TabPages[0].ImageIndex);
@@ -82,10 +82,10 @@ public class TabControlLockIconTests
     public void UnlockingOneOfTwo_KeepsTheOtherLockedTabsRoom()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabRenameAllowed(tabs.TabPages[0], false);
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabRenamable(tabs.TabPages[0], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
 
-        tabs.SetTabRenameAllowed(tabs.TabPages[0], true);
+        tabs.SetTabRenamable(tabs.TabPages[0], true);
 
         Assert.NotNull(tabs.ImageList);
         Assert.Equal(-1, tabs.TabPages[0].ImageIndex);
@@ -97,7 +97,7 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl tabs = CreateTabs();
         TabPage page = new TabPage("Late");
-        tabs.SetTabRenameAllowed(page, false);
+        tabs.SetTabRenamable(page, false);
 
         tabs.TabPages.Add(page);
 
@@ -109,7 +109,7 @@ public class TabControlLockIconTests
     public void SwitchingTheIconOff_TakesTheRoomAway_AndBackOnPutsItBack()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
+        tabs.SetTabClosable(tabs.TabPages[0], false);
 
         tabs.ShowLockIcon = false;
         Assert.Null(tabs.ImageList);
@@ -126,9 +126,9 @@ public class TabControlLockIconTests
         using WfuiTabControl tabs = CreateTabs();
         tabs.ShowLockIcon = false;
 
-        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
+        tabs.SetTabClosable(tabs.TabPages[0], false);
 
-        Assert.False(tabs.IsTabCloseAllowed(tabs.TabPages[0]));
+        Assert.False(tabs.IsTabClosable(tabs.TabPages[0]));
         Assert.Null(tabs.ImageList);
     }
 
@@ -156,8 +156,8 @@ public class TabControlLockIconTests
         tabs.ImageList = own;
         tabs.TabPages[0].ImageIndex = 1;
 
-        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
-        tabs.SetTabRenameAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[0], false);
+        tabs.SetTabRenamable(tabs.TabPages[1], false);
 
         Assert.Same(own, tabs.ImageList);
         Assert.Equal(1, tabs.TabPages[0].ImageIndex);
@@ -207,7 +207,7 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl tabs = CreateTabs();
         tabs.TabBackColor = Color.FromArgb(40, 41, 42);
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
         Rectangle locked = tabs.GetTabRect(1);
         Rectangle plain = tabs.GetTabRect(2);
 
@@ -260,7 +260,7 @@ public class TabControlLockIconTests
             host.Controls.Add(tabs);
             host.Show();
             Application.DoEvents();
-            tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+            tabs.SetTabClosable(tabs.TabPages[1], false);
             Application.DoEvents();
 
             tabs.BeginRenameTab(1);
@@ -282,8 +282,8 @@ public class TabControlLockIconTests
     public void TheToolTip_SaysWhatIsLocked(bool renameLocked, bool closeLocked, string expected)
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabRenameAllowed(tabs.TabPages[1], !renameLocked);
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], !closeLocked);
+        tabs.SetTabRenamable(tabs.TabPages[1], !renameLocked);
+        tabs.SetTabClosable(tabs.TabPages[1], !closeLocked);
 
         Assert.Equal(expected, tabs.InvokePrivate<string>("GetLockedToolTipText", 1));
     }
@@ -292,7 +292,7 @@ public class TabControlLockIconTests
     public void TheToolTip_IsEmpty_ForNoTab_AndWhenTheIconIsOff()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
 
         Assert.Equal("", tabs.InvokePrivate<string>("GetLockedToolTipText", -1));
         Assert.Equal("", tabs.InvokePrivate<string>("GetLockedToolTipText", 9));
@@ -314,7 +314,7 @@ public class TabControlLockIconTests
     public void TheToolTipText_FollowsTheLanguage()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
         string? english = tabs.InvokePrivate<string>("GetLockedToolTipText", 1);
 
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
@@ -330,7 +330,7 @@ public class TabControlLockIconTests
     {
         using WfuiTabControl tabs = CreateTabs();
         TabPage locked = tabs.TabPages[1];
-        tabs.SetTabCloseAllowed(locked, false);
+        tabs.SetTabClosable(locked, false);
 
         tabs.TabPages.Remove(locked);
 
@@ -341,7 +341,7 @@ public class TabControlLockIconTests
     public void DisposingTheControl_ReleasesTheSlotImages()
     {
         WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
+        tabs.SetTabClosable(tabs.TabPages[0], false);
         ImageList slots = tabs.ImageList!;
         bool released = false;
         slots.Disposed += (s, e) => released = true;

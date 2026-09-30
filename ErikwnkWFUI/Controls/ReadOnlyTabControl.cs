@@ -145,7 +145,7 @@ namespace ErikwnkWFUI.Controls
         /// current accent - set it to <see cref="UIColors.Primary"/> for an
         /// accent-colored bar, which is what <see cref="UIStyles.TabControls.CreatePrimary"/> does.
         /// </summary>
-        public Color AccentColor
+        public Color SelectedTabIndicatorColor
         {
             get => _accentColor.Value;
             set
@@ -912,7 +912,7 @@ namespace ErikwnkWFUI.Controls
                     break;
             }
 
-            using (SolidBrush brush = new SolidBrush(AccentColor))
+            using (SolidBrush brush = new SolidBrush(SelectedTabIndicatorColor))
             {
                 graphics.FillRectangle(brush, bar);
             }

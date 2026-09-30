@@ -377,7 +377,7 @@ public class TabControlContextMenuTests
     public void ALockedTab_CannotBeClosed_ItsMenuEntryIsDisabled()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
 
         RightClick(tabs, 1);
         Open(tabs);
@@ -391,7 +391,7 @@ public class TabControlContextMenuTests
     public void TheOtherTabs_CanStillBeClosed()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
 
         RightClick(tabs, 2);
         Open(tabs);
@@ -405,8 +405,8 @@ public class TabControlContextMenuTests
     public void UnlockingATab_MakesItClosableAgain()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], false);
-        tabs.SetTabCloseAllowed(tabs.TabPages[1], true);
+        tabs.SetTabClosable(tabs.TabPages[1], false);
+        tabs.SetTabClosable(tabs.TabPages[1], true);
 
         RightClick(tabs, 1);
         Open(tabs);
@@ -418,14 +418,14 @@ public class TabControlContextMenuTests
     public void ALockedTab_IsStillAddedBehindAndRenamedLikeAnyOther()
     {
         using WfuiTabControl tabs = CreateTabs();
-        tabs.SetTabCloseAllowed(tabs.TabPages[0], false);
+        tabs.SetTabClosable(tabs.TabPages[0], false);
 
         RightClick(tabs, 0);
         Open(tabs);
         AddItem(tabs).PerformClick();
 
         Assert.Equal("New tab", tabs.TabPages[1].Text);
-        Assert.True(tabs.IsTabRenameAllowed(tabs.TabPages[0]));
+        Assert.True(tabs.IsTabRenamable(tabs.TabPages[0]));
     }
 
     // ---- one tab always stays ----
