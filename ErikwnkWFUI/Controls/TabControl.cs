@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -16,11 +17,11 @@ namespace ErikwnkWFUI.Controls
     /// the base type stays fully qualified so the class doesn't inherit from
     /// itself. Go through <see cref="UIStyles.TabControls.CreateStandard"/> to
     /// get one without spelling out <c>ErikwnkWFUI.Controls.TabControl</c>.
-    /// Differences from the standard control: <see cref="System.Windows.Forms.TabControl.Appearance"/>
-    /// is not supported (tabs are always drawn as tabs, never as buttons),
-    /// <c>DrawItem</c> is never raised because the control draws everything
-    /// itself, and <see cref="PageBackColor"/> replaces a page's own
-    /// <c>BackColor</c> when the page is added.
+    /// Differences from the standard control: <see cref="Appearance"/> is
+    /// always <see cref="TabAppearance.Normal"/> (tabs are never drawn as
+    /// buttons), <c>DrawItem</c> is never raised because the control draws
+    /// everything itself, and <see cref="PageBackColor"/> replaces a page's
+    /// own <c>BackColor</c> when the page is added.
     /// </remarks>
     public class TabControl : System.Windows.Forms.TabControl
     {
@@ -172,6 +173,40 @@ namespace ErikwnkWFUI.Controls
                 _pageBackColor.Set(value);
                 ApplyPageBackColor();
                 Repaint();
+            }
+        }
+
+        /// <summary>
+        /// Always <see cref="TabAppearance.Normal"/> - this control only
+        /// draws tabs, never button-style tabs. Setting anything else throws.
+        /// </summary>
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public new TabAppearance Appearance
+        {
+            get => TabAppearance.Normal;
+            set
+            {
+                if (value != TabAppearance.Normal)
+                    throw new NotSupportedException("Only TabAppearance.Normal is supported.");
+            }
+        }
+
+        // The native styles that switch a tab control to button tabs. The
+        // base class's own Appearance can still be reached through a
+        // reference typed as the standard TabControl, so they are stripped
+        // from the window itself as well.
+        private const int TCS_BUTTONS = 0x0100;
+        private const int TCS_FLATBUTTONS = 0x0008;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams parameters = base.CreateParams;
+                parameters.Style &= ~(TCS_BUTTONS | TCS_FLATBUTTONS);
+                return parameters;
             }
         }
 

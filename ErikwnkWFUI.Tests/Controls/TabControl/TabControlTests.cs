@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
@@ -445,5 +446,57 @@ public class TabControlTests
 
         Assert.True(tabs.ShowToolTips == false);
         Assert.Equal("Hint", tabs.TabPages[0].ToolTipText);
+    }
+
+    // ---- Appearance: only Normal ----
+
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(System.IntPtr hWnd, int index);
+
+    private const int GWL_STYLE = -16;
+    private const int TCS_BUTTONS = 0x0100;
+
+    [Fact]
+    public void Appearance_IsAlwaysNormal()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+
+        Assert.Equal(TabAppearance.Normal, tabs.Appearance);
+    }
+
+    [Theory]
+    [InlineData(TabAppearance.Buttons)]
+    [InlineData(TabAppearance.FlatButtons)]
+    public void Appearance_SettingAButtonStyle_Throws(TabAppearance appearance)
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+
+        Assert.Throws<System.NotSupportedException>(() => tabs.Appearance = appearance);
+        Assert.Equal(TabAppearance.Normal, tabs.Appearance);
+    }
+
+    [Fact]
+    public void Appearance_SettingNormal_IsAccepted()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+
+        tabs.Appearance = TabAppearance.Normal;
+
+        Assert.Equal(TabAppearance.Normal, tabs.Appearance);
+    }
+
+    // Through a reference typed as the standard control the property can't
+    // be intercepted - the window itself must still never become button tabs.
+    [Theory]
+    [InlineData(TabAppearance.Buttons)]
+    [InlineData(TabAppearance.FlatButtons)]
+    public void Appearance_SetThroughTheBaseType_NeverMakesTheWindowButtonTabs(TabAppearance appearance)
+    {
+        using WfuiTabControl tabs = CreateTabs();
+
+        ((System.Windows.Forms.TabControl)tabs).Appearance = appearance;
+        _ = tabs.Handle;
+
+        Assert.Equal(0, GetWindowLong(tabs.Handle, GWL_STYLE) & TCS_BUTTONS);
     }
 }
