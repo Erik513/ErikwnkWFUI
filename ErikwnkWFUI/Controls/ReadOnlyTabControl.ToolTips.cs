@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -67,8 +67,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (_tabToolTip == null)
             {
-                _tabToolTip = new ToolTip { InitialDelay = 500, ReshowDelay = 100, AutoPopDelay = 5000 };
-                _tabToolTip.ReviveOnFormActivate(this);
+                _tabToolTip = UIToolTipFactory.CreateHoverToolTip(this);
             }
 
             return _tabToolTip;

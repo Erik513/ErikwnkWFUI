@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 
@@ -86,5 +86,18 @@ public class UIColorsTests
         {
             UIColors.SetAccent(UIAccentColors.Blue);
         }
+    }
+
+    [Theory]
+    [InlineData(255, 255, 255, true)]
+    [InlineData(240, 240, 240, true)]
+    [InlineData(0, 0, 0, false)]
+    [InlineData(40, 40, 40, false)]
+    public void IsLight_SaysWhetherDarkTextBelongsOnTheColor(int r, int g, int b, bool expected)
+    {
+        Color color = Color.FromArgb(r, g, b);
+
+        Assert.Equal(expected, UIColors.IsLight(color));
+        Assert.Equal(expected, UIColors.GetContrastingForeColor(color) == UIColors.DarkForeColor);
     }
 }

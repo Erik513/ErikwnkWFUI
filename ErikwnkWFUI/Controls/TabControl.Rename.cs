@@ -64,8 +64,10 @@ namespace ErikwnkWFUI.Controls
             // Only a control that takes the focus makes the box lose it - a
             // click on a page's empty area or a label does not, so every
             // click outside the box has to end the edit by itself.
-            _renameClickFilter = new RenameClickFilter(this, box);
-            Application.AddMessageFilter(_renameClickFilter);
+            _renameClickFilter = new OutsideClickFilter(
+                hwnd => box.IsHandleCreated && hwnd != box.Handle,
+                () => EndRename(commit: true));
+            _renameClickFilter.Start();
 
             // A tab control only accepts pages as children, so the box is
             // attached to its window directly.
@@ -106,7 +108,7 @@ namespace ErikwnkWFUI.Controls
 
             if (_renameClickFilter != null)
             {
-                Application.RemoveMessageFilter(_renameClickFilter);
+                _renameClickFilter.Stop();
                 _renameClickFilter = null;
             }
 
@@ -121,42 +123,6 @@ namespace ErikwnkWFUI.Controls
             if (IsHandleCreated && !Focused)
             {
                 Focus();
-            }
-        }
-
-        // Watches the mouse while a name is being edited: a button going down
-        // anywhere but in the box itself ends the edit and applies the name.
-        private sealed class RenameClickFilter : IMessageFilter
-        {
-            private const int WM_LBUTTONDOWN = 0x0201;
-            private const int WM_RBUTTONDOWN = 0x0204;
-            private const int WM_MBUTTONDOWN = 0x0207;
-            private const int WM_XBUTTONDOWN = 0x020B;
-            private const int WM_NCLBUTTONDOWN = 0x00A1;
-            private const int WM_NCRBUTTONDOWN = 0x00A4;
-
-            private readonly TabControl _owner;
-            private readonly TextBox _box;
-
-            public RenameClickFilter(TabControl owner, TextBox box)
-            {
-                _owner = owner;
-                _box = box;
-            }
-
-            public bool PreFilterMessage(ref Message m)
-            {
-                bool isButtonDown =
-                    m.Msg == WM_LBUTTONDOWN || m.Msg == WM_RBUTTONDOWN || m.Msg == WM_MBUTTONDOWN ||
-                    m.Msg == WM_XBUTTONDOWN || m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN;
-
-                if (isButtonDown && _box.IsHandleCreated && m.HWnd != _box.Handle)
-                {
-                    _owner.EndRename(commit: true);
-                }
-
-                // Never swallowed - the click still does what it was meant to.
-                return false;
             }
         }
 

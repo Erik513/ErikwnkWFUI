@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
@@ -147,7 +147,7 @@ namespace ErikwnkWFUI.Controls
                 get
                 {
                     Color fill = _selectionBackColor();
-                    bool fillIsLight = UIColors.GetContrastingForeColor(fill) == UIColors.DarkForeColor;
+                    bool fillIsLight = UIColors.IsLight(fill);
                     return fillIsLight ? UIColors.Darken(fill, 40) : UIColors.Lighten(fill, 40);
                 }
             }

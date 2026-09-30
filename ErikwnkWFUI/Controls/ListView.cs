@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -59,7 +60,7 @@ namespace ErikwnkWFUI.Controls
         private int _rowRangeDragLastAppliedIndex = -1;
         private int _rowRangeAutoScrollDirection;
         private readonly Timer _rowRangeDragPollTimer;
-        private readonly OutsideClickDeselectFilter _outsideClickDeselectFilter;
+        private readonly OutsideClickFilter _outsideClickDeselectFilter;
 
         private Color _rowBackColor = UIColors.BackgroundMedium;
         private Color _alternateRowBackColor;
@@ -346,8 +347,8 @@ namespace ErikwnkWFUI.Controls
             // Message filter, not a poll, for "a click happened somewhere
             // else" - see OutsideClickDeselectFilter for what counts as
             // outside.
-            _outsideClickDeselectFilter = new OutsideClickDeselectFilter(this);
-            Application.AddMessageFilter(_outsideClickDeselectFilter);
+            _outsideClickDeselectFilter = new OutsideClickFilter(IsOutsideClickThatDeselects, DeselectAll, leftButtonOnly: true);
+            _outsideClickDeselectFilter.Start();
         }
 
         protected override void Dispose(bool disposing)
@@ -360,7 +361,7 @@ namespace ErikwnkWFUI.Controls
                 _toggleDeselectSettleTimer.Dispose();
                 _rowRangeDragPollTimer.Stop();
                 _rowRangeDragPollTimer.Dispose();
-                Application.RemoveMessageFilter(_outsideClickDeselectFilter);
+                _outsideClickDeselectFilter.Stop();
             }
 
             base.Dispose(disposing);
@@ -2048,67 +2049,47 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Clears the selection on a left-button press anywhere else in the
-        // app. This control's own handle (client area or scrollbar) is
-        // never "outside"; the header is a separate native window and
-        // needs its own exclusion.
-        private sealed class OutsideClickDeselectFilter : IMessageFilter
+        // Whether a left-button press in the given window counts as "somewhere
+        // else" for the selection. This control's own handle (client area or
+        // scrollbar) is never outside; the header is a separate native window
+        // and needs its own exclusion.
+        private bool IsOutsideClickThatDeselects(System.IntPtr hwnd)
         {
-            private const int WM_LBUTTONDOWN = 0x0201;
-            private const int WM_NCLBUTTONDOWN = 0x00A1;
-
-            private readonly ListView _owner;
-
-            public OutsideClickDeselectFilter(ListView owner)
+            if (IsDisposed || !IsHandleCreated || SelectedItems.Count == 0)
             {
-                _owner = owner;
+                return false;
             }
 
-            public bool PreFilterMessage(ref Message m)
+            if (hwnd == Handle)
             {
-                if (m.Msg != WM_LBUTTONDOWN && m.Msg != WM_NCLBUTTONDOWN)
-                {
-                    return false;
-                }
-
-                if (_owner.IsDisposed || !_owner.IsHandleCreated || _owner.SelectedItems.Count == 0)
-                {
-                    return false;
-                }
-
-                if (m.HWnd == _owner.Handle)
-                {
-                    return false;
-                }
-
-                var headerHandle = HeaderInputSubclass.GetHeaderHandle(_owner.Handle);
-                if (headerHandle != System.IntPtr.Zero && m.HWnd == headerHandle)
-                {
-                    return false;
-                }
-
-                var clickedControl = Control.FromChildHandle(m.HWnd);
-                if (clickedControl == null)
-                {
-                    // Not one of this process's own windows (e.g. a click
-                    // in a different application) - nothing to react to.
-                    return false;
-                }
-
-                if (clickedControl is ToolStripDropDown)
-                {
-                    // A context menu isn't "outside" either - otherwise
-                    // clicking "Copy selection" cleared the very selection
-                    // its own Click handler was about to read.
-                    return false;
-                }
-
-                foreach (ListViewItem item in _owner.SelectedItems.Cast<ListViewItem>().ToList())
-                {
-                    item.Selected = false;
-                }
-
                 return false;
+            }
+
+            var headerHandle = HeaderInputSubclass.GetHeaderHandle(Handle);
+            if (headerHandle != System.IntPtr.Zero && hwnd == headerHandle)
+            {
+                return false;
+            }
+
+            var clickedControl = Control.FromChildHandle(hwnd);
+            if (clickedControl == null)
+            {
+                // Not one of this process's own windows (e.g. a click
+                // in a different application) - nothing to react to.
+                return false;
+            }
+
+            // A context menu isn't "outside" either - otherwise
+            // clicking "Copy selection" cleared the very selection
+            // its own Click handler was about to read.
+            return !(clickedControl is ToolStripDropDown);
+        }
+
+        private void DeselectAll()
+        {
+            foreach (ListViewItem item in SelectedItems.Cast<ListViewItem>().ToList())
+            {
+                item.Selected = false;
             }
         }
     }

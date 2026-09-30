@@ -261,7 +261,7 @@ namespace ErikwnkWFUI.Controls
         // between a normal and the selected tab.
         private static Color GetDefaultHoverTabBackColor()
         {
-            bool lightSurface = UIColors.GetContrastingForeColor(UIColors.BackgroundDark).R < 128;
+            bool lightSurface = UIColors.IsLight(UIColors.BackgroundDark);
 
             return lightSurface ? UIColors.BackgroundDarkElevated : UIColors.BackgroundLight;
         }

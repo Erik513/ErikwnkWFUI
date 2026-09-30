@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
@@ -174,28 +175,11 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            GraphicsState state = e.Graphics.Save();
-
-            try
+            ParentBackground.Paint(this, e.Graphics, args =>
             {
-                e.Graphics.TranslateTransform(-Left, -Top);
-
-                Rectangle rectangle = new Rectangle(
-                    Parent.Location,
-                    Parent.Size);
-
-                InvokePaintBackground(
-                    Parent,
-                    new PaintEventArgs(e.Graphics, rectangle));
-
-                InvokePaint(
-                    Parent,
-                    new PaintEventArgs(e.Graphics, rectangle));
-            }
-            finally
-            {
-                e.Graphics.Restore(state);
-            }
+                InvokePaintBackground(Parent, args);
+                InvokePaint(Parent, args);
+            });
         }
 
         protected override void Dispose(bool disposing)
@@ -232,13 +216,7 @@ namespace ErikwnkWFUI.Controls
 
         private void CreateToolTip()
         {
-            _toolTip = new ToolTip
-            {
-                InitialDelay = 500,
-                ReshowDelay = 100,
-                AutoPopDelay = 5000
-            };
-            _toolTip.ReviveOnFormActivate(this);
+            _toolTip = UIToolTipFactory.CreateHoverToolTip(this);
         }
 
         private void UpdateToolTip()

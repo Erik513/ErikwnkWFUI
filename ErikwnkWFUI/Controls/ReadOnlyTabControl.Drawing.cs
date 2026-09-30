@@ -64,17 +64,7 @@ namespace ErikwnkWFUI.Controls
 
             if (color.A < 255 && Parent != null)
             {
-                System.Drawing.Drawing2D.GraphicsState state = graphics.Save();
-
-                try
-                {
-                    graphics.TranslateTransform(-Left, -Top);
-                    InvokePaintBackground(Parent, new PaintEventArgs(graphics, Parent.ClientRectangle));
-                }
-                finally
-                {
-                    graphics.Restore(state);
-                }
+                ParentBackground.Paint(this, graphics, args => InvokePaintBackground(Parent, args));
             }
 
             if (color.A > 0)

@@ -43,7 +43,7 @@ namespace ErikwnkWFUI.Controls
         // The text box that sits on a tab while its name is being edited.
         private TextBox _renameBox;
         private int _renameIndex = -1;
-        private RenameClickFilter _renameClickFilter;
+        private OutsideClickFilter _renameClickFilter;
 
         private const int MinimumRenameWidth = 60;
         private const int DefaultMaxTabNameLength = 40;

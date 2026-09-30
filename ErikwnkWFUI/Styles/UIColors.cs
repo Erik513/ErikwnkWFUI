@@ -228,7 +228,13 @@ namespace ErikwnkWFUI.Styles
         /// </summary>
         public static Color GetContrastingForeColor(Color background)
         {
-            return RelativeLuminance(background) > LightBackgroundThreshold ? DarkForeColor : LightForeColor;
+            return IsLight(background) ? DarkForeColor : LightForeColor;
+        }
+
+        /// <summary>Whether a color is bright enough that dark text is the one to put on it.</summary>
+        public static bool IsLight(Color color)
+        {
+            return RelativeLuminance(color) > LightBackgroundThreshold;
         }
 
         private static double RelativeLuminance(Color color)

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -19,6 +20,22 @@ namespace ErikwnkWFUI.Factories
                 UseAnimation = true,
                 UseFading = true
             };
+        }
+
+        // The plain tooltip a control shows for itself on hover: standard
+        // look, short delay, and kept working after the window loses and
+        // regains focus.
+        public static ToolTip CreateHoverToolTip(Control owner)
+        {
+            ToolTip toolTip = new ToolTip
+            {
+                InitialDelay = 500,
+                ReshowDelay = 100,
+                AutoPopDelay = 5000
+            };
+
+            toolTip.ReviveOnFormActivate(owner);
+            return toolTip;
         }
     }
 }
