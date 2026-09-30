@@ -274,6 +274,16 @@ public class TabControlRenameTests
         });
     }
 
+    [Fact]
+    public void BeginRenameTab_NeedsAWindow_AndDoesNothingWithoutOne()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        tabs.TabPages.Add("a");
+
+        Assert.False(tabs.BeginRenameTab(0));
+        Assert.False(tabs.IsRenamingTab);
+    }
+
     // ---- length ----
 
     [Fact]

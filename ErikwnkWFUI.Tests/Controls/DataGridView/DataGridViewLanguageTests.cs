@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -26,42 +26,44 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 [Collection(LanguageTestCollection.Name)]
 public class DataGridViewLanguageTests
 {
-    [Theory]
-    [InlineData("DataGridView.WithHeaderSuffix")]
-    [InlineData("DataGridView.DeleteRow")]
-    [InlineData("DataGridView.DeleteRowHeader")]
-    [InlineData("DataGridView.AddRow")]
-    [InlineData("DataGridView.EnumerationHeader")]
-    [InlineData("DataGridView.RowNumber")]
-    [InlineData("DataGridView.CellCopied")]
-    [InlineData("DataGridView.CellsCopied")]
-    [InlineData("DataGridView.CellCut")]
-    [InlineData("DataGridView.CellsCut")]
-    [InlineData("DataGridView.CellCleared")]
-    [InlineData("DataGridView.CellsCleared")]
-    [InlineData("DataGridView.RowPasted")]
-    [InlineData("DataGridView.RowsPasted")]
-    [InlineData("DataGridView.CellsPasted")]
-    [InlineData("DataGridView.RowDeleted")]
-    [InlineData("DataGridView.RowsDeleted")]
-    [InlineData("DataGridView.RowInserted")]
-    [InlineData("DataGridView.RowCut")]
-    [InlineData("DataGridView.RowsCut")]
-    [InlineData("DataGridView.ContextMenuCut")]
-    [InlineData("DataGridView.ContextMenuCutRows")]
-    [InlineData("DataGridView.ContextMenuCopySelection")]
-    [InlineData("DataGridView.ContextMenuCopySelectionWithHeader")]
-    [InlineData("DataGridView.ContextMenuCopyAll")]
-    [InlineData("DataGridView.ContextMenuCopyAllWithHeader")]
-    [InlineData("DataGridView.ContextMenuSelectAll")]
-    [InlineData("DataGridView.ContextMenuPaste")]
-    [InlineData("DataGridView.ContextMenuClear")]
-    [InlineData("DataGridView.ContextMenuDeleteRows")]
-    [InlineData("DataGridView.ContextMenuInsertRowAbove")]
-    [InlineData("DataGridView.ContextMenuInsertRowBelow")]
-    public void Key_IsTranslatedForEveryLanguage(string key)
+    [Fact]
+    public void EveryKey_IsTranslatedForEveryLanguage()
     {
-        LanguageTestHelper.AssertTranslatedForEveryLanguage(key);
+        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[]
+        {
+            "DataGridView.WithHeaderSuffix",
+            "DataGridView.DeleteRow",
+            "DataGridView.DeleteRowHeader",
+            "DataGridView.AddRow",
+            "DataGridView.EnumerationHeader",
+            "DataGridView.RowNumber",
+            "DataGridView.CellCopied",
+            "DataGridView.CellsCopied",
+            "DataGridView.CellCut",
+            "DataGridView.CellsCut",
+            "DataGridView.CellCleared",
+            "DataGridView.CellsCleared",
+            "DataGridView.RowPasted",
+            "DataGridView.RowsPasted",
+            "DataGridView.CellsPasted",
+            "DataGridView.RowDeleted",
+            "DataGridView.RowsDeleted",
+            "DataGridView.RowInserted",
+            "DataGridView.RowCut",
+            "DataGridView.RowsCut",
+            "DataGridView.ContextMenuCut",
+            "DataGridView.ContextMenuCutRows",
+            "DataGridView.ContextMenuCopySelection",
+            "DataGridView.ContextMenuCopySelectionWithHeader",
+            "DataGridView.ContextMenuCopyAll",
+            "DataGridView.ContextMenuCopyAllWithHeader",
+            "DataGridView.ContextMenuSelectAll",
+            "DataGridView.ContextMenuPaste",
+            "DataGridView.ContextMenuClear",
+            "DataGridView.ContextMenuDeleteRows",
+            "DataGridView.ContextMenuInsertRowAbove",
+            "DataGridView.ContextMenuInsertRowBelow"
+        });
     }
 
     // The copy entries are meant to look identical in ListView and both

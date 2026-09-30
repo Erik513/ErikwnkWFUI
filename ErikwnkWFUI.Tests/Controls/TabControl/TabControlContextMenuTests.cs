@@ -200,6 +200,33 @@ public class TabControlContextMenuTests
         });
     }
 
+    [Fact]
+    public void TabAdding_SettingNoPage_AddsNothing()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.TabAdding += (s, e) => e.TabPage = null!;
+
+        AddItem(tabs).PerformClick();
+
+        Assert.Equal(3, tabs.TabCount);
+    }
+
+    [Fact]
+    public void ACancelledNewPage_IsDisposed()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        TabPage? offered = null;
+        tabs.TabAdding += (s, e) =>
+        {
+            offered = e.TabPage;
+            e.Cancel = true;
+        };
+
+        AddItem(tabs).PerformClick();
+
+        Assert.True(offered!.IsDisposed);
+    }
+
     // ---- where a new tab goes ----
 
     [Theory]
@@ -611,14 +638,16 @@ public class TabControlContextMenuTests
 [Collection(LanguageTestCollection.Name)]
 public class TabControlLanguageTests
 {
-    [Theory]
-    [InlineData("TabControl.AddTab")]
-    [InlineData("TabControl.RenameTab")]
-    [InlineData("TabControl.CloseTab")]
-    [InlineData("TabControl.NewTabTitle")]
-    public void Key_IsTranslatedForEveryLanguage(string key)
+    [Fact]
+    public void EveryKey_IsTranslatedForEveryLanguage()
     {
-        LanguageTestHelper.AssertTranslatedForEveryLanguage(key);
+        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[]
+        {
+            "TabControl.AddTab",
+            "TabControl.RenameTab",
+            "TabControl.CloseTab",
+            "TabControl.NewTabTitle"
+        });
     }
 
     [Fact]

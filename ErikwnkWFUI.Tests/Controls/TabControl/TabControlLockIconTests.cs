@@ -301,13 +301,15 @@ public class TabControlLockIconTests
         Assert.Equal("", tabs.InvokePrivate<string>("GetLockedToolTipText", 1));
     }
 
-    [Theory]
-    [InlineData("TabControl.LockedRenameAndClose")]
-    [InlineData("TabControl.LockedRename")]
-    [InlineData("TabControl.LockedClose")]
-    public void Key_IsTranslatedForEveryLanguage(string key)
+    [Fact]
+    public void EveryKey_IsTranslatedForEveryLanguage()
     {
-        LanguageTestHelper.AssertTranslatedForEveryLanguage(key);
+        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[]
+        {
+            "TabControl.LockedRenameAndClose",
+            "TabControl.LockedRename",
+            "TabControl.LockedClose"
+        });
     }
 
     [Fact]

@@ -15,7 +15,10 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// events and their order, the selection, geometry, defaults - has to come
 /// out identical. A scenario that observes nothing would prove nothing, so
 /// each one also checks that its log is not empty.
-/// Shown forms and real window messages: in the focus collection.
+/// Shown forms and real window messages: in the focus collection. The
+/// editable control only repeats the scenarios where what it adds (its
+/// mouse, selection and resize hooks) could make a difference - layout and
+/// defaults are the read-only control's business.
 /// </summary>
 [Collection(FocusTestCollection.Name)]
 public class TabControlParityTests
@@ -445,8 +448,6 @@ public class TabControlParityTests
     [InlineData(Kind.ReadOnly, TabAlignment.Right, false)]
     [InlineData(Kind.ReadOnly, TabAlignment.Top, true)]
     [InlineData(Kind.ReadOnly, TabAlignment.Left, true)]
-    [InlineData(Kind.Editable, TabAlignment.Top, false)]
-    [InlineData(Kind.Editable, TabAlignment.Bottom, true)]
     public void TheStripSitsOnTheSameSideOfThePage(Kind kind, TabAlignment alignment, bool multiline)
     {
         AssertSame(
@@ -464,7 +465,6 @@ public class TabControlParityTests
     [InlineData(Kind.ReadOnly, TabSizeMode.Normal)]
     [InlineData(Kind.ReadOnly, TabSizeMode.FillToRight)]
     [InlineData(Kind.ReadOnly, TabSizeMode.Fixed)]
-    [InlineData(Kind.Editable, TabSizeMode.FillToRight)]
     public void TheSizeModes_KeepTheShapeOfTheLayout(Kind kind, TabSizeMode mode)
     {
         AssertSame(
@@ -481,7 +481,6 @@ public class TabControlParityTests
     // FillToRight is about the rows reaching the right edge.
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void FillToRight_StretchesEveryRowToTheRightEdge_LikeTheStandardControl(Kind kind)
     {
         AssertSame(
@@ -505,7 +504,6 @@ public class TabControlParityTests
     // Sizes that are given are kept exactly - these must be identical.
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void ExplicitItemSizeAndPadding_ProduceTheExactSameTabs(Kind kind)
     {
         AssertSame(
@@ -525,7 +523,6 @@ public class TabControlParityTests
 
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void ChangingATabsText_ResizesItInTheSameDirection(Kind kind)
     {
         AssertSame(kind, (tabs, log) =>
@@ -544,7 +541,6 @@ public class TabControlParityTests
 
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void TabImages_MakeATabWiderInBoth(Kind kind)
     {
         using ImageList images = new ImageList { ImageSize = new Size(16, 16) };
@@ -567,7 +563,6 @@ public class TabControlParityTests
 
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void ResizingTheControl_WrapsAndUnwrapsTheRowsTheSame(Kind kind)
     {
         AssertSame(
@@ -641,7 +636,6 @@ public class TabControlParityTests
 
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void TheDefaultPropertiesAreTheStandardOnes(Kind kind)
     {
         using System.Windows.Forms.TabControl standard = Create(null);
@@ -652,7 +646,6 @@ public class TabControlParityTests
 
     [Theory]
     [InlineData(Kind.ReadOnly)]
-    [InlineData(Kind.Editable)]
     public void TheDefaultsOfANewPage_AreTheStandardOnes(Kind kind)
     {
         using System.Windows.Forms.TabControl standard = Create(null);

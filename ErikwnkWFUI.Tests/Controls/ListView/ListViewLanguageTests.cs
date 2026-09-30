@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -16,18 +16,20 @@ namespace ErikwnkWFUI.Tests.Controls.ListView;
 [Collection(LanguageTestCollection.Name)]
 public class ListViewLanguageTests
 {
-    [Theory]
-    [InlineData("ListView.CopySelection")]
-    [InlineData("ListView.CopyAll")]
-    [InlineData("ListView.CopySelectionWithHeader")]
-    [InlineData("ListView.CopyAllWithHeader")]
-    [InlineData("ListView.SelectAll")]
-    [InlineData("ListView.RowCopied")]
-    [InlineData("ListView.RowsCopied")]
-    [InlineData("ListView.WithHeaderSuffix")]
-    public void Key_IsTranslatedForEveryLanguage(string key)
+    [Fact]
+    public void EveryKey_IsTranslatedForEveryLanguage()
     {
-        LanguageTestHelper.AssertTranslatedForEveryLanguage(key);
+        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[]
+        {
+            "ListView.CopySelection",
+            "ListView.CopyAll",
+            "ListView.CopySelectionWithHeader",
+            "ListView.CopyAllWithHeader",
+            "ListView.SelectAll",
+            "ListView.RowCopied",
+            "ListView.RowsCopied",
+            "ListView.WithHeaderSuffix"
+        });
     }
 
     [Fact]

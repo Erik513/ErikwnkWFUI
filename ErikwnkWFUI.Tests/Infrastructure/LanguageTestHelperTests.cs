@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Styles;
+﻿using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Tests.Infrastructure;
 
@@ -47,5 +47,25 @@ public class LanguageTestHelperTests
         // to catch.
         Assert.Throws<Xunit.Sdk.FalseException>(() =>
             LanguageTestHelper.AssertTranslatedForEveryLanguage("ThisKeyDoesNotExistAnywhere"));
+    }
+
+    [Fact]
+    public void AssertAllTranslatedForEveryLanguage_RealKeys_Pass()
+    {
+        Exception? exception = Record.Exception(() =>
+            LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "MessageBox.Cancel", "InfoPopup.None" }));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void AssertAllTranslatedForEveryLanguage_NamesEveryMissingKey()
+    {
+        Xunit.Sdk.TrueException exception = Assert.Throws<Xunit.Sdk.TrueException>(() =>
+            LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "MessageBox.Cancel", "Missing.One", "Missing.Two" }));
+
+        Assert.Contains("Missing.One", exception.Message);
+        Assert.Contains("Missing.Two", exception.Message);
+        Assert.DoesNotContain("MessageBox.Cancel", exception.Message);
     }
 }

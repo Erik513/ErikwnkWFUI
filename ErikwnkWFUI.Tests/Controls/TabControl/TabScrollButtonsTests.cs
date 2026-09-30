@@ -365,4 +365,124 @@ public class TabScrollButtonsTests
             Assert.Equal(Color.Red.ToArgb(), bitmap.GetPixel(arrows.Left + 5, y).ToArgb());
         });
     }
+
+    // ---- the states of the arrows ----
+
+    private static Color CenterOfHalf(Bitmap bitmap, Rectangle arrows, bool second)
+    {
+        int x = arrows.Left + (second ? arrows.Width * 3 / 4 : arrows.Width / 4);
+        Color pixel = bitmap.GetPixel(x, arrows.Top + arrows.Height / 2);
+        return Color.FromArgb(pixel.R, pixel.G, pixel.B);
+    }
+
+    private static Color CornerOfSecondHalf(Bitmap bitmap, Rectangle arrows)
+    {
+        Color pixel = bitmap.GetPixel(arrows.Right - 4, arrows.Top + 3);
+        return Color.FromArgb(pixel.R, pixel.G, pixel.B);
+    }
+
+    private static Bitmap RenderHost(Form host)
+    {
+        Bitmap bitmap = new Bitmap(host.ClientSize.Width, host.ClientSize.Height);
+        host.DrawToBitmap(bitmap, new Rectangle(Point.Empty, host.ClientSize));
+        return bitmap;
+    }
+
+    [Fact]
+    public void TheArrowThatCannotScrollFurther_IsDrawnInTheDisabledColor()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.TabForeColor = Color.FromArgb(240, 240, 240);
+            tabs.DisabledTabForeColor = Color.FromArgb(240, 0, 0);
+            tabs.TabBackColor = Color.Black;
+            Application.DoEvents();
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            using Bitmap bitmap = RenderHost(host);
+
+            // At the start of the strip: back is spent, forward still works.
+            Color back = CenterOfHalf(bitmap, arrows, second: false);
+            Color forward = CenterOfHalf(bitmap, arrows, second: true);
+            Assert.True(back.R > 150 && back.G < 80);
+            Assert.True(forward.R > 150 && forward.G > 150);
+        });
+    }
+
+    [Fact]
+    public void AHoveredArrow_IsDrawnInTheHoverColor_APressedOneInTheSelectedColor()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.TabBackColor = Color.FromArgb(10, 11, 12);
+            tabs.HoverTabBackColor = Color.FromArgb(20, 21, 22);
+            tabs.SelectedTabBackColor = Color.FromArgb(30, 31, 32);
+            TabScrollButtons buttons = GetButtons(tabs);
+            Application.DoEvents();
+            Rectangle arrows = buttons.GetBounds();
+
+            using (Bitmap normal = RenderHost(host))
+            {
+                Assert.Equal(Color.FromArgb(10, 11, 12), CornerOfSecondHalf(normal, arrows));
+            }
+
+            buttons.SetPrivateField("_hotPart", TabScrollButtons.Part.Second);
+            using (Bitmap hot = RenderHost(host))
+            {
+                Assert.Equal(Color.FromArgb(20, 21, 22), CornerOfSecondHalf(hot, arrows));
+            }
+
+            buttons.SetPrivateField("_pressedPart", TabScrollButtons.Part.Second);
+            using (Bitmap pressed = RenderHost(host))
+            {
+                Assert.Equal(Color.FromArgb(30, 31, 32), CornerOfSecondHalf(pressed, arrows));
+            }
+        });
+    }
+
+    [Fact]
+    public void TheArrowsOutline_UsesTheBorderColor()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.BorderColor = Color.FromArgb(91, 92, 93);
+            Application.DoEvents();
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            using Bitmap bitmap = RenderHost(host);
+
+            Color top = bitmap.GetPixel(arrows.Left + 8, arrows.Top);
+            Color divider = bitmap.GetPixel(arrows.Left + arrows.Width / 2, arrows.Top + 5);
+            Assert.Equal(Color.FromArgb(91, 92, 93), Color.FromArgb(top.R, top.G, top.B));
+            Assert.Equal(Color.FromArgb(91, 92, 93), Color.FromArgb(divider.R, divider.G, divider.B));
+        });
+    }
+
+    [Fact]
+    public void Arrows_ReleasedAndAttachedAgain_KeepWorking()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            TabScrollButtons buttons = GetButtons(tabs);
+
+            buttons.ReleaseHandle();
+            buttons.AttachTo(tabs.Handle);
+            Application.DoEvents();
+
+            Assert.NotEqual(System.IntPtr.Zero, buttons.Handle);
+            Assert.False(buttons.GetBounds().IsEmpty);
+        });
+    }
+
+    [Fact]
+    public void TheBounds_AreEmpty_BeforeTheArrowsAreAttached()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+
+        Assert.True(tabs.GetPrivateField<TabScrollButtons>("_scrollButtons")!.GetBounds().IsEmpty);
+    }
 }

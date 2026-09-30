@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Tests.Infrastructure;
@@ -62,5 +63,33 @@ internal static class LanguageTestHelper
                     $"'{key}' has no {language} translation - UIStrings.Get fell back to the raw key.");
             });
         }
+    }
+
+    /// <summary>
+    /// <see cref="AssertTranslatedForEveryLanguage"/> for a whole list of
+    /// keys in one go: one test per control instead of one per key, and
+    /// when it fails the message names every key/language pair that is
+    /// missing, not just the first.
+    /// </summary>
+    public static void AssertAllTranslatedForEveryLanguage(IEnumerable<string> keys)
+    {
+        List<string> missing = new List<string>();
+
+        foreach (string key in keys)
+        {
+            foreach (UILanguage language in AllLanguages)
+            {
+                RunWithLanguage(language, () =>
+                {
+                    if (UIStrings.Get(key) == key)
+                    {
+                        missing.Add($"'{key}' ({language})");
+                    }
+                });
+            }
+        }
+
+        Assert.True(missing.Count == 0,
+            "No translation, UIStrings.Get fell back to the raw key: " + string.Join(", ", missing));
     }
 }

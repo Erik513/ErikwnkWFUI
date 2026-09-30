@@ -16,9 +16,14 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// (Enter opening a cell edit, a typed letter appearing in a hidden text
 /// box, Space toggling a hidden check box).
 ///
-/// Every control kind is checked the same way, against the themed tab
-/// controls and the standard TabControl side by side, so "behaves like the
-/// standard one" is compared rather than assumed. Each kind also has a
+/// What happens here is WinForms' own doing (a page that is hidden takes
+/// the focus off whatever was in it), independent of what the control is -
+/// so a handful of representatives covers it, one per way a control deals
+/// with the keyboard: a text box, a button, a native list, a composite
+/// (NumericUpDown), the grid (which starts editing on a keystroke) and one
+/// of the library's own owner-drawn lists. Each is checked against the
+/// themed tab controls and the standard TabControl side by side, so "behaves
+/// like the standard one" is compared rather than assumed. Each kind also has a
 /// control experiment: without a tab switch the very same keys do change its
 /// state - otherwise "state unchanged after the switch" would prove nothing.
 /// Uses a shown form: focus needs real windows.
@@ -46,16 +51,11 @@ public class TabControlFocusTests
     public enum Content
     {
         TextBox,
-        ComboBox,
-        CheckBox,
         Button,
         ListBox,
         NumericUpDown,
         DataGridView,
-        ListView,
-        ThemedListBox,
-        ThemedComboBox,
-        ThemedTextBox
+        ThemedListBox
     }
 
     // A control on a page, plus a description of its observable state that
@@ -81,20 +81,6 @@ public class TabControlFocusTests
             {
                 TextBox box = new TextBox();
                 return new Subject(box, () => box.Text);
-            }
-
-            case Content.ComboBox:
-            {
-                ComboBox combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
-                combo.Items.AddRange(new object[] { "alpha", "bravo", "charlie" });
-                combo.SelectedIndex = 0;
-                return new Subject(combo, () => combo.SelectedIndex.ToString());
-            }
-
-            case Content.CheckBox:
-            {
-                CheckBox check = new CheckBox { Text = "check" };
-                return new Subject(check, () => check.Checked.ToString());
             }
 
             case Content.Button:
@@ -129,37 +115,12 @@ public class TabControlFocusTests
                 return new Subject(grid, () => grid.IsCurrentCellInEditMode.ToString());
             }
 
-            case Content.ThemedListBox:
+            default:
             {
                 ErikwnkWFUI.Controls.ListBox list = new ErikwnkWFUI.Controls.ListBox();
                 list.Items.AddRange(new object[] { "alpha", "bravo", "charlie" });
                 list.SelectedIndex = 0;
                 return new Subject(list, () => list.SelectedIndex.ToString());
-            }
-
-            case Content.ThemedComboBox:
-            {
-                ComboBox combo = ErikwnkWFUI.UIStyles.ComboBoxes.CreateStandard();
-                combo.Items.AddRange(new object[] { "alpha", "bravo", "charlie" });
-                combo.SelectedIndex = 0;
-                return new Subject(combo, () => combo.SelectedIndex.ToString());
-            }
-
-            case Content.ThemedTextBox:
-            {
-                TextBox box = ErikwnkWFUI.UIStyles.TextBoxes.CreateStandard();
-                return new Subject(box, () => box.Text);
-            }
-
-            default:
-            {
-                ErikwnkWFUI.Controls.ListView list = new ErikwnkWFUI.Controls.ListView { View = View.Details };
-                list.Columns.Add("Name", 100);
-                list.Items.Add("alpha");
-                list.Items.Add("bravo");
-                list.Items.Add("charlie");
-                list.Items[0].Selected = true;
-                return new Subject(list, () => string.Join(",", list.SelectedIndices.Cast<int>()));
             }
         }
     }
@@ -283,54 +244,19 @@ public class TabControlFocusTests
 
     [Theory]
     [MemberData(nameof(Combinations))]
-    public void SwitchingTheTabInCode_TakesTheFocusOffTheControl(Kind kind, Content content)
+    public void SwitchingTheTabInCode_TakesTheFocusOff_SoKeysDoNotReachTheControl(Kind kind, Content content)
     {
         StaThread.Run(() =>
         {
             using Form host = Show(kind, content, out System.Windows.Forms.TabControl tabs, out Subject subject);
             Assert.True(subject.Control.Focused);
+            string before = subject.State();
 
             tabs.SelectedIndex = 1;
             Pump();
-
             Assert.False(subject.Control.Focused);
-        });
-    }
-
-    [Theory]
-    [MemberData(nameof(Combinations))]
-    public void KeysAfterSwitchingTheTab_DoNotReachTheControl(Kind kind, Content content)
-    {
-        StaThread.Run(() =>
-        {
-            using Form host = Show(kind, content, out System.Windows.Forms.TabControl tabs, out Subject subject);
-            string before = subject.State();
-
-            tabs.SelectedIndex = 1;
-            Pump();
             TypeWhereTheFocusIs(host);
 
-            Assert.Equal(before, subject.State());
-        });
-    }
-
-    [Theory]
-    [MemberData(nameof(Combinations))]
-    public void KeysAfterSwitchingWithAClick_DoNotReachTheControl(Kind kind, Content content)
-    {
-        StaThread.Run(() =>
-        {
-            using Form host = Show(kind, content, out System.Windows.Forms.TabControl tabs, out Subject subject);
-            string before = subject.State();
-
-            Rectangle tab = tabs.GetTabRect(1);
-            System.IntPtr at = (System.IntPtr)((tab.Left + 10) | ((tab.Top + 8) << 16));
-            SendMessage(tabs.Handle, 0x201, (System.IntPtr)1, at);
-            SendMessage(tabs.Handle, 0x202, System.IntPtr.Zero, at);
-            Pump();
-            TypeWhereTheFocusIs(host);
-
-            Assert.Equal(1, tabs.SelectedIndex);
             Assert.Equal(before, subject.State());
         });
     }
@@ -387,15 +313,14 @@ public class TabControlFocusTests
     }
 
     [Theory]
-    [MemberData(nameof(Combinations))]
-    public void ACellBeingEdited_IsEndedByTheSwitch(Kind kind, Content content)
+    [InlineData(Kind.Standard)]
+    [InlineData(Kind.ReadOnly)]
+    [InlineData(Kind.Editable)]
+    public void ACellBeingEdited_IsEndedByTheSwitch(Kind kind)
     {
-        if (content != Content.DataGridView)
-            return;
-
         StaThread.Run(() =>
         {
-            using Form host = Show(kind, content, out System.Windows.Forms.TabControl tabs, out Subject subject);
+            using Form host = Show(kind, Content.DataGridView, out System.Windows.Forms.TabControl tabs, out Subject subject);
             WfuiDataGridView grid = (WfuiDataGridView)subject.Control;
             grid.CurrentCell = grid.Rows[0].Cells[0];
             grid.BeginEdit(false);

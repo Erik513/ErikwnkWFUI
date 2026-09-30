@@ -226,18 +226,6 @@ public class TabControlTests
         Assert.Equal("Tab 1", tabs.TabPages[0].Text);
     }
 
-    [Theory]
-    [InlineData(TabAlignment.Top)]
-    [InlineData(TabAlignment.Bottom)]
-    [InlineData(TabAlignment.Left)]
-    [InlineData(TabAlignment.Right)]
-    public void EveryAlignment_KeepsThePagesInsideTheClientArea(TabAlignment alignment)
-    {
-        using WfuiTabControl tabs = CreateTabs(alignment);
-
-        Assert.True(tabs.ClientRectangle.Contains(tabs.DisplayRectangle));
-    }
-
     // ---- hot tracking (only when HotTrack is on, like the standard one) ----
 
     [Fact]
@@ -681,5 +669,286 @@ public class TabControlTests
         using Bitmap bitmap = Render(tabs);
 
         Assert.Equal(Color.FromArgb(200, 10, 20), Pixel(bitmap, tab.Left + 4, tab.Top + 4));
+    }
+
+    // ---- every color can be set and read back ----
+
+    public static System.Collections.Generic.IEnumerable<object[]> ColorProperties()
+    {
+        foreach (string name in new[]
+        {
+            "HeaderBackColor", "TabBackColor", "HoverTabBackColor", "SelectedTabBackColor", "TabForeColor",
+            "SelectedTabForeColor", "DisabledTabForeColor", "SelectedTabIndicatorColor", "BorderColor", "PageBackColor"
+        })
+        {
+            yield return new object[] { name };
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(ColorProperties))]
+    public void EveryColorProperty_KeepsTheValueItWasGiven_ForThatInstanceOnly(string name)
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        using WfuiTabControl untouched = CreateTabs();
+        System.Reflection.PropertyInfo property = typeof(WfuiTabControl).GetProperty(name)!;
+        Color chosen = Color.FromArgb(201, 77, 13);
+        Color before = (Color)property.GetValue(untouched)!;
+
+        property.SetValue(tabs, chosen);
+
+        Assert.Equal(chosen, (Color)property.GetValue(tabs)!);
+        Assert.Equal(before, (Color)property.GetValue(untouched)!);
+    }
+
+
+    // ---- which color a tab gets ----
+
+    [Fact]
+    public void TabBackColor_SelectedWinsOverHoveredWinsOverNormal()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.TabBackColor = Color.FromArgb(1, 1, 1);
+        tabs.HoverTabBackColor = Color.FromArgb(2, 2, 2);
+        tabs.SelectedTabBackColor = Color.FromArgb(3, 3, 3);
+
+        Assert.Equal(Color.FromArgb(3, 3, 3), tabs.InvokePrivate<Color>("GetTabBackColor", true, true));
+        Assert.Equal(Color.FromArgb(3, 3, 3), tabs.InvokePrivate<Color>("GetTabBackColor", true, false));
+        Assert.Equal(Color.FromArgb(2, 2, 2), tabs.InvokePrivate<Color>("GetTabBackColor", false, true));
+        Assert.Equal(Color.FromArgb(1, 1, 1), tabs.InvokePrivate<Color>("GetTabBackColor", false, false));
+    }
+
+    [Fact]
+    public void TabForeColor_DisabledWinsOverSelectedWinsOverNormal()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.TabForeColor = Color.FromArgb(1, 1, 1);
+        tabs.SelectedTabForeColor = Color.FromArgb(2, 2, 2);
+        tabs.DisabledTabForeColor = Color.FromArgb(3, 3, 3);
+
+        Assert.Equal(Color.FromArgb(3, 3, 3), tabs.InvokePrivate<Color>("GetTabForeColor", true, false));
+        Assert.Equal(Color.FromArgb(3, 3, 3), tabs.InvokePrivate<Color>("GetTabForeColor", false, false));
+        Assert.Equal(Color.FromArgb(2, 2, 2), tabs.InvokePrivate<Color>("GetTabForeColor", true, true));
+        Assert.Equal(Color.FromArgb(1, 1, 1), tabs.InvokePrivate<Color>("GetTabForeColor", false, true));
+    }
+
+    [Fact]
+    public void ADisabledPage_GetsTheDisabledTextColor_OnItsTab()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.TabBackColor = Color.Black;
+        tabs.TabForeColor = Color.White;
+        tabs.DisabledTabForeColor = Color.FromArgb(255, 0, 0);
+        tabs.TabPages[2].Enabled = false;
+        Rectangle plain = tabs.GetTabRect(1);
+        Rectangle disabled = tabs.GetTabRect(2);
+
+        using Bitmap bitmap = new Bitmap(tabs.Width, tabs.Height);
+        tabs.DrawToBitmap(bitmap, new Rectangle(Point.Empty, tabs.Size));
+
+        // Text pixels are either white (normal) or reddish (disabled) -
+        // the two tabs must not mix.
+        Assert.True(CountColored(bitmap, plain, reddish: false) > 10);
+        Assert.Equal(0, CountColored(bitmap, plain, reddish: true));
+        Assert.True(CountColored(bitmap, disabled, reddish: true) > 10);
+    }
+
+    private static int CountColored(Bitmap bitmap, Rectangle tab, bool reddish)
+    {
+        int count = 0;
+
+        for (int x = tab.Left + 3; x < tab.Right - 3; x++)
+        {
+            for (int y = tab.Top + 4; y < tab.Bottom - 4; y++)
+            {
+                Color pixel = bitmap.GetPixel(x, y);
+                bool isReddish = pixel.R > 200 && pixel.G < 50 && pixel.B < 50;
+                bool isWhitish = pixel.R > 140 && pixel.G > 140 && pixel.B > 140;
+
+                if (reddish ? isReddish : isWhitish)
+                {
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    // ---- drawing never falls over ----
+
+    [Theory]
+    [InlineData(TabAlignment.Top, 0)]
+    [InlineData(TabAlignment.Bottom, 0)]
+    [InlineData(TabAlignment.Left, 0)]
+    [InlineData(TabAlignment.Right, 0)]
+    [InlineData(TabAlignment.Top, 1)]
+    [InlineData(TabAlignment.Left, 1)]
+    public void DrawingAnEmptyOrSingleTabControl_DoesNotThrow_InAnyAlignment(TabAlignment alignment, int pageCount)
+    {
+        using WfuiTabControl tabs = CreateTabs(alignment, pageCount);
+
+        using Bitmap bitmap = Render(tabs);
+
+        Assert.Equal(tabs.Width, bitmap.Width);
+    }
+
+    [Fact]
+    public void DrawingATinyControl_DoesNotThrow()
+    {
+        foreach (Size size in new[] { new Size(1, 1), new Size(10, 10), new Size(40, 20) })
+        {
+            using WfuiTabControl tabs = CreateTabs();
+            tabs.Size = size;
+
+            using Bitmap bitmap = new Bitmap(System.Math.Max(1, tabs.Width), System.Math.Max(1, tabs.Height));
+            tabs.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
+
+            Assert.True(bitmap.Width >= 1);
+        }
+    }
+
+    [Fact]
+    public void DrawingBeforeTheHandleExists_IsNotNeeded_ButTheBoundsStillWork()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl { Size = new Size(200, 100) };
+        tabs.TabPages.Add("a");
+
+        Assert.Equal(1, tabs.TabCount);
+        Assert.Equal(new Size(200, 100), tabs.Size);
+    }
+
+    // ---- vertical tabs ----
+
+    [Theory]
+    [InlineData(TabAlignment.Left)]
+    [InlineData(TabAlignment.Right)]
+    public void OnAVerticalStrip_TheNameIsDrawnAlongTheTab(TabAlignment alignment)
+    {
+        using WfuiTabControl tabs = CreateTabs(alignment);
+        tabs.TabBackColor = Color.Black;
+        tabs.SelectedTabBackColor = Color.Black;
+        tabs.TabForeColor = Color.White;
+        tabs.SelectedTabForeColor = Color.White;
+        Rectangle tab = tabs.GetTabRect(1);
+
+        using Bitmap bitmap = new Bitmap(tabs.Width, tabs.Height);
+        tabs.DrawToBitmap(bitmap, new Rectangle(Point.Empty, tabs.Size));
+
+        // Rotated text fills the tab's length, not just its middle: pixels
+        // in the upper and in the lower half of the tab both.
+        int upper = CountColored(bitmap, new Rectangle(tab.Left, tab.Top, tab.Width, tab.Height / 2), reddish: false);
+        int lower = CountColored(bitmap, new Rectangle(tab.Left, tab.Top + tab.Height / 2, tab.Width, tab.Height / 2), reddish: false);
+        Assert.True(upper > 3);
+        Assert.True(lower > 3);
+    }
+
+    [Theory]
+    [InlineData(TabAlignment.Left)]
+    [InlineData(TabAlignment.Right)]
+    public void OnAVerticalStrip_ATabImageIsDrawn(TabAlignment alignment)
+    {
+        using WfuiTabControl tabs = CreateTabs(alignment);
+        using Bitmap icon = new Bitmap(16, 16);
+        using (Graphics graphics = Graphics.FromImage(icon))
+        {
+            graphics.Clear(Color.FromArgb(255, 128, 0));
+        }
+
+        using ImageList images = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
+        images.Images.Add(icon);
+        tabs.ImageList = images;
+        tabs.TabPages[1].ImageIndex = 0;
+        Rectangle tab = tabs.GetTabRect(1);
+
+        using Bitmap bitmap = new Bitmap(tabs.Width, tabs.Height);
+        tabs.DrawToBitmap(bitmap, new Rectangle(Point.Empty, tabs.Size));
+
+        bool found = false;
+
+        for (int x = tab.Left; x < tab.Right && !found; x++)
+        {
+            for (int y = tab.Top; y < tab.Bottom && !found; y++)
+            {
+                found = Pixel(bitmap, x, y) == Color.FromArgb(255, 128, 0);
+            }
+        }
+
+        Assert.True(found);
+    }
+
+    // ---- the strip and the page area ----
+
+    [Theory]
+    [InlineData(TabAlignment.Top)]
+    [InlineData(TabAlignment.Bottom)]
+    [InlineData(TabAlignment.Left)]
+    [InlineData(TabAlignment.Right)]
+    public void TheLayout_HoldsTogether_InEveryAlignment(TabAlignment alignment)
+    {
+        using WfuiTabControl tabs = CreateTabs(alignment);
+        Rectangle strip = tabs.InvokePrivate<Rectangle>("GetTabStripBounds");
+        Rectangle area = tabs.InvokePrivate<Rectangle>("GetPageAreaBounds");
+
+        // The pages stay inside the control, and the page area wraps them.
+        Assert.True(tabs.ClientRectangle.Contains(tabs.DisplayRectangle));
+        Assert.True(area.Contains(tabs.DisplayRectangle));
+        Assert.True(tabs.ClientRectangle.Contains(area));
+
+        // The strip holds every tab and keeps off the page contents.
+        for (int i = 0; i < tabs.TabCount; i++)
+        {
+            Assert.True(strip.IntersectsWith(tabs.GetTabRect(i)));
+        }
+
+        Assert.False(strip.IntersectsWith(Rectangle.Inflate(tabs.DisplayRectangle, -1, -1)));
+    }
+
+    // ---- the read-only control has none of the editing API ----
+
+    [Fact]
+    public void TheReadOnlyControl_HasNoEditingProperty_TheEditableOneHasThemAll()
+    {
+        string[] editing =
+        {
+            "AllowUserToAddTabs", "AllowUserToCloseTabs", "AllowUserToRenameTabs", "SelectTabOnRightClick",
+            "MaxTabNameLength", "ShowLockIcon", "ContextMenuSelectionColor", "IsRenamingTab"
+        };
+
+        string[] onTheReadOnlyOne = editing.Where(name => typeof(ErikwnkWFUI.Controls.ReadOnlyTabControl).GetProperty(name) != null).ToArray();
+        string[] missingOnTheEditableOne = editing.Where(name => typeof(ErikwnkWFUI.Controls.TabControl).GetProperty(name) == null).ToArray();
+
+        Assert.True(onTheReadOnlyOne.Length == 0, "On the read-only control: " + string.Join(", ", onTheReadOnlyOne));
+        Assert.True(missingOnTheEditableOne.Length == 0, "Missing on the editable control: " + string.Join(", ", missingOnTheEditableOne));
+    }
+
+    // ---- the factories and UIStyles ----
+
+    [Fact]
+    public void UIStyles_HandsOutTheRightTypes()
+    {
+        using var standard = ErikwnkWFUI.UIStyles.TabControls.CreateStandard();
+        using var readOnlyStandard = ErikwnkWFUI.UIStyles.TabControls.CreateReadOnlyStandard();
+        using var primary = ErikwnkWFUI.UIStyles.TabControls.CreatePrimary();
+        using var readOnlyPrimary = ErikwnkWFUI.UIStyles.TabControls.CreateReadOnlyPrimary();
+
+        Assert.IsType<ErikwnkWFUI.Controls.TabControl>(standard);
+        Assert.IsType<ErikwnkWFUI.Controls.ReadOnlyTabControl>(readOnlyStandard);
+        Assert.IsType<ErikwnkWFUI.Controls.TabControl>(primary);
+        Assert.IsType<ErikwnkWFUI.Controls.ReadOnlyTabControl>(readOnlyPrimary);
+    }
+
+    [Fact]
+    public void ThePrimaryVariants_ColorTheIndicatorInTheAccent_TheStandardOnesNeutral()
+    {
+        using var standard = ErikwnkWFUI.UIStyles.TabControls.CreateStandard();
+        using var readOnlyStandard = ErikwnkWFUI.UIStyles.TabControls.CreateReadOnlyStandard();
+        using var primary = ErikwnkWFUI.UIStyles.TabControls.CreatePrimary();
+        using var readOnlyPrimary = ErikwnkWFUI.UIStyles.TabControls.CreateReadOnlyPrimary();
+
+        Assert.Equal(UIColors.BorderLight, standard.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.BorderLight, readOnlyStandard.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.Primary, primary.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.Primary, readOnlyPrimary.SelectedTabIndicatorColor);
     }
 }
