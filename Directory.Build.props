@@ -1,0 +1,12 @@
+<Project>
+
+  <!-- Shared by ErikwnkWFUI, ErikwnkWFUI.Showcase and ErikwnkWFUI.Tests.
+       A project overrides a value in its own csproj where it differs
+       (the tests turn nullable annotations and implicit usings on). -->
+  <PropertyGroup>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>
