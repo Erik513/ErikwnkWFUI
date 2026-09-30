@@ -499,4 +499,124 @@ public class TabControlTests
 
         Assert.Equal(0, GetWindowLong(tabs.Handle, GWL_STYLE) & TCS_BUTTONS);
     }
+
+    // ---- a page's own BackColor stays changeable ----
+
+    [Fact]
+    public void PageWithItsOwnBackColor_KeepsItWhenAdded()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        TabPage page = new TabPage("A") { BackColor = Color.Red };
+
+        tabs.TabPages.Add(page);
+
+        Assert.Equal(Color.Red, page.BackColor);
+    }
+
+    [Fact]
+    public void PageBackColorSetAfterAdding_Stays()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        tabs.TabPages.Add("A");
+
+        tabs.TabPages[0].BackColor = Color.Red;
+
+        Assert.Equal(Color.Red, tabs.TabPages[0].BackColor);
+    }
+
+    [Fact]
+    public void ChangingPageBackColor_LeavesPagesWithTheirOwnColorAlone()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        tabs.TabPages.Add("themed");
+        tabs.TabPages.Add(new TabPage("custom") { BackColor = Color.Red });
+
+        tabs.PageBackColor = Color.Green;
+
+        Assert.Equal(Color.Green, tabs.TabPages[0].BackColor);
+        Assert.Equal(Color.Red, tabs.TabPages[1].BackColor);
+    }
+
+    [Fact]
+    public void PageWithACustomColorSetLater_StaysWhenPageBackColorChanges()
+    {
+        using WfuiTabControl tabs = new WfuiTabControl();
+        tabs.TabPages.Add("A");
+        tabs.TabPages[0].BackColor = Color.Red;
+
+        tabs.PageBackColor = Color.Green;
+
+        Assert.Equal(Color.Red, tabs.TabPages[0].BackColor);
+    }
+
+    // ---- DrawMode = OwnerDrawFixed: DrawItem still works ----
+
+    private sealed class DrawItemRecorder
+    {
+        public System.Collections.Generic.List<DrawItemEventArgs> Calls { get; } = new System.Collections.Generic.List<DrawItemEventArgs>();
+    }
+
+    [Fact]
+    public void DrawItem_IsNotRaised_InTheDefaultMode()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        int raised = 0;
+        tabs.DrawItem += (s, e) => raised++;
+
+        using Bitmap bitmap = Render(tabs);
+
+        Assert.Equal(0, raised);
+    }
+
+    [Fact]
+    public void DrawItem_IsRaisedOncePerTab_WithOwnerDrawFixed()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
+        System.Collections.Generic.List<int> indexes = new System.Collections.Generic.List<int>();
+        tabs.DrawItem += (s, e) => indexes.Add(e.Index);
+
+        using Bitmap bitmap = Render(tabs);
+
+        indexes.Sort();
+        Assert.Equal(new[] { 0, 1, 2 }, indexes);
+    }
+
+    [Fact]
+    public void DrawItem_CarriesTheTabRectangleAndItsState()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
+        tabs.TabPages[2].Enabled = false;
+        System.Collections.Generic.Dictionary<int, DrawItemEventArgs> byIndex = new System.Collections.Generic.Dictionary<int, DrawItemEventArgs>();
+        tabs.DrawItem += (s, e) => byIndex[e.Index] = new DrawItemEventArgs(e.Graphics, e.Font, e.Bounds, e.Index, e.State, e.ForeColor, e.BackColor);
+
+        using Bitmap bitmap = Render(tabs);
+
+        Assert.Equal(tabs.GetTabRect(1), byIndex[1].Bounds);
+        Assert.True((byIndex[0].State & DrawItemState.Selected) != 0);
+        Assert.True((byIndex[1].State & DrawItemState.Selected) == 0);
+        Assert.True((byIndex[2].State & DrawItemState.Disabled) != 0);
+        // (DrawItemEventArgs itself swaps in the system highlight colors for
+        // the selected state, same as with the native control.)
+        Assert.Equal(tabs.TabBackColor, byIndex[1].BackColor);
+        Assert.Equal(tabs.DisabledTabForeColor, byIndex[2].ForeColor);
+    }
+
+    [Fact]
+    public void DrawItem_LetsTheHandlerDrawTheTab()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.DrawMode = TabDrawMode.OwnerDrawFixed;
+        tabs.DrawItem += (s, e) =>
+        {
+            using SolidBrush brush = new SolidBrush(Color.FromArgb(200, 10, 20));
+            e.Graphics.FillRectangle(brush, e.Bounds);
+        };
+        Rectangle tab = tabs.GetTabRect(1);
+
+        using Bitmap bitmap = Render(tabs);
+
+        Assert.Equal(Color.FromArgb(200, 10, 20), Pixel(bitmap, tab.Left + 4, tab.Top + 4));
+    }
 }

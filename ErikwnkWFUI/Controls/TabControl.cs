@@ -19,9 +19,10 @@ namespace ErikwnkWFUI.Controls
     /// get one without spelling out <c>ErikwnkWFUI.Controls.TabControl</c>.
     /// Differences from the standard control: <see cref="Appearance"/> is
     /// always <see cref="TabAppearance.Normal"/> (tabs are never drawn as
-    /// buttons), <c>DrawItem</c> is never raised because the control draws
-    /// everything itself, and <see cref="PageBackColor"/> replaces a page's
-    /// own <c>BackColor</c> when the page is added.
+    /// buttons). Both customization routes of the standard control still
+    /// work: a page's own <c>BackColor</c> is kept (see
+    /// <see cref="PageBackColor"/>), and <c>DrawMode = OwnerDrawFixed</c>
+    /// hands the drawing of each tab to <c>DrawItem</c>.
     /// </remarks>
     public class TabControl : System.Windows.Forms.TabControl
     {
@@ -164,14 +165,20 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background color applied to every page, including pages added later. Overrides a page's own <c>BackColor</c>.</summary>
+        /// <summary>
+        /// Background color of the pages, applied to pages that don't have a
+        /// color of their own - existing ones and ones added later. A page
+        /// whose <c>BackColor</c> was set individually keeps it, as with
+        /// the standard control.
+        /// </summary>
         public Color PageBackColor
         {
             get => _pageBackColor.Value;
             set
             {
+                Color previous = _pageBackColor.Value;
                 _pageBackColor.Set(value);
-                ApplyPageBackColor();
+                ApplyPageBackColor(previous);
                 Repaint();
             }
         }
@@ -378,15 +385,32 @@ namespace ErikwnkWFUI.Controls
             _scrollButtons.Refresh();
         }
 
-        private void ApplyPageBackColor()
+        // A page that still shows the previous page color was never given one
+        // of its own, so it follows the change; any other color was chosen
+        // for that page and stays.
+        private void ApplyPageBackColor(Color previous)
         {
             foreach (TabPage page in TabPages)
             {
-                ApplyPageBackColor(page);
+                if (page.BackColor == previous)
+                {
+                    SetPageBackColor(page);
+                }
             }
         }
 
+        // A page that was added without a color of its own - it uses the
+        // visual-style texture or just inherits this control's BackColor -
+        // gets the themed one.
         private void ApplyPageBackColor(TabPage page)
+        {
+            if (page.UseVisualStyleBackColor || page.BackColor == BackColor)
+            {
+                SetPageBackColor(page);
+            }
+        }
+
+        private void SetPageBackColor(TabPage page)
         {
             // The visual-style page background is a themed texture that
             // ignores BackColor entirely.
@@ -545,6 +569,12 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawTab(Graphics graphics, int index)
         {
+            if (DrawMode == TabDrawMode.OwnerDrawFixed)
+            {
+                DrawTabByOwner(graphics, index);
+                return;
+            }
+
             bool selected = index == SelectedIndex;
             Rectangle bounds = GetTabRect(index);
 
@@ -580,6 +610,39 @@ namespace ErikwnkWFUI.Controls
                 Rectangle focus = Rectangle.Inflate(bounds, -3, -3);
                 ControlPaint.DrawFocusRectangle(graphics, focus, GetTabForeColor(true, true), GetTabBackColor(true, false));
             }
+        }
+
+        // With DrawMode = OwnerDrawFixed the standard control leaves each tab
+        // to the DrawItem event. This control draws itself, so it raises the
+        // event itself, with the same arguments the native one would carry -
+        // the colors are the themed ones for that tab's state.
+        private void DrawTabByOwner(Graphics graphics, int index)
+        {
+            bool selected = index == SelectedIndex;
+            bool hovered = index == _hoveredTabIndex;
+            bool enabled = TabPages[index].Enabled && Enabled;
+            DrawItemState state = DrawItemState.None;
+
+            if (selected)
+                state |= DrawItemState.Selected;
+
+            if (hovered)
+                state |= DrawItemState.HotLight;
+
+            if (!enabled)
+                state |= DrawItemState.Disabled;
+
+            if (selected && Focused && ShowFocusCues)
+                state |= DrawItemState.Focus;
+
+            OnDrawItem(new DrawItemEventArgs(
+                graphics,
+                Font,
+                GetTabRect(index),
+                index,
+                state,
+                GetTabForeColor(selected, enabled),
+                GetTabBackColor(selected, hovered)));
         }
 
         private Color GetTabBackColor(bool selected, bool hovered)
