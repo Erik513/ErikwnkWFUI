@@ -199,12 +199,8 @@ namespace ErikwnkWFUI.Showcase
                 _scrollHost.Dispose();
 
             _toolbar = BuildToolbar();
-            _scrollHost = new Panel
-            {
-                Dock = DockStyle.Fill,
-                AutoScroll = true,
-                BackColor = UIColors.BackgroundMedium
-            };
+            _scrollHost = UIStyles.Panels.CreateMedium();
+            _scrollHost.AutoScroll = true;
 
             // The bars AddProgressBarsSection is about to (re)create are
             // brand new instances - drop the setters that closed over the
@@ -271,20 +267,13 @@ namespace ErikwnkWFUI.Showcase
 
             foreach ((string name, Color color) in AccentPresets)
             {
-                Button swatch = new Button
-                {
-                    Size = new Size(28, 28),
-                    Margin = new Padding(0, 9, 6, 0),
-                    FlatStyle = FlatStyle.Flat,
-                    BackColor = color,
-                    Cursor = Cursors.Hand,
-                    Text = ""
-                };
-                swatch.FlatAppearance.BorderColor = UIColors.BorderLight;
-                swatch.FlatAppearance.BorderSize = 1;
-
-                ToolTip tip = new ToolTip();
-                tip.SetToolTip(swatch, name);
+                // The library button (with its tooltip), just filled with
+                // the preset's own color.
+                Button swatch = UIStyles.Buttons.CreateStandard(string.Empty, name, new Size(28, 28));
+                swatch.Margin = new Padding(0, 9, 6, 0);
+                swatch.BackColor = color;
+                swatch.FlatAppearance.MouseOverBackColor = UIColors.Lighten(color, 20);
+                swatch.FlatAppearance.MouseDownBackColor = UIColors.Darken(color, 20);
 
                 swatch.Click += delegate
                 {
@@ -839,16 +828,19 @@ namespace ErikwnkWFUI.Showcase
             foreach (string title in new[] { "Overview", "Details" })
             {
                 System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
-                page.Controls.Add(new System.Windows.Forms.Label
-                {
-                    Text = "Alignment = " + alignment,
-                    AutoSize = true,
-                    Location = new System.Drawing.Point(10, 10)
-                });
+                page.Controls.Add(CreateTabPageLabel("Alignment = " + alignment));
                 tabs.TabPages.Add(page);
             }
 
             return tabs;
+        }
+
+        private static System.Windows.Forms.Label CreateTabPageLabel(string text)
+        {
+            System.Windows.Forms.Label label = UIStyles.Labels.CreateNormal(text);
+            label.AutoSize = true;
+            label.Location = new System.Drawing.Point(10, 10);
+            return label;
         }
 
         private static System.Windows.Forms.Control CreateTabControlDemo(System.Windows.Forms.TabControl tabs, int pageCount, string description = null)
@@ -859,14 +851,10 @@ namespace ErikwnkWFUI.Showcase
             {
                 string title = i < titles.Length ? titles[i] : "Tab number " + (i + 1);
                 System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(title);
-                page.Controls.Add(new System.Windows.Forms.Label
-                {
-                    Text = description == null
+                page.Controls.Add(CreateTabPageLabel(
+                    description == null
                         ? "Content of the " + title + " tab"
-                        : title + ": " + description,
-                    AutoSize = true,
-                    Location = new System.Drawing.Point(10, 10)
-                });
+                        : title + ": " + description));
                 tabs.TabPages.Add(page);
             }
 
