@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -878,7 +878,7 @@ namespace ErikwnkWFUI.Showcase
             AddOverviewPage(
                 overview,
                 "Icons and states",
-                "Tab images from an ImageList, HotTrack (hover highlight) and a disabled page (left). Right: AllowSelectingDisabledTabs = false - the disabled tabs cannot be selected, the arrow keys skip them.",
+                "Tab images from an ImageList, the hover highlight (HotTrack, on by default) and a disabled page (left). Right: AllowSelectingDisabledTabs = false - the disabled tabs cannot be selected, the arrow keys skip them.",
                 CreateTabIconsDemo(),
                 CreateTabDisabledTabsDemo());
 
@@ -940,11 +940,10 @@ namespace ErikwnkWFUI.Showcase
             overview.TabPages.Add(page);
         }
 
-        // Tab images, HotTrack and a disabled page.
+        // Tab images and a disabled page.
         private static System.Windows.Forms.Control CreateTabIconsDemo()
         {
             System.Windows.Forms.TabControl tabs = UIStyles.TabControls.CreateReadOnlyPrimary();
-            tabs.HotTrack = true;
 
             System.Windows.Forms.ImageList images = new System.Windows.Forms.ImageList
             {

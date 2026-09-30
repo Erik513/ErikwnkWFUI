@@ -26,6 +26,8 @@ namespace ErikwnkWFUI.Controls
     /// 6 px wider and 1 px taller for a short name), because the native
     /// control lays it out differently once it is painted by the library;
     /// set <c>ItemSize</c> and <c>Padding</c> for exactly the standard sizes.
+    /// <c>HotTrack</c> (the hover highlight) is on by default, where the
+    /// standard control has it off, since a hover color is part of the theme.
     /// </remarks>
     public class ReadOnlyTabControl : System.Windows.Forms.TabControl
     {
@@ -43,7 +45,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly ThemeColor _headerBackColor = new ThemeColor(() => Color.Transparent);
         private readonly ThemeColor _tabBackColor = new ThemeColor(() => UIColors.BackgroundDark);
-        private readonly ThemeColor _hoverTabBackColor = new ThemeColor(() => UIColors.BackgroundLight);
+        private readonly ThemeColor _hoverTabBackColor = new ThemeColor(GetDefaultHoverTabBackColor);
         private readonly ThemeColor _selectedTabBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
         private readonly ThemeColor _tabForeColor = new ThemeColor(() => UIColors.TextSecondary);
         private readonly ThemeColor _selectedTabForeColor = new ThemeColor(() => UIColors.TextPrimary);
@@ -88,7 +90,15 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background of the tab under the mouse. Only used while <see cref="System.Windows.Forms.TabControl.HotTrack"/> is on, like the standard control.</summary>
+        /// <summary>
+        /// Background of the tab under the mouse. Only used while
+        /// <see cref="System.Windows.Forms.TabControl.HotTrack"/> is on - which
+        /// it is by default here, unlike the standard control. By default a dark theme lightens a hovered
+        /// tab (<see cref="UIColors.BackgroundLight"/>) and a light theme
+        /// steps it toward the selected tab from the dark side
+        /// (<see cref="UIColors.BackgroundDarkElevated"/>), so a hovered tab
+        /// never looks more selected than the selected one.
+        /// </summary>
         public Color HoverTabBackColor
         {
             get => _hoverTabBackColor.Value;
@@ -245,6 +255,16 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Which way "hovered" goes depends on the surface: on a light theme
+        // white would outshine the selected tab, so there it is the tone
+        // between a normal and the selected tab.
+        private static Color GetDefaultHoverTabBackColor()
+        {
+            bool lightSurface = UIColors.GetContrastingForeColor(UIColors.BackgroundDark).R < 128;
+
+            return lightSurface ? UIColors.BackgroundDarkElevated : UIColors.BackgroundLight;
+        }
+
         public ReadOnlyTabControl()
         {
             // First, before anything below can resize the control: on the
@@ -254,6 +274,7 @@ namespace ErikwnkWFUI.Controls
 
             Font = UIFonts.Normal;
             ForeColor = UIColors.TextPrimary;
+            HotTrack = true;
 
             SetStyle(
                 ControlStyles.UserPaint |

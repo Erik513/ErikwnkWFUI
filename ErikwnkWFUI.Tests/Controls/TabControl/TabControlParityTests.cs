@@ -621,7 +621,6 @@ public class TabControlParityTests
             $"Alignment={tabs.Alignment}",
             $"Multiline={tabs.Multiline}",
             $"SizeMode={tabs.SizeMode}",
-            $"HotTrack={tabs.HotTrack}",
             $"ShowToolTips={tabs.ShowToolTips}",
             $"TabStop={tabs.TabStop}",
             $"Padding={tabs.Padding}",
@@ -660,6 +659,20 @@ public class TabControlParityTests
             $"{expected.Text} {expected.Enabled} {expected.Visible} {expected.ImageIndex} {expected.ToolTipText} {expected.Dock} {expected.BorderStyle}",
             $"{actual.Text} {actual.Enabled} {actual.Visible} {actual.ImageIndex} {actual.ToolTipText} {actual.Dock} {actual.BorderStyle}");
         Assert.Equal(standard.SelectedIndex, themed.SelectedIndex);
+    }
+
+    // The one default that differs on purpose: a hover highlight is part of
+    // the themed look, so HotTrack is on where the standard control has it off.
+    [Theory]
+    [InlineData(Kind.ReadOnly)]
+    [InlineData(Kind.Editable)]
+    public void HotTrack_IsOnByDefault_UnlikeTheStandardControl(Kind kind)
+    {
+        using System.Windows.Forms.TabControl standard = Create(null);
+        using System.Windows.Forms.TabControl themed = Create(kind);
+
+        Assert.False(standard.HotTrack);
+        Assert.True(themed.HotTrack);
     }
 
     // ---- hot tracking is only a look ----

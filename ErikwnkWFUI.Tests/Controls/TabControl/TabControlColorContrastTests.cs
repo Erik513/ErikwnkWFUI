@@ -55,6 +55,36 @@ public class TabControlColorContrastTests
         });
     }
 
+    [Fact]
+    public void AHoveredTab_IsBrighterThanTheSelectedOne_OnADarkTheme()
+    {
+        RunWithTheme(lightTheme: false, tabs =>
+        {
+            Assert.Equal(UIColors.BackgroundLight, tabs.HoverTabBackColor);
+            Assert.True(Brightness(tabs.HoverTabBackColor) > Brightness(tabs.SelectedTabBackColor));
+            Assert.True(Brightness(tabs.SelectedTabBackColor) > Brightness(tabs.TabBackColor));
+        });
+    }
+
+    // On a light theme white would outshine the selected tab and look more
+    // selected than it: the hovered tab lies between a normal and the
+    // selected one instead.
+    [Fact]
+    public void AHoveredTab_LiesBetweenANormalAndTheSelectedOne_OnALightTheme()
+    {
+        RunWithTheme(lightTheme: true, tabs =>
+        {
+            Assert.Equal(UIColors.BackgroundDarkElevated, tabs.HoverTabBackColor);
+            Assert.True(Brightness(tabs.HoverTabBackColor) > Brightness(tabs.TabBackColor));
+            Assert.True(Brightness(tabs.HoverTabBackColor) < Brightness(tabs.SelectedTabBackColor));
+        });
+    }
+
+    private static int Brightness(Color color)
+    {
+        return color.R + color.G + color.B;
+    }
+
     [Theory]
     [MemberData(nameof(Themes))]
     public void TheScrollArrowsHoverGlyph_MeetsNormalTextContrast(bool lightTheme)

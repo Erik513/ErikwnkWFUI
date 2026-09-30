@@ -232,9 +232,37 @@ public class TabControlTests
     public void MouseOverATab_IsIgnored_WhileHotTrackIsOff()
     {
         using WfuiTabControl tabs = CreateTabs();
+        tabs.HotTrack = false;
         Point over = Center(tabs.GetTabRect(1));
 
         tabs.InvokePrivate("OnMouseMove", new MouseEventArgs(MouseButtons.None, 0, over.X, over.Y, 0));
+
+        Assert.Equal(-1, tabs.GetPrivateField<int>("_hoveredTabIndex"));
+    }
+
+    [DllImport("user32.dll")]
+    private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int message, System.IntPtr wParam, System.IntPtr lParam);
+
+    // The real message path, on a control as it comes out of the box: a mouse
+    // move over a tab lights it up, leaving clears it again.
+    [Fact]
+    public void ADefaultControl_HighlightsTheHoveredTab_FromRealMouseMessages()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        tabs.HoverTabBackColor = Color.FromArgb(21, 22, 23);
+        Rectangle tab = tabs.GetTabRect(1);
+
+        SendMessage(tabs.Handle, 0x0200, System.IntPtr.Zero, (System.IntPtr)((tab.Left + 10) | ((tab.Top + 8) << 16)));
+
+        Assert.True(tabs.HotTrack);
+        Assert.Equal(1, tabs.GetPrivateField<int>("_hoveredTabIndex"));
+
+        using (Bitmap hovered = Render(tabs))
+        {
+            Assert.Equal(Color.FromArgb(21, 22, 23), Pixel(hovered, tab.Left + 4, tab.Top + 4));
+        }
+
+        SendMessage(tabs.Handle, 0x02A3, System.IntPtr.Zero, System.IntPtr.Zero);
 
         Assert.Equal(-1, tabs.GetPrivateField<int>("_hoveredTabIndex"));
     }
