@@ -878,8 +878,9 @@ namespace ErikwnkWFUI.Showcase
             AddOverviewPage(
                 overview,
                 "Icons and states",
-                "Tab images from an ImageList, HotTrack (hover highlight) and a disabled page.",
-                CreateTabIconsDemo());
+                "Tab images from an ImageList, HotTrack (hover highlight) and a disabled page (left). Right: AllowSelectingDisabledTabs = false - the disabled tabs cannot be selected, the arrow keys skip them.",
+                CreateTabIconsDemo(),
+                CreateTabDisabledTabsDemo());
 
             AddOverviewPage(
                 overview,
@@ -995,6 +996,25 @@ namespace ErikwnkWFUI.Showcase
                     page.Enabled = false;
                 }
 
+                tabs.TabPages.Add(page);
+            }
+
+            return tabs;
+        }
+
+        // Disabled tabs that cannot be selected at all.
+        private static System.Windows.Forms.Control CreateTabDisabledTabsDemo()
+        {
+            Controls.ReadOnlyTabControl tabs = UIStyles.TabControls.CreateReadOnlyPrimary();
+            tabs.AllowSelectingDisabledTabs = false;
+
+            string[] titles = { "One", "Two (disabled)", "Three", "Four (disabled)", "Five" };
+
+            for (int i = 0; i < titles.Length; i++)
+            {
+                System.Windows.Forms.TabPage page = new System.Windows.Forms.TabPage(titles[i]);
+                page.Controls.Add(CreateTabPageLabel("Tab " + (i + 1) + ": click the tabs or use the arrow keys"));
+                page.Enabled = i % 2 == 0;
                 tabs.TabPages.Add(page);
             }
 

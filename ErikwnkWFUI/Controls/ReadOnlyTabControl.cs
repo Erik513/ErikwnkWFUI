@@ -54,6 +54,8 @@ namespace ErikwnkWFUI.Controls
 
         private readonly TabScrollButtons _scrollButtons;
 
+        private bool _allowSelectingDisabledTabs = true;
+
         private int _hoveredTabIndex = -1;
 
         /// <summary>
@@ -180,6 +182,20 @@ namespace ErikwnkWFUI.Controls
                 ApplyPageBackColor(previous);
                 Repaint();
             }
+        }
+
+        /// <summary>
+        /// Whether a tab whose page is disabled can be selected. On by
+        /// default, like the standard control, where a disabled page can
+        /// still be opened (its content is disabled, the tab is not). Off:
+        /// a click, the keyboard or code cannot select such a tab, and the
+        /// arrow keys and Ctrl+Tab skip over it. A tab that is selected when
+        /// its page gets disabled stays selected.
+        /// </summary>
+        public bool AllowSelectingDisabledTabs
+        {
+            get => _allowSelectingDisabledTabs;
+            set => _allowSelectingDisabledTabs = value;
         }
 
         /// <summary>
@@ -377,6 +393,95 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseLeave(e);
 
             SetHoveredTabIndex(-1);
+        }
+
+        protected override void OnSelecting(TabControlCancelEventArgs e)
+        {
+            // Before the event goes out, so a handler sees it already refused.
+            if (!_allowSelectingDisabledTabs && e.TabPage != null && !e.TabPage.Enabled)
+            {
+                e.Cancel = true;
+            }
+
+            base.OnSelecting(e);
+        }
+
+        // The arrow keys along the strip. The native control would step onto
+        // a disabled tab, be refused, and stay put - so it would never get
+        // past one. Handled here to step over them instead.
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (!_allowSelectingDisabledTabs && !e.Control && !e.Alt)
+            {
+                bool vertical = Alignment == TabAlignment.Left || Alignment == TabAlignment.Right;
+                Keys forward = vertical ? Keys.Down : Keys.Right;
+                Keys backward = vertical ? Keys.Up : Keys.Left;
+
+                if (e.KeyCode == forward || e.KeyCode == backward)
+                {
+                    SelectEnabledTab(e.KeyCode == forward ? 1 : -1, wrap: false);
+                    e.Handled = true;
+                    return;
+                }
+            }
+
+            base.OnKeyDown(e);
+        }
+
+        // Ctrl+Tab, Ctrl+Shift+Tab and Ctrl+PageDown / Ctrl+PageUp, which
+        // the tab control turns into a selection change itself.
+        protected override bool ProcessKeyPreview(ref Message m)
+        {
+            const int WM_KEYDOWN = 0x0100;
+
+            if (!_allowSelectingDisabledTabs && m.Msg == WM_KEYDOWN && (ModifierKeys & Keys.Control) != 0)
+            {
+                Keys key = (Keys)(int)m.WParam;
+                bool shift = (ModifierKeys & Keys.Shift) != 0;
+
+                if (key == Keys.Tab || key == Keys.PageDown || key == Keys.PageUp)
+                {
+                    bool forward = key == Keys.PageDown || (key == Keys.Tab && !shift);
+                    SelectEnabledTab(forward ? 1 : -1, wrap: true);
+                    return true;
+                }
+            }
+
+            return base.ProcessKeyPreview(ref m);
+        }
+
+        // Selects the next tab in a direction whose page is enabled; nothing
+        // when there is none. Wraps around the ends where asked to.
+        private void SelectEnabledTab(int direction, bool wrap)
+        {
+            int count = TabCount;
+
+            if (count == 0)
+                return;
+
+            int index = SelectedIndex;
+
+            for (int step = 0; step < count; step++)
+            {
+                index += direction;
+
+                if (index < 0 || index >= count)
+                {
+                    if (!wrap)
+                        return;
+
+                    index = (index + count) % count;
+                }
+
+                if (index == SelectedIndex)
+                    return;
+
+                if (TabPages[index].Enabled)
+                {
+                    SelectedIndex = index;
+                    return;
+                }
+            }
         }
 
         protected override void OnSelectedIndexChanged(EventArgs e)
