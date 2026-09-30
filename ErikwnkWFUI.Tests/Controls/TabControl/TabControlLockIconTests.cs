@@ -275,9 +275,9 @@ public class TabControlLockIconTests
     // ---- the tooltip ----
 
     [Theory]
-    [InlineData(true, true, "This tab can't be renamed or closed")]
-    [InlineData(true, false, "This tab can't be renamed")]
-    [InlineData(false, true, "This tab can't be closed")]
+    [InlineData(true, true, "This tab cannot be renamed or closed")]
+    [InlineData(true, false, "This tab cannot be renamed")]
+    [InlineData(false, true, "This tab cannot be closed")]
     [InlineData(false, false, "")]
     public void TheToolTip_SaysWhatIsLocked(bool renameLocked, bool closeLocked, string expected)
     {

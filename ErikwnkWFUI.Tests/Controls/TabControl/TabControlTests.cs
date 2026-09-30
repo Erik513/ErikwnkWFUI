@@ -76,7 +76,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateStandard();
 
-        Assert.Equal(UIColors.BorderLight, tabs.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.TextTertiary, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyStandard();
 
-        Assert.Equal(UIColors.BorderLight, tabs.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.TextTertiary, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreatePrimary();
 
-        Assert.Equal(UIColors.Primary, tabs.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.PrimaryLight, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class TabControlTests
     {
         using WfuiTabControl tabs = UITabControlFactory.CreateReadOnlyPrimary();
 
-        Assert.Equal(UIColors.Primary, tabs.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.PrimaryLight, tabs.SelectedTabIndicatorColor);
     }
 
     [Fact]
@@ -946,9 +946,9 @@ public class TabControlTests
         using var primary = ErikwnkWFUI.UIStyles.TabControls.CreatePrimary();
         using var readOnlyPrimary = ErikwnkWFUI.UIStyles.TabControls.CreateReadOnlyPrimary();
 
-        Assert.Equal(UIColors.BorderLight, standard.SelectedTabIndicatorColor);
-        Assert.Equal(UIColors.BorderLight, readOnlyStandard.SelectedTabIndicatorColor);
-        Assert.Equal(UIColors.Primary, primary.SelectedTabIndicatorColor);
-        Assert.Equal(UIColors.Primary, readOnlyPrimary.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.TextTertiary, standard.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.TextTertiary, readOnlyStandard.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.PrimaryLight, primary.SelectedTabIndicatorColor);
+        Assert.Equal(UIColors.PrimaryLight, readOnlyPrimary.SelectedTabIndicatorColor);
     }
 }

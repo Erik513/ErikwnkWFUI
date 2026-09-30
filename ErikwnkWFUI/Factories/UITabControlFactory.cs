@@ -20,11 +20,13 @@ namespace ErikwnkWFUI.Factories
         // Same controls, with the selected tab's bar (and the menu's
         // selection) in the current accent instead of the neutral gray the
         // Standard ones keep - mirrors UIDataGridViewFactory.CreatePrimary.
+        // The bar is the lighter accent shade: a thin line needs more
+        // contrast than a filled selection does.
         public static TabControl CreatePrimary()
         {
             return new TabControl
             {
-                SelectedTabIndicatorColor = UIColors.Primary,
+                SelectedTabIndicatorColor = UIColors.PrimaryLight,
                 ContextMenuSelectionColor = UIColors.Primary
             };
         }
@@ -33,7 +35,7 @@ namespace ErikwnkWFUI.Factories
         {
             return new ReadOnlyTabControl
             {
-                SelectedTabIndicatorColor = UIColors.Primary
+                SelectedTabIndicatorColor = UIColors.PrimaryLight
             };
         }
     }

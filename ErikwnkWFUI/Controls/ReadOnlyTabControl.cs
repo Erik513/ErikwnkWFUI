@@ -48,7 +48,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _tabForeColor = new ThemeColor(() => UIColors.TextSecondary);
         private readonly ThemeColor _selectedTabForeColor = new ThemeColor(() => UIColors.TextPrimary);
         private readonly ThemeColor _disabledTabForeColor = new ThemeColor(() => UIColors.TextDisabled);
-        private readonly ThemeColor _accentColor = new ThemeColor(() => UIColors.BorderLight);
+        private readonly ThemeColor _accentColor = new ThemeColor(() => UIColors.TextTertiary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly ThemeColor _pageBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
 
@@ -145,8 +145,9 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Color of the bar on the outer edge of the selected tab. Defaults
-        /// to a neutral gray (<see cref="UIColors.BorderLight"/>), not the
-        /// current accent - set it to <see cref="UIColors.Primary"/> for an
+        /// to a neutral gray (<see cref="UIColors.TextTertiary"/>, which
+        /// stands out from the tab in both themes), not the current accent -
+        /// set it to <see cref="UIColors.PrimaryLight"/> for an
         /// accent-colored bar, which is what <see cref="UIStyles.TabControls.CreatePrimary"/> does.
         /// </summary>
         public Color SelectedTabIndicatorColor
