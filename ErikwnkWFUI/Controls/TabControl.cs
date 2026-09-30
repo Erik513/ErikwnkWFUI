@@ -48,6 +48,8 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _pageBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
 
         private const int WM_PARENTNOTIFY = 0x0210;
+        private const int WM_HSCROLL = 0x0114;
+        private const int WM_VSCROLL = 0x0115;
 
         private readonly TabScrollButtons _scrollButtons;
 
@@ -202,6 +204,15 @@ namespace ErikwnkWFUI.Controls
             {
                 _scrollButtons.AttachTo(Handle);
             }
+
+            // The strip scrolling moves the tabs around. The native control
+            // only repaints the part it uncovers and shifts the rest as it
+            // was, which would keep old tab pixels (cut-off names) in the
+            // wrong place - so the whole strip is redrawn.
+            if ((m.Msg == WM_HSCROLL || m.Msg == WM_VSCROLL) && IsHandleCreated)
+            {
+                Invalidate();
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -266,6 +277,8 @@ namespace ErikwnkWFUI.Controls
             }
 
             e.Graphics.ResetClip();
+
+            CoverOutsideVisibleStrip(e.Graphics);
         }
 
         protected override void OnParentBackColorChanged(EventArgs e)
@@ -418,7 +431,8 @@ namespace ErikwnkWFUI.Controls
 
         // The part of the client area tabs may be drawn in: inside the
         // strip's margin at the start, and stopping where the scroll arrows
-        // begin at the end.
+        // begin at the end. A tab reaching past either end is cut off there
+        // (name included), which is what shows there are more tabs.
         private Rectangle GetVisibleStripBounds()
         {
             Rectangle bounds = ClientRectangle;
@@ -433,6 +447,47 @@ namespace ErikwnkWFUI.Controls
                 return Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, Math.Min(bounds.Bottom, arrows.Top));
 
             return Rectangle.FromLTRB(bounds.Left, bounds.Top, Math.Min(bounds.Right, arrows.Left), bounds.Bottom);
+        }
+
+        // The strip along the tabs' side of the control, including the row
+        // the selected tab reaches into.
+        private Rectangle GetTabStripBounds()
+        {
+            Rectangle area = GetPageAreaBounds();
+            Rectangle client = ClientRectangle;
+
+            switch (Alignment)
+            {
+                case TabAlignment.Bottom:
+                    return Rectangle.FromLTRB(client.Left, area.Bottom - 1, client.Right, client.Bottom);
+
+                case TabAlignment.Left:
+                    return Rectangle.FromLTRB(client.Left, client.Top, area.Left + 1, client.Bottom);
+
+                case TabAlignment.Right:
+                    return Rectangle.FromLTRB(area.Right - 1, client.Top, client.Right, client.Bottom);
+
+                default:
+                    return Rectangle.FromLTRB(client.Left, client.Top, client.Right, area.Top + 1);
+            }
+        }
+
+        // Text is not reliably held back by the graphics clip - a cut-off
+        // tab's name was seen showing up in the margin beyond the scroll
+        // arrows on screen. So whatever part of the strip is neither tab
+        // area nor arrows is simply painted over with the header background
+        // again.
+        private void CoverOutsideVisibleStrip(Graphics graphics)
+        {
+            using (Region cover = new Region(GetTabStripBounds()))
+            {
+                cover.Exclude(GetVisibleStripBounds());
+                cover.Exclude(_scrollButtons.GetBounds());
+
+                graphics.SetClip(cover, System.Drawing.Drawing2D.CombineMode.Replace);
+                DrawHeaderBackground(graphics);
+                graphics.ResetClip();
+            }
         }
 
         private void DrawPageArea(Graphics graphics)

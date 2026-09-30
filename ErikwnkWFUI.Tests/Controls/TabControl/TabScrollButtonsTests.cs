@@ -34,6 +34,18 @@ public class TabScrollButtonsTests
     [DllImport("user32.dll")]
     private static extern System.IntPtr SendMessage(System.IntPtr hWnd, int message, System.IntPtr wParam, System.IntPtr lParam);
 
+    [DllImport("user32.dll")]
+    private static extern bool GetUpdateRect(System.IntPtr hWnd, out RECT rect, bool erase);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(System.IntPtr hWnd, System.IntPtr insertAfter, int x, int y, int cx, int cy, int flags);
+
+    private static bool NeedsRepaint(WfuiTabControl tabs)
+    {
+        RECT rect;
+        return GetUpdateRect(tabs.Handle, out rect, false);
+    }
+
     private const int WM_HSCROLL = 0x0114;
     private const int SB_THUMBPOSITION = 4;
 
@@ -199,6 +211,158 @@ public class TabScrollButtonsTests
             Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(0, y).ToArgb() | unchecked((int)0xFF000000)));
             Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(1, y).ToArgb() | unchecked((int)0xFF000000)));
             Assert.Equal(background, Color.FromArgb(bitmap.GetPixel(arrows.Right + 1, y).ToArgb() | unchecked((int)0xFF000000)));
+        });
+    }
+
+    // The tabs are drawn up to wherever the arrows are - so if the arrows
+    // turn up (or change) after the tabs were already painted, the tabs have
+    // to be painted again, or their text stays visible past the arrows.
+    [Fact]
+    public void ArrowsBeingAttached_TriggersARepaintOfTheTabs()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.Update();
+            Assert.False(NeedsRepaint(tabs));
+
+            GetButtons(tabs).ReleaseHandle();
+            GetButtons(tabs).AttachTo(tabs.Handle);
+
+            Assert.True(NeedsRepaint(tabs));
+        });
+    }
+
+    [Fact]
+    public void ArrowsBeingHidden_TriggersARepaintOfTheTabs()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.Update();
+            Assert.False(NeedsRepaint(tabs));
+
+            // SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_HIDEWINDOW.
+            SetWindowPos(GetButtons(tabs).Handle, System.IntPtr.Zero, 0, 0, 0, 0, 0x0002 | 0x0001 | 0x0004 | 0x0010 | 0x0080);
+
+            Assert.True(NeedsRepaint(tabs));
+        });
+    }
+
+    // A tab reaching under the arrows stays visible, cut off right where
+    // the arrows begin - so it's clear there are more tabs - and nothing of
+    // it may show on the arrows' far side.
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void ScrollingStrip_ShowsACutOffTabUpToTheArrows_AndNotBeyond(int position)
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            host.BackColor = Color.FromArgb(71, 72, 73);
+            tabs.TabBackColor = Color.FromArgb(81, 82, 83);
+            ScrollTo(tabs, position);
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            using Bitmap bitmap = new Bitmap(host.ClientSize.Width, host.ClientSize.Height);
+            host.DrawToBitmap(bitmap, new Rectangle(Point.Empty, host.ClientSize));
+
+            int cutOffTabs = 0;
+
+            for (int i = 0; i < tabs.TabCount; i++)
+            {
+                Rectangle tab = tabs.GetTabRect(i);
+
+                if (i == tabs.SelectedIndex || tab.Left >= arrows.Left || tab.Right <= arrows.Left || tab.Left < 2)
+                    continue;
+
+                cutOffTabs++;
+
+                // Its shape is there right up to the arrows...
+                Color pixel = bitmap.GetPixel(arrows.Left - 3, tab.Top + 4);
+                Assert.Equal(Color.FromArgb(81, 82, 83), Color.FromArgb(pixel.R, pixel.G, pixel.B));
+            }
+
+            Assert.True(cutOffTabs > 0);
+
+            // ...and past the arrows, only the strip's own background.
+            int y = tabs.GetTabRect(0).Top + 5;
+            Color beyond = bitmap.GetPixel(arrows.Right + 1, y);
+            Assert.Equal(Color.FromArgb(71, 72, 73), Color.FromArgb(beyond.R, beyond.G, beyond.B));
+        });
+    }
+
+    private static Rectangle GetInvalidArea(WfuiTabControl tabs)
+    {
+        RECT rect;
+        GetUpdateRect(tabs.Handle, out rect, false);
+        return Rectangle.FromLTRB(rect.Left, rect.Top, rect.Right, rect.Bottom);
+    }
+
+    // Scrolling shifts every tab; the native control only repaints what it
+    // uncovers, so anything short of a full repaint leaves old (cut-off)
+    // tab pixels behind.
+    [Fact]
+    public void ScrollingTheStrip_RepaintsTheWholeControl()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.Update();
+
+            // Sent directly, without ScrollTo's DoEvents - that would run
+            // the pending repaint before it can be looked at.
+            SendMessage(tabs.Handle, WM_HSCROLL, (System.IntPtr)(SB_THUMBPOSITION | (2 << 16)), GetButtons(tabs).Handle);
+            Rectangle invalid = GetInvalidArea(tabs);
+
+            Assert.Equal(tabs.ClientRectangle, invalid);
+        });
+    }
+
+    [Fact]
+    public void SelectingACutOffTab_RepaintsTheWholeControl()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            tabs.Update();
+
+            tabs.SelectedIndex = tabs.TabCount - 1;
+            Rectangle invalid = GetInvalidArea(tabs);
+
+            Assert.Equal(tabs.ClientRectangle, invalid);
+        });
+    }
+
+    // Text was seen slipping past the graphics clip on screen, into the
+    // margin beyond the arrows - so the strip outside the visible part is
+    // painted over regardless. Junk is planted there first, then the cover
+    // has to wipe it.
+    [Fact]
+    public void CoveringTheStrip_WipesWhateverWasDrawnBeyondTheArrows()
+    {
+        StaThread.Run(() =>
+        {
+            using Form host = ShowOverflowingTabs(out WfuiTabControl tabs);
+            host.BackColor = Color.FromArgb(71, 72, 73);
+            Rectangle arrows = GetButtons(tabs).GetBounds();
+
+            using Bitmap bitmap = new Bitmap(tabs.Width, tabs.Height);
+            using (Graphics graphics = Graphics.FromImage(bitmap))
+            {
+                graphics.Clear(Color.Red);
+                tabs.InvokePrivate("CoverOutsideVisibleStrip", graphics);
+            }
+
+            int y = arrows.Top + 8;
+
+            // Beyond the arrows and before the strip's first pixel column:
+            // wiped. Inside the arrows' own area it is left alone.
+            Assert.Equal(Color.FromArgb(71, 72, 73), Color.FromArgb(bitmap.GetPixel(arrows.Right, y).ToArgb() | unchecked((int)0xFF000000)));
+            Assert.Equal(Color.FromArgb(71, 72, 73), Color.FromArgb(bitmap.GetPixel(0, y).ToArgb() | unchecked((int)0xFF000000)));
+            Assert.Equal(Color.Red.ToArgb(), bitmap.GetPixel(arrows.Left + 5, y).ToArgb());
         });
     }
 }

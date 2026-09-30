@@ -25,6 +25,7 @@ namespace ErikwnkWFUI.Controls
         private const string ClassName = "msctls_updown32";
 
         private const int WM_WINDOWPOSCHANGING = 0x0046;
+        private const int WM_WINDOWPOSCHANGED = 0x0047;
         private const int WM_PAINT = 0x000F;
         private const int WM_ERASEBKGND = 0x0014;
         private const int WM_MOUSEMOVE = 0x0200;
@@ -38,6 +39,8 @@ namespace ErikwnkWFUI.Controls
         private const int UDS_HORZ = 0x0040;
         private const int UDM_GETRANGE32 = 0x0470;
         private const int UDM_GETPOS32 = 0x0472;
+        private const int UDM_SETPOS = 0x0467;
+        private const int UDM_SETPOS32 = 0x0471;
         private const int TCM_ADJUSTRECT = 0x1328;
 
         private const int TME_LEAVE = 0x0002;
@@ -71,6 +74,10 @@ namespace ErikwnkWFUI.Controls
             {
                 AssignHandle(child);
                 MoveToOwnerPosition();
+
+                // The tabs may already have been drawn without knowing about
+                // the arrows - their stretch of the strip needs redoing.
+                _owner.Invalidate();
             }
         }
 
@@ -220,6 +227,16 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            // The arrows appearing, disappearing or moving changes where
+            // the tabs may be drawn - and the tab control moving its scroll
+            // position (as it does when a tab is selected that was cut off)
+            // shifts every tab.
+            if (m.Msg == WM_WINDOWPOSCHANGED || m.Msg == UDM_SETPOS || m.Msg == UDM_SETPOS32)
+            {
+                _owner.Invalidate();
+                Refresh();
+            }
 
             // The click that just ran is what scrolls the tabs, so the
             // arrow that just reached its end has to be redrawn disabled.
