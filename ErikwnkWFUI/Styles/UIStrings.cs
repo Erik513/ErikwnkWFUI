@@ -59,6 +59,9 @@ namespace ErikwnkWFUI.Styles
             ["TabControl.RenameTab"] = "Rename tab",
             ["TabControl.CloseTab"] = "Close tab",
             ["TabControl.NewTabTitle"] = "New tab",
+            ["TabControl.LockedRenameAndClose"] = "This tab can't be renamed or closed",
+            ["TabControl.LockedRename"] = "This tab can't be renamed",
+            ["TabControl.LockedClose"] = "This tab can't be closed",
 
             ["ListView.CopySelection"] = "Copy",
             ["ListView.CopyAll"] = "Copy all",
@@ -126,6 +129,9 @@ namespace ErikwnkWFUI.Styles
             ["TabControl.RenameTab"] = "Tab umbenennen",
             ["TabControl.CloseTab"] = "Tab schließen",
             ["TabControl.NewTabTitle"] = "Neuer Tab",
+            ["TabControl.LockedRenameAndClose"] = "Dieser Tab kann nicht umbenannt oder geschlossen werden",
+            ["TabControl.LockedRename"] = "Dieser Tab kann nicht umbenannt werden",
+            ["TabControl.LockedClose"] = "Dieser Tab kann nicht geschlossen werden",
 
             ["ListView.CopySelection"] = "Kopieren",
             ["ListView.CopyAll"] = "Alles kopieren",

@@ -633,7 +633,9 @@ namespace ErikwnkWFUI.Controls
                 DrawAccent(graphics, bounds);
             }
 
-            DrawTabContent(graphics, bounds, page, GetTabForeColor(selected, page.Enabled && Enabled));
+            Color foreColor = GetTabForeColor(selected, page.Enabled && Enabled);
+            DrawTabContent(graphics, index, bounds, page, foreColor);
+            DrawTabOverlay(graphics, index, bounds, foreColor);
 
             if (selected && Focused && ShowFocusCues)
             {
@@ -806,7 +808,35 @@ namespace ErikwnkWFUI.Controls
 
         // Image and text, centered together. On a vertical strip the text
         // is rotated to read along the tab, like the standard control.
-        private void DrawTabContent(Graphics graphics, Rectangle bounds, TabPage page, Color foreColor)
+        /// <summary>
+        /// Draws the image of a tab. The default draws it as it is; a
+        /// derived control can draw something else in its place.
+        /// </summary>
+        protected virtual void DrawTabImage(Graphics graphics, int index, Image image, Rectangle bounds, Color foreColor)
+        {
+            graphics.DrawImage(image, bounds.X, bounds.Y, bounds.Width, bounds.Height);
+        }
+
+        /// <summary>
+        /// How far, in pixels, the image and name of a tab with an image are
+        /// moved sideways from the centered position (negative: to the left).
+        /// Zero by default.
+        /// </summary>
+        protected virtual int GetTabContentOffset(int index)
+        {
+            return 0;
+        }
+
+        /// <summary>
+        /// Called after a tab has been drawn, to add to it - a marker in a
+        /// corner, say. Does nothing by default; not called for tabs drawn
+        /// through <c>DrawItem</c>.
+        /// </summary>
+        protected virtual void DrawTabOverlay(Graphics graphics, int index, Rectangle bounds, Color foreColor)
+        {
+        }
+
+        private void DrawTabContent(Graphics graphics, int index, Rectangle bounds, TabPage page, Color foreColor)
         {
             Image image = GetTabImage(page);
             string text = page.Text ?? "";
@@ -825,14 +855,14 @@ namespace ErikwnkWFUI.Controls
 
             if (!IsVertical())
             {
-                DrawHorizontalContent(graphics, bounds, image, text, foreColor, flags);
+                DrawHorizontalContent(graphics, index, bounds, image, text, foreColor, flags);
                 return;
             }
 
-            DrawVerticalContent(graphics, bounds, image, text, foreColor, flags);
+            DrawVerticalContent(graphics, index, bounds, image, text, foreColor, flags);
         }
 
-        private void DrawHorizontalContent(Graphics graphics, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
+        private void DrawHorizontalContent(Graphics graphics, int index, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
         {
             if (image == null)
             {
@@ -843,15 +873,15 @@ namespace ErikwnkWFUI.Controls
             int imageWidth = image.Width + (text.Length > 0 ? ImageTextGap : 0);
             int textWidth = MeasureTextWidth(graphics, text);
             int contentWidth = Math.Min(bounds.Width, imageWidth + textWidth);
-            int x = bounds.Left + (bounds.Width - contentWidth) / 2;
+            int x = bounds.Left + (bounds.Width - contentWidth) / 2 + GetTabContentOffset(index);
 
-            graphics.DrawImage(image, x, bounds.Top + (bounds.Height - image.Height) / 2, image.Width, image.Height);
+            DrawTabImage(graphics, index, image, new Rectangle(x, bounds.Top + (bounds.Height - image.Height) / 2, image.Width, image.Height), foreColor);
 
             Rectangle textBounds = new Rectangle(x + imageWidth, bounds.Top, Math.Max(0, contentWidth - imageWidth), bounds.Height);
             TextRenderer.DrawText(graphics, text, Font, textBounds, foreColor, flags);
         }
 
-        private void DrawVerticalContent(Graphics graphics, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
+        private void DrawVerticalContent(Graphics graphics, int index, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
         {
             // Left tabs read bottom-to-top, right tabs top-to-bottom.
             bool bottomToTop = Alignment == TabAlignment.Left;
@@ -864,7 +894,7 @@ namespace ErikwnkWFUI.Controls
             if (image != null)
             {
                 int imageY = bottomToTop ? y + contentHeight - image.Height : y;
-                graphics.DrawImage(image, bounds.Left + (bounds.Width - image.Width) / 2, imageY, image.Width, image.Height);
+                DrawTabImage(graphics, index, image, new Rectangle(bounds.Left + (bounds.Width - image.Width) / 2, imageY, image.Width, image.Height), foreColor);
             }
 
             int textLength = Math.Max(0, contentHeight - imageHeight);
@@ -920,7 +950,8 @@ namespace ErikwnkWFUI.Controls
             return TextRenderer.MeasureText(graphics, text, Font, Size.Empty, flags).Width;
         }
 
-        private Image GetTabImage(TabPage page)
+        /// <summary>The image a tab shows from <c>ImageList</c>, or null when it has none.</summary>
+        protected Image GetTabImage(TabPage page)
         {
             if (ImageList == null)
                 return null;
