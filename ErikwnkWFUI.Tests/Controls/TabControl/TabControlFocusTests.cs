@@ -236,7 +236,14 @@ public class TabControlFocusTests
         Press(target, 0x20, ' ');
         Press(target, 0x42, 'b');
         Press(target, 0x35, '5');
-        Pump();
+
+        // Generously: a button clicks on the key-up, which a slow moment of
+        // the machine can leave a message-loop round or two behind.
+        for (int i = 0; i < 8; i++)
+        {
+            Pump();
+            System.Threading.Thread.Sleep(2);
+        }
     }
 
     public static System.Collections.Generic.IEnumerable<object[]> Combinations()

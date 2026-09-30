@@ -426,9 +426,14 @@ public class TabControlParityTests
         }
 
         bool inside = tabs.ClientRectangle.Contains(display);
-        bool ordered = rects.Zip(rects.Skip(1), (first, second) => vertical
-            ? first.Top <= second.Top
-            : first.Left <= second.Left || first.Top < second.Top).All(x => x);
+        // Within a row the tabs run in index order. (Rows themselves may
+        // wrap differently and the native control moves the selected row
+        // next to the page, so the rows are not compared with each other.)
+        bool ordered = Enumerable.Range(0, rects.Count)
+            .GroupBy(i => vertical ? rects[i].Left : rects[i].Top)
+            .All(row => row.Zip(row.Skip(1), (first, second) => vertical
+                ? rects[first].Top <= rects[second].Top
+                : rects[first].Left <= rects[second].Left).All(x => x));
 
         return $"{side}; pageInside={inside}; tabsInOrder={ordered}; tabs={rects.Count}";
     }
@@ -586,7 +591,8 @@ public class TabControlParityTests
     // The one deliberate difference, written down so it cannot grow
     // unnoticed: while the native control sizes a tab itself, the themed
     // controls' tabs come out a little larger (about 6 px wider and 1 px
-    // taller for a short name) than the standard control's. The tab
+    // taller for a short name on .NET 8 without visual styles, about 12 and 3
+    // with them on .NET Framework) than the standard control's. The tab
     // heights and the page area start follow from it.
     [Fact]
     public void TheAutomaticTabSize_IsALittleLargerThanTheStandardControls()
@@ -607,8 +613,8 @@ public class TabControlParityTests
 
         Assert.True(themed.Width >= standard.Width);
         Assert.True(themed.Height >= standard.Height);
-        Assert.True(themed.Width - standard.Width <= 10);
-        Assert.True(themed.Height - standard.Height <= 2);
+        Assert.True(themed.Width - standard.Width <= 14);
+        Assert.True(themed.Height - standard.Height <= 4);
     }
 
     // ---- defaults ----

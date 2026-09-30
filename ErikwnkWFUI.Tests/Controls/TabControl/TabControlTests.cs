@@ -426,7 +426,7 @@ public class TabControlTests
             graphics.Clear(Color.FromArgb(255, 128, 0));
         }
 
-        using ImageList images = new ImageList();
+        using ImageList images = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
         images.Images.Add(icon);
         tabs.ImageList = images;
         tabs.TabPages[1].ImageIndex = 0;
