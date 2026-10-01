@@ -474,20 +474,20 @@ namespace ErikwnkWFUI
         /// <summary>Themed <see cref="CheckBox"/>es.</summary>
         public static class CheckBoxes
         {
-            public static CheckBox CreateStandard(
+            public static System.Windows.Forms.CheckBox CreateStandard(
                 string text = "",
-                bool checkedState = true)
+                bool isChecked = true)
             {
                 return UICheckBoxFactory.CreateStandard(
                     text,
-                    checkedState);
+                    isChecked);
             }
 
-            public static CheckBox CreateCompact(
-                bool checkedState = true)
+            public static System.Windows.Forms.CheckBox CreateCompact(
+                bool isChecked = true)
             {
                 return UICheckBoxFactory.CreateCompact(
-                    checkedState);
+                    isChecked);
             }
         }
 

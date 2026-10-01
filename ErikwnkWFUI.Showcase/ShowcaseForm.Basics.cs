@@ -149,15 +149,15 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddCheckBoxesSection(PropertyTable table)
         {
-            CheckBox checkedBox = UIStyles.CheckBoxes.CreateStandard("Checked", true);
-            CheckBox uncheckedBox = UIStyles.CheckBoxes.CreateStandard("Unchecked", false);
-            CheckBox disabledBox = UIStyles.CheckBoxes.CreateStandard("Disabled", true);
+            System.Windows.Forms.CheckBox checkedBox = UIStyles.CheckBoxes.CreateStandard("Checked", true);
+            System.Windows.Forms.CheckBox uncheckedBox = UIStyles.CheckBoxes.CreateStandard("Unchecked", false);
+            System.Windows.Forms.CheckBox disabledBox = UIStyles.CheckBoxes.CreateStandard("Disabled", true);
             disabledBox.Enabled = false;
             AddUniformRow(table, "CreateStandard", checkedBox, uncheckedBox, disabledBox);
 
-            CheckBox compactChecked = UIStyles.CheckBoxes.CreateCompact(true);
-            CheckBox compactUnchecked = UIStyles.CheckBoxes.CreateCompact(false);
-            CheckBox compactDisabled = UIStyles.CheckBoxes.CreateCompact(true);
+            System.Windows.Forms.CheckBox compactChecked = UIStyles.CheckBoxes.CreateCompact(true);
+            System.Windows.Forms.CheckBox compactUnchecked = UIStyles.CheckBoxes.CreateCompact(false);
+            System.Windows.Forms.CheckBox compactDisabled = UIStyles.CheckBoxes.CreateCompact(true);
             compactDisabled.Enabled = false;
             AddUniformRow(table, "CreateCompact", compactChecked, compactUnchecked, compactDisabled);
         }
