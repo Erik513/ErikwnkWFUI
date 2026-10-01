@@ -89,6 +89,62 @@ namespace ErikwnkWFUI.Showcase
             Button browseDisabled = UIStyles.Buttons.CreateBrowse("Browse", new Size(36, 30));
             browseDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateBrowse", browse, browseDisabled);
+
+            // Any color, ready-made or your own: fill, hover, pressed, disabled
+            // and the text on each come from the color set.
+            (string Name, UIColorSet Set)[] sets =
+            {
+                ("Primary", UIStyles.Colors.Sets.Primary),
+                ("Red", UIStyles.Colors.Sets.Red),
+                ("Orange", UIStyles.Colors.Sets.Orange),
+                ("Yellow", UIStyles.Colors.Sets.Yellow),
+                ("Green", UIStyles.Colors.Sets.Green),
+                ("Teal", UIStyles.Colors.Sets.Teal),
+                ("Blue", UIStyles.Colors.Sets.Blue),
+                ("Purple", UIStyles.Colors.Sets.Purple),
+                ("Pink", UIStyles.Colors.Sets.Pink),
+                ("Brown", UIStyles.Colors.Sets.Brown),
+                ("Gray", UIStyles.Colors.Sets.Gray)
+            };
+
+            table.AddRow(
+                "Colors.Sets",
+                118,
+                UIColumn.Percent(CreateSetButtons(sets, enabled: true), TwoColumnPercent),
+                UIColumn.Percent(CreateSetButtons(sets, enabled: false), TwoColumnPercent));
+
+            (string Name, UIColorSet Set)[] custom =
+            {
+                ("Lime", UIStyles.Colors.CreateSet(Color.FromArgb(120, 200, 40))),
+                ("Sky", UIStyles.Colors.CreateSet(Color.FromArgb(100, 180, 240))),
+                ("White", UIStyles.Colors.CreateSet(Color.FromArgb(250, 250, 250))),
+                ("Black", UIStyles.Colors.CreateSet(Color.FromArgb(15, 15, 15))),
+                ("Navy", UIStyles.Colors.CreateSet(Color.FromArgb(10, 20, 100))),
+                ("Lilac", UIStyles.Colors.CreateSet(Color.FromArgb(180, 150, 230)))
+            };
+
+            table.AddRow(
+                "CreateSet(color)",
+                84,
+                UIColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
+                UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
+        }
+
+        private static Control CreateSetButtons((string Name, UIColorSet Set)[] sets, bool enabled)
+        {
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            flow.FlowDirection = FlowDirection.LeftToRight;
+            flow.WrapContents = true;
+
+            foreach ((string name, UIColorSet set) in sets)
+            {
+                Button button = UIStyles.Buttons.CreateStandard(name, size: new Size(74, 30), colors: set);
+                button.Margin = new Padding(0, 0, 6, 6);
+                button.Enabled = enabled;
+                flow.Controls.Add(button);
+            }
+
+            return flow;
         }
 
         private void AddCheckBoxesSection(PropertyTable table)

@@ -115,6 +115,56 @@ namespace ErikwnkWFUI
 
             public static Color AccentForeColor { get { return UIColors.AccentForeColor; } }
 
+            /// <summary>
+            /// A color set made from any color: the color is what a control shows
+            /// while hovered, the fill at rest is a darker shade and pressed a
+            /// lighter one (a light color such as yellow keeps its look at rest and
+            /// gets darker instead). Text and disabled colors are worked out so the
+            /// text stays readable on every fill. Pass the result to a control that
+            /// takes a <see cref="UIColorSet"/>.
+            /// </summary>
+            public static UIColorSet CreateSet(Color color)
+            {
+                return UIColors.CreateSet(color);
+            }
+
+            /// <summary>
+            /// A color set from the three fills you want (at rest, hovered, pressed);
+            /// the text and disabled colors are worked out from them.
+            /// </summary>
+            public static UIColorSet CreateSet(Color basic, Color hover, Color pressed)
+            {
+                return UIColors.CreateSet(basic, hover, pressed);
+            }
+
+            /// <summary>
+            /// Ready-made color sets for the common colors, for when a control should
+            /// not use the standard or the primary look. Each one has a fill at rest,
+            /// hovered, pressed and disabled plus matching text colors (see
+            /// <see cref="UIColorSet"/>). All but <see cref="Primary"/> are the same in
+            /// Dark and Light and ignore the accent. To tune one, replace it with your
+            /// own <see cref="CreateSet(Color, Color, Color)"/>.
+            /// </summary>
+            public static class Sets
+            {
+                /// <summary>The accent color's own look; changes with <see cref="SetAccent"/>.</summary>
+                public static UIColorSet Primary
+                {
+                    get { return UIColors.CreateSet(UIColors.PrimaryDark, UIColors.Primary, UIColors.PrimaryLight); }
+                }
+
+                public static UIColorSet Red { get; } = UIColors.CreateSet(UIColors.RedDark, UIColors.Red, UIColors.RedLight);
+                public static UIColorSet Orange { get; } = UIColors.CreateSet(Color.FromArgb(154, 81, 15), Color.FromArgb(210, 110, 20), Color.FromArgb(236, 141, 55));
+                public static UIColorSet Yellow { get; } = UIColors.CreateSet(UIColors.YellowDark, UIColors.Yellow, UIColors.YellowLight);
+                public static UIColorSet Green { get; } = UIColors.CreateSet(UIColors.GreenDark, UIColors.Green, UIColors.GreenLight);
+                public static UIColorSet Teal { get; } = UIColors.CreateSet(Color.FromArgb(0, 69, 60), Color.FromArgb(0, 130, 114), Color.FromArgb(0, 191, 168));
+                public static UIColorSet Blue { get; } = UIColors.CreateSet(Color.FromArgb(0, 55, 97), Color.FromArgb(0, 90, 158), Color.FromArgb(0, 125, 219));
+                public static UIColorSet Purple { get; } = UIColors.CreateSet(Color.FromArgb(81, 44, 125), Color.FromArgb(110, 60, 170), Color.FromArgb(141, 93, 198));
+                public static UIColorSet Pink { get; } = UIColors.CreateSet(Color.FromArgb(155, 44, 83), Color.FromArgb(200, 60, 110), Color.FromArgb(213, 108, 145));
+                public static UIColorSet Brown { get; } = UIColors.CreateSet(Color.FromArgb(75, 47, 28), Color.FromArgb(120, 75, 45), Color.FromArgb(165, 103, 62));
+                public static UIColorSet Gray { get; } = UIColors.CreateSet(Color.FromArgb(75, 75, 75), Color.FromArgb(90, 90, 90), Color.FromArgb(121, 121, 121));
+            }
+
             public static Color HoverOverlay { get { return UIColors.HoverOverlay; } }
             public static Color ActiveOverlay { get { return UIColors.ActiveOverlay; } }
             public static Color Selection { get { return UIColors.Selection; } }
@@ -170,12 +220,29 @@ namespace ErikwnkWFUI
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
             /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
+            /// <param name="colors">
+            /// A color set to use instead of the neutral look, for a button in a color of
+            /// your own: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c>,
+            /// or simply a <see cref="Color"/>. Fill, hover, pressed and disabled looks and the
+            /// text on each are then worked out for you, the same in Dark and Light.
+            /// </param>
             public static Button CreateStandard(
                 string text = "",
                 string tooltip = "",
                 Size? size = null,
-                bool isIcon = false)
+                bool isIcon = false,
+                UIColorSet colors = null)
             {
+                if (colors != null)
+                {
+                    return UIButtonFactory.CreateColored(
+                        text,
+                        tooltip,
+                        size,
+                        isIcon,
+                        colors);
+                }
+
                 return UIButtonFactory.CreateStandard(
                     text,
                     tooltip,

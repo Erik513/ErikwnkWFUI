@@ -237,6 +237,129 @@ namespace ErikwnkWFUI.Styles
             return RelativeLuminance(color) > LightBackgroundThreshold;
         }
 
+        // ---- color sets: one color in, every state out ----
+
+        // How far a disabled fill is darkened: a light fill only dims a
+        // little, a dark one more. Text on it is the best text color blended
+        // this far toward the fill - readable, but visibly muted.
+        private const double DisabledDarkenAmount = 0.35;
+        private const double LightDisabledDarkenAmount = 0.1;
+        private const double DisabledTextBlend = 0.35;
+
+        /// <summary>
+        /// A color set from a color of your choice, in the same style as the
+        /// built-in Primary look: the color is what the control shows while
+        /// hovered, rest is a darker shade of it and pressed a lighter one.
+        /// A light color (yellow, white) keeps its look at rest instead and
+        /// gets darker when hovered and pressed, since a lighter shade would
+        /// vanish. Text and disabled colors are worked out from the fills.
+        /// </summary>
+        internal static UIColorSet CreateSet(Color color)
+        {
+            if (IsLight(color))
+                return CreateSet(color, ShiftLightness(color, -0.08), ShiftLightness(color, -0.16));
+
+            bool isNeutral = color.R == color.G && color.G == color.B;
+
+            return CreateSet(ShiftLightness(color, isNeutral ? -0.06 : -0.12), color, ShiftLightness(color, 0.12));
+        }
+
+        /// <summary>
+        /// A color set from the three fills you want; the text colors (the
+        /// ones that read best on each fill) and the disabled look are worked
+        /// out from them.
+        /// </summary>
+        internal static UIColorSet CreateSet(Color basic, Color hover, Color pressed)
+        {
+            Color disabled = Darken(basic, IsLight(basic) ? LightDisabledDarkenAmount : DisabledDarkenAmount);
+            Color basicText = GetBestTextColor(basic);
+
+            return new UIColorSet(
+                basic,
+                hover,
+                pressed,
+                disabled,
+                basicText,
+                GetTextOn(hover, basicText),
+                GetTextOn(pressed, basicText),
+                BlendToward(GetBestTextColor(disabled), disabled, DisabledTextBlend));
+        }
+
+        // Text keeps the color it has at rest as long as it stays clearly
+        // readable (3:1) on the next fill; only when it would not, the
+        // better one takes over. Otherwise the text would flip between
+        // light and dark each time the mouse moves over a button.
+        private const double KeepTextRatio = 3.0;
+
+        private static Color GetTextOn(Color fill, Color preferred)
+        {
+            return GetContrastRatio(preferred, fill) >= KeepTextRatio ? preferred : GetBestTextColor(fill);
+        }
+
+        /// <summary>
+        /// The dark or the light text color, whichever has the higher WCAG
+        /// contrast on the background. Unlike <see cref="GetContrastingForeColor"/>
+        /// this is the true ratio, not a brightness rule of thumb.
+        /// </summary>
+        internal static Color GetBestTextColor(Color background)
+        {
+            return GetContrastRatio(LightForeColor, background) >= GetContrastRatio(DarkForeColor, background)
+                ? LightForeColor
+                : DarkForeColor;
+        }
+
+        /// <summary>
+        /// The color with its HSL lightness moved by <paramref name="delta"/>
+        /// (-1 to 1), hue and saturation kept. Unlike blending toward white or
+        /// black this keeps a color saturated, so a lighter blue is still a
+        /// blue and not a pale one.
+        /// </summary>
+        internal static Color ShiftLightness(Color color, double delta)
+        {
+            double hue = color.GetHue();
+            double saturation = color.GetSaturation();
+            double lightness = Math.Max(0, Math.Min(1, color.GetBrightness() + delta));
+
+            double chroma = (1 - Math.Abs(2 * lightness - 1)) * saturation;
+            double x = chroma * (1 - Math.Abs(hue / 60 % 2 - 1));
+            double m = lightness - chroma / 2;
+            double r, g, b;
+
+            if (hue < 60) { r = chroma; g = x; b = 0; }
+            else if (hue < 120) { r = x; g = chroma; b = 0; }
+            else if (hue < 180) { r = 0; g = chroma; b = x; }
+            else if (hue < 240) { r = 0; g = x; b = chroma; }
+            else if (hue < 300) { r = x; g = 0; b = chroma; }
+            else { r = chroma; g = 0; b = x; }
+
+            return Color.FromArgb(
+                color.A,
+                (int)Math.Round((r + m) * 255),
+                (int)Math.Round((g + m) * 255),
+                (int)Math.Round((b + m) * 255));
+        }
+
+        /// <summary>The WCAG 2.1 contrast ratio (1 to 21) between two colors.</summary>
+        internal static double GetContrastRatio(Color first, Color second)
+        {
+            double a = GetWcagLuminance(first);
+            double b = GetWcagLuminance(second);
+
+            return (Math.Max(a, b) + 0.05) / (Math.Min(a, b) + 0.05);
+        }
+
+        private static double GetWcagLuminance(Color color)
+        {
+            return 0.2126 * ToLinear(color.R) + 0.7152 * ToLinear(color.G) + 0.0722 * ToLinear(color.B);
+        }
+
+        private static double ToLinear(int channel)
+        {
+            double value = channel / 255.0;
+
+            return value <= 0.03928 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
+        }
+
         private static double RelativeLuminance(Color color)
         {
             return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
