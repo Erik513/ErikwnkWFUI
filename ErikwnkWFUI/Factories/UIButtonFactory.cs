@@ -132,8 +132,11 @@ namespace ErikwnkWFUI.Factories
             button.FlatAppearance.MouseOverBackColor = look.MouseOverBackColor;
             button.FlatAppearance.MouseDownBackColor = look.MouseDownBackColor;
 
-            SetEnabledStyle(button, look.BackColor, look.ForeColor, look.FixedForeColor);
+            // Pressed before enabled: both listen to EnabledChanged, and the
+            // pressed text color has to be undone before the enabled style
+            // remembers the colors.
             SetPressedForeColor(button, look.ForeColor, look.FixedForeColor);
+            SetEnabledStyle(button, look.BackColor, look.ForeColor, look.FixedForeColor);
             AddToolTip(button, tooltip);
 
             button.Paint += OnButtonPaint;
@@ -157,13 +160,19 @@ namespace ErikwnkWFUI.Factories
             using (SolidBrush backBrush = new SolidBrush(button.BackColor))
                 e.Graphics.FillRectangle(backBrush, textArea);
 
+            TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+
+            // A button that does not use mnemonics shows "&" as it is.
+            if (!button.UseMnemonic)
+                flags |= TextFormatFlags.NoPrefix;
+
             TextRenderer.DrawText(
                 e.Graphics,
                 button.Text,
                 button.Font,
                 button.ClientRectangle,
                 button.ForeColor,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+                flags);
         }
 
         // FlatAppearance can only change the fill per mouse state, not the text
@@ -179,9 +188,9 @@ namespace ErikwnkWFUI.Factories
             bool isPressed = false;
             Color restoreForeColor = idleForeColor;
 
-            button.MouseDown += delegate
+            void Press()
             {
-                if (!button.Enabled)
+                if (!button.Enabled || isPressed)
                     return;
 
                 restoreForeColor = button.ForeColor;
@@ -193,24 +202,48 @@ namespace ErikwnkWFUI.Factories
 
                 if (restoreForeColor != pressedForeColor)
                     button.ForeColor = pressedForeColor;
-            };
+            }
 
-            button.MouseUp += delegate
+            void Release()
             {
                 if (!isPressed)
                     return;
 
                 isPressed = false;
                 button.ForeColor = restoreForeColor;
+            }
+
+            // Only the left button and the space bar press a button; the fill
+            // changes for nothing else, so the text must not either.
+            button.MouseDown += (sender, e) =>
+            {
+                if (e.Button == MouseButtons.Left)
+                    Press();
             };
 
-            button.MouseLeave += delegate
+            button.KeyDown += (sender, e) =>
             {
-                if (!isPressed)
-                    return;
+                if (e.KeyCode == Keys.Space)
+                    Press();
+            };
 
-                isPressed = false;
-                button.ForeColor = restoreForeColor;
+            button.MouseUp += delegate { Release(); };
+            button.MouseLeave += delegate { Release(); };
+            button.KeyUp += (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Space)
+                    Release();
+            };
+            button.LostFocus += delegate { Release(); };
+
+            // A Click handler that disables the button runs before MouseUp,
+            // while the pressed color is still in place. SetEnabledStyle must
+            // see the idle color when it remembers one, so this has to be
+            // hooked first (see CreateButton).
+            button.EnabledChanged += delegate
+            {
+                if (!button.Enabled)
+                    Release();
             };
         }
 

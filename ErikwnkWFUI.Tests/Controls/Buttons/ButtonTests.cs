@@ -321,6 +321,89 @@ public class ButtonTests
         Assert.Equal(muted, button.ForeColor);
     }
 
+    // ---- found in review: pressed state edge cases ----
+
+    private static void Key(Button button, string handler, Keys key)
+    {
+        button.InvokePrivate(handler, new KeyEventArgs(key));
+    }
+
+    private static Button CreateWithLightPressedFill()
+    {
+        // A light pressed fill makes the contrasting text differ from the
+        // light idle text, so the tests can tell the two apart.
+        Button button = UIStyles.Buttons.CreateStandard("Go");
+        button.FlatAppearance.MouseDownBackColor = Color.White;
+        return button;
+    }
+
+    [Fact]
+    public void ARightClick_DoesNotRecolorTheText()
+    {
+        // The fill only reacts to the left button; the text must not either,
+        // or it flashes in a color meant for a fill that never appeared.
+        using Button button = CreateWithLightPressedFill();
+        Color idle = button.ForeColor;
+
+        button.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Right, 1, 5, 5, 0));
+
+        Assert.Equal(idle, button.ForeColor);
+    }
+
+    [Fact]
+    public void TheSpaceKey_PressesLikeTheMouse_AndLosingFocusEndsIt()
+    {
+        using Button button = CreateWithLightPressedFill();
+        Color idle = button.ForeColor;
+
+        Key(button, "OnKeyDown", Keys.Space);
+        Assert.Equal(UIColors.DarkForeColor, button.ForeColor);
+
+        Key(button, "OnKeyUp", Keys.Space);
+        Assert.Equal(idle, button.ForeColor);
+
+        Key(button, "OnKeyDown", Keys.Space);
+        button.InvokePrivate("OnLostFocus", EventArgs.Empty);
+        Assert.Equal(idle, button.ForeColor);
+
+        Key(button, "OnKeyDown", Keys.Enter);
+        Assert.Equal(idle, button.ForeColor);
+    }
+
+    [Fact]
+    public void PressingTwiceWithoutARelease_StillRestoresTheIdleText()
+    {
+        using Button button = CreateWithLightPressedFill();
+        Color idle = button.ForeColor;
+
+        Press(button);
+        Press(button);
+        Release(button);
+
+        Assert.Equal(idle, button.ForeColor);
+    }
+
+    [Fact]
+    public void DisablingWhilePressed_AsAClickHandlerDoes_KeepsTheDisabledAndTheEnabledLook()
+    {
+        // Click is raised before MouseUp, so a handler that disables the
+        // button runs while the pressed text color is still in place.
+        using Button button = CreateWithLightPressedFill();
+        Color idle = button.ForeColor;
+
+        Press(button);
+        button.Enabled = false;
+        Color muted = button.ForeColor;
+        Release(button);
+
+        Assert.NotEqual(idle, muted);
+        Assert.Equal(muted, button.ForeColor);
+
+        button.Enabled = true;
+
+        Assert.Equal(idle, button.ForeColor);
+    }
+
     // ---- tooltip ----
 
     [Fact]
