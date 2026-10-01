@@ -13,9 +13,8 @@ namespace ErikwnkWFUI.Factories
         private static readonly Size DefaultButtonSize = new Size(30, 30);
         private const double DisabledColorFactor = 0.65;
 
-        // Tracks the ToolTip component each button got from AddToolTip, so
-        // UpdateTooltip can change its text later (e.g. on a language
-        // switch) instead of only being able to set it once at creation.
+        // The tooltip each button got, so UpdateTooltip can change its text
+        // later (after a language switch, say).
         private static readonly ConditionalWeakTable<Button, ToolTip> _tooltips =
             new ConditionalWeakTable<Button, ToolTip>();
 
@@ -49,19 +48,11 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreateBrowse(string tooltip = "", Size? size = null, bool isIcon = true)
         {
-            // Deliberately a font glyph instead of the OpenFolder PNG icon: a
-            // 512x512 raster image downscaled to button size looks blurry and
-            // clashes with this button's own yellow, unlike the flat-color
-            // glyphs used by the other icon buttons.
+            // A font glyph on purpose: the OpenFolder PNG scaled down to button size
+            // looks blurry next to the flat yellow.
             //
-            // fixedForeColor: true - white regardless of computed contrast.
-            // Yellow's background is itself a fixed, non-computed look (this
-            // button doesn't follow the theme or accent), so the glyph color
-            // should be equally fixed rather than flipping to black just
-            // because Yellow happens to sit above the light/dark text
-            // threshold - a deliberate, requested exception, not an
-            // oversight the way the pre-fix "always black" button/disabled
-            // text bugs earlier this session were.
+            // The glyph stays white (fixedForeColor): this button keeps its yellow
+            // in every theme, so its text color is fixed as well.
             return CreateButton("📁", tooltip, size, isIcon,
                 UIColors.Yellow, UIColors.White, UIColors.BorderDark, 1,
                 UIColors.YellowLight, UIColors.YellowLighter,
@@ -110,15 +101,10 @@ namespace ErikwnkWFUI.Factories
             return button;
         }
 
-        // WinForms' built-in disabled-Button rendering ignores ForeColor
-        // entirely - confirmed by reading it back as exactly the light color
-        // SetEnabledStyle assigns, while the actually-rendered pixels were a
-        // barely-readable dark-on-dark blend (an embossed light/dark pair
-        // the framework derives from BackColor, not ForeColor). The Paint
-        // event fires after the button's own internal painting finishes, so
-        // repainting the text here overrides it with the color we actually
-        // computed. Only touches disabled buttons - enabled ones render
-        // correctly on their own.
+        // The framework paints the text of a disabled button in its own embossed
+        // colors and ignores ForeColor, which comes out barely readable. So the
+        // text is drawn once more on top, in the muted color SetEnabledStyle
+        // chose. Enabled buttons draw fine on their own.
         private static void OnButtonPaint(object sender, PaintEventArgs e)
         {
             Button button = (Button)sender;
@@ -140,32 +126,14 @@ namespace ErikwnkWFUI.Factories
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         }
 
-        // FlatAppearance only lets a button swap its BACKGROUND per mouse
-        // state, not its text/icon color, so pressed text has to be
-        // recolored by hand to stay readable against mouseDownBackColor -
-        // that's NOT always a light shade of the idle color (e.g.
-        // CreateStandard's press color is the app's accent, which is a dark
-        // blue by default), so this computes the correct contrast for that
-        // specific background rather than assuming dark text is always
-        // right.
+        // FlatAppearance can only change the fill per mouse state, not the text
+        // color. So while the button is pressed, its text gets whichever color
+        // reads best on the pressed fill (dark or light, depending on the accent).
         //
-        // MouseLeave fires on every plain hover-then-move-away too, not
-        // just after a press - so this must only touch ForeColor if a
-        // press is actually in progress (isPressed), and must restore
-        // whatever ForeColor was live right before the press (not the
-        // color captured at construction time), since callers are free
-        // to recolor a button after creation (e.g. DealOrNoDeal's price
-        // buttons set ForeColor = Black on top of this factory's default).
-        //
-        // Reads button.FlatAppearance.MouseDownBackColor fresh on every
-        // press rather than taking a color parameter captured once at
-        // construction - TitleBarControl.RefreshTheme() pokes that
-        // property directly on an already-built button (to follow a later
-        // theme/accent switch) without going through this factory again,
-        // so a captured-once value would go stale: pressed text kept
-        // contrasting against whatever the ORIGINAL accent's press color
-        // was, not the current one - confirmed live as invisible
-        // white-on-white once the accent itself turned white.
+        // Only a real press is undone on MouseLeave and MouseUp, and what comes
+        // back is the color from just before the press - callers may recolor a
+        // button after creating it. The pressed fill is read at press time, not
+        // at creation, because TitleBarControl.RefreshTheme changes it later.
         private static void SetPressedForeColor(Button button, Color idleForeColor, bool fixedForeColor)
         {
             bool isPressed = false;
@@ -237,37 +205,17 @@ namespace ErikwnkWFUI.Factories
                 toolTip.SetToolTip(button, tooltip ?? "");
         }
 
-        // Like SetPressedForeColor above: restores whatever BackColor/ForeColor
-        // was live right before the button got disabled, not the color
-        // captured here at construction time - so a caller's manual override
-        // (button.BackColor = ... after creation) survives an Enabled
-        // round-trip instead of silently snapping back to the factory
-        // default the next time the button re-enables.
+        // Disabled means a darker fill and muted text. The colors in use right
+        // before disabling are remembered and put back on enabling, so a
+        // caller's own BackColor/ForeColor survives the round trip.
         private static void SetEnabledStyle(Button button, Color enabledBackColor, Color enabledForeColor, bool fixedForeColor)
         {
             Color disabledBackColor = Darken(enabledBackColor, DisabledColorFactor);
 
-            // Computed per button rather than a single fixed UIColors.TextDisabled
-            // gray - that read fine against most variants' darkened background
-            // by coincidence, but CreateBrowse's (Yellow darkened by
-            // DisabledColorFactor is still a fairly bright olive) landed at a
-            // contrast ratio of ~1.0 against it - i.e. functionally invisible.
-            // Blended 35% toward the disabled background rather than used at
-            // full brightness - GetContrastingForeColor alone picks the same
-            // white/near-black constant an enabled button would also land on
-            // (darkening the background rarely flips which side of the
-            // threshold it's on), so disabled text read exactly as crisp/
-            // bright as enabled text once OnButtonPaint fixed its visibility -
-            // "looks the same as enabled". The blend keeps it clearly
-            // readable (it's blending toward an already-darkened background,
-            // not toward black) while actually looking muted.
-            // fixedForeColor buttons (CreateBrowse) skip the contrast
-            // computation - their idle fore color is a fixed part of their
-            // look, not something GetContrastingForeColor should be picking
-            // for them - but still get the same muting blend applied to it
-            // for disabled. Every control's disabled state should read as
-            // visibly grayed out regardless of what's otherwise fixed about
-            // its look.
+            // The text is the contrasting color blended 35% toward the disabled fill:
+            // still readable, but visibly muted. One fixed gray did not work - on
+            // Browse's yellow it came out at a contrast of about 1.0. Buttons with a
+            // fixed text color (Browse) blend that color instead.
             Color disabledForeColor = fixedForeColor
                 ? BlendTowardColor(enabledForeColor, disabledBackColor, 0.35)
                 : BlendTowardColor(UIColors.GetContrastingForeColor(disabledBackColor), disabledBackColor, 0.35);

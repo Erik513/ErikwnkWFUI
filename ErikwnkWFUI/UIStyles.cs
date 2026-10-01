@@ -162,9 +162,14 @@ namespace ErikwnkWFUI
             public static Font Emoji { get { return UIFonts.Emoji; } }
         }
 
-        /// <summary>Flat, themed <see cref="Button"/>s in a few preset colors (<see cref="CreateStandard"/>, <see cref="CreatePrimary"/>, <see cref="CreateGreen"/>, <see cref="CreateRed"/>) plus a couple of special-purpose ones.</summary>
+        /// <summary>Flat, themed <see cref="Button"/>s: <see cref="CreateStandard"/> (neutral), <see cref="CreatePrimary"/> (accent color), <see cref="CreateGreen"/> (confirm) and <see cref="CreateRed"/> (delete), plus <see cref="CreateBrowse"/> for a folder picker. The disabled, hover and pressed looks are built in.</summary>
         public static class Buttons
         {
+            /// <summary>The neutral button.</summary>
+            /// <param name="text">The caption.</param>
+            /// <param name="tooltip">Tooltip text; empty for none.</param>
+            /// <param name="size">The size; 30 x 30 when left out.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
             public static Button CreateStandard(
                 string text = "",
                 string tooltip = "",
@@ -178,6 +183,11 @@ namespace ErikwnkWFUI
                     isIcon);
             }
 
+            /// <summary>The main button of a screen, in the current accent color.</summary>
+            /// <param name="text">The caption.</param>
+            /// <param name="tooltip">Tooltip text; empty for none.</param>
+            /// <param name="size">The size; 30 x 30 when left out.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
             public static Button CreatePrimary(
                 string text = "",
                 string tooltip = "",
@@ -191,6 +201,11 @@ namespace ErikwnkWFUI
                     isIcon);
             }
 
+            /// <summary>A green button, for confirming.</summary>
+            /// <param name="text">The caption.</param>
+            /// <param name="tooltip">Tooltip text; empty for none.</param>
+            /// <param name="size">The size; 30 x 30 when left out.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
             public static Button CreateGreen(
                 string text = "",
                 string tooltip = "",
@@ -204,6 +219,11 @@ namespace ErikwnkWFUI
                     isIcon);
             }
 
+            /// <summary>A red button, for deleting or other destructive actions.</summary>
+            /// <param name="text">The caption.</param>
+            /// <param name="tooltip">Tooltip text; empty for none.</param>
+            /// <param name="size">The size; 30 x 30 when left out.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
             public static Button CreateRed(
                 string text = "",
                 string tooltip = "",
@@ -218,16 +238,11 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
-            /// A yellow "open folder" icon button. <paramref name="tooltip"/>
-            /// is exactly that - the tooltip text - NOT the button's visible
-            /// label: this factory always sets <c>.Text</c> to the folder
-            /// glyph ("📁") itself, so there's no separate parameter for
-            /// visible text at all. Overwriting the returned button's
-            /// <c>.Text</c> afterward (e.g. while re-applying strings on a
-            /// language switch) replaces the icon with whatever was set and
-            /// is almost never what's wanted - to change the tooltip later,
-            /// use <see cref="UpdateTooltip"/> instead, and leave <c>.Text</c>
-            /// alone.
+            /// A yellow "open folder" button. The first parameter is the tooltip,
+            /// not a caption: the button always shows the folder glyph. To change
+            /// the tooltip later (after a language switch), use
+            /// <see cref="UpdateTooltip"/> - setting <c>Text</c> would replace the
+            /// glyph.
             /// </summary>
             public static Button CreateBrowse(
                 string tooltip = "",
@@ -241,8 +256,9 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
-            /// Changes an already-created button's tooltip text - e.g. to
-            /// re-translate it after a language switch.
+            /// Changes the tooltip text of a button made by this class, for example
+            /// after a language switch. Does nothing for a button created without a
+            /// tooltip.
             /// </summary>
             public static void UpdateTooltip(Button button, string tooltip)
             {
