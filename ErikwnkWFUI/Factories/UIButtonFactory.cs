@@ -13,6 +13,15 @@ namespace ErikwnkWFUI.Factories
         private static readonly Size DefaultButtonSize = new Size(30, 30);
         private const double DisabledColorFactor = 0.65;
 
+        // A light fill (Standard on a light theme) only dims a little when
+        // disabled: darkening it as far as a dark fill would make a heavy
+        // gray block that stands out more than the enabled button.
+        private const double LightDisabledColorFactor = 0.9;
+
+        // The outline of every button except Standard. A fixed color, so
+        // they look the same on both themes (only Standard follows the theme).
+        private static readonly Color FixedBorderColor = Color.FromArgb(50, 50, 50);
+
         // The tooltip each button got, so UpdateTooltip can change its text
         // later (after a language switch, say).
         private static readonly ConditionalWeakTable<Button, ToolTip> _tooltips =
@@ -21,28 +30,35 @@ namespace ErikwnkWFUI.Factories
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
             return CreateButton(text, tooltip, size, isIcon,
-                UIColors.BackgroundMedium, UIColors.TextPrimary, UIColors.BorderDark, 1,
+                UIColors.BackgroundMedium, UIColors.TextPrimary, GetStandardBorderColor(), 1,
                 UIColors.BackgroundLighter, UIColors.Primary);
+        }
+
+        // On a dark theme the fill is told apart by a quiet outline. A light
+        // theme needs a stronger one, or the button melts into the page.
+        private static Color GetStandardBorderColor()
+        {
+            return UIColors.IsLight(UIColors.BackgroundMedium) ? UIColors.BorderLight : UIColors.BorderDark;
         }
 
         public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
             return CreateButton(text, tooltip, size, isIcon,
-                UIColors.PrimaryDark, UIColors.GetContrastingForeColor(UIColors.PrimaryDark), UIColors.BorderDark, 0,
+                UIColors.PrimaryDark, UIColors.GetContrastingForeColor(UIColors.PrimaryDark), FixedBorderColor, 0,
                 UIColors.Primary, UIColors.PrimaryLight);
         }
 
         public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
             return CreateButton(text, tooltip, size, isIcon,
-                UIColors.GreenDark, UIColors.GetContrastingForeColor(UIColors.GreenDark), UIColors.BorderDark, 1,
+                UIColors.GreenDark, UIColors.GetContrastingForeColor(UIColors.GreenDark), FixedBorderColor, 1,
                 UIColors.Green, UIColors.GreenLight);
         }
 
         public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
             return CreateButton(text, tooltip, size, isIcon,
-                UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), UIColors.BorderDark, 1,
+                UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), FixedBorderColor, 1,
                 UIColors.Red, UIColors.RedLight);
         }
 
@@ -54,7 +70,7 @@ namespace ErikwnkWFUI.Factories
             // The glyph stays white (fixedForeColor): this button keeps its yellow
             // in every theme, so its text color is fixed as well.
             return CreateButton("📁", tooltip, size, isIcon,
-                UIColors.Yellow, UIColors.White, UIColors.BorderDark, 1,
+                UIColors.Yellow, UIColors.White, FixedBorderColor, 1,
                 UIColors.YellowLight, UIColors.YellowLighter,
                 fixedForeColor: true);
         }
@@ -210,7 +226,8 @@ namespace ErikwnkWFUI.Factories
         // caller's own BackColor/ForeColor survives the round trip.
         private static void SetEnabledStyle(Button button, Color enabledBackColor, Color enabledForeColor, bool fixedForeColor)
         {
-            Color disabledBackColor = Darken(enabledBackColor, DisabledColorFactor);
+            bool lightFill = !fixedForeColor && UIColors.IsLight(enabledBackColor);
+            Color disabledBackColor = Darken(enabledBackColor, lightFill ? LightDisabledColorFactor : DisabledColorFactor);
 
             // The text is the contrasting color blended 35% toward the disabled fill:
             // still readable, but visibly muted. One fixed gray did not work - on

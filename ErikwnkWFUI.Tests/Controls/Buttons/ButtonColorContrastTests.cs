@@ -16,10 +16,11 @@ namespace ErikwnkWFUI.Tests.Controls.Buttons;
 /// exempts, still has to be visible (3:1).
 ///
 /// Browse is left out of the idle/hovered/pressed bars on purpose: it is a
-/// fixed yellow button with a white folder glyph that looks the same in every
-/// theme, a look chosen deliberately and easy to recognize. What is checked
-/// instead is that it really is the same in both themes. Every case that falls
-/// short is listed in one message, so a failing run shows the whole picture.
+/// fixed yellow button with a white folder glyph, a look chosen deliberately
+/// and easy to recognize. Like Primary, Green and Red it must look the same in
+/// both themes (only Standard follows the theme), and that is checked down to
+/// the outline and the disabled and pressed colors. Every case that falls short
+/// is listed in one message, so a failing run shows the whole picture.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
 public class ButtonColorContrastTests
@@ -143,19 +144,35 @@ public class ButtonColorContrastTests
         });
     }
 
-    [Fact]
-    public void Browse_LooksTheSame_InBothThemes()
+    [Theory]
+    [InlineData("Primary")]
+    [InlineData("Green")]
+    [InlineData("Red")]
+    [InlineData("Browse")]
+    public void EveryButtonButStandard_LooksTheSame_InBothThemes(string variant)
     {
-        (Color Back, Color Fore, Color Over, Color Down, Color Border) Look()
+        (Color Back, Color Fore, Color Over, Color Down, Color Border, int BorderSize, Color DisabledBack, Color DisabledFore, Color PressedFore) Look()
         {
-            using Button browse = UIStyles.Buttons.CreateBrowse();
+            using Button button = Create(variant);
+            Color back = button.BackColor;
+            Color fore = button.ForeColor;
+
+            Press(button);
+            Color pressedFore = button.ForeColor;
+            button.InvokePrivate("OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+
+            button.Enabled = false;
 
             return (
-                browse.BackColor,
-                browse.ForeColor,
-                browse.FlatAppearance.MouseOverBackColor,
-                browse.FlatAppearance.MouseDownBackColor,
-                browse.FlatAppearance.BorderColor);
+                back,
+                fore,
+                button.FlatAppearance.MouseOverBackColor,
+                button.FlatAppearance.MouseDownBackColor,
+                button.FlatAppearance.BorderColor,
+                button.FlatAppearance.BorderSize,
+                button.BackColor,
+                button.ForeColor,
+                pressedFore);
         }
 
         try
@@ -166,14 +183,38 @@ public class ButtonColorContrastTests
             UIColors.ApplyTheme(UIThemes.Light);
             var light = Look();
 
-            Assert.Equal(dark.Back, light.Back);
-            Assert.Equal(dark.Fore, light.Fore);
-            Assert.Equal(dark.Over, light.Over);
-            Assert.Equal(dark.Down, light.Down);
+            Assert.Equal(dark, light);
         }
         finally
         {
             UIColors.ApplyTheme(UIThemes.Dark);
         }
+    }
+
+    [Fact]
+    public void StandardButton_StandsOutFromThePage_OnALightTheme()
+    {
+        RunWithTheme(lightTheme: true, shortfalls =>
+        {
+            using Button button = UIStyles.Buttons.CreateStandard("Text");
+
+            // The fill is almost the page color, so the outline carries it.
+            Check(shortfalls, "Standard outline against the page", button.FlatAppearance.BorderColor, UIColors.BackgroundMedium, 1.8);
+        });
+    }
+
+    [Fact]
+    public void ADisabledStandardButton_StaysALightSurface_OnALightTheme()
+    {
+        RunWithTheme(lightTheme: true, shortfalls =>
+        {
+            using Button button = UIStyles.Buttons.CreateStandard("Text");
+            button.Enabled = false;
+
+            if (!UIColors.IsLight(button.BackColor))
+            {
+                shortfalls.Add("Standard disabled fill is a dark block " + button.BackColor);
+            }
+        });
     }
 }
