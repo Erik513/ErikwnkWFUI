@@ -132,6 +132,28 @@ public class ColorSetControlsTests
         }
     }
 
+    [Fact]
+    public void TheDeleteColumn_StaysRedAndUnhighlighted_EvenWithARedSet()
+    {
+        // A red selection would swallow a red glyph, but the delete column
+        // never shows the selection color (it carries the row's own resting
+        // fill over) and its glyph is always the same fixed red.
+        using WfuiDataGridView grid = (WfuiDataGridView)UIStyles.DataGridViews.CreateStandard(null, UIStyles.Colors.Sets.Red);
+        grid.BindingContext = new System.Windows.Forms.BindingContext();
+        grid.DataSource = Controls.DataGridView.GridTestHelpers.CreateItems(("A", 1));
+        _ = grid.Handle;
+        grid.ShowDeleteRowColumn = true;
+        int deleteColumn = grid.Columns["__deleteRow"]!.Index;
+        System.Windows.Forms.DataGridViewCellStyle style = new System.Windows.Forms.DataGridViewCellStyle { BackColor = Color.White };
+
+        grid.InvokePrivate("OnCellFormatting", new System.Windows.Forms.DataGridViewCellFormattingEventArgs(deleteColumn, 0, null, typeof(object), style));
+
+        Assert.Equal(UIStyles.Colors.Sets.Red.Hover, grid.SelectionBackColor);
+        Assert.Equal(Color.White, style.SelectionBackColor);
+        Assert.Equal(UIColors.RedLight, style.ForeColor);
+        Assert.Equal(UIColors.RedLight, style.SelectionForeColor);
+    }
+
     // ---- ListView ----
 
     [Fact]
