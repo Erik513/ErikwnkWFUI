@@ -201,7 +201,7 @@ namespace ErikwnkWFUI.Styles
             // accent has no hue to lean on, so it needs the same higher
             // alpha ListView's own CreateStandard selection default uses
             // for the same reason.
-            Selection = Color.FromArgb(isNeutralAccent ? 130 : 60, accent.R, accent.G, accent.B);
+            Selection = CreateSelectionOverlay(accent);
 
             AccentForeColor = GetContrastingForeColor(accent);
         }
@@ -237,7 +237,25 @@ namespace ErikwnkWFUI.Styles
             return RelativeLuminance(color) > LightBackgroundThreshold;
         }
 
+        /// <summary>
+        /// The see-through tint a selected row gets in the given color. A hued
+        /// color stands out from a row's own gray even at a low alpha; a
+        /// neutral one has no hue to lean on and needs a higher one.
+        /// </summary>
+        internal static Color CreateSelectionOverlay(Color accent)
+        {
+            bool isNeutral = accent.R == accent.G && accent.G == accent.B;
+
+            return Color.FromArgb(isNeutral ? 130 : 60, accent.R, accent.G, accent.B);
+        }
+
         // ---- color sets: one color in, every state out ----
+
+        /// <summary>The look of the accent color: darker at rest, the accent hovered, lighter pressed.</summary>
+        internal static UIColorSet PrimarySet
+        {
+            get { return CreateSet(PrimaryDark, Primary, PrimaryLight); }
+        }
 
         // How far a disabled fill is darkened: a light fill only dims a
         // little, a dark one more. Text on it is the best text color blended

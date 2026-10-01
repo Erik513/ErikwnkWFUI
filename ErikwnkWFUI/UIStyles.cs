@@ -150,7 +150,7 @@ namespace ErikwnkWFUI
                 /// <summary>The accent color's own look; changes with <see cref="SetAccent"/>.</summary>
                 public static UIColorSet Primary
                 {
-                    get { return UIColors.CreateSet(UIColors.PrimaryDark, UIColors.Primary, UIColors.PrimaryLight); }
+                    get { return UIColors.PrimarySet; }
                 }
 
                 public static UIColorSet Red { get; } = UIColors.CreateSet(UIColors.RedDark, UIColors.Red, UIColors.RedLight);
@@ -337,15 +337,24 @@ namespace ErikwnkWFUI
         public static class DataGridViews
         {
             /// <summary>The editable variant - row adding/deleting, an optional delete-row column, clipboard cut/copy/paste, and a right-click context menu. Use <see cref="CreateReadOnlyStandard"/> instead for a grid that only ever shows data.</summary>
-            public static System.Windows.Forms.DataGridView CreateStandard(object dataSource = null)
+            /// <param name="dataSource">The data to bind, or none.</param>
+            /// <param name="colors">
+            /// A color set to frame and highlight the grid in instead of the neutral gray:
+            /// one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
+            /// <see cref="Color"/>. The border, the selection, the column drag line and the
+            /// context menu's selection then use its color.
+            /// </param>
+            public static System.Windows.Forms.DataGridView CreateStandard(object dataSource = null, UIColorSet colors = null)
             {
-                return UIDataGridViewFactory.CreateStandard(dataSource);
+                return UIDataGridViewFactory.CreateStandard(dataSource, colors);
             }
 
             /// <summary>The display-only variant - column-header sorting, but no editing. Use <see cref="CreateStandard"/> instead for a grid that needs to be editable.</summary>
-            public static System.Windows.Forms.DataGridView CreateReadOnlyStandard(object dataSource = null)
+            /// <param name="dataSource">The data to bind, or none.</param>
+            /// <param name="colors">A color set for the border, selection and menu instead of the neutral gray; see <see cref="CreateStandard"/>.</param>
+            public static System.Windows.Forms.DataGridView CreateReadOnlyStandard(object dataSource = null, UIColorSet colors = null)
             {
-                return UIDataGridViewFactory.CreateReadOnlyStandard(dataSource);
+                return UIDataGridViewFactory.CreateReadOnlyStandard(dataSource, colors);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but framed in the current accent color instead of the fixed neutral border - mirrors <see cref="ListViews.CreatePrimary"/>.</summary>
@@ -569,9 +578,16 @@ namespace ErikwnkWFUI
         /// <summary>A dark-themed, multi-column <see cref="Controls.ListView"/> (Details view) with spreadsheet-style cell-range selection, hand-rolled column reordering/resizing, and Ctrl+C/Ctrl+Shift+C copy - see the class itself for the full behavior.</summary>
         public static class ListViews
         {
-            public static System.Windows.Forms.ListView CreateStandard()
+            /// <summary>The themed list view in neutral gray.</summary>
+            /// <param name="colors">
+            /// A color set to frame and highlight the list in instead of the neutral gray:
+            /// one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
+            /// <see cref="Color"/>. The border, the selection, the column drag line and the
+            /// context menu's selection then use its color.
+            /// </param>
+            public static System.Windows.Forms.ListView CreateStandard(UIColorSet colors = null)
             {
-                return UIListViewFactory.CreateStandard();
+                return UIListViewFactory.CreateStandard(colors);
             }
 
             public static System.Windows.Forms.ListView CreatePrimary()

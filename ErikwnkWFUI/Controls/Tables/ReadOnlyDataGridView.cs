@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -2424,7 +2424,10 @@ namespace ErikwnkWFUI.Controls
             Color rowForeColor = Enabled ? _rowForeColor : UIColors.DisabledGray;
             Color headerForeColor = Enabled ? _headerForeColor : UIColors.DisabledGray;
             Color selectionBackColor = Enabled ? SelectionBackColor : UIColors.DisabledGray;
-            Color selectionForeColor = UIColors.GetContrastingForeColor(selectionBackColor);
+            // The true best contrast, not a brightness rule of thumb: on the mid
+            // tones a color set can bring (lime green, say) the rule picks the
+            // wrong text color.
+            Color selectionForeColor = UIColors.GetBestTextColor(selectionBackColor);
 
             using (var headerFont = new Font(Font, FontStyle.Bold))
             {

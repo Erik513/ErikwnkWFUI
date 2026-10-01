@@ -47,7 +47,7 @@ namespace ErikwnkWFUI.Showcase
                  AddContextMenusSection),
 
                 ("DataGridView",
-                 "Tables bound to a list. The editable ones (CreateStandard, CreatePrimary) let the user add, delete, cut and paste rows; the read-only ones (CreateReadOnlyStandard, CreateReadOnlyPrimary) only sort by clicking a column header, and the right one of each pair is disabled. Primary uses the accent color for the selection.",
+                 "Tables bound to a list. The editable ones (CreateStandard, CreatePrimary) let the user add, delete, cut and paste rows; the read-only ones (CreateReadOnlyStandard, CreateReadOnlyPrimary) only sort by clicking a column header, and the right one of each pair is disabled. Primary uses the accent color for the selection, and with colors: a color set (see the Buttons tab) any other color does.",
                  AddDataGridSection),
 
                 ("Labels",
@@ -59,7 +59,7 @@ namespace ErikwnkWFUI.Showcase
                  AddListBoxControlSection),
 
                 ("ListView",
-                 "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color.",
+                 "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does.",
                  AddListViewSection),
 
                 ("NumericUpDown",

@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -9,54 +9,57 @@ namespace ErikwnkWFUI.Factories
     // "using System.Windows.Forms;" in most consuming files).
     internal static class UIDataGridViewFactory
     {
-        public static DataGridView CreateStandard(object dataSource = null)
+        public static DataGridView CreateStandard(object dataSource = null, UIColorSet colors = null)
         {
-            return new Controls.DataGridView
+            Controls.DataGridView grid = new Controls.DataGridView
             {
                 DataSource = dataSource
             };
+
+            ApplyColors(grid, colors);
+
+            return grid;
         }
 
-        public static DataGridView CreateReadOnlyStandard(object dataSource = null)
+        public static DataGridView CreateReadOnlyStandard(object dataSource = null, UIColorSet colors = null)
         {
-            return new Controls.ReadOnlyDataGridView
+            Controls.ReadOnlyDataGridView grid = new Controls.ReadOnlyDataGridView
             {
                 DataSource = dataSource
             };
+
+            ApplyColors(grid, colors);
+
+            return grid;
         }
 
-        // Same editable control CreateStandard returns, framed (and
-        // gridlined - see ReadOnlyDataGridView.BorderColor), selection-
-        // highlighted, and reorder-line-colored in the current accent
-        // instead of the fixed neutral gray CreateStandard keeps -
-        // including this grid's own built-in right-click context menu.
-        // Mirrors UIListViewFactory.CreatePrimary.
+        // The editable grid framed (and gridlined - see
+        // ReadOnlyDataGridView.BorderColor), selection-highlighted and
+        // reorder-line-colored in the current accent instead of the neutral
+        // gray - including its own right-click menu. Mirrors
+        // UIListViewFactory.CreatePrimary.
         public static DataGridView CreatePrimary(object dataSource = null)
         {
-            return new Controls.DataGridView
-            {
-                DataSource = dataSource,
-                BorderColor = UIColors.Primary,
-                SelectionBackColor = UIColors.Primary,
-                ColumnReorderIndicatorColor = UIColors.Primary,
-                ContextMenuSelectionColor = UIColors.Primary
-            };
+            return CreateStandard(dataSource, UIColors.PrimarySet);
         }
 
-        // Same read-only control CreateReadOnlyStandard returns, framed/
-        // highlighted in the current accent instead - the read-only
-        // counterpart to CreatePrimary, same as CreateReadOnlyStandard is
-        // to CreateStandard.
+        // The read-only counterpart to CreatePrimary.
         public static DataGridView CreateReadOnlyPrimary(object dataSource = null)
         {
-            return new Controls.ReadOnlyDataGridView
-            {
-                DataSource = dataSource,
-                BorderColor = UIColors.Primary,
-                SelectionBackColor = UIColors.Primary,
-                ColumnReorderIndicatorColor = UIColors.Primary,
-                ContextMenuSelectionColor = UIColors.Primary
-            };
+            return CreateReadOnlyStandard(dataSource, UIColors.PrimarySet);
+        }
+
+        // The set's hover color is the color of the look (it is the accent
+        // itself for the primary set).
+        private static void ApplyColors(Controls.ReadOnlyDataGridView grid, UIColorSet colors)
+        {
+            if (colors == null)
+                return;
+
+            grid.BorderColor = colors.Hover;
+            grid.SelectionBackColor = colors.Hover;
+            grid.ColumnReorderIndicatorColor = colors.Hover;
+            grid.ContextMenuSelectionColor = colors.Hover;
         }
     }
 }

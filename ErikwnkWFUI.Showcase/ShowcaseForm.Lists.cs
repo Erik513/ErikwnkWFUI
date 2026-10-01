@@ -55,6 +55,12 @@ namespace ErikwnkWFUI.Showcase
             PopulateListViewDemo(primaryListView);
             table.AddRow("CreatePrimary", 260, UIColumn.Absolute(primaryListView, demoWidth));
             PinToDemoWidth(primaryListView, demoWidth);
+
+            // Any other color: pass a color set.
+            var purpleListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Purple);
+            PopulateListViewDemo(purpleListView);
+            table.AddRow("colors: Purple", 260, UIColumn.Absolute(purpleListView, demoWidth));
+            PinToDemoWidth(purpleListView, demoWidth);
         }
 
         // AddRow's UIColumn.Absolute only bounds the WRAPPER cell to
@@ -142,8 +148,8 @@ namespace ErikwnkWFUI.Showcase
             // itself (see ReadOnlyDataGridView.ReorderDataSource), which
             // needs an IList data source; a DataTable isn't one, so
             // sorting silently did nothing against it here.
-            AddEditableDataGridRow(table, "CreateStandard", UIStyles.DataGridViews.CreateStandard);
-            AddEditableDataGridRow(table, "CreatePrimary", UIStyles.DataGridViews.CreatePrimary);
+            AddEditableDataGridRow(table, "CreateStandard", data => UIStyles.DataGridViews.CreateStandard(data));
+            AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
             // The lighter of the two variants above - column-header sorting
             // still works, but no adding/deleting/cutting/pasting rows, so
@@ -179,6 +185,22 @@ namespace ErikwnkWFUI.Showcase
                 180,
                 UIColumn.Percent(readOnlyPrimaryGrid, 50),
                 UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
+
+            // Any other color: pass a color set (here two of the ready-made
+            // ones) - border, selection, drag line and menu follow it.
+            var tealGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
+            tealGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(tealGrid);
+
+            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
+            orangeGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(orangeGrid);
+
+            table.AddRow(
+                "colors: Teal | Orange",
+                180,
+                UIColumn.Percent(tealGrid, 50),
+                UIColumn.Percent(orangeGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the
