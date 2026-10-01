@@ -240,15 +240,6 @@ namespace ErikwnkWFUI
                     isIcon);
             }
 
-            public static Button CreateIconButton(
-                string text,
-                int size = 32)
-            {
-                return UIButtonFactory.CreateIconButton(
-                    text,
-                    size);
-            }
-
             /// <summary>
             /// Changes an already-created button's tooltip text - e.g. to
             /// re-translate it after a language switch.

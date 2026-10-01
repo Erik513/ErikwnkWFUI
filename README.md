@@ -1,4 +1,4 @@
-# ErikwnkWFUI
+﻿# ErikwnkWFUI
 
 A dark-themed WinForms UI control library: borderless windows with a custom
 title bar, styled buttons/labels/lists/tables/dialogs, and a small theming
@@ -114,8 +114,5 @@ project.) Pass the result to `StyledFormOptions.Icon` or
   only theme part of the control - a `ComboBox`'s dropdown list and a
   `NumericUpDown`'s spinner buttons are native Windows chrome and stay
   system-colored regardless of the active theme/accent.
-- `UIStyles.Buttons.CreateIconButton` uses a fixed translucent-white overlay
-  (meant for buttons drawn on top of arbitrary imagery) rather than
-  following the active theme.
 - Theme, accent, and language changes only affect controls built *after*
   the change - nothing here live-updates already-open windows.

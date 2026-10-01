@@ -11,7 +11,6 @@ namespace ErikwnkWFUI.Factories
     internal static class UIButtonFactory
     {
         private static readonly Size DefaultButtonSize = new Size(30, 30);
-        private static readonly Size DefaultIconButtonSize = new Size(32, 32);
         private const double DisabledColorFactor = 0.65;
 
         // Tracks the ToolTip component each button got from AddToolTip, so
@@ -22,28 +21,28 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateStyledButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon,
                 UIColors.BackgroundMedium, UIColors.TextPrimary, UIColors.BorderDark, 1,
                 UIColors.BackgroundLighter, UIColors.Primary);
         }
 
         public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateStyledButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon,
                 UIColors.PrimaryDark, UIColors.GetContrastingForeColor(UIColors.PrimaryDark), UIColors.BorderDark, 0,
                 UIColors.Primary, UIColors.PrimaryLight);
         }
 
         public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateStyledButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon,
                 UIColors.GreenDark, UIColors.GetContrastingForeColor(UIColors.GreenDark), UIColors.BorderDark, 1,
                 UIColors.Green, UIColors.GreenLight);
         }
 
         public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateStyledButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon,
                 UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), UIColors.BorderDark, 1,
                 UIColors.Red, UIColors.RedLight);
         }
@@ -63,38 +62,13 @@ namespace ErikwnkWFUI.Factories
             // threshold - a deliberate, requested exception, not an
             // oversight the way the pre-fix "always black" button/disabled
             // text bugs earlier this session were.
-            return CreateStyledButton("📁", tooltip, size, isIcon,
+            return CreateButton("📁", tooltip, size, isIcon,
                 UIColors.Yellow, UIColors.White, UIColors.BorderDark, 1,
                 UIColors.YellowLight, UIColors.YellowLighter,
                 fixedForeColor: true);
         }
 
-        public static Button CreateIconButton(string text, int size = 32)
-        {
-            Button button = new Button
-            {
-                Text = text,
-                Size = size > 0 ? new Size(size, size) : DefaultIconButtonSize,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = Color.FromArgb(40, 255, 255, 255),
-                ForeColor = UIColors.TextPrimary,
-                Font = UIFonts.Emoji,
-                Cursor = Cursors.Hand,
-                Margin = new Padding(4),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Color.FromArgb(70, 255, 255, 255);
-            button.FlatAppearance.MouseDownBackColor = Color.FromArgb(90, 255, 255, 255);
-
-            button.Resize += OnRoundIconButtonResize;
-            ApplyRoundRegion(button);
-
-            return button;
-        }
-
-        private static Button CreateStyledButton(
+        private static Button CreateButton(
             string text,
             string tooltip,
             Size? size,
@@ -338,38 +312,6 @@ namespace ErikwnkWFUI.Factories
                 color.R + (int)((target.R - color.R) * amount),
                 color.G + (int)((target.G - color.G) * amount),
                 color.B + (int)((target.B - color.B) * amount));
-        }
-
-        private static void OnRoundIconButtonResize(object sender, EventArgs e)
-        {
-            Button button = sender as Button;
-
-            if (button == null)
-                return;
-
-            ApplyRoundRegion(button);
-        }
-
-        private static void ApplyRoundRegion(Button button)
-        {
-            if (button == null || button.Width <= 0 || button.Height <= 0)
-                return;
-
-            Region oldRegion = button.Region;
-            GraphicsPath path = new GraphicsPath();
-
-            try
-            {
-                path.AddEllipse(0, 0, button.Width, button.Height);
-                button.Region = new Region(path);
-            }
-            finally
-            {
-                path.Dispose();
-
-                if (oldRegion != null)
-                    oldRegion.Dispose();
-            }
         }
     }
 }
