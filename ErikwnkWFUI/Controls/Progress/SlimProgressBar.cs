@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -138,10 +138,7 @@ namespace ErikwnkWFUI.Controls
         // share (0-65%) and only the last third blends yellow->green - a
         // flat 50/50 split turned green too early ("es wird zu schnell
         // grün"). Same logic as UIProgressBarFactory's BorderedProgressBar.
-        // ComputeStatusColor - duplicated rather than shared, matching this
-        // codebase's existing pattern of small per-control color helpers
-        // (see BlendTowardColor in ToggleSwitch.cs/UICheckBoxFactory.cs)
-        // rather than one central utility.
+        // ComputeStatusColor - duplicated rather than shared.
         private const double YellowBreakpoint = 0.65;
 
         private static Color ComputeStatusColor(int value, int minimum, int maximum)

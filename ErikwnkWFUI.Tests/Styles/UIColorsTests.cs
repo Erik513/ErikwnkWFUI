@@ -100,4 +100,32 @@ public class UIColorsTests
         Assert.Equal(expected, UIColors.IsLight(color));
         Assert.Equal(expected, UIColors.GetContrastingForeColor(color) == UIColors.DarkForeColor);
     }
+
+    [Fact]
+    public void BlendToward_GoesThePartOfTheWay_AndKeepsTheAlpha()
+    {
+        Color from = Color.FromArgb(200, 100, 150, 200);
+        Color target = Color.FromArgb(255, 200, 50, 0);
+
+        Assert.Equal(from, UIColors.BlendToward(from, target, 0));
+        Assert.Equal(Color.FromArgb(200, 200, 50, 0), UIColors.BlendToward(from, target, 1));
+        Assert.Equal(Color.FromArgb(200, 135, 115, 130), UIColors.BlendToward(from, target, 0.35));
+    }
+
+    [Fact]
+    public void BlendToward_ClampsTheAmount()
+    {
+        Color from = Color.FromArgb(10, 20, 30);
+        Color target = Color.FromArgb(110, 120, 130);
+
+        Assert.Equal(from, UIColors.BlendToward(from, target, -3));
+        Assert.Equal(target, UIColors.BlendToward(from, target, 7));
+    }
+
+    [Fact]
+    public void Darken_ByAShare_ScalesEveryChannel()
+    {
+        Assert.Equal(Color.FromArgb(65, 130, 162), UIColors.Darken(Color.FromArgb(100, 200, 250), 0.35));
+        Assert.Equal(Color.FromArgb(0, 0, 0), UIColors.Darken(Color.FromArgb(100, 200, 250), 1.0));
+    }
 }

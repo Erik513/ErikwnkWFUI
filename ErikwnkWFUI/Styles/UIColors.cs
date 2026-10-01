@@ -242,12 +242,28 @@ namespace ErikwnkWFUI.Styles
             return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
         }
 
-        private static Color Darken(Color color, double amount)
+        internal static Color Darken(Color color, double amount)
         {
             return Color.FromArgb(
                 (int)(color.R * (1 - amount)),
                 (int)(color.G * (1 - amount)),
                 (int)(color.B * (1 - amount)));
+        }
+
+        /// <summary>
+        /// The color a given share (0-1) of the way from <paramref name="color"/>
+        /// to <paramref name="target"/> - for muting a text toward its
+        /// background.
+        /// </summary>
+        internal static Color BlendToward(Color color, Color target, double amount)
+        {
+            amount = Math.Max(0, Math.Min(1, amount));
+
+            return Color.FromArgb(
+                color.A,
+                color.R + (int)((target.R - color.R) * amount),
+                color.G + (int)((target.G - color.G) * amount),
+                color.B + (int)((target.B - color.B) * amount));
         }
 
         private static Color Lighten(Color color, double amount)

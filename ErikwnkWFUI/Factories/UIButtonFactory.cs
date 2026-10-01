@@ -11,16 +11,51 @@ namespace ErikwnkWFUI.Factories
     internal static class UIButtonFactory
     {
         private static readonly Size DefaultButtonSize = new Size(30, 30);
-        private const double DisabledColorFactor = 0.65;
 
-        // A light fill (Standard on a light theme) only dims a little when
-        // disabled: darkening it as far as a dark fill would make a heavy
-        // gray block that stands out more than the enabled button.
-        private const double LightDisabledColorFactor = 0.9;
+        // How much darker a disabled fill gets. A light fill (Standard on a
+        // light theme) only dims a little: darkening it as far as a dark fill
+        // would make a heavy gray block that stands out more than the
+        // enabled button.
+        private const double DisabledDarkenAmount = 0.35;
+        private const double LightDisabledDarkenAmount = 0.1;
 
         // The outline of every button except Standard. A fixed color, so
         // they look the same on both themes (only Standard follows the theme).
         private static readonly Color FixedBorderColor = Color.FromArgb(50, 50, 50);
+
+        // Everything that makes up a button's look, so each variant is one
+        // value instead of seven loose arguments.
+        private readonly struct ButtonLook
+        {
+            public readonly Color BackColor;
+            public readonly Color ForeColor;
+            public readonly Color BorderColor;
+            public readonly int BorderSize;
+            public readonly Color MouseOverBackColor;
+            public readonly Color MouseDownBackColor;
+
+            // A fixed text color stays as it is instead of being picked for
+            // contrast (Browse's white glyph).
+            public readonly bool FixedForeColor;
+
+            public ButtonLook(
+                Color backColor,
+                Color foreColor,
+                Color borderColor,
+                int borderSize,
+                Color mouseOverBackColor,
+                Color mouseDownBackColor,
+                bool fixedForeColor = false)
+            {
+                BackColor = backColor;
+                ForeColor = foreColor;
+                BorderColor = borderColor;
+                BorderSize = borderSize;
+                MouseOverBackColor = mouseOverBackColor;
+                MouseDownBackColor = mouseDownBackColor;
+                FixedForeColor = fixedForeColor;
+            }
+        }
 
         // The tooltip each button got, so UpdateTooltip can change its text
         // later (after a language switch, say).
@@ -29,9 +64,9 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.BackgroundMedium, UIColors.TextPrimary, GetStandardBorderColor(), 1,
-                UIColors.BackgroundLighter, UIColors.Primary);
+                UIColors.BackgroundLighter, UIColors.Primary));
         }
 
         // On a dark theme the fill is told apart by a quiet outline. A light
@@ -43,23 +78,23 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.PrimaryDark, UIColors.GetContrastingForeColor(UIColors.PrimaryDark), FixedBorderColor, 0,
-                UIColors.Primary, UIColors.PrimaryLight);
+                UIColors.Primary, UIColors.PrimaryLight));
         }
 
         public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.GreenDark, UIColors.GetContrastingForeColor(UIColors.GreenDark), FixedBorderColor, 1,
-                UIColors.Green, UIColors.GreenLight);
+                UIColors.Green, UIColors.GreenLight));
         }
 
         public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon,
+            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), FixedBorderColor, 1,
-                UIColors.Red, UIColors.RedLight);
+                UIColors.Red, UIColors.RedLight));
         }
 
         public static Button CreateBrowse(string tooltip = "", Size? size = null, bool isIcon = true)
@@ -69,32 +104,21 @@ namespace ErikwnkWFUI.Factories
             //
             // The glyph stays white (fixedForeColor): this button keeps its yellow
             // in every theme, so its text color is fixed as well.
-            return CreateButton("📁", tooltip, size, isIcon,
+            return CreateButton("📁", tooltip, size, isIcon, new ButtonLook(
                 UIColors.Yellow, UIColors.White, FixedBorderColor, 1,
                 UIColors.YellowLight, UIColors.YellowLighter,
-                fixedForeColor: true);
+                fixedForeColor: true));
         }
 
-        private static Button CreateButton(
-            string text,
-            string tooltip,
-            Size? size,
-            bool isIcon,
-            Color backColor,
-            Color foreColor,
-            Color borderColor,
-            int borderSize,
-            Color mouseOverBackColor,
-            Color mouseDownBackColor,
-            bool fixedForeColor = false)
+        private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look)
         {
             Button button = new Button
             {
                 Text = text ?? "",
                 Size = size ?? DefaultButtonSize,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = backColor,
-                ForeColor = foreColor,
+                BackColor = look.BackColor,
+                ForeColor = look.ForeColor,
                 Font = isIcon ? UIFonts.Icon : UIFonts.Normal,
                 TabStop = true,
                 Cursor = Cursors.Hand,
@@ -103,13 +127,13 @@ namespace ErikwnkWFUI.Factories
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            button.FlatAppearance.BorderSize = borderSize;
-            button.FlatAppearance.BorderColor = borderColor;
-            button.FlatAppearance.MouseOverBackColor = mouseOverBackColor;
-            button.FlatAppearance.MouseDownBackColor = mouseDownBackColor;
+            button.FlatAppearance.BorderSize = look.BorderSize;
+            button.FlatAppearance.BorderColor = look.BorderColor;
+            button.FlatAppearance.MouseOverBackColor = look.MouseOverBackColor;
+            button.FlatAppearance.MouseDownBackColor = look.MouseDownBackColor;
 
-            SetEnabledStyle(button, backColor, foreColor, fixedForeColor);
-            SetPressedForeColor(button, foreColor, fixedForeColor);
+            SetEnabledStyle(button, look.BackColor, look.ForeColor, look.FixedForeColor);
+            SetPressedForeColor(button, look.ForeColor, look.FixedForeColor);
             AddToolTip(button, tooltip);
 
             button.Paint += OnButtonPaint;
@@ -227,15 +251,15 @@ namespace ErikwnkWFUI.Factories
         private static void SetEnabledStyle(Button button, Color enabledBackColor, Color enabledForeColor, bool fixedForeColor)
         {
             bool lightFill = !fixedForeColor && UIColors.IsLight(enabledBackColor);
-            Color disabledBackColor = Darken(enabledBackColor, lightFill ? LightDisabledColorFactor : DisabledColorFactor);
+            Color disabledBackColor = UIColors.Darken(enabledBackColor, lightFill ? LightDisabledDarkenAmount : DisabledDarkenAmount);
 
             // The text is the contrasting color blended 35% toward the disabled fill:
             // still readable, but visibly muted. One fixed gray did not work - on
             // Browse's yellow it came out at a contrast of about 1.0. Buttons with a
             // fixed text color (Browse) blend that color instead.
             Color disabledForeColor = fixedForeColor
-                ? BlendTowardColor(enabledForeColor, disabledBackColor, 0.35)
-                : BlendTowardColor(UIColors.GetContrastingForeColor(disabledBackColor), disabledBackColor, 0.35);
+                ? UIColors.BlendToward(enabledForeColor, disabledBackColor, 0.35)
+                : UIColors.BlendToward(UIColors.GetContrastingForeColor(disabledBackColor), disabledBackColor, 0.35);
 
             Color restoreBackColor = enabledBackColor;
             Color restoreForeColor = enabledForeColor;
@@ -255,28 +279,6 @@ namespace ErikwnkWFUI.Factories
                     button.ForeColor = disabledForeColor;
                 }
             };
-        }
-
-        private static Color Darken(Color color, double factor)
-        {
-            factor = Math.Max(0, Math.Min(1, factor));
-
-            return Color.FromArgb(
-                color.A,
-                Math.Max(0, Math.Min(255, (int)(color.R * factor))),
-                Math.Max(0, Math.Min(255, (int)(color.G * factor))),
-                Math.Max(0, Math.Min(255, (int)(color.B * factor))));
-        }
-
-        private static Color BlendTowardColor(Color color, Color target, double amount)
-        {
-            amount = Math.Max(0, Math.Min(1, amount));
-
-            return Color.FromArgb(
-                color.A,
-                color.R + (int)((target.R - color.R) * amount),
-                color.G + (int)((target.G - color.G) * amount),
-                color.B + (int)((target.B - color.B) * amount));
         }
     }
 }

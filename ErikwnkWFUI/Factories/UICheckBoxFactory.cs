@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
@@ -248,7 +248,7 @@ namespace ErikwnkWFUI.Factories
                 Color parentBackColor = GetParentBackColor();
                 Color textColor = Enabled
                     ? UIColors.TextPrimary
-                    : BlendTowardColor(UIColors.GetContrastingForeColor(parentBackColor), parentBackColor, 0.35);
+                    : UIColors.BlendToward(UIColors.GetContrastingForeColor(parentBackColor), parentBackColor, 0.35);
 
                 TextRenderer.DrawText(
                     g,
@@ -287,15 +287,6 @@ namespace ErikwnkWFUI.Factories
                 path.CloseFigure();
 
                 return path;
-            }
-
-            private static Color BlendTowardColor(Color color, Color target, double amount)
-            {
-                int r = (int)(color.R + (target.R - color.R) * amount);
-                int g = (int)(color.G + (target.G - color.G) * amount);
-                int b = (int)(color.B + (target.B - color.B) * amount);
-
-                return Color.FromArgb(r, g, b);
             }
         }
     }

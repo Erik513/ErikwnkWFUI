@@ -403,7 +403,7 @@ namespace ErikwnkWFUI.Controls
             // therefore the whole disabled switch - renders identically in
             // both themes, matching disabled buttons.
             if (!Enabled)
-                return BlendTowardColor(UIColors.GetContrastingForeColor(UIColors.DisabledGray), UIColors.DisabledGray, 0.35);
+                return UIColors.BlendToward(UIColors.GetContrastingForeColor(UIColors.DisabledGray), UIColors.DisabledGray, 0.35);
 
             if (KnobColor.HasValue)
                 return KnobColor.Value;
@@ -421,17 +421,6 @@ namespace ErikwnkWFUI.Controls
                 return UIColors.LightForeColor;
 
             return UIStyles.Colors.White;
-        }
-
-        private static Color BlendTowardColor(Color color, Color target, double amount)
-        {
-            amount = Math.Max(0, Math.Min(1, amount));
-
-            return Color.FromArgb(
-                color.A,
-                color.R + (int)((target.R - color.R) * amount),
-                color.G + (int)((target.G - color.G) * amount),
-                color.B + (int)((target.B - color.B) * amount));
         }
 
         private GraphicsPath CreateRoundedRectanglePath(
