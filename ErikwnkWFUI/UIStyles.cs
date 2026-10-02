@@ -22,7 +22,7 @@ namespace ErikwnkWFUI
     /// light/dark theme) and <see cref="Language"/>/<see cref="SetLanguage"/>
     /// for switching the language of built-in dialog text.
     /// </summary>
-    public static class UIStyles
+    public static partial class UIStyles
     {
         /// <summary>
         /// Language used by built-in dialogs/controls that ship their own text
@@ -138,6 +138,16 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// Like <see cref="CreateSet(Color, Color, Color)"/>, but the text has the one
+            /// color you give in every state (muted when disabled) instead of the best one
+            /// for each fill - for a look whose text color is fixed.
+            /// </summary>
+            public static UIColorSet CreateSet(Color basic, Color hover, Color pressed, Color text)
+            {
+                return UIColors.CreateSet(basic, hover, pressed, text);
+            }
+
+            /// <summary>
             /// Ready-made color sets for the common colors, for when a control should
             /// not use the standard or the primary look. Each one has a fill at rest,
             /// hovered, pressed and disabled plus matching text colors (see
@@ -155,7 +165,8 @@ namespace ErikwnkWFUI
 
                 public static UIColorSet Red { get; } = UIColors.CreateSet(UIColors.RedDark, UIColors.Red, UIColors.RedLight);
                 public static UIColorSet Orange { get; } = UIColors.CreateSet(Color.FromArgb(154, 81, 15), Color.FromArgb(210, 110, 20), Color.FromArgb(236, 141, 55));
-                public static UIColorSet Yellow { get; } = UIColors.CreateSet(UIColors.YellowDark, UIColors.Yellow, UIColors.YellowLight);
+                // White text on every state, like Browse's glyph on the same yellow.
+                public static UIColorSet Yellow { get; } = UIColors.CreateSet(UIColors.YellowDark, UIColors.Yellow, UIColors.YellowLight, UIColors.White);
                 public static UIColorSet Green { get; } = UIColors.CreateSet(UIColors.GreenDark, UIColors.Green, UIColors.GreenLight);
                 public static UIColorSet Teal { get; } = UIColors.CreateSet(Color.FromArgb(0, 69, 60), Color.FromArgb(0, 130, 114), Color.FromArgb(0, 191, 168));
                 public static UIColorSet Blue { get; } = UIColors.CreateSet(Color.FromArgb(0, 55, 97), Color.FromArgb(0, 90, 158), Color.FromArgb(0, 125, 219));
@@ -320,6 +331,40 @@ namespace ErikwnkWFUI
                     tooltip,
                     size,
                     isIcon);
+            }
+
+            /// <summary>
+            /// A button that carries a symbol instead of a caption - pick the symbol
+            /// from <see cref="Symbols"/> and, if you like, a color from
+            /// <c>UIStyles.Colors.Sets</c>. The symbol is centered and grows with the
+            /// button.
+            /// </summary>
+            /// <example>
+            /// <code>
+            /// var add = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Add, "Add", colors: UIStyles.Colors.Sets.Green);
+            /// var back = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, "Back");
+            /// </code>
+            /// </example>
+            /// <param name="symbol">The symbol, for example <c>UIStyles.Symbols.Delete</c>.</param>
+            /// <param name="tooltip">The tooltip text (the button has no caption); empty for none.</param>
+            /// <param name="size">The size; 30 x 30 when left out. The symbol scales with the height.</param>
+            /// <param name="colors">
+            /// A color set for the button instead of the neutral look: one of
+            /// <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
+            /// <see cref="Color"/>. Fill, hover, pressed and disabled looks and the symbol color on
+            /// each are then worked out for you, the same in Dark and Light.
+            /// </param>
+            public static Button CreateSymbol(
+                string symbol,
+                string tooltip = "",
+                Size? size = null,
+                UIColorSet colors = null)
+            {
+                return UIButtonFactory.CreateSymbol(
+                    symbol,
+                    tooltip,
+                    size,
+                    colors);
             }
 
             /// <summary>

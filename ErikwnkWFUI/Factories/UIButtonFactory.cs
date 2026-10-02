@@ -12,6 +12,9 @@ namespace ErikwnkWFUI.Factories
     {
         private static readonly Size DefaultButtonSize = new Size(30, 30);
 
+        // 13 pt symbols on a 30 px button (UIFonts.Icon), scaled with the height.
+        private const float SymbolPointsPerPixel = 13f / 30f;
+
         // How much darker a disabled fill gets. A light fill (Standard on a
         // light theme) only dims a little: darkening it as far as a dark fill
         // would make a heavy gray block that stands out more than the
@@ -80,9 +83,44 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
+            return CreateStandard(text, tooltip, size, isIcon, null);
+        }
+
+        private static Button CreateStandard(string text, string tooltip, Size? size, bool isIcon, Button instance)
+        {
             return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.BackgroundMedium, UIColors.TextPrimary, GetStandardBorderColor(), 1,
-                UIColors.BackgroundLighter, UIColors.Primary));
+                UIColors.BackgroundLighter, UIColors.Primary), instance);
+        }
+
+        // A button made to carry a symbol (see UIStyles.Symbols): the neutral
+        // look, or the colors of a set. The symbol font grows with the button,
+        // so a larger button gets a larger symbol - 13 pt at the standard 30 px,
+        // the size CreateBrowse has.
+        public static Button CreateSymbol(string symbol, string tooltip, Size? size, UIColorSet colors)
+        {
+            Size buttonSize = size ?? DefaultButtonSize;
+
+            // Its own kind of button: it draws the symbol itself, centered on
+            // what is actually visible of it (see SymbolButton).
+            SymbolButton instance = new SymbolButton();
+
+            Button button = colors != null
+                ? CreateColored(symbol, tooltip, buttonSize, true, colors, instance)
+                : CreateStandard(symbol, tooltip, buttonSize, true, instance);
+
+            float points = buttonSize.Height * SymbolPointsPerPixel;
+
+            // At the standard size it is the shared icon font already (and a
+            // font equal to the current one would not be taken over anyway).
+            if (Math.Abs(points - UIFonts.Icon.Size) < 0.01f)
+                return button;
+
+            Font font = new Font(UIFonts.Icon.FontFamily, points);
+            button.Font = font;
+            button.Disposed += delegate { font.Dispose(); };
+
+            return button;
         }
 
         // A button in the colors of a set: the fill and the text for every
@@ -90,13 +128,18 @@ namespace ErikwnkWFUI.Factories
         // the same on both themes.
         public static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors)
         {
+            return CreateColored(text, tooltip, size, isIcon, colors, null);
+        }
+
+        private static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors, Button instance)
+        {
             return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 colors.Basic, colors.BasicText, FixedBorderColor, 1,
                 colors.Hover, colors.Pressed,
                 hoverForeColor: colors.HoverText,
                 pressedForeColor: colors.PressedText,
                 disabledBackColor: colors.Disabled,
-                disabledForeColor: colors.DisabledText));
+                disabledForeColor: colors.DisabledText), instance);
         }
 
         // On a dark theme the fill is told apart by a quiet outline. A light
@@ -134,28 +177,27 @@ namespace ErikwnkWFUI.Factories
             //
             // The glyph stays white (fixedForeColor): this button keeps its yellow
             // in every theme, so its text color is fixed as well.
-            return CreateButton("📁", tooltip, size, isIcon, new ButtonLook(
+            return CreateButton(UIStyles.Symbols.Folder, tooltip, size, isIcon, new ButtonLook(
                 UIColors.Yellow, UIColors.White, FixedBorderColor, 1,
                 UIColors.YellowLight, UIColors.YellowLighter,
                 fixedForeColor: true));
         }
 
-        private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look)
+        private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look, Button instance = null)
         {
-            Button button = new Button
-            {
-                Text = text ?? "",
-                Size = size ?? DefaultButtonSize,
-                FlatStyle = FlatStyle.Flat,
-                BackColor = look.BackColor,
-                ForeColor = look.ForeColor,
-                Font = isIcon ? UIFonts.Icon : UIFonts.Normal,
-                TabStop = true,
-                Cursor = Cursors.Hand,
-                Margin = new Padding(0),
-                Padding = isIcon ? new Padding(0) : new Padding(6, 0, 6, 0),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
+            Button button = instance ?? new Button();
+
+            button.Text = text ?? "";
+            button.Size = size ?? DefaultButtonSize;
+            button.FlatStyle = FlatStyle.Flat;
+            button.BackColor = look.BackColor;
+            button.ForeColor = look.ForeColor;
+            button.Font = isIcon ? UIFonts.Icon : UIFonts.Normal;
+            button.TabStop = true;
+            button.Cursor = Cursors.Hand;
+            button.Margin = new Padding(0);
+            button.Padding = isIcon ? new Padding(0) : new Padding(6, 0, 6, 0);
+            button.TextAlign = ContentAlignment.MiddleCenter;
 
             button.FlatAppearance.BorderSize = look.BorderSize;
             button.FlatAppearance.BorderColor = look.BorderColor;
@@ -182,7 +224,7 @@ namespace ErikwnkWFUI.Factories
         {
             Button button = (Button)sender;
 
-            if (button.Enabled || string.IsNullOrEmpty(button.Text))
+            if (button is SymbolButton || button.Enabled || string.IsNullOrEmpty(button.Text))
                 return;
 
             Rectangle textArea = Rectangle.Inflate(button.ClientRectangle, -2, -2);
@@ -391,6 +433,235 @@ namespace ErikwnkWFUI.Factories
                     button.ForeColor = disabledForeColor;
                 }
             };
+        }
+
+        // A button for symbols. The native button centers the text by its
+        // advance width and line height, which for symbol glyphs is not where
+        // the glyph actually sits - they come out a pixel or several off, and
+        // the more so the larger the button. So this one draws itself: fill,
+        // outline and the symbol, moved so that the visible part of the glyph
+        // is centered. Colors come from the same places as on any button
+        // (BackColor, ForeColor, FlatAppearance), so the state handling of the
+        // factory works unchanged.
+        private sealed class SymbolButton : Button
+        {
+            private bool _isHot;
+            private bool _isPressed;
+
+            // Where the ink of the current text sits when the text is centered
+            // by the framework - measured once per text, font and size.
+            private Point _inkShift;
+            private bool _isInkShiftKnown;
+
+            public SymbolButton()
+            {
+                // Every paint covers the whole button with an opaque fill, so
+                // nothing of a neighbor can show through.
+                SetStyle(
+                    ControlStyles.UserPaint |
+                    ControlStyles.Opaque |
+                    ControlStyles.AllPaintingInWmPaint |
+                    ControlStyles.OptimizedDoubleBuffer |
+                    ControlStyles.ResizeRedraw,
+                    true);
+            }
+
+            protected override void OnMouseEnter(EventArgs e)
+            {
+                base.OnMouseEnter(e);
+                _isHot = true;
+                Invalidate();
+            }
+
+            protected override void OnMouseLeave(EventArgs e)
+            {
+                base.OnMouseLeave(e);
+                _isHot = false;
+                _isPressed = false;
+                Invalidate();
+            }
+
+            protected override void OnMouseDown(MouseEventArgs mevent)
+            {
+                base.OnMouseDown(mevent);
+
+                if (mevent.Button == MouseButtons.Left)
+                    _isPressed = true;
+
+                Invalidate();
+            }
+
+            protected override void OnMouseUp(MouseEventArgs mevent)
+            {
+                base.OnMouseUp(mevent);
+                _isPressed = false;
+                Invalidate();
+            }
+
+            protected override void OnKeyDown(KeyEventArgs kevent)
+            {
+                base.OnKeyDown(kevent);
+
+                if (kevent.KeyCode == Keys.Space)
+                {
+                    _isPressed = true;
+                    Invalidate();
+                }
+            }
+
+            protected override void OnKeyUp(KeyEventArgs kevent)
+            {
+                base.OnKeyUp(kevent);
+
+                if (kevent.KeyCode == Keys.Space)
+                {
+                    _isPressed = false;
+                    Invalidate();
+                }
+            }
+
+            protected override void OnEnabledChanged(EventArgs e)
+            {
+                base.OnEnabledChanged(e);
+                Invalidate();
+            }
+
+            protected override void OnGotFocus(EventArgs e)
+            {
+                base.OnGotFocus(e);
+                Invalidate();
+            }
+
+            protected override void OnLostFocus(EventArgs e)
+            {
+                base.OnLostFocus(e);
+                _isPressed = false;
+                Invalidate();
+            }
+
+            protected override void OnTextChanged(EventArgs e)
+            {
+                base.OnTextChanged(e);
+                _isInkShiftKnown = false;
+                Invalidate();
+            }
+
+            protected override void OnFontChanged(EventArgs e)
+            {
+                base.OnFontChanged(e);
+                _isInkShiftKnown = false;
+                Invalidate();
+            }
+
+            protected override void OnSizeChanged(EventArgs e)
+            {
+                base.OnSizeChanged(e);
+                _isInkShiftKnown = false;
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                Graphics g = e.Graphics;
+                Color fill = BackColor;
+
+                if (Enabled && _isPressed)
+                    fill = FlatAppearance.MouseDownBackColor;
+                else if (Enabled && _isHot)
+                    fill = FlatAppearance.MouseOverBackColor;
+
+                using (SolidBrush brush = new SolidBrush(fill))
+                    g.FillRectangle(brush, ClientRectangle);
+
+                int borderSize = Math.Min(FlatAppearance.BorderSize, Math.Min(Width, Height) / 2);
+
+                if (borderSize > 0)
+                {
+                    // Four strips, not DrawRectangle: a pen drawing a rectangle
+                    // leaves the pixel at its starting corner unpainted.
+                    using (SolidBrush brush = new SolidBrush(FlatAppearance.BorderColor))
+                    {
+                        g.FillRectangle(brush, 0, 0, Width, borderSize);
+                        g.FillRectangle(brush, 0, Height - borderSize, Width, borderSize);
+                        g.FillRectangle(brush, 0, borderSize, borderSize, Height - 2 * borderSize);
+                        g.FillRectangle(brush, Width - borderSize, borderSize, borderSize, Height - 2 * borderSize);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Text))
+                {
+                    Rectangle area = ClientRectangle;
+                    Point shift = GetInkShift();
+                    area.Offset(-shift.X, -shift.Y);
+
+                    TextRenderer.DrawText(g, Text, Font, area, ForeColor, SymbolFlags);
+                }
+
+                if (Focused && ShowFocusCues)
+                    ControlPaint.DrawFocusRectangle(g, Rectangle.Inflate(ClientRectangle, -3, -3), ForeColor, fill);
+            }
+
+            // How bright a pixel of the white-on-black symbol has to be to count as ink.
+            private const int InkThreshold = 60;
+
+            private const TextFormatFlags SymbolFlags =
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
+                TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.SingleLine;
+
+            // How far the visible part of the symbol lies from the middle of
+            // the button when the framework centers the text. Found by drawing
+            // the symbol white on black into a bitmap and looking at which
+            // pixels it covers.
+            private Point GetInkShift()
+            {
+                if (_isInkShiftKnown)
+                    return _inkShift;
+
+                _inkShift = Point.Empty;
+                _isInkShiftKnown = true;
+
+                if (Width <= 0 || Height <= 0)
+                    return _inkShift;
+
+                using (Bitmap bitmap = new Bitmap(Width, Height))
+                using (Graphics g = Graphics.FromImage(bitmap))
+                {
+                    g.Clear(Color.Black);
+                    TextRenderer.DrawText(g, Text, Font, new Rectangle(0, 0, Width, Height), Color.White, SymbolFlags);
+
+                    int minX = int.MaxValue, maxX = -1, minY = int.MaxValue, maxY = -1;
+
+                    for (int y = 0; y < Height; y++)
+                    {
+                        for (int x = 0; x < Width; x++)
+                        {
+                            Color pixel = bitmap.GetPixel(x, y);
+
+                            // All three channels: ClearType colors the edges of a glyph
+                            // differently per channel, one alone would tilt the result.
+                            if (pixel.R + pixel.G + pixel.B <= InkThreshold * 3)
+                                continue;
+
+                            minX = System.Math.Min(minX, x);
+                            maxX = System.Math.Max(maxX, x);
+                            minY = System.Math.Min(minY, y);
+                            maxY = System.Math.Max(maxY, y);
+                        }
+                    }
+
+                    if (maxX >= 0)
+                    {
+                        // Twice the offset of the center, to keep the half pixel.
+                        int shiftX = (minX + maxX + 1) - Width;
+                        int shiftY = (minY + maxY + 1) - Height;
+
+                        _inkShift = new Point(
+                            (int)System.Math.Round(shiftX / 2.0, MidpointRounding.AwayFromZero),
+                            (int)System.Math.Round(shiftY / 2.0, MidpointRounding.AwayFromZero));
+                    }
+                }
+
+                return _inkShift;
+            }
         }
     }
 }

@@ -303,6 +303,27 @@ namespace ErikwnkWFUI.Styles
                 BlendToward(GetBestTextColor(disabled), disabled, DisabledTextBlend));
         }
 
+        /// <summary>
+        /// Like <see cref="CreateSet(Color, Color, Color)"/>, but the text has the
+        /// one color you give in every state (muted when disabled) instead of
+        /// the best one for each fill - for a look whose text color is fixed,
+        /// such as the white glyph on Browse's yellow.
+        /// </summary>
+        internal static UIColorSet CreateSet(Color basic, Color hover, Color pressed, Color text)
+        {
+            Color disabled = Darken(basic, IsLight(basic) ? LightDisabledDarkenAmount : DisabledDarkenAmount);
+
+            return new UIColorSet(
+                basic,
+                hover,
+                pressed,
+                disabled,
+                text,
+                text,
+                text,
+                BlendToward(text, disabled, DisabledTextBlend));
+        }
+
         // Text keeps the color it has at rest as long as it stays clearly
         // readable (3:1) on the next fill; only when it would not, the
         // better one takes over. Otherwise the text would flip between

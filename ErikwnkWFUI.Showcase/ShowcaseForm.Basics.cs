@@ -90,6 +90,32 @@ namespace ErikwnkWFUI.Showcase
             browseDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateBrowse", browse, browseDisabled);
 
+            // Buttons made for symbols: pick the symbol (and a color if you like).
+            // Hover over one for its name.
+            (string Name, string Symbol, UIColorSet Colors)[] symbolButtons =
+            {
+                ("Add", UIStyles.Symbols.Add, UIStyles.Colors.Sets.Green),
+                ("Save", UIStyles.Symbols.Save, UIStyles.Colors.Sets.Green),
+                ("Delete", UIStyles.Symbols.Delete, UIStyles.Colors.Sets.Red),
+                ("Close", UIStyles.Symbols.Close, UIStyles.Colors.Sets.Red),
+                ("Edit", UIStyles.Symbols.Edit, UIStyles.Colors.Sets.Blue),
+                ("Refresh", UIStyles.Symbols.Refresh, UIStyles.Colors.Sets.Blue),
+                ("Login", UIStyles.Symbols.User, UIStyles.Colors.Sets.Primary),
+                ("OpenFile", UIStyles.Symbols.File, UIStyles.Colors.Sets.Yellow),
+                ("Search", UIStyles.Symbols.Search, null),
+                ("Settings", UIStyles.Symbols.Settings, null),
+                ("Back", UIStyles.Symbols.Back, null),
+                ("Forward", UIStyles.Symbols.Forward, null),
+                ("Up", UIStyles.Symbols.Up, null),
+                ("Home", UIStyles.Symbols.Home, null)
+            };
+
+            table.AddRow(
+                "CreateSymbol",
+                84,
+                UIColumn.Percent(CreateSymbolButtons(symbolButtons, enabled: true), TwoColumnPercent),
+                UIColumn.Percent(CreateSymbolButtons(symbolButtons, enabled: false), TwoColumnPercent));
+
             // Any color, ready-made or your own: fill, hover, pressed, disabled
             // and the text on each come from the color set.
             (string Name, UIColorSet Set)[] sets =
@@ -128,6 +154,23 @@ namespace ErikwnkWFUI.Showcase
                 84,
                 UIColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
                 UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
+        }
+
+        private static Control CreateSymbolButtons((string Name, string Symbol, UIColorSet Colors)[] buttons, bool enabled)
+        {
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            flow.FlowDirection = FlowDirection.LeftToRight;
+            flow.WrapContents = true;
+
+            foreach ((string name, string symbol, UIColorSet colors) in buttons)
+            {
+                Button button = UIStyles.Buttons.CreateSymbol(symbol, name, colors: colors);
+                button.Margin = new Padding(0, 0, 6, 6);
+                button.Enabled = enabled;
+                flow.Controls.Add(button);
+            }
+
+            return flow;
         }
 
         private static Control CreateSetButtons((string Name, UIColorSet Set)[] sets, bool enabled)

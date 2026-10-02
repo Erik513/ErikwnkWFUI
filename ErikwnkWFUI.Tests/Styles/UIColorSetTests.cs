@@ -82,8 +82,41 @@ public class UIColorSetTests
     {
         foreach ((string name, UIColorSet set) in Predefined())
         {
+            // Yellow keeps white text on its bright fills, like Browse (checked below).
+            if (name == "Yellow")
+                continue;
+
             AssertReadable(name, set);
         }
+    }
+
+    [Fact]
+    public void Yellow_KeepsWhiteText_InEveryState_LikeBrowse()
+    {
+        UIColorSet yellow = UIStyles.Colors.Sets.Yellow;
+
+        Assert.Equal(UIColors.White, yellow.BasicText);
+        Assert.Equal(UIColors.White, yellow.HoverText);
+        Assert.Equal(UIColors.White, yellow.PressedText);
+        Assert.NotEqual(UIColors.White, yellow.DisabledText);
+        Assert.True(Ratio(yellow.BasicText, yellow.Basic) >= 3.0, "white on the resting yellow");
+        Assert.True(Ratio(yellow.DisabledText, yellow.Disabled) >= 3.0, "muted white on the disabled yellow");
+
+        using System.Windows.Forms.Button browse = UIStyles.Buttons.CreateBrowse();
+        Assert.Equal(browse.ForeColor, yellow.BasicText);
+    }
+
+    [Fact]
+    public void ASetWithAFixedText_KeepsItInEveryState_AndMutesItWhenDisabled()
+    {
+        Color text = Color.FromArgb(255, 255, 0);
+        UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(40, 40, 120), Color.FromArgb(70, 70, 170), Color.FromArgb(230, 230, 255), text);
+
+        Assert.Equal(text, set.BasicText);
+        Assert.Equal(text, set.HoverText);
+        Assert.Equal(text, set.PressedText);
+        Assert.NotEqual(text, set.DisabledText);
+        Assert.Equal(Color.FromArgb(40, 40, 120), set.Basic);
     }
 
     [Fact]

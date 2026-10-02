@@ -31,7 +31,7 @@ namespace ErikwnkWFUI.Showcase
             return new (string, string, Action<PropertyTable>)[]
             {
                 ("Buttons",
-                 "Buttons in the library's own design. Standard is the neutral one, Primary follows the current accent color, Green confirms and Red is for destructive actions; Browse is the small button next to a path field, and for any other color pass colors: (a ready-made set from Colors.Sets, a set from CreateSet, or simply a Color) - hover, pressed and disabled looks and the text on each are worked out for you. Each row shows the enabled and the disabled look.",
+                 "Buttons in the library's own design. Standard is the neutral one, Primary follows the current accent color, Green confirms and Red is for destructive actions; Browse carries a folder symbol on a color that never changes, CreateSymbol makes a button for any symbol of UIStyles.Symbols, and for any other color pass colors: (a ready-made set from Colors.Sets, a set from CreateSet, or simply a Color) - hover, pressed and disabled looks and the text on each are worked out for you. Each row shows the enabled and the disabled look.",
                  AddButtonsSection),
 
                 ("CheckBoxes",
@@ -85,6 +85,10 @@ namespace ErikwnkWFUI.Showcase
                 ("Spinner",
                  "Loading circles. Standard, Green and Primary spin endlessly, in the default size and in a larger, heavier one. The Progress variants show a percentage instead; Progress Status shifts from red to green.",
                  AddSpinnerSection),
+
+                ("Symbols",
+                 "Ready-made symbols as text characters, for buttons, labels and menu items: UIStyles.Symbols.Add, UIStyles.Symbols.Delete and so on. They take the color of the control they are on and scale with its font. Draw them in UIStyles.Fonts.Icon through a control that draws with TextRenderer (a Button, one of the library's labels, a menu item); Graphics.DrawString can show empty boxes. CreateSymbol on the Buttons tab puts one on a button.",
+                 AddSymbolsSection),
 
                 ("TabControl",
                  "The tabs this window is made of. ReadOnlyTabControl can be switched but not edited; TabControl also lets the user add, rename and close tabs with a right-click menu, and individual tabs can be locked. Tabs that do not fit scroll with arrows, and a cut-off tab shows its full name as a tooltip. The last row shows every variant.",
