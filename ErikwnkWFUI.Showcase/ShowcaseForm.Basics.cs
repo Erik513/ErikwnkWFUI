@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
@@ -86,32 +88,20 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateRed", danger, dangerDisabled);
 
             // Ready-made designs: pass a preset to CreateSymbol and it brings the symbol and
-            // the colors. Hover over one for its name.
-            (string Name, UIButtonPreset Preset)[] presets =
-            {
-                ("Add", UIStyles.Buttons.Presets.Add),
-                ("Save", UIStyles.Buttons.Presets.Save),
-                ("Delete", UIStyles.Buttons.Presets.Delete),
-                ("Close", UIStyles.Buttons.Presets.Close),
-                ("Edit", UIStyles.Buttons.Presets.Edit),
-                ("Refresh", UIStyles.Buttons.Presets.Refresh),
-                ("Login", UIStyles.Buttons.Presets.Login),
-                ("Search", UIStyles.Buttons.Presets.Search),
-                ("Settings", UIStyles.Buttons.Presets.Settings),
-                ("Back", UIStyles.Buttons.Presets.Back),
-                ("Forward", UIStyles.Buttons.Presets.Forward),
-                ("Up", UIStyles.Buttons.Presets.Up),
-                ("Down", UIStyles.Buttons.Presets.Down),
-                ("Home", UIStyles.Buttons.Presets.Home),
-                ("OpenFile", UIStyles.Buttons.Presets.OpenFile),
-                ("Browse", UIStyles.Buttons.Presets.Browse)
-            };
+            // the colors. All presets of UIStyles.Buttons.Presets, found by reflection so a
+            // new one shows up by itself. Hover over one for its name.
+            (string Name, UIButtonPreset Preset)[] presets = typeof(UIStyles.Buttons.Presets)
+                .GetProperties(BindingFlags.Public | BindingFlags.Static)
+                .Select(property => (property.Name, (UIButtonPreset)property.GetValue(null)))
+                .ToArray();
+
+            const int presetsPerLine = 18;
+            int presetLines = (presets.Length + presetsPerLine - 1) / presetsPerLine;
 
             table.AddRow(
                 "CreateSymbol (preset)",
-                84,
-                UIColumn.Percent(CreatePresetButtons(presets, enabled: true), TwoColumnPercent),
-                UIColumn.Percent(CreatePresetButtons(presets, enabled: false), TwoColumnPercent));
+                presetLines * 36 + 14,
+                CreatePresetButtons(presets));
 
             // Any color, ready-made or your own: fill, hover, pressed, disabled
             // and the text on each come from the color set.
@@ -153,7 +143,7 @@ namespace ErikwnkWFUI.Showcase
                 UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
         }
 
-        private static Control CreatePresetButtons((string Name, UIButtonPreset Preset)[] presets, bool enabled)
+        private static Control CreatePresetButtons((string Name, UIButtonPreset Preset)[] presets)
         {
             FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
             flow.FlowDirection = FlowDirection.LeftToRight;
@@ -163,7 +153,6 @@ namespace ErikwnkWFUI.Showcase
             {
                 Button button = UIStyles.Buttons.CreateSymbol(preset, name);
                 button.Margin = new Padding(0, 0, 6, 6);
-                button.Enabled = enabled;
                 flow.Controls.Add(button);
             }
 

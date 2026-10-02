@@ -72,8 +72,9 @@ var add = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Add, "Add");
 var del = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Delete, "Delete", new Size(48, 48));
 ```
 
-`UIStyles.Buttons.Presets` has Add, Save, Delete, Close, Edit, Refresh, Login,
-Search, Settings, Back, Forward, Up, Down, Home, OpenFile and Browse. Your own are made
+`UIStyles.Buttons.Presets` has a preset for every symbol of `UIStyles.Symbols`, named
+like the symbol (Add, Delete, Save, Play, Warning, Lock ...); a few carry the name of
+what they are for instead (Login, OpenFile, Browse). Your own are made
 once with `new UIButtonPreset(symbol, colors)` and used everywhere.
 
 **With a symbol and colors of your choice** - any symbol from `UIStyles.Symbols`

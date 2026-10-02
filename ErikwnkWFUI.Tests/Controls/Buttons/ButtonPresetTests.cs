@@ -17,25 +17,11 @@ namespace ErikwnkWFUI.Tests.Controls.Buttons;
 [Collection(AccentColorTestCollection.Name)]
 public class ButtonPresetTests
 {
-    private static (string Name, UIButtonPreset Preset)[] Ready() => new[]
-    {
-        ("Add", UIStyles.Buttons.Presets.Add),
-        ("Save", UIStyles.Buttons.Presets.Save),
-        ("Delete", UIStyles.Buttons.Presets.Delete),
-        ("Close", UIStyles.Buttons.Presets.Close),
-        ("Edit", UIStyles.Buttons.Presets.Edit),
-        ("Refresh", UIStyles.Buttons.Presets.Refresh),
-        ("Login", UIStyles.Buttons.Presets.Login),
-        ("Search", UIStyles.Buttons.Presets.Search),
-        ("Settings", UIStyles.Buttons.Presets.Settings),
-        ("Back", UIStyles.Buttons.Presets.Back),
-        ("Forward", UIStyles.Buttons.Presets.Forward),
-        ("Up", UIStyles.Buttons.Presets.Up),
-        ("Down", UIStyles.Buttons.Presets.Down),
-        ("Home", UIStyles.Buttons.Presets.Home),
-        ("OpenFile", UIStyles.Buttons.Presets.OpenFile),
-        ("Browse", UIStyles.Buttons.Presets.Browse),
-    };
+    // Every preset on the class, found by reflection, so a new one is tested without being listed.
+    private static (string Name, UIButtonPreset Preset)[] Ready() => typeof(UIStyles.Buttons.Presets)
+        .GetProperties(BindingFlags.Public | BindingFlags.Static)
+        .Select(property => (property.Name, (UIButtonPreset)property.GetValue(null)!))
+        .ToArray();
 
     public static IEnumerable<object[]> Names()
     {
@@ -48,15 +34,21 @@ public class ButtonPresetTests
     private static UIButtonPreset Get(string name) => Ready().First(entry => entry.Name == name).Preset;
 
     [Fact]
-    public void EveryPresetOnTheClass_IsInTheList_SoNoneEscapesTheseTests()
+    public void EverySymbol_HasAPreset_AndNoSymbolHasTwo()
     {
-        string[] onTheClass = typeof(UIStyles.Buttons.Presets)
-            .GetProperties(BindingFlags.Public | BindingFlags.Static)
-            .Select(property => property.Name)
-            .OrderBy(name => name)
+        string[] symbols = typeof(UIStyles.Symbols)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral && field.FieldType == typeof(string))
+            .Select(field => (string)field.GetRawConstantValue()!)
+            .OrderBy(symbol => symbol, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(Ready().Select(entry => entry.Name).OrderBy(name => name).ToArray(), onTheClass);
+        string[] used = Ready()
+            .Select(entry => entry.Preset.Symbol)
+            .OrderBy(symbol => symbol, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(symbols, used);
     }
 
     [Fact]
@@ -80,7 +72,51 @@ public class ButtonPresetTests
             ("Home", UIStyles.Symbols.Home, UIStyles.Colors.Sets.Dark),
             ("OpenFile", UIStyles.Symbols.File, UIStyles.Colors.Sets.Yellow),
             ("Browse", UIStyles.Symbols.Folder, UIStyles.Colors.Sets.Yellow),
+            ("Remove", UIStyles.Symbols.Remove, UIStyles.Colors.Sets.Red),
+            ("Cancel", UIStyles.Symbols.Cancel, UIStyles.Colors.Sets.Red),
+            ("Check", UIStyles.Symbols.Check, UIStyles.Colors.Sets.Green),
+            ("Undo", UIStyles.Symbols.Undo, UIStyles.Colors.Sets.Dark),
+            ("Redo", UIStyles.Symbols.Redo, UIStyles.Colors.Sets.Dark),
+            ("Cut", UIStyles.Symbols.Cut, UIStyles.Colors.Sets.Dark),
+            ("Clipboard", UIStyles.Symbols.Clipboard, UIStyles.Colors.Sets.Dark),
+            ("Print", UIStyles.Symbols.Print, UIStyles.Colors.Sets.Dark),
+            ("FolderOpen", UIStyles.Symbols.FolderOpen, UIStyles.Colors.Sets.Yellow),
+            ("Image", UIStyles.Symbols.Image, UIStyles.Colors.Sets.Dark),
+            ("Menu", UIStyles.Symbols.Menu, UIStyles.Colors.Sets.Dark),
+            ("ChevronLeft", UIStyles.Symbols.ChevronLeft, UIStyles.Colors.Sets.Dark),
+            ("ChevronRight", UIStyles.Symbols.ChevronRight, UIStyles.Colors.Sets.Dark),
+            ("Play", UIStyles.Symbols.Play, UIStyles.Colors.Sets.Green),
+            ("Pause", UIStyles.Symbols.Pause, UIStyles.Colors.Sets.Dark),
+            ("Stop", UIStyles.Symbols.Stop, UIStyles.Colors.Sets.Red),
+            ("Record", UIStyles.Symbols.Record, UIStyles.Colors.Sets.Red),
+            ("SkipBack", UIStyles.Symbols.SkipBack, UIStyles.Colors.Sets.Dark),
+            ("SkipForward", UIStyles.Symbols.SkipForward, UIStyles.Colors.Sets.Dark),
+            ("Volume", UIStyles.Symbols.Volume, UIStyles.Colors.Sets.Dark),
+            ("Mute", UIStyles.Symbols.Mute, UIStyles.Colors.Sets.Dark),
+            ("Music", UIStyles.Symbols.Music, UIStyles.Colors.Sets.Purple),
+            ("Info", UIStyles.Symbols.Info, UIStyles.Colors.Sets.Blue),
+            ("Warning", UIStyles.Symbols.Warning, UIStyles.Colors.Sets.Orange),
+            ("Error", UIStyles.Symbols.Error, UIStyles.Colors.Sets.Red),
+            ("Help", UIStyles.Symbols.Help, UIStyles.Colors.Sets.Blue),
+            ("Star", UIStyles.Symbols.Star, UIStyles.Colors.Sets.Orange),
+            ("StarOutline", UIStyles.Symbols.StarOutline, UIStyles.Colors.Sets.Dark),
+            ("Heart", UIStyles.Symbols.Heart, UIStyles.Colors.Sets.Pink),
+            ("Key", UIStyles.Symbols.Key, UIStyles.Colors.Sets.Yellow),
+            ("Lock", UIStyles.Symbols.Lock, UIStyles.Colors.Sets.Dark),
+            ("Unlock", UIStyles.Symbols.Unlock, UIStyles.Colors.Sets.Dark),
+            ("Power", UIStyles.Symbols.Power, UIStyles.Colors.Sets.Red),
+            ("Mail", UIStyles.Symbols.Mail, UIStyles.Colors.Sets.Blue),
+            ("Calendar", UIStyles.Symbols.Calendar, UIStyles.Colors.Sets.Blue),
+            ("Clock", UIStyles.Symbols.Clock, UIStyles.Colors.Sets.Dark),
+            ("Bell", UIStyles.Symbols.Bell, UIStyles.Colors.Sets.Orange),
+            ("Link", UIStyles.Symbols.Link, UIStyles.Colors.Sets.Blue),
+            ("Pin", UIStyles.Symbols.Pin, UIStyles.Colors.Sets.Dark),
+            ("Globe", UIStyles.Symbols.Globe, UIStyles.Colors.Sets.Blue),
+            ("Eye", UIStyles.Symbols.Eye, UIStyles.Colors.Sets.Dark),
         };
+
+        // The table covers every preset - a new preset has to be added here with its meaning.
+        Assert.Equal(expected.Length, Ready().Length);
 
         foreach ((string name, string symbol, UIColorSet colors) in expected)
         {
