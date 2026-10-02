@@ -344,6 +344,61 @@ public class SymbolButtonTests
         Assert.Equal(set.DisabledText, Middle());
     }
 
+    // ---- Browse is a symbol button too ----
+
+    [Theory]
+    [InlineData(30, 30)]
+    [InlineData(36, 30)]
+    [InlineData(50, 30)]
+    [InlineData(64, 48)]
+    public void Browse_IsDrawnLikeAnySymbolButton_FolderInTheMiddle(int width, int height)
+    {
+        using Button browse = UIStyles.Buttons.CreateBrowse("Pick", new Size(width, height));
+
+        Assert.Equal("SymbolButton", browse.GetType().Name);
+        Assert.Equal(UIStyles.Symbols.Folder, browse.Text);
+        Assert.Equal("Pick", ButtonTestsToolTip.Text(browse));
+
+        var offset = InkOffset(browse);
+
+        Assert.NotNull(offset);
+        Assert.InRange(offset!.Value.X, -1.0, 1.0);
+        Assert.InRange(offset.Value.Y, -1.0, 1.0);
+    }
+
+    [Fact]
+    public void Browse_KeepsItsYellowLook_InEveryState()
+    {
+        using Button browse = UIStyles.Buttons.CreateBrowse();
+        Color disabled = UIColors.Darken(UIColors.Yellow, 0.35);
+
+        Assert.Equal(UIColors.Yellow, browse.BackColor);
+        Assert.Equal(UIColors.White, browse.ForeColor);
+        Assert.Equal(UIColors.YellowLight, browse.FlatAppearance.MouseOverBackColor);
+        Assert.Equal(UIColors.YellowLighter, browse.FlatAppearance.MouseDownBackColor);
+
+        Raise(browse, "OnMouseEnter", EventArgs.Empty);
+        Assert.Equal(UIColors.White, browse.ForeColor);
+        Raise(browse, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+        Assert.Equal(UIColors.White, browse.ForeColor);
+        Raise(browse, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+        Raise(browse, "OnMouseLeave", EventArgs.Empty);
+
+        browse.Enabled = false;
+        Assert.Equal(disabled, browse.BackColor);
+        Assert.Equal(UIColors.BlendToward(UIColors.White, disabled, 0.35), browse.ForeColor);
+    }
+
+    [Fact]
+    public void Browse_CanStillBeAskedForTheNormalFont()
+    {
+        using Button symbolFont = UIStyles.Buttons.CreateBrowse();
+        using Button normalFont = UIStyles.Buttons.CreateBrowse("", null, isIcon: false);
+
+        Assert.Equal(UIFonts.Icon, symbolFont.Font);
+        Assert.Equal(UIFonts.Normal, normalFont.Font);
+    }
+
     [Fact]
     public void ThePressedAndKeyBehavior_IsTheSameAsOnAnyOtherButton()
     {

@@ -170,17 +170,37 @@ namespace ErikwnkWFUI.Factories
                 UIColors.Red, UIColors.RedLight));
         }
 
+        // The look of CreateBrowse: yellow with a white glyph that stays white
+        // in every state and in both themes. The disabled yellow is the
+        // resting one darkened as far as any dark fill gets.
+        private static UIColorSet CreateBrowseColors()
+        {
+            Color disabled = UIColors.Darken(UIColors.Yellow, DisabledDarkenAmount);
+
+            return new UIColorSet(
+                UIColors.Yellow,
+                UIColors.YellowLight,
+                UIColors.YellowLighter,
+                disabled,
+                UIColors.White,
+                UIColors.White,
+                UIColors.White,
+                UIColors.BlendToward(UIColors.White, disabled, 0.35));
+        }
+
+        // A symbol button like any other (see CreateSymbol): the folder symbol on
+        // a fixed look. A font glyph on purpose - the OpenFolder PNG scaled down
+        // to button size looks blurry next to the flat yellow.
         public static Button CreateBrowse(string tooltip = "", Size? size = null, bool isIcon = true)
         {
-            // A font glyph on purpose: the OpenFolder PNG scaled down to button size
-            // looks blurry next to the flat yellow.
-            //
-            // The glyph stays white (fixedForeColor): this button keeps its yellow
-            // in every theme, so its text color is fixed as well.
-            return CreateButton(UIStyles.Symbols.Folder, tooltip, size, isIcon, new ButtonLook(
-                UIColors.Yellow, UIColors.White, FixedBorderColor, 1,
-                UIColors.YellowLight, UIColors.YellowLighter,
-                fixedForeColor: true));
+            Button button = CreateSymbol(UIStyles.Symbols.Folder, tooltip, size, CreateBrowseColors());
+
+            // The symbol font is the point of this button; a caller that asks
+            // for the normal font gets it.
+            if (!isIcon)
+                button.Font = UIFonts.Normal;
+
+            return button;
         }
 
         private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look, Button instance = null)
