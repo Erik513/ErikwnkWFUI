@@ -14,11 +14,11 @@ namespace ErikwnkWFUI.Showcase
         private static readonly (string Title, string[] Names)[] SymbolGroups =
         {
             ("Actions", new[] { "Add", "Remove", "Delete", "Edit", "Save", "Refresh", "Search", "Settings", "Close", "Cancel", "Check", "Undo", "Redo", "Cut", "Clipboard", "Print" }),
-            ("Files", new[] { "File", "Folder", "FolderOpen", "Image" }),
+            ("Files", new[] { "File", "Folder", "FolderOpen" }),
             ("Navigation", new[] { "Back", "Forward", "Up", "Down", "Home", "Menu", "ChevronLeft", "ChevronRight" }),
             ("Media", new[] { "Play", "Pause", "Stop", "Record", "SkipBack", "SkipForward", "Volume", "Mute", "Music" }),
-            ("Status", new[] { "Info", "Warning", "Error", "Help", "Star", "StarOutline", "Heart" }),
-            ("People, security", new[] { "User", "Key", "Lock", "Unlock", "Power" }),
+            ("Status", new[] { "Info", "Warning", "Error", "Help", "Heart" }),
+            ("People, security", new[] { "User", "Lock", "Unlock", "Power" }),
             ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye" })
         };
 

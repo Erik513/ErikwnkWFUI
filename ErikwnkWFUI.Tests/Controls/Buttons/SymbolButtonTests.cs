@@ -408,7 +408,7 @@ public class SymbolButtonTests
         // It is built on the same button: the space bar presses it and a
         // disabled one ignores the mouse.
         UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(250, 220, 60));
-        using Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Star, colors: set);
+        using Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, colors: set);
 
         Raise(button, "OnKeyDown", new KeyEventArgs(Keys.Space));
         Assert.Equal(set.PressedText, button.ForeColor);

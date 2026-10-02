@@ -13,7 +13,7 @@
     /// var add = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Add, "Add");
     ///
     /// // Your own preset, defined once:
-    /// var star = new UIButtonPreset(UIStyles.Symbols.Star, UIStyles.Colors.Sets.Orange);
+    /// var heart = new UIButtonPreset(UIStyles.Symbols.Heart, UIStyles.Colors.Sets.Orange);
     /// var favorite = UIStyles.Buttons.CreateSymbol(star, "Favorite");
     /// </code>
     /// </example>

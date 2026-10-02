@@ -84,7 +84,7 @@ once with `new UIButtonPreset(symbol, colors)` and used everywhere.
 var browse = UIStyles.Buttons.CreateSymbol(
     UIStyles.Symbols.Folder, "Choose folder", new Size(50, 30), UIStyles.Colors.Sets.Yellow);
 var back = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, "Back");
-var star = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Star, "Favorite", colors: Color.Orange);
+var heart = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Like", colors: Color.Orange);
 ```
 
 A preset is nothing but a symbol plus a color set, so both ways give the same

@@ -78,10 +78,10 @@ public class ButtonPresetTests
             ("Undo", UIStyles.Symbols.Undo, UIStyles.Colors.Sets.Dark),
             ("Redo", UIStyles.Symbols.Redo, UIStyles.Colors.Sets.Dark),
             ("Cut", UIStyles.Symbols.Cut, UIStyles.Colors.Sets.Dark),
+            ("Copy", UIStyles.Symbols.Copy, UIStyles.Colors.Sets.Dark),
             ("Clipboard", UIStyles.Symbols.Clipboard, UIStyles.Colors.Sets.Dark),
             ("Print", UIStyles.Symbols.Print, UIStyles.Colors.Sets.Dark),
             ("FolderOpen", UIStyles.Symbols.FolderOpen, UIStyles.Colors.Sets.Yellow),
-            ("Image", UIStyles.Symbols.Image, UIStyles.Colors.Sets.Dark),
             ("Menu", UIStyles.Symbols.Menu, UIStyles.Colors.Sets.Dark),
             ("ChevronLeft", UIStyles.Symbols.ChevronLeft, UIStyles.Colors.Sets.Dark),
             ("ChevronRight", UIStyles.Symbols.ChevronRight, UIStyles.Colors.Sets.Dark),
@@ -98,10 +98,7 @@ public class ButtonPresetTests
             ("Warning", UIStyles.Symbols.Warning, UIStyles.Colors.Sets.Orange),
             ("Error", UIStyles.Symbols.Error, UIStyles.Colors.Sets.Red),
             ("Help", UIStyles.Symbols.Help, UIStyles.Colors.Sets.Blue),
-            ("Star", UIStyles.Symbols.Star, UIStyles.Colors.Sets.Orange),
-            ("StarOutline", UIStyles.Symbols.StarOutline, UIStyles.Colors.Sets.Dark),
             ("Heart", UIStyles.Symbols.Heart, UIStyles.Colors.Sets.Pink),
-            ("Key", UIStyles.Symbols.Key, UIStyles.Colors.Sets.Yellow),
             ("Lock", UIStyles.Symbols.Lock, UIStyles.Colors.Sets.Dark),
             ("Unlock", UIStyles.Symbols.Unlock, UIStyles.Colors.Sets.Dark),
             ("Power", UIStyles.Symbols.Power, UIStyles.Colors.Sets.Red),
@@ -123,7 +120,14 @@ public class ButtonPresetTests
             UIButtonPreset preset = Get(name);
 
             Assert.Equal(symbol, preset.Symbol);
-            Assert.Same(colors, preset.Colors);
+
+            // The fills are those of the set named, the symbol is white in every state.
+            Assert.Equal(
+                (colors.Basic, colors.Hover, colors.Pressed, colors.Disabled),
+                (preset.Colors!.Basic, preset.Colors.Hover, preset.Colors.Pressed, preset.Colors.Disabled));
+            Assert.Equal(
+                (UIColors.White, UIColors.White, UIColors.White),
+                (preset.Colors.BasicText, preset.Colors.HoverText, preset.Colors.PressedText));
         }
     }
 
@@ -236,10 +240,10 @@ public class ButtonPresetTests
     public void YourOwnPreset_IsMadeFromASymbolAndColors_OrASymbolAlone()
     {
         UIColorSet orange = UIStyles.Colors.Sets.Orange;
-        UIButtonPreset star = new UIButtonPreset(UIStyles.Symbols.Star, orange);
+        UIButtonPreset star = new UIButtonPreset(UIStyles.Symbols.Heart, orange);
         UIButtonPreset plain = new UIButtonPreset(UIStyles.Symbols.Menu);
 
-        Assert.Equal(UIStyles.Symbols.Star, star.Symbol);
+        Assert.Equal(UIStyles.Symbols.Heart, star.Symbol);
         Assert.Same(orange, star.Colors);
         Assert.Null(plain.Colors);
 
@@ -257,17 +261,17 @@ public class ButtonPresetTests
         UIButtonPreset add = UIStyles.Buttons.Presets.Add;
 
         UIButtonPreset teal = add.WithColors(UIStyles.Colors.Sets.Teal);
-        UIButtonPreset plus = add.WithSymbol(UIStyles.Symbols.Star);
+        UIButtonPreset plus = add.WithSymbol(UIStyles.Symbols.Heart);
         UIButtonPreset neutral = add.WithColors(null);
 
         Assert.Equal(add.Symbol, teal.Symbol);
         Assert.Same(UIStyles.Colors.Sets.Teal, teal.Colors);
-        Assert.Equal(UIStyles.Symbols.Star, plus.Symbol);
+        Assert.Equal(UIStyles.Symbols.Heart, plus.Symbol);
         Assert.Same(add.Colors, plus.Colors);
         Assert.Null(neutral.Colors);
 
         Assert.Equal(UIStyles.Symbols.Add, add.Symbol);
-        Assert.Same(UIStyles.Colors.Sets.Green, add.Colors);
+        Assert.Equal(UIStyles.Colors.Sets.Green.Basic, add.Colors!.Basic);
     }
 
     [Fact]

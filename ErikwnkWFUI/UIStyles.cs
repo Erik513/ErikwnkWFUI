@@ -393,7 +393,7 @@ namespace ErikwnkWFUI
             /// var back = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, "Back");
             ///
             /// // Any color works - a plain Color is turned into a color set:
-            /// var star = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Star, "Favorite", colors: Color.Orange);
+            /// var heart = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Like", colors: Color.Orange);
             /// </code>
             /// </example>
             /// <param name="symbol">The symbol, for example <c>UIStyles.Symbols.Delete</c>, or any character of your own.</param>
@@ -430,178 +430,176 @@ namespace ErikwnkWFUI
             /// </summary>
             public static class Presets
             {
+                // The symbol of a preset is white in every state - the fills and the
+                // disabled look stay those of the set.
+                private static UIColorSet WhiteOn(UIColorSet set)
+                {
+                    return UIColors.WithText(set, UIColors.White);
+                }
+
                 /// <summary>Adding an entry: a plus on green.</summary>
-                public static UIButtonPreset Add { get; } = new UIButtonPreset(Symbols.Add, Colors.Sets.Green);
+                public static UIButtonPreset Add { get; } = new UIButtonPreset(Symbols.Add, WhiteOn(Colors.Sets.Green));
 
                 /// <summary>Saving: a disk on green.</summary>
-                public static UIButtonPreset Save { get; } = new UIButtonPreset(Symbols.Save, Colors.Sets.Green);
+                public static UIButtonPreset Save { get; } = new UIButtonPreset(Symbols.Save, WhiteOn(Colors.Sets.Green));
 
                 /// <summary>Deleting an entry: a trash can on red.</summary>
-                public static UIButtonPreset Delete { get; } = new UIButtonPreset(Symbols.Delete, Colors.Sets.Red);
+                public static UIButtonPreset Delete { get; } = new UIButtonPreset(Symbols.Delete, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Closing or removing: a cross on red.</summary>
-                public static UIButtonPreset Close { get; } = new UIButtonPreset(Symbols.Close, Colors.Sets.Red);
+                public static UIButtonPreset Close { get; } = new UIButtonPreset(Symbols.Close, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Editing an entry: a pencil on blue.</summary>
-                public static UIButtonPreset Edit { get; } = new UIButtonPreset(Symbols.Edit, Colors.Sets.Blue);
+                public static UIButtonPreset Edit { get; } = new UIButtonPreset(Symbols.Edit, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Reloading: a circular arrow on blue.</summary>
-                public static UIButtonPreset Refresh { get; } = new UIButtonPreset(Symbols.Refresh, Colors.Sets.Blue);
+                public static UIButtonPreset Refresh { get; } = new UIButtonPreset(Symbols.Refresh, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Logging in: a person on blue.</summary>
-                public static UIButtonPreset Login { get; } = new UIButtonPreset(Symbols.User, Colors.Sets.Blue);
+                public static UIButtonPreset Login { get; } = new UIButtonPreset(Symbols.User, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Searching: a magnifier on dark gray.</summary>
-                public static UIButtonPreset Search { get; } = new UIButtonPreset(Symbols.Search, Colors.Sets.Dark);
+                public static UIButtonPreset Search { get; } = new UIButtonPreset(Symbols.Search, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Opening the settings: a gear on dark gray.</summary>
-                public static UIButtonPreset Settings { get; } = new UIButtonPreset(Symbols.Settings, Colors.Sets.Dark);
+                public static UIButtonPreset Settings { get; } = new UIButtonPreset(Symbols.Settings, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going back: an arrow to the left on dark gray.</summary>
-                public static UIButtonPreset Back { get; } = new UIButtonPreset(Symbols.Back, Colors.Sets.Dark);
+                public static UIButtonPreset Back { get; } = new UIButtonPreset(Symbols.Back, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going forward: an arrow to the right on dark gray.</summary>
-                public static UIButtonPreset Forward { get; } = new UIButtonPreset(Symbols.Forward, Colors.Sets.Dark);
+                public static UIButtonPreset Forward { get; } = new UIButtonPreset(Symbols.Forward, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going one level up: an arrow up on dark gray.</summary>
-                public static UIButtonPreset Up { get; } = new UIButtonPreset(Symbols.Up, Colors.Sets.Dark);
+                public static UIButtonPreset Up { get; } = new UIButtonPreset(Symbols.Up, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going one level down: an arrow down on dark gray.</summary>
-                public static UIButtonPreset Down { get; } = new UIButtonPreset(Symbols.Down, Colors.Sets.Dark);
+                public static UIButtonPreset Down { get; } = new UIButtonPreset(Symbols.Down, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going to the start: a house on dark gray.</summary>
-                public static UIButtonPreset Home { get; } = new UIButtonPreset(Symbols.Home, Colors.Sets.Dark);
+                public static UIButtonPreset Home { get; } = new UIButtonPreset(Symbols.Home, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Choosing a file: a document on yellow.</summary>
-                public static UIButtonPreset OpenFile { get; } = new UIButtonPreset(Symbols.File, Colors.Sets.Yellow);
+                public static UIButtonPreset OpenFile { get; } = new UIButtonPreset(Symbols.File, WhiteOn(Colors.Sets.Yellow));
 
                 /// <summary>Choosing a folder: a folder on yellow (the former Browse button).</summary>
-                public static UIButtonPreset Browse { get; } = new UIButtonPreset(Symbols.Folder, Colors.Sets.Yellow);
+                public static UIButtonPreset Browse { get; } = new UIButtonPreset(Symbols.Folder, WhiteOn(Colors.Sets.Yellow));
 
                 // ---- one for every other symbol, named like the symbol ----
 
                 /// <summary>Taking an item out of a list: a minus, on red.</summary>
-                public static UIButtonPreset Remove { get; } = new UIButtonPreset(Symbols.Remove, Colors.Sets.Red);
+                public static UIButtonPreset Remove { get; } = new UIButtonPreset(Symbols.Remove, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Cancelling: a heavy cross, on red.</summary>
-                public static UIButtonPreset Cancel { get; } = new UIButtonPreset(Symbols.Cancel, Colors.Sets.Red);
+                public static UIButtonPreset Cancel { get; } = new UIButtonPreset(Symbols.Cancel, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Confirming: a check mark, on green.</summary>
-                public static UIButtonPreset Check { get; } = new UIButtonPreset(Symbols.Check, Colors.Sets.Green);
+                public static UIButtonPreset Check { get; } = new UIButtonPreset(Symbols.Check, WhiteOn(Colors.Sets.Green));
 
                 /// <summary>Undoing the last step: a curved arrow back, on dark gray.</summary>
-                public static UIButtonPreset Undo { get; } = new UIButtonPreset(Symbols.Undo, Colors.Sets.Dark);
+                public static UIButtonPreset Undo { get; } = new UIButtonPreset(Symbols.Undo, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Redoing a step: a curved arrow forward, on dark gray.</summary>
-                public static UIButtonPreset Redo { get; } = new UIButtonPreset(Symbols.Redo, Colors.Sets.Dark);
+                public static UIButtonPreset Redo { get; } = new UIButtonPreset(Symbols.Redo, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Cutting: scissors, on dark gray.</summary>
-                public static UIButtonPreset Cut { get; } = new UIButtonPreset(Symbols.Cut, Colors.Sets.Dark);
+                public static UIButtonPreset Cut { get; } = new UIButtonPreset(Symbols.Cut, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Copying: two overlapping sheets, on dark gray.</summary>
+                public static UIButtonPreset Copy { get; } = new UIButtonPreset(Symbols.Copy, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Copying or pasting: a clipboard, on dark gray.</summary>
-                public static UIButtonPreset Clipboard { get; } = new UIButtonPreset(Symbols.Clipboard, Colors.Sets.Dark);
+                public static UIButtonPreset Clipboard { get; } = new UIButtonPreset(Symbols.Clipboard, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Printing: a printer, on dark gray.</summary>
-                public static UIButtonPreset Print { get; } = new UIButtonPreset(Symbols.Print, Colors.Sets.Dark);
+                public static UIButtonPreset Print { get; } = new UIButtonPreset(Symbols.Print, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Opening a folder: an open folder, on yellow.</summary>
-                public static UIButtonPreset FolderOpen { get; } = new UIButtonPreset(Symbols.FolderOpen, Colors.Sets.Yellow);
-
-                /// <summary>Picking or showing an image: a picture, on dark gray.</summary>
-                public static UIButtonPreset Image { get; } = new UIButtonPreset(Symbols.Image, Colors.Sets.Dark);
+                public static UIButtonPreset FolderOpen { get; } = new UIButtonPreset(Symbols.FolderOpen, WhiteOn(Colors.Sets.Yellow));
 
                 /// <summary>Opening a menu: three lines, on dark gray.</summary>
-                public static UIButtonPreset Menu { get; } = new UIButtonPreset(Symbols.Menu, Colors.Sets.Dark);
+                public static UIButtonPreset Menu { get; } = new UIButtonPreset(Symbols.Menu, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going one page back: a small arrow to the left, on dark gray.</summary>
-                public static UIButtonPreset ChevronLeft { get; } = new UIButtonPreset(Symbols.ChevronLeft, Colors.Sets.Dark);
+                public static UIButtonPreset ChevronLeft { get; } = new UIButtonPreset(Symbols.ChevronLeft, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Going one page on: a small arrow to the right, on dark gray.</summary>
-                public static UIButtonPreset ChevronRight { get; } = new UIButtonPreset(Symbols.ChevronRight, Colors.Sets.Dark);
+                public static UIButtonPreset ChevronRight { get; } = new UIButtonPreset(Symbols.ChevronRight, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Starting: a triangle, on green.</summary>
-                public static UIButtonPreset Play { get; } = new UIButtonPreset(Symbols.Play, Colors.Sets.Green);
+                public static UIButtonPreset Play { get; } = new UIButtonPreset(Symbols.Play, WhiteOn(Colors.Sets.Green));
 
                 /// <summary>Pausing: two bars, on dark gray.</summary>
-                public static UIButtonPreset Pause { get; } = new UIButtonPreset(Symbols.Pause, Colors.Sets.Dark);
+                public static UIButtonPreset Pause { get; } = new UIButtonPreset(Symbols.Pause, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Stopping: a square, on red.</summary>
-                public static UIButtonPreset Stop { get; } = new UIButtonPreset(Symbols.Stop, Colors.Sets.Red);
+                public static UIButtonPreset Stop { get; } = new UIButtonPreset(Symbols.Stop, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Recording: a circle, on red.</summary>
-                public static UIButtonPreset Record { get; } = new UIButtonPreset(Symbols.Record, Colors.Sets.Red);
+                public static UIButtonPreset Record { get; } = new UIButtonPreset(Symbols.Record, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Skipping to the previous item, on dark gray.</summary>
-                public static UIButtonPreset SkipBack { get; } = new UIButtonPreset(Symbols.SkipBack, Colors.Sets.Dark);
+                public static UIButtonPreset SkipBack { get; } = new UIButtonPreset(Symbols.SkipBack, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Skipping to the next item, on dark gray.</summary>
-                public static UIButtonPreset SkipForward { get; } = new UIButtonPreset(Symbols.SkipForward, Colors.Sets.Dark);
+                public static UIButtonPreset SkipForward { get; } = new UIButtonPreset(Symbols.SkipForward, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Sound on: a loudspeaker, on dark gray.</summary>
-                public static UIButtonPreset Volume { get; } = new UIButtonPreset(Symbols.Volume, Colors.Sets.Dark);
+                public static UIButtonPreset Volume { get; } = new UIButtonPreset(Symbols.Volume, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Sound off: a crossed loudspeaker, on dark gray.</summary>
-                public static UIButtonPreset Mute { get; } = new UIButtonPreset(Symbols.Mute, Colors.Sets.Dark);
+                public static UIButtonPreset Mute { get; } = new UIButtonPreset(Symbols.Mute, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Music: a note, on purple.</summary>
-                public static UIButtonPreset Music { get; } = new UIButtonPreset(Symbols.Music, Colors.Sets.Purple);
+                public static UIButtonPreset Music { get; } = new UIButtonPreset(Symbols.Music, WhiteOn(Colors.Sets.Purple));
 
                 /// <summary>Information: an i, on blue.</summary>
-                public static UIButtonPreset Info { get; } = new UIButtonPreset(Symbols.Info, Colors.Sets.Blue);
+                public static UIButtonPreset Info { get; } = new UIButtonPreset(Symbols.Info, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>A warning: a triangle with an exclamation mark, on orange.</summary>
-                public static UIButtonPreset Warning { get; } = new UIButtonPreset(Symbols.Warning, Colors.Sets.Orange);
+                public static UIButtonPreset Warning { get; } = new UIButtonPreset(Symbols.Warning, WhiteOn(Colors.Sets.Orange));
 
                 /// <summary>An error: a sign with a bar, on red.</summary>
-                public static UIButtonPreset Error { get; } = new UIButtonPreset(Symbols.Error, Colors.Sets.Red);
+                public static UIButtonPreset Error { get; } = new UIButtonPreset(Symbols.Error, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Help: a question mark, on blue.</summary>
-                public static UIButtonPreset Help { get; } = new UIButtonPreset(Symbols.Help, Colors.Sets.Blue);
-
-                /// <summary>Marking as favorite: a filled star, on orange.</summary>
-                public static UIButtonPreset Star { get; } = new UIButtonPreset(Symbols.Star, Colors.Sets.Orange);
-
-                /// <summary>Not marked as favorite: an empty star, on dark gray.</summary>
-                public static UIButtonPreset StarOutline { get; } = new UIButtonPreset(Symbols.StarOutline, Colors.Sets.Dark);
+                public static UIButtonPreset Help { get; } = new UIButtonPreset(Symbols.Help, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Liking: a heart, on pink.</summary>
-                public static UIButtonPreset Heart { get; } = new UIButtonPreset(Symbols.Heart, Colors.Sets.Pink);
-
-                /// <summary>A key or password: a key, on yellow.</summary>
-                public static UIButtonPreset Key { get; } = new UIButtonPreset(Symbols.Key, Colors.Sets.Yellow);
+                public static UIButtonPreset Heart { get; } = new UIButtonPreset(Symbols.Heart, WhiteOn(Colors.Sets.Pink));
 
                 /// <summary>Locked: a closed padlock, on dark gray.</summary>
-                public static UIButtonPreset Lock { get; } = new UIButtonPreset(Symbols.Lock, Colors.Sets.Dark);
+                public static UIButtonPreset Lock { get; } = new UIButtonPreset(Symbols.Lock, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Unlocked: an open padlock, on dark gray.</summary>
-                public static UIButtonPreset Unlock { get; } = new UIButtonPreset(Symbols.Unlock, Colors.Sets.Dark);
+                public static UIButtonPreset Unlock { get; } = new UIButtonPreset(Symbols.Unlock, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Switching off: the power sign, on red.</summary>
-                public static UIButtonPreset Power { get; } = new UIButtonPreset(Symbols.Power, Colors.Sets.Red);
+                public static UIButtonPreset Power { get; } = new UIButtonPreset(Symbols.Power, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Mail: an envelope, on blue.</summary>
-                public static UIButtonPreset Mail { get; } = new UIButtonPreset(Symbols.Mail, Colors.Sets.Blue);
+                public static UIButtonPreset Mail { get; } = new UIButtonPreset(Symbols.Mail, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Dates: a calendar, on blue.</summary>
-                public static UIButtonPreset Calendar { get; } = new UIButtonPreset(Symbols.Calendar, Colors.Sets.Blue);
+                public static UIButtonPreset Calendar { get; } = new UIButtonPreset(Symbols.Calendar, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Time: an alarm clock, on dark gray.</summary>
-                public static UIButtonPreset Clock { get; } = new UIButtonPreset(Symbols.Clock, Colors.Sets.Dark);
+                public static UIButtonPreset Clock { get; } = new UIButtonPreset(Symbols.Clock, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Notifications: a bell, on orange.</summary>
-                public static UIButtonPreset Bell { get; } = new UIButtonPreset(Symbols.Bell, Colors.Sets.Orange);
+                public static UIButtonPreset Bell { get; } = new UIButtonPreset(Symbols.Bell, WhiteOn(Colors.Sets.Orange));
 
                 /// <summary>A link: a chain, on blue.</summary>
-                public static UIButtonPreset Link { get; } = new UIButtonPreset(Symbols.Link, Colors.Sets.Blue);
+                public static UIButtonPreset Link { get; } = new UIButtonPreset(Symbols.Link, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Pinning: a pin, on dark gray.</summary>
-                public static UIButtonPreset Pin { get; } = new UIButtonPreset(Symbols.Pin, Colors.Sets.Dark);
+                public static UIButtonPreset Pin { get; } = new UIButtonPreset(Symbols.Pin, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>The web: a globe, on blue.</summary>
-                public static UIButtonPreset Globe { get; } = new UIButtonPreset(Symbols.Globe, Colors.Sets.Blue);
+                public static UIButtonPreset Globe { get; } = new UIButtonPreset(Symbols.Globe, WhiteOn(Colors.Sets.Blue));
 
                 /// <summary>Showing or watching: an eye, on dark gray.</summary>
-                public static UIButtonPreset Eye { get; } = new UIButtonPreset(Symbols.Eye, Colors.Sets.Dark);
+                public static UIButtonPreset Eye { get; } = new UIButtonPreset(Symbols.Eye, WhiteOn(Colors.Sets.Dark));
             }
 
             /// <summary>

@@ -346,6 +346,23 @@ namespace ErikwnkWFUI.Styles
                 BlendToward(text, disabled, DisabledTextBlend));
         }
 
+        /// <summary>
+        /// The same fills and disabled look as <paramref name="set"/>, but with
+        /// <paramref name="text"/> in every state (muted when disabled).
+        /// </summary>
+        internal static UIColorSet WithText(UIColorSet set, Color text)
+        {
+            return new UIColorSet(
+                set.Basic,
+                set.Hover,
+                set.Pressed,
+                set.Disabled,
+                text,
+                text,
+                text,
+                BlendToward(text, set.Disabled, DisabledTextBlend));
+        }
+
         // Text keeps the color it has at rest as long as it stays clearly
         // readable (3:1) on the next fill; only when it would not, the
         // better one takes over. Otherwise the text would flip between

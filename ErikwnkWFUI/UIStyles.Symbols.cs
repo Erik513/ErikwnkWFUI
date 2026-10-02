@@ -23,18 +23,26 @@ namespace ErikwnkWFUI
         {
             private const string IconFontName = "Segoe MDL2 Assets";
 
+            // Windows 11's newer icon font. Only symbols that are much better there
+            // use it (Copy: two rounded sheets, not the old pair of pages).
+            private const string FluentFontName = "Segoe Fluent Icons";
+
             private static readonly bool _isIconFontInstalled = IsFontInstalled(IconFontName);
+            private static readonly bool _isFluentFontInstalled = IsFontInstalled(FluentFontName);
 
             /// <summary>
             /// The name of the font a symbol has to be drawn in. Nearly all are drawn in
             /// <see cref="Fonts.Icon"/>; the few that come from the Windows icon font
-            /// (<c>Delete</c>) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
+            /// (<c>Delete</c>, <c>Copy</c>, <c>Print</c>, <c>Info</c>, <c>Warning</c>, <c>Globe</c>) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
             /// <c>UIStyles.Buttons.CreateSymbol</c> picks the right one by itself; use this
             /// when you draw a symbol yourself.
             /// </summary>
             public static string GetFontName(string symbol)
             {
                 bool isIconFontSymbol = !string.IsNullOrEmpty(symbol) && symbol[0] >= '\uE000' && symbol[0] <= '\uF8FF';
+
+                if (isIconFontSymbol && symbol == Copy && _isFluentFontInstalled)
+                    return FluentFontName;
 
                 return isIconFontSymbol && _isIconFontInstalled
                     ? IconFontName
@@ -74,13 +82,17 @@ namespace ErikwnkWFUI
             public const string Redo = "↷";
             public const string Cut = "✂";
             public const string Clipboard = "\U0001F4CB";
-            public const string Print = "\U0001F5A8";
+            // Print, Info, Warning, Globe and Copy come from the Windows icon font
+            // (see GetFontName): bold, clear shapes where the emoji or text
+            // characters are thin, colored or hard to tell apart when small.
+            // Copy: two rounded sheets in Windows 11's icon font, the older pair of pages in Windows 10's.
+            public const string Copy = "\uE8C8";
+            public const string Print = "\uE749";
 
             // ---- files ----
             public const string File = "\U0001F4C4";
             public const string Folder = "\U0001F4C1";
             public const string FolderOpen = "\U0001F4C2";
-            public const string Image = "\U0001F5BC";
 
             // ---- navigation ----
             public const string Back = "⬅";
@@ -104,17 +116,14 @@ namespace ErikwnkWFUI
             public const string Music = "♫";
 
             // ---- status ----
-            public const string Info = "ℹ";
-            public const string Warning = "⚠";
+            public const string Info = "\uE946";
+            public const string Warning = "\uE7BA";
             public const string Error = "⛔";
             public const string Help = "❓";
-            public const string Star = "★";
-            public const string StarOutline = "☆";
             public const string Heart = "♥";
 
             // ---- people and security ----
             public const string User = "\U0001F464";
-            public const string Key = "\U0001F511";
             public const string Lock = "\U0001F512";
             public const string Unlock = "\U0001F513";
             public const string Power = "⏻";
@@ -126,7 +135,7 @@ namespace ErikwnkWFUI
             public const string Bell = "\U0001F514";
             public const string Link = "\U0001F517";
             public const string Pin = "\U0001F4CC";
-            public const string Globe = "\U0001F310";
+            public const string Globe = "\uE774";
             public const string Eye = "\U0001F441";
         }
     }
