@@ -93,10 +93,15 @@ namespace ErikwnkWFUI.Factories
                 UIColors.BackgroundLighter, UIColors.Primary), instance);
         }
 
-        // A button made to carry a symbol (see UIStyles.Symbols): the neutral
-        // look, or the colors of a set. The symbol font grows with the button,
-        // so a larger button gets a larger symbol - 13 pt at the standard 30 px,
-        // the size CreateBrowse has.
+        // The one place a symbol button is made - UIStyles.Buttons.CreateSymbol
+        // (with a preset or with a symbol and colors) ends up here.
+        //
+        // - Look: the colors of the set, or the neutral look when there is none.
+        // - Symbol: drawn by SymbolButton, centered on what is actually visible of
+        //   the glyph. The font grows with the button: 13 pt at the standard 30 px
+        //   height, the size of UIFonts.Icon, proportionally larger or smaller
+        //   otherwise. A few symbols need the Windows icon font instead of the usual
+        //   symbol font (UIStyles.Symbols.GetFontName decides).
         public static Button CreateSymbol(string symbol, string tooltip, Size? size, UIColorSet colors)
         {
             Size buttonSize = size ?? DefaultButtonSize;
@@ -110,13 +115,15 @@ namespace ErikwnkWFUI.Factories
                 : CreateStandard(symbol, tooltip, buttonSize, true, instance);
 
             float points = buttonSize.Height * SymbolPointsPerPixel;
+            string family = UIStyles.Symbols.GetFontName(symbol);
 
-            // At the standard size it is the shared icon font already (and a
-            // font equal to the current one would not be taken over anyway).
-            if (Math.Abs(points - UIFonts.Icon.Size) < 0.01f)
+            // At the standard size, in the usual symbol font, it is the shared icon
+            // font already (and a font equal to the current one would not be taken
+            // over anyway).
+            if (family == UIFonts.Icon.FontFamily.Name && Math.Abs(points - UIFonts.Icon.Size) < 0.01f)
                 return button;
 
-            Font font = new Font(UIFonts.Icon.FontFamily, points);
+            Font font = new Font(family, points);
             button.Font = font;
             button.Disposed += delegate { font.Dispose(); };
 
@@ -168,39 +175,6 @@ namespace ErikwnkWFUI.Factories
             return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
                 UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), FixedBorderColor, 1,
                 UIColors.Red, UIColors.RedLight));
-        }
-
-        // The look of CreateBrowse: yellow with a white glyph that stays white
-        // in every state and in both themes. The disabled yellow is the
-        // resting one darkened as far as any dark fill gets.
-        private static UIColorSet CreateBrowseColors()
-        {
-            Color disabled = UIColors.Darken(UIColors.Yellow, DisabledDarkenAmount);
-
-            return new UIColorSet(
-                UIColors.Yellow,
-                UIColors.YellowLight,
-                UIColors.YellowLighter,
-                disabled,
-                UIColors.White,
-                UIColors.White,
-                UIColors.White,
-                UIColors.BlendToward(UIColors.White, disabled, 0.35));
-        }
-
-        // A symbol button like any other (see CreateSymbol): the folder symbol on
-        // a fixed look. A font glyph on purpose - the OpenFolder PNG scaled down
-        // to button size looks blurry next to the flat yellow.
-        public static Button CreateBrowse(string tooltip = "", Size? size = null, bool isIcon = true)
-        {
-            Button button = CreateSymbol(UIStyles.Symbols.Folder, tooltip, size, CreateBrowseColors());
-
-            // The symbol font is the point of this button; a caller that asks
-            // for the normal font gets it.
-            if (!isIcon)
-                button.Font = UIFonts.Normal;
-
-            return button;
         }
 
         private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look, Button instance = null)

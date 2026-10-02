@@ -43,6 +43,19 @@ public class SymbolButtonTests
         Assert.Equal(UIFonts.Icon.Size, button.Font.Size);
     }
 
+    [Fact]
+    public void ASymbolFromTheWindowsIconFont_GetsThatFont_AtAnySize()
+    {
+        string expected = UIStyles.Symbols.GetFontName(UIStyles.Symbols.Delete);
+
+        using Button standardSize = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Delete);
+        using Button large = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Delete, size: new Size(48, 48));
+
+        Assert.Equal(expected, standardSize.Font.Name);
+        Assert.Equal(expected, large.Font.Name);
+        Assert.Equal(UIFonts.Icon.Size, standardSize.Font.Size);
+    }
+
     [Theory]
     [InlineData(24)]
     [InlineData(30)]
@@ -344,19 +357,19 @@ public class SymbolButtonTests
         Assert.Equal(set.DisabledText, Middle());
     }
 
-    // ---- Browse is a symbol button too ----
+    // ---- the folder on the yellow set: what the old Browse button looked like ----
 
     [Theory]
     [InlineData(30, 30)]
     [InlineData(36, 30)]
     [InlineData(50, 30)]
     [InlineData(64, 48)]
-    public void Browse_IsDrawnLikeAnySymbolButton_FolderInTheMiddle(int width, int height)
+    public void AFolderOnYellow_IsDrawnInTheMiddle_AtAnySize(int width, int height)
     {
-        using Button browse = UIStyles.Buttons.CreateBrowse("Pick", new Size(width, height));
+        using Button browse = UIStyles.Buttons.CreateSymbol(
+            UIStyles.Symbols.Folder, "Pick", new Size(width, height), UIStyles.Colors.Sets.Yellow);
 
         Assert.Equal("SymbolButton", browse.GetType().Name);
-        Assert.Equal(UIStyles.Symbols.Folder, browse.Text);
         Assert.Equal("Pick", ButtonTestsToolTip.Text(browse));
 
         var offset = InkOffset(browse);
@@ -367,9 +380,9 @@ public class SymbolButtonTests
     }
 
     [Fact]
-    public void Browse_KeepsItsYellowLook_InEveryState()
+    public void TheYellowSet_HasTheLookOfTheOldBrowseButton_InEveryState()
     {
-        using Button browse = UIStyles.Buttons.CreateBrowse();
+        using Button browse = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, colors: UIStyles.Colors.Sets.Yellow);
         Color disabled = UIColors.Darken(UIColors.Yellow, 0.35);
 
         Assert.Equal(UIColors.Yellow, browse.BackColor);
@@ -387,16 +400,6 @@ public class SymbolButtonTests
         browse.Enabled = false;
         Assert.Equal(disabled, browse.BackColor);
         Assert.Equal(UIColors.BlendToward(UIColors.White, disabled, 0.35), browse.ForeColor);
-    }
-
-    [Fact]
-    public void Browse_CanStillBeAskedForTheNormalFont()
-    {
-        using Button symbolFont = UIStyles.Buttons.CreateBrowse();
-        using Button normalFont = UIStyles.Buttons.CreateBrowse("", null, isIcon: false);
-
-        Assert.Equal(UIFonts.Icon, symbolFont.Font);
-        Assert.Equal(UIFonts.Normal, normalFont.Font);
     }
 
     [Fact]

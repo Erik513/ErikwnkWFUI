@@ -44,6 +44,7 @@ public class UIColorSetTests
         ("Pink", UIStyles.Colors.Sets.Pink),
         ("Brown", UIStyles.Colors.Sets.Brown),
         ("Gray", UIStyles.Colors.Sets.Gray),
+        ("Dark", UIStyles.Colors.Sets.Dark),
     };
 
     private static double Ratio(Color text, Color fill) => ColorContrastHelper.GetContrastRatio(text, fill);
@@ -91,7 +92,32 @@ public class UIColorSetTests
     }
 
     [Fact]
-    public void Yellow_KeepsWhiteText_InEveryState_LikeBrowse()
+    public void Dark_IsTheDarkGrayOfTheStandardButton_ButFixed()
+    {
+        UIColorSet dark = UIStyles.Colors.Sets.Dark;
+
+        // The standard button's resting and hover fills in the dark theme ...
+        Assert.Equal(Color.FromArgb(35, 35, 35), dark.Basic);
+        Assert.Equal(Color.FromArgb(60, 60, 60), dark.Hover);
+
+        // ... but light text on every state, and the same in the light theme.
+        Assert.Equal(UIColors.LightForeColor, dark.BasicText);
+        Assert.Equal(UIColors.LightForeColor, dark.HoverText);
+        Assert.Equal(UIColors.LightForeColor, dark.PressedText);
+
+        try
+        {
+            UIColors.ApplyTheme(UIThemes.Light);
+            Assert.Equal(Color.FromArgb(35, 35, 35), UIStyles.Colors.Sets.Dark.Basic);
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+    }
+
+    [Fact]
+    public void Yellow_KeepsWhiteText_InEveryState()
     {
         UIColorSet yellow = UIStyles.Colors.Sets.Yellow;
 
@@ -99,11 +125,10 @@ public class UIColorSetTests
         Assert.Equal(UIColors.White, yellow.HoverText);
         Assert.Equal(UIColors.White, yellow.PressedText);
         Assert.NotEqual(UIColors.White, yellow.DisabledText);
-        Assert.True(Ratio(yellow.BasicText, yellow.Basic) >= 3.0, "white on the resting yellow");
+        // White on the bright yellow is about 2.7:1 - the look the Browse button
+        // always had and the one that was asked for; a graphic on it stays clear.
+        Assert.True(Ratio(yellow.BasicText, yellow.Basic) >= 2.6, "white on the resting yellow");
         Assert.True(Ratio(yellow.DisabledText, yellow.Disabled) >= 3.0, "muted white on the disabled yellow");
-
-        using System.Windows.Forms.Button browse = UIStyles.Buttons.CreateBrowse();
-        Assert.Equal(browse.ForeColor, yellow.BasicText);
     }
 
     [Fact]
@@ -226,15 +251,16 @@ public class UIColorSetTests
     }
 
     [Fact]
-    public void RedGreenAndYellow_AreTheExistingColorFamilies()
+    public void RedAndGreen_AreTheExistingColorFamilies_AndYellowIsTheBrightOne()
     {
         Assert.Equal(UIColors.RedDark, UIStyles.Colors.Sets.Red.Basic);
         Assert.Equal(UIColors.Red, UIStyles.Colors.Sets.Red.Hover);
         Assert.Equal(UIColors.RedLight, UIStyles.Colors.Sets.Red.Pressed);
         Assert.Equal(UIColors.GreenDark, UIStyles.Colors.Sets.Green.Basic);
         Assert.Equal(UIColors.GreenLight, UIStyles.Colors.Sets.Green.Pressed);
-        Assert.Equal(UIColors.YellowDark, UIStyles.Colors.Sets.Yellow.Basic);
-        Assert.Equal(UIColors.YellowLight, UIStyles.Colors.Sets.Yellow.Pressed);
+        Assert.Equal(UIColors.Yellow, UIStyles.Colors.Sets.Yellow.Basic);
+        Assert.Equal(UIColors.YellowLight, UIStyles.Colors.Sets.Yellow.Hover);
+        Assert.Equal(UIColors.YellowLighter, UIStyles.Colors.Sets.Yellow.Pressed);
     }
 
     [Fact]

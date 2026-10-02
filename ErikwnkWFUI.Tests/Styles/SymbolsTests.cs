@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Tests.Styles;
 
@@ -32,7 +33,7 @@ public class SymbolsTests
     // know the first 65536 characters, and half of the symbols are beyond.
     private static string Render(string glyph)
     {
-        using Font font = new Font("Segoe UI Symbol", 20f);
+        using Font font = new Font(UIStyles.Symbols.GetFontName(glyph), 20f);
         using Bitmap bitmap = new Bitmap(48, 48);
         using Graphics graphics = Graphics.FromImage(bitmap);
         graphics.Clear(Color.Black);
@@ -100,5 +101,22 @@ public class SymbolsTests
         }
 
         Assert.True(missing.Count == 0, "drawn as nothing or a missing-glyph box: " + string.Join(", ", missing));
+    }
+
+    [Fact]
+    public void TheFontOfASymbol_IsTheUsualSymbolFont_ExceptForTheIconFontOnes()
+    {
+        string usual = UIFonts.Icon.FontFamily.Name;
+
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName(UIStyles.Symbols.Add));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName(UIStyles.Symbols.Folder));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName(""));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName(null!));
+
+        // Delete comes from the Windows icon font where there is one.
+        string deleteFont = UIStyles.Symbols.GetFontName(UIStyles.Symbols.Delete);
+        bool hasIconFont = new System.Drawing.Text.InstalledFontCollection().Families.Any(f => f.Name == "Segoe MDL2 Assets");
+
+        Assert.Equal(hasIconFont ? "Segoe MDL2 Assets" : usual, deleteFont);
     }
 }

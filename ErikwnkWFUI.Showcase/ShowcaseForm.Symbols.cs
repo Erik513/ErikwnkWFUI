@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -71,7 +71,7 @@ namespace ErikwnkWFUI.Showcase
 
                 Label glyph = UIStyles.Labels.CreateNormal(all[name]);
                 glyph.AutoEllipsis = false;
-                glyph.Font = new Font(UIStyles.Fonts.Icon.FontFamily, 20f);
+                glyph.Font = new Font(UIStyles.Symbols.GetFontName(all[name]), 20f);
                 glyph.TextAlign = ContentAlignment.MiddleCenter;
                 glyph.SetBounds(0, 4, SymbolCellWidth, 38);
                 glyph.Disposed += delegate { glyph.Font.Dispose(); };

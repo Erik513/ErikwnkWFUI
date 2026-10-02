@@ -31,7 +31,7 @@ namespace ErikwnkWFUI.Showcase
             return new (string, string, Action<PropertyTable>)[]
             {
                 ("Buttons",
-                 "Buttons in the library's own design. Standard is the neutral one, Primary follows the current accent color, Green confirms and Red is for destructive actions; Browse carries a folder symbol on a color that never changes, CreateSymbol makes a button for any symbol of UIStyles.Symbols, and for any other color pass colors: (a ready-made set from Colors.Sets, a set from CreateSet, or simply a Color) - hover, pressed and disabled looks and the text on each are worked out for you. Each row shows the enabled and the disabled look.",
+                 "Buttons in the library's own design. Standard is the neutral one, Primary follows the current accent color, Green confirms and Red is for destructive actions; CreateSymbol makes a button for any symbol of UIStyles.Symbols or one of your own, neutral or in a color - or from a preset (UIStyles.Buttons.Presets.Add, .Delete, .Browse ... or your own UIButtonPreset), which brings the symbol and the colors, and for any other color pass colors: (a ready-made set from Colors.Sets, a set from CreateSet, or simply a Color) - hover, pressed and disabled looks and the text on each are worked out for you. Each row shows the enabled and the disabled look.",
                  AddButtonsSection),
 
                 ("CheckBoxes",

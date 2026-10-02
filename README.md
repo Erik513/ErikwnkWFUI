@@ -59,6 +59,41 @@ one-line summary of what it's for.
   window dragging, sleep prevention) used internally by the controls above;
   not something you'd normally use directly.
 
+## Symbol buttons
+
+A button that shows a symbol instead of a caption always comes from
+`UIStyles.Buttons.CreateSymbol`, in one of two ways.
+
+**With a ready-made preset** - the preset already says which symbol the button
+carries and in which colors; you add the tooltip and, optionally, the size:
+
+```csharp
+var add = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Add, "Add");
+var del = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Delete, "Delete", new Size(48, 48));
+```
+
+`UIStyles.Buttons.Presets` has Add, Save, Delete, Close, Edit, Refresh, Login,
+Search, Settings, Back, Forward, Up, Down, Home, OpenFile and Browse. Your own are made
+once with `new UIButtonPreset(symbol, colors)` and used everywhere.
+
+**With a symbol and colors of your choice** - any symbol from `UIStyles.Symbols`
+(or one of your own), in the neutral look or in the colors of a color set:
+
+```csharp
+var browse = UIStyles.Buttons.CreateSymbol(
+    UIStyles.Symbols.Folder, "Choose folder", new Size(50, 30), UIStyles.Colors.Sets.Yellow);
+var back = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, "Back");
+var star = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Star, "Favorite", colors: Color.Orange);
+```
+
+A preset is nothing but a symbol plus a color set, so both ways give the same
+button. The symbol is drawn exactly in the middle and grows with the height of
+the button; hover, pressed and disabled looks come from the color set and are the
+same in Dark and Light. To draw a symbol yourself (in a label, a menu), use
+`UIStyles.Fonts.Icon` - or the font `UIStyles.Symbols.GetFontName(symbol)` names
+for the few symbols that come from the Windows icon font - through a control that
+draws with `TextRenderer`. The Showcase's Symbols tab shows every symbol.
+
 ## Theming
 
 Two independent knobs, both **set once, before building any UI** - already-

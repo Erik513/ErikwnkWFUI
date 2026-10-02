@@ -165,14 +165,20 @@ namespace ErikwnkWFUI
 
                 public static UIColorSet Red { get; } = UIColors.CreateSet(UIColors.RedDark, UIColors.Red, UIColors.RedLight);
                 public static UIColorSet Orange { get; } = UIColors.CreateSet(Color.FromArgb(154, 81, 15), Color.FromArgb(210, 110, 20), Color.FromArgb(236, 141, 55));
-                // White text on every state, like Browse's glyph on the same yellow.
-                public static UIColorSet Yellow { get; } = UIColors.CreateSet(UIColors.YellowDark, UIColors.Yellow, UIColors.YellowLight, UIColors.White);
+                // White text on every state, even on the bright fills.
+                public static UIColorSet Yellow { get; } = UIColors.YellowSet;
                 public static UIColorSet Green { get; } = UIColors.CreateSet(UIColors.GreenDark, UIColors.Green, UIColors.GreenLight);
                 public static UIColorSet Teal { get; } = UIColors.CreateSet(Color.FromArgb(0, 69, 60), Color.FromArgb(0, 130, 114), Color.FromArgb(0, 191, 168));
                 public static UIColorSet Blue { get; } = UIColors.CreateSet(Color.FromArgb(0, 55, 97), Color.FromArgb(0, 90, 158), Color.FromArgb(0, 125, 219));
                 public static UIColorSet Purple { get; } = UIColors.CreateSet(Color.FromArgb(81, 44, 125), Color.FromArgb(110, 60, 170), Color.FromArgb(141, 93, 198));
                 public static UIColorSet Pink { get; } = UIColors.CreateSet(Color.FromArgb(155, 44, 83), Color.FromArgb(200, 60, 110), Color.FromArgb(213, 108, 145));
                 public static UIColorSet Brown { get; } = UIColors.CreateSet(Color.FromArgb(75, 47, 28), Color.FromArgb(120, 75, 45), Color.FromArgb(165, 103, 62));
+                /// <summary>
+                /// The dark gray of <see cref="Buttons.CreateStandard"/> in the dark theme - but fixed:
+                /// it stays dark in the light theme too and ignores the accent.
+                /// </summary>
+                public static UIColorSet Dark { get; } = UIColors.CreateSet(Color.FromArgb(35, 35, 35), Color.FromArgb(60, 60, 60), Color.FromArgb(90, 90, 90));
+
                 public static UIColorSet Gray { get; } = UIColors.CreateSet(Color.FromArgb(75, 75, 75), Color.FromArgb(90, 90, 90), Color.FromArgb(121, 121, 121));
             }
 
@@ -223,7 +229,15 @@ namespace ErikwnkWFUI
             public static Font Emoji { get { return UIFonts.Emoji; } }
         }
 
-        /// <summary>Flat, themed <see cref="Button"/>s: <see cref="CreateStandard"/> (neutral), <see cref="CreatePrimary"/> (accent color), <see cref="CreateGreen"/> (confirm) and <see cref="CreateRed"/> (delete), plus <see cref="CreateBrowse"/> for a folder picker. The disabled, hover and pressed looks are built in.</summary>
+        /// <summary>
+        /// Flat, themed <see cref="Button"/>s with a caption: <see cref="CreateStandard"/> (neutral),
+        /// <see cref="CreatePrimary"/> (accent color), <see cref="CreateGreen"/> (confirm) and
+        /// <see cref="CreateRed"/> (delete). The disabled, hover and pressed looks are built in.
+        /// A button that carries a symbol instead of a caption always comes from
+        /// <c>CreateSymbol</c>, in one of two ways: with a ready-made <see cref="Presets">preset</see>
+        /// (<c>CreateSymbol(Presets.Add, "Add")</c>), or by choosing the symbol and the colors
+        /// yourself (<c>CreateSymbol(Symbols.Folder, "Choose folder", size, Colors.Sets.Yellow)</c>).
+        /// </summary>
         public static class Buttons
         {
             /// <summary>The neutral button.</summary>
@@ -316,43 +330,79 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
-            /// A yellow "open folder" button. The first parameter is the tooltip,
-            /// not a caption: the button always shows the folder glyph. To change
-            /// the tooltip later (after a language switch), use
-            /// <see cref="UpdateTooltip"/> - setting <c>Text</c> would replace the
-            /// glyph.
+            /// Makes a symbol button from a ready-made design - the simplest way. The
+            /// <paramref name="preset"/> already says which symbol the button carries and in
+            /// which colors; you only add what the button is for (the tooltip) and, if the
+            /// standard 30 x 30 is not what you want, its size.
             /// </summary>
-            public static Button CreateBrowse(
+            /// <remarks>
+            /// The ready-made presets are in <see cref="Presets"/> (Add, Delete, Save, Browse ...).
+            /// Need a design they do not have? Make your own <see cref="UIButtonPreset"/> once and
+            /// use it everywhere, or choose symbol and colors directly with the other
+            /// <c>CreateSymbol</c> overload. A preset is nothing but a symbol and a color set, so both
+            /// ways give the same button.
+            /// </remarks>
+            /// <example>
+            /// <code>
+            /// // A preset brings the symbol and the colors:
+            /// var save = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Save, "Save");
+            ///
+            /// // The same, larger:
+            /// var big = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Delete, "Delete", new Size(48, 48));
+            /// </code>
+            /// </example>
+            /// <param name="preset">The design, for example <c>UIStyles.Buttons.Presets.Add</c>.</param>
+            /// <param name="tooltip">The tooltip text (the button has no caption, so this is what tells the user what it does); empty for none.</param>
+            /// <param name="size">The size of the button; 30 x 30 when left out. The symbol grows with the height.</param>
+            public static Button CreateSymbol(
+                UIButtonPreset preset,
                 string tooltip = "",
-                Size? size = null,
-                bool isIcon = true)
+                Size? size = null)
             {
-                return UIButtonFactory.CreateBrowse(
+                if (preset == null)
+                    throw new ArgumentNullException(nameof(preset));
+
+                // A preset is only a symbol plus colors - the work is the same as below.
+                return CreateSymbol(
+                    preset.Symbol,
                     tooltip,
                     size,
-                    isIcon);
+                    preset.Colors);
             }
 
             /// <summary>
-            /// A button that carries a symbol instead of a caption - pick the symbol
-            /// from <see cref="Symbols"/> and, if you like, a color from
-            /// <c>UIStyles.Colors.Sets</c>. The symbol is centered and grows with the
-            /// button.
+            /// Makes a symbol button when you want to choose the symbol and the colors yourself:
+            /// any symbol from <see cref="Symbols"/> (or a symbol of your own), in the neutral look
+            /// or in the colors of a color set.
             /// </summary>
+            /// <remarks>
+            /// The button draws its symbol itself, exactly in the middle, and the symbol grows with
+            /// the height of the button. Hover, pressed and disabled looks and the color of the
+            /// symbol in each of them come from the color set, so they are the same in Dark and
+            /// Light. Without <paramref name="colors"/> the button has the neutral look and follows
+            /// the theme. For a ready-made combination of symbol and colors use the
+            /// <see cref="CreateSymbol(UIButtonPreset, string, Size?)">preset overload</see> instead.
+            /// </remarks>
             /// <example>
             /// <code>
-            /// var add = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Add, "Add", colors: UIStyles.Colors.Sets.Green);
+            /// // Symbol and colors chosen by hand (this is what Presets.Browse is):
+            /// var browse = UIStyles.Buttons.CreateSymbol(
+            ///     UIStyles.Symbols.Folder, "Choose folder", new Size(50, 30), UIStyles.Colors.Sets.Yellow);
+            ///
+            /// // Neutral look, no color set:
             /// var back = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, "Back");
+            ///
+            /// // Any color works - a plain Color is turned into a color set:
+            /// var star = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Star, "Favorite", colors: Color.Orange);
             /// </code>
             /// </example>
-            /// <param name="symbol">The symbol, for example <c>UIStyles.Symbols.Delete</c>.</param>
-            /// <param name="tooltip">The tooltip text (the button has no caption); empty for none.</param>
-            /// <param name="size">The size; 30 x 30 when left out. The symbol scales with the height.</param>
+            /// <param name="symbol">The symbol, for example <c>UIStyles.Symbols.Delete</c>, or any character of your own.</param>
+            /// <param name="tooltip">The tooltip text (the button has no caption, so this is what tells the user what it does); empty for none.</param>
+            /// <param name="size">The size of the button; 30 x 30 when left out. The symbol grows with the height.</param>
             /// <param name="colors">
-            /// A color set for the button instead of the neutral look: one of
-            /// <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
-            /// <see cref="Color"/>. Fill, hover, pressed and disabled looks and the symbol color on
-            /// each are then worked out for you, the same in Dark and Light.
+            /// The colors of the button: one of <c>UIStyles.Colors.Sets</c>, a set you made with
+            /// <c>UIStyles.Colors.CreateSet(...)</c>, or simply a <see cref="Color"/>. Left out, the
+            /// button has the neutral look of <see cref="CreateStandard"/>.
             /// </param>
             public static Button CreateSymbol(
                 string symbol,
@@ -365,6 +415,67 @@ namespace ErikwnkWFUI
                     tooltip,
                     size,
                     colors);
+            }
+
+            /// <summary>
+            /// Ready-made designs for the buttons most programs need. Each one is a symbol with
+            /// its own fixed colors (green to add or save, red to delete or close, blue to edit or
+            /// reload, dark gray for search, settings and navigation, yellow to choose a file or folder), the same in Dark and
+            /// Light and with any accent. Hand one to
+            /// <see cref="CreateSymbol(UIButtonPreset, string, Size?)"/> to get the button. A preset
+            /// you would like a little different is a copy away
+            /// (<see cref="UIButtonPreset.WithColors"/>, <see cref="UIButtonPreset.WithSymbol"/>), and
+            /// your own presets are made with <see cref="UIButtonPreset"/>.
+            /// </summary>
+            public static class Presets
+            {
+                /// <summary>Adding an entry: a plus on green.</summary>
+                public static UIButtonPreset Add { get; } = new UIButtonPreset(Symbols.Add, Colors.Sets.Green);
+
+                /// <summary>Saving: a disk on green.</summary>
+                public static UIButtonPreset Save { get; } = new UIButtonPreset(Symbols.Save, Colors.Sets.Green);
+
+                /// <summary>Deleting an entry: a trash can on red.</summary>
+                public static UIButtonPreset Delete { get; } = new UIButtonPreset(Symbols.Delete, Colors.Sets.Red);
+
+                /// <summary>Closing or removing: a cross on red.</summary>
+                public static UIButtonPreset Close { get; } = new UIButtonPreset(Symbols.Close, Colors.Sets.Red);
+
+                /// <summary>Editing an entry: a pencil on blue.</summary>
+                public static UIButtonPreset Edit { get; } = new UIButtonPreset(Symbols.Edit, Colors.Sets.Blue);
+
+                /// <summary>Reloading: a circular arrow on blue.</summary>
+                public static UIButtonPreset Refresh { get; } = new UIButtonPreset(Symbols.Refresh, Colors.Sets.Blue);
+
+                /// <summary>Logging in: a person on blue.</summary>
+                public static UIButtonPreset Login { get; } = new UIButtonPreset(Symbols.User, Colors.Sets.Blue);
+
+                /// <summary>Searching: a magnifier on dark gray.</summary>
+                public static UIButtonPreset Search { get; } = new UIButtonPreset(Symbols.Search, Colors.Sets.Dark);
+
+                /// <summary>Opening the settings: a gear on dark gray.</summary>
+                public static UIButtonPreset Settings { get; } = new UIButtonPreset(Symbols.Settings, Colors.Sets.Dark);
+
+                /// <summary>Going back: an arrow to the left on dark gray.</summary>
+                public static UIButtonPreset Back { get; } = new UIButtonPreset(Symbols.Back, Colors.Sets.Dark);
+
+                /// <summary>Going forward: an arrow to the right on dark gray.</summary>
+                public static UIButtonPreset Forward { get; } = new UIButtonPreset(Symbols.Forward, Colors.Sets.Dark);
+
+                /// <summary>Going one level up: an arrow up on dark gray.</summary>
+                public static UIButtonPreset Up { get; } = new UIButtonPreset(Symbols.Up, Colors.Sets.Dark);
+
+                /// <summary>Going one level down: an arrow down on dark gray.</summary>
+                public static UIButtonPreset Down { get; } = new UIButtonPreset(Symbols.Down, Colors.Sets.Dark);
+
+                /// <summary>Going to the start: a house on dark gray.</summary>
+                public static UIButtonPreset Home { get; } = new UIButtonPreset(Symbols.Home, Colors.Sets.Dark);
+
+                /// <summary>Choosing a file: a document on yellow.</summary>
+                public static UIButtonPreset OpenFile { get; } = new UIButtonPreset(Symbols.File, Colors.Sets.Yellow);
+
+                /// <summary>Choosing a folder: a folder on yellow (the former Browse button).</summary>
+                public static UIButtonPreset Browse { get; } = new UIButtonPreset(Symbols.Folder, Colors.Sets.Yellow);
             }
 
             /// <summary>

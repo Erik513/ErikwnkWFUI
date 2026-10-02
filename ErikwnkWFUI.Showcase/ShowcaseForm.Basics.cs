@@ -85,36 +85,33 @@ namespace ErikwnkWFUI.Showcase
             dangerDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateRed", danger, dangerDisabled);
 
-            Button browse = UIStyles.Buttons.CreateBrowse("Browse", new Size(36, 30));
-            Button browseDisabled = UIStyles.Buttons.CreateBrowse("Browse", new Size(36, 30));
-            browseDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateBrowse", browse, browseDisabled);
-
-            // Buttons made for symbols: pick the symbol (and a color if you like).
-            // Hover over one for its name.
-            (string Name, string Symbol, UIColorSet Colors)[] symbolButtons =
+            // Ready-made designs: pass a preset to CreateSymbol and it brings the symbol and
+            // the colors. Hover over one for its name.
+            (string Name, UIButtonPreset Preset)[] presets =
             {
-                ("Add", UIStyles.Symbols.Add, UIStyles.Colors.Sets.Green),
-                ("Save", UIStyles.Symbols.Save, UIStyles.Colors.Sets.Green),
-                ("Delete", UIStyles.Symbols.Delete, UIStyles.Colors.Sets.Red),
-                ("Close", UIStyles.Symbols.Close, UIStyles.Colors.Sets.Red),
-                ("Edit", UIStyles.Symbols.Edit, UIStyles.Colors.Sets.Blue),
-                ("Refresh", UIStyles.Symbols.Refresh, UIStyles.Colors.Sets.Blue),
-                ("Login", UIStyles.Symbols.User, UIStyles.Colors.Sets.Primary),
-                ("OpenFile", UIStyles.Symbols.File, UIStyles.Colors.Sets.Yellow),
-                ("Search", UIStyles.Symbols.Search, null),
-                ("Settings", UIStyles.Symbols.Settings, null),
-                ("Back", UIStyles.Symbols.Back, null),
-                ("Forward", UIStyles.Symbols.Forward, null),
-                ("Up", UIStyles.Symbols.Up, null),
-                ("Home", UIStyles.Symbols.Home, null)
+                ("Add", UIStyles.Buttons.Presets.Add),
+                ("Save", UIStyles.Buttons.Presets.Save),
+                ("Delete", UIStyles.Buttons.Presets.Delete),
+                ("Close", UIStyles.Buttons.Presets.Close),
+                ("Edit", UIStyles.Buttons.Presets.Edit),
+                ("Refresh", UIStyles.Buttons.Presets.Refresh),
+                ("Login", UIStyles.Buttons.Presets.Login),
+                ("Search", UIStyles.Buttons.Presets.Search),
+                ("Settings", UIStyles.Buttons.Presets.Settings),
+                ("Back", UIStyles.Buttons.Presets.Back),
+                ("Forward", UIStyles.Buttons.Presets.Forward),
+                ("Up", UIStyles.Buttons.Presets.Up),
+                ("Down", UIStyles.Buttons.Presets.Down),
+                ("Home", UIStyles.Buttons.Presets.Home),
+                ("OpenFile", UIStyles.Buttons.Presets.OpenFile),
+                ("Browse", UIStyles.Buttons.Presets.Browse)
             };
 
             table.AddRow(
-                "CreateSymbol",
+                "CreateSymbol (preset)",
                 84,
-                UIColumn.Percent(CreateSymbolButtons(symbolButtons, enabled: true), TwoColumnPercent),
-                UIColumn.Percent(CreateSymbolButtons(symbolButtons, enabled: false), TwoColumnPercent));
+                UIColumn.Percent(CreatePresetButtons(presets, enabled: true), TwoColumnPercent),
+                UIColumn.Percent(CreatePresetButtons(presets, enabled: false), TwoColumnPercent));
 
             // Any color, ready-made or your own: fill, hover, pressed, disabled
             // and the text on each come from the color set.
@@ -156,15 +153,15 @@ namespace ErikwnkWFUI.Showcase
                 UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
         }
 
-        private static Control CreateSymbolButtons((string Name, string Symbol, UIColorSet Colors)[] buttons, bool enabled)
+        private static Control CreatePresetButtons((string Name, UIButtonPreset Preset)[] presets, bool enabled)
         {
             FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
 
-            foreach ((string name, string symbol, UIColorSet colors) in buttons)
+            foreach ((string name, UIButtonPreset preset) in presets)
             {
-                Button button = UIStyles.Buttons.CreateSymbol(symbol, name, colors: colors);
+                Button button = UIStyles.Buttons.CreateSymbol(preset, name);
                 button.Margin = new Padding(0, 0, 6, 6);
                 button.Enabled = enabled;
                 flow.Controls.Add(button);

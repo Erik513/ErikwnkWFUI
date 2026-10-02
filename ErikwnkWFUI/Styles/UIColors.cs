@@ -251,6 +251,28 @@ namespace ErikwnkWFUI.Styles
 
         // ---- color sets: one color in, every state out ----
 
+        /// <summary>
+        /// The yellow look: white text that stays white in every state and in both
+        /// themes. The disabled yellow is the resting one darkened as far as any
+        /// dark fill gets.
+        /// </summary>
+        internal static readonly UIColorSet YellowSet = CreateYellowSet();
+
+        private static UIColorSet CreateYellowSet()
+        {
+            Color disabled = Darken(Yellow, DisabledDarkenAmount);
+
+            return new UIColorSet(
+                Yellow,
+                YellowLight,
+                YellowLighter,
+                disabled,
+                White,
+                White,
+                White,
+                BlendToward(White, disabled, DisabledTextBlend));
+        }
+
         /// <summary>The look of the accent color: darker at rest, the accent hovered, lighter pressed.</summary>
         internal static UIColorSet PrimarySet
         {

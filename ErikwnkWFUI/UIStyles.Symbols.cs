@@ -1,4 +1,6 @@
-﻿namespace ErikwnkWFUI
+﻿using ErikwnkWFUI.Styles;
+
+namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
@@ -8,22 +10,58 @@
         /// take the color of the control they are on and scale with its font.
         /// </summary>
         /// <remarks>
-        /// Show them in <see cref="Fonts.Icon"/> through a control that draws with
+        /// Show them in <see cref="Fonts.Icon"/> (but see <see cref="Symbols.GetFontName"/>
+        /// for the few that need another font) through a control that draws with
         /// <c>TextRenderer</c> (a <c>Button</c>, a <c>Label</c> from
         /// <see cref="Labels"/>, a menu item) - Windows then fills in the symbols that
         /// are not in that font itself. Drawing them with <c>Graphics.DrawString</c>
         /// can show empty boxes instead. See the Symbols tab of the Showcase for
         /// what each looks like. A button that carries one is made with
-        /// <see cref="Buttons.CreateSymbol"/>.
+        /// <c>UIStyles.Buttons.CreateSymbol</c>.
         /// </remarks>
         public static class Symbols
         {
+            private const string IconFontName = "Segoe MDL2 Assets";
+
+            private static readonly bool _isIconFontInstalled = IsFontInstalled(IconFontName);
+
+            /// <summary>
+            /// The name of the font a symbol has to be drawn in. Nearly all are drawn in
+            /// <see cref="Fonts.Icon"/>; the few that come from the Windows icon font
+            /// (<c>Delete</c>) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
+            /// <c>UIStyles.Buttons.CreateSymbol</c> picks the right one by itself; use this
+            /// when you draw a symbol yourself.
+            /// </summary>
+            public static string GetFontName(string symbol)
+            {
+                bool isIconFontSymbol = !string.IsNullOrEmpty(symbol) && symbol[0] >= '\uE000' && symbol[0] <= '\uF8FF';
+
+                return isIconFontSymbol && _isIconFontInstalled
+                    ? IconFontName
+                    : UIFonts.Icon.FontFamily.Name;
+            }
+
+            private static bool IsFontInstalled(string name)
+            {
+                using (System.Drawing.Text.InstalledFontCollection fonts = new System.Drawing.Text.InstalledFontCollection())
+                {
+                    foreach (System.Drawing.FontFamily family in fonts.Families)
+                    {
+                        if (family.Name == name)
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+
             // ---- actions ----
             public const string Add = "➕";
             public const string Remove = "➖";
-            // The recycle sign: the trash can emoji is a color glyph that ignores
-            // the text color and comes out thin and dim on a button.
-            public const string Delete = "\u267B";
+            // A trash can from the Windows icon font (see GetFontName): the trash
+            // can emoji is a color glyph that ignores the text color and comes out
+            // thin and dim, and no other character looks like deleting.
+            public const string Delete = "\uE74D";
             public const string Edit = "✎";
             public const string Save = "\U0001F4BE";
             public const string Refresh = "↻";

@@ -39,7 +39,7 @@ public class ButtonColorContrastTests
             "Primary" => UIStyles.Buttons.CreatePrimary("Text"),
             "Green" => UIStyles.Buttons.CreateGreen("Text"),
             "Red" => UIStyles.Buttons.CreateRed("Text"),
-            _ => UIStyles.Buttons.CreateBrowse()
+            _ => UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, colors: UIStyles.Colors.Sets.Yellow)
         };
     }
 

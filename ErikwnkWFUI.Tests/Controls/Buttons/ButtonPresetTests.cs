@@ -1,0 +1,243 @@
+﻿using System.Drawing;
+using System.Reflection;
+using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
+
+namespace ErikwnkWFUI.Tests.Controls.Buttons;
+
+/// <summary>
+/// Button presets: a symbol in fixed colors, passed to <c>CreateSymbol</c>.
+/// What is checked is the wiring - each ready-made preset carries the symbol
+/// and the color it says, a button made from it looks like the symbol button
+/// made by hand, it is the same in Dark and Light and with any accent - and
+/// the preset object itself (own presets, the "with" copies).
+/// [Collection]: the colors read the live accent and the tests switch themes.
+/// </summary>
+[Collection(AccentColorTestCollection.Name)]
+public class ButtonPresetTests
+{
+    private static (string Name, UIButtonPreset Preset)[] Ready() => new[]
+    {
+        ("Add", UIStyles.Buttons.Presets.Add),
+        ("Save", UIStyles.Buttons.Presets.Save),
+        ("Delete", UIStyles.Buttons.Presets.Delete),
+        ("Close", UIStyles.Buttons.Presets.Close),
+        ("Edit", UIStyles.Buttons.Presets.Edit),
+        ("Refresh", UIStyles.Buttons.Presets.Refresh),
+        ("Login", UIStyles.Buttons.Presets.Login),
+        ("Search", UIStyles.Buttons.Presets.Search),
+        ("Settings", UIStyles.Buttons.Presets.Settings),
+        ("Back", UIStyles.Buttons.Presets.Back),
+        ("Forward", UIStyles.Buttons.Presets.Forward),
+        ("Up", UIStyles.Buttons.Presets.Up),
+        ("Down", UIStyles.Buttons.Presets.Down),
+        ("Home", UIStyles.Buttons.Presets.Home),
+        ("OpenFile", UIStyles.Buttons.Presets.OpenFile),
+        ("Browse", UIStyles.Buttons.Presets.Browse),
+    };
+
+    public static IEnumerable<object[]> Names()
+    {
+        foreach ((string name, _) in Ready())
+        {
+            yield return new object[] { name };
+        }
+    }
+
+    private static UIButtonPreset Get(string name) => Ready().First(entry => entry.Name == name).Preset;
+
+    [Fact]
+    public void EveryPresetOnTheClass_IsInTheList_SoNoneEscapesTheseTests()
+    {
+        string[] onTheClass = typeof(UIStyles.Buttons.Presets)
+            .GetProperties(BindingFlags.Public | BindingFlags.Static)
+            .Select(property => property.Name)
+            .OrderBy(name => name)
+            .ToArray();
+
+        Assert.Equal(Ready().Select(entry => entry.Name).OrderBy(name => name).ToArray(), onTheClass);
+    }
+
+    [Fact]
+    public void EachPreset_CarriesTheSymbolAndTheColorItIsNamedFor()
+    {
+        (string, string, UIColorSet)[] expected =
+        {
+            ("Add", UIStyles.Symbols.Add, UIStyles.Colors.Sets.Green),
+            ("Save", UIStyles.Symbols.Save, UIStyles.Colors.Sets.Green),
+            ("Delete", UIStyles.Symbols.Delete, UIStyles.Colors.Sets.Red),
+            ("Close", UIStyles.Symbols.Close, UIStyles.Colors.Sets.Red),
+            ("Edit", UIStyles.Symbols.Edit, UIStyles.Colors.Sets.Blue),
+            ("Refresh", UIStyles.Symbols.Refresh, UIStyles.Colors.Sets.Blue),
+            ("Login", UIStyles.Symbols.User, UIStyles.Colors.Sets.Blue),
+            ("Search", UIStyles.Symbols.Search, UIStyles.Colors.Sets.Dark),
+            ("Settings", UIStyles.Symbols.Settings, UIStyles.Colors.Sets.Dark),
+            ("Back", UIStyles.Symbols.Back, UIStyles.Colors.Sets.Dark),
+            ("Forward", UIStyles.Symbols.Forward, UIStyles.Colors.Sets.Dark),
+            ("Up", UIStyles.Symbols.Up, UIStyles.Colors.Sets.Dark),
+            ("Down", UIStyles.Symbols.Down, UIStyles.Colors.Sets.Dark),
+            ("Home", UIStyles.Symbols.Home, UIStyles.Colors.Sets.Dark),
+            ("OpenFile", UIStyles.Symbols.File, UIStyles.Colors.Sets.Yellow),
+            ("Browse", UIStyles.Symbols.Folder, UIStyles.Colors.Sets.Yellow),
+        };
+
+        foreach ((string name, string symbol, UIColorSet colors) in expected)
+        {
+            UIButtonPreset preset = Get(name);
+
+            Assert.Equal(symbol, preset.Symbol);
+            Assert.Same(colors, preset.Colors);
+        }
+    }
+
+    [Fact]
+    public void EveryPreset_HasItsOwnSymbol()
+    {
+        List<string> symbols = Ready().Select(entry => entry.Preset.Symbol).ToList();
+
+        Assert.Equal(symbols.Count, symbols.Distinct().Count());
+    }
+
+    [Theory]
+    [MemberData(nameof(Names))]
+    public void AButtonFromAPreset_IsTheSymbolButtonMadeByHand(string name)
+    {
+        UIButtonPreset preset = Get(name);
+
+        using Button fromPreset = UIStyles.Buttons.CreateSymbol(preset, "Tip", new Size(40, 36));
+        using Button byHand = UIStyles.Buttons.CreateSymbol(preset.Symbol, "Tip", new Size(40, 36), preset.Colors);
+
+        Assert.Equal("SymbolButton", fromPreset.GetType().Name);
+        Assert.Equal(byHand.Text, fromPreset.Text);
+        Assert.Equal(byHand.Size, fromPreset.Size);
+        Assert.Equal(byHand.BackColor, fromPreset.BackColor);
+        Assert.Equal(byHand.ForeColor, fromPreset.ForeColor);
+        Assert.Equal(byHand.Font.Size, fromPreset.Font.Size);
+        Assert.Equal(byHand.FlatAppearance.MouseOverBackColor, fromPreset.FlatAppearance.MouseOverBackColor);
+        Assert.Equal(byHand.FlatAppearance.MouseDownBackColor, fromPreset.FlatAppearance.MouseDownBackColor);
+        Assert.Equal("Tip", ButtonTestsToolTip.Text(fromPreset));
+    }
+
+    [Theory]
+    [MemberData(nameof(Names))]
+    public void AButtonFromAPreset_LooksTheSame_InBothThemes_AndWithAnyAccent(string name)
+    {
+        UIButtonPreset preset = Get(name);
+
+        (Color, Color, Color, Color, Color, Color, Color, Color) Look()
+        {
+            using Button button = UIStyles.Buttons.CreateSymbol(preset);
+            Color back = button.BackColor;
+            Color fore = button.ForeColor;
+            Color over = button.FlatAppearance.MouseOverBackColor;
+            Color down = button.FlatAppearance.MouseDownBackColor;
+            Color border = button.FlatAppearance.BorderColor;
+            button.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+            Color pressed = button.ForeColor;
+            button.InvokePrivate("OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+            button.Enabled = false;
+
+            return (back, fore, over, down, border, pressed, button.BackColor, button.ForeColor);
+        }
+
+        try
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+            var dark = Look();
+
+            UIColors.ApplyTheme(UIThemes.Light);
+            var light = Look();
+
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            Assert.Equal(dark, light);
+            Assert.Equal(dark, Look());
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
+
+    [Fact]
+    public void TheCallInTheDocs_WithSymbolAndColors_IsThePresetOfTheSameName()
+    {
+        // The example of CreateSymbol: symbol, tooltip, size and colors by hand ...
+        using Button byHand = UIStyles.Buttons.CreateSymbol(
+            UIStyles.Symbols.Folder, "Ordner auswählen", new Size(50, 30), UIStyles.Colors.Sets.Yellow);
+
+        // ... is what the Browse preset makes.
+        using Button preset = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Browse, "Ordner auswählen", new Size(50, 30));
+
+        Assert.Equal(new Size(50, 30), byHand.Size);
+        Assert.Equal("Ordner auswählen", ButtonTestsToolTip.Text(byHand));
+        Assert.Equal(byHand.Text, preset.Text);
+        Assert.Equal(byHand.Size, preset.Size);
+        Assert.Equal(byHand.BackColor, preset.BackColor);
+        Assert.Equal(byHand.ForeColor, preset.ForeColor);
+        Assert.Equal(byHand.FlatAppearance.MouseOverBackColor, preset.FlatAppearance.MouseOverBackColor);
+        Assert.Equal(byHand.FlatAppearance.MouseDownBackColor, preset.FlatAppearance.MouseDownBackColor);
+        Assert.Equal(ButtonTestsToolTip.Text(byHand), ButtonTestsToolTip.Text(preset));
+    }
+
+    [Fact]
+    public void ThePresetsSymbolAndColors_CannotBeOverriddenByTheCaller_ButAnotherPresetCan()
+    {
+        // The preset decides; whoever wants other colors takes another preset.
+        using Button green = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Add);
+        using Button teal = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Add.WithColors(UIStyles.Colors.Sets.Teal));
+
+        Assert.Equal(UIStyles.Colors.Sets.Green.Basic, green.BackColor);
+        Assert.Equal(UIStyles.Colors.Sets.Teal.Basic, teal.BackColor);
+        Assert.Equal(green.Text, teal.Text);
+    }
+
+    // ---- the preset object ----
+
+    [Fact]
+    public void YourOwnPreset_IsMadeFromASymbolAndColors_OrASymbolAlone()
+    {
+        UIColorSet orange = UIStyles.Colors.Sets.Orange;
+        UIButtonPreset star = new UIButtonPreset(UIStyles.Symbols.Star, orange);
+        UIButtonPreset plain = new UIButtonPreset(UIStyles.Symbols.Menu);
+
+        Assert.Equal(UIStyles.Symbols.Star, star.Symbol);
+        Assert.Same(orange, star.Colors);
+        Assert.Null(plain.Colors);
+
+        using Button colored = UIStyles.Buttons.CreateSymbol(star);
+        using Button neutral = UIStyles.Buttons.CreateSymbol(plain);
+        using Button standard = UIStyles.Buttons.CreateStandard(UIStyles.Symbols.Menu, isIcon: true);
+
+        Assert.Equal(orange.Basic, colored.BackColor);
+        Assert.Equal(standard.BackColor, neutral.BackColor);
+    }
+
+    [Fact]
+    public void TheWithCopies_ChangeOneThing_AndLeaveTheOriginalAlone()
+    {
+        UIButtonPreset add = UIStyles.Buttons.Presets.Add;
+
+        UIButtonPreset teal = add.WithColors(UIStyles.Colors.Sets.Teal);
+        UIButtonPreset plus = add.WithSymbol(UIStyles.Symbols.Star);
+        UIButtonPreset neutral = add.WithColors(null);
+
+        Assert.Equal(add.Symbol, teal.Symbol);
+        Assert.Same(UIStyles.Colors.Sets.Teal, teal.Colors);
+        Assert.Equal(UIStyles.Symbols.Star, plus.Symbol);
+        Assert.Same(add.Colors, plus.Colors);
+        Assert.Null(neutral.Colors);
+
+        Assert.Equal(UIStyles.Symbols.Add, add.Symbol);
+        Assert.Same(UIStyles.Colors.Sets.Green, add.Colors);
+    }
+
+    [Fact]
+    public void ANullSymbol_BecomesEmpty_AndANullPreset_IsRefused()
+    {
+        Assert.Equal("", new UIButtonPreset(null!).Symbol);
+        Assert.Throws<ArgumentNullException>(() => UIStyles.Buttons.CreateSymbol((UIButtonPreset)null!));
+    }
+}

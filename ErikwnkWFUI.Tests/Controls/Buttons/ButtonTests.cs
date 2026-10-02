@@ -33,7 +33,7 @@ public class ButtonTests
             "Primary" => UIStyles.Buttons.CreatePrimary(text, tooltip, size, isIcon),
             "Green" => UIStyles.Buttons.CreateGreen(text, tooltip, size, isIcon),
             "Red" => UIStyles.Buttons.CreateRed(text, tooltip, size, isIcon),
-            _ => UIStyles.Buttons.CreateBrowse(tooltip, size)
+            _ => UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, tooltip, size, UIStyles.Colors.Sets.Yellow)
         };
     }
 
@@ -100,11 +100,11 @@ public class ButtonTests
     }
 
     [Fact]
-    public void Browse_ShowsTheFolderGlyph_AndTakesItsTooltipFirst()
+    public void AFolderOnYellow_ShowsTheGlyph_WhiteOnYellow()
     {
-        using Button browse = UIStyles.Buttons.CreateBrowse("Pick a folder");
+        using Button browse = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, "Pick a folder", colors: UIStyles.Colors.Sets.Yellow);
 
-        Assert.Equal("\U0001F4C1", browse.Text);
+        Assert.Equal(UIStyles.Symbols.Folder, browse.Text);
         Assert.Equal("Pick a folder", GetToolTipText(browse));
         Assert.Equal(UIFonts.Icon, browse.Font);
         Assert.Equal(UIColors.Yellow, browse.BackColor);
@@ -302,7 +302,7 @@ public class ButtonTests
     [Fact]
     public void Pressing_AFixedTextButton_KeepsItsColor()
     {
-        using Button browse = UIStyles.Buttons.CreateBrowse();
+        using Button browse = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, colors: UIStyles.Colors.Sets.Yellow);
 
         Press(browse);
 
