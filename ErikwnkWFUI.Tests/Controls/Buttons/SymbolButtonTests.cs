@@ -403,6 +403,25 @@ public class SymbolButtonTests
     }
 
     [Fact]
+    public void TheChevrons_AreDrawnSmallerThanOtherSymbols_OnAButtonOfTheSameSize()
+    {
+        using Button normal = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Up, size: new Size(40, 40));
+
+        foreach (string chevron in new[] { UIStyles.Symbols.ChevronLeft, UIStyles.Symbols.ChevronRight, UIStyles.Symbols.ChevronUp, UIStyles.Symbols.ChevronDown })
+        {
+            using Button button = UIStyles.Buttons.CreateSymbol(chevron, size: new Size(40, 40));
+
+            Assert.True(button.Font.Size < normal.Font.Size, "chevron not smaller");
+        }
+
+        // At the standard size too (it must not take the shared icon font as it is).
+        using Button standardChevron = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.ChevronLeft);
+        using Button standardOther = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Up);
+
+        Assert.True(standardChevron.Font.Size < standardOther.Font.Size);
+    }
+
+    [Fact]
     public void ThePressedAndKeyBehavior_IsTheSameAsOnAnyOtherButton()
     {
         // It is built on the same button: the space bar presses it and a

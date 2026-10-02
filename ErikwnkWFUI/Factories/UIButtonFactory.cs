@@ -114,7 +114,7 @@ namespace ErikwnkWFUI.Factories
                 ? CreateColored(symbol, tooltip, buttonSize, true, colors, instance)
                 : CreateStandard(symbol, tooltip, buttonSize, true, instance);
 
-            float points = buttonSize.Height * SymbolPointsPerPixel;
+            float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
             string family = UIStyles.Symbols.GetFontName(symbol);
 
             // At the standard size, in the usual symbol font, it is the shared icon

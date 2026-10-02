@@ -33,7 +33,7 @@ namespace ErikwnkWFUI
             /// <summary>
             /// The name of the font a symbol has to be drawn in. Nearly all are drawn in
             /// <see cref="Fonts.Icon"/>; the few that come from the Windows icon font
-            /// (<c>Delete</c>, <c>Copy</c>, <c>Print</c>, <c>Info</c>, <c>Warning</c>, <c>Globe</c>) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
+            /// (<c>Delete</c>, <c>Copy</c>, <c>Print</c>, <c>Filter</c> ... - everything whose character is in the private-use range) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
             /// <c>UIStyles.Buttons.CreateSymbol</c> picks the right one by itself; use this
             /// when you draw a symbol yourself.
             /// </summary>
@@ -47,6 +47,18 @@ namespace ErikwnkWFUI
                 return isIconFontSymbol && _isIconFontInstalled
                     ? IconFontName
                     : UIFonts.Icon.FontFamily.Name;
+            }
+
+            // The arrows of the chevrons fill the whole character cell and look too
+            // big next to the other symbols, so a button draws them a bit smaller.
+            private const float ChevronSizeFactor = 0.7f;
+
+            internal static float GetSizeFactor(string symbol)
+            {
+                bool isChevron = symbol == ChevronLeft || symbol == ChevronRight
+                    || symbol == ChevronUp || symbol == ChevronDown;
+
+                return isChevron ? ChevronSizeFactor : 1f;
             }
 
             private static bool IsFontInstalled(string name)
@@ -81,13 +93,22 @@ namespace ErikwnkWFUI
             public const string Undo = "↶";
             public const string Redo = "↷";
             public const string Cut = "✂";
-            public const string Clipboard = "\U0001F4CB";
-            // Print, Info, Warning, Globe and Copy come from the Windows icon font
+            public const string Paste = "\uE77F";
+            // Print, Info, Warning, Globe, Paste, Download, Copy and the other private-use characters below come from the Windows icon font
             // (see GetFontName): bold, clear shapes where the emoji or text
             // characters are thin, colored or hard to tell apart when small.
             // Copy: two rounded sheets in Windows 11's icon font, the older pair of pages in Windows 10's.
             public const string Copy = "\uE8C8";
             public const string Print = "\uE749";
+            public const string Download = "\uE896";
+            public const string Upload = "\uE898";
+            public const string Share = "\uE72D";
+            public const string Filter = "\uE71C";
+            public const string Sort = "\uE8CB";
+            public const string ZoomIn = "\uE8A3";
+            public const string ZoomOut = "\uE71F";
+            public const string Fullscreen = "\uE740";
+            public const string Send = "\uE724";
 
             // ---- files ----
             public const string File = "\U0001F4C4";
@@ -101,8 +122,10 @@ namespace ErikwnkWFUI
             public const string Down = "⬇";
             public const string Home = "⌂";
             public const string Menu = "☰";
-            public const string ChevronLeft = "‹";
-            public const string ChevronRight = "›";
+            public const string ChevronLeft = "\uE76B";
+            public const string ChevronRight = "\uE76C";
+            public const string ChevronUp = "\uE70E";
+            public const string ChevronDown = "\uE70D";
 
             // ---- media ----
             public const string Play = "▶";
@@ -114,6 +137,8 @@ namespace ErikwnkWFUI
             public const string Volume = "\U0001F50A";
             public const string Mute = "\U0001F507";
             public const string Music = "♫";
+            public const string Shuffle = "\uE8B1";
+            public const string Repeat = "\uE8EE";
 
             // ---- status ----
             public const string Info = "\uE946";

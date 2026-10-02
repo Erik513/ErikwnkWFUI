@@ -13,10 +13,10 @@ namespace ErikwnkWFUI.Showcase
     {
         private static readonly (string Title, string[] Names)[] SymbolGroups =
         {
-            ("Actions", new[] { "Add", "Remove", "Delete", "Edit", "Save", "Refresh", "Search", "Settings", "Close", "Cancel", "Check", "Undo", "Redo", "Cut", "Clipboard", "Print" }),
+            ("Actions", new[] { "Add", "Remove", "Delete", "Edit", "Save", "Refresh", "Search", "Settings", "Close", "Cancel", "Check", "Undo", "Redo", "Cut", "Copy", "Paste", "Print", "Download", "Upload", "Share", "Send", "Filter", "Sort", "ZoomIn", "ZoomOut", "Fullscreen" }),
             ("Files", new[] { "File", "Folder", "FolderOpen" }),
-            ("Navigation", new[] { "Back", "Forward", "Up", "Down", "Home", "Menu", "ChevronLeft", "ChevronRight" }),
-            ("Media", new[] { "Play", "Pause", "Stop", "Record", "SkipBack", "SkipForward", "Volume", "Mute", "Music" }),
+            ("Navigation", new[] { "Back", "Forward", "Up", "Down", "Home", "Menu", "ChevronLeft", "ChevronRight", "ChevronUp", "ChevronDown" }),
+            ("Media", new[] { "Play", "Pause", "Stop", "Record", "SkipBack", "SkipForward", "Volume", "Mute", "Music", "Shuffle", "Repeat" }),
             ("Status", new[] { "Info", "Warning", "Error", "Help", "Heart" }),
             ("People, security", new[] { "User", "Lock", "Unlock", "Power" }),
             ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye" })

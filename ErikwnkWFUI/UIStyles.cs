@@ -508,14 +508,41 @@ namespace ErikwnkWFUI
                 /// <summary>Copying: two overlapping sheets, on dark gray.</summary>
                 public static UIButtonPreset Copy { get; } = new UIButtonPreset(Symbols.Copy, WhiteOn(Colors.Sets.Dark));
 
-                /// <summary>Copying or pasting: a clipboard, on dark gray.</summary>
-                public static UIButtonPreset Clipboard { get; } = new UIButtonPreset(Symbols.Clipboard, WhiteOn(Colors.Sets.Dark));
+                /// <summary>Pasting: a clipboard with a sheet, on dark gray.</summary>
+                public static UIButtonPreset Paste { get; } = new UIButtonPreset(Symbols.Paste, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Printing: a printer, on dark gray.</summary>
                 public static UIButtonPreset Print { get; } = new UIButtonPreset(Symbols.Print, WhiteOn(Colors.Sets.Dark));
 
-                /// <summary>Opening a folder: an open folder, on yellow.</summary>
-                public static UIButtonPreset FolderOpen { get; } = new UIButtonPreset(Symbols.FolderOpen, WhiteOn(Colors.Sets.Yellow));
+                /// <summary>Downloading: an arrow down onto a line, on blue.</summary>
+                public static UIButtonPreset Download { get; } = new UIButtonPreset(Symbols.Download, WhiteOn(Colors.Sets.Blue));
+
+                /// <summary>Uploading: an arrow up from a line, on blue.</summary>
+                public static UIButtonPreset Upload { get; } = new UIButtonPreset(Symbols.Upload, WhiteOn(Colors.Sets.Blue));
+
+                /// <summary>Sharing: a box with an arrow out of it, on blue.</summary>
+                public static UIButtonPreset Share { get; } = new UIButtonPreset(Symbols.Share, WhiteOn(Colors.Sets.Blue));
+
+                /// <summary>Filtering: a funnel, on dark gray.</summary>
+                public static UIButtonPreset Filter { get; } = new UIButtonPreset(Symbols.Filter, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Sorting: lines of different length, on dark gray.</summary>
+                public static UIButtonPreset Sort { get; } = new UIButtonPreset(Symbols.Sort, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Zooming in: a magnifier with a plus, on dark gray.</summary>
+                public static UIButtonPreset ZoomIn { get; } = new UIButtonPreset(Symbols.ZoomIn, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Zooming out: a magnifier with a minus, on dark gray.</summary>
+                public static UIButtonPreset ZoomOut { get; } = new UIButtonPreset(Symbols.ZoomOut, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Full screen: arrows to the corners, on dark gray.</summary>
+                public static UIButtonPreset Fullscreen { get; } = new UIButtonPreset(Symbols.Fullscreen, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Sending: a paper plane, on blue.</summary>
+                public static UIButtonPreset Send { get; } = new UIButtonPreset(Symbols.Send, WhiteOn(Colors.Sets.Blue));
+
+                /// <summary>Opening a folder: an open folder, on dark gray.</summary>
+                public static UIButtonPreset FolderOpen { get; } = new UIButtonPreset(Symbols.FolderOpen, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Opening a menu: three lines, on dark gray.</summary>
                 public static UIButtonPreset Menu { get; } = new UIButtonPreset(Symbols.Menu, WhiteOn(Colors.Sets.Dark));
@@ -525,6 +552,12 @@ namespace ErikwnkWFUI
 
                 /// <summary>Going one page on: a small arrow to the right, on dark gray.</summary>
                 public static UIButtonPreset ChevronRight { get; } = new UIButtonPreset(Symbols.ChevronRight, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Collapsing: a small arrow up, on dark gray.</summary>
+                public static UIButtonPreset ChevronUp { get; } = new UIButtonPreset(Symbols.ChevronUp, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Expanding: a small arrow down, on dark gray.</summary>
+                public static UIButtonPreset ChevronDown { get; } = new UIButtonPreset(Symbols.ChevronDown, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Starting: a triangle, on green.</summary>
                 public static UIButtonPreset Play { get; } = new UIButtonPreset(Symbols.Play, WhiteOn(Colors.Sets.Green));
@@ -552,6 +585,12 @@ namespace ErikwnkWFUI
 
                 /// <summary>Music: a note, on purple.</summary>
                 public static UIButtonPreset Music { get; } = new UIButtonPreset(Symbols.Music, WhiteOn(Colors.Sets.Purple));
+
+                /// <summary>Random order: crossing arrows, on dark gray.</summary>
+                public static UIButtonPreset Shuffle { get; } = new UIButtonPreset(Symbols.Shuffle, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Repeating: arrows in a loop, on dark gray.</summary>
+                public static UIButtonPreset Repeat { get; } = new UIButtonPreset(Symbols.Repeat, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Information: an i, on blue.</summary>
                 public static UIButtonPreset Info { get; } = new UIButtonPreset(Symbols.Info, WhiteOn(Colors.Sets.Blue));
