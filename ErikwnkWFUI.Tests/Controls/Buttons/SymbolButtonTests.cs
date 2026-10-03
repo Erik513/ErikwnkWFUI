@@ -387,6 +387,41 @@ public class SymbolButtonTests
         Assert.True(Has(set.DisabledText), name + " disabled");
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void EverySymbol_IsSeenAndCentered_OnTheNeutralButton_InBothThemes(bool lightTheme)
+    {
+        // The neutral button follows the theme: dark symbols on a light fill and the
+        // other way round. The symbol must be there and in the middle in both.
+        List<string> problems = new List<string>();
+
+        try
+        {
+            UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
+
+            foreach (System.Reflection.FieldInfo field in typeof(UIStyles.Symbols).GetFields())
+            {
+                if (!field.IsLiteral)
+                    continue;
+
+                using Button button = UIStyles.Buttons.CreateSymbol((string)field.GetRawConstantValue()!);
+                var offset = InkOffset(button);
+
+                if (offset == null)
+                    problems.Add(field.Name + " is not seen");
+                else if (Math.Abs(offset.Value.X) > 1.0 || Math.Abs(offset.Value.Y) > 1.0)
+                    problems.Add($"{field.Name} ({offset.Value.X:F1}, {offset.Value.Y:F1})");
+            }
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+
+        Assert.True(problems.Count == 0, (lightTheme ? "Light: " : "Dark: ") + string.Join(", ", problems));
+    }
+
     [Fact]
     public void TheFill_FollowsTheState_AndTheOutlineIsDrawn()
     {
