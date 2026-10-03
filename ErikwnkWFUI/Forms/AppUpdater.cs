@@ -126,16 +126,13 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public Button CreateUpdateAvailableButton(UpdateCheckResult result, Version currentVersion, Form owner)
         {
-            Button button = UIButtonFactory.CreateGreen(
-                UIStyles.Symbols.TriangleUp,
+            // A symbol button, green with a white symbol like the other confirm buttons.
+            Button button = UIStyles.Buttons.CreateSymbol(
+                UIStyles.Symbols.Update,
                 UIStrings.Get("Update.AvailableTooltip"),
                 new Size(22, 20),
-                isIcon: true);
+                UIColors.WithText(UIStyles.Colors.Sets.Green, UIColors.White));
 
-            // "▲" fills its glyph box (unlike the wispy "⬆"); a smaller size
-            // keeps it from clipping in this strip-sized button.
-            button.Font = new Font("Segoe UI Symbol", 9f);
-            button.Padding = new Padding(0);
             // A FlowLayoutPanel top-aligns its children; center the button in
             // the strip. No right margin - it should sit in the corner.
             button.Margin = new Padding(6, 2, 0, 2);

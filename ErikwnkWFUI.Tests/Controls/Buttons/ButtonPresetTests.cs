@@ -63,6 +63,8 @@ public class ButtonPresetTests
             ("Edit", UIStyles.Symbols.Edit, UIStyles.Colors.Sets.Blue),
             ("Refresh", UIStyles.Symbols.Refresh, UIStyles.Colors.Sets.Blue),
             ("Login", UIStyles.Symbols.User, UIStyles.Colors.Sets.Blue),
+            ("Sync", UIStyles.Symbols.Sync, UIStyles.Colors.Sets.Blue),
+            ("Update", UIStyles.Symbols.Update, UIStyles.Colors.Sets.Green),
             ("Search", UIStyles.Symbols.Search, UIStyles.Colors.Sets.Dark),
             ("Settings", UIStyles.Symbols.Settings, UIStyles.Colors.Sets.Dark),
             ("Back", UIStyles.Symbols.Back, UIStyles.Colors.Sets.Dark),

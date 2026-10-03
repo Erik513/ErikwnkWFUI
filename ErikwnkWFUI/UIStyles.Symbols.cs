@@ -89,7 +89,9 @@ namespace ErikwnkWFUI
             public const string Delete = "\uE74D";
             public const string Edit = "✎";
             public const string Save = "\U0001F4BE";
-            public const string Refresh = "↻";
+            public const string Refresh = "\uE72C";
+            public const string Sync = "\uE895";
+            public const string Update = "\uE777";
             public const string Search = "\U0001F50D";
             public const string Settings = "⚙";
             public const string Close = "✕";

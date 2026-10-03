@@ -458,6 +458,12 @@ namespace ErikwnkWFUI
                 /// <summary>Logging in: a person on blue.</summary>
                 public static UIButtonPreset Login { get; } = new UIButtonPreset(Symbols.User, WhiteOn(Colors.Sets.Blue));
 
+                /// <summary>Syncing two sides: two arrows chasing each other, on blue.</summary>
+                public static UIButtonPreset Sync { get; } = new UIButtonPreset(Symbols.Sync, WhiteOn(Colors.Sets.Blue));
+
+                /// <summary>Updating or restoring: a circular arrow against the clock, on green.</summary>
+                public static UIButtonPreset Update { get; } = new UIButtonPreset(Symbols.Update, WhiteOn(Colors.Sets.Green));
+
                 /// <summary>Searching: a magnifier on dark gray.</summary>
                 public static UIButtonPreset Search { get; } = new UIButtonPreset(Symbols.Search, WhiteOn(Colors.Sets.Dark));
 
