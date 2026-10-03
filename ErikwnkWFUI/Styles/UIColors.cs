@@ -347,20 +347,32 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
-        /// The same fills and disabled look as <paramref name="set"/>, but with
-        /// <paramref name="text"/> in every state (muted when disabled).
+        /// The same look as <paramref name="set"/>, but with <paramref name="text"/> in
+        /// every state (muted when disabled). With a <paramref name="minimumContrast"/>
+        /// the fills that would not carry that text well enough are darkened until they
+        /// do - a white symbol on a set whose pressed fill is bright, say.
         /// </summary>
-        internal static UIColorSet WithText(UIColorSet set, Color text)
+        internal static UIColorSet WithText(UIColorSet set, Color text, double minimumContrast = 0)
         {
             return new UIColorSet(
-                set.Basic,
-                set.Hover,
-                set.Pressed,
+                DarkenUntilReadable(set.Basic, text, minimumContrast),
+                DarkenUntilReadable(set.Hover, text, minimumContrast),
+                DarkenUntilReadable(set.Pressed, text, minimumContrast),
                 set.Disabled,
                 text,
                 text,
                 text,
                 BlendToward(text, set.Disabled, DisabledTextBlend));
+        }
+
+        private static Color DarkenUntilReadable(Color fill, Color text, double minimumContrast)
+        {
+            Color result = fill;
+
+            for (int step = 0; step < 40 && GetContrastRatio(text, result) < minimumContrast; step++)
+                result = ShiftLightness(result, -0.01);
+
+            return result;
         }
 
         // Text keeps the color it has at rest as long as it stays clearly

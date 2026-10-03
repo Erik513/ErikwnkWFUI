@@ -143,14 +143,50 @@ public class ButtonPresetTests
 
             Assert.Equal(symbol, preset.Symbol);
 
-            // The fills are those of the set named, the symbol is white in every state.
-            Assert.Equal(
-                (colors.Basic, colors.Hover, colors.Pressed, colors.Disabled),
-                (preset.Colors!.Basic, preset.Colors.Hover, preset.Colors.Pressed, preset.Colors.Disabled));
+            // The symbol is white in every state; the fills are those of the set named
+            // (a fill too bright for white is darkened, see EverySymbol_IsReadable...).
+            Assert.Equal(colors.Disabled, preset.Colors!.Disabled);
             Assert.Equal(
                 (UIColors.White, UIColors.White, UIColors.White),
                 (preset.Colors.BasicText, preset.Colors.HoverText, preset.Colors.PressedText));
         }
+    }
+
+    [Fact]
+    public void EverySymbol_IsReadable_OnEveryFillOfItsPreset()
+    {
+        // A symbol is a graphic: 3:1 is the bar. The yellow keeps its bright
+        // fills on purpose (white on yellow is the look of the folder button) and is
+        // held to what its resting look has always had.
+        List<string> unreadable = new List<string>();
+
+        foreach ((string name, UIButtonPreset preset) in Ready())
+        {
+            UIColorSet set = preset.Colors!;
+            bool isYellow = set.Basic == UIStyles.Colors.Sets.Yellow.Basic;
+            double minimum = isYellow ? 2.6 : ColorContrastHelper.MinimumRatioLargeTextOrUiComponents;
+
+            (string State, Color Fill, Color Text)[] states =
+            {
+                ("rest", set.Basic, set.BasicText),
+                ("hover", set.Hover, set.HoverText),
+                ("pressed", set.Pressed, set.PressedText),
+                ("disabled", set.Disabled, set.DisabledText)
+            };
+
+            foreach ((string state, Color fill, Color text) in states)
+            {
+                if (isYellow && state != "rest" && state != "disabled")
+                    continue;
+
+                double ratio = ColorContrastHelper.GetContrastRatio(text, fill);
+
+                if (ratio < minimum)
+                    unreadable.Add(name + " " + state + " " + ratio.ToString("0.0"));
+            }
+        }
+
+        Assert.True(unreadable.Count == 0, "too little contrast: " + string.Join(", ", unreadable));
     }
 
     [Fact]

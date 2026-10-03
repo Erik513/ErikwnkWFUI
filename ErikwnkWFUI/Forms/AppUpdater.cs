@@ -131,7 +131,7 @@ namespace ErikwnkWFUI.Forms
                 UIStyles.Symbols.Update,
                 UIStrings.Get("Update.AvailableTooltip"),
                 new Size(22, 20),
-                UIColors.WithText(UIStyles.Colors.Sets.Green, UIColors.White));
+                UIColors.WithText(UIStyles.Colors.Sets.Green, UIColors.White, 3.0));
 
             // A FlowLayoutPanel top-aligns its children; center the button in
             // the strip. No right margin - it should sit in the corner.

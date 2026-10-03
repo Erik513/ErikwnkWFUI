@@ -431,11 +431,14 @@ namespace ErikwnkWFUI
             /// </summary>
             public static class Presets
             {
-                // The symbol of a preset is white in every state - the fills and the
-                // disabled look stay those of the set.
+                // The symbol of a preset is white in every state. The fills are those of
+                // the set, only a fill too bright for a white symbol (3:1) is darkened a
+                // little. The yellow keeps its bright fills: white on yellow is its look.
                 private static UIColorSet WhiteOn(UIColorSet set)
                 {
-                    return UIColors.WithText(set, UIColors.White);
+                    return ReferenceEquals(set, Colors.Sets.Yellow)
+                        ? UIColors.WithText(set, UIColors.White)
+                        : UIColors.WithText(set, UIColors.White, 3.0);
                 }
 
                 /// <summary>Adding an entry: a plus on green.</summary>
