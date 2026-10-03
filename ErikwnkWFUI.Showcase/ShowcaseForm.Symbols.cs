@@ -13,14 +13,14 @@ namespace ErikwnkWFUI.Showcase
     {
         private static readonly (string Title, string[] Names)[] SymbolGroups =
         {
-            ("Actions", new[] { "Add", "Remove", "Delete", "Edit", "Save", "Refresh", "Sync", "Update", "Search", "Settings", "Close", "Cancel", "Check", "Undo", "Redo", "Cut", "Copy", "Paste", "Print", "Download", "Upload", "Share", "Send", "Filter", "Sort", "ZoomIn", "ZoomOut", "Fullscreen" }),
+            ("Actions", new[] { "Add", "Remove", "Delete", "Edit", "Save", "Refresh", "Sync", "Update", "Search", "Settings", "Cancel", "Check", "Undo", "Redo", "Cut", "Copy", "Paste", "Print", "Download", "Upload", "Share", "Send", "Filter", "Sort", "ZoomIn", "ZoomOut", "Fullscreen" }),
             ("Files", new[] { "File", "Folder", "FolderOpen" }),
             ("Navigation", new[] { "Back", "Forward", "Up", "Down", "Home", "Menu", "ChevronLeft", "ChevronRight", "ChevronUp", "ChevronDown", "TriangleUp", "TriangleDown" }),
             ("Media", new[] { "Play", "Pause", "Stop", "Record", "SkipBack", "SkipForward", "Volume", "Mute", "Music", "Shuffle", "Repeat" }),
-            ("Status", new[] { "Info", "Warning", "Error", "Help", "Lightning", "Heart" }),
-            ("Window", new[] { "Minimize", "Maximize", "Restore" }),
+            ("Status", new[] { "Info", "Warning", "Error", "Help" }),
+            ("Window", new[] { "Minimize", "Maximize", "Restore", "Close" }),
             ("People, security", new[] { "User", "Logout", "Lock", "Unlock", "Power" }),
-            ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye" })
+            ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye", "Lightning", "Heart" })
         };
 
         private const int SymbolCellWidth = 92;
@@ -51,7 +51,7 @@ namespace ErikwnkWFUI.Showcase
 
         private static int GetSymbolRowHeight(int count)
         {
-            int perRow = 8;
+            int perRow = 6;
             int rows = (count + perRow - 1) / perRow;
 
             return rows * SymbolCellHeight + 14;
