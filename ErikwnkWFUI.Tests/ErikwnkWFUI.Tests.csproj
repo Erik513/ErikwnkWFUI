@@ -21,6 +21,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- AppUpdater takes HttpClients; on .NET Framework they live in this assembly. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ErikwnkWFUI\ErikwnkWFUI.csproj" />
   </ItemGroup>

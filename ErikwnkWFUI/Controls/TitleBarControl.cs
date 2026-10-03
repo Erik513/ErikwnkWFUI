@@ -33,6 +33,7 @@ namespace ErikwnkWFUI.Controls
         private Button _minimizeButton;
         private Button _maximizeButton;
         private Button _closeButton;
+        private bool _isMaximized;
 
         private FormDragHandle _titleBarDragHandle;
         private FormDragHandle _titleLabelDragHandle;
@@ -139,12 +140,20 @@ namespace ErikwnkWFUI.Controls
             RunWhenHandleReady(UpdateLayout);
         }
 
+        // While maximized the button restores the window, and says so.
         public void UpdateMaximizeButton(bool isMaximized)
         {
             if (_maximizeButton == null)
                 return;
 
+            _isMaximized = isMaximized;
             _maximizeButton.Text = isMaximized ? UIStyles.Symbols.Restore : UIStyles.Symbols.Maximize;
+            UIButtonFactory.UpdateTooltip(_maximizeButton, GetMaximizeTooltip());
+        }
+
+        private string GetMaximizeTooltip()
+        {
+            return UIStrings.Get(_isMaximized ? "TitleBar.Restore" : "TitleBar.Maximize");
         }
 
         /// <summary>
@@ -331,7 +340,7 @@ namespace ErikwnkWFUI.Controls
         private void OnUIStringsLanguageChanged(object sender, EventArgs e)
         {
             UIButtonFactory.UpdateTooltip(_minimizeButton, UIStrings.Get("TitleBar.Minimize"));
-            UIButtonFactory.UpdateTooltip(_maximizeButton, UIStrings.Get("TitleBar.Maximize"));
+            UIButtonFactory.UpdateTooltip(_maximizeButton, GetMaximizeTooltip());
             UIButtonFactory.UpdateTooltip(_closeButton, UIStrings.Get("TitleBar.Close"));
         }
 

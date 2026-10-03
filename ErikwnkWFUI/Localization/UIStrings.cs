@@ -35,6 +35,7 @@ namespace ErikwnkWFUI.Localization
         {
             ["TitleBar.Minimize"] = "Minimize",
             ["TitleBar.Maximize"] = "Maximize",
+            ["TitleBar.Restore"] = "Restore",
             ["TitleBar.Close"] = "Close",
 
             ["UpdateAvailable.Title"] = "Update available",
@@ -109,6 +110,7 @@ namespace ErikwnkWFUI.Localization
         {
             ["TitleBar.Minimize"] = "Minimieren",
             ["TitleBar.Maximize"] = "Maximieren",
+            ["TitleBar.Restore"] = "Wiederherstellen",
             ["TitleBar.Close"] = "Schließen",
 
             ["UpdateAvailable.Title"] = "Update verfügbar",
