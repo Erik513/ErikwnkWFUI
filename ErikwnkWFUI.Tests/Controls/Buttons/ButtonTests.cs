@@ -37,21 +37,6 @@ public class ButtonTests
         };
     }
 
-    private static ToolTip? GetToolTip(Button button)
-    {
-        FieldInfo field = typeof(UIButtonFactory).GetField("_tooltips", BindingFlags.NonPublic | BindingFlags.Static)!;
-        object table = field.GetValue(null)!;
-        object?[] args = { button, null };
-        bool found = (bool)table.GetType().GetMethod("TryGetValue")!.Invoke(table, args)!;
-
-        return found ? (ToolTip)args[1]! : null;
-    }
-
-    private static string GetToolTipText(Button button)
-    {
-        return GetToolTip(button)?.GetToolTip(button) ?? "";
-    }
-
     private static void Press(Button button)
     {
         button.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
@@ -76,7 +61,7 @@ public class ButtonTests
         using Button defaults = Create(variant, "Save", "Saves it");
 
         Assert.Equal("Save", defaults.Text);
-        Assert.Equal("Saves it", GetToolTipText(defaults));
+        Assert.Equal("Saves it", ButtonToolTipReader.Text(defaults));
         Assert.Equal(new Size(30, 30), defaults.Size);
         Assert.Equal(FlatStyle.Flat, defaults.FlatStyle);
         Assert.Equal(Cursors.Hand, defaults.Cursor);
@@ -84,7 +69,7 @@ public class ButtonTests
         using Button sized = Create(variant, "Save", size: new Size(120, 40));
 
         Assert.Equal(new Size(120, 40), sized.Size);
-        Assert.Equal("", GetToolTipText(sized));
+        Assert.Equal("", ButtonToolTipReader.Text(sized));
     }
 
     [Fact]
@@ -105,7 +90,7 @@ public class ButtonTests
         using Button browse = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, "Pick a folder", colors: UIStyles.Colors.Sets.Yellow);
 
         Assert.Equal(UIStyles.Symbols.Folder, browse.Text);
-        Assert.Equal("Pick a folder", GetToolTipText(browse));
+        Assert.Equal("Pick a folder", ButtonToolTipReader.Text(browse));
         Assert.Equal(UIFonts.Icon, browse.Font);
         Assert.Equal(UIColors.Yellow, browse.BackColor);
         Assert.Equal(UIColors.White, browse.ForeColor);
@@ -410,7 +395,7 @@ public class ButtonTests
     public void TheTooltip_IsReleasedWithItsButton()
     {
         Button button = UIStyles.Buttons.CreateStandard("Go", "Tip");
-        ToolTip toolTip = GetToolTip(button)!;
+        ToolTip toolTip = ButtonToolTipReader.Find(button)!;
         bool disposed = false;
         toolTip.Disposed += (sender, e) => disposed = true;
 
@@ -427,13 +412,13 @@ public class ButtonTests
 
         UIStyles.Buttons.UpdateTooltip(withTip, "Neu");
         UIStyles.Buttons.UpdateTooltip(withTip, null!);
-        Assert.Equal("", GetToolTipText(withTip));
+        Assert.Equal("", ButtonToolTipReader.Text(withTip));
 
         UIStyles.Buttons.UpdateTooltip(withTip, "Neu");
-        Assert.Equal("Neu", GetToolTipText(withTip));
+        Assert.Equal("Neu", ButtonToolTipReader.Text(withTip));
 
         UIStyles.Buttons.UpdateTooltip(withoutTip, "Never shown");
-        Assert.Equal("", GetToolTipText(withoutTip));
+        Assert.Equal("", ButtonToolTipReader.Text(withoutTip));
 
         UIStyles.Buttons.UpdateTooltip(null!, "Anything");
     }

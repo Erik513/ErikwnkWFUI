@@ -178,7 +178,7 @@ public class ButtonPresetTests
         Assert.Equal(byHand.Font.Size, fromPreset.Font.Size);
         Assert.Equal(byHand.FlatAppearance.MouseOverBackColor, fromPreset.FlatAppearance.MouseOverBackColor);
         Assert.Equal(byHand.FlatAppearance.MouseDownBackColor, fromPreset.FlatAppearance.MouseDownBackColor);
-        Assert.Equal("Tip", ButtonTestsToolTip.Text(fromPreset));
+        Assert.Equal("Tip", ButtonToolTipReader.Text(fromPreset));
     }
 
     [Theory]
@@ -234,14 +234,14 @@ public class ButtonPresetTests
         using Button preset = UIStyles.Buttons.CreateSymbol(UIStyles.Buttons.Presets.Browse, "Ordner auswählen", new Size(50, 30));
 
         Assert.Equal(new Size(50, 30), byHand.Size);
-        Assert.Equal("Ordner auswählen", ButtonTestsToolTip.Text(byHand));
+        Assert.Equal("Ordner auswählen", ButtonToolTipReader.Text(byHand));
         Assert.Equal(byHand.Text, preset.Text);
         Assert.Equal(byHand.Size, preset.Size);
         Assert.Equal(byHand.BackColor, preset.BackColor);
         Assert.Equal(byHand.ForeColor, preset.ForeColor);
         Assert.Equal(byHand.FlatAppearance.MouseOverBackColor, preset.FlatAppearance.MouseOverBackColor);
         Assert.Equal(byHand.FlatAppearance.MouseDownBackColor, preset.FlatAppearance.MouseDownBackColor);
-        Assert.Equal(ButtonTestsToolTip.Text(byHand), ButtonTestsToolTip.Text(preset));
+        Assert.Equal(ButtonToolTipReader.Text(byHand), ButtonToolTipReader.Text(preset));
     }
 
     [Fact]

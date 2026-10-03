@@ -78,7 +78,7 @@ namespace ErikwnkWFUI.Factories
 
         // The tooltip each button got, so UpdateTooltip can change its text
         // later (after a language switch, say).
-        private static readonly ConditionalWeakTable<Button, ToolTip> _tooltips =
+        private static readonly ConditionalWeakTable<Button, ToolTip> ToolTipsByButton =
             new ConditionalWeakTable<Button, ToolTip>();
 
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
@@ -364,7 +364,7 @@ namespace ErikwnkWFUI.Factories
             ToolTip toolTip = UIToolTipFactory.CreateToolTip();
             toolTip.SetToolTip(button, tooltip);
             toolTip.ReviveOnFormActivate(button);
-            _tooltips.Add(button, toolTip);
+            ToolTipsByButton.Add(button, toolTip);
 
             button.Disposed += delegate
             {
@@ -383,7 +383,7 @@ namespace ErikwnkWFUI.Factories
                 return;
 
             ToolTip toolTip;
-            if (_tooltips.TryGetValue(button, out toolTip))
+            if (ToolTipsByButton.TryGetValue(button, out toolTip))
                 toolTip.SetToolTip(button, tooltip ?? "");
         }
 

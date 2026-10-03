@@ -36,7 +36,7 @@ public class SymbolButtonTests
 
         Assert.Equal(UIStyles.Symbols.Add, button.Text);
         Assert.Equal(new Size(30, 30), button.Size);
-        Assert.Equal("Add", ButtonTestsToolTip.Text(button));
+        Assert.Equal("Add", ButtonToolTipReader.Text(button));
         Assert.Equal(Padding.Empty, button.Padding);
         Assert.Equal(FlatStyle.Flat, button.FlatStyle);
         Assert.Equal(UIFonts.Icon.FontFamily.Name, button.Font.FontFamily.Name);
@@ -370,7 +370,7 @@ public class SymbolButtonTests
             UIStyles.Symbols.Folder, "Pick", new Size(width, height), UIStyles.Colors.Sets.Yellow);
 
         Assert.Equal("SymbolButton", browse.GetType().Name);
-        Assert.Equal("Pick", ButtonTestsToolTip.Text(browse));
+        Assert.Equal("Pick", ButtonToolTipReader.Text(browse));
 
         var offset = InkOffset(browse);
 
@@ -448,20 +448,5 @@ public class SymbolButtonTests
         button.Enabled = false;
         Raise(button, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
         Assert.Equal(set.DisabledText, button.ForeColor);
-    }
-}
-
-// The tooltip each button got, read back from the factory's own table.
-internal static class ButtonTestsToolTip
-{
-    public static string Text(Button button)
-    {
-        System.Reflection.FieldInfo field = typeof(ErikwnkWFUI.Factories.UIButtonFactory)
-            .GetField("_tooltips", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-        object table = field.GetValue(null)!;
-        object?[] args = { button, null };
-        bool found = (bool)table.GetType().GetMethod("TryGetValue")!.Invoke(table, args)!;
-
-        return found ? ((ToolTip)args[1]!).GetToolTip(button) ?? "" : "";
     }
 }
