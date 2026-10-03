@@ -320,8 +320,8 @@ namespace ErikwnkWFUI.Styles
                 pressed,
                 disabled,
                 basicText,
-                GetTextOn(hover, basicText),
-                GetTextOn(pressed, basicText),
+                GetTextOn(hover, basicText, KeepTextRatio),
+                GetTextOn(pressed, basicText, PressedKeepTextRatio),
                 BlendToward(GetBestTextColor(disabled), disabled, DisabledTextBlend));
         }
 
@@ -376,14 +376,18 @@ namespace ErikwnkWFUI.Styles
         }
 
         // Text keeps the color it has at rest as long as it stays clearly
-        // readable (3:1) on the next fill; only when it would not, the
-        // better one takes over. Otherwise the text would flip between
-        // light and dark each time the mouse moves over a button.
+        // readable on the next fill; only when it would not, the better one
+        // takes over. Otherwise the text would flip between light and dark each
+        // time the mouse moves over a button. Hovering can last, so it asks for
+        // 3:1; pressing is a moment, and light text on the bright pressed fills of
+        // green, orange and teal is still plainly readable at about 2.1-2.4:1, so
+        // there 2:1 is enough.
         private const double KeepTextRatio = 3.0;
+        private const double PressedKeepTextRatio = 2.0;
 
-        private static Color GetTextOn(Color fill, Color preferred)
+        private static Color GetTextOn(Color fill, Color preferred, double keepRatio)
         {
-            return GetContrastRatio(preferred, fill) >= KeepTextRatio ? preferred : GetBestTextColor(fill);
+            return GetContrastRatio(preferred, fill) >= keepRatio ? preferred : GetBestTextColor(fill);
         }
 
         /// <summary>

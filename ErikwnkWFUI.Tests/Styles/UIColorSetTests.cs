@@ -63,7 +63,9 @@ public class UIColorSetTests
 
         Check("at rest", set.BasicText, set.Basic, 4.0);
         Check("hovered", set.HoverText, set.Hover, 3.0);
-        Check("pressed", set.PressedText, set.Pressed, 3.0);
+        // Pressing is a moment: light text on the bright pressed fills (green, orange,
+        // teal: 2.1-2.4:1) may stay light.
+        Check("pressed", set.PressedText, set.Pressed, 2.0);
         Check("disabled", set.DisabledText, set.Disabled, 3.0);
 
         Assert.True(problems.Count == 0, name + ": " + string.Join("; ", problems));
@@ -184,12 +186,28 @@ public class UIColorSetTests
         UIColorSet teal = UIStyles.Colors.CreateSet(Color.FromArgb(0, 128, 128));
         Assert.Equal(teal.BasicText, teal.HoverText);
 
-        // Green: light text is fine at rest and hovered but fails on the
-        // bright pressed fill, where the dark one takes over.
+        // Green: light text stays on all three, also on the bright pressed fill
+        // (2.4:1 is enough for the moment of a click).
         UIColorSet green = UIStyles.Colors.Sets.Green;
         Assert.Equal(UIColors.LightForeColor, green.BasicText);
         Assert.Equal(UIColors.LightForeColor, green.HoverText);
-        Assert.Equal(UIColors.DarkForeColor, green.PressedText);
+        Assert.Equal(UIColors.LightForeColor, green.PressedText);
+
+        // A pressed fill that is too bright for light text (below 2:1) flips it.
+        UIColorSet bright = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(80, 220, 120));
+        Assert.Equal(UIColors.LightForeColor, bright.HoverText);
+        Assert.Equal(UIColors.DarkForeColor, bright.PressedText);
+    }
+
+    [Fact]
+    public void NoReadyMadeSet_FlipsToDarkText_WhenPressed()
+    {
+        // Pressing is a moment: the text stays as it is, also on the bright pressed
+        // fills of green, orange and teal.
+        foreach ((string name, UIColorSet set) in Predefined())
+        {
+            Assert.True(set.PressedText == set.BasicText, name + " changes its text color when pressed");
+        }
     }
 
     [Fact]

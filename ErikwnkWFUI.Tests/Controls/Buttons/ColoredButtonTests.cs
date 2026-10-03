@@ -79,15 +79,27 @@ public class ColoredButtonTests
     [Fact]
     public void TheTextFlips_WhenAStateNeedsTheOtherColor()
     {
-        // Light text at rest and hovered on green, dark on the bright
-        // pressed fill (see UIColorSetTests).
-        using Button button = UIStyles.Buttons.CreateStandard("Go", colors: UIStyles.Colors.Sets.Green);
+        // Light text at rest and hovered, dark on a pressed fill so bright that light
+        // text would be hard to read (see UIColorSetTests).
+        UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(80, 220, 120));
+        using Button button = UIStyles.Buttons.CreateStandard("Go", colors: set);
 
         Assert.Equal(UIColors.LightForeColor, button.ForeColor);
         Enter(button);
         Assert.Equal(UIColors.LightForeColor, button.ForeColor);
         Press(button);
         Assert.Equal(UIColors.DarkForeColor, button.ForeColor);
+    }
+
+    [Fact]
+    public void TheGreenButton_KeepsItsWhiteText_WhilePressed()
+    {
+        // Pressing is a moment and white on the bright green is still readable.
+        using Button button = UIStyles.Buttons.CreateGreen("Go");
+
+        Press(button);
+
+        Assert.Equal(UIColors.LightForeColor, button.ForeColor);
     }
 
     [Fact]
@@ -261,7 +273,7 @@ public class ColoredButtonTests
 
                     Press(button);
                     Assert.True(
-                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseDownBackColor) >= 3.0,
+                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseDownBackColor) >= 2.0,
                         $"{sample[0]} text pressed ({(light ? "Light" : "Dark")})");
                 }
             }

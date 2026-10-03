@@ -246,7 +246,7 @@ public class ButtonColorContrastTests
                     Check(shortfalls, label + " hovered", button.ForeColor, button.FlatAppearance.MouseOverBackColor, 3.0);
 
                     Press(button);
-                    Check(shortfalls, label + " pressed", button.ForeColor, button.FlatAppearance.MouseDownBackColor, 3.0);
+                    Check(shortfalls, label + " pressed", button.ForeColor, button.FlatAppearance.MouseDownBackColor, 2.0);
                 }
             });
         }
