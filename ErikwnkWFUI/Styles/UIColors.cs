@@ -329,7 +329,7 @@ namespace ErikwnkWFUI.Styles
         /// Like <see cref="CreateSet(Color, Color, Color)"/>, but the text has the
         /// one color you give in every state (muted when disabled) instead of
         /// the best one for each fill - for a look whose text color is fixed,
-        /// such as the white glyph on Browse's yellow.
+        /// such as the white symbols of the button presets.
         /// </summary>
         internal static UIColorSet CreateSet(Color basic, Color hover, Color pressed, Color text)
         {

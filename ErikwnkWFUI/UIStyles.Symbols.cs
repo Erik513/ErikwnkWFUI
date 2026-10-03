@@ -31,9 +31,13 @@ namespace ErikwnkWFUI
             private static readonly bool _isFluentFontInstalled = IsFontInstalled(FluentFontName);
 
             /// <summary>
-            /// The name of the font a symbol has to be drawn in. Nearly all are drawn in
-            /// <see cref="Fonts.Icon"/>; the few that come from the Windows icon font
-            /// (<c>Delete</c>, <c>Copy</c>, <c>Print</c>, <c>Filter</c> ... - everything whose character is in the private-use range) need "Segoe MDL2 Assets", which Windows 10 and 11 have.
+            /// The name of the font a symbol has to be drawn in. Most are drawn in
+            /// <see cref="Fonts.Icon"/>; the ones that come from the Windows icon font
+            /// (<c>Delete</c>, <c>Print</c>, <c>Filter</c>, <c>Lightning</c> ... - every symbol
+            /// whose character is in the private-use range) need "Segoe MDL2 Assets", which
+            /// Windows 10 and 11 have; <c>Copy</c> uses "Segoe Fluent Icons" where Windows has it
+            /// (Windows 11). Without the icon font the usual font is returned, so nothing
+            /// throws - but those symbols then show as boxes.
             /// <c>UIStyles.Buttons.CreateSymbol</c> picks the right one by itself; use this
             /// when you draw a symbol yourself.
             /// </summary>
@@ -101,10 +105,12 @@ namespace ErikwnkWFUI
             public const string Redo = "↷";
             public const string Cut = "✂";
             public const string Paste = "\uE77F";
-            // Print, Info, Warning, Globe, Paste, Download, Copy and the other private-use characters below come from the Windows icon font
-            // (see GetFontName): bold, clear shapes where the emoji or text
-            // characters are thin, colored or hard to tell apart when small.
-            // Copy: two rounded sheets in Windows 11's icon font, the older pair of pages in Windows 10's.
+            // The symbols written as "\uE..." / "\uF..." (Copy, Paste, Print, Download ...
+            // and, further down, Info, Warning, Globe, the chevrons and more) come from the
+            // Windows icon font (see GetFontName): clear shapes where an emoji or text
+            // character is thin, colored or hard to tell apart when small.
+            // Copy is two rounded sheets in Windows 11's newer icon font and the older
+            // pair of pages in Windows 10's.
             public const string Copy = "\uE8C8";
             public const string Print = "\uE749";
             public const string Download = "\uE896";

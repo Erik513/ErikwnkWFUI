@@ -100,8 +100,9 @@ namespace ErikwnkWFUI.Factories
         // - Symbol: drawn by SymbolButton, centered on what is actually visible of
         //   the glyph. The font grows with the button: 13 pt at the standard 30 px
         //   height, the size of UIFonts.Icon, proportionally larger or smaller
-        //   otherwise. A few symbols need the Windows icon font instead of the usual
-        //   symbol font (UIStyles.Symbols.GetFontName decides).
+        //   otherwise - and a bit smaller for the symbols that fill their whole cell
+        //   (UIStyles.Symbols.GetSizeFactor). Symbols from the Windows icon font get
+        //   that font instead of the usual one (UIStyles.Symbols.GetFontName decides).
         public static Button CreateSymbol(string symbol, string tooltip, Size? size, UIColorSet colors)
         {
             Size buttonSize = size ?? DefaultButtonSize;
@@ -117,9 +118,9 @@ namespace ErikwnkWFUI.Factories
             float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
             string family = UIStyles.Symbols.GetFontName(symbol);
 
-            // At the standard size, in the usual symbol font, it is the shared icon
-            // font already (and a font equal to the current one would not be taken
-            // over anyway).
+            // At the standard size, in the usual symbol font and at full size, it is
+            // the shared icon font already (and a font equal to the current one would
+            // not be taken over anyway).
             if (family == UIFonts.Icon.FontFamily.Name && Math.Abs(points - UIFonts.Icon.Size) < 0.01f)
                 return button;
 

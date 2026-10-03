@@ -244,7 +244,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
             /// <param name="colors">
             /// A color set to use instead of the neutral look, for a button in a color of
             /// your own: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c>,
@@ -279,7 +279,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
             public static Button CreatePrimary(
                 string text = "",
                 string tooltip = "",
@@ -297,7 +297,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
             public static Button CreateGreen(
                 string text = "",
                 string tooltip = "",
@@ -315,7 +315,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text.</param>
+            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
             public static Button CreateRed(
                 string text = "",
                 string tooltip = "",
@@ -420,8 +420,9 @@ namespace ErikwnkWFUI
             /// <summary>
             /// Ready-made designs - there is one for every symbol of <see cref="Symbols"/>, and the
             /// buttons most programs need (Add, Delete, Save, Browse ...) come first. Each one is a symbol with
-            /// its own fixed colors (green to add or save, red to delete or close, blue to edit or
-            /// reload, dark gray for search, settings and navigation, yellow to choose a file or folder), the same in Dark and
+            /// its own fixed colors (green to add, save or confirm, red to delete, close or stop, blue to edit, reload
+            /// or send, yellow to choose a file or folder, dark gray for navigation and everything
+            /// without a color of its own), the same in Dark and
             /// Light and with any accent. Hand one to
             /// <see cref="CreateSymbol(UIButtonPreset, string, Size?)"/> to get the button. A preset
             /// you would like a little different is a copy away
@@ -446,7 +447,7 @@ namespace ErikwnkWFUI
                 /// <summary>Deleting an entry: a trash can on red.</summary>
                 public static UIButtonPreset Delete { get; } = new UIButtonPreset(Symbols.Delete, WhiteOn(Colors.Sets.Red));
 
-                /// <summary>Closing or removing: a cross on red.</summary>
+                /// <summary>Closing a window or dialog: a cross on red.</summary>
                 public static UIButtonPreset Close { get; } = new UIButtonPreset(Symbols.Close, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Editing an entry: a pencil on blue.</summary>
@@ -488,7 +489,7 @@ namespace ErikwnkWFUI
                 /// <summary>Choosing a file: a document on yellow.</summary>
                 public static UIButtonPreset OpenFile { get; } = new UIButtonPreset(Symbols.File, WhiteOn(Colors.Sets.Yellow));
 
-                /// <summary>Choosing a folder: a folder on yellow (the former Browse button).</summary>
+                /// <summary>Choosing a folder: a folder on yellow.</summary>
                 public static UIButtonPreset Browse { get; } = new UIButtonPreset(Symbols.Folder, WhiteOn(Colors.Sets.Yellow));
 
                 // ---- one for every other symbol, named like the symbol ----
@@ -610,7 +611,7 @@ namespace ErikwnkWFUI
                 /// <summary>A warning: a triangle with an exclamation mark, on orange.</summary>
                 public static UIButtonPreset Warning { get; } = new UIButtonPreset(Symbols.Warning, WhiteOn(Colors.Sets.Orange));
 
-                /// <summary>An error: a sign with a bar, on red.</summary>
+                /// <summary>An error: a no-entry sign, on red.</summary>
                 public static UIButtonPreset Error { get; } = new UIButtonPreset(Symbols.Error, WhiteOn(Colors.Sets.Red));
 
                 /// <summary>Help: a question mark, on blue.</summary>

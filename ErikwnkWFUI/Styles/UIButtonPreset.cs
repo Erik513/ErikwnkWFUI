@@ -14,7 +14,7 @@
     ///
     /// // Your own preset, defined once:
     /// var heart = new UIButtonPreset(UIStyles.Symbols.Heart, UIStyles.Colors.Sets.Orange);
-    /// var favorite = UIStyles.Buttons.CreateSymbol(star, "Favorite");
+    /// var like = UIStyles.Buttons.CreateSymbol(heart, "Like");
     /// </code>
     /// </example>
     public sealed class UIButtonPreset
