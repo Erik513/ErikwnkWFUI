@@ -158,4 +158,100 @@ public class SymbolsTests
         Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Lightning));
         Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Delete));
     }
+
+    [Fact]
+    public void TheIconFontRange_IsDecidedByTheFirstCharacter_AndItsEdgesExactly()
+    {
+        if (!IsInstalled("Segoe MDL2 Assets"))
+            return;
+
+        string usual = UIFonts.Icon.FontFamily.Name;
+
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName("\uE000"));
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName("\uF8FF"));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName("\uDFFF"));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName("\uF900"));
+
+        // Only the first character counts, and an emoji (a surrogate pair) is not in the range.
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName("\uE74D" + "x"));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName("x" + "\uE74D"));
+        Assert.Equal(usual, UIStyles.Symbols.GetFontName(UIStyles.Symbols.Save));
+    }
+
+    [Fact]
+    public void OnlyTheCopySymbol_ItselfGetsTheNewerFont()
+    {
+        if (!IsInstalled("Segoe MDL2 Assets") || !IsInstalled("Segoe Fluent Icons"))
+            return;
+
+        Assert.Equal("Segoe Fluent Icons", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Copy));
+
+        // Not another symbol, not the same character with something after it.
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Paste));
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Copy + "x"));
+    }
+
+    [Fact]
+    public void EveryFontNameAFontIsAskedFor_IsAnInstalledFamily_NotASilentDefault()
+    {
+        // A font that is not installed is replaced by a default without a word: the
+        // name that comes back must be the name that is really used.
+        List<string> notReal = new List<string>();
+
+        foreach ((string name, string glyph) in AllSymbols())
+        {
+            string family = UIStyles.Symbols.GetFontName(glyph);
+            using Font font = new Font(family, 12f);
+
+            if (font.FontFamily.Name != family)
+                notReal.Add(name + " -> " + family);
+        }
+
+        Assert.True(notReal.Count == 0, "not an installed font: " + string.Join(", ", notReal));
+    }
+
+    [Fact]
+    public void OnlyTheChevronsAndTheLightningBolt_AreDrawnSmaller()
+    {
+        string[] smaller =
+        {
+            UIStyles.Symbols.ChevronLeft, UIStyles.Symbols.ChevronRight,
+            UIStyles.Symbols.ChevronUp, UIStyles.Symbols.ChevronDown, UIStyles.Symbols.Lightning
+        };
+
+        foreach ((string name, string glyph) in AllSymbols())
+        {
+            float factor = UIStyles.Symbols.GetSizeFactor(glyph);
+
+            if (smaller.Contains(glyph))
+                Assert.True(factor > 0.5f && factor < 1f, name + " should be drawn smaller, factor " + factor);
+            else
+                Assert.True(factor == 1f, name + " should be drawn at full size, factor " + factor);
+        }
+
+        Assert.Equal(1f, UIStyles.Symbols.GetSizeFactor(null!));
+        Assert.Equal(1f, UIStyles.Symbols.GetSizeFactor(""));
+    }
+
+    [Fact]
+    public void EverySymbol_IsOneCharacterOrOneValidPair_WithoutInvisibleExtras()
+    {
+        // A variation selector (U+FE0F asks for the colored emoji) or a joiner would
+        // change how the symbol looks or glue symbols together.
+        List<string> problems = new List<string>();
+
+        foreach ((string name, string glyph) in AllSymbols())
+        {
+            if (glyph.Length == 2 && !(char.IsHighSurrogate(glyph[0]) && char.IsLowSurrogate(glyph[1])))
+                problems.Add(name + " is two characters that are not one emoji");
+
+            foreach (char c in glyph)
+            {
+                if ((c >= '\uFE00' && c <= '\uFE0F') || c == '\u200D' || c == '\u200B' || char.IsWhiteSpace(c))
+                    problems.Add(name + " contains an invisible character U+" + ((int)c).ToString("X4"));
+            }
+        }
+
+        Assert.True(problems.Count == 0, string.Join("; ", problems));
+    }
 }

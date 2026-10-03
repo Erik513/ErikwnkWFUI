@@ -284,6 +284,70 @@ public class SymbolButtonTests
         Assert.True(offCenter.Count == 0, "off center by more than a pixel: " + string.Join(", ", offCenter));
     }
 
+    // The box around everything drawn in the symbol's color.
+    private static Rectangle? InkBounds(Button button)
+    {
+        using Bitmap bitmap = Draw(button);
+        Color back = button.BackColor;
+        int minX = int.MaxValue, maxX = -1, minY = int.MaxValue, maxY = -1;
+
+        for (int y = 3; y < bitmap.Height - 3; y++)
+        {
+            for (int x = 3; x < bitmap.Width - 3; x++)
+            {
+                Color c = bitmap.GetPixel(x, y);
+
+                if (Math.Abs(c.R - back.R) + Math.Abs(c.G - back.G) + Math.Abs(c.B - back.B) > 90)
+                {
+                    minX = Math.Min(minX, x);
+                    maxX = Math.Max(maxX, x);
+                    minY = Math.Min(minY, y);
+                    maxY = Math.Max(maxY, y);
+                }
+            }
+        }
+
+        return maxX < 0 ? null : new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+    }
+
+    [Theory]
+    [InlineData(24)]
+    [InlineData(30)]
+    [InlineData(48)]
+    public void EverySymbol_IsNeitherTinyNorCrowdingTheEdge(int size)
+    {
+        // At the standard size a symbol has to be seen (not a dot) and to leave room
+        // around it; the bars and lines (Minimize, Menu, Remove) are thin by nature.
+        List<string> problems = new List<string>();
+        int margin = size / 8;
+
+        foreach (System.Reflection.FieldInfo field in typeof(UIStyles.Symbols).GetFields())
+        {
+            if (!field.IsLiteral)
+                continue;
+
+            using Button button = UIStyles.Buttons.CreateSymbol((string)field.GetRawConstantValue()!, size: new Size(size, size), colors: UIStyles.Colors.Sets.Teal);
+            Rectangle? ink = InkBounds(button);
+
+            if (ink == null)
+            {
+                problems.Add(field.Name + " is not drawn");
+                continue;
+            }
+
+            int longest = Math.Max(ink.Value.Width, ink.Value.Height);
+            bool touchesEdge = ink.Value.Left < margin || ink.Value.Top < margin || ink.Value.Right > size - margin || ink.Value.Bottom > size - margin;
+
+            if (longest < size * 0.3)
+                problems.Add($"{field.Name} is tiny ({ink.Value.Width}x{ink.Value.Height})");
+
+            if (touchesEdge)
+                problems.Add($"{field.Name} crowds the edge ({ink.Value})");
+        }
+
+        Assert.True(problems.Count == 0, string.Join("; ", problems));
+    }
+
     [Fact]
     public void TheFill_FollowsTheState_AndTheOutlineIsDrawn()
     {
