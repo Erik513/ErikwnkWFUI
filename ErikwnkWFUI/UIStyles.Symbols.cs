@@ -51,12 +51,17 @@ namespace ErikwnkWFUI
 
             // The arrows of the chevrons fill the whole character cell and look too
             // big next to the other symbols, so a button draws them a bit smaller.
+            // The lightning bolt does too, a little less.
             private const float ChevronSizeFactor = 0.7f;
+            private const float LightningSizeFactor = 0.8f;
 
             internal static float GetSizeFactor(string symbol)
             {
                 bool isChevron = symbol == ChevronLeft || symbol == ChevronRight
                     || symbol == ChevronUp || symbol == ChevronDown;
+
+                if (symbol == Lightning)
+                    return LightningSizeFactor;
 
                 return isChevron ? ChevronSizeFactor : 1f;
             }
@@ -145,6 +150,7 @@ namespace ErikwnkWFUI
             public const string Warning = "\uE7BA";
             public const string Error = "⛔";
             public const string Help = "❓";
+            public const string Lightning = "\uE945";
             public const string Heart = "♥";
 
             // ---- window (the buttons of the title bar) ----
@@ -156,6 +162,7 @@ namespace ErikwnkWFUI
             public const string User = "\U0001F464";
             public const string Lock = "\U0001F512";
             public const string Unlock = "\U0001F513";
+            public const string Logout = "\uF3B1";
             public const string Power = "⏻";
 
             // ---- things ----

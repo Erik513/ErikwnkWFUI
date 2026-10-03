@@ -403,6 +403,17 @@ public class SymbolButtonTests
     }
 
     [Fact]
+    public void TheLightningBolt_IsDrawnSmallerThanOtherSymbols_ButLargerThanTheChevrons()
+    {
+        using Button bolt = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Lightning);
+        using Button other = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Up);
+        using Button chevron = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.ChevronLeft);
+
+        Assert.True(bolt.Font.Size < other.Font.Size);
+        Assert.True(bolt.Font.Size > chevron.Font.Size);
+    }
+
+    [Fact]
     public void TheChevrons_AreDrawnSmallerThanOtherSymbols_OnAButtonOfTheSameSize()
     {
         using Button normal = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Up, size: new Size(40, 40));

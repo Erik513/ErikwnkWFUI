@@ -604,6 +604,9 @@ namespace ErikwnkWFUI
                 /// <summary>Help: a question mark, on blue.</summary>
                 public static UIButtonPreset Help { get; } = new UIButtonPreset(Symbols.Help, WhiteOn(Colors.Sets.Blue));
 
+                /// <summary>Starting something at once: a lightning bolt, on dark gray.</summary>
+                public static UIButtonPreset Lightning { get; } = new UIButtonPreset(Symbols.Lightning, WhiteOn(Colors.Sets.Dark));
+
                 /// <summary>Liking: a heart, on pink.</summary>
                 public static UIButtonPreset Heart { get; } = new UIButtonPreset(Symbols.Heart, WhiteOn(Colors.Sets.Pink));
 
@@ -612,6 +615,9 @@ namespace ErikwnkWFUI
 
                 /// <summary>Unlocked: an open padlock, on dark gray.</summary>
                 public static UIButtonPreset Unlock { get; } = new UIButtonPreset(Symbols.Unlock, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Signing out: an arrow leaving a frame, on dark gray.</summary>
+                public static UIButtonPreset Logout { get; } = new UIButtonPreset(Symbols.Logout, WhiteOn(Colors.Sets.Dark));
 
                 /// <summary>Switching off: the power sign, on red.</summary>
                 public static UIButtonPreset Power { get; } = new UIButtonPreset(Symbols.Power, WhiteOn(Colors.Sets.Red));

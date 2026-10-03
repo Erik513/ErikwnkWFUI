@@ -17,9 +17,9 @@ namespace ErikwnkWFUI.Showcase
             ("Files", new[] { "File", "Folder", "FolderOpen" }),
             ("Navigation", new[] { "Back", "Forward", "Up", "Down", "Home", "Menu", "ChevronLeft", "ChevronRight", "ChevronUp", "ChevronDown" }),
             ("Media", new[] { "Play", "Pause", "Stop", "Record", "SkipBack", "SkipForward", "Volume", "Mute", "Music", "Shuffle", "Repeat" }),
-            ("Status", new[] { "Info", "Warning", "Error", "Help", "Heart" }),
+            ("Status", new[] { "Info", "Warning", "Error", "Help", "Lightning", "Heart" }),
             ("Window", new[] { "Minimize", "Maximize", "Restore" }),
-            ("People, security", new[] { "User", "Lock", "Unlock", "Power" }),
+            ("People, security", new[] { "User", "Logout", "Lock", "Unlock", "Power" }),
             ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye" })
         };
 
