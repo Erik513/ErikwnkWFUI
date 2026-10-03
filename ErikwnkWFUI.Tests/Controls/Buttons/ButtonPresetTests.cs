@@ -96,6 +96,8 @@ public class ButtonPresetTests
             ("Repeat", UIStyles.Symbols.Repeat, UIStyles.Colors.Sets.Dark),
             ("FolderOpen", UIStyles.Symbols.FolderOpen, UIStyles.Colors.Sets.Dark),
             ("Menu", UIStyles.Symbols.Menu, UIStyles.Colors.Sets.Dark),
+            ("TriangleUp", UIStyles.Symbols.TriangleUp, UIStyles.Colors.Sets.Dark),
+            ("TriangleDown", UIStyles.Symbols.TriangleDown, UIStyles.Colors.Sets.Dark),
             ("ChevronLeft", UIStyles.Symbols.ChevronLeft, UIStyles.Colors.Sets.Dark),
             ("ChevronRight", UIStyles.Symbols.ChevronRight, UIStyles.Colors.Sets.Dark),
             ("Play", UIStyles.Symbols.Play, UIStyles.Colors.Sets.Green),

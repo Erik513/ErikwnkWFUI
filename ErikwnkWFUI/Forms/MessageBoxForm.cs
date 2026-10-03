@@ -356,35 +356,35 @@ namespace ErikwnkWFUI.Forms
                 case MessageBoxButtons.OK:
                     return new[]
                     {
-                        new DialogButtonInfo("✓", DialogResult.OK)
+                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK)
                     };
 
                 case MessageBoxButtons.OKCancel:
                     return new[]
                     {
-                        new DialogButtonInfo("✓", DialogResult.OK),
+                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK),
                         new DialogButtonInfo(UIStrings.Get("MessageBox.Cancel"), DialogResult.Cancel)
                     };
 
                 case MessageBoxButtons.YesNo:
                     return new[]
                     {
-                        new DialogButtonInfo("✓", DialogResult.Yes),
-                        new DialogButtonInfo("✖", DialogResult.No)
+                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.Yes),
+                        new DialogButtonInfo(UIStyles.Symbols.Cancel, DialogResult.No)
                     };
 
                 case MessageBoxButtons.YesNoCancel:
                     return new[]
                     {
-                        new DialogButtonInfo("✓", DialogResult.Yes),
-                        new DialogButtonInfo("✖", DialogResult.No),
+                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.Yes),
+                        new DialogButtonInfo(UIStyles.Symbols.Cancel, DialogResult.No),
                         new DialogButtonInfo(UIStrings.Get("MessageBox.Cancel"), DialogResult.Cancel)
                     };
 
                 default:
                     return new[]
                     {
-                        new DialogButtonInfo("✓", DialogResult.OK)
+                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK)
                     };
             }
         }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Net.Http;
 using System.Threading;
@@ -127,7 +127,7 @@ namespace ErikwnkWFUI.Forms
         public Button CreateUpdateAvailableButton(UpdateCheckResult result, Version currentVersion, Form owner)
         {
             Button button = UIButtonFactory.CreateGreen(
-                "▲",
+                UIStyles.Symbols.TriangleUp,
                 UIStrings.Get("Update.AvailableTooltip"),
                 new Size(22, 20),
                 isIcon: true);

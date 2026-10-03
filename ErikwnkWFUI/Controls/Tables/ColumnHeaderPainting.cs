@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace ErikwnkWFUI.Controls
@@ -32,7 +32,7 @@ namespace ErikwnkWFUI.Controls
             // Ascending points down, descending points up - the opposite
             // of what might seem obvious, but matches what was actually
             // asked for on both controls.
-            string glyph = sortOrder == SortOrder.Ascending ? "▼" : "▲";
+            string glyph = sortOrder == SortOrder.Ascending ? UIStyles.Symbols.TriangleDown : UIStyles.Symbols.TriangleUp;
 
             const int rightMargin = 4;
 

@@ -127,6 +127,9 @@ namespace ErikwnkWFUI
             public const string Down = "⬇";
             public const string Home = "⌂";
             public const string Menu = "☰";
+            // Solid triangles: sort arrows, "something is up" markers.
+            public const string TriangleUp = "\u25B2";
+            public const string TriangleDown = "\u25BC";
             public const string ChevronLeft = "\uE76B";
             public const string ChevronRight = "\uE76C";
             public const string ChevronUp = "\uE70E";

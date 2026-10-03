@@ -115,7 +115,7 @@ namespace ErikwnkWFUI.Forms
         {
             return new Label
             {
-                Text = "✓",
+                Text = UIStyles.Symbols.Check,
                 // AccentForeColor is computed against the raw accent
                 // (Primary), not the darker PrimaryDark this form actually
                 // uses as its background - contrast has to be computed

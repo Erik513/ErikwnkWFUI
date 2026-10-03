@@ -547,6 +547,12 @@ namespace ErikwnkWFUI
                 /// <summary>Opening a menu: three lines, on dark gray.</summary>
                 public static UIButtonPreset Menu { get; } = new UIButtonPreset(Symbols.Menu, WhiteOn(Colors.Sets.Dark));
 
+                /// <summary>Marking something that goes up, or sorting upward: a solid triangle, on dark gray.</summary>
+                public static UIButtonPreset TriangleUp { get; } = new UIButtonPreset(Symbols.TriangleUp, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Marking something that goes down, or sorting downward: a solid triangle, on dark gray.</summary>
+                public static UIButtonPreset TriangleDown { get; } = new UIButtonPreset(Symbols.TriangleDown, WhiteOn(Colors.Sets.Dark));
+
                 /// <summary>Going one page back: a small arrow to the left, on dark gray.</summary>
                 public static UIButtonPreset ChevronLeft { get; } = new UIButtonPreset(Symbols.ChevronLeft, WhiteOn(Colors.Sets.Dark));
 
