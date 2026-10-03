@@ -348,6 +348,45 @@ public class SymbolButtonTests
         Assert.True(problems.Count == 0, string.Join("; ", problems));
     }
 
+    [Theory]
+    [InlineData("Delete")]
+    [InlineData("Folder")]
+    [InlineData("Heart")]
+    [InlineData("Play")]
+    [InlineData("Lock")]
+    public void ASymbol_IsDrawnInTheTextColorOfTheState_WhateverFontItComesFrom(string name)
+    {
+        // From the icon font (Delete), an emoji (Folder, Lock), a text character (Heart, Play).
+        string symbol = (string)typeof(UIStyles.Symbols).GetField(name)!.GetRawConstantValue()!;
+        UIColorSet set = UIStyles.Colors.Sets.Green;
+        using Button button = UIStyles.Buttons.CreateSymbol(symbol, size: new Size(48, 48), colors: set);
+
+        bool Has(Color color)
+        {
+            using Bitmap bitmap = Draw(button);
+
+            for (int y = 3; y < bitmap.Height - 3; y++)
+            {
+                for (int x = 3; x < bitmap.Width - 3; x++)
+                {
+                    if (bitmap.GetPixel(x, y) == color)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        Assert.True(Has(set.BasicText), name + " at rest");
+
+        Raise(button, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+        Assert.True(Has(set.PressedText), name + " pressed");
+        Raise(button, "OnMouseUp", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+
+        button.Enabled = false;
+        Assert.True(Has(set.DisabledText), name + " disabled");
+    }
+
     [Fact]
     public void TheFill_FollowsTheState_AndTheOutlineIsDrawn()
     {
