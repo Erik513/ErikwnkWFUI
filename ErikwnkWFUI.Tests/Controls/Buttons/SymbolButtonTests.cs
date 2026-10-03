@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 
@@ -627,6 +628,35 @@ public class SymbolButtonTests
             different.Add("after the font change");
 
         Assert.True(different.Count == 0, "drawn differently from a fresh button: " + string.Join(", ", different));
+    }
+
+    [Fact]
+    public void ASymbolButton_IsNamedByItsTooltip_ForAScreenReader_AndTheNameFollowsTheTooltip()
+    {
+        using Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Save, "Save");
+        using Button withoutTip = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Save);
+        using Button text = UIStyles.Buttons.CreateStandard("Save", "Saves the file");
+
+        Assert.Equal("Save", button.AccessibleName);
+
+        UIButtonFactory.UpdateTooltip(button, "Speichern");
+        Assert.Equal("Speichern", button.AccessibleName);
+
+        // Without a tooltip there is nothing to name it by; a button with a caption
+        // is named by that caption, not by its tooltip.
+        Assert.True(string.IsNullOrEmpty(withoutTip.AccessibleName));
+        Assert.True(string.IsNullOrEmpty(text.AccessibleName));
+    }
+
+    [Fact]
+    public void ANameSetByTheCaller_IsLeftAloneByATooltipChange()
+    {
+        using Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Save, "Save");
+        button.AccessibleName = "Store document";
+
+        UIButtonFactory.UpdateTooltip(button, "Speichern");
+
+        Assert.Equal("Store document", button.AccessibleName);
     }
 
     [Fact]

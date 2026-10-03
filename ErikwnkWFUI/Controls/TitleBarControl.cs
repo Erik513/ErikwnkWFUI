@@ -288,6 +288,9 @@ namespace ErikwnkWFUI.Controls
             Button button = UIButtonFactory.CreateStandard(text, tooltip, ButtonSize);
             button.Visible = visible;
 
+            // Shows only a symbol: named by its tooltip for a screen reader.
+            button.AccessibleName = tooltip;
+
             return button;
         }
 

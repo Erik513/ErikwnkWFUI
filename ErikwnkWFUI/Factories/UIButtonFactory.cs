@@ -198,6 +198,11 @@ namespace ErikwnkWFUI.Factories
             SetEnabledStyle(button, look);
             AddToolTip(button, tooltip);
 
+            // A button that shows only a symbol is read out as that character by a
+            // screen reader; what it does is in the tooltip.
+            if (isIcon && !string.IsNullOrWhiteSpace(tooltip))
+                button.AccessibleName = tooltip;
+
             button.Paint += OnButtonPaint;
 
             return button;
@@ -375,8 +380,14 @@ namespace ErikwnkWFUI.Factories
                 return;
 
             ToolTip toolTip;
-            if (ToolTipsByButton.TryGetValue(button, out toolTip))
-                toolTip.SetToolTip(button, tooltip ?? "");
+            if (!ToolTipsByButton.TryGetValue(button, out toolTip))
+                return;
+
+            // The accessible name is the tooltip for a symbol button: it follows.
+            if (button.AccessibleName == toolTip.GetToolTip(button))
+                button.AccessibleName = tooltip ?? "";
+
+            toolTip.SetToolTip(button, tooltip ?? "");
         }
 
         // Disabled means a darker fill and muted text. The colors in use right

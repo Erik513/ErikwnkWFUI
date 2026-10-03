@@ -50,7 +50,7 @@ public class ColoredButtonTests
         UIColorSet set = UIStyles.Colors.CreateSet(color);
         using Button button = Create(color);
 
-        Assert.Equal(set.Basic, button.BackColor);
+        Assert.True(set.Basic == button.BackColor, name + ": resting fill");
         Assert.Equal(set.BasicText, button.ForeColor);
         Assert.Equal(set.Hover, button.FlatAppearance.MouseOverBackColor);
         Assert.Equal(set.Pressed, button.FlatAppearance.MouseDownBackColor);

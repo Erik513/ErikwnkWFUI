@@ -31,13 +31,16 @@ public class ButtonLanguageTests
         });
     }
 
-    private static string Tip(TitleBarControl bar, string field)
+    private static Button Field(TitleBarControl bar, string field)
     {
-        Button button = (Button)typeof(TitleBarControl)
+        return (Button)typeof(TitleBarControl)
             .GetField(field, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
             .GetValue(bar)!;
+    }
 
-        return ButtonToolTipReader.Text(button);
+    private static string Tip(TitleBarControl bar, string field)
+    {
+        return ButtonToolTipReader.Text(Field(bar, field));
     }
 
     [Fact]
@@ -56,6 +59,11 @@ public class ButtonLanguageTests
             Assert.Equal("Minimieren", Tip(bar, "_minimizeButton"));
             Assert.Equal("Maximieren", Tip(bar, "_maximizeButton"));
             Assert.Equal("Schließen", Tip(bar, "_closeButton"));
+
+            // A screen reader gets the same words, not the symbol character.
+            Assert.Equal("Minimieren", Field(bar, "_minimizeButton").AccessibleName);
+            Assert.Equal("Maximieren", Field(bar, "_maximizeButton").AccessibleName);
+            Assert.Equal("Schließen", Field(bar, "_closeButton").AccessibleName);
         });
     }
 
