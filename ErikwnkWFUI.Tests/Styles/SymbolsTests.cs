@@ -8,8 +8,9 @@ namespace ErikwnkWFUI.Tests.Styles;
 /// <summary>
 /// The symbols are plain characters, so what can go wrong is a code point
 /// that no font has (it would show as an empty box), the same character under
-/// two names, or a typo. Whether Windows can draw each one is checked by
-/// drawing it, the way a button would.
+/// two names, invisible extra characters, or the wrong font or size for one.
+/// Whether Windows can draw each one is checked by drawing it, the way a
+/// button would.
 /// </summary>
 public class SymbolsTests
 {
@@ -30,7 +31,7 @@ public class SymbolsTests
 
     // How Windows really draws the text: the way a button does, with the
     // symbol font and whatever it falls back to. The glyph lookup APIs only
-    // know the first 65536 characters, and half of the symbols are beyond.
+    // know the first 65536 characters, and the emoji symbols are beyond.
     private static string Render(string glyph)
     {
         using Font font = new Font(UIStyles.Symbols.GetFontName(glyph), 20f);
