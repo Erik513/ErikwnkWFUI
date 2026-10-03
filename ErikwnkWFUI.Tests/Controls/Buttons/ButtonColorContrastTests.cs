@@ -217,4 +217,42 @@ public class ButtonColorContrastTests
             }
         });
     }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void ThePrimaryButton_IsReadable_WithEveryAccent_AndInEveryState(bool lightTheme)
+    {
+        // Bright accents (yellow, amber) need dark text: the text follows the fill
+        // in each state, not only at rest.
+        Color[] accents = typeof(UIAccentColors)
+            .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
+            .Where(field => field.FieldType == typeof(Color))
+            .Select(field => (Color)field.GetValue(null)!)
+            .ToArray();
+
+        try
+        {
+            RunWithTheme(lightTheme, shortfalls =>
+            {
+                foreach (Color accent in accents)
+                {
+                    UIColors.SetAccent(accent);
+                    using Button button = UIStyles.Buttons.CreatePrimary("Text");
+                    string label = "accent " + accent.R + "," + accent.G + "," + accent.B;
+
+                    Check(shortfalls, label + " idle", button.ForeColor, button.BackColor, 4.4);
+
+                    button.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+                    Check(shortfalls, label + " hovered", button.ForeColor, button.FlatAppearance.MouseOverBackColor, 3.0);
+
+                    Press(button);
+                    Check(shortfalls, label + " pressed", button.ForeColor, button.FlatAppearance.MouseDownBackColor, 3.0);
+                }
+            });
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
 }

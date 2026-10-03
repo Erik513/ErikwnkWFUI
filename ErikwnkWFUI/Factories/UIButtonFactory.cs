@@ -37,10 +37,6 @@ namespace ErikwnkWFUI.Factories
             public readonly Color MouseOverBackColor;
             public readonly Color MouseDownBackColor;
 
-            // A fixed text color stays as it is instead of being picked for
-            // contrast (Browse's white glyph).
-            public readonly bool FixedForeColor;
-
             // Set when the look comes from a UIColorSet, which already knows
             // the text on each state and the disabled look. Left empty, the
             // button works them out as it always did.
@@ -56,7 +52,6 @@ namespace ErikwnkWFUI.Factories
                 int borderSize,
                 Color mouseOverBackColor,
                 Color mouseDownBackColor,
-                bool fixedForeColor = false,
                 Color? hoverForeColor = null,
                 Color? pressedForeColor = null,
                 Color? disabledBackColor = null,
@@ -68,7 +63,6 @@ namespace ErikwnkWFUI.Factories
                 BorderSize = borderSize;
                 MouseOverBackColor = mouseOverBackColor;
                 MouseDownBackColor = mouseDownBackColor;
-                FixedForeColor = fixedForeColor;
                 HoverForeColor = hoverForeColor;
                 PressedForeColor = pressedForeColor;
                 DisabledBackColor = disabledBackColor;
@@ -112,7 +106,7 @@ namespace ErikwnkWFUI.Factories
             SymbolButton instance = new SymbolButton();
 
             Button button = colors != null
-                ? CreateColored(symbol, tooltip, buttonSize, true, colors, instance)
+                ? CreateColored(symbol, tooltip, buttonSize, true, colors, instance, 1)
                 : CreateStandard(symbol, tooltip, buttonSize, true, instance);
 
             float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
@@ -136,13 +130,13 @@ namespace ErikwnkWFUI.Factories
         // the same on both themes.
         public static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors)
         {
-            return CreateColored(text, tooltip, size, isIcon, colors, null);
+            return CreateColored(text, tooltip, size, isIcon, colors, null, 1);
         }
 
-        private static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors, Button instance)
+        private static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors, Button instance, int borderSize)
         {
             return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
-                colors.Basic, colors.BasicText, FixedBorderColor, 1,
+                colors.Basic, colors.BasicText, FixedBorderColor, borderSize,
                 colors.Hover, colors.Pressed,
                 hoverForeColor: colors.HoverText,
                 pressedForeColor: colors.PressedText,
@@ -157,25 +151,23 @@ namespace ErikwnkWFUI.Factories
             return UIColors.IsLight(UIColors.BackgroundMedium) ? UIColors.BorderLight : UIColors.BorderDark;
         }
 
+        // Primary, Green and Red are the color sets of the same name, so their
+        // text on every state (and the disabled look) is worked out by the set -
+        // the same as CreateStandard(colors: ...) - and follows the accent for
+        // Primary, even a bright one.
         public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
-                UIColors.PrimaryDark, UIColors.GetContrastingForeColor(UIColors.PrimaryDark), FixedBorderColor, 0,
-                UIColors.Primary, UIColors.PrimaryLight));
+            return CreateColored(text, tooltip, size, isIcon, UIColors.PrimarySet, null, 0);
         }
 
         public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
-                UIColors.GreenDark, UIColors.GetContrastingForeColor(UIColors.GreenDark), FixedBorderColor, 1,
-                UIColors.Green, UIColors.GreenLight));
+            return CreateColored(text, tooltip, size, isIcon, UIStyles.Colors.Sets.Green, null, 1);
         }
 
         public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateButton(text, tooltip, size, isIcon, new ButtonLook(
-                UIColors.RedDark, UIColors.GetContrastingForeColor(UIColors.RedDark), FixedBorderColor, 1,
-                UIColors.Red, UIColors.RedLight));
+            return CreateColored(text, tooltip, size, isIcon, UIStyles.Colors.Sets.Red, null, 1);
         }
 
         private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, ButtonLook look, Button instance = null)
@@ -262,9 +254,8 @@ namespace ErikwnkWFUI.Factories
             {
                 if (isPressed)
                 {
-                    button.ForeColor = look.FixedForeColor
-                        ? atRest
-                        : look.PressedForeColor ?? UIColors.GetContrastingForeColor(button.FlatAppearance.MouseDownBackColor);
+                    button.ForeColor = look.PressedForeColor
+                        ?? UIColors.GetContrastingForeColor(button.FlatAppearance.MouseDownBackColor);
                 }
                 else if (isHovered)
                 {
@@ -395,20 +386,16 @@ namespace ErikwnkWFUI.Factories
         {
             Color enabledBackColor = look.BackColor;
             Color enabledForeColor = look.ForeColor;
-            bool fixedForeColor = look.FixedForeColor;
 
-            bool lightFill = !fixedForeColor && UIColors.IsLight(enabledBackColor);
+            bool lightFill = UIColors.IsLight(enabledBackColor);
             Color disabledBackColor = look.DisabledBackColor
                 ?? UIColors.Darken(enabledBackColor, lightFill ? LightDisabledDarkenAmount : DisabledDarkenAmount);
 
             // The text is the contrasting color blended 35% toward the disabled fill:
-            // still readable, but visibly muted. One fixed gray did not work - on
-            // Browse's yellow it came out at a contrast of about 1.0. Buttons with a
-            // fixed text color (Browse) blend that color instead.
+            // still readable, but visibly muted. One fixed gray did not work - on a
+            // bright fill it came out at a contrast of about 1.0.
             Color disabledForeColor = look.DisabledForeColor
-                ?? (fixedForeColor
-                    ? UIColors.BlendToward(enabledForeColor, disabledBackColor, 0.35)
-                    : UIColors.BlendToward(UIColors.GetContrastingForeColor(disabledBackColor), disabledBackColor, 0.35));
+                ?? UIColors.BlendToward(UIColors.GetContrastingForeColor(disabledBackColor), disabledBackColor, 0.35);
 
             Color restoreBackColor = enabledBackColor;
             Color restoreForeColor = enabledForeColor;
