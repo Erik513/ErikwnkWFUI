@@ -147,6 +147,11 @@ namespace ErikwnkWFUI
             public const string Help = "❓";
             public const string Heart = "♥";
 
+            // ---- window (the buttons of the title bar) ----
+            public const string Minimize = "\U0001F5D5";
+            public const string Maximize = "\U0001F5D6";
+            public const string Restore = "\u2750";
+
             // ---- people and security ----
             public const string User = "\U0001F464";
             public const string Lock = "\U0001F512";

@@ -127,9 +127,9 @@ namespace ErikwnkWFUI.Controls
                 titleTextAlign,
                 resolvedBackColor);
             _iconPictureBox = CreateIconPictureBox(icon);
-            _minimizeButton = CreateTitleBarButton("🗕", UIStrings.Get("TitleBar.Minimize"), showMinimizeButton);
-            _maximizeButton = CreateTitleBarButton("🗖", UIStrings.Get("TitleBar.Maximize"), showMaximizeButton);
-            _closeButton = CreateTitleBarButton("✕", UIStrings.Get("TitleBar.Close"), showCloseButton);
+            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton);
+            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton);
+            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton);
 
             AddControls();
             CreateDragHandles();
@@ -144,7 +144,7 @@ namespace ErikwnkWFUI.Controls
             if (_maximizeButton == null)
                 return;
 
-            _maximizeButton.Text = isMaximized ? "❐" : "🗖";
+            _maximizeButton.Text = isMaximized ? UIStyles.Symbols.Restore : UIStyles.Symbols.Maximize;
         }
 
         /// <summary>

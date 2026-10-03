@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -376,7 +376,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            e.Value = "✕";
+            e.Value = UIStyles.Symbols.Close;
             e.FormattingApplied = true;
 
             // AlternatingRowsDefaultCellStyle outranks Column.DefaultCellStyle

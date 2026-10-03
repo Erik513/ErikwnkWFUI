@@ -639,6 +639,15 @@ namespace ErikwnkWFUI
 
                 /// <summary>Showing or watching: an eye, on dark gray.</summary>
                 public static UIButtonPreset Eye { get; } = new UIButtonPreset(Symbols.Eye, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Minimizing a window: a bar at the bottom, on dark gray.</summary>
+                public static UIButtonPreset Minimize { get; } = new UIButtonPreset(Symbols.Minimize, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Maximizing a window: a single frame, on dark gray.</summary>
+                public static UIButtonPreset Maximize { get; } = new UIButtonPreset(Symbols.Maximize, WhiteOn(Colors.Sets.Dark));
+
+                /// <summary>Bringing a maximized window back: two frames, on dark gray.</summary>
+                public static UIButtonPreset Restore { get; } = new UIButtonPreset(Symbols.Restore, WhiteOn(Colors.Sets.Dark));
             }
 
             /// <summary>

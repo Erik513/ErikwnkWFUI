@@ -122,6 +122,9 @@ public class ButtonPresetTests
             ("Link", UIStyles.Symbols.Link, UIStyles.Colors.Sets.Blue),
             ("Pin", UIStyles.Symbols.Pin, UIStyles.Colors.Sets.Dark),
             ("Globe", UIStyles.Symbols.Globe, UIStyles.Colors.Sets.Blue),
+            ("Minimize", UIStyles.Symbols.Minimize, UIStyles.Colors.Sets.Dark),
+            ("Maximize", UIStyles.Symbols.Maximize, UIStyles.Colors.Sets.Dark),
+            ("Restore", UIStyles.Symbols.Restore, UIStyles.Colors.Sets.Dark),
             ("Eye", UIStyles.Symbols.Eye, UIStyles.Colors.Sets.Dark),
         };
 
