@@ -133,4 +133,57 @@ public class ButtonLanguageTests
             Assert.False(reference.IsAlive, "the title bar is still referenced after Dispose");
         });
     }
+
+    [Fact]
+    public void TheSymbolsAndTheirButtons_AreTheSame_InEveryLanguage_AndUnderAnyCulture()
+    {
+        // A symbol is a character, not a text: no language and no culture may change it.
+        // (The Turkish culture is the classic one that breaks case-insensitive string work.)
+        System.Globalization.CultureInfo before = System.Globalization.CultureInfo.CurrentUICulture;
+        List<string> baseline = new List<string>();
+
+        string Look(string symbol)
+        {
+            using Button button = UIStyles.Buttons.CreateSymbol(symbol, "tip");
+            return symbol + "|" + UIStyles.Symbols.GetFontName(symbol) + "|" + button.Font.FontFamily.Name + "|" + button.Font.Size
+                + "|" + UIStyles.Symbols.GetSizeFactor(symbol) + "|" + button.AccessibleName;
+        }
+
+        try
+        {
+            LanguageTestHelper.RunWithLanguage(UILanguage.English, () =>
+            {
+                foreach (System.Reflection.FieldInfo field in typeof(UIStyles.Symbols).GetFields())
+                {
+                    if (field.IsLiteral)
+                        baseline.Add(Look((string)field.GetRawConstantValue()!));
+                }
+            });
+
+            foreach (UILanguage language in LanguageTestHelper.AllLanguages)
+            {
+                foreach (string culture in new[] { "de-DE", "tr-TR", "ar-SA" })
+                {
+                    System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo(culture);
+
+                    LanguageTestHelper.RunWithLanguage(language, () =>
+                    {
+                        List<string> now = new List<string>();
+
+                        foreach (System.Reflection.FieldInfo field in typeof(UIStyles.Symbols).GetFields())
+                        {
+                            if (field.IsLiteral)
+                                now.Add(Look((string)field.GetRawConstantValue()!));
+                        }
+
+                        Assert.Equal(baseline, now);
+                    });
+                }
+            }
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = before;
+        }
+    }
 }
