@@ -49,10 +49,13 @@ namespace ErikwnkWFUI.Showcase
                 table.AddRow("Others", GetSymbolRowHeight(others.Length), CreateSymbolGrid(others, all));
         }
 
+        // The value column fits at least this many cells (92 px plus margin each) in
+        // a narrow window; wider ones fit more and just leave some room below.
+        private const int SymbolCellsPerRow = 6;
+
         private static int GetSymbolRowHeight(int count)
         {
-            int perRow = 6;
-            int rows = (count + perRow - 1) / perRow;
+            int rows = (count + SymbolCellsPerRow - 1) / SymbolCellsPerRow;
 
             return rows * SymbolCellHeight + 14;
         }

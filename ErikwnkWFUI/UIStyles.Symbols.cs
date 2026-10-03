@@ -35,8 +35,32 @@ namespace ErikwnkWFUI
             // use it (Copy: two rounded sheets, not the old pair of pages).
             private const string FluentFontName = "Segoe Fluent Icons";
 
-            private static readonly bool _isIconFontInstalled = IsFontInstalled(IconFontName);
-            private static readonly bool _isFluentFontInstalled = IsFontInstalled(FluentFontName);
+            private static readonly bool _isIconFontInstalled;
+            private static readonly bool _isFluentFontInstalled;
+
+            // Which of the two fonts Windows has, looked up once (the list of
+            // installed fonts is not cheap to read). If it cannot be read at all, the
+            // fonts count as missing: a symbol then falls back to the usual font
+            // instead of every symbol button failing.
+            static Symbols()
+            {
+                try
+                {
+                    using (System.Drawing.Text.InstalledFontCollection fonts = new System.Drawing.Text.InstalledFontCollection())
+                    {
+                        foreach (System.Drawing.FontFamily family in fonts.Families)
+                        {
+                            if (family.Name == IconFontName)
+                                _isIconFontInstalled = true;
+                            else if (family.Name == FluentFontName)
+                                _isFluentFontInstalled = true;
+                        }
+                    }
+                }
+                catch (System.Exception)
+                {
+                }
+            }
 
             /// <summary>
             /// The name of the font a symbol has to be drawn in. Most are drawn in
@@ -71,27 +95,13 @@ namespace ErikwnkWFUI
             // its height: 1 for nearly all, less for the few that look too big.
             internal static float GetSizeFactor(string symbol)
             {
-                bool isChevron = symbol == ChevronLeft || symbol == ChevronRight
-                    || symbol == ChevronUp || symbol == ChevronDown;
-
                 if (symbol == Lightning)
                     return LightningSizeFactor;
 
-                return isChevron ? ChevronSizeFactor : 1f;
-            }
+                if (symbol == ChevronLeft || symbol == ChevronRight || symbol == ChevronUp || symbol == ChevronDown)
+                    return ChevronSizeFactor;
 
-            private static bool IsFontInstalled(string name)
-            {
-                using (System.Drawing.Text.InstalledFontCollection fonts = new System.Drawing.Text.InstalledFontCollection())
-                {
-                    foreach (System.Drawing.FontFamily family in fonts.Families)
-                    {
-                        if (family.Name == name)
-                            return true;
-                    }
-                }
-
-                return false;
+                return 1f;
             }
 
             // ---- actions ----
