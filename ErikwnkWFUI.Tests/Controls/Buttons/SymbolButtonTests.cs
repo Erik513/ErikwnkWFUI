@@ -432,6 +432,203 @@ public class SymbolButtonTests
         Assert.True(standardChevron.Font.Size < standardOther.Font.Size);
     }
 
+    // ---- the symbol button follows hover and press itself: odd input ----
+
+    private static Color FillOf(Button button)
+    {
+        using Bitmap bitmap = Draw(button);
+        return bitmap.GetPixel(4, 4);
+    }
+
+    private static void MouseDown(Button button, MouseButtons which = MouseButtons.Left)
+    {
+        Raise(button, "OnMouseDown", new MouseEventArgs(which, 1, 5, 5, 0));
+    }
+
+    private static void MouseUp(Button button, MouseButtons which = MouseButtons.Left)
+    {
+        Raise(button, "OnMouseUp", new MouseEventArgs(which, 1, 5, 5, 0));
+    }
+
+    private static Button CreateTeal() =>
+        UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Add, size: new Size(40, 40), colors: UIStyles.Colors.Sets.Teal);
+
+    [Theory]
+    [InlineData(MouseButtons.Right)]
+    [InlineData(MouseButtons.Middle)]
+    public void AnotherMouseButton_DoesNotShowThePressedFill(MouseButtons which)
+    {
+        using Button button = CreateTeal();
+
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button, which);
+
+        Assert.Equal(UIStyles.Colors.Sets.Teal.Hover, FillOf(button));
+    }
+
+    [Fact]
+    public void TheSpaceKey_ShowsThePressedFill_OtherKeysDoNot_AndLosingFocusEndsIt()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+
+        Raise(button, "OnKeyDown", new KeyEventArgs(Keys.Enter));
+        Assert.Equal(set.Basic, FillOf(button));
+
+        Raise(button, "OnKeyUp", new KeyEventArgs(Keys.Space));
+        Assert.Equal(set.Basic, FillOf(button));
+
+        Raise(button, "OnKeyDown", new KeyEventArgs(Keys.Space));
+        Assert.Equal(set.Pressed, FillOf(button));
+
+        Raise(button, "OnLostFocus", EventArgs.Empty);
+        Assert.Equal(set.Basic, FillOf(button));
+    }
+
+    [Fact]
+    public void LeavingWhilePressed_EndsThePress_AndComingBackShowsHoverNotPressed()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button);
+        Raise(button, "OnMouseLeave", EventArgs.Empty);
+        Assert.Equal(set.Basic, FillOf(button));
+
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        Assert.Equal(set.Hover, FillOf(button));
+    }
+
+    [Fact]
+    public void PressingTwice_ThenReleasingOnce_LeavesNoPressedFillBehind()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button);
+        MouseDown(button);
+        MouseUp(button);
+
+        Assert.Equal(set.Hover, FillOf(button));
+    }
+
+    [Fact]
+    public void ADisabledButton_IgnoresPressAndHover_AndComesBackIdle()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+
+        button.Enabled = false;
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button);
+        Assert.Equal(set.Disabled, FillOf(button));
+
+        // Whatever arrived while it was disabled must not show once it is enabled.
+        Raise(button, "OnMouseLeave", EventArgs.Empty);
+        button.Enabled = true;
+        Assert.Equal(set.Basic, FillOf(button));
+    }
+
+    [Fact]
+    public void DisablingWhilePressed_AsAClickHandlerDoes_DoesNotLeaveItStuckPressed()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+        button.Click += delegate { button.Enabled = false; };
+
+        // WinForms raises Click before MouseUp.
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button);
+        Raise(button, "OnClick", EventArgs.Empty);
+        MouseUp(button);
+        Raise(button, "OnMouseLeave", EventArgs.Empty);
+        Assert.Equal(set.Disabled, FillOf(button));
+
+        button.Enabled = true;
+        Assert.Equal(set.Basic, FillOf(button));
+    }
+
+    [Fact]
+    public void BeingDisabledMidPress_WithoutTheReleaseEverArriving_DoesNotStayPressed()
+    {
+        // A disabled control gets no MouseUp: the press must not outlive it.
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        MouseDown(button);
+        button.Enabled = false;
+        button.Enabled = true;
+
+        Assert.Equal(set.Hover, FillOf(button));
+    }
+
+    [Fact]
+    public void ASymbolThatIsEmpty_DrawsJustTheButton()
+    {
+        using Button empty = UIStyles.Buttons.CreateSymbol("", size: new Size(40, 40), colors: UIStyles.Colors.Sets.Teal);
+        using Button missing = UIStyles.Buttons.CreateSymbol(null!, size: new Size(40, 40), colors: UIStyles.Colors.Sets.Teal);
+
+        Assert.Equal(UIStyles.Colors.Sets.Teal.Basic, FillOf(empty));
+        Assert.Equal(UIStyles.Colors.Sets.Teal.Basic, FillOf(missing));
+        Assert.Equal("", missing.Text);
+    }
+
+    private static bool SamePixels(Button first, Button second)
+    {
+        using Bitmap a = Draw(first);
+        using Bitmap b = Draw(second);
+
+        for (int y = 0; y < a.Height; y++)
+        {
+            for (int x = 0; x < a.Width; x++)
+            {
+                if (a.GetPixel(x, y) != b.GetPixel(x, y))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    [Fact]
+    public void ChangingTheSymbol_OrTheFont_DrawsItLikeAFreshButton()
+    {
+        // The measured shift belongs to one symbol in one font: a stale one
+        // would push the next symbol off the middle. (Only symbols of the usual
+        // font: changing the text keeps the font the button was made with.)
+        string[] symbols =
+        {
+            UIStyles.Symbols.Add, UIStyles.Symbols.Up, UIStyles.Symbols.Home, UIStyles.Symbols.Heart,
+            UIStyles.Symbols.Play, UIStyles.Symbols.TriangleDown, UIStyles.Symbols.Mail, UIStyles.Symbols.Search
+        };
+
+        using Button changing = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Back, size: new Size(48, 48));
+        List<string> different = new List<string>();
+
+        foreach (string symbol in symbols)
+        {
+            changing.Text = symbol;
+            using Button fresh = UIStyles.Buttons.CreateSymbol(symbol, size: new Size(48, 48));
+
+            if (!SamePixels(changing, fresh))
+                different.Add(symbol);
+        }
+
+        using Font larger = new Font(changing.Font.FontFamily, 30f);
+        using Font largerToo = new Font(changing.Font.FontFamily, 30f);
+        using Button freshLarger = UIStyles.Buttons.CreateSymbol(changing.Text, size: new Size(48, 48));
+        changing.Font = larger;
+        freshLarger.Font = largerToo;
+
+        if (!SamePixels(changing, freshLarger))
+            different.Add("after the font change");
+
+        Assert.True(different.Count == 0, "drawn differently from a fresh button: " + string.Join(", ", different));
+    }
+
     [Fact]
     public void ThePressedAndKeyBehavior_IsTheSameAsOnAnyOtherButton()
     {

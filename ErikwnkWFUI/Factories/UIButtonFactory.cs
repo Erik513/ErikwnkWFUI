@@ -517,6 +517,10 @@ namespace ErikwnkWFUI.Factories
             protected override void OnEnabledChanged(EventArgs e)
             {
                 base.OnEnabledChanged(e);
+
+                // A disabled control gets no MouseUp, so a press that was still
+                // going (a click handler that disables the button) would stay.
+                _isPressed = false;
                 Invalidate();
             }
 

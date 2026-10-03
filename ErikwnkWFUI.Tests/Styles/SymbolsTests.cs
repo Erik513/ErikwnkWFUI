@@ -119,4 +119,43 @@ public class SymbolsTests
 
         Assert.Equal(hasIconFont ? "Segoe MDL2 Assets" : usual, deleteFont);
     }
+
+    private static bool IsInstalled(string family) =>
+        new System.Drawing.Text.InstalledFontCollection().Families.Any(f => f.Name == family);
+
+    [Fact]
+    public void EverySymbolFromTheIconFontRange_GetsAnIconFont_AndTheOthersTheUsualOne()
+    {
+        string usual = UIFonts.Icon.FontFamily.Name;
+        List<string> wrong = new List<string>();
+
+        foreach ((string name, string glyph) in AllSymbols())
+        {
+            bool isIconFontSymbol = glyph[0] >= '' && glyph[0] <= '';
+            string font = UIStyles.Symbols.GetFontName(glyph);
+
+            bool isRight = isIconFontSymbol
+                ? font == "Segoe MDL2 Assets" || font == "Segoe Fluent Icons" || (font == usual && !IsInstalled("Segoe MDL2 Assets"))
+                : font == usual;
+
+            if (!isRight)
+                wrong.Add(name + " -> " + font);
+        }
+
+        Assert.True(wrong.Count == 0, "wrong font: " + string.Join(", ", wrong));
+    }
+
+    [Fact]
+    public void Copy_UsesTheNewerIconFont_WhereThereIsOne_AndEverythingElseTheOlderOne()
+    {
+        if (!IsInstalled("Segoe MDL2 Assets"))
+            return;
+
+        Assert.Equal(
+            IsInstalled("Segoe Fluent Icons") ? "Segoe Fluent Icons" : "Segoe MDL2 Assets",
+            UIStyles.Symbols.GetFontName(UIStyles.Symbols.Copy));
+
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Lightning));
+        Assert.Equal("Segoe MDL2 Assets", UIStyles.Symbols.GetFontName(UIStyles.Symbols.Delete));
+    }
 }
