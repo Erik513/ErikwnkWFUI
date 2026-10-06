@@ -399,6 +399,20 @@ namespace ErikwnkWFUI.Controls
                 DrawDash(g, boxRect, markColor, metrics.Scale(2));
         }
 
+        // A mnemonic ("&Save") shows its underline only once the Alt key was used, as on any
+        // checkbox; without mnemonics the "&" is just a character.
+        private TextFormatFlags GetTextFlags()
+        {
+            TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter;
+
+            if (!UseMnemonic)
+                flags |= TextFormatFlags.NoPrefix;
+            else if (!ShowKeyboardCues)
+                flags |= TextFormatFlags.HidePrefix;
+
+            return flags;
+        }
+
         private void PaintText(Graphics g)
         {
             if (string.IsNullOrEmpty(Text))
@@ -421,7 +435,7 @@ namespace ErikwnkWFUI.Controls
                 Font,
                 textArea,
                 textColor,
-                TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+                GetTextFlags());
         }
 
         // The dotted frame of the keyboard focus, around the label and the box (or the

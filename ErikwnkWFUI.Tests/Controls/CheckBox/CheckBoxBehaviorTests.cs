@@ -382,6 +382,25 @@ public class CheckBoxBehaviorTests : IDisposable
             > ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Ok", font, 96).Height);
     }
 
+    [Fact]
+    public void AMnemonicIsNotUnderlined_UntilAltIsUsed_AndWithoutMnemonicsTheAmpersandIsShown()
+    {
+        System.Windows.Forms.CheckBox plain = Create(false, "Item");
+        System.Windows.Forms.CheckBox mnemonic = Create(false, "&Item");
+        System.Windows.Forms.CheckBox literal = Create(false, "&Item");
+        literal.UseMnemonic = false;
+        mnemonic.Size = plain.Size;
+        literal.Size = plain.Size;
+
+        using Bitmap plainPicture = Draw(plain);
+        using Bitmap mnemonicPicture = Draw(mnemonic);
+        using Bitmap literalPicture = Draw(literal);
+
+        // "&Item" without Alt looks like "Item"; with UseMnemonic off it shows the "&".
+        Assert.True(SamePixels(plainPicture, mnemonicPicture), "the mnemonic is underlined without Alt");
+        Assert.False(SamePixels(plainPicture, literalPicture), "the ampersand is not shown without mnemonics");
+    }
+
     // ---- what the library draws its own way: these properties are ignored ----
 
     [Fact]
