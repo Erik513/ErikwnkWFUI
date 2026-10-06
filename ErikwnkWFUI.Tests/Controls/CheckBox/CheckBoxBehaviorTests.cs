@@ -345,6 +345,43 @@ public class CheckBoxBehaviorTests : IDisposable
         Assert.True(firstTextColumn <= 30, "the text starts too far from the box, at " + firstTextColumn);
     }
 
+    [Fact]
+    public void ATransparentParent_ShowsTheColorBehindIt_NotAHole()
+    {
+        using Form form = new Form { BackColor = Color.FromArgb(10, 40, 70), Size = new Size(300, 100) };
+        Panel transparent = new Panel { BackColor = Color.Transparent, Size = new Size(200, 40) };
+        System.Windows.Forms.CheckBox box = Create(false);
+        form.Controls.Add(transparent);
+        transparent.Controls.Add(box);
+
+        using Bitmap picture = Draw(box);
+
+        Assert.Equal(form.BackColor, picture.GetPixel(picture.Width - 1, 1));
+    }
+
+    [Fact]
+    public void TheSizesGrowWithTheScreensScaling_AndStayTheOldOnesAtNormalScaling()
+    {
+        ErikwnkWFUI.Controls.CheckBox.Metrics normal = new ErikwnkWFUI.Controls.CheckBox.Metrics(96);
+        ErikwnkWFUI.Controls.CheckBox.Metrics large = new ErikwnkWFUI.Controls.CheckBox.Metrics(144);
+        ErikwnkWFUI.Controls.CheckBox.Metrics huge = new ErikwnkWFUI.Controls.CheckBox.Metrics(192);
+        ErikwnkWFUI.Controls.CheckBox.Metrics tooLow = new ErikwnkWFUI.Controls.CheckBox.Metrics(0);
+
+        Assert.Equal(16, normal.BoxSize);
+        Assert.Equal(2, normal.BoxLeftMargin);
+        Assert.Equal(24, normal.GlyphColumnWidth);
+        Assert.Equal(24, large.BoxSize);
+        Assert.Equal(32, huge.BoxSize);
+        Assert.True(large.GlyphColumnWidth > normal.GlyphColumnWidth && huge.GlyphColumnWidth > large.GlyphColumnWidth);
+        Assert.Equal(normal.BoxSize, tooLow.BoxSize);
+
+        System.Drawing.Font font = UIFonts.Normal;
+        Assert.True(ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Ok", font, 192).Width
+            > ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Ok", font, 96).Width);
+        Assert.True(ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Ok", font, 192).Height
+            > ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Ok", font, 96).Height);
+    }
+
     // ---- what the library draws its own way: these properties are ignored ----
 
     [Fact]

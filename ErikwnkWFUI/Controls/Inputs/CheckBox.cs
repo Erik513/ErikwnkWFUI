@@ -30,10 +30,42 @@ namespace ErikwnkWFUI.Controls
     // and never calls base.OnPaint stops the native drawing completely.
     public class CheckBox : System.Windows.Forms.CheckBox
     {
-        private const int BoxSize = 16;
-        private const int BoxLeftMargin = 2;
-        private const int TextLeftPadding = 6;
-        private const int GlyphColumnWidth = BoxLeftMargin + BoxSize + TextLeftPadding;
+        // The measures of the box and its label at 96 dpi; they grow with the screen's
+        // scaling (see Metrics), so the box keeps pace with the text.
+        private const int BoxSize96 = 16;
+        private const int BoxLeftMargin96 = 2;
+        private const int TextLeftPadding96 = 6;
+
+        internal readonly struct Metrics
+        {
+            public readonly int Dpi;
+            public readonly int BoxSize;
+            public readonly int BoxLeftMargin;
+            public readonly int GlyphColumnWidth;
+
+            public Metrics(int dpi)
+            {
+                Dpi = dpi < 96 ? 96 : dpi;
+                BoxSize = ScaleBy(Dpi, BoxSize96);
+                BoxLeftMargin = ScaleBy(Dpi, BoxLeftMargin96);
+                GlyphColumnWidth = BoxLeftMargin + BoxSize + ScaleBy(Dpi, TextLeftPadding96);
+            }
+
+            private static int ScaleBy(int dpi, int value96)
+            {
+                return (int)System.Math.Round(value96 * dpi / 96.0);
+            }
+
+            public int Scale(int value96)
+            {
+                return ScaleBy(Dpi, value96);
+            }
+        }
+
+        private Metrics GetMetrics()
+        {
+            return new Metrics(DeviceDpi);
+        }
 
         public CheckBox()
         {
@@ -140,6 +172,27 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        // The mouse can be taken away without a MouseUp (another window, a dialog opened
+        // while pressing): then nothing is pressed any more.
+        protected override void OnMouseCaptureChanged(System.EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+            _isPressed = false;
+            Invalidate();
+        }
+
+        // Hidden, a box gets no MouseLeave: shown again it must not still look hovered.
+        protected override void OnVisibleChanged(System.EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+
+            if (!Visible)
+            {
+                _isHot = false;
+                _isPressed = false;
+            }
+        }
+
         protected override void OnEnabledChanged(System.EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -154,15 +207,16 @@ namespace ErikwnkWFUI.Controls
         // factory sets it and turns AutoSize off, because the native measuring knows only
         // the system glyph and, in a table cell that is laid out several times, settled
         // on different bounds than a fresh control (leftovers of neighboring cells showed).
-        internal static Size ComputePreferredSize(string text, Font font)
+        internal static Size ComputePreferredSize(string text, Font font, int dpi = 96)
         {
+            Metrics metrics = new Metrics(dpi);
             bool hasText = !string.IsNullOrEmpty(text);
 
             int width = hasText
-                ? GlyphColumnWidth + TextRenderer.MeasureText(text, font).Width + 4
-                : BoxSize + BoxLeftMargin * 2;
+                ? metrics.GlyphColumnWidth + TextRenderer.MeasureText(text, font).Width + 4
+                : metrics.BoxSize + metrics.BoxLeftMargin * 2;
 
-            int height = System.Math.Max(BoxSize + 8, font.Height + 8);
+            int height = System.Math.Max(metrics.BoxSize + 8, font.Height + 8);
 
             return new Size(width, height);
         }
@@ -258,11 +312,17 @@ namespace ErikwnkWFUI.Controls
             return color;
         }
 
+        // The color to erase to: the first opaque back color up the chain of parents (a
+        // transparent panel shows what is behind it), or the theme's own without a parent.
         private Color GetParentBackColor()
         {
-            return Parent != null
-                ? Parent.BackColor
-                : UIColors.BackgroundMedium;
+            for (Control parent = Parent; parent != null; parent = parent.Parent)
+            {
+                if (parent.BackColor.A == 255)
+                    return parent.BackColor;
+            }
+
+            return UIColors.BackgroundMedium;
         }
 
         private void PaintShapes(Graphics g)
@@ -272,13 +332,14 @@ namespace ErikwnkWFUI.Controls
 
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
+            Metrics metrics = GetMetrics();
             bool hasText = !string.IsNullOrEmpty(Text);
 
             int boxX = hasText
-                ? BoxLeftMargin
-                : (Width - BoxSize) / 2;
-            int boxY = (Height - BoxSize) / 2;
-            Rectangle boxRect = new Rectangle(boxX, boxY, BoxSize, BoxSize);
+                ? metrics.BoxLeftMargin
+                : (Width - metrics.BoxSize) / 2;
+            int boxY = (Height - metrics.BoxSize) / 2;
+            Rectangle boxRect = new Rectangle(boxX, boxY, metrics.BoxSize, metrics.BoxSize);
 
             // Filled when checked or undetermined, outline only when not. The fill and the
             // mark on it come from the color set for rest, hovered and pressed. An empty box
@@ -315,7 +376,7 @@ namespace ErikwnkWFUI.Controls
 
             Color borderColor = BorderColor;
 
-            using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, 3))
+            using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, metrics.Scale(3)))
             {
                 if (isFilled)
                 {
@@ -328,14 +389,14 @@ namespace ErikwnkWFUI.Controls
                         g.FillPath(tintBrush, boxPath);
                 }
 
-                using (Pen borderPen = new Pen(borderColor, isActive && !isFilled ? 2f : 1.5f))
+                using (Pen borderPen = new Pen(borderColor, metrics.Scale(isActive && !isFilled ? 20 : 15) / 10f))
                     g.DrawPath(borderPen, boxPath);
             }
 
             if (CheckState == CheckState.Checked)
-                DrawCheckmark(g, boxRect, markColor);
+                DrawCheckmark(g, boxRect, markColor, metrics.Scale(2));
             else if (CheckState == CheckState.Indeterminate)
-                DrawDash(g, boxRect, markColor);
+                DrawDash(g, boxRect, markColor, metrics.Scale(2));
         }
 
         private void PaintText(Graphics g)
@@ -343,8 +404,8 @@ namespace ErikwnkWFUI.Controls
             if (string.IsNullOrEmpty(Text))
                 return;
 
-            Rectangle textArea = new Rectangle(
-                GlyphColumnWidth, 0, Width - GlyphColumnWidth, Height);
+            int glyphColumn = GetMetrics().GlyphColumnWidth;
+            Rectangle textArea = new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
 
             // Disabled text is the contrasting color blended toward the background, as on
             // buttons: the fixed DisabledGray of the box is too faint for text on the
@@ -370,16 +431,22 @@ namespace ErikwnkWFUI.Controls
             if (!Focused || !ShowFocusCues)
                 return;
 
+            Metrics metrics = GetMetrics();
             Rectangle area;
 
             if (string.IsNullOrEmpty(Text))
             {
-                area = new Rectangle((Width - BoxSize) / 2 - 3, (Height - BoxSize) / 2 - 3, BoxSize + 6, BoxSize + 6);
+                int around = metrics.Scale(3);
+                area = new Rectangle(
+                    (Width - metrics.BoxSize) / 2 - around,
+                    (Height - metrics.BoxSize) / 2 - around,
+                    metrics.BoxSize + around * 2,
+                    metrics.BoxSize + around * 2);
             }
             else
             {
                 int textWidth = TextRenderer.MeasureText(Text, Font).Width;
-                int width = System.Math.Min(Width - 2, GlyphColumnWidth + textWidth + 2);
+                int width = System.Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
                 area = new Rectangle(1, 1, width, Height - 2);
             }
 
@@ -387,13 +454,13 @@ namespace ErikwnkWFUI.Controls
             ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, GetParentBackColor());
         }
 
-        private static void DrawDash(Graphics g, Rectangle box, Color color)
+        private static void DrawDash(Graphics g, Rectangle box, Color color, float width)
         {
             int y = box.Y + box.Height / 2;
             int left = box.X + (int)(box.Width * 0.26);
             int right = box.X + (int)(box.Width * 0.74);
 
-            using (Pen pen = new Pen(color, 2f))
+            using (Pen pen = new Pen(color, width))
             {
                 pen.StartCap = LineCap.Round;
                 pen.EndCap = LineCap.Round;
@@ -402,13 +469,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private static void DrawCheckmark(Graphics g, Rectangle box, Color color)
+        private static void DrawCheckmark(Graphics g, Rectangle box, Color color, float width)
         {
             Point p1 = new Point(box.X + (int)(box.Width * 0.22), box.Y + (int)(box.Height * 0.52));
             Point p2 = new Point(box.X + (int)(box.Width * 0.42), box.Y + (int)(box.Height * 0.74));
             Point p3 = new Point(box.X + (int)(box.Width * 0.80), box.Y + (int)(box.Height * 0.26));
 
-            using (Pen pen = new Pen(color, 2f))
+            using (Pen pen = new Pen(color, width))
             {
                 pen.StartCap = LineCap.Round;
                 pen.EndCap = LineCap.Round;

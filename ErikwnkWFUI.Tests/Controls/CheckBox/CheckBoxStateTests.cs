@@ -289,6 +289,35 @@ public class CheckBoxStateTests
         Assert.Equal(Green.Basic, Inside(box));
     }
 
+    [Fact]
+    public void ThePressIsEnded_WhenTheMouseIsTakenAway_WithoutAMouseUp()
+    {
+        // Another window or a dialog took the mouse while pressing: no MouseUp ever comes.
+        using System.Windows.Forms.CheckBox box = Create(true, Green);
+
+        Enter(box);
+        Down(box);
+        Raise(box, "OnMouseCaptureChanged", EventArgs.Empty);
+
+        Assert.Equal(Green.Hover, Inside(box));
+    }
+
+    [Fact]
+    public void AHiddenBox_ComesBackWithoutAHoverOrPressLook()
+    {
+        using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, BackColor = UIColors.BackgroundMedium };
+        System.Windows.Forms.CheckBox box = Create(true, Green);
+        host.Controls.Add(box);
+        host.Show();
+
+        Enter(box);
+        Down(box);
+        box.Visible = false;
+        box.Visible = true;
+
+        Assert.Equal(Green.Basic, Inside(box));
+    }
+
     // ---- the third state ----
 
     [Fact]

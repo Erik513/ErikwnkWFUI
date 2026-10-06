@@ -1,6 +1,4 @@
 ﻿using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -23,9 +21,11 @@ namespace ErikwnkWFUI.Factories
                 Font = font,
                 FlatStyle = FlatStyle.Flat,
                 AutoSize = false,
-                Size = Controls.CheckBox.ComputePreferredSize(text, font),
                 Colors = colors
             };
+
+            // Sized for the screen's scaling, which the control knows once it exists.
+            checkBox.Size = Controls.CheckBox.ComputePreferredSize(text, font, checkBox.DeviceDpi);
 
             return checkBox;
         }
@@ -50,7 +50,8 @@ namespace ErikwnkWFUI.Factories
                 isChecked,
                 colors);
 
-            checkBox.Size = new Size(25, 25);
+            int side = (int)System.Math.Round(25 * checkBox.DeviceDpi / 96.0);
+            checkBox.Size = new Size(side, side);
 
             return checkBox;
         }
