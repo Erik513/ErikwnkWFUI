@@ -7,31 +7,27 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A themed <see cref="System.Windows.Forms.CheckBox"/>, drawn entirely by the
-    /// library: a rounded box filled with a color set (neutral gray, or the accent for
-    /// the primary one) when checked (a dash
-    /// when undetermined), a checkmark and the label. Like a button it has a
-    /// look for hovered, pressed, focused (shown when the keyboard is used) and
-    /// disabled. Get one through <see cref="UIStyles.CheckBoxes"/>.
+    /// A themed <see cref="System.Windows.Forms.CheckBox"/>, drawn entirely by the library:
+    /// a rounded box, a checkmark (a dash when undetermined) and the label. The filled box
+    /// takes its colors from a <see cref="UIColorSet"/> - neutral gray by default, the accent
+    /// for the primary one - and, like a button, the box has a look for hovered, pressed,
+    /// focused (shown once the keyboard is used) and disabled. Get one through
+    /// <see cref="UIStyles.CheckBoxes"/>.
     /// </summary>
-    // Fully owner-drawn (box, checkmark, and label) instead of trying to
-    // recolor pieces of the native glyph - four earlier attempts each
-    // fixed one problem and caused another: ForeColor drives the native
-    // checkmark's color too, so tuning it for label readability made the
-    // checkmark invisible against its own white box (and vice versa);
-    // the native glyph doesn't dim on Enabled at all; erasing only a
-    // guessed-width text region left a sliver of the native glyph/text
-    // peeking out at the boundary; and even a full-rectangle erase in a
-    // plain CheckBox's Paint EVENT still let native ButtonBase text
-    // render underneath/after it in specific layouts (confirmed via a
-    // PropertyTable row: a disabled or otherwise-repainted
-    // checkbox showed its label doubled, faintly offset - ButtonBase's
-    // own OnPaint drawing its default glyph/text using its own layout,
-    // with our Paint-event handler's drawing on top not fully hiding it
-    // depending on repaint timing). A real subclass that overrides
-    // OnPaint and never calls base.OnPaint prevents ButtonBase's native
-    // rendering from running at all, which is the only approach that
-    // eliminated the doubling in every case tested.
+    /// <remarks>
+    /// It keeps everything that is not looks from the standard control: <c>Checked</c>,
+    /// <c>CheckState</c>, <c>ThreeState</c>, <c>AutoCheck</c>, the events, the keyboard and
+    /// the mnemonic. Because the library draws the box itself, these properties are
+    /// ignored: <c>CheckAlign</c> (the box is always on the left), <c>TextAlign</c>,
+    /// <c>RightToLeft</c> and <c>Appearance</c>. The size is not automatic: the factory sets
+    /// it for the text and font it is given, so after changing <c>Text</c> or <c>Font</c> set
+    /// the <c>Size</c> too.
+    /// </remarks>
+    // Why not recolor the native control: ForeColor drives the native checkmark as
+    // well as the label, the native glyph does not dim when disabled, and drawing over it
+    // from a Paint event still let ButtonBase draw its own glyph and text underneath (a
+    // label showed up doubled in a PropertyTable cell). A subclass that draws in OnPaint
+    // and never calls base.OnPaint stops the native drawing completely.
     public class CheckBox : System.Windows.Forms.CheckBox
     {
         private const int BoxSize = 16;
@@ -41,21 +37,11 @@ namespace ErikwnkWFUI.Controls
 
         public CheckBox()
         {
-            // Deliberately NOT using ControlStyles.OptimizedDoubleBuffer/
-            // DoubleBuffered=true - both route through WinForms'
-            // process-wide BufferedGraphicsManager, which reuses ONE
-            // shared backing bitmap across every double-buffered control
-            // for efficiency. With several of these checkboxes (and
-            // other double-buffered controls, e.g. ToggleSwitch) all
-            // painting during the same layout/paint burst, that shared
-            // buffer got reused before being fully overwritten, and a
-            // neighboring control's leftover pixels (its text, or in one
-            // observed case a ToggleSwitch's blue knob) showed up baked
-            // into a checkbox's painted area on real screen captures
-            // (CopyFromScreen and PrintWindow both showed it - not a
-            // capture-tooling artifact). OnPaint below manages its own
-            // private per-call Bitmap instead, so no buffer is ever
-            // shared with any other control.
+            // No OptimizedDoubleBuffer / DoubleBuffered: both use WinForms' one shared buffer
+            // bitmap, and with several of these boxes (and other double-buffered controls
+            // such as ToggleSwitch) painting in one burst, pixels of a neighbor - its text,
+            // once a switch's knob - showed up inside a box. OnPaint draws into a private
+            // bitmap of its own instead.
             SetStyle(
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.UserPaint,
@@ -164,22 +150,10 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // Native CheckBox.AutoSize defaults to true and measures a
-        // preferred size for the SYSTEM checkbox glyph, which knows
-        // nothing about our custom 16px box/padding layout. Left
-        // enabled, this caused the real (already laid-out, resized,
-        // relaid-out) PropertyTable instance to settle on
-        // different bounds than what a single fresh construction+paint
-        // produces - live screen captures (CopyFromScreen AND
-        // PrintWindow, i.e. not a capture-tooling artifact) showed
-        // leftover text fragments from neighboring rows/cells baked
-        // into the checkbox's painted area, while a throwaway
-        // freshly-constructed-then-immediately-DrawToBitmap probe never
-        // reproduced it - consistent with a layout-history-dependent
-        // bug, not a per-paint drawing bug. The factory now disables
-        // AutoSize and assigns an explicitly computed Size instead, so
-        // there is exactly one deterministic set of bounds regardless
-        // of how many real layout passes the control goes through.
+        // The size for a text and font: the 16 px box, the gap and the measured label. The
+        // factory sets it and turns AutoSize off, because the native measuring knows only
+        // the system glyph and, in a table cell that is laid out several times, settled
+        // on different bounds than a fresh control (leftovers of neighboring cells showed).
         internal static Size ComputePreferredSize(string text, Font font)
         {
             bool hasText = !string.IsNullOrEmpty(text);
@@ -193,18 +167,9 @@ namespace ErikwnkWFUI.Controls
             return new Size(width, height);
         }
 
-        // BackColor=Transparent (the previous approach) makes WinForms
-        // route background painting through its "ask the parent to
-        // render what's behind me" fake-transparency path - inside a
-        // nested TableLayoutPanel (PropertyTable's editor cells)
-        // that path picked up stale/sibling content (a neighboring
-        // checkbox's or the row label's text), showing through as
-        // ghosted text on real screen paints. DrawToBitmap didn't
-        // reproduce it (WM_PRINT paints each control directly, bypassing
-        // that compositing path), which is why it looked fine there.
-        // Overriding this as a no-op guarantees our own OnPaint (which
-        // already does a full manual erase to the parent's BackColor)
-        // is the only thing that ever paints this control's background.
+        // Nothing is painted here: OnPaint erases to the parent's color itself. A
+        // transparent BackColor would have WinForms ask the parent to draw what is behind
+        // the box, and in a nested table layout that showed stale text of neighboring cells.
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
         }
@@ -214,25 +179,10 @@ namespace ErikwnkWFUI.Controls
             if (Width <= 0 || Height <= 0)
                 return;
 
-            // The box/border/checkmark are painted onto a private
-            // per-call Bitmap first (see the constructor comment for
-            // why - avoids WinForms' shared BufferedGraphicsManager
-            // bleeding in a neighboring control's pixels), then blitted
-            // onto e.Graphics.
-            //
-            // The label TEXT is different: TextRenderer.DrawText uses
-            // GDI ClearType, which bakes in RGB sub-pixel color hinting
-            // calibrated to the REAL display's physical pixel grid.
-            // Rendering it onto an intermediate Bitmap and blitting that
-            // bitmap to the screen moves those sub-pixel-colored pixels
-            // to a target they were never calibrated for, showing up as
-            // soft/fringed, faintly-doubled-looking text - confirmed by
-            // the user directly on the live app, on EVERY checkbox's
-            // text (not just disabled ones, since low-contrast colors
-            // just make the artifact more visible, not more present).
-            // So text is drawn as a separate, final step straight onto
-            // e.Graphics - the actual on-screen surface - never through
-            // the intermediate bitmap.
+            // Box and checkmark go into a private bitmap first (see the constructor), then
+            // onto the control. The text does not: ClearType colors its pixels for the real
+            // screen, and through an intermediate bitmap it came out soft and fringed. So
+            // the label is drawn last, straight onto the control's own surface.
             using (Bitmap buffer = new Bitmap(Width, Height, PixelFormat.Format24bppRgb))
             {
                 using (Graphics g = Graphics.FromImage(buffer))
@@ -244,8 +194,7 @@ namespace ErikwnkWFUI.Controls
             PaintText(e.Graphics);
             PaintFocus(e.Graphics);
 
-            // Deliberately no base.OnPaint(e) call - see the class
-            // comment above.
+            // No base.OnPaint: the native drawing must not run (see the class comment).
         }
 
         private Color GetParentBackColor()
@@ -270,14 +219,11 @@ namespace ErikwnkWFUI.Controls
             int boxY = (Height - BoxSize) / 2;
             Rectangle boxRect = new Rectangle(boxX, boxY, BoxSize, BoxSize);
 
-            // Filled when checked (or undetermined), outline only when not.
-            // Like a button: the fill and the mark on it come from a color set
-            // for rest, hovered and pressed; an unchecked box shows the state with
-            // its border (and a faint tint while pressed). DisabledGray
-            // substitutes for border and fill when disabled - a fixed mid-gray
-            // (unlike TextDisabled, which is a theme role that differs between
-            // Dark/Light), so a disabled checkbox looks identical in both themes,
-            // the same way a disabled ToggleSwitch/button does.
+            // Filled when checked or undetermined, outline only when not. The fill and the
+            // mark on it come from the color set for rest, hovered and pressed. An empty box
+            // shows hover and press by its border and, pressed, a faint tint. Disabled is a
+            // fixed gray (DisabledGray, not the theme's TextDisabled) so a disabled box looks
+            // the same in both themes, like a disabled button or switch.
             UIColorSet colors = GetColors();
             bool isFilled = CheckState != CheckState.Unchecked;
             bool isActive = Enabled && (_isHot || _isPressed);
@@ -343,18 +289,9 @@ namespace ErikwnkWFUI.Controls
             Rectangle textArea = new Rectangle(
                 GlyphColumnWidth, 0, Width - GlyphColumnWidth, Height);
 
-            // DisabledGray (120,120,120) is a fixed constant chosen
-            // for the box/border/fill, which stay legible against it
-            // regardless of theme since they're solid shapes. Fine
-            // text is different: against Light theme's near-white
-            // BackgroundLight, that same gray falls below a readable
-            // contrast ratio (confirmed illegible in a live
-            // screenshot, not just a theoretical contrast
-            // calculation). Blend toward the ACTUAL background
-            // instead - same technique buttons already use for
-            // their disabled text - so contrast stays adequate in
-            // both themes even though the literal color now differs
-            // between them.
+            // Disabled text is the contrasting color blended toward the background, as on
+            // buttons: the fixed DisabledGray of the box is too faint for text on the
+            // light theme.
             Color parentBackColor = GetParentBackColor();
             Color textColor = Enabled
                 ? UIColors.TextPrimary

@@ -821,7 +821,13 @@ namespace ErikwnkWFUI
             }
         }
 
-        /// <summary>Themed <see cref="CheckBox"/>es.</summary>
+        /// <summary>
+        /// Themed <see cref="CheckBox"/>es, drawn by the library: <see cref="CreateStandard"/> (neutral
+        /// gray when checked) and <see cref="CreatePrimary"/> (the accent color), each also as a
+        /// label-less <see cref="CreateStandardCompact"/> / <see cref="CreatePrimaryCompact"/> for table
+        /// cells. A color set can be given to any of the standard ones. Hover, pressed, keyboard
+        /// focus, disabled and the undetermined third state (<c>ThreeState</c>) are built in.
+        /// </summary>
         public static class CheckBoxes
         {
             /// <param name="text">The label next to the box.</param>
