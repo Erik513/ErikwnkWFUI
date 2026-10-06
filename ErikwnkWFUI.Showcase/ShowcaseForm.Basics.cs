@@ -189,6 +189,14 @@ namespace ErikwnkWFUI.Showcase
             System.Windows.Forms.CheckBox compactDisabled = UIStyles.CheckBoxes.CreateCompact(true);
             compactDisabled.Enabled = false;
             AddUniformRow(table, "CreateCompact", compactChecked, compactUnchecked, compactDisabled);
+
+            // A third state, and the colors of the filled box.
+            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Undetermined", true);
+            undetermined.ThreeState = true;
+            undetermined.CheckState = CheckState.Indeterminate;
+            System.Windows.Forms.CheckBox green = UIStyles.CheckBoxes.CreateStandard("Green set", true, UIStyles.Colors.Sets.Green);
+            System.Windows.Forms.CheckBox purple = UIStyles.CheckBoxes.CreateStandard("Purple set", true, UIStyles.Colors.Sets.Purple);
+            AddUniformRow(table, "ThreeState, colors", undetermined, green, purple);
         }
 
         private void AddToggleSwitchesSection(PropertyTable table)

@@ -824,20 +824,32 @@ namespace ErikwnkWFUI
         /// <summary>Themed <see cref="CheckBox"/>es.</summary>
         public static class CheckBoxes
         {
+            /// <param name="text">The label next to the box.</param>
+            /// <param name="isChecked">Whether the box starts checked.</param>
+            /// <param name="colors">
+            /// The colors of the filled box (rest, hovered, pressed), for example one of
+            /// <c>UIStyles.Colors.Sets</c>; left out, the accent color.
+            /// </param>
             public static System.Windows.Forms.CheckBox CreateStandard(
                 string text = "",
-                bool isChecked = true)
+                bool isChecked = true,
+                UIColorSet colors = null)
             {
                 return UICheckBoxFactory.CreateStandard(
                     text,
-                    isChecked);
+                    isChecked,
+                    colors);
             }
 
+            /// <summary>A box without a label, 25 x 25 (for table cells and the like).</summary>
+            /// <inheritdoc cref="CreateStandard"/>
             public static System.Windows.Forms.CheckBox CreateCompact(
-                bool isChecked = true)
+                bool isChecked = true,
+                UIColorSet colors = null)
             {
                 return UICheckBoxFactory.CreateCompact(
-                    isChecked);
+                    isChecked,
+                    colors);
             }
         }
 

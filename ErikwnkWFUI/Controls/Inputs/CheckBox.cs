@@ -8,9 +8,10 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// A themed <see cref="System.Windows.Forms.CheckBox"/>, drawn entirely by the
-    /// library: a rounded box filled with the accent color when checked, a
-    /// checkmark and the label. Get one through
-    /// <see cref="UIStyles.CheckBoxes"/>.
+    /// library: a rounded box filled with the accent color when checked (a dash
+    /// when undetermined), a checkmark and the label. Like a button it has a
+    /// look for hovered, pressed, focused (shown when the keyboard is used) and
+    /// disabled. Get one through <see cref="UIStyles.CheckBoxes"/>.
     /// </summary>
     // Fully owner-drawn (box, checkmark, and label) instead of trying to
     // recolor pieces of the native glyph - four earlier attempts each
@@ -58,6 +59,113 @@ namespace ErikwnkWFUI.Controls
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.UserPaint,
                 true);
+        }
+
+        private bool _isHot;
+        private bool _isPressed;
+        private UIColorSet _colors;
+
+        /// <summary>
+        /// The colors of the filled box: its fill at rest, hovered and pressed, and the
+        /// mark on each. Left null, the box is filled with the accent color (a little
+        /// lighter when hovered and pressed), like the primary button.
+        /// </summary>
+        public UIColorSet Colors
+        {
+            get { return _colors; }
+            set
+            {
+                _colors = value;
+                Invalidate();
+            }
+        }
+
+        private UIColorSet GetColors()
+        {
+            if (_colors != null)
+                return _colors;
+
+            return UIColors.CreateSet(
+                UIColors.Primary,
+                UIColors.ShiftLightness(UIColors.Primary, 0.08),
+                UIColors.ShiftLightness(UIColors.Primary, 0.16));
+        }
+
+        protected override void OnMouseEnter(System.EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _isHot = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(System.EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _isHot = false;
+            _isPressed = false;
+            Invalidate();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs mevent)
+        {
+            base.OnMouseDown(mevent);
+
+            if (mevent.Button == MouseButtons.Left)
+                _isPressed = true;
+
+            Invalidate();
+        }
+
+        protected override void OnMouseUp(MouseEventArgs mevent)
+        {
+            base.OnMouseUp(mevent);
+            _isPressed = false;
+            Invalidate();
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (e.KeyCode == Keys.Space)
+            {
+                _isPressed = true;
+                Invalidate();
+            }
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            base.OnKeyUp(e);
+
+            if (e.KeyCode == Keys.Space)
+            {
+                _isPressed = false;
+                Invalidate();
+            }
+        }
+
+        protected override void OnGotFocus(System.EventArgs e)
+        {
+            base.OnGotFocus(e);
+            Invalidate();
+        }
+
+        protected override void OnLostFocus(System.EventArgs e)
+        {
+            base.OnLostFocus(e);
+            _isPressed = false;
+            Invalidate();
+        }
+
+        protected override void OnEnabledChanged(System.EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+
+            // A disabled control gets no MouseUp: a press that was still going
+            // (a handler that disables the box) must not outlive it.
+            _isPressed = false;
+            Invalidate();
         }
 
         // Native CheckBox.AutoSize defaults to true and measures a
@@ -138,6 +246,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             PaintText(e.Graphics);
+            PaintFocus(e.Graphics);
 
             // Deliberately no base.OnPaint(e) call - see the class
             // comment above.
@@ -165,36 +274,69 @@ namespace ErikwnkWFUI.Controls
             int boxY = (Height - BoxSize) / 2;
             Rectangle boxRect = new Rectangle(boxX, boxY, BoxSize, BoxSize);
 
-            // Filled with the accent when checked (readable regardless of
-            // theme/accent - no more fighting over one color that has to
-            // work as both a checkmark stroke and a label color), outline
-            // only when unchecked. DisabledGray substitutes for both
-            // border and fill when disabled - a fixed mid-gray (unlike
-            // TextDisabled, which is a theme role that differs between
-            // Dark/Light), so a disabled checkbox looks identical in both
-            // themes, the same way a disabled ToggleSwitch/button does.
-            Color borderColor = Enabled ? UIColors.BorderMedium : UIColors.DisabledGray;
-            Color fillColor = Checked
-                ? (Enabled ? UIColors.Primary : UIColors.DisabledGray)
-                : Color.Transparent;
+            // Filled when checked (or undetermined), outline only when not.
+            // Like a button: the fill and the mark on it come from a color set
+            // for rest, hovered and pressed; an unchecked box shows the state with
+            // its border (and a faint tint while pressed). DisabledGray
+            // substitutes for border and fill when disabled - a fixed mid-gray
+            // (unlike TextDisabled, which is a theme role that differs between
+            // Dark/Light), so a disabled checkbox looks identical in both themes,
+            // the same way a disabled ToggleSwitch/button does.
+            UIColorSet colors = GetColors();
+            bool isFilled = CheckState != CheckState.Unchecked;
+            bool isActive = Enabled && (_isHot || _isPressed);
+
+            Color fillColor;
+            Color markColor;
+
+            if (!Enabled)
+            {
+                fillColor = UIColors.DisabledGray;
+                markColor = UIColors.GetContrastingForeColor(UIColors.DisabledGray);
+            }
+            else if (_isPressed)
+            {
+                fillColor = colors.Pressed;
+                markColor = colors.PressedText;
+            }
+            else if (_isHot)
+            {
+                fillColor = colors.Hover;
+                markColor = colors.HoverText;
+            }
+            else
+            {
+                fillColor = colors.Basic;
+                markColor = colors.BasicText;
+            }
+
+            Color borderColor = !Enabled
+                ? UIColors.DisabledGray
+                : isActive && !isFilled
+                    ? (_isPressed ? colors.Pressed : colors.Hover)
+                    : UIColors.BorderMedium;
 
             using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, 3))
             {
-                if (Checked)
+                if (isFilled)
                 {
                     using (SolidBrush fillBrush = new SolidBrush(fillColor))
                         g.FillPath(fillBrush, boxPath);
+                }
+                else if (isActive)
+                {
+                    using (SolidBrush tintBrush = new SolidBrush(Color.FromArgb(_isPressed ? 60 : 30, colors.Basic)))
+                        g.FillPath(tintBrush, boxPath);
                 }
 
                 using (Pen borderPen = new Pen(borderColor, 1.5f))
                     g.DrawPath(borderPen, boxPath);
             }
 
-            if (Checked)
-            {
-                Color checkColor = UIColors.GetContrastingForeColor(fillColor);
-                DrawCheckmark(g, boxRect, checkColor);
-            }
+            if (CheckState == CheckState.Checked)
+                DrawCheckmark(g, boxRect, markColor);
+            else if (CheckState == CheckState.Indeterminate)
+                DrawDash(g, boxRect, markColor);
         }
 
         private void PaintText(Graphics g)
@@ -229,6 +371,45 @@ namespace ErikwnkWFUI.Controls
                 textArea,
                 textColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
+        }
+
+        // The dotted frame of the keyboard focus, around the label and the box (or the
+        // box alone when there is no label) - only once the keyboard has been used.
+        private void PaintFocus(Graphics g)
+        {
+            if (!Focused || !ShowFocusCues)
+                return;
+
+            Rectangle area;
+
+            if (string.IsNullOrEmpty(Text))
+            {
+                area = new Rectangle((Width - BoxSize) / 2 - 3, (Height - BoxSize) / 2 - 3, BoxSize + 6, BoxSize + 6);
+            }
+            else
+            {
+                int textWidth = TextRenderer.MeasureText(Text, Font).Width;
+                int width = System.Math.Min(Width - 2, GlyphColumnWidth + textWidth + 2);
+                area = new Rectangle(1, 1, width, Height - 2);
+            }
+
+            area.Intersect(new Rectangle(0, 0, Width, Height));
+            ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, GetParentBackColor());
+        }
+
+        private static void DrawDash(Graphics g, Rectangle box, Color color)
+        {
+            int y = box.Y + box.Height / 2;
+            int left = box.X + (int)(box.Width * 0.26);
+            int right = box.X + (int)(box.Width * 0.74);
+
+            using (Pen pen = new Pen(color, 2f))
+            {
+                pen.StartCap = LineCap.Round;
+                pen.EndCap = LineCap.Round;
+
+                g.DrawLine(pen, left, y, right, y);
+            }
         }
 
         private static void DrawCheckmark(Graphics g, Rectangle box, Color color)
