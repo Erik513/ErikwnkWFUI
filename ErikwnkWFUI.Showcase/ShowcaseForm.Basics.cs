@@ -202,24 +202,32 @@ namespace ErikwnkWFUI.Showcase
             compactPrimaryDisabled.Enabled = false;
             AddUniformRow(table, "CreatePrimaryCompact", compactPrimaryChecked, compactPrimaryUnchecked, compactPrimaryDisabled);
 
-            // The third state is a setting of any checkbox (ThreeState and CheckState), in
-            // every color.
-            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Standard", true);
+            // The third state (ThreeState and CheckState) of the Standard one ...
+            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Undetermined", true);
             undetermined.ThreeState = true;
             undetermined.CheckState = CheckState.Indeterminate;
-            System.Windows.Forms.CheckBox undeterminedPrimary = UIStyles.CheckBoxes.CreatePrimary("Primary", true);
-            undeterminedPrimary.ThreeState = true;
-            undeterminedPrimary.CheckState = CheckState.Indeterminate;
-            System.Windows.Forms.CheckBox undeterminedGreen = UIStyles.CheckBoxes.CreateStandard("Green set", true, UIStyles.Colors.Sets.Green);
-            undeterminedGreen.ThreeState = true;
-            undeterminedGreen.CheckState = CheckState.Indeterminate;
-            AddUniformRow(table, "ThreeState (undetermined)", undetermined, undeterminedPrimary, undeterminedGreen);
+            System.Windows.Forms.CheckBox undeterminedDisabled = UIStyles.CheckBoxes.CreateStandard("Disabled", true);
+            undeterminedDisabled.ThreeState = true;
+            undeterminedDisabled.CheckState = CheckState.Indeterminate;
+            undeterminedDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard (undetermined)", undetermined, undeterminedDisabled);
 
-            // Any color set colors the filled box.
-            System.Windows.Forms.CheckBox green = UIStyles.CheckBoxes.CreateStandard("Green set", true, UIStyles.Colors.Sets.Green);
-            System.Windows.Forms.CheckBox purple = UIStyles.CheckBoxes.CreateStandard("Purple set", true, UIStyles.Colors.Sets.Purple);
-            System.Windows.Forms.CheckBox orangeCompact = UIStyles.CheckBoxes.CreateStandardCompact(true, UIStyles.Colors.Sets.Orange);
-            AddUniformRow(table, "CreateStandard(colors)", green, purple, orangeCompact);
+            // ... and of the Primary one.
+            System.Windows.Forms.CheckBox primaryUndetermined = UIStyles.CheckBoxes.CreatePrimary("Undetermined", true);
+            primaryUndetermined.ThreeState = true;
+            primaryUndetermined.CheckState = CheckState.Indeterminate;
+            System.Windows.Forms.CheckBox primaryUndeterminedDisabled = UIStyles.CheckBoxes.CreatePrimary("Disabled", true);
+            primaryUndeterminedDisabled.ThreeState = true;
+            primaryUndeterminedDisabled.CheckState = CheckState.Indeterminate;
+            primaryUndeterminedDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimary (undetermined)", primaryUndetermined, primaryUndeterminedDisabled);
+
+            // CreateStandard with a color set.
+            System.Windows.Forms.CheckBox greenChecked = UIStyles.CheckBoxes.CreateStandard("Checked", true, UIStyles.Colors.Sets.Green);
+            System.Windows.Forms.CheckBox greenUnchecked = UIStyles.CheckBoxes.CreateStandard("Unchecked", false, UIStyles.Colors.Sets.Green);
+            System.Windows.Forms.CheckBox greenDisabled = UIStyles.CheckBoxes.CreateStandard("Disabled", true, UIStyles.Colors.Sets.Green);
+            greenDisabled.Enabled = false;
+            AddUniformRow(table, "CreateStandard(colors)", greenChecked, greenUnchecked, greenDisabled);
         }
 
         private void AddToggleSwitchesSection(PropertyTable table)
@@ -266,6 +274,24 @@ namespace ErikwnkWFUI.Showcase
             comboDisabled.SelectedIndex = 0;
             comboDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", combo, comboDisabled);
+
+            ComboBox primaryCombo = UIStyles.ComboBoxes.CreatePrimary();
+            primaryCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+            primaryCombo.SelectedIndex = 0;
+            ComboBox primaryComboDisabled = UIStyles.ComboBoxes.CreatePrimary();
+            primaryComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+            primaryComboDisabled.SelectedIndex = 0;
+            primaryComboDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimary", primaryCombo, primaryComboDisabled);
+
+            ComboBox greenCombo = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
+            greenCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+            greenCombo.SelectedIndex = 0;
+            ComboBox greenComboDisabled = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
+            greenComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+            greenComboDisabled.SelectedIndex = 0;
+            greenComboDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard(colors)", greenCombo, greenComboDisabled);
         }
 
         private void AddContextMenusSection(PropertyTable table)

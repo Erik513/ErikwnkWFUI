@@ -764,10 +764,27 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="ComboBox"/>. Note: only the edit portion follows the theme - the native dropdown list itself still renders with system colors (see ErikwnkWFUI/README.md).</summary>
         public static class ComboBoxes
         {
+            /// <summary>A themed combo box; the selected (or hovered) row of the list is the neutral gray.</summary>
+            /// <param name="comboBoxStyle">The standard WinForms style; a drop-down list the user only picks from by default.</param>
+            /// <param name="colors">
+            /// A color set for the selected (or hovered) row of the list instead of the neutral gray:
+            /// one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
+            /// <see cref="Color"/>.
+            /// </param>
             public static ComboBox CreateStandard(
-                ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
+                ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
+                UIColorSet colors = null)
             {
                 return UIComboBoxFactory.CreateStandard(
+                    comboBoxStyle,
+                    colors);
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but with the selected row in the current accent instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
+            public static ComboBox CreatePrimary(
+                ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
+            {
+                return UIComboBoxFactory.CreatePrimary(
                     comboBoxStyle);
             }
 

@@ -12,7 +12,8 @@ namespace ErikwnkWFUI.Factories
     internal static class UIComboBoxFactory
     {
         public static ComboBox CreateStandard(
-            ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
+            ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
+            UIColorSet colors = null)
         {
             ComboBox comboBox = new ComboBox
             {
@@ -30,7 +31,7 @@ namespace ErikwnkWFUI.Factories
                 DrawMode = DrawMode.OwnerDrawFixed
             };
 
-            comboBox.DrawItem += OnComboBoxDrawItem;
+            comboBox.DrawItem += (sender, e) => OnComboBoxDrawItem(sender, e, colors);
 
             // Even with FlatStyle.Flat, Windows still paints a themed
             // focus/hover border around the box in the OS accent color
@@ -56,6 +57,13 @@ namespace ErikwnkWFUI.Factories
             UnthemeDropDownList(comboBox);
 
             return comboBox;
+        }
+
+        // The Standard one with the accent: the selected row in the primary color set.
+        public static ComboBox CreatePrimary(
+            ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
+        {
+            return CreateStandard(comboBoxStyle, UIColors.PrimarySet);
         }
 
         // Preserves selection by POSITION (same index in the new list as
@@ -104,7 +112,7 @@ namespace ErikwnkWFUI.Factories
                 SetWindowTheme(info.hwndList, "", "");
         }
 
-        private static void OnComboBoxDrawItem(object sender, DrawItemEventArgs e)
+        private static void OnComboBoxDrawItem(object sender, DrawItemEventArgs e, UIColorSet colors)
         {
             if (e.Index < 0 || !(sender is ComboBox comboBox))
                 return;
@@ -117,7 +125,12 @@ namespace ErikwnkWFUI.Factories
             // hovering/selecting a row in the open popup.
             bool isDisplayArea = (e.State & DrawItemState.ComboBoxEdit) != 0;
             bool isSelected = !isDisplayArea && (e.State & DrawItemState.Selected) != 0;
-            Color backColor = isSelected ? UIColors.Primary : UIColors.BackgroundMedium;
+
+            // The selected (or hovered) row: the set's color with the set's text, or the
+            // neutral gray of the other controls' selections without a set.
+            Color backColor = !isSelected
+                ? UIColors.BackgroundMedium
+                : colors != null ? colors.Hover : UIColors.BorderLight;
 
             // comboBox.Enabled wasn't checked at all here before - the closed
             // box's own text always rendered as the full-brightness
@@ -127,7 +140,7 @@ namespace ErikwnkWFUI.Factories
             Color textColor = !comboBox.Enabled
                 ? UIColors.TextDisabled
                 : isSelected
-                    ? UIColors.GetContrastingForeColor(backColor)
+                    ? (colors != null ? colors.HoverText : UIColors.GetContrastingForeColor(backColor))
                     : UIColors.TextPrimary;
 
             using (SolidBrush backBrush = new SolidBrush(backColor))

@@ -48,7 +48,7 @@ namespace ErikwnkWFUI.Showcase
             lockedFirst.SetTabClosable(lockedFirst.TabPages[0], false);
             table.AddRow("CreatePrimary", 140, lockedFirst);
 
-            // Any color set colors the bar under the selected tab and the menu selection.
+            // CreateStandard with a color set.
             table.AddRow(
                 "CreateStandard(colors)",
                 140,
