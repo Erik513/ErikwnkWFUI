@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Factories
                 DrawMode = DrawMode.OwnerDrawFixed
             };
 
-            comboBox.DrawItem += ComboBox_DrawItem;
+            comboBox.DrawItem += OnComboBoxDrawItem;
 
             // Even with FlatStyle.Flat, Windows still paints a themed
             // focus/hover border around the box in the OS accent color
@@ -104,7 +104,7 @@ namespace ErikwnkWFUI.Factories
                 SetWindowTheme(info.hwndList, "", "");
         }
 
-        private static void ComboBox_DrawItem(object sender, DrawItemEventArgs e)
+        private static void OnComboBoxDrawItem(object sender, DrawItemEventArgs e)
         {
             if (e.Index < 0 || !(sender is ComboBox comboBox))
                 return;
