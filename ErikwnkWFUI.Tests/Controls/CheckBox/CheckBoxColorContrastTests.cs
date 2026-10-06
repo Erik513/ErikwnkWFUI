@@ -190,4 +190,27 @@ public class CheckBoxColorContrastTests
             Check(shortfalls, "outline against another parent color", control.OutlineColor, parent.BackColor, 3.0);
         });
     }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void AnEmptyBox_GetsAStrongerOutline_WhenHoveredAndPressed_WithAnySet(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            foreach ((string name, UIColorSet? set) in AllSets())
+            {
+                using System.Windows.Forms.CheckBox box = UIStyles.CheckBoxes.CreateStandard("x", false, set);
+                ErikwnkWFUI.Controls.CheckBox control = (ErikwnkWFUI.Controls.CheckBox)box;
+                Color page = UIColors.BackgroundMedium;
+
+                Check(shortfalls, name + " at rest", control.BorderColor, page, 3.0);
+
+                box.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+                Check(shortfalls, name + " hovered", control.BorderColor, page, 4.5);
+
+                box.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+                Check(shortfalls, name + " pressed", control.BorderColor, page, 6.0);
+            }
+        });
+    }
 }

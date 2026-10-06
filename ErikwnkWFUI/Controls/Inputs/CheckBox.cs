@@ -220,6 +220,44 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The border of the box in the current state: the outline at rest, the fixed gray
+        // when disabled, and for an empty box that is hovered or pressed the color of the
+        // set - brought to 4.5:1 (hovered) or 6:1 (pressed) against the page, so the state
+        // is seen as a stronger outline in both themes (the gray set alone would be fainter
+        // than the outline in the dark theme).
+        internal Color BorderColor
+        {
+            get
+            {
+                if (!Enabled)
+                    return UIColors.DisabledGray;
+
+                bool isActive = _isHot || _isPressed;
+
+                if (!isActive || CheckState != CheckState.Unchecked)
+                    return OutlineColor;
+
+                UIColorSet colors = GetColors();
+
+                return EnsureContrast(
+                    _isPressed ? colors.Pressed : colors.Hover,
+                    GetParentBackColor(),
+                    _isPressed ? 6.0 : 4.5);
+            }
+        }
+
+        // The color moved lighter (on a dark page) or darker (on a light one), in small steps,
+        // until it has the contrast against the page.
+        private static Color EnsureContrast(Color color, Color page, double minimum)
+        {
+            double step = UIColors.IsLight(page) ? -0.03 : 0.03;
+
+            for (int i = 0; i < 40 && UIColors.GetContrastRatio(color, page) < minimum; i++)
+                color = UIColors.ShiftLightness(color, step);
+
+            return color;
+        }
+
         private Color GetParentBackColor()
         {
             return Parent != null
@@ -275,11 +313,7 @@ namespace ErikwnkWFUI.Controls
                 markColor = colors.BasicText;
             }
 
-            Color borderColor = !Enabled
-                ? UIColors.DisabledGray
-                : isActive && !isFilled
-                    ? (_isPressed ? colors.Pressed : colors.Hover)
-                    : OutlineColor;
+            Color borderColor = BorderColor;
 
             using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, 3))
             {
@@ -294,7 +328,7 @@ namespace ErikwnkWFUI.Controls
                         g.FillPath(tintBrush, boxPath);
                 }
 
-                using (Pen borderPen = new Pen(borderColor, 1.5f))
+                using (Pen borderPen = new Pen(borderColor, isActive && !isFilled ? 2f : 1.5f))
                     g.DrawPath(borderPen, boxPath);
             }
 
