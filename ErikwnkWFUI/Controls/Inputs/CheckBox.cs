@@ -257,21 +257,7 @@ namespace ErikwnkWFUI.Controls
         // filled box is delineated even when its fill is close to the page.
         internal Color OutlineColor
         {
-            get
-            {
-                Color page = GetParentBackColor();
-                Color text = UIColors.GetBestTextColor(page);
-
-                for (double toward = 0.7; toward > 0; toward -= 0.05)
-                {
-                    Color outline = UIColors.BlendToward(text, page, toward);
-
-                    if (UIColors.GetContrastRatio(outline, page) >= 3.0)
-                        return outline;
-                }
-
-                return text;
-            }
+            get { return UIColors.GetOutlineColor(GetParentBackColor()); }
         }
 
         // The border of the box in the current state: the outline at rest, the fixed gray
@@ -293,27 +279,13 @@ namespace ErikwnkWFUI.Controls
 
                 UIColorSet colors = GetColors();
 
-                return EnsureContrast(
+                return UIColors.EnsureContrast(
                     _isPressed ? colors.Pressed : colors.Hover,
                     GetParentBackColor(),
                     _isPressed ? 6.0 : 4.5);
             }
         }
 
-        // The color moved lighter (on a dark page) or darker (on a light one), in small steps,
-        // until it has the contrast against the page.
-        private static Color EnsureContrast(Color color, Color page, double minimum)
-        {
-            double step = UIColors.IsLight(page) ? -0.03 : 0.03;
-
-            for (int i = 0; i < 40 && UIColors.GetContrastRatio(color, page) < minimum; i++)
-                color = UIColors.ShiftLightness(color, step);
-
-            return color;
-        }
-
-        // The color to erase to: the first opaque back color up the chain of parents (a
-        // transparent panel shows what is behind it), or the theme's own without a parent.
         private Color GetParentBackColor()
         {
             for (Control parent = Parent; parent != null; parent = parent.Parent)

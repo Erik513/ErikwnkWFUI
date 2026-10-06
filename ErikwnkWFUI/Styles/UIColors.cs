@@ -375,6 +375,40 @@ namespace ErikwnkWFUI.Styles
             return result;
         }
 
+        /// <summary>
+        /// The outline of a control on <paramref name="page"/>: the best text color for the page,
+        /// moved toward it just far enough to keep 3:1 against it (the bar for the boundary of a
+        /// control), so it stands out on any page color.
+        /// </summary>
+        internal static Color GetOutlineColor(Color page)
+        {
+            Color text = GetBestTextColor(page);
+
+            for (double toward = 0.7; toward > 0; toward -= 0.05)
+            {
+                Color outline = BlendToward(text, page, toward);
+
+                if (GetContrastRatio(outline, page) >= 3.0)
+                    return outline;
+            }
+
+            return text;
+        }
+
+        /// <summary>
+        /// <paramref name="color"/> moved lighter (on a dark page) or darker (on a light one), in
+        /// small steps, until it has at least <paramref name="minimum"/> contrast against the page.
+        /// </summary>
+        internal static Color EnsureContrast(Color color, Color page, double minimum)
+        {
+            double step = IsLight(page) ? -0.03 : 0.03;
+
+            for (int i = 0; i < 40 && GetContrastRatio(color, page) < minimum; i++)
+                color = ShiftLightness(color, step);
+
+            return color;
+        }
+
         // Text keeps the color it has at rest as long as it stays clearly
         // readable on the next fill; only when it would not, the better one
         // takes over. Otherwise the text would flip between light and dark each

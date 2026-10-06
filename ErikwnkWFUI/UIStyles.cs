@@ -771,7 +771,7 @@ namespace ErikwnkWFUI
             /// one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
             /// <see cref="Color"/>.
             /// </param>
-            public static ComboBox CreateStandard(
+            public static System.Windows.Forms.ComboBox CreateStandard(
                 ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
                 UIColorSet colors = null)
             {
@@ -781,7 +781,7 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but with the selected row in the current accent instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static ComboBox CreatePrimary(
+            public static System.Windows.Forms.ComboBox CreatePrimary(
                 ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
             {
                 return UIComboBoxFactory.CreatePrimary(
@@ -799,7 +799,7 @@ namespace ErikwnkWFUI
             /// combo box's items.
             /// </summary>
             public static void ReplaceItems(
-                ComboBox comboBox,
+                System.Windows.Forms.ComboBox comboBox,
                 System.Collections.Generic.IEnumerable<object> items,
                 bool keepSelection = true)
             {

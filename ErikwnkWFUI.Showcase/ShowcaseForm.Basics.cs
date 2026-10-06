@@ -266,28 +266,28 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddComboBoxesSection(PropertyTable table)
         {
-            ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
+            System.Windows.Forms.ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
             combo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             combo.SelectedIndex = 0;
-            ComboBox comboDisabled = UIStyles.ComboBoxes.CreateStandard();
+            System.Windows.Forms.ComboBox comboDisabled = UIStyles.ComboBoxes.CreateStandard();
             comboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             comboDisabled.SelectedIndex = 0;
             comboDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", combo, comboDisabled);
 
-            ComboBox primaryCombo = UIStyles.ComboBoxes.CreatePrimary();
+            System.Windows.Forms.ComboBox primaryCombo = UIStyles.ComboBoxes.CreatePrimary();
             primaryCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             primaryCombo.SelectedIndex = 0;
-            ComboBox primaryComboDisabled = UIStyles.ComboBoxes.CreatePrimary();
+            System.Windows.Forms.ComboBox primaryComboDisabled = UIStyles.ComboBoxes.CreatePrimary();
             primaryComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             primaryComboDisabled.SelectedIndex = 0;
             primaryComboDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreatePrimary", primaryCombo, primaryComboDisabled);
 
-            ComboBox greenCombo = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
+            System.Windows.Forms.ComboBox greenCombo = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
             greenCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             greenCombo.SelectedIndex = 0;
-            ComboBox greenComboDisabled = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
+            System.Windows.Forms.ComboBox greenComboDisabled = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
             greenComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             greenComboDisabled.SelectedIndex = 0;
             greenComboDisabled.Enabled = false;

@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
-using ErikwnkWFUI.Native;
-using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -15,48 +12,14 @@ namespace ErikwnkWFUI.Factories
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
             UIColorSet colors = null)
         {
-            ComboBox comboBox = new ComboBox
+            return new Controls.ComboBox
             {
                 BackColor = UIColors.BackgroundMedium,
                 ForeColor = UIColors.TextPrimary,
-                FlatStyle = FlatStyle.Flat,
                 Font = UIFonts.Normal,
                 DropDownStyle = comboBoxStyle,
-                // FlatStyle/BackColor/ForeColor only style the closed box -
-                // the dropdown popup is a native Win32 list that always
-                // highlights the hovered/selected row with the OS accent
-                // (blue), no matter what's set above. Owner-drawing every
-                // row is the only way to make that highlight follow the
-                // app's own accent color instead.
-                DrawMode = DrawMode.OwnerDrawFixed
+                Colors = colors
             };
-
-            comboBox.DrawItem += (sender, e) => OnComboBoxDrawItem(sender, e, colors);
-
-            // Even with FlatStyle.Flat, Windows still paints a themed
-            // focus/hover border around the box in the OS accent color
-            // (blue) - that's drawn by the visual-styles engine, not by
-            // any WinForms property, so it ignores BackColor/ForeColor
-            // entirely. Detaching the control from its theme class is the
-            // only way to stop it; the control then falls back to a
-            // plain, non-accent-colored border. Forcing Handle here (rather
-            // than waiting for the HandleCreated event) does this
-            // synchronously before the caller adds items or parents the
-            // control - deferring it left a window where an owner-drawn
-            // item could get painted before the retheme took effect,
-            // rendering blank.
-            SetWindowTheme(comboBox.Handle, "", "");
-
-            // The dropdown popup is a SEPARATE native window (its own HWND,
-            // fetched via GetComboBoxInfo) from the combo box itself - it
-            // still had its own themed border in the OS accent (blue) even
-            // after the line above, since stripping the combo box's own
-            // window theme doesn't touch it. Comctl32 creates this child
-            // window up front (hidden until first drop-down), so it's
-            // already available right after the combo box's own handle is.
-            UnthemeDropDownList(comboBox);
-
-            return comboBox;
         }
 
         // The Standard one with the accent: the selected row in the primary color set.
@@ -102,67 +65,6 @@ namespace ErikwnkWFUI.Factories
             {
                 comboBox.EndUpdate();
             }
-        }
-
-        private static void UnthemeDropDownList(ComboBox comboBox)
-        {
-            NativeComboBoxInfo info = new NativeComboBoxInfo { cbSize = Marshal.SizeOf(typeof(NativeComboBoxInfo)) };
-
-            if (GetComboBoxInfo(comboBox.Handle, ref info) && info.hwndList != IntPtr.Zero)
-                SetWindowTheme(info.hwndList, "", "");
-        }
-
-        private static void OnComboBoxDrawItem(object sender, DrawItemEventArgs e, UIColorSet colors)
-        {
-            if (e.Index < 0 || !(sender is ComboBox comboBox))
-                return;
-
-            // ComboBoxEdit marks the closed box's own display area (redrawn
-            // whenever the control has focus) as opposed to a row inside
-            // the open dropdown list - without excluding it, the closed
-            // box would also pick up Selected and stay permanently
-            // yellow-filled the whole time it has focus, not just while
-            // hovering/selecting a row in the open popup.
-            bool isDisplayArea = (e.State & DrawItemState.ComboBoxEdit) != 0;
-            bool isSelected = !isDisplayArea && (e.State & DrawItemState.Selected) != 0;
-
-            // The selected (or hovered) row: the set's color with the set's text, or the
-            // neutral gray of the other controls' selections without a set.
-            Color backColor = !isSelected
-                ? UIColors.BackgroundMedium
-                : colors != null ? colors.Hover : UIColors.BorderLight;
-
-            // comboBox.Enabled wasn't checked at all here before - the closed
-            // box's own text always rendered as the full-brightness
-            // TextPrimary, with zero visual change when the control was
-            // disabled (confirmed by rendering both states and comparing
-            // pixels - they were identical).
-            Color textColor = !comboBox.Enabled
-                ? UIColors.TextDisabled
-                : isSelected
-                    ? (colors != null ? colors.HoverText : UIColors.GetContrastingForeColor(backColor))
-                    : UIColors.TextPrimary;
-
-            using (SolidBrush backBrush = new SolidBrush(backColor))
-            {
-                e.Graphics.FillRectangle(backBrush, e.Bounds);
-            }
-
-            // GetItemText (not a raw .ToString() on the item) is what
-            // respects DisplayMember, matching how a native ComboBox
-            // renders its items - without this, binding a list of objects
-            // via DisplayMember rendered each row as the item's fully-
-            // qualified type name instead of the intended display text.
-            object item = e.Index >= 0 && e.Index < comboBox.Items.Count ? comboBox.Items[e.Index] : null;
-            string text = comboBox.GetItemText(item);
-
-            TextRenderer.DrawText(
-                e.Graphics,
-                text,
-                comboBox.Font,
-                e.Bounds,
-                textColor,
-                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.NoPrefix);
         }
     }
 }

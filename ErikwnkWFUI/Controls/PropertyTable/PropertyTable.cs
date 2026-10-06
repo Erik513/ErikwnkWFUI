@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using static ErikwnkWFUI.UIStyles;
 
@@ -384,7 +384,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            if (control is ComboBox)
+            if (control is System.Windows.Forms.ComboBox)
             {
                 control.Dock = DockStyle.Fill;
                 control.Margin = new Padding(0);
