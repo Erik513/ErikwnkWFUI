@@ -103,16 +103,20 @@ public class CheckBoxStateTests
     }
 
     [Fact]
-    public void WithoutColors_TheBoxIsFilledWithTheAccent_AndFollowsIt()
+    public void WithoutColors_TheBoxIsTheNeutralGray_ForEveryState_AndIgnoresTheAccent()
     {
+        UIColorSet gray = UIStyles.Colors.Sets.Gray;
+
         try
         {
-            using System.Windows.Forms.CheckBox box = Create(true);
-            Assert.Equal(UIColors.Primary, Inside(box));
-
             UIColors.SetAccent(UIAccentColors.Purple);
-            Assert.Equal(UIColors.Primary, Inside(box));
-            Assert.NotEqual(UIAccentColors.Blue, UIColors.Primary);
+            using System.Windows.Forms.CheckBox box = Create(true);
+
+            Assert.Equal(gray.Basic, Inside(box));
+            Enter(box);
+            Assert.Equal(gray.Hover, Inside(box));
+            Down(box);
+            Assert.Equal(gray.Pressed, Inside(box));
         }
         finally
         {
@@ -121,7 +125,33 @@ public class CheckBoxStateTests
     }
 
     [Fact]
-    public void AColorsSetLater_ChangesTheLook_AndNullGoesBackToTheAccent()
+    public void CreatePrimary_IsTheStandardWithThePrimarySet_AndFollowsTheAccent()
+    {
+        try
+        {
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            using System.Windows.Forms.CheckBox primary = UIStyles.CheckBoxes.CreatePrimary("Label", true);
+            using System.Windows.Forms.CheckBox viaSet = UIStyles.CheckBoxes.CreateStandard("Label", true, UIStyles.Colors.Sets.Primary);
+
+            UIColorSet set = UIStyles.Colors.Sets.Primary;
+            Assert.Equal(set.Basic, Inside(primary));
+            Assert.Equal(Inside(viaSet), Inside(primary));
+            Assert.Equal(primary.Size, viaSet.Size);
+
+            Enter(primary);
+            Assert.Equal(set.Hover, Inside(primary));
+
+            Assert.NotEqual(UIStyles.Colors.Sets.Gray.Basic, Inside(UIStyles.CheckBoxes.CreatePrimary("x", true)));
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
+
+    [Fact]
+    public void AColorsSetLater_ChangesTheLook_AndNullGoesBackToTheGray()
     {
         using System.Windows.Forms.CheckBox box = Create(true);
         Color accent = Inside(box);

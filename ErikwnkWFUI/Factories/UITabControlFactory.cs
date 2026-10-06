@@ -6,37 +6,50 @@ namespace ErikwnkWFUI.Factories
     internal static class UITabControlFactory
     {
         // The editable variant: right-click a tab to add, rename or close tabs.
-        public static TabControl CreateStandard()
+        public static TabControl CreateStandard(UIColorSet colors = null)
         {
-            return new TabControl();
+            TabControl tabs = new TabControl();
+            ApplyColors(tabs, colors);
+
+            return tabs;
         }
 
         // The display-only variant: tabs can be switched, not edited.
-        public static ReadOnlyTabControl CreateReadOnlyStandard()
+        public static ReadOnlyTabControl CreateReadOnlyStandard(UIColorSet colors = null)
         {
-            return new ReadOnlyTabControl();
+            ReadOnlyTabControl tabs = new ReadOnlyTabControl();
+            ApplyColors(tabs, colors);
+
+            return tabs;
         }
 
-        // Same controls, with the selected tab's bar (and the menu's
-        // selection) in the current accent instead of the neutral gray the
-        // Standard ones keep - mirrors UIDataGridViewFactory.CreatePrimary.
-        // The bar is the lighter accent shade: a thin line needs more
-        // contrast than a filled selection does.
+        // A color set replaces the neutral gray where the tab control shows its
+        // "accent": the bar under the selected tab (the set's pressed shade - a thin
+        // line needs more contrast than a filled selection does) and the selection of
+        // the right-click menu (the set's own color). The tab fills and the text stay
+        // those of the theme.
+        private static void ApplyColors(ReadOnlyTabControl tabs, UIColorSet colors)
+        {
+            if (colors == null)
+                return;
+
+            tabs.SelectedTabIndicatorColor = colors.Pressed;
+
+            TabControl editable = tabs as TabControl;
+
+            if (editable != null)
+                editable.ContextMenuSelectionColor = colors.Hover;
+        }
+
+        // The Standard ones in the current accent - the primary color set.
         public static TabControl CreatePrimary()
         {
-            return new TabControl
-            {
-                SelectedTabIndicatorColor = UIColors.PrimaryLight,
-                ContextMenuSelectionColor = UIColors.Primary
-            };
+            return CreateStandard(UIColors.PrimarySet);
         }
 
         public static ReadOnlyTabControl CreateReadOnlyPrimary()
         {
-            return new ReadOnlyTabControl
-            {
-                SelectedTabIndicatorColor = UIColors.PrimaryLight
-            };
+            return CreateReadOnlyStandard(UIColors.PrimarySet);
         }
     }
 }

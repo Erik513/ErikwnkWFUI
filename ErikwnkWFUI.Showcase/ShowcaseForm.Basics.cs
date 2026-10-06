@@ -184,19 +184,42 @@ namespace ErikwnkWFUI.Showcase
             disabledBox.Enabled = false;
             AddUniformRow(table, "CreateStandard", checkedBox, uncheckedBox, disabledBox);
 
-            System.Windows.Forms.CheckBox compactChecked = UIStyles.CheckBoxes.CreateCompact(true);
-            System.Windows.Forms.CheckBox compactUnchecked = UIStyles.CheckBoxes.CreateCompact(false);
-            System.Windows.Forms.CheckBox compactDisabled = UIStyles.CheckBoxes.CreateCompact(true);
-            compactDisabled.Enabled = false;
-            AddUniformRow(table, "CreateCompact", compactChecked, compactUnchecked, compactDisabled);
+            System.Windows.Forms.CheckBox primaryChecked = UIStyles.CheckBoxes.CreatePrimary("Checked", true);
+            System.Windows.Forms.CheckBox primaryUnchecked = UIStyles.CheckBoxes.CreatePrimary("Unchecked", false);
+            System.Windows.Forms.CheckBox primaryDisabled = UIStyles.CheckBoxes.CreatePrimary("Disabled", true);
+            primaryDisabled.Enabled = false;
+            AddUniformRow(table, "CreatePrimary", primaryChecked, primaryUnchecked, primaryDisabled);
 
-            // A third state, and the colors of the filled box.
-            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Undetermined", true);
+            System.Windows.Forms.CheckBox compactChecked = UIStyles.CheckBoxes.CreateStandardCompact(true);
+            System.Windows.Forms.CheckBox compactUnchecked = UIStyles.CheckBoxes.CreateStandardCompact(false);
+            System.Windows.Forms.CheckBox compactDisabled = UIStyles.CheckBoxes.CreateStandardCompact(true);
+            compactDisabled.Enabled = false;
+            AddUniformRow(table, "CreateStandardCompact", compactChecked, compactUnchecked, compactDisabled);
+
+            System.Windows.Forms.CheckBox compactPrimaryChecked = UIStyles.CheckBoxes.CreatePrimaryCompact(true);
+            System.Windows.Forms.CheckBox compactPrimaryUnchecked = UIStyles.CheckBoxes.CreatePrimaryCompact(false);
+            System.Windows.Forms.CheckBox compactPrimaryDisabled = UIStyles.CheckBoxes.CreatePrimaryCompact(true);
+            compactPrimaryDisabled.Enabled = false;
+            AddUniformRow(table, "CreatePrimaryCompact", compactPrimaryChecked, compactPrimaryUnchecked, compactPrimaryDisabled);
+
+            // The third state is a setting of any checkbox (ThreeState and CheckState), in
+            // every color.
+            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Standard", true);
             undetermined.ThreeState = true;
             undetermined.CheckState = CheckState.Indeterminate;
+            System.Windows.Forms.CheckBox undeterminedPrimary = UIStyles.CheckBoxes.CreatePrimary("Primary", true);
+            undeterminedPrimary.ThreeState = true;
+            undeterminedPrimary.CheckState = CheckState.Indeterminate;
+            System.Windows.Forms.CheckBox undeterminedGreen = UIStyles.CheckBoxes.CreateStandard("Green set", true, UIStyles.Colors.Sets.Green);
+            undeterminedGreen.ThreeState = true;
+            undeterminedGreen.CheckState = CheckState.Indeterminate;
+            AddUniformRow(table, "ThreeState (undetermined)", undetermined, undeterminedPrimary, undeterminedGreen);
+
+            // Any color set colors the filled box.
             System.Windows.Forms.CheckBox green = UIStyles.CheckBoxes.CreateStandard("Green set", true, UIStyles.Colors.Sets.Green);
             System.Windows.Forms.CheckBox purple = UIStyles.CheckBoxes.CreateStandard("Purple set", true, UIStyles.Colors.Sets.Purple);
-            AddUniformRow(table, "ThreeState, colors", undetermined, green, purple);
+            System.Windows.Forms.CheckBox orangeCompact = UIStyles.CheckBoxes.CreateStandardCompact(true, UIStyles.Colors.Sets.Orange);
+            AddUniformRow(table, "CreateStandard(colors)", green, purple, orangeCompact);
         }
 
         private void AddToggleSwitchesSection(PropertyTable table)

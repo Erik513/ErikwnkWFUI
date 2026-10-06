@@ -8,7 +8,8 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// A themed <see cref="System.Windows.Forms.CheckBox"/>, drawn entirely by the
-    /// library: a rounded box filled with the accent color when checked (a dash
+    /// library: a rounded box filled with a color set (neutral gray, or the accent for
+    /// the primary one) when checked (a dash
     /// when undetermined), a checkmark and the label. Like a button it has a
     /// look for hovered, pressed, focused (shown when the keyboard is used) and
     /// disabled. Get one through <see cref="UIStyles.CheckBoxes"/>.
@@ -67,8 +68,9 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The colors of the filled box: its fill at rest, hovered and pressed, and the
-        /// mark on each. Left null, the box is filled with the accent color (a little
-        /// lighter when hovered and pressed), like the primary button.
+        /// mark on each. Left null, the box is filled in the neutral gray
+        /// (<c>UIStyles.Colors.Sets.Gray</c>); <c>UIStyles.CheckBoxes.CreatePrimary</c>
+        /// makes one in the accent color.
         /// </summary>
         public UIColorSet Colors
         {
@@ -82,13 +84,7 @@ namespace ErikwnkWFUI.Controls
 
         private UIColorSet GetColors()
         {
-            if (_colors != null)
-                return _colors;
-
-            return UIColors.CreateSet(
-                UIColors.Primary,
-                UIColors.ShiftLightness(UIColors.Primary, 0.08),
-                UIColors.ShiftLightness(UIColors.Primary, 0.16));
+            return _colors ?? UIStyles.Colors.Sets.Gray;
         }
 
         protected override void OnMouseEnter(System.EventArgs e)

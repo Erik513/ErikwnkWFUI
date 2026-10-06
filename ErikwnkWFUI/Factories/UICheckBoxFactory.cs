@@ -30,7 +30,18 @@ namespace ErikwnkWFUI.Factories
             return checkBox;
         }
 
-        public static CheckBox CreateCompact(
+        // The Standard one in the current accent - the primary color set.
+        public static CheckBox CreatePrimary(
+            string text = "",
+            bool isChecked = true)
+        {
+            return CreateStandard(
+                text,
+                isChecked,
+                UIColors.PrimarySet);
+        }
+
+        public static CheckBox CreateStandardCompact(
             bool isChecked = true,
             UIColorSet colors = null)
         {
@@ -43,5 +54,15 @@ namespace ErikwnkWFUI.Factories
 
             return checkBox;
         }
+
+        // The compact one in the current accent - the primary color set.
+        public static CheckBox CreatePrimaryCompact(
+            bool isChecked = true)
+        {
+            return CreateStandardCompact(
+                isChecked,
+                UIColors.PrimarySet);
+        }
+
     }
 }

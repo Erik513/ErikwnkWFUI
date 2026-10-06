@@ -32,6 +32,82 @@ public class ColorSetControlsTests
 
     private static WfuiListView AsList(System.Windows.Forms.ListView list) => (WfuiListView)list;
 
+    // ---- TabControl ----
+
+    [Fact]
+    public void ATabControl_WithASet_UsesItsColorsForTheBarAndTheMenu_ReadOnlyOnlyForTheBar()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+
+        using ErikwnkWFUI.Controls.TabControl editable = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreateStandard(set);
+        using ErikwnkWFUI.Controls.ReadOnlyTabControl readOnly = UIStyles.TabControls.CreateReadOnlyStandard(set);
+
+        Assert.Equal(set.Pressed, editable.SelectedTabIndicatorColor);
+        Assert.Equal(set.Hover, editable.ContextMenuSelectionColor);
+        Assert.Equal(set.Pressed, readOnly.SelectedTabIndicatorColor);
+    }
+
+    [Fact]
+    public void ATabControl_WithoutASet_KeepsItsNeutralColors()
+    {
+        using ErikwnkWFUI.Controls.TabControl plain = new ErikwnkWFUI.Controls.TabControl();
+        using ErikwnkWFUI.Controls.TabControl made = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreateStandard();
+        using ErikwnkWFUI.Controls.ReadOnlyTabControl plainReadOnly = new ErikwnkWFUI.Controls.ReadOnlyTabControl();
+        using ErikwnkWFUI.Controls.ReadOnlyTabControl madeReadOnly = UIStyles.TabControls.CreateReadOnlyStandard();
+
+        Assert.Equal(plain.SelectedTabIndicatorColor, made.SelectedTabIndicatorColor);
+        Assert.Equal(plain.ContextMenuSelectionColor, made.ContextMenuSelectionColor);
+        Assert.Equal(plainReadOnly.SelectedTabIndicatorColor, madeReadOnly.SelectedTabIndicatorColor);
+    }
+
+    [Fact]
+    public void TabsPrimary_IsTheStandardWithThePrimarySet_AndFollowsTheAccent()
+    {
+        try
+        {
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            using ErikwnkWFUI.Controls.TabControl primary = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreatePrimary();
+            using ErikwnkWFUI.Controls.TabControl viaSet = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Primary);
+            using ErikwnkWFUI.Controls.ReadOnlyTabControl readOnlyPrimary = UIStyles.TabControls.CreateReadOnlyPrimary();
+
+            Assert.Equal(viaSet.SelectedTabIndicatorColor, primary.SelectedTabIndicatorColor);
+            Assert.Equal(viaSet.ContextMenuSelectionColor, primary.ContextMenuSelectionColor);
+            Assert.Equal(UIColors.PrimaryLight, primary.SelectedTabIndicatorColor);
+            Assert.Equal(UIColors.Primary, primary.ContextMenuSelectionColor);
+            Assert.Equal(UIColors.PrimaryLight, readOnlyPrimary.SelectedTabIndicatorColor);
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
+
+    [Fact]
+    public void ATabControl_WithASet_LooksTheSame_InBothThemes_AndAnyColorWorks()
+    {
+        try
+        {
+            foreach (Color color in Samples)
+            {
+                UIColors.ApplyTheme(UIThemes.Dark);
+                using ErikwnkWFUI.Controls.TabControl dark = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreateStandard(color);
+                Color darkBar = dark.SelectedTabIndicatorColor;
+                Color darkMenu = dark.ContextMenuSelectionColor;
+
+                UIColors.ApplyTheme(UIThemes.Light);
+                using ErikwnkWFUI.Controls.TabControl light = (ErikwnkWFUI.Controls.TabControl)UIStyles.TabControls.CreateStandard(color);
+
+                Assert.Equal(darkBar, light.SelectedTabIndicatorColor);
+                Assert.Equal(darkMenu, light.ContextMenuSelectionColor);
+            }
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+    }
+
     // ---- DataGridView ----
 
     [Fact]

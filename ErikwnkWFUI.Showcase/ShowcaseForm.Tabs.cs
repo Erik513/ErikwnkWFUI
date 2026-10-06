@@ -48,6 +48,12 @@ namespace ErikwnkWFUI.Showcase
             lockedFirst.SetTabClosable(lockedFirst.TabPages[0], false);
             table.AddRow("CreatePrimary", 140, lockedFirst);
 
+            // Any color set colors the bar under the selected tab and the menu selection.
+            table.AddRow(
+                "CreateStandard(colors)",
+                140,
+                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Green), 3, "Green set"));
+
             // Everything the tab controls can do, in one tab control: each
             // page of this read-only one shows a group of variants.
             table.AddRow("All variants", OverviewHeight + 20, CreateTabOverviewDemo());
