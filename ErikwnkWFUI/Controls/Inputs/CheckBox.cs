@@ -197,6 +197,29 @@ namespace ErikwnkWFUI.Controls
             // No base.OnPaint: the native drawing must not run (see the class comment).
         }
 
+        // The outline of the box at rest: the best text color for the parent, moved toward
+        // it just far enough to keep 3:1 against it. The box so stands out in both themes
+        // (the theme's own border color is only 1.6:1 there) and on any parent color, and a
+        // filled box is delineated even when its fill is close to the page.
+        internal Color OutlineColor
+        {
+            get
+            {
+                Color page = GetParentBackColor();
+                Color text = UIColors.GetBestTextColor(page);
+
+                for (double toward = 0.7; toward > 0; toward -= 0.05)
+                {
+                    Color outline = UIColors.BlendToward(text, page, toward);
+
+                    if (UIColors.GetContrastRatio(outline, page) >= 3.0)
+                        return outline;
+                }
+
+                return text;
+            }
+        }
+
         private Color GetParentBackColor()
         {
             return Parent != null
@@ -256,7 +279,7 @@ namespace ErikwnkWFUI.Controls
                 ? UIColors.DisabledGray
                 : isActive && !isFilled
                     ? (_isPressed ? colors.Pressed : colors.Hover)
-                    : UIColors.BorderMedium;
+                    : OutlineColor;
 
             using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, 3))
             {
