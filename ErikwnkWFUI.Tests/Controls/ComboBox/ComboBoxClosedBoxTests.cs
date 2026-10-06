@@ -140,6 +140,66 @@ public class ComboBoxClosedBoxTests
         Assert.False(HasColor(box, box.ForeColor, textArea), "text drawn without a selection");
     }
 
+    // The first column and the last column that hold a pixel of the text color.
+    private static (int First, int Last) TextColumns(Control control)
+    {
+        using Bitmap bitmap = Draw(control);
+        int first = -1;
+        int last = -1;
+
+        for (int x = 3; x < bitmap.Width - 24; x++)
+        {
+            for (int y = 3; y < bitmap.Height - 3; y++)
+            {
+                if (bitmap.GetPixel(x, y) == control.ForeColor)
+                {
+                    if (first < 0)
+                        first = x;
+
+                    last = x;
+                    break;
+                }
+            }
+        }
+
+        return (first, last);
+    }
+
+    [Fact]
+    public void TheTextAndTheArrow_StayWhereTheyAre_WhenTheBorderGetsThicker()
+    {
+        using ErikwnkWFUI.Controls.ComboBox box = Create();
+        (int First, int Last) rest = TextColumns(box);
+
+        using Bitmap restPicture = Draw(box);
+        int arrowRest = ArrowColumn(restPicture, box);
+
+        Enter(box);
+        (int First, int Last) hovered = TextColumns(box);
+
+        using Bitmap hoveredPicture = Draw(box);
+        int arrowHovered = ArrowColumn(hoveredPicture, box);
+
+        Assert.True(rest.First > 0, "no text found");
+        Assert.Equal(rest, hovered);
+        Assert.Equal(arrowRest, arrowHovered);
+    }
+
+    // The column where the arrow part has its leftmost inked pixel.
+    private static int ArrowColumn(Bitmap bitmap, Control control)
+    {
+        for (int x = bitmap.Width - 24; x < bitmap.Width - 3; x++)
+        {
+            for (int y = 3; y < bitmap.Height - 3; y++)
+            {
+                if (bitmap.GetPixel(x, y) != control.BackColor)
+                    return x;
+            }
+        }
+
+        return -1;
+    }
+
     [Fact]
     public void TheArrow_IsDrawnInTheArrowPart_InTheTextColor_AndGrayWhenDisabled()
     {
@@ -188,6 +248,28 @@ public class ComboBoxClosedBoxTests
         box.InvokePrivate("OnDropDownClosed", EventArgs.Empty);
 
         Assert.Equal(UIColors.GetOutlineColor(box.BackColor), box.BorderColor);
+    }
+
+    [Fact]
+    public void TheSystemsOwnRepaintOfTheSelectionField_ComesOutAsTheSameClosedBox()
+    {
+        // On a focus change the system asks for the selection field as an item (ComboBoxEdit):
+        // that must draw the closed box exactly as the normal paint does, not the text of a row.
+        using ErikwnkWFUI.Controls.ComboBox box = Create();
+        using Bitmap normal = Draw(box);
+        using Bitmap viaItem = new Bitmap(box.Width, box.Height);
+
+        using (Graphics g = Graphics.FromImage(viaItem))
+        {
+            DrawItemEventArgs args = new DrawItemEventArgs(g, box.Font, new Rectangle(3, 3, box.Width - 26, box.Height - 6), 0, DrawItemState.ComboBoxEdit);
+            box.InvokePrivate("OnDrawItem", args);
+        }
+
+        for (int y = 0; y < normal.Height; y++)
+        {
+            for (int x = 0; x < normal.Width; x++)
+                Assert.True(normal.GetPixel(x, y) == viaItem.GetPixel(x, y), "differs at " + x + "," + y);
+        }
     }
 
     [Fact]

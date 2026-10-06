@@ -94,6 +94,17 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
+            // On a focus change the system repaints the selection field of the closed box
+            // itself, asking for it as an item (state ComboBoxEdit) and not through WM_PAINT.
+            // Drawn as a row it came out a few pixels off, and the text of a box that just lost
+            // the focus jumped for a moment. The closed box is drawn the one way instead.
+            if (OwnsClosedPainting && (e.State & DrawItemState.ComboBoxEdit) != 0)
+            {
+                PaintBuffered(e.Graphics);
+
+                return;
+            }
+
             if (e.Index >= 0)
                 DrawRow(e);
 
@@ -156,8 +167,7 @@ namespace ErikwnkWFUI.Controls
 
                     try
                     {
-                        using (Graphics g = Graphics.FromHdc(hdc))
-                            PaintClosed(g);
+                        PaintBuffered(hdc);
                     }
                     finally
                     {
@@ -170,14 +180,32 @@ namespace ErikwnkWFUI.Controls
                 // DrawToBitmap and printing ask the control to draw itself into a given DC.
                 if (m.Msg == WM_PRINTCLIENT || (m.Msg == WM_PRINT && ((long)m.LParam & PRF_CLIENT) != 0))
                 {
-                    using (Graphics g = Graphics.FromHdc(m.WParam))
-                        PaintClosed(g);
+                    PaintBuffered(m.WParam);
 
                     return;
                 }
             }
 
             base.WndProc(ref m);
+        }
+
+        // Drawn into an off-screen buffer and put on the screen in one go: drawing the fill and
+        // then the text straight onto the window showed as flicker whenever the box repainted
+        // (while items were loaded, say). The buffer is a compatible bitmap, so the text keeps
+        // its ClearType, and every pixel of it is painted before it is shown.
+        private void PaintBuffered(IntPtr hdc)
+        {
+            using (Graphics target = Graphics.FromHdc(hdc))
+                PaintBuffered(target);
+        }
+
+        private void PaintBuffered(Graphics target)
+        {
+            using (BufferedGraphics buffer = BufferedGraphicsManager.Current.Allocate(target, ClientRectangle))
+            {
+                PaintClosed(buffer.Graphics);
+                buffer.Render();
+            }
         }
 
         private UIColorSet GetColors()
@@ -233,8 +261,11 @@ namespace ErikwnkWFUI.Controls
                 g.DrawRectangle(pen, half, half, bounds.Width - borderWidth, bounds.Height - borderWidth);
             }
 
+            // The layout uses the widest border, whatever the state: the text and the arrow must
+            // not move when the border gets thicker on hover.
+            int inset = Scale(2);
             int arrowWidth = Scale(ArrowWidth96);
-            Rectangle arrowArea = new Rectangle(bounds.Right - arrowWidth - borderWidth, bounds.Top, arrowWidth, bounds.Height);
+            Rectangle arrowArea = new Rectangle(bounds.Right - arrowWidth - inset, bounds.Top, arrowWidth, bounds.Height);
             Color textColor = Enabled ? ForeColor : UIColors.TextDisabled;
             Color arrowColor = !Enabled ? UIColors.DisabledGray : isActive ? border : textColor;
 
@@ -242,10 +273,10 @@ namespace ErikwnkWFUI.Controls
 
             int padding = Scale(TextPadding96);
             Rectangle textArea = new Rectangle(
-                bounds.Left + borderWidth + padding,
-                bounds.Top + borderWidth,
-                Math.Max(0, arrowArea.Left - bounds.Left - borderWidth - padding),
-                bounds.Height - borderWidth * 2);
+                bounds.Left + inset + padding,
+                bounds.Top + inset,
+                Math.Max(0, arrowArea.Left - bounds.Left - inset - padding),
+                bounds.Height - inset * 2);
 
             string text = SelectedIndex >= 0 ? GetItemText(SelectedItem) : "";
 
