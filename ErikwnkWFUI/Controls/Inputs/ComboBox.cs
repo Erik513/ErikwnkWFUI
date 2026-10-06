@@ -35,6 +35,11 @@ namespace ErikwnkWFUI.Controls
         private const int ArrowWidth96 = 22;
         private const int TextPadding96 = 6;
 
+        // The off-screen buffer is this box's own. The shared one (BufferedGraphicsManager.Current)
+        // is one bitmap for every control of the thread: when two boxes paint close together,
+        // one can show up with pixels of the other (the text of the neighbor).
+        private readonly BufferedGraphicsContext _bufferContext = new BufferedGraphicsContext();
+
         private bool _isHot;
         private bool _lastInputWasMouse;
         private UIColorSet _colors;
@@ -88,6 +93,14 @@ namespace ErikwnkWFUI.Controls
 
             if (GetComboBoxInfo(Handle, ref info) && info.hwndList != IntPtr.Zero)
                 SetWindowTheme(info.hwndList, "", "");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _bufferContext.Dispose();
+
+            base.Dispose(disposing);
         }
 
         // ---- the rows of the list ----
@@ -201,7 +214,7 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintBuffered(Graphics target)
         {
-            using (BufferedGraphics buffer = BufferedGraphicsManager.Current.Allocate(target, ClientRectangle))
+            using (BufferedGraphics buffer = _bufferContext.Allocate(target, ClientRectangle))
             {
                 PaintClosed(buffer.Graphics);
                 buffer.Render();
