@@ -966,6 +966,42 @@ namespace ErikwnkWFUI
             }
         }
 
+        /// <summary>A small, borderless popup with extra info next to a control or the mouse: one text or labeled sections, or in the compact form a single short value. Reuse one popup for many show calls.</summary>
+        public static class InfoPopups
+        {
+            /// <summary>A popup in the neutral gray.</summary>
+            /// <param name="title">A title shown above the text, or none.</param>
+            /// <param name="colors">
+            /// A color set for the background and the text instead of the neutral gray: one of
+            /// <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
+            /// <see cref="Color"/>.
+            /// </param>
+            public static Forms.InfoPopupForm CreateStandard(string title = "", UIColorSet colors = null)
+            {
+                return UIInfoPopupFactory.CreateStandard(title, colors);
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
+            public static Forms.InfoPopupForm CreatePrimary(string title = "")
+            {
+                return UIInfoPopupFactory.CreatePrimary(title);
+            }
+
+            /// <summary>The fixed-size form for one short value (a percentage over a slider): the text is centred and the popup does not change its size.</summary>
+            /// <param name="size">The fixed client size, or the default of the compact form.</param>
+            /// <param name="colors">A color set instead of the neutral gray; see <see cref="CreateStandard"/>.</param>
+            public static Forms.InfoPopupForm CreateStandardCompact(Size? size = null, UIColorSet colors = null)
+            {
+                return UIInfoPopupFactory.CreateStandardCompact(size, colors);
+            }
+
+            /// <summary>Like <see cref="CreateStandardCompact"/> but in the current accent color.</summary>
+            public static Forms.InfoPopupForm CreatePrimaryCompact(Size? size = null)
+            {
+                return UIInfoPopupFactory.CreatePrimaryCompact(size);
+            }
+        }
+
         /// <summary>A <see cref="Controls.ContextMenuStrip"/> themed to match the rest of ErikwnkWFUI instead of the plain OS-default popup menu - functionally identical to the native control.</summary>
         public static class ContextMenuStrips
         {

@@ -36,36 +36,57 @@ namespace ErikwnkWFUI.Showcase
                 ToastForm.ShowToast("Sample toast message", this);
             };
 
-            Button infoPopupButton = UIStyles.Buttons.CreateStandard("Show InfoPopupForm", size: new Size(180, 32));
-            infoPopupButton.Click += delegate
-            {
-                _infoPopup.ShowInfo("This is a sample InfoPopupForm.", infoPopupButton);
-
-                // InfoPopupForm is designed as a hover tooltip - real
-                // consumers show it on MouseEnter and hide it on MouseLeave.
-                // A click-to-preview button has no such pairing, so without
-                // this it would just stay open forever; restart the same
-                // timer on every click instead of leaking a new one each time.
-                _infoPopupHideTimer.Stop();
-                _infoPopupHideTimer.Start();
-            };
-
-            Button compactInfoPopupButton = UIStyles.Buttons.CreateStandard("Show InfoPopupForm (Compact)", size: new Size(220, 32));
-            compactInfoPopupButton.Click += delegate
-            {
-                // Fixed-size mode meant for a short value like a slider's
-                // percentage (see VolumeSlider) - not the free-form text the
-                // plain demo above uses.
-                _compactInfoPopup.ShowInfo("70%", compactInfoPopupButton);
-
-                _compactInfoPopupHideTimer.Stop();
-                _compactInfoPopupHideTimer.Start();
-            };
+            // The popups are rebuilt with the page, so they take the current accent.
+            DisposeInfoPopups();
 
             table.AddRow("MessageBox", messageBoxButton);
             table.AddRow("ToastForm", toastButton);
-            table.AddRow("InfoPopupForm", infoPopupButton);
-            table.AddRow("InfoPopupForm.Compact", compactInfoPopupButton);
+            table.AddRow("InfoPopups.CreateStandard", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandard("Info"), "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
+            table.AddRow("InfoPopups.CreatePrimary", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimary("Info"), "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
+            table.AddRow("InfoPopups.CreateStandardCompact", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandardCompact(new Size(70, 32)), "70%", "Show compact InfoPopupForm", 220));
+            table.AddRow("InfoPopups.CreatePrimaryCompact", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimaryCompact(new Size(70, 32)), "70%", "Show compact InfoPopupForm", 220));
+        }
+
+        // InfoPopupForm is designed as a hover tooltip - real consumers show it on MouseEnter
+        // and hide it on MouseLeave. A click-to-preview button has no such pairing, so a timer
+        // hides the popup again; the same timer restarts on every click.
+        private Button CreateInfoPopupButton(InfoPopupForm popup, string text, string caption, int width)
+        {
+            Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
+            Timer hideTimer = new Timer { Interval = 3000 };
+
+            hideTimer.Tick += delegate
+            {
+                hideTimer.Stop();
+                popup.Hide();
+            };
+
+            button.Click += delegate
+            {
+                popup.ShowInfo(text, button);
+                hideTimer.Stop();
+                hideTimer.Start();
+            };
+
+            _infoPopups.Add(popup);
+            _infoPopupTimers.Add(hideTimer);
+
+            return button;
+        }
+
+        private void DisposeInfoPopups()
+        {
+            foreach (Timer timer in _infoPopupTimers)
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
+
+            foreach (InfoPopupForm popup in _infoPopups)
+                popup.Dispose();
+
+            _infoPopupTimers.Clear();
+            _infoPopups.Clear();
         }
     }
 }

@@ -35,6 +35,36 @@ namespace ErikwnkWFUI.Forms
         private string _lastSectionContentKey;
         private bool _compact;
         private Size _compactSize = new Size(48, 24);
+        private UIColorSet _colors;
+
+        /// <summary>
+        /// The colors of the popup: its background is the set's basic color and the text the
+        /// set's text color. Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
+        /// <c>UIStyles.InfoPopups.CreatePrimary</c> makes one in the accent color.
+        /// </summary>
+        public UIColorSet Colors
+        {
+            get { return _colors; }
+            set
+            {
+                _colors = value;
+                RefreshColors();
+            }
+        }
+
+        private UIColorSet GetColors()
+        {
+            return _colors ?? UIStyles.Colors.Sets.Gray;
+        }
+
+        // The background: the set's basic color, shifted just far enough that the set's text
+        // reads on it (a few sets are too light or mid-tone for that).
+        private Color GetBackColor()
+        {
+            UIColorSet colors = GetColors();
+
+            return UIColors.GetReadableFill(colors.Basic, colors.BasicText);
+        }
 
         /// <summary>
         /// Fixed-size mode for a single very short value (e.g. a percentage over
@@ -68,6 +98,7 @@ namespace ErikwnkWFUI.Forms
                     AutoSize = false;
                     Padding = new Padding(0);
                     ApplyCompactSize();
+                    RefreshColors();
                 }
             }
         }
@@ -427,48 +458,38 @@ namespace ErikwnkWFUI.Forms
             };
         }
 
-        // TextPrimary/TextPrimaryDim are theme-dependent (near-white in Dark,
-        // near-black in Light), but this popup's BackColor is PrimaryDark -
-        // an accent shade that stays the same regardless of theme. Reading
-        // TextPrimary directly meant Light theme rendered near-black text on
-        // a still-dark accent background, unreadable. Same principle as
-        // ToastForm/button press text: contrast has to be computed against
-        // the actual background, not assumed from the theme.
-        private static Color GetForeColor()
+        // The popup's background does not follow the theme (a gray or an accent shade), so the
+        // text color is worked out against that background, not taken from the theme: the
+        // set's own text color, which reads on its basic fill.
+        private Color GetForeColor()
         {
-            return UIColors.GetContrastingForeColor(UIColors.PrimaryDark);
+            return GetColors().BasicText;
         }
 
-        // TextPrimaryDim's role (de-emphasized body text under a bold title)
-        // doesn't have a fixed-background equivalent in UIColors, so this
-        // blends the contrast-computed fore color partway toward the
-        // background itself - keeps the same "quieter than the title" effect
-        // regardless of which accent/theme combination is active.
-        private static Color GetDimForeColor()
+        // The quieter body text under a bold title: the text color blended partway toward the
+        // background, as far as it still reads (4.5:1).
+        private Color GetDimForeColor()
         {
-            const double blendTowardBackground = 0.35;
             Color fore = GetForeColor();
-            Color back = UIColors.PrimaryDark;
+            Color back = GetBackColor();
+            Color dim = fore;
 
-            return Color.FromArgb(
-                fore.R + (int)((back.R - fore.R) * blendTowardBackground),
-                fore.G + (int)((back.G - fore.G) * blendTowardBackground),
-                fore.B + (int)((back.B - fore.B) * blendTowardBackground));
+            for (double amount = 0.35; amount > 0; amount -= 0.05)
+            {
+                dim = UIColors.BlendToward(fore, back, amount);
+
+                if (UIColors.GetContrastRatio(dim, back) >= 4.5)
+                    return dim;
+            }
+
+            return fore;
         }
 
-        // Docs recommend reusing a single InfoPopupForm across many show
-        // calls rather than creating a new one each time, which is exactly
-        // why the color fix above wasn't enough on its own: BackColor/the
-        // label colors were still only ever set once, at construction time -
-        // so an app that switches accent/theme after building this popup
-        // (or, in ErikwnkWFUI.Showcase's case, after every single accent
-        // swatch click) kept showing whatever color was live when `new
-        // InfoPopupForm(...)` first ran. Called at the top of every Show*
-        // method so each call re-reads the current accent, the same way a
-        // freshly-constructed ToastForm/MessageBox naturally would.
+        // One popup is reused for many show calls, and its colors are read again at the top of
+        // every Show* method, so a later change of accent or theme shows up in the next call.
         private void RefreshColors()
         {
-            BackColor = UIColors.PrimaryDark;
+            BackColor = GetBackColor();
 
             Color foreColor = GetForeColor();
             Color dimForeColor = GetDimForeColor();
@@ -497,7 +518,7 @@ namespace ErikwnkWFUI.Forms
             StartPosition = FormStartPosition.Manual;
 
             DoubleBuffered = true;
-            BackColor = UIColors.PrimaryDark;
+            BackColor = GetBackColor();
             Opacity = 0.80; // match ToastForm (testing a stronger value than the previous 0.90)
             Padding = new Padding(12);
 

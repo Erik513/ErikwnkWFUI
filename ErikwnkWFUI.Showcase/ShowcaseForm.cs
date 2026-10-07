@@ -61,10 +61,8 @@ namespace ErikwnkWFUI.Showcase
         private Panel _popupsHost;
         private Control _pageTabs;
         private int _selectedPageIndex;
-        private InfoPopupForm _infoPopup;
-        private Timer _infoPopupHideTimer;
-        private InfoPopupForm _compactInfoPopup;
-        private Timer _compactInfoPopupHideTimer;
+        private readonly List<InfoPopupForm> _infoPopups = new List<InfoPopupForm>();
+        private readonly List<Timer> _infoPopupTimers = new List<Timer>();
         private bool _isLightTheme;
 
         // Lets every ProgressBars-section row (the setters registered by
@@ -91,28 +89,6 @@ namespace ErikwnkWFUI.Showcase
             Size = new Size(1320, 900);
             MinimumSize = new Size(700, 500);
 
-            _infoPopup = new InfoPopupForm("Info");
-
-            _infoPopupHideTimer = new Timer { Interval = 3000 };
-            _infoPopupHideTimer.Tick += delegate
-            {
-                _infoPopupHideTimer.Stop();
-                _infoPopup.Hide();
-            };
-
-            // A separate instance from _infoPopup - Compact is meant to be
-            // set once and left on for that instance's whole life (see its
-            // own doc comment), so the plain-text demo above and this one
-            // can't share a single popup.
-            _compactInfoPopup = new InfoPopupForm { Compact = true, CompactSize = new Size(70, 32) };
-
-            _compactInfoPopupHideTimer = new Timer { Interval = 3000 };
-            _compactInfoPopupHideTimer.Tick += delegate
-            {
-                _compactInfoPopupHideTimer.Stop();
-                _compactInfoPopup.Hide();
-            };
-
             // 1% every 60ms - a full 0->100 sweep takes 6 seconds, slow
             // enough to actually watch rather than just flicker by.
             _progressBarAnimationTimer = new Timer { Interval = 60 };
@@ -132,12 +108,7 @@ namespace ErikwnkWFUI.Showcase
         {
             if (disposing)
             {
-                if (_infoPopupHideTimer != null)
-                {
-                    _infoPopupHideTimer.Stop();
-                    _infoPopupHideTimer.Dispose();
-                    _infoPopupHideTimer = null;
-                }
+                DisposeInfoPopups();
 
                 if (_progressBarAnimationTimer != null)
                 {
@@ -146,24 +117,6 @@ namespace ErikwnkWFUI.Showcase
                     _progressBarAnimationTimer = null;
                 }
 
-                if (_infoPopup != null)
-                {
-                    _infoPopup.Dispose();
-                    _infoPopup = null;
-                }
-
-                if (_compactInfoPopupHideTimer != null)
-                {
-                    _compactInfoPopupHideTimer.Stop();
-                    _compactInfoPopupHideTimer.Dispose();
-                    _compactInfoPopupHideTimer = null;
-                }
-
-                if (_compactInfoPopup != null)
-                {
-                    _compactInfoPopup.Dispose();
-                    _compactInfoPopup = null;
-                }
             }
 
             base.Dispose(disposing);

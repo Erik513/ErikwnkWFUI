@@ -102,7 +102,7 @@ namespace ErikwnkWFUI.Controls
             {
                 if (_popup == null || _popup.IsDisposed)
                 {
-                    _popup = new InfoPopupForm { Compact = true };
+                    _popup = UIStyles.InfoPopups.CreatePrimaryCompact();
 
                     // Fixed size for the widest value ("100%") so it doesn't
                     // jitter as digits are added/removed while dragging - just a
