@@ -213,6 +213,21 @@ public class ComboBoxClosedBoxTests
     }
 
     [Fact]
+    public void TheEditableStyle_GetsItsBorderAndButtonFromTheLibrary_TheTextFieldStaysFree()
+    {
+        using ErikwnkWFUI.Controls.ComboBox box = Create(null, ComboBoxStyle.DropDown);
+        Assert.True(box.OwnsEditableFramePainting);
+
+        using Bitmap bitmap = Draw(box);
+        Color border = box.BorderColor;
+        Assert.Equal(border, bitmap.GetPixel(0, bitmap.Height / 2));
+        Assert.Equal(border, bitmap.GetPixel(bitmap.Width - 1, bitmap.Height / 2));
+
+        using ErikwnkWFUI.Controls.ComboBox simple = Create(null, ComboBoxStyle.Simple);
+        Assert.False(simple.OwnsEditableFramePainting);
+    }
+
+    [Fact]
     public void TheOtherDropDownStyles_KeepTheSystemsClosedBox()
     {
         foreach (ComboBoxStyle style in new[] { ComboBoxStyle.DropDown, ComboBoxStyle.Simple })

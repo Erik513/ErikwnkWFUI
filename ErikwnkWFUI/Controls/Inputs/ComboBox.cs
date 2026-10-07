@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Native;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -18,15 +19,26 @@ namespace ErikwnkWFUI.Controls
     /// <see cref="UIStyles.ComboBoxes"/>.
     /// </summary>
     /// <remarks>
-    /// Everything but the looks is the standard control: items, binding, selection, events,
-    /// keyboard and type-ahead. The list that opens is the system's own window, drawn row by
-    /// row by the library. A box with <c>DropDownStyle</c> other than <c>DropDownList</c> (it
-    /// has a text field inside) keeps the system's drawing for the closed box. <c>RightToLeft</c>
-    /// is ignored.
+    /// Everything but the looks is the standard control: items, sorting, binding, selection, the
+    /// events (<c>SelectionChangeCommitted</c> too), keyboard and type-ahead, the size of the list
+    /// (<c>DropDownWidth</c>, <c>DropDownHeight</c>, <c>MaxDropDownItems</c>) and auto-completion
+    /// of the editable style. The list that opens is the system's own window, drawn row by row by
+    /// the library; an application can still paint over a row in a <c>DrawItem</c> handler, which
+    /// runs after the library's drawing.
+    ///
+    /// Taken over by the library, and ignored: <c>FlatStyle</c>, <c>RightToLeft</c> and, for the
+    /// closed box, the system's own look. <c>DrawMode</c> is set by the library (owner-drawn); a
+    /// variable-height mode still works. A <c>DropDownList</c> has its whole closed box drawn by
+    /// the library. A <c>DropDown</c> holds a text field (a window of its own): the library draws
+    /// the border and the arrow button around it, the field keeps the system's selection color.
+    /// A <c>Simple</c> box keeps the system's drawing for the box itself. The list is drawn like
+    /// the others in every style.
     /// </remarks>
     public class ComboBox : System.Windows.Forms.ComboBox
     {
         private const int WM_ERASEBKGND = 0x0014;
+        private const int WM_CTLCOLOREDIT = 0x0133;
+        private const int WM_CTLCOLORSTATIC = 0x0138;
         private const int WM_PRINT = 0x0317;
         private const int WM_PRINTCLIENT = 0x0318;
         private const int PRF_CLIENT = 0x00000004;
@@ -77,6 +89,13 @@ namespace ErikwnkWFUI.Controls
             get { return DropDownStyle == ComboBoxStyle.DropDownList && !DesignMode; }
         }
 
+        // The editable style holds a text field (a child window that draws itself); the library
+        // paints what is around it: the border and the arrow button.
+        internal bool OwnsEditableFramePainting
+        {
+            get { return DropDownStyle == ComboBoxStyle.DropDown && !DesignMode; }
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -92,7 +111,14 @@ namespace ErikwnkWFUI.Controls
             NativeComboBoxInfo info = new NativeComboBoxInfo { cbSize = Marshal.SizeOf(typeof(NativeComboBoxInfo)) };
 
             if (GetComboBoxInfo(Handle, ref info) && info.hwndList != IntPtr.Zero)
-                SetWindowTheme(info.hwndList, "", "");
+            {
+                // The list of a dark theme gets the system's dark style, which also gives it dark
+                // scroll bars (the plain, unthemed list has light ones).
+                if (NativeControlTheme.IsDark)
+                    NativeControlTheme.ApplyToScrollBars(info.hwndList);
+                else
+                    SetWindowTheme(info.hwndList, "", "");
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -164,7 +190,7 @@ namespace ErikwnkWFUI.Controls
 
         protected override void WndProc(ref Message m)
         {
-            if (OwnsClosedPainting)
+            if (OwnsClosedPainting || OwnsEditableFramePainting)
             {
                 if (m.Msg == WM_ERASEBKGND)
                 {
@@ -199,6 +225,17 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
+            // The text field of a disabled box asks for its colors as a "static" control, which
+            // the system answers with white; it gets the colors of the enabled field instead.
+            if (m.Msg == WM_CTLCOLORSTATIC && OwnsEditableFramePainting)
+            {
+                m.Msg = WM_CTLCOLOREDIT;
+                base.WndProc(ref m);
+                SetTextColor(m.WParam, ColorTranslator.ToWin32(Enabled ? ForeColor : UIColors.DisabledGray));
+
+                return;
+            }
+
             base.WndProc(ref m);
         }
 
@@ -214,11 +251,28 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintBuffered(Graphics target)
         {
+            bool isEditable = OwnsEditableFramePainting;
+
             using (BufferedGraphics buffer = _bufferContext.Allocate(target, ClientRectangle))
             {
-                PaintClosed(buffer.Graphics);
-                buffer.Render();
+                PaintClosed(buffer.Graphics, !isEditable);
+
+                // The text field is a window of its own on top: never painted over.
+                if (isEditable)
+                    target.SetClip(GetTextFieldBounds(), CombineMode.Exclude);
+
+                buffer.Render(target);
             }
+        }
+
+        private Rectangle GetTextFieldBounds()
+        {
+            NativeComboBoxInfo info = new NativeComboBoxInfo { cbSize = Marshal.SizeOf(typeof(NativeComboBoxInfo)) };
+
+            if (!GetComboBoxInfo(Handle, ref info) || info.hwndEdit == IntPtr.Zero)
+                return Rectangle.Empty;
+
+            return Rectangle.FromLTRB(info.rcItem.Left, info.rcItem.Top, info.rcItem.Right, info.rcItem.Bottom);
         }
 
         private UIColorSet GetColors()
@@ -254,7 +308,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private void PaintClosed(Graphics g)
+        private void PaintClosed(Graphics g, bool withText = true)
         {
             Rectangle bounds = ClientRectangle;
 
@@ -290,6 +344,9 @@ namespace ErikwnkWFUI.Controls
                 bounds.Top + inset,
                 Math.Max(0, arrowArea.Left - bounds.Left - inset - padding),
                 bounds.Height - inset * 2);
+
+            if (!withText)
+                return;
 
             string text = SelectedIndex >= 0 ? GetItemText(SelectedItem) : "";
 

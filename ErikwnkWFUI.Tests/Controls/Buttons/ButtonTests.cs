@@ -422,4 +422,56 @@ public class ButtonTests
 
         UIStyles.Buttons.UpdateTooltip(null!, "Anything");
     }
+
+    // ---- the standard button's own features keep working on the themed one ----
+
+    private static Bitmap DrawButton(Button button)
+    {
+        _ = button.Handle;
+        Bitmap bitmap = new Bitmap(button.Width, button.Height);
+        button.DrawToBitmap(bitmap, new System.Drawing.Rectangle(0, 0, button.Width, button.Height));
+
+        return bitmap;
+    }
+
+    // The leftmost column that holds a pixel other than the fill, inside the border.
+    private static int FirstInkColumn(Button button)
+    {
+        using Bitmap bitmap = DrawButton(button);
+        System.Drawing.Color back = button.BackColor;
+
+        for (int x = 3; x < bitmap.Width - 3; x++)
+        {
+            for (int y = 3; y < bitmap.Height - 3; y++)
+            {
+                System.Drawing.Color c = bitmap.GetPixel(x, y);
+
+                if (Math.Abs(c.R - back.R) + Math.Abs(c.G - back.G) + Math.Abs(c.B - back.B) > 90)
+                    return x;
+            }
+        }
+
+        return -1;
+    }
+
+    [Fact]
+    public void TheTextAlignment_AndAnImage_StillWork_OnATextButton()
+    {
+        Button centered = UIStyles.Buttons.CreateStandard("Text", size: new System.Drawing.Size(140, 30));
+        Button left = UIStyles.Buttons.CreateStandard("Text", size: new System.Drawing.Size(140, 30));
+        left.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
+        Assert.True(FirstInkColumn(left) < FirstInkColumn(centered) - 20, "the text did not move to the left");
+
+        Button withImage = UIStyles.Buttons.CreateStandard("Text", size: new System.Drawing.Size(140, 30));
+        using System.Drawing.Bitmap image = new System.Drawing.Bitmap(16, 16);
+
+        using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(image))
+            g.Clear(System.Drawing.Color.Orange);
+
+        withImage.Image = image;
+        withImage.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+
+        Assert.True(FirstInkColumn(withImage) < FirstInkColumn(centered) - 20, "the image is not shown");
+    }
 }

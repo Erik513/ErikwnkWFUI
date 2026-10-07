@@ -377,7 +377,9 @@ namespace ErikwnkWFUI
             /// </summary>
             /// <remarks>
             /// The button draws its symbol itself, exactly in the middle, and the symbol grows with
-            /// the height of the button. Hover, pressed and disabled looks and the color of the
+            /// the height of the button. For that reason an image, <c>TextAlign</c>, <c>Padding</c>
+            /// and the other layout properties of a button are ignored on it (a button with a caption
+            /// from <c>CreateStandard</c> and the others keeps them). Hover, pressed and disabled looks and the color of the
             /// symbol in each of them come from the color set, so they are the same in Dark and
             /// Light. Without <paramref name="colors"/> the button has the neutral look and follows
             /// the theme. For a ready-made combination of symbol and colors use the

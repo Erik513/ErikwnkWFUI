@@ -798,6 +798,34 @@ public class SymbolButtonTests
     }
 
     [Fact]
+    public void ImageAlignmentPaddingAndTheFlatStyle_AreIgnored_TheSymbolIsAlwaysDrawnInTheMiddle()
+    {
+        // The symbol button draws the symbol itself, centered on what is visible of it: what a
+        // standard button would do with an image, an alignment or padding does not apply.
+        using Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Save, size: new Size(60, 36));
+
+        using Bitmap before = Draw(button);
+        using Bitmap image = new Bitmap(12, 12);
+
+        button.Image = image;
+        button.ImageAlign = ContentAlignment.MiddleRight;
+        button.TextAlign = ContentAlignment.BottomLeft;
+        button.TextImageRelation = TextImageRelation.ImageBeforeText;
+        button.Padding = new Padding(12, 2, 0, 8);
+        button.AutoEllipsis = true;
+        button.UseMnemonic = false;
+        button.RightToLeft = RightToLeft.Yes;
+
+        using Bitmap after = Draw(button);
+
+        for (int y = 0; y < before.Height; y++)
+        {
+            for (int x = 0; x < before.Width; x++)
+                Assert.True(before.GetPixel(x, y) == after.GetPixel(x, y), "differs at " + x + "," + y);
+        }
+    }
+
+    [Fact]
     public void ThePressedAndKeyBehavior_IsTheSameAsOnAnyOtherButton()
     {
         // It is built on the same button: the space bar presses it and a

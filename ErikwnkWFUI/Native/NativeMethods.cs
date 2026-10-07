@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace ErikwnkWFUI.Native
@@ -83,6 +83,9 @@ namespace ErikwnkWFUI.Native
 
         [DllImport("user32.dll")]
         public static extern bool RedrawWindow(IntPtr hWnd, IntPtr updateRect, IntPtr updateRegion, uint flags);
+
+        [DllImport("gdi32.dll")]
+        public static extern int SetTextColor(IntPtr hdc, int color);
 
         [DllImport("user32.dll")]
         public static extern IntPtr BeginPaint(IntPtr hWnd, out NativePaintStruct paint);

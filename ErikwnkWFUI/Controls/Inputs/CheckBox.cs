@@ -19,7 +19,10 @@ namespace ErikwnkWFUI.Controls
     /// <c>CheckState</c>, <c>ThreeState</c>, <c>AutoCheck</c>, the events, the keyboard and
     /// the mnemonic. Because the library draws the box itself, these properties are
     /// ignored: <c>CheckAlign</c> (the box is always on the left), <c>TextAlign</c>,
-    /// <c>RightToLeft</c> and <c>Appearance</c>. The size is not automatic: the factory sets
+    /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and
+    /// <c>TextImageRelation</c>, <c>FlatStyle</c> with <c>FlatAppearance</c>, <c>AutoEllipsis</c>,
+    /// <c>Padding</c> and <c>UseVisualStyleBackColor</c>. A double click is two clicks, as on the
+    /// standard box. The size is not automatic: the factory sets
     /// it for the text and font it is given, so after changing <c>Text</c> or <c>Font</c> set
     /// the <c>Size</c> too.
     /// </remarks>
@@ -438,6 +441,37 @@ namespace ErikwnkWFUI.Controls
 
             area.Intersect(new Rectangle(0, 0, Width, Height));
             ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, GetParentBackColor());
+        }
+
+        /// <summary>
+        /// Draws just the box of a check box - outline, fill when checked or undetermined, and the
+        /// mark - for other controls that show check boxes (the list view). The colors are the
+        /// caller's; the measures follow the screen's scaling.
+        /// </summary>
+        internal static void DrawGlyph(Graphics g, Rectangle box, CheckState state, Color outline, Color fill, Color mark, int dpi)
+        {
+            Metrics metrics = new Metrics(dpi);
+            SmoothingMode previous = g.SmoothingMode;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (GraphicsPath path = CreateRoundedRectanglePath(box, metrics.Scale(3)))
+            {
+                if (state != CheckState.Unchecked)
+                {
+                    using (SolidBrush brush = new SolidBrush(fill))
+                        g.FillPath(brush, path);
+                }
+
+                using (Pen pen = new Pen(outline, metrics.Scale(15) / 10f))
+                    g.DrawPath(pen, path);
+            }
+
+            if (state == CheckState.Checked)
+                DrawCheckmark(g, box, mark, metrics.Scale(2));
+            else if (state == CheckState.Indeterminate)
+                DrawDash(g, box, mark, metrics.Scale(2));
+
+            g.SmoothingMode = previous;
         }
 
         private static void DrawDash(Graphics g, Rectangle box, Color color, float width)

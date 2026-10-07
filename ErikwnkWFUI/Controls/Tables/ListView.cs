@@ -27,7 +27,9 @@ namespace ErikwnkWFUI.Controls
     }
 
     /// <summary>
-    /// A dark-themed, multi-column ListView (Details view). Row selection -
+    /// A dark-themed, multi-column ListView (Details view only: the other views - list, small and
+    /// large icons, tiles - draw nothing, and <c>CheckBoxes</c> shows no boxes; group headers keep
+    /// the system's color). Row selection -
     /// click, Ctrl+click, Shift+click, rubber-band drag with auto-scroll -
     /// is entirely native, left to
     /// <see cref="System.Windows.Forms.ListView.MultiSelect"/> and
@@ -545,11 +547,17 @@ namespace ErikwnkWFUI.Controls
             // across a recreate.
             SendMessage(Handle, LVM_SETEXTENDEDLISTVIEWSTYLE, (System.IntPtr)LVS_EX_DOUBLEBUFFER, (System.IntPtr)LVS_EX_DOUBLEBUFFER);
 
+            // Dark scroll bars on a dark theme (the system's own, not drawn by the library). The
+            // other dark style for lists (ItemsView) would make the group headers light, but it
+            // leaves the scroll bars light, and the scroll bars matter more.
+            NativeControlTheme.ApplyToScrollBars(Handle);
+
             // The header is a separate native child window ("SysHeader32"),
             // recreated along with this control's own handle - reattach
             // every time instead of once in the constructor.
             _headerInputSubclass?.ReleaseHandle();
             System.IntPtr headerHandle = HeaderInputSubclass.GetHeaderHandle(Handle);
+            NativeControlTheme.ApplyToItemsView(headerHandle);
             if (headerHandle != System.IntPtr.Zero)
             {
                 _headerInputSubclass = new HeaderInputSubclass(this);
@@ -1006,11 +1014,36 @@ namespace ErikwnkWFUI.Controls
 
             var text = e.ColumnIndex < e.Item.SubItems.Count ? e.Item.SubItems[e.ColumnIndex].Text : string.Empty;
 
+            // With CheckBoxes, the first cell starts with the box the system keeps room for (and
+            // toggles on a click there); drawn here because the owner-drawn rows would otherwise
+            // leave that room empty.
+            int textLeft = bounds.X + 6;
+
+            if (CheckBoxes && e.ColumnIndex == 0)
+            {
+                int side = (int)Math.Round(16 * DeviceDpi / 96.0);
+                Rectangle box = new Rectangle(bounds.X + (int)Math.Round(2 * DeviceDpi / 96.0), bounds.Y + (bounds.Height - side) / 2, side, side);
+                bool isChecked = e.Item.Checked;
+                Color fill = Enabled ? BorderColor : UIColors.DisabledGray;
+                Color outline = Enabled ? UIColors.GetOutlineColor(baseBackColor) : UIColors.DisabledGray;
+
+                CheckBox.DrawGlyph(
+                    e.Graphics,
+                    box,
+                    isChecked ? CheckState.Checked : CheckState.Unchecked,
+                    outline,
+                    fill,
+                    UIColors.GetBestTextColor(fill),
+                    DeviceDpi);
+
+                textLeft = box.Right + (int)Math.Round(6 * DeviceDpi / 96.0);
+            }
+
             TextRenderer.DrawText(
                 e.Graphics,
                 text,
                 e.Item.Font ?? Font,
-                new Rectangle(bounds.X + 6, bounds.Y, Math.Max(0, bounds.Width - 9), bounds.Height),
+                new Rectangle(textLeft, bounds.Y, Math.Max(0, bounds.Right - 3 - textLeft), bounds.Height),
                 GetEffectiveColor(e.Item.ForeColor),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
         }

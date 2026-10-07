@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 
@@ -24,7 +25,10 @@ namespace ErikwnkWFUI.Controls
     /// to enforce that by default.
     /// </summary>
     /// <remarks>
-    /// Consumers never need to spell out
+    /// The column types: text, check box and image columns follow the grid's colors; button, combo
+    /// box and link columns are put in them when the column is added (flat, with the link colors
+    /// readable on the rows). The system's own scroll bars and the editing control of a combo cell
+    /// are not themed. Consumers never need to spell out
     /// <c>ErikwnkWFUI.Controls.ReadOnlyDataGridView</c>: go through
     /// <see cref="UIStyles.DataGridViews.CreateReadOnlyStandard"/>, which hands back
     /// a plain <see cref="System.Windows.Forms.DataGridView"/>-typed
@@ -775,6 +779,7 @@ namespace ErikwnkWFUI.Controls
             SetStyle(ControlStyles.ResizeRedraw, true);
 
             EnableDoubleBuffering();
+            ThemeScrollBars();
             ApplyStyles();
 
             MouseDown += HandleMouseDown;
@@ -1237,6 +1242,39 @@ namespace ErikwnkWFUI.Controls
             }));
         }
 
+        // The columns that are not text keep the system's look unless told otherwise: white
+        // buttons and combo boxes and dark-blue links on the dark rows. Put in the grid's
+        // colors here, when the column comes in; a consumer can still change them afterwards.
+        // (Check box and image columns already follow the cell colors.)
+        private void ThemeColumnType(DataGridViewColumn column)
+        {
+            DataGridViewButtonColumn button = column as DataGridViewButtonColumn;
+            DataGridViewComboBoxColumn combo = column as DataGridViewComboBoxColumn;
+            DataGridViewLinkColumn link = column as DataGridViewLinkColumn;
+
+            if (button != null)
+            {
+                button.FlatStyle = FlatStyle.Flat;
+                button.DefaultCellStyle.BackColor = UIColors.BackgroundLighter;
+                button.DefaultCellStyle.ForeColor = UIColors.TextPrimary;
+            }
+            else if (combo != null)
+            {
+                // The arrow button of a flat combo cell is still a white block in the system's
+                // button color: it shows on the current cell only, where the choice is made.
+                combo.FlatStyle = FlatStyle.Flat;
+                combo.DisplayStyleForCurrentCellOnly = true;
+            }
+            else if (link != null)
+            {
+                // A link has to be seen against the row color in both themes.
+                Color row = _rowBackColor;
+                link.LinkColor = UIColors.EnsureContrast(UIColors.Primary, row, 4.5);
+                link.VisitedLinkColor = UIColors.EnsureContrast(UIColors.ShiftLightness(UIColors.Primary, -0.15), row, 4.5);
+                link.ActiveLinkColor = UIColors.TextPrimary;
+            }
+        }
+
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
             base.OnColumnAdded(e);
@@ -1258,6 +1296,8 @@ namespace ErikwnkWFUI.Controls
             {
                 e.Column.CellTemplate = new EditHintTextBoxCell();
             }
+
+            ThemeColumnType(e.Column);
 
             // Pinned leftmost regardless of SortingEnabled (unlike the
             // SortMode logic below, which the early return right after this
@@ -2449,6 +2489,61 @@ namespace ErikwnkWFUI.Controls
             AlternatingRowsDefaultCellStyle.SelectionForeColor = selectionForeColor;
 
             Invalidate();
+        }
+
+        // The scroll bars of the grid are controls of their own inside it (private fields of the
+        // standard grid, named differently on .NET Framework and .NET); they get the dark visual
+        // style whenever their window is created.
+        private Control[] _scrollBars = new Control[0];
+
+        private void ThemeScrollBars()
+        {
+            List<Control> found = new List<Control>();
+
+            foreach (string field in new[] { "horizScrollBar", "_horizScrollBar", "vertScrollBar", "_vertScrollBar" })
+            {
+                Control bar = typeof(System.Windows.Forms.DataGridView)
+                    .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)
+                    ?.GetValue(this) as Control;
+
+                if (bar == null)
+                    continue;
+
+                found.Add(bar);
+                bar.HandleCreated += (sender, e) => NativeControlTheme.ApplyToScrollBars(((Control)sender).Handle);
+
+                if (bar.IsHandleCreated)
+                    NativeControlTheme.ApplyToScrollBars(bar.Handle);
+            }
+
+            _scrollBars = found.ToArray();
+        }
+
+        // Where the two scroll bars meet is a square the standard grid fills with the system's
+        // button color - a white block on the dark grid. Painted over in the grid's own color.
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            Control horizontal = null;
+            Control vertical = null;
+
+            foreach (Control bar in _scrollBars)
+            {
+                if (!bar.Visible)
+                    continue;
+
+                if (bar is HScrollBar)
+                    horizontal = bar;
+                else if (bar is VScrollBar)
+                    vertical = bar;
+            }
+
+            if (horizontal != null && vertical != null)
+            {
+                using (SolidBrush brush = new SolidBrush(BackgroundColor))
+                    e.Graphics.FillRectangle(brush, new Rectangle(vertical.Left, horizontal.Top, vertical.Width, horizontal.Height));
+            }
         }
 
         private void EnableDoubleBuffering()

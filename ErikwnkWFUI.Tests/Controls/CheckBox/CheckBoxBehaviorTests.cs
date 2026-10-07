@@ -420,6 +420,46 @@ public class CheckBoxBehaviorTests : IDisposable
     }
 
     [Fact]
+    public void ImageFlatStyleEllipsisPaddingAndTheBackColorFlag_AreAlsoIgnored()
+    {
+        // The rest of what the standard checkbox draws in its own way: an image, the flat
+        // style and its appearance, the ellipsis, the padding, the text-and-image relation.
+        System.Windows.Forms.CheckBox box = Create(true);
+        using Bitmap before = Draw(box);
+        using Bitmap picture = new Bitmap(10, 10);
+
+        box.Image = picture;
+        box.ImageAlign = ContentAlignment.MiddleRight;
+        box.TextImageRelation = TextImageRelation.ImageAboveText;
+        box.FlatStyle = FlatStyle.Standard;
+        box.FlatAppearance.BorderSize = 4;
+        box.AutoEllipsis = true;
+        box.Padding = new Padding(10);
+        box.UseVisualStyleBackColor = true;
+
+        using Bitmap after = Draw(box);
+        Assert.True(SamePixels(before, after), "one of the ignored properties changed the picture");
+    }
+
+    [Fact]
+    public void ADoubleClick_IsTwoClicks_AsOnTheStandardBox()
+    {
+        System.Windows.Forms.CheckBox box = Create(false);
+        int clicks = 0;
+        box.Click += delegate { clicks++; };
+
+        IntPtr at = (IntPtr)(8 | (8 << 16));
+        SendMessage(box.Handle, 0x201, (IntPtr)1, at);
+        SendMessage(box.Handle, 0x202, IntPtr.Zero, at);
+        SendMessage(box.Handle, 0x203, (IntPtr)1, at);
+        SendMessage(box.Handle, 0x202, IntPtr.Zero, at);
+        Application.DoEvents();
+
+        Assert.Equal(2, clicks);
+        Assert.False(box.Checked);
+    }
+
+    [Fact]
     public void TheLook_SurvivesTheHandleBeingRecreated()
     {
         using System.Windows.Forms.CheckBox box = Create(true);
