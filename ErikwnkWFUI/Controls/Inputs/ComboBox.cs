@@ -171,7 +171,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The list's frame has the color the box shows while the list is open.
-        private Color ListBorderColor
+        internal Color ListBorderColor
         {
             get
             {

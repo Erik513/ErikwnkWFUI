@@ -286,7 +286,7 @@ public class ComboBoxBehaviorTests : IDisposable
         Assert.Equal(2, box.Items.Count);
 
         UIStyles.ComboBoxes.ReplaceItems(box, Array.Empty<object>());
-        Assert.Equal(0, box.Items.Count);
+        Assert.Empty(box.Items);
         Assert.Equal(-1, box.SelectedIndex);
     }
 
