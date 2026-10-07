@@ -146,9 +146,10 @@ project.) Pass the result to `StyledFormOptions.Icon` or
 
 ## Known limitations
 
-- `UIStyles.ComboBoxes.CreateStandard` and `UIStyles.NumericUpDowns.CreateStandard`
-  only theme part of the control - a `ComboBox`'s dropdown list and a
-  `NumericUpDown`'s spinner buttons are native Windows chrome and stay
-  system-colored regardless of the active theme/accent.
+- `UIStyles.NumericUpDowns.CreateStandard` only themes part of the control -
+  the spinner buttons are native Windows chrome and stay system-colored
+  regardless of the active theme/accent. A `ComboBox` is themed except for the
+  text field of its editable style (selection color) and the `Simple` style,
+  which keeps the system's drawing.
 - Theme, accent, and language changes only affect controls built *after*
   the change - nothing here live-updates already-open windows.

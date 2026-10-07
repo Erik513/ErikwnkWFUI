@@ -32,7 +32,7 @@ namespace ErikwnkWFUI.Controls
     /// the library. A <c>DropDown</c> holds a text field (a window of its own): the library draws
     /// the border and the arrow button around it, the field keeps the system's selection color.
     /// A <c>Simple</c> box keeps the system's drawing for the box itself. The list is drawn like
-    /// the others in every style.
+    /// the others in every style, and its outer frame has the border color of the open box.
     /// </remarks>
     public class ComboBox : System.Windows.Forms.ComboBox
     {
@@ -61,6 +61,7 @@ namespace ErikwnkWFUI.Controls
         public ComboBox()
         {
             _listFrame = new ListFrame(this);
+
             // The rows are owner-drawn: the list of the system always highlights the hovered
             // row in the system's accent color, no matter what is set. Drawing every row is
             // the only way to make it follow the library's colors.
@@ -70,7 +71,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The colors of the box: the selected (hovered) row of the list, and for the closed box
-        /// the border when hovered and dropped down. Left null, the neutral gray
+        /// the border when hovered and dropped down (the open list's frame has the latter). Left null, the neutral gray
         /// (<c>UIStyles.Colors.Sets.Gray</c>) for the closed box and the gray of the selection in
         /// other controls for the row; <c>UIStyles.ComboBoxes.CreatePrimary</c> makes one in the
         /// accent color.
@@ -85,8 +86,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The closed box is painted by the library only for a drop-down list; the other styles
-        // contain a text field that stays the system's.
+        // The whole closed box is painted by the library only for a drop-down list; the styles
+        // with a text field keep that field the system's.
         internal bool OwnsClosedPainting
         {
             get { return DropDownStyle == ComboBoxStyle.DropDownList && !DesignMode; }
@@ -107,7 +108,8 @@ namespace ErikwnkWFUI.Controls
             // around the box; it comes from the visual-styles engine and ignores every color
             // property. Detaching the control from its theme class stops it. The list that
             // opens is a window of its own (its handle comes from GetComboBoxInfo) with the
-            // same themed border; comctl32 creates it with the box, so it is there already.
+            // same themed border, which is painted over below; comctl32 creates it with the
+            // box, so it is there already.
             // Done on every new handle, not once: the handle can be recreated.
             SetWindowTheme(Handle, "", "");
 
@@ -225,7 +227,7 @@ namespace ErikwnkWFUI.Controls
                 ? UIColors.BackgroundMedium
                 : _colors != null ? _colors.Hover : UIColors.BorderLight;
 
-            // A disabled box used to draw its text in full brightness, with no change at all.
+            // A disabled box draws its text muted.
             Color textColor = !Enabled
                 ? UIColors.TextDisabled
                 : isSelected
@@ -287,7 +289,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             // The text field of a disabled box asks for its colors as a "static" control, which
-            // the system answers with white; it gets the colors of the enabled field instead.
+            // the system answers with white; it gets the box's colors with muted text instead.
             if (m.Msg == WM_CTLCOLORSTATIC && OwnsEditableFramePainting)
             {
                 m.Msg = WM_CTLCOLOREDIT;

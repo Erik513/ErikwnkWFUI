@@ -763,7 +763,7 @@ namespace ErikwnkWFUI
             }
         }
 
-        /// <summary>A themed <see cref="ComboBox"/>. Note: only the edit portion follows the theme - the native dropdown list itself still renders with system colors (see ErikwnkWFUI/README.md).</summary>
+        /// <summary>A themed <see cref="ComboBox"/>: the closed box, the rows and the frame of the open list follow the theme (the scroll bars of the list are the system's dark ones in a dark theme).</summary>
         public static class ComboBoxes
         {
             /// <summary>A themed combo box; the selected (or hovered) row of the list is the neutral gray.</summary>
