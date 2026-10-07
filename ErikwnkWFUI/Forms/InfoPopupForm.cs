@@ -55,8 +55,8 @@ namespace ErikwnkWFUI.Forms
         private const int BlockGap96 = 8;
         private const int HeaderGap96 = 3;
         private const int ScreenMargin = 10;
-        private const int OwnerOffsetX = 8;
-        private const int OwnerOffsetY = -10;
+        private const int AnchorOffsetX = 8;
+        private const int AnchorOffsetY = -10;
         private const int WS_EX_NOACTIVATE = 0x08000000;
 
         private const TextFormatFlags MeasureFlags =
@@ -64,7 +64,7 @@ namespace ErikwnkWFUI.Forms
 
         private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _showDelayTimer;
-        private Control _pendingOwner;
+        private Control _pendingAnchor;
         private Point _pendingMouseScreenPosition;
         private InfoPopupSection[] _pendingSections;
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
@@ -264,42 +264,42 @@ namespace ErikwnkWFUI.Forms
 
         // ---- showing it ----
 
-        /// <summary>Shows (or moves, if already visible) the popup anchored to the bottom-right of <paramref name="owner"/>.</summary>
-        public void ShowNextTo(Control owner)
+        /// <summary>Shows (or moves, if already visible) the popup anchored to the bottom-right of <paramref name="anchor"/>.</summary>
+        public void ShowNextTo(Control anchor)
         {
-            if (!CanShow(owner))
+            if (!CanShow(anchor))
                 return;
 
-            Place(owner, GetLocationNextTo(owner));
+            Place(anchor, GetLocationNextTo(anchor));
         }
 
         /// <summary>Shows (or moves) the popup near <paramref name="mouseScreenPosition"/> - typical use is a MouseMove handler.</summary>
-        public void ShowAtMouse(Control owner, Point mouseScreenPosition)
+        public void ShowAtMouse(Control anchor, Point mouseScreenPosition)
         {
-            if (!CanShow(owner))
+            if (!CanShow(anchor))
                 return;
 
-            Place(owner, GetLocationNearMouse(owner, mouseScreenPosition));
+            Place(anchor, GetLocationNearMouse(anchor, mouseScreenPosition));
         }
 
         /// <summary>
-        /// Shows (or moves) the popup centered horizontally on <paramref name="ownerLocalX"/> (a pixel x
-        /// inside <paramref name="owner"/>) and just above <paramref name="owner"/>; below it if there is
+        /// Shows (or moves) the popup centered horizontally on <paramref name="anchorLocalX"/> (a pixel x
+        /// inside <paramref name="anchor"/>) and just above <paramref name="anchor"/>; below it if there is
         /// no room above. Typical use is a live value readout over a slider thumb.
         /// </summary>
-        public void ShowCenteredAbove(Control owner, int ownerLocalX)
+        public void ShowCenteredAbove(Control anchor, int anchorLocalX)
         {
-            if (!CanShow(owner))
+            if (!CanShow(anchor))
                 return;
 
-            Point ownerTop = owner.PointToScreen(new Point(ownerLocalX, 0));
-            int x = ownerTop.X - Width / 2;
-            int y = ownerTop.Y - Height - 6;
+            Point anchorTop = anchor.PointToScreen(new Point(anchorLocalX, 0));
+            int x = anchorTop.X - Width / 2;
+            int y = anchorTop.Y - Height - 6;
 
-            if (y < GetPlacementArea(owner).Top + ScreenMargin)
-                y = ownerTop.Y + owner.Height + 6;
+            if (y < GetPlacementArea(anchor).Top + ScreenMargin)
+                y = anchorTop.Y + anchor.Height + 6;
 
-            Place(owner, new Point(x, y));
+            Place(anchor, new Point(x, y));
         }
 
         /// <summary>
@@ -308,21 +308,21 @@ namespace ErikwnkWFUI.Forms
         /// Call <see cref="CancelPendingShow"/> on MouseLeave to cancel a show that has not
         /// happened yet.
         /// </summary>
-        public void ShowAtMouseDelayed(Control owner, Point mouseScreenPosition, params InfoPopupSection[] sections)
+        public void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, params InfoPopupSection[] sections)
         {
-            if (owner == null || owner.IsDisposed)
+            if (anchor == null || anchor.IsDisposed)
                 return;
 
             if (_delay == PopupDelay.Instant)
             {
                 CancelPendingShow();
                 SetContent(sections);
-                ShowAtMouse(owner, mouseScreenPosition);
+                ShowAtMouse(anchor, mouseScreenPosition);
 
                 return;
             }
 
-            _pendingOwner = owner;
+            _pendingAnchor = anchor;
             _pendingMouseScreenPosition = mouseScreenPosition;
             _pendingSections = sections;
 
@@ -336,7 +336,7 @@ namespace ErikwnkWFUI.Forms
             if (_showDelayTimer != null)
                 _showDelayTimer.Stop();
 
-            _pendingOwner = null;
+            _pendingAnchor = null;
             _pendingSections = null;
         }
 
@@ -344,21 +344,21 @@ namespace ErikwnkWFUI.Forms
         {
             _showDelayTimer.Stop();
 
-            Control owner = _pendingOwner;
+            Control anchor = _pendingAnchor;
             InfoPopupSection[] sections = _pendingSections;
 
-            if (owner == null || owner.IsDisposed || sections == null)
+            if (anchor == null || anchor.IsDisposed || sections == null)
                 return;
 
             SetContent(sections);
-            ShowAtMouse(owner, _pendingMouseScreenPosition);
+            ShowAtMouse(anchor, _pendingMouseScreenPosition);
         }
 
-        // Nothing to show without an owner or without content; a popup that is up goes away
+        // Nothing to show without an anchor or without content; a popup that is up goes away
         // when its content is taken.
-        private bool CanShow(Control owner)
+        private bool CanShow(Control anchor)
         {
-            if (owner == null || owner.IsDisposed)
+            if (anchor == null || anchor.IsDisposed)
                 return false;
 
             if (!HasContent)
@@ -371,15 +371,15 @@ namespace ErikwnkWFUI.Forms
             return true;
         }
 
-        private void Place(Control owner, Point location)
+        private void Place(Control anchor, Point location)
         {
-            Form ownerForm = owner.FindForm();
+            Form ownerForm = anchor.FindForm();
 
             if (!PopupSupport.CanShowOver(ownerForm))
                 return;
 
             BackColor = GetBackColor();
-            Location = KeepInside(location, GetPlacementArea(owner), Screen.FromControl(owner).WorkingArea);
+            Location = KeepInside(location, GetPlacementArea(anchor), Screen.FromControl(anchor).WorkingArea);
 
             if (!Visible)
             {
@@ -404,17 +404,17 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        private Point GetLocationNextTo(Control owner)
+        private Point GetLocationNextTo(Control anchor)
         {
-            return owner.PointToScreen(
-                new Point(owner.Width + OwnerOffsetX, -Height + owner.Height + OwnerOffsetY));
+            return anchor.PointToScreen(
+                new Point(anchor.Width + AnchorOffsetX, -Height + anchor.Height + AnchorOffsetY));
         }
 
         // Right and below the mouse, on the other side of it where that does not fit.
-        private Point GetLocationNearMouse(Control owner, Point mouseScreenPosition)
+        private Point GetLocationNearMouse(Control anchor, Point mouseScreenPosition)
         {
             Point result = new Point(mouseScreenPosition.X + 12, mouseScreenPosition.Y + 12);
-            Rectangle area = GetPlacementArea(owner);
+            Rectangle area = GetPlacementArea(anchor);
 
             if (result.X + Width > area.Right - ScreenMargin)
                 result.X = mouseScreenPosition.X - Width - 12;
@@ -427,10 +427,10 @@ namespace ErikwnkWFUI.Forms
 
         // Where the popup may be: inside the window of its control, and on the screen where that
         // window reaches beyond it. A control without a form has the screen.
-        private static Rectangle GetPlacementArea(Control owner)
+        private static Rectangle GetPlacementArea(Control anchor)
         {
-            Rectangle screen = Screen.FromControl(owner).WorkingArea;
-            Form form = owner.FindForm();
+            Rectangle screen = Screen.FromControl(anchor).WorkingArea;
+            Form form = anchor.FindForm();
 
             if (form == null)
                 return screen;

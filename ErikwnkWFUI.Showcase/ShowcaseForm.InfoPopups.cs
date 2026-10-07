@@ -31,10 +31,12 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateStandard(colors)", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Green), "Show popup", 160,
                 popup => popup.SetContent(SampleBlocks)));
 
-            table.AddRow("Fixed: Standard", CreateClickButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Show popup", 160,
+            table.AddSection("Fixed size - one short value, like the 70% over a slider");
+
+            table.AddRow("Standard", CreateClickButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Show value 70%", 160,
                 popup => popup.SetContent("70%")));
 
-            table.AddRow("Fixed: Primary", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), "Show popup", 160,
+            table.AddRow("Primary", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), "Show value 70%", 160,
                 popup => popup.SetContent("70%")));
 
             table.AddSection("Content");
@@ -86,7 +88,7 @@ namespace ErikwnkWFUI.Showcase
                 popup => popup.SetContent(SampleBlocks)));
 
             table.AddRow("ShowAtMouse", CreateHoverButton(UIStyles.InfoPopups.CreateStandard(), "Move over me", 160, false));
-            table.AddRow("ShowCenteredAbove", CreateCenteredAboveButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Show popup", 160));
+            table.AddRow("ShowCenteredAbove", CreateCenteredAboveButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Click anywhere on me", 160));
             table.AddRow("Delayed at mouse", CreateHoverButton(UIStyles.InfoPopups.CreateStandard(), "Rest on me", 160, true));
         }
 
