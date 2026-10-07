@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.InfoPopupFormTests;
@@ -15,9 +16,19 @@ namespace ErikwnkWFUI.Tests.Controls.InfoPopupFormTests;
 public class InfoPopupBehaviorTests : IDisposable
 {
     private readonly List<Form> _forms = new List<Form>();
+    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
+
+    // The popups are shown only while the application is in front; a test must not depend on
+    // what is in front on the machine it runs on.
+    public InfoPopupBehaviorTests()
+    {
+        PopupSupport.OwnerIsActive = _ => true;
+    }
 
     public void Dispose()
     {
+        PopupSupport.OwnerIsActive = _originalActiveCheck;
+
         foreach (Form form in _forms)
             form.Dispose();
     }
@@ -381,6 +392,86 @@ public class InfoPopupBehaviorTests : IDisposable
 
         host.Close();
         Assert.True(popup.IsDisposed || !popup.Visible);
+    }
+
+    [Fact]
+    public void WhileTheApplicationIsNotInFront_NothingIsShown_NotEvenTheDelayedOne()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        PopupSupport.OwnerIsActive = _ => false;
+
+        popup.ShowNextTo(owner);
+        popup.ShowAtMouse(owner, new Point(100, 100));
+        popup.ShowCenteredAbove(owner, 10);
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+        popup.InvokePrivate("OnShowDelayTimerTick", popup, EventArgs.Empty);
+
+        Assert.False(popup.Visible);
+
+        PopupSupport.OwnerIsActive = _ => true;
+        popup.ShowNextTo(owner);
+        Assert.True(popup.Visible);
+    }
+
+    [Fact]
+    public void OverAMinimizedWindow_NothingIsShown()
+    {
+        (Form host, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+
+        host.WindowState = FormWindowState.Minimized;
+        popup.ShowNextTo(owner);
+
+        Assert.False(popup.Visible);
+    }
+
+    [Fact]
+    public void ThePopup_IsNotTopmost_SoItStaysAboveItsWindowOnly()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+
+        popup.ShowNextTo(owner);
+
+        Assert.False(popup.TopMost);
+        Assert.NotNull(popup.Owner);
+    }
+
+    [Fact]
+    public void WhenTheWindowIsMoved_ThePopupGoesWithIt_UntilItIsHidden()
+    {
+        (Form host, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(owner);
+        Point before = popup.Location;
+
+        host.Location = new Point(host.Left + 40, host.Top + 25);
+        Assert.Equal(new Point(before.X + 40, before.Y + 25), popup.Location);
+
+        popup.Hide();
+        Point hidden = popup.Location;
+        host.Location = new Point(host.Left + 10, host.Top + 10);
+        Assert.Equal(hidden, popup.Location);
+    }
+
+    [Fact]
+    public void AfterBeingPlacedAgain_ThePopupFollowsFromItsNewPlace()
+    {
+        (Form host, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(owner);
+        popup.ShowAtMouse(owner, new Point(host.Left + 50, host.Top + 50));
+        Point placed = popup.Location;
+
+        host.Location = new Point(host.Left + 30, host.Top);
+
+        Assert.Equal(new Point(placed.X + 30, placed.Y), popup.Location);
     }
 
     [Fact]

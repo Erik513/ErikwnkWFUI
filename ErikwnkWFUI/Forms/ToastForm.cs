@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -10,16 +12,42 @@ namespace ErikwnkWFUI.Forms
     /// A small, rounded, self-dismissing confirmation toast (checkmark +
     /// message) - call the static <see cref="ShowToast"/> rather than
     /// constructing this directly. Only one toast shows at a time; showing
-    /// a new one closes whatever's currently up.
+    /// a new one closes whatever's currently up. The toast belongs to its window: it is
+    /// shown only while that window is in front, stays above its window but not above other
+    /// windows or programs, moves with the window and never takes the activation.
     /// </summary>
+    /// <remarks>
+    /// A toast that cannot be shown because its window is not in front is not lost: it waits,
+    /// and is shown when the window is activated again. At most <see cref="MaxPendingToasts"/>
+    /// wait for one window (the newest; the same text twice counts once), and one that has
+    /// waited longer than <see cref="PendingLifetime"/> is dropped, as it would be out of date.
+    /// Several waiting toasts are shown one after the other. A window that closes takes its
+    /// waiting toasts with it.
+    /// </remarks>
     public class ToastForm : Form
     {
         private const int ToastWidth = 350;
         private const int ToastHeight = 80;
         private const int CloseDelay = 2500;
 
-        private static ToastForm _currentToast;
+        /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
+        public const int MaxPendingToasts = 3;
 
+        /// <summary>How long a toast waits for its window to come to the front before it is dropped. One minute by default.</summary>
+        public static TimeSpan PendingLifetime { get; set; } = TimeSpan.FromSeconds(60);
+
+        private sealed class PendingToast
+        {
+            public string Message;
+            public DateTime Time;
+        }
+
+        private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
+
+        private static ToastForm _currentToast;
+        private Form _ownerForm;
+
+        private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _closeTimer;
         private Label _messageLabel;
         private Panel _contentPanel;
@@ -34,22 +62,130 @@ namespace ErikwnkWFUI.Forms
             Load += OnToastLoad;
         }
 
-        /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, auto-closing itself after ~2.5s.</summary>
+        /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, auto-closing itself after ~2.5s. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         public static void ShowToast(string message, Form owner)
         {
             if (owner == null || owner.IsDisposed)
                 return;
 
+            if (!PopupSupport.CanShowOver(owner))
+            {
+                Enqueue(message, owner);
+
+                return;
+            }
+
+            ShowNow(message, owner);
+        }
+
+        private static void ShowNow(string message, Form owner)
+        {
             CloseCurrentToast();
 
             ToastForm toast = new ToastForm();
             _currentToast = toast;
+            toast._ownerForm = owner;
 
             toast.SetMessage(message);
             toast.Location = GetToastLocation(owner, toast);
 
             toast._closeTimer.Start();
             toast.Show(owner);
+            toast._follower.Attach(toast, owner);
+        }
+
+        // ---- toasts that wait for their window ----
+
+        private static void Enqueue(string message, Form owner)
+        {
+            List<PendingToast> queue;
+
+            if (!_pending.TryGetValue(owner, out queue))
+            {
+                queue = new List<PendingToast>();
+                _pending[owner] = queue;
+                owner.Activated += OnOwnerActivated;
+                owner.FormClosed += OnOwnerClosed;
+            }
+
+            // The same text twice in a row is one message.
+            if (queue.Count > 0 && queue[queue.Count - 1].Message == message)
+                return;
+
+            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow });
+
+            while (queue.Count > MaxPendingToasts)
+                queue.RemoveAt(0);
+        }
+
+        private static void Forget(Form owner)
+        {
+            if (!_pending.Remove(owner))
+                return;
+
+            owner.Activated -= OnOwnerActivated;
+            owner.FormClosed -= OnOwnerClosed;
+        }
+
+        private static void OnOwnerActivated(object sender, EventArgs e)
+        {
+            ShowNextPending((Form)sender);
+        }
+
+        private static void OnOwnerClosed(object sender, FormClosedEventArgs e)
+        {
+            Forget((Form)sender);
+        }
+
+        // Shows the oldest toast that waits for <paramref name="owner"/> and is not out of date;
+        // the next one follows when this one has closed.
+        private static void ShowNextPending(Form owner)
+        {
+            List<PendingToast> queue;
+
+            if (owner == null || owner.IsDisposed || !_pending.TryGetValue(owner, out queue))
+                return;
+
+            DateTime now = DateTime.UtcNow;
+            queue.RemoveAll(toast => now - toast.Time >= PendingLifetime);
+
+            if (queue.Count == 0)
+            {
+                Forget(owner);
+
+                return;
+            }
+
+            // Not in front yet: it stays and waits for the next activation.
+            if (!PopupSupport.CanShowOver(owner))
+                return;
+
+            PendingToast next = queue[0];
+            queue.RemoveAt(0);
+
+            if (queue.Count == 0)
+                Forget(owner);
+
+            ShowNow(next.Message, owner);
+        }
+
+        // The toast must not take the activation from the window it confirms something in.
+        protected override bool ShowWithoutActivation
+        {
+            get { return true; }
+        }
+
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams parameters = base.CreateParams;
+                parameters.ExStyle |= WS_EX_NOACTIVATE;
+
+                return parameters;
+            }
         }
 
         protected override void Dispose(bool disposing)
@@ -58,6 +194,7 @@ namespace ErikwnkWFUI.Forms
             {
                 SizeChanged -= OnToastSizeChanged;
                 Load -= OnToastLoad;
+                _follower.Detach();
 
                 if (_closeTimer != null)
                 {
@@ -83,7 +220,6 @@ namespace ErikwnkWFUI.Forms
             // shade CreatePrimary buttons use as their idle background) -
             // the toast used to be the accent itself, unchanged.
             BackColor = UIColors.PrimaryDark;
-            TopMost = true;
             ShowInTaskbar = false;
             Opacity = 0.80; // testing a stronger value than the previous 0.90
         }
@@ -212,7 +348,12 @@ namespace ErikwnkWFUI.Forms
         private void OnCloseTimerTick(object sender, EventArgs e)
         {
             _closeTimer.Stop();
+
+            Form owner = _ownerForm;
             Close();
+
+            // Closed by its own time (not replaced by a newer toast): the next waiting one is due.
+            ShowNextPending(owner);
         }
     }
 }

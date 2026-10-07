@@ -1,3 +1,4 @@
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using System;
 using System.Drawing;
@@ -29,12 +30,15 @@ namespace ErikwnkWFUI.Forms
     /// With <see cref="FixedSize"/> the popup keeps one size and centers its content, for a
     /// short value that changes while it is shown (a percentage over a slider).
     ///
-    /// The popup never takes the activation (not on show, not on a click), so the window next
+    /// The popup belongs to the window of its control: it is shown only while the application
+    /// is in front (not when another program covers the window, and not over a minimized
+    /// window), it stays above its window but not above other programs, and it moves with the
+    /// window. It never takes the activation (not on show, not on a click), so the window next
     /// to it keeps the focus. Hide it with <c>Hide</c>; <c>Close</c> disposes it, as for any
     /// form shown with an owner, and it closes with its owner form.
     ///
     /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
-    /// text colors (use <see cref="Colors"/>), the fonts, the border style, <c>TopMost</c> and
+    /// text colors (use <see cref="Colors"/>), the fonts, the border style and
     /// <c>ShowInTaskbar</c>. <c>Opacity</c> can be changed. The rounded corners come from
     /// Windows 11; on Windows 10 the popup is a plain rectangle. <c>RightToLeft</c> is not
     /// supported.
@@ -54,6 +58,7 @@ namespace ErikwnkWFUI.Forms
         private const TextFormatFlags MeasureFlags =
             TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.Left;
 
+        private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _showDelayTimer;
         private Control _pendingOwner;
         private Point _pendingMouseScreenPosition;
@@ -66,7 +71,6 @@ namespace ErikwnkWFUI.Forms
         {
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
-            TopMost = true;
             StartPosition = FormStartPosition.Manual;
             DoubleBuffered = true;
             Opacity = 0.80;
@@ -313,14 +317,29 @@ namespace ErikwnkWFUI.Forms
 
         private void Place(Control owner, Point location)
         {
+            Form ownerForm = owner.FindForm();
+
+            if (!PopupSupport.CanShowOver(ownerForm))
+                return;
+
             BackColor = GetBackColor();
             Location = location;
 
             if (!Visible)
             {
-                Show(owner.FindForm());
+                Show(ownerForm);
                 BringToFront();
             }
+
+            _follower.Attach(this, ownerForm);
+        }
+
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+
+            if (!Visible)
+                _follower.Detach();
         }
 
         private Point GetLocationNextTo(Control owner)
@@ -553,6 +572,9 @@ namespace ErikwnkWFUI.Forms
 
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+                _follower.Detach();
+
             if (disposing && _showDelayTimer != null)
             {
                 _showDelayTimer.Stop();
