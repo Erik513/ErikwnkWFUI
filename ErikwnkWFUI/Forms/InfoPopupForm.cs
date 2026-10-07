@@ -1,6 +1,7 @@
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -19,6 +20,9 @@ namespace ErikwnkWFUI.Forms
     /// The text, header and text alike, is white, or black when the background is too light
     /// for white; each header and each text can be given its own color
     /// (<see cref="InfoPopupSection.HeaderColor"/>, <see cref="InfoPopupSection.TextColor"/>).
+    ///
+    /// To use it as the tooltip of controls, attach it (<see cref="AttachTo(Control, string)"/>):
+    /// it then shows and hides itself as the mouse comes and goes. Otherwise show it yourself.
     ///
     /// Content and place are two steps: set the content, then show it next to a control
     /// (<see cref="ShowNextTo"/>), at the mouse (<see cref="ShowAtMouse"/>), centered above a
@@ -43,7 +47,7 @@ namespace ErikwnkWFUI.Forms
     /// Compared with the standard <c>ToolTip</c>: the title and the text (<see cref="InfoPopupSection"/>),
     /// the time before it shows (<see cref="Delay"/>, the ToolTip's InitialDelay), the time it
     /// stays (<see cref="Duration"/>, AutoPopDelay) and the colors are offered; the popup is
-    /// shown when you call it and is not attached to a control by itself. Not offered:
+    /// shown when you call it or when it is attached to a control (<see cref="AttachTo(Control, string)"/>). Not offered:
     /// balloon style and icons, fading and animation, a separate time for moving to the next
     /// control (ReshowDelay), and showing while the window is not in front (ShowAlways).
     /// An ampersand is shown as it is, not as a mnemonic.
@@ -75,7 +79,7 @@ namespace ErikwnkWFUI.Forms
         private Timer _showDelayTimer;
         private Control _pendingAnchor;
         private Point _pendingMouseScreenPosition;
-        private InfoPopupSection[] _pendingSections;
+        private Func<InfoPopupSection[]> _pendingContent;
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
         private PopupTransparency _transparency = PopupTransparency.Medium;
@@ -319,13 +323,19 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, params InfoPopupSection[] sections)
         {
+            ShowAtMouseDelayed(anchor, mouseScreenPosition, () => sections);
+        }
+
+        // The content is asked for when the popup shows, not when the show is asked for.
+        private void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, Func<InfoPopupSection[]> content)
+        {
             if (anchor == null || anchor.IsDisposed)
                 return;
 
             if (_delay == PopupDelay.Instant)
             {
                 CancelPendingShow();
-                SetContent(sections);
+                SetContent(content());
                 ShowAtMouse(anchor, mouseScreenPosition);
 
                 return;
@@ -333,7 +343,7 @@ namespace ErikwnkWFUI.Forms
 
             _pendingAnchor = anchor;
             _pendingMouseScreenPosition = mouseScreenPosition;
-            _pendingSections = sections;
+            _pendingContent = content;
 
             _showDelayTimer.Stop();
             _showDelayTimer.Start();
@@ -346,7 +356,7 @@ namespace ErikwnkWFUI.Forms
                 _showDelayTimer.Stop();
 
             _pendingAnchor = null;
-            _pendingSections = null;
+            _pendingContent = null;
         }
 
         private void OnShowDelayTimerTick(object sender, EventArgs e)
@@ -354,12 +364,12 @@ namespace ErikwnkWFUI.Forms
             _showDelayTimer.Stop();
 
             Control anchor = _pendingAnchor;
-            InfoPopupSection[] sections = _pendingSections;
+            Func<InfoPopupSection[]> content = _pendingContent;
 
-            if (anchor == null || anchor.IsDisposed || sections == null)
+            if (anchor == null || anchor.IsDisposed || content == null)
                 return;
 
-            SetContent(sections);
+            SetContent(content());
             ShowAtMouse(anchor, _pendingMouseScreenPosition);
         }
 
@@ -398,6 +408,7 @@ namespace ErikwnkWFUI.Forms
 
             _follower.Attach(this, ownerForm);
             _lastAnchor = anchor;
+            NoteShownFor(anchor);
 
             _hideTimer.Stop();
             _hideTimer.Start();
@@ -471,6 +482,182 @@ namespace ErikwnkWFUI.Forms
             int last = end - margin - size;
 
             return Math.Max(first, Math.Min(position, last));
+        }
+
+        // ---- attaching to controls ----
+
+        // What the popup knows about a control it is attached to.
+        private sealed class Binding
+        {
+            public Control Control;
+            public Func<InfoPopupSection[]> Content;
+            public Control Parent;
+            public bool Inside;
+            public bool Shown;
+            public MouseEventHandler OnMove;
+            public EventHandler OnLeave;
+            public MouseEventHandler OnDown;
+            public KeyEventHandler OnKey;
+            public EventHandler OnHidden;
+            public EventHandler OnDisposed;
+            public EventHandler OnParentChanged;
+            public MouseEventHandler OnParentMove;
+            public EventHandler OnParentLeave;
+        }
+
+        private readonly Dictionary<Control, Binding> _bindings = new Dictionary<Control, Binding>();
+
+        /// <summary>
+        /// Shows this popup as the tooltip of <paramref name="control"/>: after the
+        /// <see cref="Delay"/> once the mouse rests on it, at the mouse, once for each time the
+        /// mouse enters. It goes away when the mouse leaves, on a click or a key press, and when
+        /// the control is hidden or disposed (which also detaches it). One popup can serve any
+        /// number of controls, each with its own content. A disabled control gets it too.
+        /// </summary>
+        public void AttachTo(Control control, string text)
+        {
+            AttachTo(control, () => new[] { new InfoPopupSection(null, text) });
+        }
+
+        /// <summary>Attaches a header with its text; see <see cref="AttachTo(Control, string)"/>.</summary>
+        public void AttachTo(Control control, string header, string text)
+        {
+            AttachTo(control, () => new[] { new InfoPopupSection(header, text) });
+        }
+
+        /// <summary>Attaches the blocks; see <see cref="AttachTo(Control, string)"/>.</summary>
+        public void AttachTo(Control control, params InfoPopupSection[] sections)
+        {
+            AttachTo(control, () => sections);
+        }
+
+        /// <summary>
+        /// Attaches content that is worked out each time the popup is about to show (a value
+        /// that changes, a text for the current state); see <see cref="AttachTo(Control, string)"/>.
+        /// </summary>
+        public void AttachTo(Control control, Func<InfoPopupSection[]> content)
+        {
+            if (control == null || content == null || IsDisposed)
+                return;
+
+            Detach(control);
+
+            Binding binding = new Binding { Control = control, Content = content };
+
+            binding.OnMove = (sender, e) => Hover(binding, Control.MousePosition);
+            binding.OnLeave = (sender, e) => Leave(binding);
+            binding.OnDown = (sender, e) => Leave(binding);
+            binding.OnKey = (sender, e) => Leave(binding);
+            binding.OnHidden = (sender, e) =>
+            {
+                if (!control.Visible)
+                    Leave(binding);
+            };
+            binding.OnDisposed = (sender, e) => Detach(control);
+            binding.OnParentChanged = (sender, e) => HookParent(binding);
+
+            // A disabled control gets no mouse events of its own: its parent sees the mouse and
+            // the control is found by where it is.
+            binding.OnParentMove = (sender, e) =>
+            {
+                if (!control.Enabled && control.Bounds.Contains(e.Location))
+                    Hover(binding, Control.MousePosition);
+                else if (binding.Inside && !control.Enabled)
+                    Leave(binding);
+            };
+            binding.OnParentLeave = (sender, e) =>
+            {
+                if (binding.Inside && !control.Enabled)
+                    Leave(binding);
+            };
+
+            control.MouseMove += binding.OnMove;
+            control.MouseLeave += binding.OnLeave;
+            control.MouseDown += binding.OnDown;
+            control.KeyDown += binding.OnKey;
+            control.VisibleChanged += binding.OnHidden;
+            control.Disposed += binding.OnDisposed;
+            control.ParentChanged += binding.OnParentChanged;
+            HookParent(binding);
+
+            _bindings[control] = binding;
+        }
+
+        /// <summary>Takes the popup off <paramref name="control"/> again; a popup that is up for it goes away.</summary>
+        public void Detach(Control control)
+        {
+            Binding binding;
+
+            if (control == null || !_bindings.TryGetValue(control, out binding))
+                return;
+
+            _bindings.Remove(control);
+            Leave(binding);
+
+            control.MouseMove -= binding.OnMove;
+            control.MouseLeave -= binding.OnLeave;
+            control.MouseDown -= binding.OnDown;
+            control.KeyDown -= binding.OnKey;
+            control.VisibleChanged -= binding.OnHidden;
+            control.Disposed -= binding.OnDisposed;
+            control.ParentChanged -= binding.OnParentChanged;
+            UnhookParent(binding);
+        }
+
+        private void HookParent(Binding binding)
+        {
+            UnhookParent(binding);
+
+            binding.Parent = binding.Control.Parent;
+
+            if (binding.Parent != null)
+            {
+                binding.Parent.MouseMove += binding.OnParentMove;
+                binding.Parent.MouseLeave += binding.OnParentLeave;
+            }
+        }
+
+        private void UnhookParent(Binding binding)
+        {
+            if (binding.Parent == null)
+                return;
+
+            binding.Parent.MouseMove -= binding.OnParentMove;
+            binding.Parent.MouseLeave -= binding.OnParentLeave;
+            binding.Parent = null;
+        }
+
+        // The mouse is on the control: once for each time it enters, the popup is scheduled, and
+        // not again while it is up or after it has gone away by itself.
+        private void Hover(Binding binding, Point mouseScreenPosition)
+        {
+            binding.Inside = true;
+
+            if (binding.Shown)
+                return;
+
+            ShowAtMouseDelayed(binding.Control, mouseScreenPosition, binding.Content);
+        }
+
+        private void Leave(Binding binding)
+        {
+            binding.Inside = false;
+            binding.Shown = false;
+
+            // Only what this control asked for: another control's popup is not touched.
+            if (_pendingAnchor == binding.Control)
+                CancelPendingShow();
+
+            if (Visible && _lastAnchor == binding.Control)
+                Hide();
+        }
+
+        private void NoteShownFor(Control anchor)
+        {
+            Binding binding;
+
+            if (_bindings.TryGetValue(anchor, out binding))
+                binding.Shown = true;
         }
 
         // ---- colors ----
@@ -662,6 +849,9 @@ namespace ErikwnkWFUI.Forms
         {
             if (disposing)
             {
+                foreach (Control control in new List<Control>(_bindings.Keys))
+                    Detach(control);
+
                 _follower.Detach();
 
                 if (_hideTimer != null)

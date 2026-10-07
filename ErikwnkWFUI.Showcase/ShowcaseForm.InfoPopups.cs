@@ -82,6 +82,28 @@ namespace ErikwnkWFUI.Showcase
                     CreateHoverButton(UIStyles.InfoPopups.CreateStandard(delay: delay), "Rest on me", 160, true));
             }
 
+            table.AddSection("AttachTo - the popup as a tooltip");
+
+            InfoPopupForm tooltip = UIStyles.InfoPopups.CreateStandard();
+            _infoPopups.Add(tooltip);
+
+            Button textButton = UIStyles.Buttons.CreateStandard("Rest the mouse on me", size: new Size(200, 32));
+            tooltip.AttachTo(textButton, "A plain text as the tooltip.");
+            table.AddRow("Text", textButton);
+
+            Button blocksButton = UIStyles.Buttons.CreateStandard("Header and text", size: new Size(200, 32));
+            tooltip.AttachTo(blocksButton, new InfoPopupSection("Save", "Writes the file to disk."), new InfoPopupSection("Shortcut", "Ctrl+S"));
+            table.AddRow("Blocks", blocksButton);
+
+            Button clockButton = UIStyles.Buttons.CreateStandard("The time when it shows", size: new Size(200, 32));
+            tooltip.AttachTo(clockButton, () => new[] { new InfoPopupSection("Now", DateTime.Now.ToString("T")) });
+            table.AddRow("Function", clockButton);
+
+            Button disabledButton = UIStyles.Buttons.CreateStandard("Disabled", size: new Size(200, 32));
+            disabledButton.Enabled = false;
+            tooltip.AttachTo(disabledButton, "Disabled", "Also a disabled control can say why.");
+            table.AddRow("Disabled control", disabledButton);
+
             table.AddSection("Places");
 
             table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
