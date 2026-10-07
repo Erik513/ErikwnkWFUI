@@ -72,6 +72,14 @@ namespace ErikwnkWFUI.Showcase
                         popup => popup.SetContent(SampleBlocks)));
             }
 
+            table.AddSection("Delay");
+
+            foreach (PopupDelay delay in new[] { PopupDelay.Instant, PopupDelay.Short, PopupDelay.Medium, PopupDelay.Long })
+            {
+                table.AddRow(delay == PopupDelay.Medium ? "Medium (default)" : delay.ToString(),
+                    CreateHoverButton(UIStyles.InfoPopups.CreateStandard(delay: delay), "Rest on me", 160, true));
+            }
+
             table.AddSection("Places");
 
             table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,

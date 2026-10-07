@@ -978,15 +978,16 @@ namespace ErikwnkWFUI
             /// <param name="fixedSize">A client size the popup keeps whatever its content, with the content centered (a short value that changes while shown, like a percentage over a slider); none sizes it to the content.</param>
             /// <param name="transparency">How see-through the popup is; medium by default.</param>
             /// <param name="duration">How long the popup stays before it hides itself (3, 5 or 8 seconds); medium by default. Every show call starts the time again.</param>
-            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium)
+            /// <param name="delay">How long a delayed show (hover) waits before the popup appears: not at all, 0.2, 0.4 (the default) or 0.8 seconds.</param>
+            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium, Forms.PopupDelay delay = Forms.PopupDelay.Medium)
             {
-                return UIInfoPopupFactory.CreateStandard(colors, fixedSize, transparency, duration);
+                return UIInfoPopupFactory.CreateStandard(colors, fixedSize, transparency, duration, delay);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium)
+            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium, Forms.PopupDelay delay = Forms.PopupDelay.Medium)
             {
-                return UIInfoPopupFactory.CreatePrimary(fixedSize, transparency, duration);
+                return UIInfoPopupFactory.CreatePrimary(fixedSize, transparency, duration, delay);
             }
         }
 

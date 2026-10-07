@@ -67,14 +67,23 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         /// <param name="transparency">How see-through the toast is; medium by default.</param>
         /// <param name="duration">How long the toast stays: short, medium (2.5 seconds, the default) or long. The time runs from when it is shown, not from when it was asked for.</param>
+        /// <param name="delay">How long to wait before the toast is shown: not at all (the default), 0.2, 0.4 or 0.8 seconds. Whether the window is in front is checked when the wait is over.</param>
         public static void ShowToast(
             string message,
             Form owner,
             PopupTransparency transparency = PopupTransparency.Medium,
-            PopupDuration duration = PopupDuration.Medium)
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
         {
             if (owner == null || owner.IsDisposed)
                 return;
+
+            if (delay != PopupDelay.Instant)
+            {
+                Schedule(message, owner, transparency, duration, delay);
+
+                return;
+            }
 
             if (!PopupSupport.CanShowOver(owner))
             {
@@ -113,6 +122,25 @@ namespace ErikwnkWFUI.Forms
         }
 
         private PopupTransparency _transparency = PopupTransparency.Medium;
+
+        // The toasts that wait for their delay; one timer each, gone when it has fired.
+        private static readonly List<Timer> _scheduled = new List<Timer>();
+
+        private static void Schedule(string message, Form owner, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
+        {
+            Timer timer = new Timer { Interval = delay.ToMilliseconds() };
+            _scheduled.Add(timer);
+
+            timer.Tick += delegate
+            {
+                timer.Stop();
+                _scheduled.Remove(timer);
+                timer.Dispose();
+                ShowToast(message, owner, transparency, duration, PopupDelay.Instant);
+            };
+
+            timer.Start();
+        }
 
         private static void ShowNow(string message, Form owner, PopupTransparency transparency, PopupDuration duration)
         {

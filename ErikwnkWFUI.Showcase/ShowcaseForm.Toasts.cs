@@ -13,9 +13,7 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddSection("Show");
 
-            table.AddRow("ShowToast", CreateToastButton("Show toast", 160, PopupTransparency.Medium, 0, PopupDuration.Medium));
-
-            table.AddRow("Delayed (5 s)", CreateToastButton("Show toast in 5 seconds", 220, PopupTransparency.Medium, 5000, PopupDuration.Medium));
+            table.AddRow("ShowToast", CreateToastButton("Show toast", 160, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
 
             table.AddSection("Transparency");
 
@@ -23,7 +21,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 table.AddRow(
                     level == PopupTransparency.Medium ? "Medium (default)" : level.ToString(),
-                    CreateToastButton("Show toast", 160, level, 0, PopupDuration.Medium));
+                    CreateToastButton("Show toast", 160, level, PopupDuration.Medium, PopupDelay.Instant));
             }
 
             table.AddSection("Duration");
@@ -32,37 +30,26 @@ namespace ErikwnkWFUI.Showcase
             {
                 table.AddRow(
                     duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
-                    CreateToastButton("Show toast", 160, PopupTransparency.Medium, 0, duration));
+                    CreateToastButton("Show toast", 160, PopupTransparency.Medium, duration, PopupDelay.Instant));
+            }
+
+            table.AddSection("Delay");
+
+            foreach (PopupDelay delay in new[] { PopupDelay.Instant, PopupDelay.Short, PopupDelay.Medium, PopupDelay.Long })
+            {
+                table.AddRow(
+                    delay == PopupDelay.Instant ? "Instant (default)" : delay.ToString(),
+                    CreateToastButton("Show toast", 160, PopupTransparency.Medium, PopupDuration.Medium, delay));
             }
         }
 
-        // A delay shows how a toast behaves when its window is not in front by then: switch to
-        // another window within the time, and the toast waits and appears when you come back.
-        private Button CreateToastButton(string caption, int width, PopupTransparency transparency, int delayMilliseconds, PopupDuration duration)
+        private Button CreateToastButton(string caption, int width, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
         {
             Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
 
             button.Click += delegate
             {
-                string message = "Sample toast message";
-
-                if (delayMilliseconds <= 0)
-                {
-                    ToastForm.ShowToast(message, this, transparency, duration);
-
-                    return;
-                }
-
-                Timer delay = new Timer { Interval = delayMilliseconds };
-
-                delay.Tick += delegate
-                {
-                    delay.Stop();
-                    delay.Dispose();
-                    ToastForm.ShowToast(message, this, transparency, duration);
-                };
-
-                delay.Start();
+                ToastForm.ShowToast("Sample toast message", this, transparency, duration, delay);
             };
 
             return button;

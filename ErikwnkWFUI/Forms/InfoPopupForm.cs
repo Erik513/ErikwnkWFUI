@@ -71,6 +71,7 @@ namespace ErikwnkWFUI.Forms
         private UIColorSet _colors;
         private PopupTransparency _transparency = PopupTransparency.Medium;
         private PopupDuration _duration = PopupDuration.Medium;
+        private PopupDelay _delay = PopupDelay.Medium;
         private Timer _hideTimer;
         private Size _fixedSize = Size.Empty;
 
@@ -83,7 +84,7 @@ namespace ErikwnkWFUI.Forms
             Opacity = PopupTransparency.Medium.ToOpacity();
             BackColor = GetBackColor();
 
-            _showDelayTimer = new Timer { Interval = 400 };
+            _showDelayTimer = new Timer { Interval = _delay.ToMilliseconds() };
             _showDelayTimer.Tick += OnShowDelayTimerTick;
 
             _hideTimer = new Timer { Interval = _duration.ToInfoMilliseconds() };
@@ -94,6 +95,20 @@ namespace ErikwnkWFUI.Forms
             };
 
             Load += delegate { ApplyRoundedCorners(); };
+        }
+
+        /// <summary>
+        /// How long <see cref="ShowAtMouseDelayed"/> waits before it shows the popup: not at all,
+        /// 0.2, 0.4 (the default) or 0.8 seconds.
+        /// </summary>
+        public PopupDelay Delay
+        {
+            get { return _delay; }
+            set
+            {
+                _delay = value;
+                _showDelayTimer.Interval = value.ToMilliseconds();
+            }
         }
 
         /// <summary>
@@ -288,8 +303,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// Like <see cref="ShowAtMouse"/> with the given content, but after 400 ms - for hover
-        /// tooltips, so passing the mouse over several items does not flash a popup for each.
+        /// Like <see cref="ShowAtMouse"/> with the given content, but after the <see cref="Delay"/>
+        /// (at once for <see cref="PopupDelay.Instant"/>) - for hover tooltips, so passing the mouse over several items does not flash a popup for each.
         /// Call <see cref="CancelPendingShow"/> on MouseLeave to cancel a show that has not
         /// happened yet.
         /// </summary>
@@ -297,6 +312,15 @@ namespace ErikwnkWFUI.Forms
         {
             if (owner == null || owner.IsDisposed)
                 return;
+
+            if (_delay == PopupDelay.Instant)
+            {
+                CancelPendingShow();
+                SetContent(sections);
+                ShowAtMouse(owner, mouseScreenPosition);
+
+                return;
+            }
 
             _pendingOwner = owner;
             _pendingMouseScreenPosition = mouseScreenPosition;

@@ -10,9 +10,10 @@ namespace ErikwnkWFUI.Factories
             UIColorSet colors = null,
             Size? fixedSize = null,
             PopupTransparency transparency = PopupTransparency.Medium,
-            PopupDuration duration = PopupDuration.Medium)
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Medium)
         {
-            InfoPopupForm popup = new InfoPopupForm { Colors = colors, Transparency = transparency, Duration = duration };
+            InfoPopupForm popup = new InfoPopupForm { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay };
 
             if (fixedSize.HasValue)
                 popup.FixedSize = fixedSize.Value;
@@ -24,9 +25,10 @@ namespace ErikwnkWFUI.Factories
         public static InfoPopupForm CreatePrimary(
             Size? fixedSize = null,
             PopupTransparency transparency = PopupTransparency.Medium,
-            PopupDuration duration = PopupDuration.Medium)
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Medium)
         {
-            return CreateStandard(UIColors.PrimarySet, fixedSize, transparency, duration);
+            return CreateStandard(UIColors.PrimarySet, fixedSize, transparency, duration, delay);
         }
     }
 }

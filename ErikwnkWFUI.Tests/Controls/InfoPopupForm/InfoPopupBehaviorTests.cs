@@ -557,6 +557,65 @@ public class InfoPopupBehaviorTests : IDisposable
         Assert.Equal(new Point(placed.X + 30, placed.Y), popup.Location);
     }
 
+    // ---- the wait before a hover popup shows ----
+
+    private static int WaitInterval(InfoPopupForm popup) => popup.GetPrivateField<System.Windows.Forms.Timer>("_showDelayTimer")!.Interval;
+
+    [Fact]
+    public void TheDelay_IsMediumByDefault_AndTheThreeLevelsAreOrdered()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        Assert.Equal(PopupDelay.Medium, popup.Delay);
+        Assert.Equal(400, WaitInterval(popup));
+
+        popup.Delay = PopupDelay.Short;
+        int shortWait = WaitInterval(popup);
+        popup.Delay = PopupDelay.Long;
+        int longWait = WaitInterval(popup);
+
+        Assert.True(shortWait < 400 && 400 < longWait, "the levels are not ordered");
+    }
+
+    [Fact]
+    public void TheFactoryMethods_TakeTheDelay()
+    {
+        InfoPopupForm standard = ErikwnkWFUI.UIStyles.InfoPopups.CreateStandard(delay: PopupDelay.Long);
+        InfoPopupForm primary = ErikwnkWFUI.UIStyles.InfoPopups.CreatePrimary(delay: PopupDelay.Instant);
+        _forms.Add(standard);
+        _forms.Add(primary);
+
+        Assert.Equal(PopupDelay.Long, standard.Delay);
+        Assert.Equal(800, WaitInterval(standard));
+        Assert.Equal(PopupDelay.Instant, primary.Delay);
+    }
+
+    [Fact]
+    public void WithoutADelay_TheHoverPopupShowsAtOnce_AndNothingIsScheduled()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.Delay = PopupDelay.Instant;
+
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+
+        Assert.True(popup.Visible);
+        Assert.Equal(new[] { "A|b" }, Content(popup));
+        Assert.False(popup.GetPrivateField<System.Windows.Forms.Timer>("_showDelayTimer")!.Enabled);
+    }
+
+    [Fact]
+    public void WithADelay_TheHoverPopupWaits_AndTheTimerRuns()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+
+        Assert.False(popup.Visible);
+        Assert.True(popup.GetPrivateField<System.Windows.Forms.Timer>("_showDelayTimer")!.Enabled);
+    }
+
     // ---- the time it stays ----
 
     private static int Interval(InfoPopupForm popup) => popup.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.Interval;

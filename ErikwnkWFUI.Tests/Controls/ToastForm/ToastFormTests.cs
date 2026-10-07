@@ -30,6 +30,14 @@ public class ToastFormTests : IDisposable
         CurrentToast()?.Dispose();
         _host?.Dispose();
         Pending().Clear();
+
+        foreach (System.Windows.Forms.Timer timer in Scheduled().ToArray())
+        {
+            timer.Stop();
+            timer.Dispose();
+        }
+
+        Scheduled().Clear();
         _second?.Dispose();
     }
 
@@ -127,6 +135,82 @@ public class ToastFormTests : IDisposable
 
         ToastForm.ShowToast("Low", host, PopupTransparency.Low);
         Assert.True(CurrentToast()!.Opacity > 0.80 && CurrentToast()!.Opacity < 1.0);
+    }
+
+    private static List<System.Windows.Forms.Timer> Scheduled()
+    {
+        FieldInfo field = typeof(ToastForm).GetField("_scheduled", BindingFlags.NonPublic | BindingFlags.Static)!;
+
+        return (List<System.Windows.Forms.Timer>)field.GetValue(null)!;
+    }
+
+    [Fact]
+    public void WithoutADelay_TheToastShowsAtOnce_ByDefault()
+    {
+        Form host = CreateHost();
+
+        ToastForm.ShowToast("Now", host);
+
+        Assert.NotNull(CurrentToast());
+        Assert.Empty(Scheduled());
+    }
+
+    [Fact]
+    public void WithADelay_TheToastWaitsForItsTime_ThenShows()
+    {
+        Form host = CreateHost();
+
+        ToastForm.ShowToast("Later", host, delay: PopupDelay.Medium);
+
+        Assert.Null(CurrentToast());
+        Assert.Single(Scheduled());
+        Assert.Equal(400, Scheduled()[0].Interval);
+
+        Scheduled()[0].InvokePrivate("OnTick", EventArgs.Empty);
+
+        Assert.Equal("Later", ShownMessage());
+        Assert.Empty(Scheduled());
+    }
+
+    [Fact]
+    public void TheDelayLevels_AreOrdered()
+    {
+        Form host = CreateHost();
+
+        ToastForm.ShowToast("a", host, delay: PopupDelay.Short);
+        ToastForm.ShowToast("b", host, delay: PopupDelay.Long);
+
+        Assert.Equal(2, Scheduled().Count);
+        Assert.True(Scheduled()[0].Interval < 400 && 400 < Scheduled()[1].Interval, "the levels are not ordered");
+
+        foreach (System.Windows.Forms.Timer timer in Scheduled().ToArray())
+            timer.InvokePrivate("OnTick", EventArgs.Empty);
+    }
+
+    [Fact]
+    public void AToastWhoseWindowIsNotInFrontWhenTheDelayEnds_Waits_LikeAnyOther()
+    {
+        Form host = CreateHost();
+        ToastForm.ShowToast("Late", host, delay: PopupDelay.Short);
+
+        PopupSupport.OwnerIsActive = _ => false;
+        Scheduled()[0].InvokePrivate("OnTick", EventArgs.Empty);
+
+        Assert.Null(CurrentToast());
+        Assert.Equal(new[] { "Late" }, WaitingFor(host));
+    }
+
+    [Fact]
+    public void AClosedWindow_IsNotAProblem_WhenTheDelayEnds()
+    {
+        Form host = CreateHost();
+        ToastForm.ShowToast("Gone", host, delay: PopupDelay.Short);
+        host.Dispose();
+
+        Exception? thrown = Record.Exception(() => Scheduled()[0].InvokePrivate("OnTick", EventArgs.Empty));
+
+        Assert.Null(thrown);
+        Assert.Null(CurrentToast());
     }
 
     private static int Interval(ToastForm toast) => toast.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Interval;
