@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 
+// The namespace is ErikwnkWFUI, not ErikwnkWFUI.Localization like the rest of this folder, on
+// purpose: programs that use AppCurrencyFormatter (DealOrNoDeal) refer to it by that name.
 namespace ErikwnkWFUI
 {
     public enum AppCurrency
