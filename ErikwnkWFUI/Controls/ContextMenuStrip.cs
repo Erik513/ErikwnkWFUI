@@ -27,6 +27,7 @@ namespace ErikwnkWFUI.Controls
     public class ContextMenuStrip : System.Windows.Forms.ContextMenuStrip
     {
         private readonly ThemeColor _selectionBackColor;
+        private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated));
         private UIColorSet _colors;
 
         public ContextMenuStrip()
@@ -42,7 +43,8 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The colors of the menu: the hovered item takes the set's hover color and text, an item
-        /// whose submenu is open the pressed ones. Left null, the neutral gray;
+        /// whose submenu is open the pressed ones; the frame is not part of it (see
+        /// <see cref="BorderColor"/>). Left null, the neutral gray;
         /// <c>UIStyles.ContextMenuStrips.CreatePrimary</c> makes one in the accent color. A
         /// <see cref="SelectionBackColor"/> set explicitly wins over the set's hover color.
         /// </summary>
@@ -65,18 +67,15 @@ namespace ErikwnkWFUI.Controls
             set => _selectionBackColor.Set(value);
         }
 
-        // The frame of the menu: the set's strong color (brought to 6:1 against the menu), or
-        // the neutral outline (3:1, as the other controls) without a set or with an explicit
-        // selection color.
-        internal Color FrameColor
+        /// <summary>
+        /// The frame of the menu and the border of a check mark's box. Defaults to the neutral
+        /// outline (3:1 against the menu, as on the other controls), whatever <see cref="Colors"/>
+        /// is; set it to frame the menu in the accent or any other color.
+        /// </summary>
+        public Color BorderColor
         {
-            get
-            {
-                if (_colors == null || _selectionBackColor.IsSet)
-                    return UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated);
-
-                return UIColors.EnsureContrast(_colors.Pressed, UIColors.BackgroundMediumElevated, 6.0);
-            }
+            get => _borderColor.Value;
+            set => _borderColor.Set(value);
         }
 
         // A submenu is a drop-down of its own that takes the renderer of its owner but not the
@@ -167,10 +166,9 @@ namespace ErikwnkWFUI.Controls
             public override Color ImageMarginGradientMiddle => UIColors.BackgroundMediumElevated;
             public override Color ImageMarginGradientEnd => UIColors.BackgroundMediumElevated;
 
-            // The frame and the border of a check mark's box: the set's strong color, or without
-            // a set the 3:1 outline.
-            public override Color MenuBorder => _menu.FrameColor;
-            public override Color ButtonSelectedBorder => _menu.FrameColor;
+            // The frame and the border of a check mark's box.
+            public override Color MenuBorder => _menu.BorderColor;
+            public override Color ButtonSelectedBorder => _menu.BorderColor;
 
             public override Color SeparatorDark => UIColors.BorderLight;
             public override Color SeparatorLight => UIColors.BorderLight;

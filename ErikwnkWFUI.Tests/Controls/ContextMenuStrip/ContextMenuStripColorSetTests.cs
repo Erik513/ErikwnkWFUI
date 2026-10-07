@@ -69,22 +69,24 @@ public class ContextMenuStripColorSetTests
     }
 
     [Fact]
-    public void TheFrame_IsTheOutlineWithoutASet_AndTheSetsStrongColorWithOne()
+    public void TheFrame_IsTheOutline_WithOrWithoutASet_AndAnOwnBorderColorWins()
     {
         using WfuiContextMenuStrip gray = UIStyles.ContextMenuStrips.CreateStandard();
         using WfuiContextMenuStrip green = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
-        Color expected = UIColors.EnsureContrast(UIStyles.Colors.Sets.Green.Pressed, UIColors.BackgroundMediumElevated, 6.0);
 
         Assert.Equal(Outline, Renderer(gray).ColorTable.MenuBorder);
-        Assert.Equal(expected, Renderer(green).ColorTable.MenuBorder);
+        Assert.Equal(Outline, Renderer(green).ColorTable.MenuBorder);
+        Assert.Equal(Outline, green.BorderColor);
 
-        // The box of a check mark has the same border.
-        Assert.Equal(expected, Renderer(green).ColorTable.ButtonSelectedBorder);
+        // An own color frames the menu, and the box of a check mark gets the same border.
+        green.BorderColor = Color.Orange;
+        Assert.Equal(Color.Orange, Renderer(green).ColorTable.MenuBorder);
+        Assert.Equal(Color.Orange, Renderer(green).ColorTable.ButtonSelectedBorder);
         Assert.Equal(Outline, Renderer(gray).ColorTable.ButtonSelectedBorder);
     }
 
     [Fact]
-    public void AnExplicitSelectionColor_KeepsTheOutlineFrame()
+    public void AnExplicitSelectionColor_LeavesTheFrameAlone()
     {
         using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
 
