@@ -140,6 +140,29 @@ public class ContextMenuStripEdgeCaseTests
     }
 
     [Fact]
+    public void AfterALanguageSwitch_TheItemsRebuiltWithNewText_GetTheLookAtTheNextOpening()
+    {
+        // The re-localization case: the application clears the menu and fills it again.
+        using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
+        menu.ShowImageMargin = false;
+        ToolStripMenuItem english = new ToolStripMenuItem("More");
+        english.DropDownItems.Add("Open");
+        menu.Items.Add(english);
+        RaiseOpening(menu);
+
+        menu.Items.Clear();
+        ToolStripMenuItem german = new ToolStripMenuItem("Mehr");
+        german.DropDownItems.Add("Öffnen");
+        menu.Items.Add(german);
+        RaiseOpening(menu);
+
+        ToolStripDropDownMenu dropDown = Assert.IsType<ToolStripDropDownMenu>(german.DropDown);
+        Assert.False(dropDown.ShowImageMargin);
+        Assert.Equal(menu.SelectionBackColor, RendererOf(dropDown).ColorTable.MenuItemSelectedGradientBegin);
+        Assert.Equal("Öffnen", dropDown.Items[0].Text);
+    }
+
+    [Fact]
     public void ARemovedAndReAddedSubmenuItem_IsThemedAgainAtTheNextOpening()
     {
         using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard();
