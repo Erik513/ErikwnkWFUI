@@ -142,7 +142,7 @@ public class DataGridViewKeyHandlingTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("Pasted\t99");
+            TestClipboard.SetText("Pasted\t99");
 
             KeyEventArgs args = new KeyEventArgs(Keys.Control | Keys.V);
             grid.InvokePrivate("OnKeyDown", args);

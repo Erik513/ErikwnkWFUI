@@ -24,7 +24,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("Pasted\t99");
+            TestClipboard.SetText("Pasted\t99");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -48,7 +48,7 @@ public class DataGridViewPasteTests
             // second pasted row must be INSERTED right after row 0, not
             // overwrite the existing row 1 ("B").
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("X\t10\nY\t20");
+            TestClipboard.SetText("X\t10\nY\t20");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -76,7 +76,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0), (5, 0));
-            Clipboard.SetText("X\t100\nY\t200");
+            TestClipboard.SetText("X\t100\nY\t200");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -106,7 +106,7 @@ public class DataGridViewPasteTests
             grid.Columns["Name"]!.ReadOnly = true;
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("ShouldNotWrite\t42");
+            TestClipboard.SetText("ShouldNotWrite\t42");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -128,7 +128,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 1));
-            Clipboard.SetText("42");
+            TestClipboard.SetText("42");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -145,7 +145,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("Pasted\tnotANumber");
+            TestClipboard.SetText("Pasted\tnotANumber");
 
             Exception? thrown = Record.Exception(() => grid.InvokePrivate("PasteFromClipboard"));
 
@@ -168,7 +168,7 @@ public class DataGridViewPasteTests
             // that value - standard spreadsheet "fill" behavior - instead
             // of anchoring at the top-left and writing only there.
             GridTestHelpers.SelectCells(grid, (0, 0), (2, 0));
-            Clipboard.SetText("Filled");
+            TestClipboard.SetText("Filled");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -191,7 +191,7 @@ public class DataGridViewPasteTests
             // column (string for Name, int for Value), same as a normal
             // paste already does.
             GridTestHelpers.SelectCells(grid, (0, 0), (0, 1), (1, 0), (1, 1));
-            Clipboard.SetText("42");
+            TestClipboard.SetText("42");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -215,7 +215,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("X\t10\nY\t20");
+            TestClipboard.SetText("X\t10\nY\t20");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -244,7 +244,7 @@ public class DataGridViewPasteTests
 
             int placeholderIndex = grid.Rows.Count - 1;
             GridTestHelpers.SelectCells(grid, (0, 0), (1, 0), (placeholderIndex, 0));
-            Clipboard.SetText("Filled");
+            TestClipboard.SetText("Filled");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -265,7 +265,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.Clear();
+            TestClipboard.Clear();
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -317,7 +317,7 @@ public class DataGridViewPasteTests
             using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
 
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("X\t10\nY\t20\nZ\t30");
+            TestClipboard.SetText("X\t10\nY\t20\nZ\t30");
 
             grid.InvokePrivate("PasteFromClipboard");
 

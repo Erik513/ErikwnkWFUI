@@ -1692,7 +1692,7 @@ namespace ErikwnkWFUI.Controls
             var dataObject = new DataObject();
             dataObject.SetText(plainTextBuilder.ToString(), TextDataFormat.UnicodeText);
             dataObject.SetData(DataFormats.Html, BuildCfHtmlTable(headerCells, rows));
-            Clipboard.SetDataObject(dataObject, true);
+            ClipboardAccess.SetDataObject(dataObject, true);
 
             var message = selectedItems.Count == 1
                 ? UIStrings.Get("ListView.RowCopied")

@@ -16,7 +16,7 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// Add order: Cut, Copy selection (submenu), Copy all (submenu), Paste,
 /// Clear, SelectAll, separator, DeleteRows, separator, InsertAbove,
 /// InsertBelow) rather than by field, since those fields are
-/// private. Paste's own Clipboard.ContainsText() check means this carries
+/// private. Paste's own TestClipboard.ContainsText() check means this carries
 /// the same [Collection(ClipboardTestCollection.Name)] every other
 /// clipboard-touching test class does.
 /// </summary>
@@ -62,7 +62,7 @@ public class DataGridViewContextMenuEnableStateTests
             // initial CurrentCell - cleared explicitly so this actually
             // tests the "nothing selected" case, not that default.
             grid.ClearSelection();
-            Clipboard.Clear();
+            TestClipboard.Clear();
 
             Open(grid, menu, 0, 0);
 
@@ -87,7 +87,7 @@ public class DataGridViewContextMenuEnableStateTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("x");
+            TestClipboard.SetText("x");
 
             Open(grid, menu, 0, 0);
 
@@ -110,7 +110,7 @@ public class DataGridViewContextMenuEnableStateTests
             (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
             grid.ReadOnly = true;
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("x");
+            TestClipboard.SetText("x");
 
             Open(grid, menu, 0, 0);
 
@@ -128,7 +128,7 @@ public class DataGridViewContextMenuEnableStateTests
         {
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
-            Clipboard.SetText("x");
+            TestClipboard.SetText("x");
 
             Open(grid, menu, 0, 0);
 
@@ -144,7 +144,7 @@ public class DataGridViewContextMenuEnableStateTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.Clear();
+            TestClipboard.Clear();
 
             Open(grid, menu, 0, 0);
 
@@ -165,7 +165,7 @@ public class DataGridViewContextMenuEnableStateTests
             (WfuiDataGridView grid, WfuiContextMenuStrip menu) = CreateGridWithMenu(items);
             int placeholderIndex = grid.Rows.Count - 1;
             GridTestHelpers.SelectCells(grid, (placeholderIndex, 0));
-            Clipboard.SetText("x");
+            TestClipboard.SetText("x");
 
             Open(grid, menu, placeholderIndex, 0);
 

@@ -232,12 +232,12 @@ public class ReadOnlyDataGridViewContextMenuTests
 
             Copy(Menu(grid)).PerformClick();
 
-            Assert.Equal("Apple", Clipboard.GetText().Trim());
+            Assert.Equal("Apple", TestClipboard.GetText().Trim());
         });
     }
 
     private static string NormalizedClipboardText() =>
-        Clipboard.GetText().Replace("\r\n", "\n").Trim();
+        TestClipboard.GetText().Replace("\r\n", "\n").Trim();
 
     [Fact]
     public void CopyAsTable_PutsTheHeaderTextOnTopOfTheSelection()

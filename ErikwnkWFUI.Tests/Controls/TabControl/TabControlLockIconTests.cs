@@ -242,6 +242,17 @@ public class TabControlLockIconTests
 
     // ---- renaming a tab that carries the padlock ----
 
+    // A real window needs a few turns of the message loop before its layout is final; one
+    // DoEvents was enough almost always, not always.
+    private static void Settle()
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(20);
+        }
+    }
+
     [Fact]
     public void TheRenameBox_StartsAfterTheSlot_OnATabThatIsOnlyCloseLocked()
     {
@@ -259,12 +270,12 @@ public class TabControlLockIconTests
             tabs.TabPages.Add("Reports");
             host.Controls.Add(tabs);
             host.Show();
-            Application.DoEvents();
+            Settle();
             tabs.SetTabClosable(tabs.TabPages[1], false);
-            Application.DoEvents();
+            Settle();
 
             tabs.BeginRenameTab(1);
-            Application.DoEvents();
+            Settle();
 
             TextBox box = tabs.GetPrivateField<TextBox>("_renameBox")!;
             Rectangle tab = tabs.GetTabRect(1);

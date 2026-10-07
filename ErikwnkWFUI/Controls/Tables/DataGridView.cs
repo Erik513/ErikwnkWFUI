@@ -1,4 +1,5 @@
 ﻿using System;
+using ErikwnkWFUI.Helpers;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -573,7 +574,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (copyOnlyContent != null)
                 {
-                    Clipboard.SetDataObject(copyOnlyContent);
+                    ClipboardAccess.SetDataObject(copyOnlyContent);
                 }
 
                 return;
@@ -587,7 +588,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (clipboardContent != null)
                 {
-                    Clipboard.SetDataObject(clipboardContent);
+                    ClipboardAccess.SetDataObject(clipboardContent);
                 }
 
                 clearedCount = ClearSelectedCellValues();
@@ -665,12 +666,12 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         private void PasteFromClipboard()
         {
-            if (!Clipboard.ContainsText())
+            if (!ClipboardAccess.ContainsText())
             {
                 return;
             }
 
-            string text = Clipboard.GetText();
+            string text = ClipboardAccess.GetText();
 
             if (string.IsNullOrEmpty(text) || !(DataSource is IList list))
             {
@@ -1260,7 +1261,7 @@ namespace ErikwnkWFUI.Controls
                 bool hasSelection = SelectedCells.Count > 0;
 
                 _contextMenuCutItem.Enabled = hasSelection && !ReadOnly && onRealRow;
-                _contextMenuPasteItem.Enabled = !ReadOnly && Clipboard.ContainsText();
+                _contextMenuPasteItem.Enabled = !ReadOnly && ClipboardAccess.ContainsText();
                 _contextMenuClearItem.Enabled = hasSelection && !ReadOnly && onRealRow;
                 _contextMenuCutRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
@@ -1376,7 +1377,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (clipboardContent != null)
                 {
-                    Clipboard.SetDataObject(clipboardContent);
+                    ClipboardAccess.SetDataObject(clipboardContent);
                 }
 
                 DeleteRows(rowIndexes);

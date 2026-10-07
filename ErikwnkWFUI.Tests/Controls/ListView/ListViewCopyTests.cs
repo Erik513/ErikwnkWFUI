@@ -49,7 +49,7 @@ public class ListViewCopyTests
 
             listView.InvokePrivate("CopySelection");
 
-            Assert.Equal("B\tY\r\nA\tX\r\n", Clipboard.GetText());
+            Assert.Equal("B\tY\r\nA\tX\r\n", TestClipboard.GetText());
         });
     }
 
@@ -66,7 +66,7 @@ public class ListViewCopyTests
 
             listView.InvokePrivate("CopySelectionAsTable");
 
-            Assert.Equal("Name\tStatus\r\nA\tX\r\n", Clipboard.GetText());
+            Assert.Equal("Name\tStatus\r\nA\tX\r\n", TestClipboard.GetText());
         });
     }
 
@@ -80,10 +80,10 @@ public class ListViewCopyTests
             ListViewTestHelpers.AddItem(listView, "A");
             _ = listView.Handle;
 
-            Clipboard.SetText("sentinel");
+            TestClipboard.SetText("sentinel");
             listView.InvokePrivate("CopySelection");
 
-            Assert.Equal("sentinel", Clipboard.GetText());
+            Assert.Equal("sentinel", TestClipboard.GetText());
         });
     }
 
@@ -105,7 +105,7 @@ public class ListViewCopyTests
 
             listView.InvokePrivate("CopySelection");
 
-            IDataObject data = Clipboard.GetDataObject()!;
+            IDataObject data = TestClipboard.GetDataObject()!;
             Assert.True(data.GetDataPresent(DataFormats.Html));
         });
     }
@@ -128,7 +128,7 @@ public class ListViewCopyTests
 
             listView.InvokePrivate("CopySelection");
 
-            Assert.Equal("X\tA\r\n", Clipboard.GetText());
+            Assert.Equal("X\tA\r\n", TestClipboard.GetText());
         });
     }
 
@@ -179,7 +179,7 @@ public class ListViewCopyTests
 
             MenuItem(listView, 4).PerformClick();
 
-            string text = Clipboard.GetText();
+            string text = TestClipboard.GetText();
             Assert.StartsWith("Name", text.TrimStart());
             Assert.Contains("A", text);
             Assert.Contains("B", text);

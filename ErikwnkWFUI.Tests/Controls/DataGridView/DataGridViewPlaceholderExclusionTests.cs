@@ -52,7 +52,7 @@ public class DataGridViewPlaceholderExclusionTests
             Assert.Equal(3, items.Count); // confirms the pending add actually happened
 
             GridTestHelpers.SelectCells(grid, (placeholderIndex, 0));
-            Clipboard.SetText("New\t99");
+            TestClipboard.SetText("New\t99");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -81,7 +81,7 @@ public class DataGridViewPlaceholderExclusionTests
 
             // Column 1 is "Value" (the int column), not "Name".
             GridTestHelpers.SelectCells(grid, (placeholderIndex, 1));
-            Clipboard.SetText("42");
+            TestClipboard.SetText("42");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -101,7 +101,7 @@ public class DataGridViewPlaceholderExclusionTests
 
             int placeholderIndex = grid.Rows.Count - 1;
             GridTestHelpers.SelectCells(grid, (0, 0), (1, 0), (placeholderIndex, 0));
-            Clipboard.SetText("X\t10\nY\t20");
+            TestClipboard.SetText("X\t10\nY\t20");
 
             grid.InvokePrivate("PasteFromClipboard");
 

@@ -101,7 +101,7 @@ public class DataGridViewActionConfirmationTests
 
             grid.InvokePrivate("CutSelectedRows");
 
-            Assert.Equal("A	1", Clipboard.GetText().Trim());
+            Assert.Equal("A	1", TestClipboard.GetText().Trim());
             Assert.Single(items);
             Assert.Equal("B", items[0].Name);
             Assert.Equal(new[] { "Row cut" }, grid.ActionConfirmationMessages);
@@ -168,7 +168,7 @@ public class DataGridViewActionConfirmationTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("Pasted\t99");
+            TestClipboard.SetText("Pasted\t99");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -184,7 +184,7 @@ public class DataGridViewActionConfirmationTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2));
             using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.SetText("X\t10\nY\t20");
+            TestClipboard.SetText("X\t10\nY\t20");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -204,7 +204,7 @@ public class DataGridViewActionConfirmationTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1), ("B", 2), ("C", 3));
             using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
             GridTestHelpers.SelectCells(grid, (0, 0), (2, 0));
-            Clipboard.SetText("Filled");
+            TestClipboard.SetText("Filled");
 
             grid.InvokePrivate("PasteFromClipboard");
 
@@ -220,7 +220,7 @@ public class DataGridViewActionConfirmationTests
             BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
             using TestableDataGridView grid = GridTestHelpers.CreateTestableGrid(items);
             GridTestHelpers.SelectCells(grid, (0, 0));
-            Clipboard.Clear();
+            TestClipboard.Clear();
 
             grid.InvokePrivate("PasteFromClipboard");
 
