@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -148,6 +148,75 @@ public class InfoPopupBehaviorTests : IDisposable
         popup.ShowNextTo(owner);
 
         Assert.True(InkPixels(popup) > 50, "no text was drawn");
+    }
+
+    // ---- colors ----
+
+    private static int Count(Form form, Color color)
+    {
+        using Bitmap bitmap = new Bitmap(form.ClientSize.Width, form.ClientSize.Height);
+        form.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        int count = 0;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                if (bitmap.GetPixel(x, y).ToArgb() == color.ToArgb())
+                    count++;
+            }
+        }
+
+        return count;
+    }
+
+    [Fact]
+    public void HeaderAndText_AreWhiteByDefault_BlackOnALightBackground()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm dark = CreatePopup();
+        InfoPopupForm light = ErikwnkWFUI.UIStyles.InfoPopups.CreateStandard(ErikwnkWFUI.UIStyles.Colors.CreateSet(Color.White));
+        _forms.Add(light);
+
+        dark.SetContent("Header", "A text under the header.");
+        dark.ShowNextTo(owner);
+        light.SetContent("Header", "A text under the header.");
+        light.ShowNextTo(owner);
+
+        Assert.True(Count(dark, Color.White) > 20, "no white text on the gray popup");
+        Assert.Equal(0, Count(dark, Color.Black));
+        Assert.True(Count(light, Color.Black) > 20, "no black text on the light popup");
+    }
+
+    [Fact]
+    public void EveryHeaderAndEveryText_CanHaveItsOwnColor()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        Color red = Color.FromArgb(255, 0, 0);
+        Color lime = Color.FromArgb(0, 255, 0);
+
+        popup.SetContent(
+            new InfoPopupSection("Red header", "A plain text") { HeaderColor = red },
+            new InfoPopupSection("Plain header", "A lime text") { TextColor = lime });
+        popup.ShowNextTo(owner);
+
+        Assert.True(Count(popup, red) > 5, "the header is not red");
+        Assert.True(Count(popup, lime) > 5, "the text is not lime");
+        Assert.True(Count(popup, Color.White) > 20, "the parts left alone are not white");
+    }
+
+    [Fact]
+    public void AColorChangedForTheSameWords_IsShown()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        popup.SetContent("Header", "Text", Color.Red, default);
+        Color before = popup.GetPrivateField<InfoPopupSection[]>("_sections")![0].HeaderColor;
+        popup.SetContent("Header", "Text", Color.Blue, default);
+
+        Assert.Equal(Color.Red, before);
+        Assert.Equal(Color.Blue, popup.GetPrivateField<InfoPopupSection[]>("_sections")![0].HeaderColor);
     }
 
     // ---- size ----

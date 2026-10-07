@@ -15,6 +15,10 @@ namespace ErikwnkWFUI.Forms
     /// <see cref="UIStyles.InfoPopups"/>.
     /// </summary>
     /// <remarks>
+    /// The text, header and text alike, is white, or black when the background is too light
+    /// for white; each header and each text can be given its own color
+    /// (<see cref="InfoPopupSection.HeaderColor"/>, <see cref="InfoPopupSection.TextColor"/>).
+    ///
     /// Content and place are two steps: set the content, then show it next to a control
     /// (<see cref="ShowNextTo"/>), at the mouse (<see cref="ShowAtMouse"/>), centered above a
     /// point of the control (<see cref="ShowCenteredAbove"/>) or at the mouse after a delay
@@ -75,8 +79,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// The colors of the popup: its background is the set's basic color and the text the
-        /// set's text color. Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
+        /// The colors of the popup: its background is the set's basic color. Left null, the
+        /// neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
         /// <c>UIStyles.InfoPopups.CreatePrimary</c> makes one in the accent color.
         /// </summary>
         public UIColorSet Colors
@@ -147,10 +151,10 @@ namespace ErikwnkWFUI.Forms
             SetContent(new InfoPopupSection(null, text));
         }
 
-        /// <summary>Sets a header with its text.</summary>
-        public void SetContent(string header, string text)
+        /// <summary>Sets a header with its text, each in its own color or, left empty, the automatic one.</summary>
+        public void SetContent(string header, string text, Color headerColor = default(Color), Color textColor = default(Color))
         {
-            SetContent(new InfoPopupSection(header, text));
+            SetContent(new InfoPopupSection(header, text) { HeaderColor = headerColor, TextColor = textColor });
         }
 
         private static InfoPopupSection[] Normalize(InfoPopupSection[] sections)
@@ -168,7 +172,11 @@ namespace ErikwnkWFUI.Forms
                     bool hasText = !string.IsNullOrWhiteSpace(section.Text);
 
                     if (hasHeader || hasText)
-                        kept.Add(new InfoPopupSection(hasHeader ? section.Header : null, hasText ? section.Text : null));
+                        kept.Add(new InfoPopupSection(hasHeader ? section.Header : null, hasText ? section.Text : null)
+                        {
+                            HeaderColor = section.HeaderColor,
+                            TextColor = section.TextColor
+                        });
                 }
             }
 
@@ -182,7 +190,8 @@ namespace ErikwnkWFUI.Forms
 
             for (int i = 0; i < first.Length; i++)
             {
-                if (first[i].Header != second[i].Header || first[i].Text != second[i].Text)
+                if (first[i].Header != second[i].Header || first[i].Text != second[i].Text
+                    || first[i].HeaderColor != second[i].HeaderColor || first[i].TextColor != second[i].TextColor)
                     return false;
             }
 
@@ -368,38 +377,21 @@ namespace ErikwnkWFUI.Forms
             return _colors ?? UIStyles.Colors.Sets.Gray;
         }
 
-        // The background: the set's basic color, shifted just far enough that the set's text
-        // reads on it (a few sets are too light or mid-tone for that).
+        // The background is the set's basic color as it is.
         private Color GetBackColor()
         {
-            UIColorSet colors = GetColors();
-
-            return UIColors.GetReadableFill(colors.Basic, colors.BasicText);
+            return GetColors().Basic;
         }
 
-        // The popup's background does not follow the theme, so the text color is worked out
-        // against that background: the set's own text color.
+        // The automatic text color: white, or black when the background is too light for white.
+        // One of the two always reads (at least 4.58:1).
         private Color GetForeColor()
         {
-            return GetColors().BasicText;
-        }
-
-        // The quieter text under a header: the text color blended partway toward the
-        // background, as far as it still reads (4.5:1).
-        private Color GetDimForeColor()
-        {
-            Color fore = GetForeColor();
             Color back = GetBackColor();
 
-            for (double amount = 0.35; amount > 0; amount -= 0.05)
-            {
-                Color dim = UIColors.BlendToward(fore, back, amount);
-
-                if (UIColors.GetContrastRatio(dim, back) >= 4.5)
-                    return dim;
-            }
-
-            return fore;
+            return UIColors.GetContrastRatio(Color.White, back) >= UIColors.GetContrastRatio(Color.Black, back)
+                ? Color.White
+                : Color.Black;
         }
 
         // ---- measuring and painting ----
@@ -502,14 +494,7 @@ namespace ErikwnkWFUI.Forms
             int x = padding;
             int y = IsFixed ? Math.Max(0, (ClientSize.Height - content.Height) / 2) : padding;
 
-            // Without any header the texts have no title to stay below: full text color.
-            bool anyHeader = false;
-
-            foreach (InfoPopupSection section in _sections)
-                anyHeader |= section.Header != null;
-
-            Color headerColor = GetForeColor();
-            Color textColor = anyHeader ? GetDimForeColor() : GetForeColor();
+            Color autoColor = GetForeColor();
             TextFormatFlags align = IsFixed ? TextFormatFlags.HorizontalCenter : TextFormatFlags.Left;
             TextFormatFlags flags = (MeasureFlags & ~TextFormatFlags.Left) | align;
 
@@ -525,7 +510,7 @@ namespace ErikwnkWFUI.Forms
 
                 if (header.Height > 0)
                 {
-                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, new Rectangle(x, y, textWidth, header.Height), headerColor, flags);
+                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, new Rectangle(x, y, textWidth, header.Height), section.HeaderColor.IsEmpty ? autoColor : section.HeaderColor, flags);
                     y += header.Height;
                 }
 
@@ -534,7 +519,7 @@ namespace ErikwnkWFUI.Forms
 
                 if (text.Height > 0)
                 {
-                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, new Rectangle(x, y, textWidth, text.Height), textColor, flags);
+                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, new Rectangle(x, y, textWidth, text.Height), section.TextColor.IsEmpty ? autoColor : section.TextColor, flags);
                     y += text.Height;
                 }
             }
@@ -585,6 +570,12 @@ namespace ErikwnkWFUI.Forms
     {
         public string Header { get; set; }
         public string Text { get; set; }
+
+        /// <summary>The color of the header. Left empty, it is white, or black on a background too light for white.</summary>
+        public Color HeaderColor { get; set; }
+
+        /// <summary>The color of the text. Left empty, it is white, or black on a background too light for white.</summary>
+        public Color TextColor { get; set; }
 
         public InfoPopupSection(string header, string text)
         {

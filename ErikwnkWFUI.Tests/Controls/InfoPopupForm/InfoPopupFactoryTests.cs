@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Reflection;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
@@ -16,8 +16,6 @@ public class InfoPopupFactoryTests
 {
     private static Color Fore(InfoPopupForm popup) => popup.InvokePrivate<Color>("GetForeColor");
 
-    private static Color Dim(InfoPopupForm popup) => popup.InvokePrivate<Color>("GetDimForeColor");
-
     [Fact]
     public void CreateStandard_IsTheNeutralGray_AndSizedToItsContent()
     {
@@ -26,7 +24,7 @@ public class InfoPopupFactoryTests
 
         Assert.Null(popup.Colors);
         Assert.Equal(gray.Basic, popup.BackColor);
-        Assert.Equal(gray.BasicText, Fore(popup));
+        Assert.Equal(Color.White, Fore(popup));
         Assert.True(popup.FixedSize.IsEmpty);
     }
 
@@ -38,11 +36,7 @@ public class InfoPopupFactoryTests
 
         Assert.Same(set, popup.Colors);
         Assert.Equal(set.Basic, popup.BackColor);
-        Assert.Equal(set.BasicText, Fore(popup));
-
-        // The text under a header is the quieter one: moved toward the background, but still reading.
-        Assert.NotEqual(set.BasicText, Dim(popup));
-        Assert.True(ColorContrastHelper.GetContrastRatio(Dim(popup), popup.BackColor) >= 4.5);
+        Assert.Equal(Color.White, Fore(popup));
     }
 
     [Fact]
@@ -92,17 +86,21 @@ public class InfoPopupFactoryTests
         Assert.Equal(UIStyles.Colors.Sets.Gray.Basic, standard.BackColor);
         Assert.Equal(UIColors.PrimarySet.Basic, primary.BackColor);
         Assert.Equal(UIStyles.Colors.Sets.Green.Basic, green.BackColor);
-        Assert.Equal(UIStyles.Colors.Sets.Green.BasicText, Fore(green));
+        Assert.Equal(Color.White, Fore(green));
     }
 
     [Fact]
-    public void ASetWhoseTextDoesNotRead_GetsABackgroundThatCarriesIt()
+    public void OnABackgroundTooLightForWhite_TheTextIsBlack_AndTheBackgroundStaysAsItIs()
     {
         UIColorSet yellow = UIStyles.Colors.Sets.Yellow;
+        UIColorSet white = UIStyles.Colors.CreateSet(Color.White);
         using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard(yellow);
+        using InfoPopupForm pale = UIStyles.InfoPopups.CreateStandard(white);
 
-        Assert.NotEqual(yellow.Basic, popup.BackColor);
-        Assert.True(ColorContrastHelper.GetContrastRatio(yellow.BasicText, popup.BackColor) >= 4.5);
+        Assert.Equal(yellow.Basic, popup.BackColor);
+        Assert.Equal(Color.Black, Fore(popup));
+        Assert.Equal(white.Basic, pale.BackColor);
+        Assert.Equal(Color.Black, Fore(pale));
     }
 
     [Theory]
@@ -126,14 +124,13 @@ public class InfoPopupFactoryTests
             {
                 using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard((UIColorSet)property.GetValue(null)!);
 
-                double header = ColorContrastHelper.GetContrastRatio(Fore(popup), popup.BackColor);
-                double text = ColorContrastHelper.GetContrastRatio(Dim(popup), popup.BackColor);
+                double ratio = ColorContrastHelper.GetContrastRatio(Fore(popup), popup.BackColor);
 
-                if (header < 4.5)
-                    shortfalls.Add(property.Name + " header " + header.ToString("0.0"));
+                if (ratio < 4.5)
+                    shortfalls.Add(property.Name + " " + ratio.ToString("0.0"));
 
-                if (text < 4.5)
-                    shortfalls.Add(property.Name + " text " + text.ToString("0.0"));
+                if (Fore(popup) != Color.White && Fore(popup) != Color.Black)
+                    shortfalls.Add(property.Name + " is neither white nor black");
             }
 
             using (InfoPopupForm orange = UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Orange))
