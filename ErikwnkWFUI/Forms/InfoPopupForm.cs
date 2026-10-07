@@ -171,13 +171,13 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Shows (or repositions) a single line of text centred horizontally on
-        /// <paramref name="anchorLocalX"/> (a pixel x inside <paramref name="anchor"/>)
-        /// and just above <paramref name="anchor"/> - flips below if there is no
+        /// <paramref name="ownerLocalX"/> (a pixel x inside <paramref name="owner"/>)
+        /// and just above <paramref name="owner"/> - flips below if there is no
         /// room. Typical use is a live value readout over a slider thumb.
         /// </summary>
-        public void ShowCenteredAbove(string text, Control anchor, int anchorLocalX)
+        public void ShowInfoCenteredAbove(string text, Control owner, int ownerLocalX)
         {
-            if (anchor == null || anchor.IsDisposed)
+            if (owner == null || owner.IsDisposed)
                 return;
 
             RefreshColors();
@@ -189,18 +189,18 @@ namespace ErikwnkWFUI.Forms
             if (!_compact)
                 PerformLayout();   // compact mode is a fixed size, don't resize
 
-            Point anchorTop = anchor.PointToScreen(new Point(anchorLocalX, 0));
-            int x = anchorTop.X - Width / 2;
-            int y = anchorTop.Y - Height - 6;
+            Point ownerTop = owner.PointToScreen(new Point(ownerLocalX, 0));
+            int x = ownerTop.X - Width / 2;
+            int y = ownerTop.Y - Height - 6;
 
-            Rectangle screen = Screen.FromControl(anchor).WorkingArea;
+            Rectangle screen = Screen.FromControl(owner).WorkingArea;
 
             if (x < screen.Left + ScreenMargin)
                 x = screen.Left + ScreenMargin;
             if (x + Width > screen.Right - ScreenMargin)
                 x = screen.Right - ScreenMargin - Width;
             if (y < screen.Top + ScreenMargin)
-                y = anchorTop.Y + anchor.Height + 6;
+                y = ownerTop.Y + owner.Height + 6;
 
             Location = new Point(x, y);
 
@@ -213,7 +213,7 @@ namespace ErikwnkWFUI.Forms
             // UI thread's message loop (e.g. a ProgressBar's animation timer).
             if (!Visible)
             {
-                Show(anchor.FindForm());
+                Show(owner.FindForm());
                 BringToFront();
             }
         }

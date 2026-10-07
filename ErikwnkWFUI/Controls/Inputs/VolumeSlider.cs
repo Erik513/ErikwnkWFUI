@@ -137,7 +137,7 @@ namespace ErikwnkWFUI.Controls
         // true for longer, which is exactly what's wanted anyway.
         private bool _focusChurnClearPending;
 
-        // ShowCenteredAbove (specifically its unconditional BringToFront()
+        // ShowInfoCenteredAbove (specifically its unconditional BringToFront()
         // call, which forces a Z-order/DWM update every single time) turned
         // out to be the real cost, not the BeginInvoke above - it runs once
         // per ValueChanged, i.e. once per mouse-move during a drag, dozens
@@ -167,7 +167,7 @@ namespace ErikwnkWFUI.Controls
             Point savedScroll = CaptureScrollPosition();
 
             _isSelfFocusChurn = true;
-            Popup.ShowCenteredAbove(_formatValue(Value), this, ThumbCenterX);
+            Popup.ShowInfoCenteredAbove(_formatValue(Value), this, ThumbCenterX);
 
             RestoreScrollPosition(savedScroll);
 
