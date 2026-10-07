@@ -120,7 +120,9 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _delay = value;
-                _showDelayTimer.Interval = value.ToMilliseconds();
+
+                if (_showDelayTimer != null)
+                    _showDelayTimer.Interval = value.ToMilliseconds();
             }
         }
 
@@ -135,7 +137,9 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _duration = value;
-                _hideTimer.Interval = value.ToInfoMilliseconds();
+
+                if (_hideTimer != null)
+                    _hideTimer.Interval = value.ToInfoMilliseconds();
             }
         }
 
@@ -329,7 +333,7 @@ namespace ErikwnkWFUI.Forms
         // The content is asked for when the popup shows, not when the show is asked for.
         private void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, Func<InfoPopupSection[]> content)
         {
-            if (anchor == null || anchor.IsDisposed)
+            if (IsDisposed || anchor == null || anchor.IsDisposed)
                 return;
 
             if (_delay == PopupDelay.Instant)
