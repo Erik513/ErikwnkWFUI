@@ -49,7 +49,6 @@ namespace ErikwnkWFUI.Localization
             ["Update.AvailableTooltip"] = "A new version is available - click to update",
 
             ["MessageBox.Cancel"] = "Cancel",
-            ["InfoPopup.None"] = "None",
 
             ["TabControl.AddTab"] = "Add tab",
             ["TabControl.RenameTab"] = "Rename tab",
@@ -124,7 +123,6 @@ namespace ErikwnkWFUI.Localization
             ["Update.AvailableTooltip"] = "Eine neue Version ist verfügbar - zum Aktualisieren klicken",
 
             ["MessageBox.Cancel"] = "Abbrechen",
-            ["InfoPopup.None"] = "Keine",
 
             ["TabControl.AddTab"] = "Tab hinzufügen",
             ["TabControl.RenameTab"] = "Tab umbenennen",

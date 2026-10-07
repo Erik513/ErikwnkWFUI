@@ -41,16 +41,16 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("MessageBox", messageBoxButton);
             table.AddRow("ToastForm", toastButton);
-            table.AddRow("InfoPopups.CreateStandard", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandard("Info"), "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
-            table.AddRow("InfoPopups.CreatePrimary", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimary("Info"), "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
-            table.AddRow("InfoPopups.CreateStandardCompact", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandardCompact(new Size(70, 32)), "70%", "Show compact InfoPopupForm", 220));
-            table.AddRow("InfoPopups.CreatePrimaryCompact", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimaryCompact(new Size(70, 32)), "70%", "Show compact InfoPopupForm", 220));
+            table.AddRow("InfoPopups.CreateStandard", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandard(), "Info", "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
+            table.AddRow("InfoPopups.CreatePrimary", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimary(), "Info", "This is a sample InfoPopupForm.", "Show InfoPopupForm", 180));
+            table.AddRow("InfoPopups.CreateStandard (fixed size)", CreateInfoPopupButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), null, "70%", "Show fixed-size InfoPopupForm", 240));
+            table.AddRow("InfoPopups.CreatePrimary (fixed size)", CreateInfoPopupButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), null, "70%", "Show fixed-size InfoPopupForm", 240));
         }
 
         // InfoPopupForm is designed as a hover tooltip - real consumers show it on MouseEnter
         // and hide it on MouseLeave. A click-to-preview button has no such pairing, so a timer
         // hides the popup again; the same timer restarts on every click.
-        private Button CreateInfoPopupButton(InfoPopupForm popup, string text, string caption, int width)
+        private Button CreateInfoPopupButton(InfoPopupForm popup, string header, string text, string caption, int width)
         {
             Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
             Timer hideTimer = new Timer { Interval = 3000 };
@@ -63,7 +63,8 @@ namespace ErikwnkWFUI.Showcase
 
             button.Click += delegate
             {
-                popup.ShowInfo(text, button);
+                popup.SetContent(header, text);
+                popup.ShowNextTo(button);
                 hideTimer.Stop();
                 hideTimer.Start();
             };

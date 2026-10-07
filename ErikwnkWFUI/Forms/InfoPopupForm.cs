@@ -1,59 +1,78 @@
-﻿using ErikwnkWFUI.Styles;
-using ErikwnkWFUI.Localization;
+using ErikwnkWFUI.Styles;
 using System;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A small, borderless, rounded-corner tooltip-like popup for showing
-    /// extra info next to a control or the mouse cursor - reuse a single
-    /// instance across many show calls rather than creating a new one each
-    /// time (it repositions/relabels itself instead of flashing closed and
-    /// reopening). Two independent content modes: a single block of text
-    /// (<see cref="ShowInfo"/>/<see cref="ShowInfoAtMouse"/>) or one or more
-    /// labeled sections (<see cref="ShowSections"/> and friends); the same popup can show
-    /// one after the other. Get one through <see cref="UIStyles.InfoPopups"/>.
+    /// A small, borderless popup with extra info next to a control or the mouse cursor, like a
+    /// tooltip: one color, and content of one or more blocks, each with an optional header and
+    /// an optional text (<see cref="SetContent(InfoPopupSection[])"/>). Reuse a single instance
+    /// for many show calls rather than creating a new one each time: it is repositioned and
+    /// refilled instead of closing and opening again. Get one through
+    /// <see cref="UIStyles.InfoPopups"/>.
     /// </summary>
     /// <remarks>
+    /// Content and place are two steps: set the content, then show it next to a control
+    /// (<see cref="ShowNextTo"/>), at the mouse (<see cref="ShowAtMouse"/>), centered above a
+    /// point of the control (<see cref="ShowCenteredAbove"/>) or at the mouse after a delay
+    /// (<see cref="ShowAtMouseDelayed"/>). Content without any text shows nothing: the popup
+    /// stays or goes hidden.
+    ///
+    /// The size follows the content, with a maximum text width after which the text wraps.
+    /// With <see cref="FixedSize"/> the popup keeps one size and centers its content, for a
+    /// short value that changes while it is shown (a percentage over a slider).
+    ///
     /// The popup never takes the activation (not on show, not on a click), so the window next
     /// to it keeps the focus. Hide it with <c>Hide</c>; <c>Close</c> disposes it, as for any
     /// form shown with an owner, and it closes with its owner form.
     ///
-    /// The library sets, and an application's own values are replaced on every show:
-    /// <c>BackColor</c> and the text colors (use <see cref="Colors"/>), the fonts, the
-    /// border style, <c>TopMost</c> and <c>ShowInTaskbar</c>. <c>Opacity</c> can be changed. The
-    /// compact form shows one short text only: sections are not shown there. The sizes
-    /// (maximum text width, margins, compact size) are pixels and not scaled for high DPI.
-    /// The rounded corners come from Windows 11; on Windows 10 the popup is a plain rectangle.
-    /// <c>RightToLeft</c> is not supported.
+    /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
+    /// text colors (use <see cref="Colors"/>), the fonts, the border style, <c>TopMost</c> and
+    /// <c>ShowInTaskbar</c>. <c>Opacity</c> can be changed. The rounded corners come from
+    /// Windows 11; on Windows 10 the popup is a plain rectangle. <c>RightToLeft</c> is not
+    /// supported.
     /// </remarks>
     public class InfoPopupForm : Form
     {
-        private const int MaxTextWidth = 260;
+        private const int MaxTextWidth96 = 260;
+        private const int Padding96 = 20;
+        private const int FixedPadding96 = 4;
+        private const int BlockGap96 = 8;
+        private const int HeaderGap96 = 3;
         private const int ScreenMargin = 10;
         private const int OwnerOffsetX = 8;
         private const int OwnerOffsetY = -10;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
 
-        private readonly Label _titleLabel;
-        private readonly Label _textLabel;
-        private readonly FlowLayoutPanel _layout;
+        private const TextFormatFlags MeasureFlags =
+            TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.Left;
 
         private Timer _showDelayTimer;
         private Control _pendingOwner;
         private Point _pendingMouseScreenPosition;
         private InfoPopupSection[] _pendingSections;
-        private string _contentKey;
-
-        // What the layout holds now: the title and the text, or the sections of this key. One
-        // popup is reused for both, so it has to know which one to put back.
-        private const string TextContentKey = "text";
-        private bool _compact;
-        private Size _compactSize = new Size(48, 24);
+        private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
+        private Size _fixedSize = Size.Empty;
+
+        public InfoPopupForm()
+        {
+            FormBorderStyle = FormBorderStyle.None;
+            ShowInTaskbar = false;
+            TopMost = true;
+            StartPosition = FormStartPosition.Manual;
+            DoubleBuffered = true;
+            Opacity = 0.80;
+            BackColor = GetBackColor();
+
+            _showDelayTimer = new Timer { Interval = 400 };
+            _showDelayTimer.Tick += OnShowDelayTimerTick;
+
+            Load += delegate { ApplyRoundedCorners(); };
+        }
 
         /// <summary>
         /// The colors of the popup: its background is the set's basic color and the text the
@@ -66,88 +85,28 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _colors = value;
-                RefreshColors();
+                BackColor = GetBackColor();
+                Invalidate();
             }
-        }
-
-        private UIColorSet GetColors()
-        {
-            return _colors ?? UIStyles.Colors.Sets.Gray;
-        }
-
-        // The background: the set's basic color, shifted just far enough that the set's text
-        // reads on it (a few sets are too light or mid-tone for that).
-        private Color GetBackColor()
-        {
-            UIColorSet colors = GetColors();
-
-            return UIColors.GetReadableFill(colors.Basic, colors.BasicText);
         }
 
         /// <summary>
-        /// Fixed-size mode for a single very short value (e.g. a percentage over
-        /// a slider): the popup is exactly <see cref="CompactSize"/>, the text is
-        /// centred, and it does not resize as the value's width changes
-        /// ("9%" vs "100%"). Set this before the first Show call.
+        /// The client size the popup keeps whatever its content, with the content centered; for
+        /// one short value that changes while the popup is shown ("9%" and "100%" must not
+        /// resize it). Empty (the default) sizes the popup to its content. In pixels.
         /// </summary>
-        public bool Compact
+        public Size FixedSize
         {
-            get { return _compact; }
+            get { return _fixedSize; }
             set
             {
-                if (_compact == value)
-                    return;
-                _compact = value;
-
-                if (value)
-                {
-                    _layout.Visible = false;
-                    if (_layout.Controls.Contains(_textLabel))
-                        _layout.Controls.Remove(_textLabel);
-
-                    _textLabel.AutoSize = false;
-                    _textLabel.Dock = DockStyle.Fill;
-                    _textLabel.TextAlign = ContentAlignment.MiddleCenter;
-                    _textLabel.MaximumSize = Size.Empty;
-                    if (!Controls.Contains(_textLabel))
-                        Controls.Add(_textLabel);
-                    _textLabel.BringToFront();
-
-                    AutoSize = false;
-                    Padding = new Padding(0);
-                    ApplyCompactSize();
-                    RefreshColors();
-                }
+                _fixedSize = value;
+                UpdateSize();
             }
         }
 
-        // A borderless top-level Form can't go below the OS minimum tracking
-        // size (~136x39) unless MinimumSize is set explicitly - WinForms then
-        // writes it into WM_GETMINMAXINFO. Lock min == max == the wanted size.
-        private void ApplyCompactSize()
-        {
-            MinimumSize = Size.Empty;
-            MaximumSize = Size.Empty;
-            ClientSize = _compactSize;
-            MinimumSize = Size;
-            MaximumSize = Size;
-            ApplyRoundedRegion();
-        }
-
-        /// <summary>The fixed client size used while <see cref="Compact"/> is true.</summary>
-        public Size CompactSize
-        {
-            get { return _compactSize; }
-            set
-            {
-                _compactSize = value;
-                if (_compact)
-                    ApplyCompactSize();
-            }
-        }
-
-        // A value popup must never take activation away from the window whose
-        // slider is being dragged.
+        // A value popup must never take activation away from the window whose slider is being
+        // dragged.
         protected override bool ShowWithoutActivation
         {
             get { return true; }
@@ -165,51 +124,197 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        private const int WS_EX_NOACTIVATE = 0x08000000;
+        // ---- the content ----
 
-        public InfoPopupForm(string title = "")
+        /// <summary>
+        /// Sets what the popup shows: one block per section, each with a header, a text, or
+        /// both; a section without either is left out.
+        /// </summary>
+        public void SetContent(params InfoPopupSection[] sections)
         {
-            ConfigureForm();
+            InfoPopupSection[] kept = Normalize(sections);
 
-            _layout = CreateLayoutPanel();
-            _titleLabel = CreateTitleLabel(title);
-            _textLabel = CreateTextLabel();
+            if (SameContent(kept, _sections))
+                return;
 
-            if (!string.IsNullOrWhiteSpace(title))
-                _layout.Controls.Add(_titleLabel);
-
-            _layout.Controls.Add(_textLabel);
-            Controls.Add(_layout);
-            _contentKey = TextContentKey;
-
-            _showDelayTimer = new Timer();
-            _showDelayTimer.Interval = 400;
-            _showDelayTimer.Tick += OnShowDelayTimerTick;
-
-            Load += OnFormLoad;
-            SizeChanged += OnFormSizeChanged;
+            _sections = kept;
+            UpdateSize();
         }
 
-        /// <summary>Shows (or repositions, if already visible) a single block of text, anchored to the bottom-right of <paramref name="owner"/>.</summary>
-        public void ShowInfo(string text, Control owner)
+        /// <summary>Sets a single text, without a header.</summary>
+        public void SetContent(string text)
+        {
+            SetContent(new InfoPopupSection(null, text));
+        }
+
+        /// <summary>Sets a header with its text.</summary>
+        public void SetContent(string header, string text)
+        {
+            SetContent(new InfoPopupSection(header, text));
+        }
+
+        private static InfoPopupSection[] Normalize(InfoPopupSection[] sections)
+        {
+            System.Collections.Generic.List<InfoPopupSection> kept = new System.Collections.Generic.List<InfoPopupSection>();
+
+            if (sections != null)
+            {
+                foreach (InfoPopupSection section in sections)
+                {
+                    if (section == null)
+                        continue;
+
+                    bool hasHeader = !string.IsNullOrWhiteSpace(section.Header);
+                    bool hasText = !string.IsNullOrWhiteSpace(section.Text);
+
+                    if (hasHeader || hasText)
+                        kept.Add(new InfoPopupSection(hasHeader ? section.Header : null, hasText ? section.Text : null));
+                }
+            }
+
+            return kept.ToArray();
+        }
+
+        private static bool SameContent(InfoPopupSection[] first, InfoPopupSection[] second)
+        {
+            if (first.Length != second.Length)
+                return false;
+
+            for (int i = 0; i < first.Length; i++)
+            {
+                if (first[i].Header != second[i].Header || first[i].Text != second[i].Text)
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool HasContent
+        {
+            get { return _sections.Length > 0; }
+        }
+
+        // ---- showing it ----
+
+        /// <summary>Shows (or moves, if already visible) the popup anchored to the bottom-right of <paramref name="owner"/>.</summary>
+        public void ShowNextTo(Control owner)
+        {
+            if (!CanShow(owner))
+                return;
+
+            Place(owner, GetLocationNextTo(owner));
+        }
+
+        /// <summary>Shows (or moves) the popup near <paramref name="mouseScreenPosition"/> - typical use is a MouseMove handler.</summary>
+        public void ShowAtMouse(Control owner, Point mouseScreenPosition)
+        {
+            if (!CanShow(owner))
+                return;
+
+            Place(owner, GetLocationNearMouse(owner, mouseScreenPosition));
+        }
+
+        /// <summary>
+        /// Shows (or moves) the popup centered horizontally on <paramref name="ownerLocalX"/> (a pixel x
+        /// inside <paramref name="owner"/>) and just above <paramref name="owner"/>; below it if there is
+        /// no room above. Typical use is a live value readout over a slider thumb.
+        /// </summary>
+        public void ShowCenteredAbove(Control owner, int ownerLocalX)
+        {
+            if (!CanShow(owner))
+                return;
+
+            Point ownerTop = owner.PointToScreen(new Point(ownerLocalX, 0));
+            int x = ownerTop.X - Width / 2;
+            int y = ownerTop.Y - Height - 6;
+
+            Rectangle screen = Screen.FromControl(owner).WorkingArea;
+
+            if (x < screen.Left + ScreenMargin)
+                x = screen.Left + ScreenMargin;
+
+            if (x + Width > screen.Right - ScreenMargin)
+                x = screen.Right - ScreenMargin - Width;
+
+            if (y < screen.Top + ScreenMargin)
+                y = ownerTop.Y + owner.Height + 6;
+
+            Place(owner, new Point(x, y));
+        }
+
+        /// <summary>
+        /// Like <see cref="ShowAtMouse"/> with the given content, but after 400 ms - for hover
+        /// tooltips, so passing the mouse over several items does not flash a popup for each.
+        /// Call <see cref="CancelPendingShow"/> on MouseLeave to cancel a show that has not
+        /// happened yet.
+        /// </summary>
+        public void ShowAtMouseDelayed(Control owner, Point mouseScreenPosition, params InfoPopupSection[] sections)
         {
             if (owner == null || owner.IsDisposed)
                 return;
 
-            RefreshColors();
+            _pendingOwner = owner;
+            _pendingMouseScreenPosition = mouseScreenPosition;
+            _pendingSections = sections;
 
-            ShowText(text);
+            _showDelayTimer.Stop();
+            _showDelayTimer.Start();
+        }
 
-            PerformLayout();
+        /// <summary>Cancels a show scheduled by <see cref="ShowAtMouseDelayed"/> that has not happened yet - does not hide the popup if it is already showing.</summary>
+        public void CancelPendingShow()
+        {
+            if (_showDelayTimer != null)
+                _showDelayTimer.Stop();
 
-            Location = GetPopupLocation(owner);
+            _pendingOwner = null;
+            _pendingSections = null;
+        }
+
+        private void OnShowDelayTimerTick(object sender, EventArgs e)
+        {
+            _showDelayTimer.Stop();
+
+            Control owner = _pendingOwner;
+            InfoPopupSection[] sections = _pendingSections;
+
+            if (owner == null || owner.IsDisposed || sections == null)
+                return;
+
+            SetContent(sections);
+            ShowAtMouse(owner, _pendingMouseScreenPosition);
+        }
+
+        // Nothing to show without an owner or without content; a popup that is up goes away
+        // when its content is taken.
+        private bool CanShow(Control owner)
+        {
+            if (owner == null || owner.IsDisposed)
+                return false;
+
+            if (!HasContent)
+            {
+                Hide();
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private void Place(Control owner, Point location)
+        {
+            BackColor = GetBackColor();
+            Location = location;
 
             if (!Visible)
+            {
                 Show(owner.FindForm());
-
-            BringToFront();
+                BringToFront();
+            }
         }
-        private Point GetPopupLocation(Control owner)
+
+        private Point GetLocationNextTo(Control owner)
         {
             Point location = owner.PointToScreen(
                 new Point(owner.Width + OwnerOffsetX, -Height + owner.Height + OwnerOffsetY));
@@ -231,78 +336,7 @@ namespace ErikwnkWFUI.Forms
             return location;
         }
 
-        /// <summary>
-        /// Shows (or repositions) a single line of text centred horizontally on
-        /// <paramref name="ownerLocalX"/> (a pixel x inside <paramref name="owner"/>)
-        /// and just above <paramref name="owner"/> - flips below if there is no
-        /// room. Typical use is a live value readout over a slider thumb.
-        /// </summary>
-        public void ShowInfoCenteredAbove(string text, Control owner, int ownerLocalX)
-        {
-            if (owner == null || owner.IsDisposed)
-                return;
-
-            RefreshColors();
-
-            ShowText(text);
-
-            if (!_compact)
-                PerformLayout();   // compact mode is a fixed size, don't resize
-
-            Point ownerTop = owner.PointToScreen(new Point(ownerLocalX, 0));
-            int x = ownerTop.X - Width / 2;
-            int y = ownerTop.Y - Height - 6;
-
-            Rectangle screen = Screen.FromControl(owner).WorkingArea;
-
-            if (x < screen.Left + ScreenMargin)
-                x = screen.Left + ScreenMargin;
-            if (x + Width > screen.Right - ScreenMargin)
-                x = screen.Right - ScreenMargin - Width;
-            if (y < screen.Top + ScreenMargin)
-                y = ownerTop.Y + owner.Height + 6;
-
-            Location = new Point(x, y);
-
-            // BringToFront() only on the transition to visible, not on
-            // every single call - VolumeSlider calls this on every
-            // ValueChanged while dragging (dozens of times a second), and
-            // re-asserting Z-order that often on an already-topmost,
-            // already-visible window is needless overhead with no visible
-            // effect, but was enough to stall unrelated things sharing the
-            // UI thread's message loop (e.g. a ProgressBar's animation timer).
-            if (!Visible)
-            {
-                Show(owner.FindForm());
-                BringToFront();
-            }
-        }
-
-        /// <summary>Same as <see cref="ShowInfo"/>, but anchored near <paramref name="mouseScreenPosition"/> instead of <paramref name="owner"/>'s bounds - typical use is showing this from a MouseMove handler.</summary>
-        public void ShowInfoAtMouse(
-            string text,
-            Control owner,
-            Point mouseScreenPosition)
-        {
-            if (owner == null || owner.IsDisposed)
-                return;
-
-            RefreshColors();
-
-            ShowText(text);
-
-            PerformLayout();
-
-            Location = GetPopupLocationNearMouse(
-                owner,
-                mouseScreenPosition);
-
-            if (!Visible)
-                Show(owner.FindForm());
-
-            BringToFront();
-        }
-        private Point GetPopupLocationNearMouse(Control owner, Point mouseScreenPosition)
+        private Point GetLocationNearMouse(Control owner, Point mouseScreenPosition)
         {
             Point result = new Point(mouseScreenPosition.X + 12, mouseScreenPosition.Y + 12);
 
@@ -327,222 +361,39 @@ namespace ErikwnkWFUI.Forms
             return result;
         }
 
-        /// <summary>Shows one or more labeled <see cref="InfoPopupSection"/>s instead of plain text, anchored to <paramref name="owner"/>.</summary>
-        public void ShowSections(Control owner, params InfoPopupSection[] sections)
+        // ---- colors ----
+
+        private UIColorSet GetColors()
         {
-            if (owner == null || owner.IsDisposed)
-                return;
-
-            RefreshColors();
-
-            if (_compact)
-                return;
-
-            ApplySections(sections);
-
-            PerformLayout();
-            Location = GetPopupLocation(owner);
-
-            if (!Visible)
-                Show(owner.FindForm());
-
-            BringToFront();
-        }
-        /// <summary>
-        /// Like <see cref="ShowSectionsAtMouse"/>, but waits 400ms before
-        /// actually showing - meant for hover tooltips, so quickly passing
-        /// the mouse over several items doesn't flash a popup for each one.
-        /// Call <see cref="CancelPendingShow"/> on MouseLeave to cancel a
-        /// still-pending show.
-        /// </summary>
-        public void ShowSectionsAtMouseDelayed(Control owner, Point mouseScreenPosition, params InfoPopupSection[] sections)
-        {
-            if (owner == null || owner.IsDisposed)
-                return;
-
-            _pendingOwner = owner;
-            _pendingMouseScreenPosition = mouseScreenPosition;
-            _pendingSections = sections;
-
-            _showDelayTimer.Stop();
-            _showDelayTimer.Start();
+            return _colors ?? UIStyles.Colors.Sets.Gray;
         }
 
-        /// <summary>Cancels a show scheduled by <see cref="ShowSectionsAtMouseDelayed"/> that hasn't fired yet - does not hide the popup if it's already showing.</summary>
-        public void CancelPendingShow()
+        // The background: the set's basic color, shifted just far enough that the set's text
+        // reads on it (a few sets are too light or mid-tone for that).
+        private Color GetBackColor()
         {
-            if (_showDelayTimer != null)
-                _showDelayTimer.Stop();
+            UIColorSet colors = GetColors();
 
-            _pendingOwner = null;
-            _pendingSections = null;
+            return UIColors.GetReadableFill(colors.Basic, colors.BasicText);
         }
 
-        private void OnShowDelayTimerTick(object sender, EventArgs e)
-        {
-            _showDelayTimer.Stop();
-
-            if (_pendingOwner == null || _pendingOwner.IsDisposed || _pendingSections == null)
-                return;
-
-            ShowSectionsAtMouse(_pendingOwner, _pendingMouseScreenPosition, _pendingSections);
-        }
-
-        /// <summary>Immediate (non-delayed) version of <see cref="ShowSectionsAtMouseDelayed"/> - skips rebuilding the section labels if the content is identical to what's already showing.</summary>
-        public void ShowSectionsAtMouse(Control owner, Point mouseScreenPosition, params InfoPopupSection[] sections)
-        {
-            if (owner == null || owner.IsDisposed)
-                return;
-
-            RefreshColors();
-
-            if (_compact)
-                return;
-
-            ApplySections(sections);
-
-            PerformLayout();
-            Location = GetPopupLocationNearMouse(owner, mouseScreenPosition);
-
-            if (!Visible)
-                Show(owner.FindForm());
-
-            BringToFront();
-        }
-
-        // Sets the text (or "none" for an empty one) and, if the layout holds sections from an
-        // earlier call, puts the title and the text label back.
-        private void ShowText(string text)
-        {
-            _textLabel.Text = string.IsNullOrWhiteSpace(text)
-                ? UIStrings.Get("InfoPopup.None")
-                : text;
-
-            if (_compact || _contentKey == TextContentKey)
-                return;
-
-            _layout.SuspendLayout();
-            ClearLayout();
-
-            if (!string.IsNullOrWhiteSpace(_titleLabel.Text))
-                _layout.Controls.Add(_titleLabel);
-
-            _layout.Controls.Add(_textLabel);
-            _layout.ResumeLayout(true);
-            _contentKey = TextContentKey;
-        }
-
-        // Builds the labels of the sections, unless the layout holds exactly these already.
-        private void ApplySections(InfoPopupSection[] sections)
-        {
-            string key = BuildSectionContentKey(sections);
-
-            if (key == _contentKey)
-                return;
-
-            _contentKey = key;
-
-            _layout.SuspendLayout();
-            ClearLayout();
-
-            if (sections != null)
-            {
-                foreach (InfoPopupSection section in sections)
-                {
-                    if (section == null)
-                        continue;
-
-                    if (!string.IsNullOrWhiteSpace(section.Header))
-                        _layout.Controls.Add(CreateSectionHeaderLabel(section.Header));
-
-                    if (!string.IsNullOrWhiteSpace(section.Text))
-                        _layout.Controls.Add(CreateSectionTextLabel(section.Text));
-                }
-            }
-
-            _layout.ResumeLayout(true);
-        }
-
-        // Empties the layout; the labels of sections are thrown away, the title and the text
-        // label stay for the next text.
-        private void ClearLayout()
-        {
-            Control[] labels = new Control[_layout.Controls.Count];
-            _layout.Controls.CopyTo(labels, 0);
-            _layout.Controls.Clear();
-
-            foreach (Control label in labels)
-            {
-                if (label != _titleLabel && label != _textLabel)
-                    label.Dispose();
-            }
-        }
-
-        private static string BuildSectionContentKey(InfoPopupSection[] sections)
-        {
-            string key = "sections";
-
-            if (sections == null)
-                return key;
-
-            foreach (InfoPopupSection section in sections)
-            {
-                if (section == null)
-                    continue;
-
-                key += "\u0001" + section.Header + "\u0002" + section.Text;
-            }
-
-            return key;
-        }
-
-        private Label CreateSectionHeaderLabel(string text)
-        {
-            return new Label
-            {
-                AutoSize = true,
-                Text = text,
-                Font = UIFonts.Title,
-                ForeColor = GetForeColor(),
-                BackColor = Color.Transparent,
-                Margin = new Padding(0, 6, 0, 3),
-                MaximumSize = new Size(MaxTextWidth, 0)
-            };
-        }
-
-        private Label CreateSectionTextLabel(string text)
-        {
-            return new Label
-            {
-                AutoSize = true,
-                Text = text,
-                Font = UIFonts.Normal,
-                ForeColor = GetDimForeColor(),
-                BackColor = Color.Transparent,
-                Margin = new Padding(0, 0, 0, 4),
-                MaximumSize = new Size(MaxTextWidth, 0)
-            };
-        }
-
-        // The popup's background does not follow the theme (a gray or an accent shade), so the
-        // text color is worked out against that background, not taken from the theme: the
-        // set's own text color, which reads on its basic fill.
+        // The popup's background does not follow the theme, so the text color is worked out
+        // against that background: the set's own text color.
         private Color GetForeColor()
         {
             return GetColors().BasicText;
         }
 
-        // The quieter body text under a bold title: the text color blended partway toward the
+        // The quieter text under a header: the text color blended partway toward the
         // background, as far as it still reads (4.5:1).
         private Color GetDimForeColor()
         {
             Color fore = GetForeColor();
             Color back = GetBackColor();
-            Color dim = fore;
 
             for (double amount = 0.35; amount > 0; amount -= 0.05)
             {
-                dim = UIColors.BlendToward(fore, back, amount);
+                Color dim = UIColors.BlendToward(fore, back, amount);
 
                 if (UIColors.GetContrastRatio(dim, back) >= 4.5)
                     return dim;
@@ -551,144 +402,185 @@ namespace ErikwnkWFUI.Forms
             return fore;
         }
 
-        // One popup is reused for many show calls, and its colors are read again at the top of
-        // every Show* method, so a later change of accent or theme shows up in the next call.
-        private void RefreshColors()
+        // ---- measuring and painting ----
+
+        private int Scale(int value96)
         {
-            BackColor = GetBackColor();
+            return (int)Math.Round(value96 * DeviceDpi / 96.0);
+        }
 
-            Color foreColor = GetForeColor();
-            Color dimForeColor = GetDimForeColor();
+        private bool IsFixed
+        {
+            get { return !_fixedSize.IsEmpty; }
+        }
 
-            _titleLabel.ForeColor = foreColor;
-            _textLabel.ForeColor = _compact ? foreColor : dimForeColor;
+        // The width the text may take: the maximum width, or in the fixed size what is left.
+        private int GetTextWidth()
+        {
+            return IsFixed
+                ? Math.Max(1, _fixedSize.Width - 2 * Scale(FixedPadding96))
+                : Scale(MaxTextWidth96);
+        }
 
-            foreach (Control control in _layout.Controls)
+        // The size of one block's header and text, wrapped at the text width.
+        private void MeasureBlock(InfoPopupSection section, int textWidth, out Size header, out Size text)
+        {
+            header = Size.Empty;
+            text = Size.Empty;
+
+            if (section.Header != null)
+                header = TextRenderer.MeasureText(section.Header, UIFonts.Title, new Size(textWidth, int.MaxValue), MeasureFlags);
+
+            if (section.Text != null)
+                text = TextRenderer.MeasureText(section.Text, UIFonts.Normal, new Size(textWidth, int.MaxValue), MeasureFlags);
+        }
+
+        private Size MeasureContent(int textWidth)
+        {
+            int width = 0;
+            int height = 0;
+
+            for (int i = 0; i < _sections.Length; i++)
             {
-                Label label = control as Label;
+                Size header;
+                Size text;
+                MeasureBlock(_sections[i], textWidth, out header, out text);
 
-                if (label == null || label == _titleLabel || label == _textLabel)
-                    continue;
+                if (i > 0)
+                    height += Scale(BlockGap96);
 
-                label.ForeColor = UIFonts.Title.Equals(label.Font) ? foreColor : dimForeColor;
+                height += header.Height + text.Height;
+
+                if (header.Height > 0 && text.Height > 0)
+                    height += Scale(HeaderGap96);
+
+                width = Math.Max(width, Math.Max(header.Width, text.Width));
+            }
+
+            return new Size(width, height);
+        }
+
+        // A borderless top-level form cannot go below the system's minimum tracking size
+        // (about 136x39) unless MinimumSize is set: it is locked to the wanted size.
+        private void UpdateSize()
+        {
+            Size client;
+
+            if (IsFixed)
+            {
+                client = _fixedSize;
+            }
+            else
+            {
+                Size content = MeasureContent(GetTextWidth());
+                int padding = Scale(Padding96);
+                client = new Size(content.Width + 2 * padding, content.Height + 2 * padding);
+            }
+
+            MinimumSize = Size.Empty;
+            MaximumSize = Size.Empty;
+            ClientSize = client;
+            MinimumSize = Size;
+            MaximumSize = Size;
+
+            ApplyRoundedCorners();
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (!HasContent)
+                return;
+
+            int textWidth = GetTextWidth();
+            Size content = MeasureContent(textWidth);
+            int padding = IsFixed ? Scale(FixedPadding96) : Scale(Padding96);
+
+            // In the fixed size the content sits in the middle, otherwise at the padding.
+            int x = padding;
+            int y = IsFixed ? Math.Max(0, (ClientSize.Height - content.Height) / 2) : padding;
+
+            // Without any header the texts have no title to stay below: full text color.
+            bool anyHeader = false;
+
+            foreach (InfoPopupSection section in _sections)
+                anyHeader |= section.Header != null;
+
+            Color headerColor = GetForeColor();
+            Color textColor = anyHeader ? GetDimForeColor() : GetForeColor();
+            TextFormatFlags align = IsFixed ? TextFormatFlags.HorizontalCenter : TextFormatFlags.Left;
+            TextFormatFlags flags = (MeasureFlags & ~TextFormatFlags.Left) | align;
+
+            for (int i = 0; i < _sections.Length; i++)
+            {
+                InfoPopupSection section = _sections[i];
+                Size header;
+                Size text;
+                MeasureBlock(section, textWidth, out header, out text);
+
+                if (i > 0)
+                    y += Scale(BlockGap96);
+
+                if (header.Height > 0)
+                {
+                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, new Rectangle(x, y, textWidth, header.Height), headerColor, flags);
+                    y += header.Height;
+                }
+
+                if (header.Height > 0 && text.Height > 0)
+                    y += Scale(HeaderGap96);
+
+                if (text.Height > 0)
+                {
+                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, new Rectangle(x, y, textWidth, text.Height), textColor, flags);
+                    y += text.Height;
+                }
             }
         }
 
-        private void ConfigureForm()
-        {
-            FormBorderStyle = FormBorderStyle.None;
-            ShowInTaskbar = false;
-            TopMost = true;
-            StartPosition = FormStartPosition.Manual;
-
-            DoubleBuffered = true;
-            BackColor = GetBackColor();
-            Opacity = 0.80; // match ToastForm (testing a stronger value than the previous 0.90)
-            Padding = new Padding(12);
-
-            AutoSize = true;
-            AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        }
-
-        private FlowLayoutPanel CreateLayoutPanel()
-        {
-            return new FlowLayoutPanel
-            {
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                AutoSize = true,
-                BackColor = Color.Transparent,
-                Margin = new Padding(0),
-                Padding = new Padding(8)
-            };
-        }
-
-        private Label CreateTitleLabel(string title)
-        {
-            return new Label
-            {
-                AutoSize = true,
-                Text = title,
-                Font = UIFonts.Title,
-                ForeColor = GetForeColor(),
-                BackColor = Color.Transparent,
-                Margin = new Padding(0, 0, 0, 6)
-            };
-        }
-
-        private Label CreateTextLabel()
-        {
-            return new Label
-            {
-                AutoSize = true,
-                MaximumSize = new Size(MaxTextWidth, 0),
-                Font = UIFonts.Normal,
-                ForeColor = GetDimForeColor(),
-                BackColor = Color.Transparent,
-                Margin = new Padding(0)
-            };
-        }
-
-        private void OnFormLoad(object sender, EventArgs e)
-        {
-            ApplyRoundedRegion();
-        }
-
-        private void OnFormSizeChanged(object sender, EventArgs e)
-        {
-            ApplyRoundedRegion();
-        }
-
-        /// <summary>
-        /// Clips the window to a rounded rectangle. Always recomputed from the
-        /// *current* <see cref="Control.ClientRectangle"/> - setting it once from
-        /// a stale/pre-final size is what left one corner square before.
-        /// </summary>
-        // Win11 rounds window corners itself via DWM (anti-aliased, all four
-        // identical) - just ask for the small radius. A window Region fights
-        // this and leaves one corner square; on Win10 the call is a silent
-        // no-op and the popup is simply a plain rectangle.
-
-        private void ApplyRoundedRegion()
+        // Win11 rounds window corners itself via DWM (anti-aliased, all four identical): just
+        // ask for the radius. A window Region fights this and leaves one corner square; on
+        // Win10 the call does nothing and the popup is a plain rectangle.
+        private void ApplyRoundedCorners()
         {
             if (!IsHandleCreated)
                 return;
 
-            int pref = _compact ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND;
+            int preference = IsFixed ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND;
+
             try
             {
-                DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
+                DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
             }
             catch
             {
-                // pre-Win11 - no rounded corners, plain rectangle
+                // before Windows 11: no rounded corners
             }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            ApplyRoundedCorners();
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
+            if (disposing && _showDelayTimer != null)
             {
-                if (_showDelayTimer != null)
-                {
-                    _showDelayTimer.Stop();
-                    _showDelayTimer.Tick -= OnShowDelayTimerTick;
-                    _showDelayTimer.Dispose();
-                    _showDelayTimer = null;
-                }
-
-                if (base.Region != null)
-                {
-                    base.Region.Dispose();
-                    base.Region = null;
-                }
+                _showDelayTimer.Stop();
+                _showDelayTimer.Tick -= OnShowDelayTimerTick;
+                _showDelayTimer.Dispose();
+                _showDelayTimer = null;
             }
 
             base.Dispose(disposing);
         }
-
     }
-    /// <summary>One labeled block of text for <see cref="InfoPopupForm.ShowSections"/> and its overloads - a section with an empty/null Header or Text just omits that part.</summary>
+
+    /// <summary>One block of content for <see cref="InfoPopupForm"/>: a header, a text, or both. A part left null or empty is not shown.</summary>
     public class InfoPopupSection
     {
         public string Header { get; set; }

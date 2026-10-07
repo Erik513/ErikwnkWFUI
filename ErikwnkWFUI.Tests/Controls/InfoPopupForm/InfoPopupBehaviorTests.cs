@@ -1,18 +1,17 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
-using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.InfoPopupFormTests;
 
 /// <summary>
-/// What the info popup does with its content and its window: the text and the sections, mixing
-/// the two on one reused popup, the show delay, a disposed owner, the position on the screen.
-/// Popups are shown for real (briefly) next to a host form. [Collection]: the text of "none"
-/// is a language string.
+/// What the info popup does with its content and its window: the blocks and what is left out,
+/// the size that follows the content or stays fixed, the three places, the show delay, a
+/// disposed owner, the position on the screen. Popups are shown for real (briefly) next to a
+/// host form. [Collection]: the colors read the live accent.
 /// </summary>
-[Collection(LanguageTestCollection.Name)]
+[Collection(AccentColorTestCollection.Name)]
 public class InfoPopupBehaviorTests : IDisposable
 {
     private readonly List<Form> _forms = new List<Form>();
@@ -41,139 +40,255 @@ public class InfoPopupBehaviorTests : IDisposable
         return (host, owner);
     }
 
-    private InfoPopupForm CreatePopup(string title = "Info")
+    private InfoPopupForm CreatePopup(Size? fixedSize = null)
     {
-        InfoPopupForm popup = new InfoPopupForm(title);
+        InfoPopupForm popup = ErikwnkWFUI.UIStyles.InfoPopups.CreateStandard(fixedSize: fixedSize);
         _forms.Add(popup);
 
         return popup;
     }
 
-    // What the popup shows now: the texts of the labels in its layout, in order.
-    private static string[] Shown(InfoPopupForm popup)
-    {
-        FlowLayoutPanel layout = popup.GetPrivateField<FlowLayoutPanel>("_layout")!;
+    private static InfoPopupSection Section(string? header, string? text) => new InfoPopupSection(header!, text!);
 
-        return layout.Controls.OfType<Label>().Select(label => label.Text).ToArray();
+    // What the popup holds now: header and text of each block ("-" for a missing part).
+    private static string[] Content(InfoPopupForm popup)
+    {
+        InfoPopupSection[] sections = popup.GetPrivateField<InfoPopupSection[]>("_sections")!;
+
+        return sections.Select(section => (section.Header ?? "-") + "|" + (section.Text ?? "-")).ToArray();
     }
 
-    private static InfoPopupSection Section(string header, string text) => new InfoPopupSection(header, text);
+    // The number of pixels that are not the background: the text that was drawn.
+    private static int InkPixels(Form form)
+    {
+        using Bitmap bitmap = new Bitmap(form.ClientSize.Width, form.ClientSize.Height);
+        form.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
+        int ink = 0;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                if (bitmap.GetPixel(x, y) != form.BackColor)
+                    ink++;
+            }
+        }
+
+        return ink;
+    }
+
+    // ---- content ----
 
     [Fact]
-    public void ShowInfo_ShowsTheTitleAndTheText_AndRepositionsWhenShownAgain()
+    public void TheContent_IsBlocksOfAHeaderAndATextEachPartOptional_EmptyPartsAreLeftOut()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        popup.SetContent(Section("Only header", null), Section(null, "Only text"), Section("Both", "Together"), Section("  ", ""), Section(null, null), null!);
+
+        Assert.Equal(new[] { "Only header|-", "-|Only text", "Both|Together" }, Content(popup));
+    }
+
+    [Fact]
+    public void TheShortcuts_SetOneTextOrOneHeaderWithItsText()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        popup.SetContent("Plain");
+        Assert.Equal(new[] { "-|Plain" }, Content(popup));
+
+        popup.SetContent("Title", "Body");
+        Assert.Equal(new[] { "Title|Body" }, Content(popup));
+
+        popup.SetContent();
+        Assert.Empty(Content(popup));
+    }
+
+    [Fact]
+    public void NewContent_ReplacesTheOldOne_AlsoOnAPopupThatIsShown()
     {
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("Info");
+        InfoPopupForm popup = CreatePopup();
 
-        popup.ShowInfo("First", owner);
+        popup.SetContent("Header", "first");
+        popup.ShowNextTo(owner);
+        popup.SetContent("second");
+        popup.ShowNextTo(owner);
+
         Assert.True(popup.Visible);
-        Assert.Equal(new[] { "Info", "First" }, Shown(popup));
-
-        popup.ShowInfo("Second", owner);
-        Assert.Equal(new[] { "Info", "Second" }, Shown(popup));
+        Assert.Equal(new[] { "-|second" }, Content(popup));
     }
 
     [Fact]
-    public void AnEmptyText_ShowsTheLocalizedNone()
+    public void WithoutAnyText_NothingIsShown_AndAPopupThatIsUpGoesAway()
     {
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("Info");
+        InfoPopupForm popup = CreatePopup();
 
-        popup.ShowInfo("  ", owner);
+        popup.SetContent("  ");
+        popup.ShowNextTo(owner);
+        Assert.False(popup.Visible);
 
-        Assert.Equal(UIStrings.Get("InfoPopup.None"), Shown(popup)[1]);
+        popup.SetContent("text");
+        popup.ShowNextTo(owner);
+        Assert.True(popup.Visible);
+
+        popup.SetContent(Section(null, ""));
+        popup.ShowNextTo(owner);
+        Assert.False(popup.Visible);
     }
 
     [Fact]
-    public void TheText_AfterTheSections_IsShownAgain_OnTheSameReusedPopup()
+    public void TheContent_IsDrawn_AsInkOnTheBackground()
     {
-        // One popup is reused for everything: text, then sections, then text again.
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("Info");
+        InfoPopupForm popup = CreatePopup();
 
-        popup.ShowInfo("Plain", owner);
-        popup.ShowSections(owner, Section("Header", "Body"));
-        Assert.Equal(new[] { "Header", "Body" }, Shown(popup));
+        popup.SetContent("Header", "A text under the header.");
+        popup.ShowNextTo(owner);
 
-        popup.ShowInfo("Plain again", owner);
-        Assert.Contains("Plain again", Shown(popup));
+        Assert.True(InkPixels(popup) > 50, "no text was drawn");
+    }
+
+    // ---- size ----
+
+    [Fact]
+    public void TheSize_FollowsTheContent_AndALongTextWrapsAtTheMaximumWidth()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        popup.SetContent("Short");
+        int shortWidth = popup.Width;
+        int shortHeight = popup.Height;
+
+        popup.SetContent("A text that is much too long for one line of the popup, so that it has to wrap onto several lines and grow in height instead of in width.");
+        int wrappedWidth = popup.Width;
+
+        Assert.True(wrappedWidth > shortWidth);
+        Assert.True(popup.Height >= shortHeight + 2 * 14, "the long text did not wrap into more lines");
+
+        popup.SetContent("Word " + new string('x', 300));
+        Assert.True(popup.Width <= wrappedWidth + 40, "a long word made the popup grow without end");
     }
 
     [Fact]
-    public void TheSectionsAtTheMouse_AreRebuilt_AfterOtherSectionsWereShownInBetween()
+    public void AFixedSize_StaysWhateverTheContent_AndCentersIt()
     {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
-        Point mouse = new Point(100, 100);
+        InfoPopupForm popup = CreatePopup(new Size(70, 32));
 
-        popup.ShowSectionsAtMouse(owner, mouse, Section("A", "first"));
-        popup.ShowSections(owner, Section("B", "second"));
-        popup.ShowSectionsAtMouse(owner, mouse, Section("A", "first"));
+        popup.SetContent("9%");
+        Assert.Equal(new Size(70, 32), popup.ClientSize);
 
-        Assert.Equal(new[] { "A", "first" }, Shown(popup));
+        popup.SetContent("100%");
+        Assert.Equal(new Size(70, 32), popup.ClientSize);
+        Assert.Equal(popup.Size, popup.MinimumSize);
+        Assert.Equal(popup.Size, popup.MaximumSize);
+
+        popup.FixedSize = Size.Empty;
+        Assert.NotEqual(new Size(70, 32), popup.ClientSize);
     }
 
     [Fact]
-    public void TheSameSections_AreNotRebuilt_WhenShownAgainAtTheMouse()
+    public void AFixedSizePopup_DrawsItsShortValue()
     {
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
-        Point mouse = new Point(100, 100);
+        InfoPopupForm popup = CreatePopup(new Size(70, 32));
 
-        popup.ShowSectionsAtMouse(owner, mouse, Section("A", "first"));
-        Label before = popup.GetPrivateField<FlowLayoutPanel>("_layout")!.Controls.OfType<Label>().First();
+        popup.SetContent("70%");
+        popup.ShowCenteredAbove(owner, 40);
 
-        popup.ShowSectionsAtMouse(owner, new Point(120, 100), Section("A", "first"));
-        Label after = popup.GetPrivateField<FlowLayoutPanel>("_layout")!.Controls.OfType<Label>().First();
+        Assert.True(InkPixels(popup) > 20, "no value was drawn");
+    }
 
-        Assert.Same(before, after);
+    // ---- the places ----
+
+    [Fact]
+    public void TheThreePlaces_ShowThePopup_AtTheirOwnPosition()
+    {
+        (Form _, Button owner) = CreateHost(new Point(300, 300));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("Info", "text");
+
+        popup.ShowNextTo(owner);
+        Point next = popup.Location;
+        Assert.True(popup.Visible);
+        Assert.True(next.X >= owner.PointToScreen(Point.Empty).X + owner.Width, "not to the right of the owner");
+
+        Point mouse = new Point(owner.PointToScreen(Point.Empty).X + 10, owner.PointToScreen(Point.Empty).Y + 10);
+        popup.ShowAtMouse(owner, mouse);
+        Assert.NotEqual(next, popup.Location);
+
+        popup.ShowCenteredAbove(owner, 40);
+        int centerX = popup.Location.X + popup.Width / 2;
+        Assert.InRange(centerX - owner.PointToScreen(new Point(40, 0)).X, -2, 2);
+        Assert.True(popup.Location.Y + popup.Height <= owner.PointToScreen(Point.Empty).Y);
     }
 
     [Fact]
-    public void ASectionWithoutAHeaderOrText_OmitsThatPart()
+    public void AnOwnerAtTheEdgeOfTheScreen_GetsAPopupThatStaysOnTheScreen()
     {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
+        Rectangle area = Screen.PrimaryScreen!.WorkingArea;
+        (Form _, Button owner) = CreateHost(new Point(area.Right - 120, area.Bottom - 120));
+        InfoPopupForm popup = CreatePopup();
 
-        popup.ShowSections(owner, Section("", "only text"), Section("only header", null!), Section(null!, ""));
+        popup.SetContent("Info", "A text that is long enough to wrap onto a few lines in the popup, " +
+            "so that the popup is not just one small line at the corner.");
+        popup.ShowNextTo(owner);
 
-        Assert.Equal(new[] { "only text", "only header" }, Shown(popup));
+        Assert.True(area.Contains(popup.Bounds), "the popup left the screen: " + popup.Bounds + " in " + area);
     }
 
     [Fact]
     public void ANullOrDisposedOwner_ShowsNothing_AndRaisesNothing()
     {
-        (Form _, Button owner) = CreateHost();
         InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
         Button gone = new Button();
         gone.Dispose();
 
         Exception? thrown = Record.Exception(() =>
         {
-            popup.ShowInfo("x", null!);
-            popup.ShowInfo("x", gone);
-            popup.ShowInfoAtMouse("x", gone, new Point(1, 1));
-            popup.ShowInfoCenteredAbove("x", gone, 1);
-            popup.ShowSections(gone, Section("a", "b"));
-            popup.ShowSectionsAtMouseDelayed(gone, new Point(1, 1), Section("a", "b"));
+            popup.ShowNextTo(null!);
+            popup.ShowNextTo(gone);
+            popup.ShowAtMouse(gone, new Point(1, 1));
+            popup.ShowCenteredAbove(gone, 1);
+            popup.ShowAtMouseDelayed(gone, new Point(1, 1), Section("a", "b"));
         });
 
         Assert.Null(thrown);
         Assert.False(popup.Visible);
     }
 
+    // ---- the delay ----
+
+    [Fact]
+    public void ADelayedShow_ShowsTheContent_WhenTheTimerFires_NotBefore()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+        Assert.False(popup.Visible);
+        Assert.Empty(Content(popup));
+
+        popup.InvokePrivate("OnShowDelayTimerTick", popup, EventArgs.Empty);
+
+        Assert.True(popup.Visible);
+        Assert.Equal(new[] { "A|b" }, Content(popup));
+    }
+
     [Fact]
     public void ACancelledDelayedShow_NeverShows_AndAnOwnerDisposedInTheMeantimeIsHarmless()
     {
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
+        InfoPopupForm popup = CreatePopup();
 
-        popup.ShowSectionsAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
         popup.CancelPendingShow();
         popup.InvokePrivate("OnShowDelayTimerTick", popup, EventArgs.Empty);
         Assert.False(popup.Visible);
 
-        popup.ShowSectionsAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
+        popup.ShowAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
         owner.Dispose();
         Exception? thrown = Record.Exception(() => popup.InvokePrivate("OnShowDelayTimerTick", popup, EventArgs.Empty));
 
@@ -181,28 +296,16 @@ public class InfoPopupBehaviorTests : IDisposable
         Assert.False(popup.Visible);
     }
 
-    [Fact]
-    public void ADelayedShow_ShowsTheSections_WhenTheTimerFires()
-    {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
-
-        popup.ShowSectionsAtMouseDelayed(owner, new Point(100, 100), Section("A", "b"));
-        Assert.False(popup.Visible);
-
-        popup.InvokePrivate("OnShowDelayTimerTick", popup, EventArgs.Empty);
-
-        Assert.True(popup.Visible);
-        Assert.Equal(new[] { "A", "b" }, Shown(popup));
-    }
+    // ---- the window ----
 
     [Fact]
     public void ThePopup_NeverTakesTheActivationAway_AndClosesWithItsOwnerForm()
     {
         (Form host, Button owner) = CreateHost();
         InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
 
-        popup.ShowInfo("x", owner);
+        popup.ShowNextTo(owner);
 
         Assert.True((bool)typeof(InfoPopupForm).GetProperty("ShowWithoutActivation", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(popup)!);
         Assert.Same(host, popup.Owner);
@@ -222,18 +325,20 @@ public class InfoPopupBehaviorTests : IDisposable
     }
 
     [Fact]
-    public void TheCompactForm_ShowsOneTextOnly_SectionsAreLeftOut()
+    public void AHiddenPopup_CanBeShownAgain()
     {
         (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = new InfoPopupForm { Compact = true };
-        _forms.Add(popup);
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("one");
 
-        popup.ShowSections(owner, Section("Header", "Body"));
+        popup.ShowNextTo(owner);
+        popup.Hide();
         Assert.False(popup.Visible);
 
-        popup.ShowInfo("70%", owner);
+        popup.SetContent("two");
+        popup.ShowNextTo(owner);
         Assert.True(popup.Visible);
-        Assert.Equal("70%", popup.GetPrivateField<Label>("_textLabel")!.Text);
+        Assert.Equal(new[] { "-|two" }, Content(popup));
     }
 
     [Fact]
@@ -241,70 +346,12 @@ public class InfoPopupBehaviorTests : IDisposable
     {
         (Form _, Button owner) = CreateHost();
         InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
         Color expected = popup.BackColor;
 
         popup.BackColor = Color.HotPink;
-        popup.ShowInfo("x", owner);
+        popup.ShowNextTo(owner);
 
         Assert.Equal(expected, popup.BackColor);
-    }
-
-    [Fact]
-    public void TheSectionLabelsThrownAway_AreDisposed_NotLeftBehind()
-    {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("");
-
-        popup.ShowSections(owner, Section("A", "first"));
-        Label old = popup.GetPrivateField<FlowLayoutPanel>("_layout")!.Controls.OfType<Label>().First();
-
-        popup.ShowSections(owner, Section("B", "second"));
-
-        Assert.True(old.IsDisposed);
-    }
-
-    [Fact]
-    public void ATextShownAfterTheSections_HasItsOwnColorsAfterAThemeChange()
-    {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup("Info");
-        popup.ShowInfo("one", owner);
-        popup.ShowSections(owner, Section("A", "b"));
-
-        // A light set: its text is dark, unlike the gray the popup started with.
-        popup.Colors = ErikwnkWFUI.UIStyles.Colors.CreateSet(Color.White);
-        popup.ShowInfo("two", owner);
-
-        Label text = popup.GetPrivateField<Label>("_textLabel")!;
-        Color back = popup.BackColor;
-        Assert.True(ColorContrastHelper.GetContrastRatio(text.ForeColor, back) >= 4.5);
-    }
-
-    [Fact]
-    public void AHiddenPopup_CanBeShownAgain()
-    {
-        (Form _, Button owner) = CreateHost();
-        InfoPopupForm popup = CreatePopup();
-
-        popup.ShowInfo("one", owner);
-        popup.Hide();
-        Assert.False(popup.Visible);
-
-        popup.ShowInfo("two", owner);
-        Assert.True(popup.Visible);
-        Assert.Equal("two", Shown(popup)[1]);
-    }
-
-    [Fact]
-    public void AnOwnerAtTheEdgeOfTheScreen_GetsAPopupThatStaysOnTheScreen()
-    {
-        Rectangle area = Screen.PrimaryScreen!.WorkingArea;
-        (Form _, Button owner) = CreateHost(new Point(area.Right - 120, area.Bottom - 120));
-        InfoPopupForm popup = CreatePopup("Info");
-
-        popup.ShowInfo("A text that is long enough to wrap onto a few lines in the popup, " +
-            "so that the popup is not just one small line at the corner.", owner);
-
-        Assert.True(area.Contains(popup.Bounds), "the popup left the screen: " + popup.Bounds + " in " + area);
     }
 }

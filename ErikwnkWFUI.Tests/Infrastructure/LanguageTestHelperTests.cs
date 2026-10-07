@@ -54,7 +54,7 @@ public class LanguageTestHelperTests
     public void AssertAllTranslatedForEveryLanguage_RealKeys_Pass()
     {
         Exception? exception = Record.Exception(() =>
-            LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "MessageBox.Cancel", "InfoPopup.None" }));
+            LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "MessageBox.Cancel", "TabControl.AddTab" }));
 
         Assert.Null(exception);
     }

@@ -102,7 +102,7 @@ namespace ErikwnkWFUI.Controls
             {
                 if (_popup == null || _popup.IsDisposed)
                 {
-                    _popup = UIStyles.InfoPopups.CreatePrimaryCompact();
+                    _popup = UIStyles.InfoPopups.CreatePrimary();
 
                     // Fixed size for the widest value ("100%") so it doesn't
                     // jitter as digits are added/removed while dragging - just a
@@ -111,7 +111,7 @@ namespace ErikwnkWFUI.Controls
                         _formatValue(1.0), UIFonts.Normal,
                         new Size(short.MaxValue, short.MaxValue),
                         TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
-                    _popup.CompactSize = new Size(widest.Width + 8, widest.Height + 6);
+                    _popup.FixedSize = new Size(widest.Width + 8, widest.Height + 6);
                 }
                 return _popup;
             }
@@ -137,9 +137,9 @@ namespace ErikwnkWFUI.Controls
         // true for longer, which is exactly what's wanted anyway.
         private bool _focusChurnClearPending;
 
-        // ShowInfoCenteredAbove (specifically its unconditional BringToFront()
-        // call, which forces a Z-order/DWM update every single time) turned
-        // out to be the real cost, not the BeginInvoke above - it runs once
+        // The popup call (once, its BringToFront() forced a Z-order/DWM update
+        // every single time) turned out to be the real cost, not the
+        // BeginInvoke above - it runs once
         // per ValueChanged, i.e. once per mouse-move during a drag, dozens
         // of times a second, and that alone was enough to visibly stall the
         // Showcase's ProgressBar animation. A percentage readout doesn't
@@ -167,7 +167,8 @@ namespace ErikwnkWFUI.Controls
             Point savedScroll = CaptureScrollPosition();
 
             _isSelfFocusChurn = true;
-            Popup.ShowInfoCenteredAbove(_formatValue(Value), this, ThumbCenterX);
+            Popup.SetContent(_formatValue(Value));
+            Popup.ShowCenteredAbove(this, ThumbCenterX);
 
             RestoreScrollPosition(savedScroll);
 

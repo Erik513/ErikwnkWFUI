@@ -966,39 +966,25 @@ namespace ErikwnkWFUI
             }
         }
 
-        /// <summary>A small, borderless popup with extra info next to a control or the mouse: one text or labeled sections, or in the compact form a single short value. Reuse one popup for many show calls.</summary>
+        /// <summary>A small, borderless popup with extra info next to a control or the mouse: blocks of an optional header and an optional text. Set its content, then show it. Reuse one popup for many show calls.</summary>
         public static class InfoPopups
         {
             /// <summary>A popup in the neutral gray.</summary>
-            /// <param name="title">A title shown above the text, or none.</param>
             /// <param name="colors">
             /// A color set for the background and the text instead of the neutral gray: one of
             /// <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a
             /// <see cref="Color"/>.
             /// </param>
-            public static Forms.InfoPopupForm CreateStandard(string title = "", UIColorSet colors = null)
+            /// <param name="fixedSize">A client size the popup keeps whatever its content, with the content centered (a short value that changes while shown, like a percentage over a slider); none sizes it to the content.</param>
+            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null)
             {
-                return UIInfoPopupFactory.CreateStandard(title, colors);
+                return UIInfoPopupFactory.CreateStandard(colors, fixedSize);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static Forms.InfoPopupForm CreatePrimary(string title = "")
+            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null)
             {
-                return UIInfoPopupFactory.CreatePrimary(title);
-            }
-
-            /// <summary>The fixed-size form for one short value (a percentage over a slider): the text is centred and the popup does not change its size.</summary>
-            /// <param name="size">The fixed client size, or the default of the compact form.</param>
-            /// <param name="colors">A color set instead of the neutral gray; see <see cref="CreateStandard"/>.</param>
-            public static Forms.InfoPopupForm CreateStandardCompact(Size? size = null, UIColorSet colors = null)
-            {
-                return UIInfoPopupFactory.CreateStandardCompact(size, colors);
-            }
-
-            /// <summary>Like <see cref="CreateStandardCompact"/> but in the current accent color.</summary>
-            public static Forms.InfoPopupForm CreatePrimaryCompact(Size? size = null)
-            {
-                return UIInfoPopupFactory.CreatePrimaryCompact(size);
+                return UIInfoPopupFactory.CreatePrimary(fixedSize);
             }
         }
 
