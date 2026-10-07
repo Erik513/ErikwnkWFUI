@@ -7,10 +7,10 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A <see cref="System.Windows.Forms.ContextMenuStrip"/> themed to match
-    /// the rest of ErikwnkWFUI instead of the plain OS-default popup menu -
-    /// same click/keyboard/Items behavior as the native control, only the
-    /// rendering changes.
+    /// A <see cref="System.Windows.Forms.ContextMenuStrip"/> themed to match the rest of
+    /// ErikwnkWFUI instead of the plain system popup menu: the same clicks, keyboard and items
+    /// as the standard control, only the look changes. Get one through
+    /// <see cref="UIStyles.ContextMenuStrips"/>.
     /// </summary>
     /// <remarks>
     /// Themed: the menu items (text, icon, check mark, shortcut text, disabled look, submenu
@@ -78,13 +78,10 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // A ToolStripMenuItem's own submenu popup (its DropDown) is a
-        // separate ToolStripDropDownMenu the framework creates lazily and
-        // does not inherit this menu's Renderer/ShowImageMargin/ShowCheckMargin - re-applied
-        // to the whole tree on every Opening rather than once at Items.Add
-        // time, since a caller can keep adding submenu items to an
-        // already-built menu right up until it's shown. After the Opening event, not
-        // before: that is where applications fill a menu (and its submenus) on demand.
+        // A submenu is a drop-down of its own that does not take over the image and check margins
+        // of this menu. They are set on the whole tree at every opening, not once when an item
+        // is added, because items can still come until the menu shows. After the Opening event,
+        // not before: that is where applications fill a menu on demand.
         protected override void OnOpening(CancelEventArgs e)
         {
             base.OnOpening(e);
@@ -111,10 +108,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // A plain, parameterless factory - nothing outside this class ever
-        // needs a renderer for anything other than THIS menu's own
-        // SelectionBackColor, so there's no reason for a caller to be able
-        // to pass in a different color source.
+        // The renderer reads this menu's colors live; submenus get one too, so they do not
+        // depend on how the framework passes the owner's renderer down.
         private ToolStripRenderer CreateRenderer()
         {
             return new ThemedRenderer(this);
@@ -161,11 +156,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Every color here is read live off UIColors (and the owning menu's
-        // own SelectionBackColor) on each access - like the rest of this
-        // library's Paint handlers - instead of snapshotted once at
-        // construction, so a long-lived menu instance still renders
-        // correctly after a theme/accent change.
+        // Every color is read from UIColors and the menu on each access, not kept from the
+        // construction, so a long-lived menu follows a later change of theme or colors.
         private sealed class ThemedColorTable : ProfessionalColorTable
         {
             private readonly ContextMenuStrip _menu;
@@ -182,29 +174,18 @@ namespace ErikwnkWFUI.Controls
             public override Color ImageMarginGradientMiddle => UIColors.BackgroundMediumElevated;
             public override Color ImageMarginGradientEnd => UIColors.BackgroundMediumElevated;
 
-            // BorderLight, not BorderMedium - measured contrast against
-            // ToolStripDropDownBackground (BackgroundMediumElevated): 1.95:1
-            // vs 1.57:1 in Dark, 1.37:1 vs 1.24:1 in Light (Light theme's
-            // BorderLight is, counter to its name, the darkest-valued of
-            // the three border roles - see UIThemes.Light).
-            //
-            // With a color set the frame, and the border of a check mark's box, are the set's
-            // strong color (as the frame of an open combo box list); the neutral gray without.
+            // The frame and the border of a check mark's box: the set's strong color, or without
+            // a set BorderLight (not BorderMedium: more contrast against the menu in both
+            // themes, 1.95:1 against 1.57:1 in Dark and 1.37:1 against 1.24:1 in Light).
             public override Color MenuBorder => _menu.FrameColor;
             public override Color ButtonSelectedBorder => _menu.FrameColor;
 
             public override Color SeparatorDark => UIColors.BorderLight;
             public override Color SeparatorLight => UIColors.BorderLight;
 
-            // Derived from the CURRENT fill rather than a fixed role - a
-            // fixed UIColors.BorderLight border coincidentally equals
-            // CreateStandard's own default fill (SelectionBackColor also
-            // defaults to BorderLight), which made the border invisible
-            // again for exactly the most common case. Shifting away from
-            // the fill's own brightness (darker if the fill is light enough
-            // for dark text, lighter otherwise) keeps the two visually
-            // distinct no matter what SelectionBackColor is set to - gray,
-            // an accent color, or anything a consumer picks.
+            // Shifted away from the current fill (darker on a light one, lighter on a dark one),
+            // not a fixed color: BorderLight is also the default fill, and a border in the
+            // fill's own color is invisible.
             public override Color MenuItemBorder
             {
                 get

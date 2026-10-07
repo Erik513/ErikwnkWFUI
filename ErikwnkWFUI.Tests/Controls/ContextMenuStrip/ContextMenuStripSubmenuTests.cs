@@ -6,13 +6,10 @@ using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 namespace ErikwnkWFUI.Tests.Controls.ContextMenuStrip;
 
 /// <summary>
-/// A ToolStripMenuItem's own submenu popup (its DropDown) is a SEPARATE
-/// ToolStripDropDownMenu the framework creates lazily and does not inherit
-/// the parent ContextMenuStrip's Renderer/ShowImageMargin on its own -
-/// ContextMenuStrip.OnOpening walks the whole item tree and re-applies both
-/// every time the menu is about to show (see ApplyThemeToSubmenus). Invoked
-/// directly via reflection rather than through an actual on-screen Show(),
-/// which needs a real message loop this test project doesn't run.
+/// A submenu is a drop-down of its own that does not take over the image and check margins of
+/// the parent menu: ContextMenuStrip.OnOpening walks the whole item tree and sets them (and the
+/// renderer) every time the menu is about to show (see ApplyThemeToSubmenus). The opening is
+/// raised through reflection, not by showing a menu on screen.
 /// </summary>
 public class ContextMenuStripSubmenuTests
 {

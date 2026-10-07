@@ -7,13 +7,9 @@ using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 namespace ErikwnkWFUI.Tests.Controls.ContextMenuStrip;
 
 /// <summary>
-/// The ColorTable ContextMenuStrip's ThemedRenderer builds reads UIColors/
-/// SelectionBackColor LIVE on every access rather than snapshotting at
-/// construction (see ContextMenuStrip.ThemedColorTable) - re-reading a
-/// property after changing SelectionBackColor is itself the test that this
-/// stayed live instead of frozen. GetForeColor is invoked directly via
-/// reflection rather than through a real paint, which would need actual
-/// Graphics/rendering infrastructure this doesn't have.
+/// The color table of the menu's renderer reads UIColors and the menu live on every access
+/// (see ContextMenuStrip.ThemedColorTable): reading a property again after a change is the test
+/// that it stayed live. GetForeColor is called through reflection, not through a real paint.
 /// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary/
 /// BorderMedium/BackgroundMediumElevated/TextPrimary/TextDisabled, which
 /// UIColorsTests changes via SetAccent/ApplyTheme.
@@ -62,14 +58,8 @@ public class ContextMenuStripRenderingTests
         Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.SeparatorLight);
     }
 
-    // MenuItemBorder used to just return the item's own fill color
-    // (_selectionBackColor()) - a border drawn in the exact same color as
-    // the area it outlines is never visible, in any theme or accent. A
-    // later fix (a fixed UIColors.BorderLight) still coincided with
-    // CreateStandard's own default fill, since SelectionBackColor also
-    // defaults to BorderLight - so it's derived from the CURRENT fill now,
-    // shifted away from that fill's own brightness, which stays distinct
-    // regardless of what SelectionBackColor is set to.
+    // A border in the color of the fill it outlines is invisible, and BorderLight is also the
+    // default fill: the border is shifted away from the current fill, whatever it is.
     [Fact]
     public void ColorTable_MenuItemBorder_DiffersFromDefaultSelectionBackColor()
     {

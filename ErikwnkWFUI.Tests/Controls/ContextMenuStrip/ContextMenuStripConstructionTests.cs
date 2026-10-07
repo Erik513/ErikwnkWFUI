@@ -7,10 +7,8 @@ using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 namespace ErikwnkWFUI.Tests.Controls.ContextMenuStrip;
 
 /// <summary>
-/// Locks down CreateStandard's SelectionBackColor defaulting to a neutral
-/// gray (not the live accent) and CreatePrimary explicitly overriding it
-/// back to the accent - the same CreateStandard/CreatePrimary split every
-/// other control in this library already has (see UIContextMenuStripFactory).
+/// The defaults of a new menu: the neutral gray (not the accent) for CreateStandard, the primary
+/// set for CreatePrimary - the same split as every other control (see UIContextMenuStripFactory).
 /// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary/
 /// BorderLight, which UIColorsTests changes via SetAccent.
 /// </summary>
