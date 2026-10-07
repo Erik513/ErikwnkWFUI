@@ -51,7 +51,7 @@ namespace ErikwnkWFUI.Showcase
                  AddDataGridSection),
 
                 ("InfoPopupForm",
-                 "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps a fixed size for a short value, and is opaque or slightly, clearly (the default) or strongly transparent. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
+                 "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps a fixed size for a short value, and is opaque or slightly, clearly (the default) or strongly transparent. It hides itself after a short, medium (the default) or long time; every show call starts the time again, so it stays while the mouse moves over its control. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
                  AddInfoPopupsSection),
 
                 ("Labels",
@@ -103,7 +103,7 @@ namespace ErikwnkWFUI.Showcase
                  AddTextBoxesSection),
 
                 ("ToastForm",
-                 "A small confirmation that closes itself after a few seconds, near the bottom of the window. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high.",
+                 "A small confirmation that closes itself after a few seconds, near the bottom of the window. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high, and it stays a short, medium (the default) or long time.",
                  AddToastsSection),
 
                 ("ToggleSwitches",

@@ -129,6 +129,54 @@ public class ToastFormTests : IDisposable
         Assert.True(CurrentToast()!.Opacity > 0.80 && CurrentToast()!.Opacity < 1.0);
     }
 
+    private static int Interval(ToastForm toast) => toast.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Interval;
+
+    [Fact]
+    public void TheDuration_IsMediumByDefault_AndTheThreeLevelsAreOrdered()
+    {
+        Form host = CreateHost();
+
+        ToastForm.ShowToast("Default", host);
+        Assert.Equal(PopupDuration.Medium, CurrentToast()!.Duration);
+        Assert.Equal(2500, Interval(CurrentToast()!));
+
+        ToastForm.ShowToast("Short", host, duration: PopupDuration.Short);
+        int shortTime = Interval(CurrentToast()!);
+
+        ToastForm.ShowToast("Long", host, duration: PopupDuration.Long);
+        int longTime = Interval(CurrentToast()!);
+
+        Assert.True(shortTime < 2500 && 2500 < longTime, "the levels are not ordered");
+        Assert.Equal(PopupDuration.Long, CurrentToast()!.Duration);
+    }
+
+    [Fact]
+    public void ADurationChangedOnTheToast_ChangesItsTimer()
+    {
+        Form host = CreateHost();
+        ToastForm.ShowToast("x", host);
+        ToastForm toast = CurrentToast()!;
+
+        toast.Duration = PopupDuration.Short;
+
+        Assert.Equal(1500, Interval(toast));
+    }
+
+    [Fact]
+    public void AWaitingToast_KeepsItsDuration_AndItsTimeRunsFromWhenItIsShown()
+    {
+        Form host = CreateHost();
+        PopupSupport.OwnerIsActive = _ => false;
+        ToastForm.ShowToast("Waits", host, duration: PopupDuration.Long);
+
+        PopupSupport.OwnerIsActive = _ => true;
+        Activate(host);
+
+        Assert.Equal(PopupDuration.Long, CurrentToast()!.Duration);
+        Assert.Equal(4000, Interval(CurrentToast()!));
+        Assert.True(CurrentToast()!.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Enabled, "the time did not start with the show");
+    }
+
     [Fact]
     public void AWaitingToast_KeepsItsTransparency()
     {

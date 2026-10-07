@@ -977,15 +977,16 @@ namespace ErikwnkWFUI
             /// </param>
             /// <param name="fixedSize">A client size the popup keeps whatever its content, with the content centered (a short value that changes while shown, like a percentage over a slider); none sizes it to the content.</param>
             /// <param name="transparency">How see-through the popup is; medium by default.</param>
-            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium)
+            /// <param name="duration">How long the popup stays before it hides itself (3, 5 or 8 seconds); medium by default. Every show call starts the time again.</param>
+            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium)
             {
-                return UIInfoPopupFactory.CreateStandard(colors, fixedSize, transparency);
+                return UIInfoPopupFactory.CreateStandard(colors, fixedSize, transparency, duration);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium)
+            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium, Forms.PopupDuration duration = Forms.PopupDuration.Medium)
             {
-                return UIInfoPopupFactory.CreatePrimary(fixedSize, transparency);
+                return UIInfoPopupFactory.CreatePrimary(fixedSize, transparency, duration);
             }
         }
 

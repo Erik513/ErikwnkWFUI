@@ -63,6 +63,15 @@ namespace ErikwnkWFUI.Showcase
                         popup => popup.SetContent(SampleBlocks)));
             }
 
+            table.AddSection("Duration");
+
+            foreach (PopupDuration duration in new[] { PopupDuration.Short, PopupDuration.Medium, PopupDuration.Long })
+            {
+                table.AddRow(duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
+                    CreateClickButton(UIStyles.InfoPopups.CreateStandard(duration: duration), "Show popup", 160,
+                        popup => popup.SetContent(SampleBlocks)));
+            }
+
             table.AddSection("Places");
 
             table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
@@ -73,25 +82,18 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("Delayed at mouse", CreateHoverButton(UIStyles.InfoPopups.CreateStandard(), "Rest on me", 160, true));
         }
 
-        // A click-to-preview button: the popup is shown next to it and a timer hides it again
-        // (a real consumer shows it on MouseEnter and hides it on MouseLeave; see the hover rows).
+        // A click-to-preview button: the popup is shown next to it and hides itself after its
+        // duration (a real consumer shows it on MouseEnter and hides it on MouseLeave; see the
+        // hover rows).
         private Button CreateClickButton(InfoPopupForm popup, string caption, int width, Action<InfoPopupForm> setContent)
         {
             Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
-            Timer hideTimer = RegisterInfoPopup(popup);
-
-            hideTimer.Tick += delegate
-            {
-                hideTimer.Stop();
-                popup.Hide();
-            };
+            _infoPopups.Add(popup);
 
             button.Click += delegate
             {
                 setContent(popup);
                 popup.ShowNextTo(button);
-                hideTimer.Stop();
-                hideTimer.Start();
             };
 
             return button;
@@ -101,7 +103,7 @@ namespace ErikwnkWFUI.Showcase
         private Button CreateHoverButton(InfoPopupForm popup, string caption, int width, bool delayed)
         {
             Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
-            RegisterInfoPopup(popup);
+            _infoPopups.Add(popup);
 
             button.MouseMove += delegate
             {
@@ -129,47 +131,22 @@ namespace ErikwnkWFUI.Showcase
         private Button CreateCenteredAboveButton(InfoPopupForm popup, string caption, int width)
         {
             Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
-            Timer hideTimer = RegisterInfoPopup(popup);
-
-            hideTimer.Tick += delegate
-            {
-                hideTimer.Stop();
-                popup.Hide();
-            };
+            _infoPopups.Add(popup);
 
             button.MouseDown += (sender, e) =>
             {
                 popup.SetContent((int)Math.Round(100.0 * e.X / button.Width) + "%");
                 popup.ShowCenteredAbove(button, e.X);
-                hideTimer.Stop();
-                hideTimer.Start();
             };
 
             return button;
         }
 
-        private Timer RegisterInfoPopup(InfoPopupForm popup)
-        {
-            Timer hideTimer = new Timer { Interval = 3000 };
-
-            _infoPopups.Add(popup);
-            _infoPopupTimers.Add(hideTimer);
-
-            return hideTimer;
-        }
-
         private void DisposeInfoPopups()
         {
-            foreach (Timer timer in _infoPopupTimers)
-            {
-                timer.Stop();
-                timer.Dispose();
-            }
-
             foreach (InfoPopupForm popup in _infoPopups)
                 popup.Dispose();
 
-            _infoPopupTimers.Clear();
             _infoPopups.Clear();
         }
     }

@@ -10,7 +10,8 @@ namespace ErikwnkWFUI.Forms
 {
     /// <summary>
     /// A small, rounded, self-dismissing confirmation toast (checkmark +
-    /// message) - call the static <see cref="ShowToast"/> rather than
+    /// message), closing itself after a short, medium or long <see cref="PopupDuration"/> -
+    /// call the static <see cref="ShowToast"/> rather than
     /// constructing this directly. Only one toast shows at a time; showing
     /// a new one closes whatever's currently up. The toast belongs to its window: it is
     /// shown only while that window is in front, stays above its window but not above other
@@ -28,7 +29,6 @@ namespace ErikwnkWFUI.Forms
     {
         private const int ToastWidth = 350;
         private const int ToastHeight = 80;
-        private const int CloseDelay = 2500;
 
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
         public const int MaxPendingToasts = 3;
@@ -41,6 +41,7 @@ namespace ErikwnkWFUI.Forms
             public string Message;
             public DateTime Time;
             public PopupTransparency Transparency;
+            public PopupDuration Duration;
         }
 
         private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
@@ -63,22 +64,42 @@ namespace ErikwnkWFUI.Forms
             Load += OnToastLoad;
         }
 
-        /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, auto-closing itself after ~2.5s. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
+        /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         /// <param name="transparency">How see-through the toast is; medium by default.</param>
-        public static void ShowToast(string message, Form owner, PopupTransparency transparency = PopupTransparency.Medium)
+        /// <param name="duration">How long the toast stays: short, medium (2.5 seconds, the default) or long. The time runs from when it is shown, not from when it was asked for.</param>
+        public static void ShowToast(
+            string message,
+            Form owner,
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium)
         {
             if (owner == null || owner.IsDisposed)
                 return;
 
             if (!PopupSupport.CanShowOver(owner))
             {
-                Enqueue(message, owner, transparency);
+                Enqueue(message, owner, transparency, duration);
 
                 return;
             }
 
-            ShowNow(message, owner, transparency);
+            ShowNow(message, owner, transparency, duration);
         }
+
+        /// <summary>How long the toast stays before it closes itself.</summary>
+        public PopupDuration Duration
+        {
+            get { return _duration; }
+            set
+            {
+                _duration = value;
+
+                if (_closeTimer != null)
+                    _closeTimer.Interval = value.ToToastMilliseconds();
+            }
+        }
+
+        private PopupDuration _duration = PopupDuration.Medium;
 
         /// <summary>How see-through the toast is: not at all, slightly, clearly (the default) or strongly.</summary>
         public PopupTransparency Transparency
@@ -93,7 +114,7 @@ namespace ErikwnkWFUI.Forms
 
         private PopupTransparency _transparency = PopupTransparency.Medium;
 
-        private static void ShowNow(string message, Form owner, PopupTransparency transparency)
+        private static void ShowNow(string message, Form owner, PopupTransparency transparency, PopupDuration duration)
         {
             CloseCurrentToast();
 
@@ -101,6 +122,7 @@ namespace ErikwnkWFUI.Forms
             _currentToast = toast;
             toast._ownerForm = owner;
             toast.Transparency = transparency;
+            toast.Duration = duration;
 
             toast.SetMessage(message);
             toast.Location = GetToastLocation(owner, toast);
@@ -112,7 +134,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(string message, Form owner, PopupTransparency transparency)
+        private static void Enqueue(string message, Form owner, PopupTransparency transparency, PopupDuration duration)
         {
             List<PendingToast> queue;
 
@@ -128,7 +150,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count > 0 && queue[queue.Count - 1].Message == message)
                 return;
 
-            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency });
+            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration });
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -182,7 +204,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Message, owner, next.Transparency);
+            ShowNow(next.Message, owner, next.Transparency, next.Duration);
         }
 
         // The toast must not take the activation from the window it confirms something in.
@@ -301,7 +323,7 @@ namespace ErikwnkWFUI.Forms
         private void CreateTimer()
         {
             _closeTimer = new Timer();
-            _closeTimer.Interval = CloseDelay;
+            _closeTimer.Interval = _duration.ToToastMilliseconds();
             _closeTimer.Tick += OnCloseTimerTick;
         }
 

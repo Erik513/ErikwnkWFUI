@@ -35,7 +35,8 @@ namespace ErikwnkWFUI.Forms
     /// is shown only while that window is in front, not when another window or program covers
     /// it and not over a minimized window. It stays above its window but not above other
     /// programs and moves with the window. It never takes the activation (not on show, not on
-    /// a click), so the window next to it keeps the focus. Hide it with <c>Hide</c>;
+    /// a click), so the window next to it keeps the focus. It hides itself after its
+    /// <see cref="Duration"/>; hide it earlier with <c>Hide</c>;
     /// <c>Close</c> disposes it, as for any form shown with an owner, and it closes with its
     /// owner form.
     ///
@@ -69,6 +70,8 @@ namespace ErikwnkWFUI.Forms
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
         private PopupTransparency _transparency = PopupTransparency.Medium;
+        private PopupDuration _duration = PopupDuration.Medium;
+        private Timer _hideTimer;
         private Size _fixedSize = Size.Empty;
 
         public InfoPopupForm()
@@ -83,7 +86,29 @@ namespace ErikwnkWFUI.Forms
             _showDelayTimer = new Timer { Interval = 400 };
             _showDelayTimer.Tick += OnShowDelayTimerTick;
 
+            _hideTimer = new Timer { Interval = _duration.ToInfoMilliseconds() };
+            _hideTimer.Tick += delegate
+            {
+                _hideTimer.Stop();
+                Hide();
+            };
+
             Load += delegate { ApplyRoundedCorners(); };
+        }
+
+        /// <summary>
+        /// How long the popup stays after it was shown (or moved) before it hides itself: 3, 5
+        /// (the default) or 8 seconds. Every show call starts the time again, so a popup that
+        /// is shown from a MouseMove handler stays while the mouse moves over its control.
+        /// </summary>
+        public PopupDuration Duration
+        {
+            get { return _duration; }
+            set
+            {
+                _duration = value;
+                _hideTimer.Interval = value.ToInfoMilliseconds();
+            }
         }
 
         /// <summary>How see-through the popup is: not at all, slightly, clearly (the default) or strongly.</summary>
@@ -339,6 +364,9 @@ namespace ErikwnkWFUI.Forms
             }
 
             _follower.Attach(this, ownerForm);
+
+            _hideTimer.Stop();
+            _hideTimer.Start();
         }
 
         protected override void OnVisibleChanged(EventArgs e)
@@ -346,7 +374,10 @@ namespace ErikwnkWFUI.Forms
             base.OnVisibleChanged(e);
 
             if (!Visible)
+            {
                 _follower.Detach();
+                _hideTimer.Stop();
+            }
         }
 
         private Point GetLocationNextTo(Control owner)
@@ -591,7 +622,16 @@ namespace ErikwnkWFUI.Forms
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 _follower.Detach();
+
+                if (_hideTimer != null)
+                {
+                    _hideTimer.Stop();
+                    _hideTimer.Dispose();
+                    _hideTimer = null;
+                }
+            }
 
             if (disposing && _showDelayTimer != null)
             {

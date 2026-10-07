@@ -557,6 +557,72 @@ public class InfoPopupBehaviorTests : IDisposable
         Assert.Equal(new Point(placed.X + 30, placed.Y), popup.Location);
     }
 
+    // ---- the time it stays ----
+
+    private static int Interval(InfoPopupForm popup) => popup.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.Interval;
+
+    private static bool TimeRuns(InfoPopupForm popup) => popup.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.Enabled;
+
+    [Fact]
+    public void TheDuration_IsMediumByDefault_AndTheThreeLevelsAreOrdered()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        Assert.Equal(PopupDuration.Medium, popup.Duration);
+        Assert.Equal(5000, Interval(popup));
+
+        popup.Duration = PopupDuration.Short;
+        int shortTime = Interval(popup);
+        popup.Duration = PopupDuration.Long;
+        int longTime = Interval(popup);
+
+        Assert.True(shortTime < 5000 && 5000 < longTime, "the levels are not ordered");
+    }
+
+    [Fact]
+    public void TheFactoryMethods_TakeTheDuration()
+    {
+        InfoPopupForm standard = ErikwnkWFUI.UIStyles.InfoPopups.CreateStandard(duration: PopupDuration.Short);
+        InfoPopupForm primary = ErikwnkWFUI.UIStyles.InfoPopups.CreatePrimary(duration: PopupDuration.Long);
+        _forms.Add(standard);
+        _forms.Add(primary);
+
+        Assert.Equal(PopupDuration.Short, standard.Duration);
+        Assert.Equal(3000, Interval(standard));
+        Assert.Equal(PopupDuration.Long, primary.Duration);
+        Assert.Equal(8000, Interval(primary));
+    }
+
+    [Fact]
+    public void TheTime_StartsWithEveryShow_AndStopsWhenThePopupIsHidden()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+
+        Assert.False(TimeRuns(popup));
+
+        popup.ShowNextTo(owner);
+        Assert.True(TimeRuns(popup));
+
+        popup.Hide();
+        Assert.False(TimeRuns(popup));
+    }
+
+    [Fact]
+    public void WhenTheTimeIsUp_ThePopupHidesItself()
+    {
+        (Form _, Button owner) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(owner);
+        Assert.True(popup.Visible);
+
+        popup.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.InvokePrivate("OnTick", EventArgs.Empty);
+
+        Assert.False(popup.Visible);
+    }
+
     [Fact]
     public void AClickOnThePopup_DoesNotActivateIt()
     {

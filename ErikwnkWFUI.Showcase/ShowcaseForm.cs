@@ -62,7 +62,6 @@ namespace ErikwnkWFUI.Showcase
         private Control _pageTabs;
         private int _selectedPageIndex;
         private readonly List<InfoPopupForm> _infoPopups = new List<InfoPopupForm>();
-        private readonly List<Timer> _infoPopupTimers = new List<Timer>();
         private bool _isLightTheme;
 
         // Lets every ProgressBars-section row (the setters registered by
