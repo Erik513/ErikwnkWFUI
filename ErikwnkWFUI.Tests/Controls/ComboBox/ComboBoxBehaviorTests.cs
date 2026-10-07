@@ -272,6 +272,49 @@ public class ComboBoxBehaviorTests : IDisposable
     }
 
     [Fact]
+    public void AfterALanguageSwitch_ReplaceItemsRelabelsTheClosedBox_LikeABoxBuiltWithTheNewText()
+    {
+        // The re-localization case: the same choices come back in another language.
+        ErikwnkWFUI.Controls.ComboBox switched = Show("Yes", "No", "Cancel");
+        switched.SelectedIndex = 1;
+        ErikwnkWFUI.Controls.ComboBox fresh = Show("Ja", "Nein", "Abbrechen");
+        fresh.SelectedIndex = 1;
+
+        using Bitmap before = Snapshot(switched);
+        UIStyles.ComboBoxes.ReplaceItems(switched, new object[] { "Ja", "Nein", "Abbrechen" });
+        Pump();
+
+        using Bitmap after = Snapshot(switched);
+        using Bitmap expected = Snapshot(fresh);
+
+        Assert.Equal("Nein", switched.GetItemText(switched.SelectedItem));
+        Assert.False(SamePicture(before, after), "the closed box still shows the old text");
+        Assert.True(SamePicture(after, expected), "the closed box differs from one built with the new text");
+    }
+
+    private static Bitmap Snapshot(Control control)
+    {
+        Bitmap bitmap = new Bitmap(control.Width, control.Height);
+        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
+
+        return bitmap;
+    }
+
+    private static bool SamePicture(Bitmap first, Bitmap second)
+    {
+        for (int y = 0; y < first.Height; y++)
+        {
+            for (int x = 0; x < first.Width; x++)
+            {
+                if (first.GetPixel(x, y) != second.GetPixel(x, y))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    [Fact]
     public void ReplaceItems_WithoutKeepSelection_ClearsIt_AndNullArgumentsAreIgnored()
     {
         ErikwnkWFUI.Controls.ComboBox box = Show("a", "b", "c");
