@@ -12,6 +12,18 @@ namespace ErikwnkWFUI.Controls
     /// same click/keyboard/Items behavior as the native control, only the
     /// rendering changes.
     /// </summary>
+    /// <remarks>
+    /// Themed: the menu items (text, icon, check mark, shortcut text, disabled look, submenu
+    /// arrow), separators, the frame and every submenu, which gets the look when the menu
+    /// opens (so items can still be added to a menu that is built already). The image and
+    /// check margins follow the menu into its submenus.
+    ///
+    /// Not themed, and left as the standard control has them: controls hosted in the menu
+    /// (<c>ToolStripComboBox</c>, <c>ToolStripTextBox</c>, <c>ToolStripProgressBar</c>) and a
+    /// <c>ToolStripButton</c>; they keep the system's look. An application that sets
+    /// <c>Renderer</c> or <c>RenderMode</c> itself gets its own look and the library's is gone.
+    /// <c>RightToLeft</c> is not supported.
+    /// </remarks>
     public class ContextMenuStrip : System.Windows.Forms.ContextMenuStrip
     {
         private readonly ThemeColor _selectionBackColor;
@@ -53,9 +65,22 @@ namespace ErikwnkWFUI.Controls
             set => _selectionBackColor.Set(value);
         }
 
+        // The frame of the menu: the set's strong color (brought to 6:1 against the menu), or
+        // the neutral gray without a set or with an explicit selection color.
+        internal Color FrameColor
+        {
+            get
+            {
+                if (_colors == null || _selectionBackColor.IsSet)
+                    return UIColors.BorderLight;
+
+                return UIColors.EnsureContrast(_colors.Pressed, UIColors.BackgroundMediumElevated, 6.0);
+            }
+        }
+
         // A ToolStripMenuItem's own submenu popup (its DropDown) is a
         // separate ToolStripDropDownMenu the framework creates lazily and
-        // does not inherit this menu's Renderer/ShowImageMargin - re-applied
+        // does not inherit this menu's Renderer/ShowImageMargin/ShowCheckMargin - re-applied
         // to the whole tree on every Opening rather than once at Items.Add
         // time, since a caller can keep adding submenu items to an
         // already-built menu right up until it's shown.
@@ -75,6 +100,7 @@ namespace ErikwnkWFUI.Controls
                 {
                     dropDown.Renderer = CreateRenderer();
                     dropDown.ShowImageMargin = ShowImageMargin;
+                    dropDown.ShowCheckMargin = ShowCheckMargin;
 
                     ApplyThemeToSubmenus(menuItem.DropDownItems);
                 }
@@ -157,7 +183,11 @@ namespace ErikwnkWFUI.Controls
             // vs 1.57:1 in Dark, 1.37:1 vs 1.24:1 in Light (Light theme's
             // BorderLight is, counter to its name, the darkest-valued of
             // the three border roles - see UIThemes.Light).
-            public override Color MenuBorder => UIColors.BorderLight;
+            //
+            // With a color set the frame, and the border of a check mark's box, are the set's
+            // strong color (as the frame of an open combo box list); the neutral gray without.
+            public override Color MenuBorder => _menu.FrameColor;
+            public override Color ButtonSelectedBorder => _menu.FrameColor;
 
             public override Color SeparatorDark => UIColors.BorderLight;
             public override Color SeparatorLight => UIColors.BorderLight;

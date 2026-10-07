@@ -67,6 +67,59 @@ public class ContextMenuStripColorSetTests
     }
 
     [Fact]
+    public void TheFrame_IsGrayWithoutASet_AndTheSetsStrongColorWithOne()
+    {
+        using WfuiContextMenuStrip gray = UIStyles.ContextMenuStrips.CreateStandard();
+        using WfuiContextMenuStrip green = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
+        Color expected = UIColors.EnsureContrast(UIStyles.Colors.Sets.Green.Pressed, UIColors.BackgroundMediumElevated, 6.0);
+
+        Assert.Equal(UIColors.BorderLight, Renderer(gray).ColorTable.MenuBorder);
+        Assert.Equal(expected, Renderer(green).ColorTable.MenuBorder);
+
+        // The box of a check mark has the same border.
+        Assert.Equal(expected, Renderer(green).ColorTable.ButtonSelectedBorder);
+        Assert.Equal(UIColors.BorderLight, Renderer(gray).ColorTable.ButtonSelectedBorder);
+    }
+
+    [Fact]
+    public void AnExplicitSelectionColor_KeepsTheGrayFrame()
+    {
+        using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
+
+        menu.SelectionBackColor = Color.Red;
+
+        Assert.Equal(UIColors.BorderLight, Renderer(menu).ColorTable.MenuBorder);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TheFrame_StandsOutFromTheMenu_ForEverySet_InBothThemes(bool lightTheme)
+    {
+        List<string> shortfalls = new List<string>();
+
+        try
+        {
+            UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
+
+            foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
+            {
+                using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard((UIColorSet)property.GetValue(null)!);
+                double ratio = ColorContrastHelper.GetContrastRatio(Renderer(menu).ColorTable.MenuBorder, UIColors.BackgroundMediumElevated);
+
+                if (ratio < 3.0)
+                    shortfalls.Add(property.Name + " " + ratio.ToString("0.0"));
+            }
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+
+        Assert.True(shortfalls.Count == 0, (lightTheme ? "Light: " : "Dark: ") + string.Join(", ", shortfalls));
+    }
+
+    [Fact]
     public void AnExplicitSelectionColor_WinsOverTheSet()
     {
         Color explicitColor = Color.FromArgb(200, 200, 200);
