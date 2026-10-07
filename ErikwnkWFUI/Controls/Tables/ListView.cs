@@ -582,6 +582,48 @@ namespace ErikwnkWFUI.Controls
         // partial-repaint artifact on an owner-drawn control) - forcing a
         // full repaint on every scroll message gets rid of it.
 
+        private const int WM_NCPAINT = 0x0085;
+        private const int GWL_STYLE = -16;
+        private const int WS_HSCROLL = 0x00100000;
+        private const int WS_VSCROLL = 0x00200000;
+
+        // Where both scroll bars meet, the system leaves a light square even with dark bars.
+        // Painted over in the color of the bars' track.
+        private void PaintScrollBarCorner()
+        {
+            int style = GetWindowLong(Handle, GWL_STYLE);
+
+            if (!NativeControlTheme.IsDark || (style & WS_HSCROLL) == 0 || (style & WS_VSCROLL) == 0)
+                return;
+
+            NativeRect window;
+            NativeRect client;
+
+            if (!GetWindowRect(Handle, out window) || !GetClientRect(Handle, out client))
+                return;
+
+            int barWidth = SystemInformation.VerticalScrollBarWidth * DeviceDpi / 96;
+            int barHeight = SystemInformation.HorizontalScrollBarHeight * DeviceDpi / 96;
+            int border = Math.Max(0, (window.Right - window.Left - client.Right - barWidth) / 2);
+            Rectangle corner = new Rectangle(border + client.Right, border + client.Bottom, barWidth, barHeight);
+
+            IntPtr hdc = GetWindowDC(Handle);
+
+            if (hdc == IntPtr.Zero)
+                return;
+
+            try
+            {
+                using (Graphics g = Graphics.FromHdc(hdc))
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(23, 23, 23)))
+                    g.FillRectangle(brush, corner);
+            }
+            finally
+            {
+                ReleaseDC(Handle, hdc);
+            }
+        }
+
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
@@ -606,6 +648,9 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            if (m.Msg == WM_NCPAINT)
+                PaintScrollBarCorner();
 
             if (m.Msg == WM_PAINT)
             {
