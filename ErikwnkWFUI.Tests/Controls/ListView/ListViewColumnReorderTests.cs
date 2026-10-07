@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Tests.Infrastructure;
+﻿using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListView = ErikwnkWFUI.Controls.ListView;
 
 namespace ErikwnkWFUI.Tests.Controls.ListView;

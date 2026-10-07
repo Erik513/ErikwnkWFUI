@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListBox = ErikwnkWFUI.Controls.ListBox;

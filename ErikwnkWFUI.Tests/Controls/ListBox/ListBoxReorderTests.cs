@@ -1,4 +1,4 @@
-using WfuiListBox = ErikwnkWFUI.Controls.ListBox;
+﻿using WfuiListBox = ErikwnkWFUI.Controls.ListBox;
 
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
 

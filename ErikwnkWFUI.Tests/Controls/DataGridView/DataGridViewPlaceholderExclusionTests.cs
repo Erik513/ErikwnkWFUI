@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;

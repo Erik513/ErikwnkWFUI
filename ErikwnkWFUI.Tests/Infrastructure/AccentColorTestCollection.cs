@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Tests.Infrastructure;
+﻿namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// UIColors.SetAccent mutates static state (Primary, Selection, ...) shared

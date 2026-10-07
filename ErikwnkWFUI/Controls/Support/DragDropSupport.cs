@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Windows.Forms;
 
 namespace ErikwnkWFUI.Controls

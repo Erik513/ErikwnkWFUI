@@ -1,4 +1,4 @@
-#if NETFRAMEWORK
+﻿#if NETFRAMEWORK
 namespace System.Runtime.CompilerServices
 {
     // The compiler needs this type for records and init-only properties;

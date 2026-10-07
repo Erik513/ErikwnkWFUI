@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Tests.Infrastructure;
+﻿namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// UIStrings.Language mutates static state shared by the whole process,

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
 

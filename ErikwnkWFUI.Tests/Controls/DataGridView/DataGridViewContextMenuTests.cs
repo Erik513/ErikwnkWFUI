@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;

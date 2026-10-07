@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Styles;
+﻿using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiListBoxControl = ErikwnkWFUI.Controls.ListBoxControl;
 

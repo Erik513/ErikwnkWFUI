@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 // Grants the test project direct access to internal-but-not-control types
 // (ColumnLayoutMath, ColumnFeatureSwitch, ...) shared between ListView and

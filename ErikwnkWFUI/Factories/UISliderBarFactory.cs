@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Controls;
+﻿using ErikwnkWFUI.Controls;
 
 namespace ErikwnkWFUI.Factories
 {

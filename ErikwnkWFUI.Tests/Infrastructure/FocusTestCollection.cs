@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Tests.Infrastructure;
+﻿namespace ErikwnkWFUI.Tests.Infrastructure;
 
 /// <summary>
 /// Tests that show a real form and depend on which window has the focus
