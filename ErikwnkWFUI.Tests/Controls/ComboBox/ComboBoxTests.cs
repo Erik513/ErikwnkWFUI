@@ -74,7 +74,7 @@ public class ComboBoxTests
     {
         // A set with its own text color (not the one the contrast rule would pick).
         UIColorSet set = UIStyles.Colors.CreateSet(
-            Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(40, 180, 90), Color.FromArgb(255, 210, 0));
+            Color.FromArgb(10, 70, 30), Color.FromArgb(10, 80, 40), Color.FromArgb(40, 180, 90), Color.FromArgb(255, 210, 0));
         using System.Windows.Forms.ComboBox box = Create(set);
 
         Assert.Equal(UIColors.BackgroundMedium, Background(box, 0, DrawItemState.None));

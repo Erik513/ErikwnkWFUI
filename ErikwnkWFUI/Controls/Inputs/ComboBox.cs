@@ -225,11 +225,11 @@ namespace ErikwnkWFUI.Controls
             // neutral gray of the other controls' selections without a set.
             Color backColor = !isSelected
                 ? UIColors.BackgroundMedium
-                : _colors != null ? _colors.Hover : UIColors.BorderLight;
+                : _colors != null ? GetReadableFill(_colors.Hover, _colors.HoverText) : UIColors.BorderLight;
 
             // A disabled box draws its text muted.
             Color textColor = !Enabled
-                ? UIColors.TextDisabled
+                ? GetDisabledTextColor(backColor)
                 : isSelected
                     ? (_colors != null ? _colors.HoverText : UIColors.GetContrastingForeColor(backColor))
                     : UIColors.TextPrimary;
@@ -294,7 +294,7 @@ namespace ErikwnkWFUI.Controls
             {
                 m.Msg = WM_CTLCOLOREDIT;
                 base.WndProc(ref m);
-                SetTextColor(m.WParam, ColorTranslator.ToWin32(Enabled ? ForeColor : UIColors.DisabledGray));
+                SetTextColor(m.WParam, ColorTranslator.ToWin32(Enabled ? ForeColor : GetDisabledTextColor(BackColor)));
 
                 return;
             }
@@ -371,6 +371,27 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The set's hover color for the selected row, shifted in lightness just far enough that
+        // the set's text reads on it (4.5:1): a few sets have a mid-tone hover color where neither
+        // light nor dark text gets there.
+        private static Color GetReadableFill(Color fill, Color text)
+        {
+            double step = UIColors.GetContrastRatio(text, Color.White) < UIColors.GetContrastRatio(text, Color.Black) ? -0.01 : 0.01;
+            Color result = fill;
+
+            for (int i = 0; i < 40 && UIColors.GetContrastRatio(text, result) < 4.5; i++)
+                result = UIColors.ShiftLightness(result, step);
+
+            return result;
+        }
+
+        // Disabled text, as on the buttons and the check box: the contrasting color blended toward
+        // the surface. The theme's TextDisabled is too faint on the light theme.
+        internal static Color GetDisabledTextColor(Color surface)
+        {
+            return UIColors.BlendToward(UIColors.GetContrastingForeColor(surface), surface, 0.35);
+        }
+
         private void PaintClosed(Graphics g, bool withText = true)
         {
             Rectangle bounds = ClientRectangle;
@@ -396,7 +417,7 @@ namespace ErikwnkWFUI.Controls
             int inset = Scale(2);
             int arrowWidth = Scale(ArrowWidth96);
             Rectangle arrowArea = new Rectangle(bounds.Right - arrowWidth - inset, bounds.Top, arrowWidth, bounds.Height);
-            Color textColor = Enabled ? ForeColor : UIColors.TextDisabled;
+            Color textColor = Enabled ? ForeColor : GetDisabledTextColor(BackColor);
             Color arrowColor = !Enabled ? UIColors.DisabledGray : isActive ? border : textColor;
 
             DrawArrow(g, arrowArea, arrowColor);

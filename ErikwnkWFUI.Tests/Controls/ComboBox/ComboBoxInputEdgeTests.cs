@@ -165,7 +165,7 @@ public class ComboBoxInputEdgeTests : IDisposable
         try
         {
             SendMessage(box.Handle, 0x138, dc, box.Handle);
-            Assert.Equal(ColorTranslator.ToWin32(UIColors.DisabledGray), GetTextColor(dc));
+            Assert.Equal(ColorTranslator.ToWin32(ErikwnkWFUI.Controls.ComboBox.GetDisabledTextColor(box.BackColor)), GetTextColor(dc));
         }
         finally
         {
