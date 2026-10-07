@@ -228,13 +228,13 @@ public class ComboBoxClosedBoxTests
     }
 
     [Fact]
-    public void TheOtherDropDownStyles_KeepTheSystemsClosedBox()
+    public void TheStylesWithATextField_AreNotPaintedWholeByTheLibrary()
     {
         foreach (ComboBoxStyle style in new[] { ComboBoxStyle.DropDown, ComboBoxStyle.Simple })
         {
             using ErikwnkWFUI.Controls.ComboBox box = Create(null, style);
 
-            // Not painted by the library (the text field inside stays the system's) ...
+            // Not painted whole by the library (the text field inside stays the system's) ...
             Assert.False(box.OwnsClosedPainting, style + " is painted by the library");
 
             Exception? thrown = Record.Exception(() =>

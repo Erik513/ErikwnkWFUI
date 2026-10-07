@@ -194,10 +194,11 @@ public class ComboBoxStandardBehaviorTests
     }
 
     [Fact]
-    public void TheDropDownStyleWithATextField_KeepsTheSystemsClosedBox_ButTheRowsAreTheLibrarys()
+    public void TheStylesWithATextField_KeepTheSystemsTextField_ButTheRowsAreTheLibrarys()
     {
-        // Only the drop-down list has its closed box drawn by the library; the style with a text
-        // field inside keeps the system's, but its list is drawn row by row like the others.
+        // Only the drop-down list has its whole closed box drawn by the library; the styles with
+        // a text field inside keep that field the system's (the editable one gets its border and
+        // arrow from the library), and their list is drawn row by row like the others.
         foreach (ComboBoxStyle style in new[] { ComboBoxStyle.DropDown, ComboBoxStyle.Simple })
         {
             ErikwnkWFUI.Controls.ComboBox box = Create(style);
