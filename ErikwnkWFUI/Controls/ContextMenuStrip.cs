@@ -83,19 +83,23 @@ namespace ErikwnkWFUI.Controls
         // does not inherit this menu's Renderer/ShowImageMargin/ShowCheckMargin - re-applied
         // to the whole tree on every Opening rather than once at Items.Add
         // time, since a caller can keep adding submenu items to an
-        // already-built menu right up until it's shown.
+        // already-built menu right up until it's shown. After the Opening event, not
+        // before: that is where applications fill a menu (and its submenus) on demand.
         protected override void OnOpening(CancelEventArgs e)
         {
-            ApplyThemeToSubmenus(Items);
             base.OnOpening(e);
+
+            if (!e.Cancel)
+                ApplyThemeToSubmenus(Items);
         }
 
         private void ApplyThemeToSubmenus(ToolStripItemCollection items)
         {
             foreach (ToolStripItem item in items)
             {
+                // Every menu item, not just those with children now: an application can fill a
+                // submenu when it is about to drop down (DropDownOpening), after this ran.
                 if (item is ToolStripMenuItem menuItem
-                    && menuItem.HasDropDownItems
                     && menuItem.DropDown is ToolStripDropDownMenu dropDown)
                 {
                     dropDown.Renderer = CreateRenderer();
