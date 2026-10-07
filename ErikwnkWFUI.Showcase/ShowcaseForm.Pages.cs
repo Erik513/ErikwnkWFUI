@@ -50,6 +50,10 @@ namespace ErikwnkWFUI.Showcase
                  "Tables bound to a list. The editable ones (CreateStandard, CreatePrimary) let the user add, delete, cut and paste rows; the read-only ones (CreateReadOnlyStandard, CreateReadOnlyPrimary) only sort by clicking a column header, and the right one of each pair is disabled. Primary uses the accent color for the selection, and with colors: a color set (see the Buttons tab) any other color does.",
                  AddDataGridSection),
 
+                ("InfoPopupForm",
+                 "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps a fixed size for a short value. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
+                 AddInfoPopupsSection),
+
                 ("Labels",
                  "Three text styles: Title, Normal and Muted (for secondary text). Left enabled, right disabled.",
                  AddLabelsSection),
