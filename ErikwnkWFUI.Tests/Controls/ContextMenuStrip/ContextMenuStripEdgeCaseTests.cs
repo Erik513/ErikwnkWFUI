@@ -136,7 +136,7 @@ public class ContextMenuStripEdgeCaseTests
         menu.Colors = null;
 
         Assert.Equal(UIColors.BorderLight, renderer.ColorTable.MenuItemSelectedGradientBegin);
-        Assert.Equal(UIColors.BorderLight, renderer.ColorTable.MenuBorder);
+        Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated), renderer.ColorTable.MenuBorder);
     }
 
     [Fact]

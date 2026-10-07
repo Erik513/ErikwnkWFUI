@@ -139,7 +139,7 @@ public class ComboBoxColorContrastTests
 
                 box.Enabled = false;
 
-                Check(shortfalls, name + " disabled text", ErikwnkWFUI.Controls.ComboBox.GetDisabledTextColor(box.BackColor), box.BackColor, 3.0);
+                Check(shortfalls, name + " disabled text", UIColors.GetDisabledText(box.BackColor), box.BackColor, 3.0);
                 Check(shortfalls, name + " disabled border", box.BorderColor, box.BackColor, 1.8);
 
                 using (Bitmap row = DrawRow(box, DrawItemState.None))

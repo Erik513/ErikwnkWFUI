@@ -231,7 +231,7 @@ namespace ErikwnkWFUI.Controls
 
             // A disabled box draws its text muted.
             Color textColor = !Enabled
-                ? GetDisabledTextColor(backColor)
+                ? UIColors.GetDisabledText(backColor)
                 : isSelected
                     ? (_colors != null ? _colors.HoverText : UIColors.GetContrastingForeColor(backColor))
                     : UIColors.TextPrimary;
@@ -296,7 +296,7 @@ namespace ErikwnkWFUI.Controls
             {
                 m.Msg = WM_CTLCOLOREDIT;
                 base.WndProc(ref m);
-                SetTextColor(m.WParam, ColorTranslator.ToWin32(Enabled ? ForeColor : GetDisabledTextColor(BackColor)));
+                SetTextColor(m.WParam, ColorTranslator.ToWin32(Enabled ? ForeColor : UIColors.GetDisabledText(BackColor)));
 
                 return;
             }
@@ -373,13 +373,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Disabled text, as on the buttons and the check box: the contrasting color blended toward
-        // the surface. The theme's TextDisabled is too faint on the light theme.
-        internal static Color GetDisabledTextColor(Color surface)
-        {
-            return UIColors.BlendToward(UIColors.GetContrastingForeColor(surface), surface, 0.35);
-        }
-
         private void PaintClosed(Graphics g, bool withText = true)
         {
             Rectangle bounds = ClientRectangle;
@@ -405,7 +398,7 @@ namespace ErikwnkWFUI.Controls
             int inset = Scale(2);
             int arrowWidth = Scale(ArrowWidth96);
             Rectangle arrowArea = new Rectangle(bounds.Right - arrowWidth - inset, bounds.Top, arrowWidth, bounds.Height);
-            Color textColor = Enabled ? ForeColor : GetDisabledTextColor(BackColor);
+            Color textColor = Enabled ? ForeColor : UIColors.GetDisabledText(BackColor);
             Color arrowColor = !Enabled ? UIColors.DisabledGray : isActive ? border : textColor;
 
             DrawArrow(g, arrowArea, arrowColor);

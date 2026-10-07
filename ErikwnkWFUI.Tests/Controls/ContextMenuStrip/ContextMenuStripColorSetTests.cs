@@ -29,6 +29,8 @@ public class ContextMenuStripColorSetTests
         public override bool Selected => _selected;
     }
 
+    private static Color Outline => UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated);
+
     private static ToolStripProfessionalRenderer Renderer(WfuiContextMenuStrip menu)
     {
         return Assert.IsAssignableFrom<ToolStripProfessionalRenderer>(menu.Renderer);
@@ -67,28 +69,28 @@ public class ContextMenuStripColorSetTests
     }
 
     [Fact]
-    public void TheFrame_IsGrayWithoutASet_AndTheSetsStrongColorWithOne()
+    public void TheFrame_IsTheOutlineWithoutASet_AndTheSetsStrongColorWithOne()
     {
         using WfuiContextMenuStrip gray = UIStyles.ContextMenuStrips.CreateStandard();
         using WfuiContextMenuStrip green = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
         Color expected = UIColors.EnsureContrast(UIStyles.Colors.Sets.Green.Pressed, UIColors.BackgroundMediumElevated, 6.0);
 
-        Assert.Equal(UIColors.BorderLight, Renderer(gray).ColorTable.MenuBorder);
+        Assert.Equal(Outline, Renderer(gray).ColorTable.MenuBorder);
         Assert.Equal(expected, Renderer(green).ColorTable.MenuBorder);
 
         // The box of a check mark has the same border.
         Assert.Equal(expected, Renderer(green).ColorTable.ButtonSelectedBorder);
-        Assert.Equal(UIColors.BorderLight, Renderer(gray).ColorTable.ButtonSelectedBorder);
+        Assert.Equal(Outline, Renderer(gray).ColorTable.ButtonSelectedBorder);
     }
 
     [Fact]
-    public void AnExplicitSelectionColor_KeepsTheGrayFrame()
+    public void AnExplicitSelectionColor_KeepsTheOutlineFrame()
     {
         using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green);
 
         menu.SelectionBackColor = Color.Red;
 
-        Assert.Equal(UIColors.BorderLight, Renderer(menu).ColorTable.MenuBorder);
+        Assert.Equal(Outline, Renderer(menu).ColorTable.MenuBorder);
     }
 
     [Theory]

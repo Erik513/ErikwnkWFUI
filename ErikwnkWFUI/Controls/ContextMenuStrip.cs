@@ -66,13 +66,14 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The frame of the menu: the set's strong color (brought to 6:1 against the menu), or
-        // the neutral gray without a set or with an explicit selection color.
+        // the neutral outline (3:1, as the other controls) without a set or with an explicit
+        // selection color.
         internal Color FrameColor
         {
             get
             {
                 if (_colors == null || _selectionBackColor.IsSet)
-                    return UIColors.BorderLight;
+                    return UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated);
 
                 return UIColors.EnsureContrast(_colors.Pressed, UIColors.BackgroundMediumElevated, 6.0);
             }
@@ -140,7 +141,7 @@ namespace ErikwnkWFUI.Controls
             private Color GetForeColor(ToolStripItem item)
             {
                 if (!item.Enabled)
-                    return UIColors.TextDisabled;
+                    return UIColors.GetDisabledText(UIColors.BackgroundMediumElevated);
 
                 bool highlighted = item.Selected || item.Pressed;
 
@@ -175,8 +176,7 @@ namespace ErikwnkWFUI.Controls
             public override Color ImageMarginGradientEnd => UIColors.BackgroundMediumElevated;
 
             // The frame and the border of a check mark's box: the set's strong color, or without
-            // a set BorderLight (not BorderMedium: more contrast against the menu in both
-            // themes, 1.95:1 against 1.57:1 in Dark and 1.37:1 against 1.24:1 in Light).
+            // a set the 3:1 outline.
             public override Color MenuBorder => _menu.FrameColor;
             public override Color ButtonSelectedBorder => _menu.FrameColor;
 

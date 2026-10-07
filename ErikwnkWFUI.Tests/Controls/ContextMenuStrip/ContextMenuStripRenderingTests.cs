@@ -38,15 +38,12 @@ public class ContextMenuStripRenderingTests
         Assert.Equal(UIColors.BackgroundMediumElevated, GetRenderer(menu).ColorTable.ToolStripDropDownBackground);
     }
 
-    // BorderLight, not BorderMedium - measured to have better contrast
-    // against ToolStripDropDownBackground in both themes (see
-    // ContextMenuStrip.ThemedColorTable.MenuBorder's own comment).
     [Fact]
-    public void ColorTable_MenuBorderMatchesBorderLight()
+    public void ColorTable_MenuBorder_IsTheOutlineAgainstTheMenu()
     {
         using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
 
-        Assert.Equal(UIColors.BorderLight, GetRenderer(menu).ColorTable.MenuBorder);
+        Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated), GetRenderer(menu).ColorTable.MenuBorder);
     }
 
     [Fact]
@@ -160,14 +157,14 @@ public class ContextMenuStripRenderingTests
     }
 
     [Fact]
-    public void GetForeColor_ReturnsTextDisabled_ForDisabledItem()
+    public void GetForeColor_ReturnsTheDisabledText_ForDisabledItem()
     {
         using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
         ToolStripMenuItem item = new ToolStripMenuItem("Item") { Enabled = false };
 
         Color result = menu.Renderer.InvokePrivate<Color>("GetForeColor", item);
 
-        Assert.Equal(UIColors.TextDisabled, result);
+        Assert.Equal(UIColors.GetDisabledText(UIColors.BackgroundMediumElevated), result);
     }
 
     [Fact]
