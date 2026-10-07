@@ -33,16 +33,16 @@ public class InfoPopupBehaviorTests : IDisposable
             form.Dispose();
     }
 
-    private (Form Host, Button Owner) CreateHost(Point? location = null)
+    private (Form Host, Button Owner) CreateHost(Point? location = null, Size? clientSize = null, Point? ownerLocation = null)
     {
         Form host = new Form
         {
             StartPosition = FormStartPosition.Manual,
             Location = location ?? new Point(-4000, -4000),
             ShowInTaskbar = false,
-            ClientSize = new Size(300, 200)
+            ClientSize = clientSize ?? new Size(300, 200)
         };
-        Button owner = new Button { Location = new Point(20, 60), Size = new Size(80, 30) };
+        Button owner = new Button { Location = ownerLocation ?? new Point(20, 60), Size = new Size(80, 30) };
 
         host.Controls.Add(owner);
         host.Show();
@@ -285,7 +285,7 @@ public class InfoPopupBehaviorTests : IDisposable
     [Fact]
     public void TheThreePlaces_ShowThePopup_AtTheirOwnPosition()
     {
-        (Form _, Button owner) = CreateHost(new Point(300, 300));
+        (Form _, Button owner) = CreateHost(new Point(300, 300), new Size(400, 300), new Point(20, 150));
         InfoPopupForm popup = CreatePopup();
         popup.SetContent("Info", "text");
 
@@ -337,6 +337,89 @@ public class InfoPopupBehaviorTests : IDisposable
 
         Assert.Null(thrown);
         Assert.False(popup.Visible);
+    }
+
+    // ---- inside the window ----
+
+    // Where the popup may be: the window, as far as it is on the screen.
+    private static Rectangle Area(Form host)
+    {
+        return Rectangle.Intersect(host.Bounds, Screen.FromControl(host).WorkingArea);
+    }
+
+    private static Point OnScreen(Form host, int x, int y)
+    {
+        return host.PointToScreen(new Point(x, y));
+    }
+
+    [Fact]
+    public void NextToAControlAtTheEdgeOfTheWindow_ThePopupStaysInsideTheWindow()
+    {
+        (Form host, Button owner) = CreateHost(new Point(100, 100), new Size(400, 300), new Point(310, 220));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("Info", "A text that is long enough to take some room next to the control.");
+
+        popup.ShowNextTo(owner);
+
+        Rectangle area = Area(host);
+        Assert.True(area.Contains(popup.Bounds), "outside the window: " + popup.Bounds + " in " + area);
+    }
+
+    [Fact]
+    public void AtTheMouseInTheCornerOfTheWindow_ThePopupStaysInsideTheWindow_WithAMarginToTheEdge()
+    {
+        (Form host, Button owner) = CreateHost(new Point(100, 100), new Size(400, 300));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("Info", "A text that is long enough to take some room at the mouse.");
+
+        popup.ShowAtMouse(owner, OnScreen(host, 395, 295));
+
+        Rectangle area = Area(host);
+        Assert.True(area.Contains(popup.Bounds), "outside the window: " + popup.Bounds + " in " + area);
+        Assert.True(popup.Right <= area.Right - 10 && popup.Bottom <= area.Bottom - 10, "no margin to the edge");
+    }
+
+    [Fact]
+    public void CenteredAboveAControlAtTheTopOfTheWindow_ThePopupGoesBelow_InsideTheWindow()
+    {
+        (Form host, Button owner) = CreateHost(new Point(100, 100), new Size(400, 300), new Point(10, 4));
+        InfoPopupForm popup = CreatePopup(new Size(70, 32));
+        popup.SetContent("70%");
+
+        popup.ShowCenteredAbove(owner, 5);
+
+        Rectangle area = Area(host);
+        Assert.True(area.Contains(popup.Bounds), "outside the window: " + popup.Bounds + " in " + area);
+        Assert.True(popup.Top >= owner.PointToScreen(Point.Empty).Y, "not below the control");
+    }
+
+    [Fact]
+    public void AWindowThatReachesBeyondTheScreen_GivesAPopupInsideTheVisiblePart()
+    {
+        Rectangle screen = SystemInformation.VirtualScreen;
+        (Form host, Button owner) = CreateHost(new Point(screen.Right - 150, 100), new Size(400, 300), new Point(20, 100));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("Hi");
+
+        popup.ShowAtMouse(owner, OnScreen(host, 100, 150));
+
+        Rectangle area = Area(host);
+        Assert.True(area.Right < host.Right, "the window is not beyond the screen");
+        Assert.True(area.Contains(popup.Bounds), "outside the visible part: " + popup.Bounds + " in " + area);
+    }
+
+    [Fact]
+    public void APopupLargerThanTheWindow_SitsAtItsTopLeft_WithoutFuss()
+    {
+        (Form host, Button owner) = CreateHost(new Point(100, 100), new Size(120, 70), new Point(10, 10));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("Info", "A text that is long enough to make the popup larger than this small window, so it cannot fit inside.");
+
+        Exception? thrown = Record.Exception(() => popup.ShowNextTo(owner));
+
+        Assert.Null(thrown);
+        Assert.True(popup.Visible);
+        Assert.Equal(Area(host).Location, popup.Location);
     }
 
     // ---- the delay ----

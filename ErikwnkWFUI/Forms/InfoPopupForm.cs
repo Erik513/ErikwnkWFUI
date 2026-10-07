@@ -30,12 +30,14 @@ namespace ErikwnkWFUI.Forms
     /// With <see cref="FixedSize"/> the popup keeps one size and centers its content, for a
     /// short value that changes while it is shown (a percentage over a slider).
     ///
-    /// The popup belongs to the window of its control: it is shown only while the application
-    /// is in front (not when another program covers the window, and not over a minimized
-    /// window), it stays above its window but not above other programs, and it moves with the
-    /// window. It never takes the activation (not on show, not on a click), so the window next
-    /// to it keeps the focus. Hide it with <c>Hide</c>; <c>Close</c> disposes it, as for any
-    /// form shown with an owner, and it closes with its owner form.
+    /// The popup belongs to the window of its control. It is placed inside that window (and on
+    /// the screen) as far as it fits; a popup larger than the window sits at its top left. It
+    /// is shown only while that window is in front, not when another window or program covers
+    /// it and not over a minimized window. It stays above its window but not above other
+    /// programs and moves with the window. It never takes the activation (not on show, not on
+    /// a click), so the window next to it keeps the focus. Hide it with <c>Hide</c>;
+    /// <c>Close</c> disposes it, as for any form shown with an owner, and it closes with its
+    /// owner form.
     ///
     /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
     /// text colors (use <see cref="Colors"/>), the fonts, the border style and
@@ -241,15 +243,7 @@ namespace ErikwnkWFUI.Forms
             int x = ownerTop.X - Width / 2;
             int y = ownerTop.Y - Height - 6;
 
-            Rectangle screen = Screen.FromControl(owner).WorkingArea;
-
-            if (x < screen.Left + ScreenMargin)
-                x = screen.Left + ScreenMargin;
-
-            if (x + Width > screen.Right - ScreenMargin)
-                x = screen.Right - ScreenMargin - Width;
-
-            if (y < screen.Top + ScreenMargin)
+            if (y < GetPlacementArea(owner).Top + ScreenMargin)
                 y = ownerTop.Y + owner.Height + 6;
 
             Place(owner, new Point(x, y));
@@ -323,7 +317,7 @@ namespace ErikwnkWFUI.Forms
                 return;
 
             BackColor = GetBackColor();
-            Location = location;
+            Location = KeepInside(location, GetPlacementArea(owner), Screen.FromControl(owner).WorkingArea);
 
             if (!Visible)
             {
@@ -344,49 +338,60 @@ namespace ErikwnkWFUI.Forms
 
         private Point GetLocationNextTo(Control owner)
         {
-            Point location = owner.PointToScreen(
+            return owner.PointToScreen(
                 new Point(owner.Width + OwnerOffsetX, -Height + owner.Height + OwnerOffsetY));
-
-            Rectangle screen = Screen.FromControl(owner).WorkingArea;
-
-            if (location.Y < screen.Top + ScreenMargin)
-                location.Y = screen.Top + ScreenMargin;
-
-            if (location.X + Width > screen.Right)
-                location.X = screen.Right - Width - ScreenMargin;
-
-            if (location.X < screen.Left + ScreenMargin)
-                location.X = screen.Left + ScreenMargin;
-
-            if (location.Y + Height > screen.Bottom)
-                location.Y = screen.Bottom - Height - ScreenMargin;
-
-            return location;
         }
 
+        // Right and below the mouse, on the other side of it where that does not fit.
         private Point GetLocationNearMouse(Control owner, Point mouseScreenPosition)
         {
             Point result = new Point(mouseScreenPosition.X + 12, mouseScreenPosition.Y + 12);
+            Rectangle area = GetPlacementArea(owner);
 
-            Form ownerForm = owner.FindForm();
-
-            Rectangle bounds = ownerForm != null
-                ? ownerForm.Bounds
-                : Screen.FromControl(owner).WorkingArea;
-
-            if (result.X + Width > bounds.Right)
+            if (result.X + Width > area.Right - ScreenMargin)
                 result.X = mouseScreenPosition.X - Width - 12;
 
-            if (result.Y + Height > bounds.Bottom)
+            if (result.Y + Height > area.Bottom - ScreenMargin)
                 result.Y = mouseScreenPosition.Y - Height - 12;
 
-            if (result.X < bounds.Left)
-                result.X = bounds.Left + 10;
-
-            if (result.Y < bounds.Top)
-                result.Y = bounds.Top + 10;
-
             return result;
+        }
+
+        // Where the popup may be: inside the window of its control, and on the screen where that
+        // window reaches beyond it. A control without a form has the screen.
+        private static Rectangle GetPlacementArea(Control owner)
+        {
+            Rectangle screen = Screen.FromControl(owner).WorkingArea;
+            Form form = owner.FindForm();
+
+            if (form == null)
+                return screen;
+
+            Rectangle inside = Rectangle.Intersect(form.Bounds, screen);
+
+            return inside.IsEmpty ? screen : inside;
+        }
+
+        // Moves the popup inside the area, with a margin to its edge where there is room for
+        // it. A popup that is larger than the area cannot fit: it sits at the start of the area
+        // (the top left), as far as the screen shows it.
+        private Point KeepInside(Point location, Rectangle area, Rectangle screen)
+        {
+            return new Point(
+                KeepInside(location.X, Width, area.Left, area.Right, screen.Left, screen.Right),
+                KeepInside(location.Y, Height, area.Top, area.Bottom, screen.Top, screen.Bottom));
+        }
+
+        private static int KeepInside(int position, int size, int start, int end, int screenStart, int screenEnd)
+        {
+            if (size > end - start)
+                return Math.Max(screenStart, Math.Min(start, screenEnd - size));
+
+            int margin = size + 2 * ScreenMargin <= end - start ? ScreenMargin : 0;
+            int first = start + margin;
+            int last = end - margin - size;
+
+            return Math.Max(first, Math.Min(position, last));
         }
 
         // ---- colors ----
