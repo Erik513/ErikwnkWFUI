@@ -15,8 +15,22 @@ namespace ErikwnkWFUI.Forms
     /// time (it repositions/relabels itself instead of flashing closed and
     /// reopening). Two independent content modes: a single block of text
     /// (<see cref="ShowInfo"/>/<see cref="ShowInfoAtMouse"/>) or one or more
-    /// labeled sections (<see cref="ShowSections"/> and friends).
+    /// labeled sections (<see cref="ShowSections"/> and friends); the same popup can show
+    /// one after the other. Get one through <see cref="UIStyles.InfoPopups"/>.
     /// </summary>
+    /// <remarks>
+    /// The popup never takes the activation (not on show, not on a click), so the window next
+    /// to it keeps the focus. Hide it with <c>Hide</c>; <c>Close</c> disposes it, as for any
+    /// form shown with an owner, and it closes with its owner form.
+    ///
+    /// The library sets, and an application's own values are replaced on every show:
+    /// <c>BackColor</c> and the text colors (use <see cref="Colors"/>), the fonts, the
+    /// border style, <c>TopMost</c> and <c>ShowInTaskbar</c>. <c>Opacity</c> can be changed. The
+    /// compact form shows one short text only: sections are not shown there. The sizes
+    /// (maximum text width, margins, compact size) are pixels and not scaled for high DPI.
+    /// The rounded corners come from Windows 11; on Windows 10 the popup is a plain rectangle.
+    /// <c>RightToLeft</c> is not supported.
+    /// </remarks>
     public class InfoPopupForm : Form
     {
         private const int MaxTextWidth = 260;
@@ -32,7 +46,11 @@ namespace ErikwnkWFUI.Forms
         private Control _pendingOwner;
         private Point _pendingMouseScreenPosition;
         private InfoPopupSection[] _pendingSections;
-        private string _lastSectionContentKey;
+        private string _contentKey;
+
+        // What the layout holds now: the title and the text, or the sections of this key. One
+        // popup is reused for both, so it has to know which one to put back.
+        private const string TextContentKey = "text";
         private bool _compact;
         private Size _compactSize = new Size(48, 24);
         private UIColorSet _colors;
@@ -135,6 +153,20 @@ namespace ErikwnkWFUI.Forms
             get { return true; }
         }
 
+        // The same for a click on the popup: it does not activate either.
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams parameters = base.CreateParams;
+                parameters.ExStyle |= WS_EX_NOACTIVATE;
+
+                return parameters;
+            }
+        }
+
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+
         public InfoPopupForm(string title = "")
         {
             ConfigureForm();
@@ -148,6 +180,7 @@ namespace ErikwnkWFUI.Forms
 
             _layout.Controls.Add(_textLabel);
             Controls.Add(_layout);
+            _contentKey = TextContentKey;
 
             _showDelayTimer = new Timer();
             _showDelayTimer.Interval = 400;
@@ -165,9 +198,7 @@ namespace ErikwnkWFUI.Forms
 
             RefreshColors();
 
-            _textLabel.Text = string.IsNullOrWhiteSpace(text)
-                ? UIStrings.Get("InfoPopup.None")
-                : text;
+            ShowText(text);
 
             PerformLayout();
 
@@ -213,9 +244,7 @@ namespace ErikwnkWFUI.Forms
 
             RefreshColors();
 
-            _textLabel.Text = string.IsNullOrWhiteSpace(text)
-                ? UIStrings.Get("InfoPopup.None")
-                : text;
+            ShowText(text);
 
             if (!_compact)
                 PerformLayout();   // compact mode is a fixed size, don't resize
@@ -260,10 +289,7 @@ namespace ErikwnkWFUI.Forms
 
             RefreshColors();
 
-            _textLabel.Text =
-                string.IsNullOrWhiteSpace(text)
-                    ? UIStrings.Get("InfoPopup.None")
-                    : text;
+            ShowText(text);
 
             PerformLayout();
 
@@ -309,22 +335,10 @@ namespace ErikwnkWFUI.Forms
 
             RefreshColors();
 
-            _layout.Controls.Clear();
+            if (_compact)
+                return;
 
-            foreach (InfoPopupSection section in sections)
-            {
-                if (!string.IsNullOrWhiteSpace(section.Header))
-                {
-                    Label headerLabel = CreateSectionHeaderLabel(section.Header);
-                    _layout.Controls.Add(headerLabel);
-                }
-
-                if (!string.IsNullOrWhiteSpace(section.Text))
-                {
-                    Label textLabel = CreateSectionTextLabel(section.Text);
-                    _layout.Controls.Add(textLabel);
-                }
-            }
+            ApplySections(sections);
 
             PerformLayout();
             Location = GetPopupLocation(owner);
@@ -382,26 +396,10 @@ namespace ErikwnkWFUI.Forms
 
             RefreshColors();
 
-            string contentKey = BuildSectionContentKey(sections);
+            if (_compact)
+                return;
 
-            if (contentKey != _lastSectionContentKey)
-            {
-                _lastSectionContentKey = contentKey;
-
-                _layout.SuspendLayout();
-                _layout.Controls.Clear();
-
-                foreach (InfoPopupSection section in sections)
-                {
-                    if (!string.IsNullOrWhiteSpace(section.Header))
-                        _layout.Controls.Add(CreateSectionHeaderLabel(section.Header));
-
-                    if (!string.IsNullOrWhiteSpace(section.Text))
-                        _layout.Controls.Add(CreateSectionTextLabel(section.Text));
-                }
-
-                _layout.ResumeLayout(true);
-            }
+            ApplySections(sections);
 
             PerformLayout();
             Location = GetPopupLocationNearMouse(owner, mouseScreenPosition);
@@ -412,19 +410,87 @@ namespace ErikwnkWFUI.Forms
             BringToFront();
         }
 
-        private string BuildSectionContentKey(InfoPopupSection[] sections)
+        // Sets the text (or "none" for an empty one) and, if the layout holds sections from an
+        // earlier call, puts the title and the text label back.
+        private void ShowText(string text)
         {
-            if (sections == null || sections.Length == 0)
-                return "";
+            _textLabel.Text = string.IsNullOrWhiteSpace(text)
+                ? UIStrings.Get("InfoPopup.None")
+                : text;
 
-            string key = "";
+            if (_compact || _contentKey == TextContentKey)
+                return;
+
+            _layout.SuspendLayout();
+            ClearLayout();
+
+            if (!string.IsNullOrWhiteSpace(_titleLabel.Text))
+                _layout.Controls.Add(_titleLabel);
+
+            _layout.Controls.Add(_textLabel);
+            _layout.ResumeLayout(true);
+            _contentKey = TextContentKey;
+        }
+
+        // Builds the labels of the sections, unless the layout holds exactly these already.
+        private void ApplySections(InfoPopupSection[] sections)
+        {
+            string key = BuildSectionContentKey(sections);
+
+            if (key == _contentKey)
+                return;
+
+            _contentKey = key;
+
+            _layout.SuspendLayout();
+            ClearLayout();
+
+            if (sections != null)
+            {
+                foreach (InfoPopupSection section in sections)
+                {
+                    if (section == null)
+                        continue;
+
+                    if (!string.IsNullOrWhiteSpace(section.Header))
+                        _layout.Controls.Add(CreateSectionHeaderLabel(section.Header));
+
+                    if (!string.IsNullOrWhiteSpace(section.Text))
+                        _layout.Controls.Add(CreateSectionTextLabel(section.Text));
+                }
+            }
+
+            _layout.ResumeLayout(true);
+        }
+
+        // Empties the layout; the labels of sections are thrown away, the title and the text
+        // label stay for the next text.
+        private void ClearLayout()
+        {
+            Control[] labels = new Control[_layout.Controls.Count];
+            _layout.Controls.CopyTo(labels, 0);
+            _layout.Controls.Clear();
+
+            foreach (Control label in labels)
+            {
+                if (label != _titleLabel && label != _textLabel)
+                    label.Dispose();
+            }
+        }
+
+        private static string BuildSectionContentKey(InfoPopupSection[] sections)
+        {
+            string key = "sections";
+
+            if (sections == null)
+                return key;
 
             foreach (InfoPopupSection section in sections)
             {
                 if (section == null)
                     continue;
 
-                key += section.Header + ":" + section.Text + "|";
+                key += "\u0001" + section.Header + "\u0002" + section.Text;
             }
 
             return key;
@@ -494,16 +560,14 @@ namespace ErikwnkWFUI.Forms
             Color foreColor = GetForeColor();
             Color dimForeColor = GetDimForeColor();
 
-            if (_compact)
-            {
-                _textLabel.ForeColor = foreColor;
-                return;
-            }
+            _titleLabel.ForeColor = foreColor;
+            _textLabel.ForeColor = _compact ? foreColor : dimForeColor;
 
             foreach (Control control in _layout.Controls)
             {
                 Label label = control as Label;
-                if (label == null)
+
+                if (label == null || label == _titleLabel || label == _textLabel)
                     continue;
 
                 label.ForeColor = UIFonts.Title.Equals(label.Font) ? foreColor : dimForeColor;
