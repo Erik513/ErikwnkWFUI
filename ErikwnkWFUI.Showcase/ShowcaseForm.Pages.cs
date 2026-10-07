@@ -51,7 +51,7 @@ namespace ErikwnkWFUI.Showcase
                  AddDataGridSection),
 
                 ("InfoPopupForm",
-                 "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps a fixed size for a short value. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
+                 "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps a fixed size for a short value, and is opaque or slightly, clearly (the default) or strongly transparent. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
                  AddInfoPopupsSection),
 
                 ("Labels",

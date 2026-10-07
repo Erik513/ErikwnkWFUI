@@ -41,7 +41,8 @@ namespace ErikwnkWFUI.Forms
     ///
     /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
     /// text colors (use <see cref="Colors"/>), the fonts, the border style and
-    /// <c>ShowInTaskbar</c>. <c>Opacity</c> can be changed. The rounded corners come from
+    /// <c>ShowInTaskbar</c>. How see-through it is, is <see cref="Transparency"/> (medium by
+    /// default; <c>Opacity</c> can still be set directly). The rounded corners come from
     /// Windows 11; on Windows 10 the popup is a plain rectangle. <c>RightToLeft</c> is not
     /// supported.
     /// </remarks>
@@ -67,6 +68,7 @@ namespace ErikwnkWFUI.Forms
         private InfoPopupSection[] _pendingSections;
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
+        private PopupTransparency _transparency = PopupTransparency.Medium;
         private Size _fixedSize = Size.Empty;
 
         public InfoPopupForm()
@@ -75,13 +77,24 @@ namespace ErikwnkWFUI.Forms
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
             DoubleBuffered = true;
-            Opacity = 0.80;
+            Opacity = PopupTransparency.Medium.ToOpacity();
             BackColor = GetBackColor();
 
             _showDelayTimer = new Timer { Interval = 400 };
             _showDelayTimer.Tick += OnShowDelayTimerTick;
 
             Load += delegate { ApplyRoundedCorners(); };
+        }
+
+        /// <summary>How see-through the popup is: not at all, slightly, clearly (the default) or strongly.</summary>
+        public PopupTransparency Transparency
+        {
+            get { return _transparency; }
+            set
+            {
+                _transparency = value;
+                Opacity = value.ToOpacity();
+            }
         }
 
         /// <summary>

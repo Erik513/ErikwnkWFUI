@@ -54,6 +54,15 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("On a light color", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Yellow), "Show popup", 160,
                 popup => popup.SetContent("Light background", "The text turns black when white would not read.")));
 
+            table.AddSection("Transparency");
+
+            foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
+            {
+                table.AddRow(level == PopupTransparency.Medium ? "Medium (default)" : level.ToString(),
+                    CreateClickButton(UIStyles.InfoPopups.CreateStandard(transparency: level), "Show popup", 160,
+                        popup => popup.SetContent(SampleBlocks)));
+            }
+
             table.AddSection("Places");
 
             table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,

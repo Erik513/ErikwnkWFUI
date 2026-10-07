@@ -976,15 +976,16 @@ namespace ErikwnkWFUI
             /// <see cref="Color"/>.
             /// </param>
             /// <param name="fixedSize">A client size the popup keeps whatever its content, with the content centered (a short value that changes while shown, like a percentage over a slider); none sizes it to the content.</param>
-            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null)
+            /// <param name="transparency">How see-through the popup is; medium by default.</param>
+            public static Forms.InfoPopupForm CreateStandard(UIColorSet colors = null, Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium)
             {
-                return UIInfoPopupFactory.CreateStandard(colors, fixedSize);
+                return UIInfoPopupFactory.CreateStandard(colors, fixedSize, transparency);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null)
+            public static Forms.InfoPopupForm CreatePrimary(Size? fixedSize = null, Forms.PopupTransparency transparency = Forms.PopupTransparency.Medium)
             {
-                return UIInfoPopupFactory.CreatePrimary(fixedSize);
+                return UIInfoPopupFactory.CreatePrimary(fixedSize, transparency);
             }
         }
 

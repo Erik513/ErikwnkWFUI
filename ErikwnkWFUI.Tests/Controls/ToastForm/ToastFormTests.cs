@@ -111,6 +111,38 @@ public class ToastFormTests : IDisposable
     }
 
     [Fact]
+    public void TheToast_IsMediumTransparentByDefault_AndTakesAnotherLevel()
+    {
+        Form host = CreateHost();
+
+        ToastForm.ShowToast("Default", host);
+        Assert.Equal(PopupTransparency.Medium, CurrentToast()!.Transparency);
+        Assert.Equal(0.80, CurrentToast()!.Opacity, 2);
+
+        ToastForm.ShowToast("Opaque", host, PopupTransparency.Opaque);
+        Assert.Equal(1.0, CurrentToast()!.Opacity, 2);
+
+        ToastForm.ShowToast("High", host, PopupTransparency.High);
+        Assert.True(CurrentToast()!.Opacity < 0.80);
+
+        ToastForm.ShowToast("Low", host, PopupTransparency.Low);
+        Assert.True(CurrentToast()!.Opacity > 0.80 && CurrentToast()!.Opacity < 1.0);
+    }
+
+    [Fact]
+    public void AWaitingToast_KeepsItsTransparency()
+    {
+        Form host = CreateHost();
+        PopupSupport.OwnerIsActive = _ => false;
+        ToastForm.ShowToast("Waits", host, PopupTransparency.Opaque);
+
+        PopupSupport.OwnerIsActive = _ => true;
+        Activate(host);
+
+        Assert.Equal(PopupTransparency.Opaque, CurrentToast()!.Transparency);
+    }
+
+    [Fact]
     public void WhileItsWindowIsNotInFront_TheToastIsNotShown_ButWaits()
     {
         Form host = CreateHost();

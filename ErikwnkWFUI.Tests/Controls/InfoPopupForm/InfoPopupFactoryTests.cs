@@ -40,6 +40,41 @@ public class InfoPopupFactoryTests
     }
 
     [Fact]
+    public void TheTransparency_IsMediumByDefault_AndTheFourLevelsAreOrdered()
+    {
+        using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard();
+
+        Assert.Equal(PopupTransparency.Medium, popup.Transparency);
+        Assert.Equal(0.80, popup.Opacity, 2);
+
+        popup.Transparency = PopupTransparency.Opaque;
+        Assert.Equal(1.0, popup.Opacity, 2);
+        double opaque = popup.Opacity;
+
+        popup.Transparency = PopupTransparency.Low;
+        double low = popup.Opacity;
+
+        popup.Transparency = PopupTransparency.High;
+        double high = popup.Opacity;
+
+        Assert.True(opaque > low && low > 0.80 && 0.80 > high && high > 0.4, "the levels are not ordered");
+    }
+
+    [Fact]
+    public void TheFactoryMethods_TakeTheTransparency()
+    {
+        using InfoPopupForm standard = UIStyles.InfoPopups.CreateStandard(transparency: PopupTransparency.Opaque);
+        using InfoPopupForm primary = UIStyles.InfoPopups.CreatePrimary(transparency: PopupTransparency.High);
+        using InfoPopupForm fixedSize = UIStyles.InfoPopups.CreatePrimary(new Size(70, 32), PopupTransparency.Low);
+
+        Assert.Equal(PopupTransparency.Opaque, standard.Transparency);
+        Assert.Equal(1.0, standard.Opacity, 2);
+        Assert.Equal(PopupTransparency.High, primary.Transparency);
+        Assert.Equal(PopupTransparency.Low, fixedSize.Transparency);
+        Assert.Equal(new Size(70, 32), fixedSize.ClientSize);
+    }
+
+    [Fact]
     public void ASetChangedLater_IsFollowedAtOnce_AndTakenAwayAgain()
     {
         using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard();

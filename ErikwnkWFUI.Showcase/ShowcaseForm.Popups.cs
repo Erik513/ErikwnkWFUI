@@ -38,6 +38,14 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("MessageBox", messageBoxButton);
             table.AddRow("ToastForm", toastButton);
+
+            foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.High })
+            {
+                PopupTransparency shown = level;
+                Button levelButton = UIStyles.Buttons.CreateStandard("Show ToastForm (" + shown + ")", size: new Size(200, 32));
+                levelButton.Click += delegate { ToastForm.ShowToast("Sample toast message", this, shown); };
+                table.AddRow("ToastForm (" + shown + ")", levelButton);
+            }
         }
     }
 }

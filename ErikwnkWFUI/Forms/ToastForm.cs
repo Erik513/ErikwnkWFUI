@@ -40,6 +40,7 @@ namespace ErikwnkWFUI.Forms
         {
             public string Message;
             public DateTime Time;
+            public PopupTransparency Transparency;
         }
 
         private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
@@ -63,28 +64,43 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, auto-closing itself after ~2.5s. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
-        public static void ShowToast(string message, Form owner)
+        /// <param name="transparency">How see-through the toast is; medium by default.</param>
+        public static void ShowToast(string message, Form owner, PopupTransparency transparency = PopupTransparency.Medium)
         {
             if (owner == null || owner.IsDisposed)
                 return;
 
             if (!PopupSupport.CanShowOver(owner))
             {
-                Enqueue(message, owner);
+                Enqueue(message, owner, transparency);
 
                 return;
             }
 
-            ShowNow(message, owner);
+            ShowNow(message, owner, transparency);
         }
 
-        private static void ShowNow(string message, Form owner)
+        /// <summary>How see-through the toast is: not at all, slightly, clearly (the default) or strongly.</summary>
+        public PopupTransparency Transparency
+        {
+            get { return _transparency; }
+            set
+            {
+                _transparency = value;
+                Opacity = value.ToOpacity();
+            }
+        }
+
+        private PopupTransparency _transparency = PopupTransparency.Medium;
+
+        private static void ShowNow(string message, Form owner, PopupTransparency transparency)
         {
             CloseCurrentToast();
 
             ToastForm toast = new ToastForm();
             _currentToast = toast;
             toast._ownerForm = owner;
+            toast.Transparency = transparency;
 
             toast.SetMessage(message);
             toast.Location = GetToastLocation(owner, toast);
@@ -96,7 +112,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(string message, Form owner)
+        private static void Enqueue(string message, Form owner, PopupTransparency transparency)
         {
             List<PendingToast> queue;
 
@@ -112,7 +128,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count > 0 && queue[queue.Count - 1].Message == message)
                 return;
 
-            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow });
+            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency });
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -166,7 +182,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Message, owner);
+            ShowNow(next.Message, owner, next.Transparency);
         }
 
         // The toast must not take the activation from the window it confirms something in.
@@ -221,7 +237,7 @@ namespace ErikwnkWFUI.Forms
             // the toast used to be the accent itself, unchanged.
             BackColor = UIColors.PrimaryDark;
             ShowInTaskbar = false;
-            Opacity = 0.80; // testing a stronger value than the previous 0.90
+            Opacity = PopupTransparency.Medium.ToOpacity();
         }
 
         private void CreateControls()
