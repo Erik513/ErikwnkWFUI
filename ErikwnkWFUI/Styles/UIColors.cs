@@ -518,11 +518,6 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
-        /// The color a given share (0-1) of the way from <paramref name="color"/>
-        /// to <paramref name="target"/> - for muting a text toward its
-        /// background.
-        /// </summary>
-        /// <summary>
         /// Text of a disabled control on <paramref name="surface"/>: the best text color blended
         /// toward the surface, as on the buttons and the check box. The theme's
         /// <see cref="TextDisabled"/> is too faint on the light theme.
@@ -532,6 +527,11 @@ namespace ErikwnkWFUI.Styles
             return BlendToward(GetContrastingForeColor(surface), surface, 0.35);
         }
 
+        /// <summary>
+        /// The color a given share (0-1) of the way from <paramref name="color"/>
+        /// to <paramref name="target"/> - for muting a text toward its
+        /// background.
+        /// </summary>
         internal static Color BlendToward(Color color, Color target, double amount)
         {
             amount = Math.Max(0, Math.Min(1, amount));

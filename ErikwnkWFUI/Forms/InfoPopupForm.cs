@@ -9,55 +9,55 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A small, borderless popup with extra info next to a control or the mouse cursor, like a
-    /// tooltip: one color, and content of one or more blocks, each with an optional header and
-    /// an optional text (<see cref="SetContent(InfoPopupSection[])"/>). Reuse a single instance
-    /// for many show calls rather than creating a new one each time: it is repositioned and
-    /// refilled instead of closing and opening again. Get one through
+    /// A small, borderless popup with extra info next to a control or the mouse, like a
+    /// tooltip. Its content is blocks of an optional header and an optional text
+    /// (<see cref="SetContent(InfoPopupSection[])"/>). Reuse one instance for many show calls:
+    /// it is moved and refilled instead of being closed and created again. Get one through
     /// <see cref="UIStyles.InfoPopups"/>.
     /// </summary>
     /// <remarks>
-    /// The text, header and text alike, is white, or black when the background is too light
-    /// for white; each header and each text can be given its own color
-    /// (<see cref="InfoPopupSection.HeaderColor"/>, <see cref="InfoPopupSection.TextColor"/>).
-    ///
-    /// To use it as the tooltip of controls, attach it (<see cref="AttachTo(Control, string)"/>):
-    /// it then shows and hides itself as the mouse comes and goes. Otherwise show it yourself.
-    ///
-    /// Content and place are two steps: set the content, then show it next to a control
-    /// (<see cref="ShowNextTo"/>), at the mouse (<see cref="ShowAtMouse"/>), centered above a
-    /// point of the control (<see cref="ShowCenteredAbove"/>) or at the mouse after a delay
-    /// (<see cref="ShowAtMouseDelayed"/>). Content without any text shows nothing: the popup
-    /// stays or goes hidden.
-    ///
-    /// The size follows the content, with a maximum text width after which the text wraps.
-    /// With <see cref="FixedSize"/> the popup keeps one size and centers its content, for a
-    /// short value that changes while it is shown (a percentage over a slider).
-    ///
-    /// The popup belongs to the window of its control. It is placed inside that window (and on
-    /// the screen) as far as it fits; a popup larger than the window sits at its top left. It
-    /// is shown only while that window is in front, not when another window or program covers
-    /// it and not over a minimized window. It stays above its window but not above other
-    /// programs and moves with the window. It never takes the activation (not on show, not on
-    /// a click), so the window next to it keeps the focus. It hides itself after its
-    /// <see cref="Duration"/>; hide it earlier with <c>Hide</c>;
-    /// <c>Close</c> disposes it, as for any form shown with an owner, and it closes with its
-    /// owner form.
-    ///
-    /// Compared with the standard <c>ToolTip</c>: the title and the text (<see cref="InfoPopupSection"/>),
-    /// the time before it shows (<see cref="Delay"/>, the ToolTip's InitialDelay), the time it
-    /// stays (<see cref="Duration"/>, AutoPopDelay) and the colors are offered; the popup is
-    /// shown when you call it or when it is attached to a control (<see cref="AttachTo(Control, string)"/>). Not offered:
-    /// balloon style and icons, fading and animation, a separate time for moving to the next
-    /// control (ReshowDelay), and showing while the window is not in front (ShowAlways).
-    /// An ampersand is shown as it is, not as a mnemonic.
-    ///
-    /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
-    /// text colors (use <see cref="Colors"/>), the fonts, the border style and
-    /// <c>ShowInTaskbar</c>. How see-through it is, is <see cref="Transparency"/> (medium by
-    /// default; <c>Opacity</c> can still be set directly). The rounded corners come from
-    /// Windows 11; on Windows 10 the popup is a plain rectangle. <c>RightToLeft</c> is not
+    /// <para>
+    /// Use: set the content, then show it next to a control (<see cref="ShowNextTo"/>), at the
+    /// mouse (<see cref="ShowAtMouse"/>), centered above a point of a control
+    /// (<see cref="ShowCenteredAbove"/>) or at the mouse after the <see cref="Delay"/>
+    /// (<see cref="ShowAtMouseDelayed"/>). Content without any text shows nothing. As the
+    /// tooltip of controls, attach it (<see cref="AttachTo(Control, string)"/>): it then shows
+    /// and hides itself as the mouse comes and goes.
+    /// </para>
+    /// <para>
+    /// Look: the size follows the content, and the text wraps at a maximum width. With
+    /// <see cref="FixedSize"/> the popup keeps one size and centers its content (a percentage
+    /// over a slider). Header and text are white, or black on a background too light for white;
+    /// every header and text can have its own color (<see cref="InfoPopupSection.HeaderColor"/>,
+    /// <see cref="InfoPopupSection.TextColor"/>). <see cref="Colors"/> sets the background and
+    /// <see cref="Transparency"/> how see-through the popup is.
+    /// </para>
+    /// <para>
+    /// Window: the popup belongs to the window of the control it is shown for. It is placed
+    /// inside that window (and on the screen) as far as it fits; a popup larger than the window
+    /// sits at its top left. It is shown only while that window is in front, so not when
+    /// another window or program covers it, and not over a minimized window. It stays above its
+    /// window but not above other programs, moves with the window, and never takes the
+    /// activation (not on show, not on a click), so the window keeps the focus. It hides itself
+    /// after its <see cref="Duration"/>; hide it earlier with <c>Hide</c>. <c>Close</c> disposes
+    /// it, as for any form shown with an owner, and it closes with its owner form.
+    /// </para>
+    /// <para>
+    /// Compared with the standard <c>ToolTip</c>: the header and the text, the time before it
+    /// shows (<see cref="Delay"/>, the ToolTip's InitialDelay), the time it stays
+    /// (<see cref="Duration"/>, AutoPopDelay) and the colors are offered. The popup is shown
+    /// when you call it or when it is attached to a control. Not offered: balloon style and
+    /// icons, fading and animation, a separate time for moving to the next control
+    /// (ReshowDelay), and showing while the window is not in front (ShowAlways). An ampersand is
+    /// shown as it is, not as a mnemonic.
+    /// </para>
+    /// <para>
+    /// Set by the library, so an application's own values are replaced: <c>BackColor</c> and
+    /// the text colors (use <see cref="Colors"/>), the fonts, the border style and
+    /// <c>ShowInTaskbar</c>. <c>Opacity</c> can still be set directly. The rounded corners come
+    /// from Windows 11; on Windows 10 the popup is a plain rectangle. <c>RightToLeft</c> is not
     /// supported.
+    /// </para>
     /// </remarks>
     public class InfoPopupForm : Form
     {
@@ -185,8 +185,8 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        // A value popup must never take activation away from the window whose slider is being
-        // dragged.
+        // A popup must never take the activation away from the window it is shown for (the window
+        // of a slider that is being dragged, say).
         protected override bool ShowWithoutActivation
         {
             get { return true; }
@@ -281,7 +281,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- showing it ----
 
-        /// <summary>Shows (or moves, if already visible) the popup anchored to the bottom-right of <paramref name="anchor"/>.</summary>
+        /// <summary>Shows (or moves) the popup at the bottom-right of the control <paramref name="anchor"/>.</summary>
         public void ShowNextTo(Control anchor)
         {
             if (!CanShow(anchor))
@@ -321,9 +321,9 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Like <see cref="ShowAtMouse"/> with the given content, but after the <see cref="Delay"/>
-        /// (at once for <see cref="PopupDelay.Instant"/>) - for hover tooltips, so passing the mouse over several items does not flash a popup for each.
-        /// Call <see cref="CancelPendingShow"/> on MouseLeave to cancel a show that has not
-        /// happened yet.
+        /// (at once for <see cref="PopupDelay.Instant"/>). For hover tooltips: passing the mouse
+        /// over several items does not flash a popup for each. Call
+        /// <see cref="CancelPendingShow"/> on MouseLeave to cancel a show that has not happened yet.
         /// </summary>
         public void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, params InfoPopupSection[] sections)
         {

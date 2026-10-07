@@ -65,6 +65,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
+        /// <param name="message">The text of the toast.</param>
+        /// <param name="owner">The window the toast belongs to and is shown over.</param>
         /// <param name="transparency">How see-through the toast is; medium by default.</param>
         /// <param name="duration">How long the toast stays: short, medium (2.5 seconds, the default) or long. The time runs from when it is shown, not from when it was asked for.</param>
         /// <param name="delay">How long to wait before the toast is shown: not at all (the default), 0.2, 0.4 or 0.8 seconds. Whether the window is in front is checked when the wait is over.</param>
