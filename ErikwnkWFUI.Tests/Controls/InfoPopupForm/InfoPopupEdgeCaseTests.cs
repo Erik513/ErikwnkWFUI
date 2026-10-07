@@ -240,6 +240,67 @@ public class InfoPopupEdgeCaseTests : IDisposable
         Assert.True(popup.Visible);
     }
 
+    // ---- shared by two windows, and going away while it is up ----
+
+    [Fact]
+    public void AnotherWindowsControl_TakesThePopupOver_WithThatWindowAsItsOwner()
+    {
+        (Form first, Button firstAnchor) = CreateHost();
+        (Form second, Button secondAnchor) = CreateHost();
+        second.Location = new Point(first.Right + 20, first.Top);
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+
+        popup.ShowNextTo(firstAnchor);
+        Assert.Same(first, popup.Owner);
+
+        popup.ShowNextTo(secondAnchor);
+
+        Assert.True(popup.Visible);
+        Assert.Same(second, popup.Owner);
+
+        // It follows the window it belongs to now.
+        Point before = popup.Location;
+        second.Location = new Point(second.Left + 30, second.Top);
+        Assert.Equal(before.X + 30, popup.Location.X);
+    }
+
+    [Fact]
+    public void AVisiblePopup_CanBeDisposed_WithoutAnError()
+    {
+        (Form _, Button anchor) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(anchor);
+        Assert.True(popup.Visible);
+
+        Exception? thrown = Record.Exception(() => popup.Dispose());
+
+        Assert.Null(thrown);
+        Assert.True(popup.IsDisposed);
+    }
+
+    [Fact]
+    public void WhenTheOwnerWindowCloses_ThePopupGoesWithIt_AndLaterCallsAreHarmless()
+    {
+        (Form host, Button anchor) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(anchor);
+
+        host.Close();
+
+        Exception? thrown = Record.Exception(() =>
+        {
+            popup.ShowNextTo(anchor);
+            popup.SetContent("later");
+            popup.Hide();
+        });
+
+        Assert.Null(thrown);
+        Assert.False(popup.Visible);
+    }
+
     // ---- changes while it is up ----
 
     [Fact]

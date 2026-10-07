@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Helpers;
+﻿using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Forms
     /// Use: set the content, then show it next to a control (<see cref="ShowNextTo"/>), at the
     /// mouse (<see cref="ShowAtMouse"/>), centered above a point of a control
     /// (<see cref="ShowCenteredAbove"/>) or at the mouse after the <see cref="Delay"/>
-    /// (<see cref="ShowAtMouseDelayed"/>). Content without any text shows nothing. As the
+    /// (<see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/>). Content without any text shows nothing. As the
     /// tooltip of controls, attach it (<see cref="AttachTo(Control, string)"/>): it then shows
     /// and hides itself as the mouse comes and goes.
     /// </para>
@@ -111,7 +111,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// How long <see cref="ShowAtMouseDelayed"/> waits before it shows the popup: not at all,
+        /// How long <see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/> waits before it shows the popup: not at all,
         /// 0.2, 0.4 (the default) or 0.8 seconds.
         /// </summary>
         public PopupDelay Delay
@@ -150,6 +150,10 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _transparency = value;
+
+                if (IsDisposed)
+                    return;
+
                 Opacity = value.ToOpacity();
                 BackColor = GetBackColor();
             }
@@ -166,6 +170,10 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _colors = value;
+
+                if (IsDisposed)
+                    return;
+
                 BackColor = GetBackColor();
                 Invalidate();
             }
@@ -354,7 +362,7 @@ namespace ErikwnkWFUI.Forms
             _showDelayTimer.Start();
         }
 
-        /// <summary>Cancels a show scheduled by <see cref="ShowAtMouseDelayed"/> that has not happened yet - does not hide the popup if it is already showing.</summary>
+        /// <summary>Cancels a show scheduled by <see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/> that has not happened yet - does not hide the popup if it is already showing.</summary>
         public void CancelPendingShow()
         {
             if (_showDelayTimer != null)
@@ -401,6 +409,11 @@ namespace ErikwnkWFUI.Forms
 
             if (!PopupSupport.CanShowOver(ownerForm))
                 return;
+
+            // Another window's control: the popup is shown again as that window's own, not kept
+            // above the window it was shown for before.
+            if (Visible && Owner != ownerForm)
+                Hide();
 
             BackColor = GetBackColor();
             Location = KeepInside(location, GetPlacementArea(anchor), Screen.FromControl(anchor).WorkingArea);
@@ -549,14 +562,14 @@ namespace ErikwnkWFUI.Forms
 
             Binding binding = new Binding { Control = control, Content = content };
 
-            binding.OnMove = (sender, e) => Hover(binding, Control.MousePosition);
-            binding.OnLeave = (sender, e) => Leave(binding);
-            binding.OnDown = (sender, e) => Leave(binding);
-            binding.OnKey = (sender, e) => Leave(binding);
+            binding.OnMove = (sender, e) => StartHover(binding, Control.MousePosition);
+            binding.OnLeave = (sender, e) => StopHover(binding);
+            binding.OnDown = (sender, e) => StopHover(binding);
+            binding.OnKey = (sender, e) => StopHover(binding);
             binding.OnHidden = (sender, e) =>
             {
                 if (!control.Visible)
-                    Leave(binding);
+                    StopHover(binding);
             };
             binding.OnDisposed = (sender, e) => Detach(control);
             binding.OnParentChanged = (sender, e) => HookParent(binding);
@@ -566,14 +579,14 @@ namespace ErikwnkWFUI.Forms
             binding.OnParentMove = (sender, e) =>
             {
                 if (!control.Enabled && control.Bounds.Contains(e.Location))
-                    Hover(binding, Control.MousePosition);
+                    StartHover(binding, Control.MousePosition);
                 else if (binding.Inside && !control.Enabled)
-                    Leave(binding);
+                    StopHover(binding);
             };
             binding.OnParentLeave = (sender, e) =>
             {
                 if (binding.Inside && !control.Enabled)
-                    Leave(binding);
+                    StopHover(binding);
             };
 
             control.MouseMove += binding.OnMove;
@@ -597,7 +610,7 @@ namespace ErikwnkWFUI.Forms
                 return;
 
             _bindings.Remove(control);
-            Leave(binding);
+            StopHover(binding);
 
             control.MouseMove -= binding.OnMove;
             control.MouseLeave -= binding.OnLeave;
@@ -634,7 +647,7 @@ namespace ErikwnkWFUI.Forms
 
         // The mouse is on the control: once for each time it enters, the popup is scheduled, and
         // not again while it is up or after it has gone away by itself.
-        private void Hover(Binding binding, Point mouseScreenPosition)
+        private void StartHover(Binding binding, Point mouseScreenPosition)
         {
             binding.Inside = true;
 
@@ -644,7 +657,7 @@ namespace ErikwnkWFUI.Forms
             ShowAtMouseDelayed(binding.Control, mouseScreenPosition, binding.Content);
         }
 
-        private void Leave(Binding binding)
+        private void StopHover(Binding binding)
         {
             binding.Inside = false;
             binding.Shown = false;
@@ -788,6 +801,10 @@ namespace ErikwnkWFUI.Forms
         // (about 136x39) unless MinimumSize is set: it is locked to the wanted size.
         private void UpdateSize()
         {
+            // A form that is gone (disposed with its owner) cannot be resized any more.
+            if (IsDisposed)
+                return;
+
             Size client;
 
             if (IsFixed)
