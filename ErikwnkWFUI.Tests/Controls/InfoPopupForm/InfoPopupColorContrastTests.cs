@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Reflection;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
@@ -61,11 +61,11 @@ public class InfoPopupColorContrastTests
     }
 
     [Fact]
-    public void ThePopupInTheGrayAndTheAccent_ReadsOverAnyPage_ExceptAtTheStrongestTransparency()
+    public void EverySetAtEveryLevel_ReadsOverAWhitePageAndABlackOne()
     {
         List<string> shortfalls = new List<string>();
 
-        foreach (UIColorSet set in new[] { UIStyles.Colors.Sets.Gray, UIColors.PrimarySet })
+        foreach ((string name, UIColorSet set) in AllSets())
         {
             foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
             {
@@ -75,11 +75,9 @@ public class InfoPopupColorContrastTests
                 foreach (Color page in new[] { Color.White, Color.Black })
                 {
                     double ratio = Effective(text, popup.BackColor, popup.Opacity, page);
-                    // The strongest level gives up some contrast on purpose; it still has to be readable.
-                    double needed = level == PopupTransparency.High ? 3.0 : 4.5;
 
-                    if (ratio < needed)
-                        shortfalls.Add(level + " over " + page.Name + " " + ratio.ToString("0.0"));
+                    if (ratio < 4.49)
+                        shortfalls.Add(name + " " + level + " over " + page.Name + " " + ratio.ToString("0.0"));
                 }
             }
         }
@@ -88,24 +86,36 @@ public class InfoPopupColorContrastTests
     }
 
     [Fact]
-    public void EverySetAtTheMediumDefault_ReadsOverAWhitePageAndABlackOne()
+    public void AColorThatReadsAlready_StaysAsItIs_AndOneThatDoesNotIsShiftedAwayFromTheText()
     {
-        List<string> shortfalls = new List<string>();
+        // The gray at the default level reads over any page: unchanged.
+        using InfoPopupForm gray = UIStyles.InfoPopups.CreateStandard();
+        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic, gray.BackColor);
 
-        foreach ((string name, UIColorSet set) in AllSets())
+        // Opaque never needs a shift, whatever the set.
+        foreach ((string _, UIColorSet set) in AllSets())
         {
-            using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard(set);
-            Color text = popup.InvokePrivate<Color>("GetForeColor");
-
-            foreach (Color page in new[] { Color.White, Color.Black })
-            {
-                double ratio = Effective(text, popup.BackColor, popup.Opacity, page);
-
-                if (ratio < 3.0)
-                    shortfalls.Add(name + " over " + page.Name + " " + ratio.ToString("0.0"));
-            }
+            using InfoPopupForm opaque = UIStyles.InfoPopups.CreateStandard(set, transparency: PopupTransparency.Opaque);
+            Assert.Equal(set.Basic, opaque.BackColor);
         }
 
-        Assert.True(shortfalls.Count == 0, string.Join(", ", shortfalls));
+        // Orange with white text is too light for the strongest transparency: darker, same hue family.
+        UIColorSet orange = UIStyles.Colors.Sets.Orange;
+        using InfoPopupForm strong = UIStyles.InfoPopups.CreateStandard(orange, transparency: PopupTransparency.High);
+        Assert.NotEqual(orange.Basic, strong.BackColor);
+        Assert.True(strong.BackColor.GetBrightness() < orange.Basic.GetBrightness());
+        Assert.True(strong.BackColor.R > strong.BackColor.B, "the hue turned");
+    }
+
+    [Fact]
+    public void AChangedTransparency_BringsTheBackgroundAlong()
+    {
+        UIColorSet orange = UIStyles.Colors.Sets.Orange;
+        using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard(orange, transparency: PopupTransparency.Opaque);
+        Assert.Equal(orange.Basic, popup.BackColor);
+
+        popup.Transparency = PopupTransparency.High;
+
+        Assert.NotEqual(orange.Basic, popup.BackColor);
     }
 }

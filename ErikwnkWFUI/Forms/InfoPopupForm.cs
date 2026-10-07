@@ -151,6 +151,7 @@ namespace ErikwnkWFUI.Forms
             {
                 _transparency = value;
                 Opacity = value.ToOpacity();
+                BackColor = GetBackColor();
             }
         }
 
@@ -671,21 +672,58 @@ namespace ErikwnkWFUI.Forms
             return _colors ?? UIStyles.Colors.Sets.Gray;
         }
 
-        // The background is the set's basic color as it is.
-        private Color GetBackColor()
-        {
-            return GetColors().Basic;
-        }
-
-        // The automatic text color: white, or black when the background is too light for white.
-        // One of the two always reads (at least 4.58:1).
+        // The automatic text color: white, or black when the set's color is too light for white.
+        // On the color itself one of the two always reads (at least 4.58:1).
         private Color GetForeColor()
         {
-            Color back = GetBackColor();
+            Color basic = GetColors().Basic;
 
-            return UIColors.GetContrastRatio(Color.White, back) >= UIColors.GetContrastRatio(Color.Black, back)
+            return UIColors.GetContrastRatio(Color.White, basic) >= UIColors.GetContrastRatio(Color.Black, basic)
                 ? Color.White
                 : Color.Black;
+        }
+
+        // The background: the set's basic color, kept readable through the transparency. The
+        // whole window is see-through, so the text fades with it and the page behind (white or
+        // black, the worst) shines through the background; with a white page behind, white text
+        // on a mid-tone color can drop far below 4.5:1. The color is shifted away from the text
+        // (darker for white text, lighter for black) just far enough for the text to read over
+        // both a white and a black page. A color that reads already stays as it is.
+        private Color GetBackColor()
+        {
+            Color back = GetColors().Basic;
+            Color text = GetForeColor();
+            double step = text == Color.White ? -0.01 : 0.01;
+
+            for (int i = 0; i < 100 && WorstContrast(text, back) < 4.5; i++)
+                back = UIColors.ShiftLightness(back, step);
+
+            return back;
+        }
+
+        // The lower of the contrasts the text has over a white page and over a black page.
+        private double WorstContrast(Color text, Color back)
+        {
+            double over = double.MaxValue;
+
+            foreach (Color page in new[] { Color.White, Color.Black })
+            {
+                Color seenBack = Mix(back, page, Opacity);
+                Color seenText = Mix(text, page, Opacity);
+
+                over = Math.Min(over, UIColors.GetContrastRatio(seenText, seenBack));
+            }
+
+            return over;
+        }
+
+        // A color seen through the window: its share of the opacity, the rest from the page.
+        private static Color Mix(Color color, Color page, double opacity)
+        {
+            return Color.FromArgb(
+                (int)Math.Round(color.R * opacity + page.R * (1 - opacity)),
+                (int)Math.Round(color.G * opacity + page.G * (1 - opacity)),
+                (int)Math.Round(color.B * opacity + page.B * (1 - opacity)));
         }
 
         // ---- measuring and painting ----
