@@ -422,6 +422,75 @@ public class InfoPopupBehaviorTests : IDisposable
         Assert.Equal(Area(host).Location, popup.Location);
     }
 
+    // ---- what a tooltip does ----
+
+    [Fact]
+    public void LineBreaksInTheText_AreKept_AndTheAmpersandIsShownAsItIs()
+    {
+        InfoPopupForm popup = CreatePopup();
+
+        popup.SetContent("one line");
+        int oneLine = popup.Height;
+        popup.SetContent("first\nsecond\nthird");
+        Assert.True(popup.Height > oneLine + 20, "the line breaks were not kept");
+
+        // With a mnemonic "A&&B" would be as wide as "A&B"; shown as it is, it is wider.
+        popup.SetContent("A&B");
+        int single = popup.Width;
+        popup.SetContent("A&&B");
+        Assert.True(popup.Width > single, "the ampersand is treated as a mnemonic");
+    }
+
+    [Fact]
+    public void ADisposedPopup_ShowsNothing_InsteadOfThrowing()
+    {
+        (Form _, Button anchor) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+        popup.ShowNextTo(anchor);
+
+        // Close disposes a form that was shown with an owner; asking again must not crash.
+        popup.Close();
+
+        Exception? thrown = Record.Exception(() =>
+        {
+            popup.ShowNextTo(anchor);
+            popup.ShowAtMouse(anchor, new Point(100, 100));
+            popup.ShowCenteredAbove(anchor, 10);
+        });
+
+        Assert.Null(thrown);
+        Assert.True(popup.IsDisposed);
+    }
+
+    [Fact]
+    public void AnOpacitySetDirectly_StaysAcrossShows()
+    {
+        (Form _, Button anchor) = CreateHost();
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("x");
+
+        popup.Opacity = 0.5;
+        popup.ShowNextTo(anchor);
+        popup.ShowNextTo(anchor);
+
+        Assert.Equal(0.5, popup.Opacity, 2);
+    }
+
+    [Fact]
+    public void ContentThatGrowsWhileTheCopyIsUp_StillFitsInsideTheWindow()
+    {
+        (Form host, Button anchor) = CreateHost(new Point(100, 100), new Size(400, 300), new Point(310, 220));
+        InfoPopupForm popup = CreatePopup();
+        popup.SetContent("short");
+        popup.ShowAtMouse(anchor, host.PointToScreen(new Point(300, 200)));
+
+        popup.SetContent("Info", "A text that grows a lot while the popup is shown, so that it needs much more room than before and would run over the edge of the window.");
+
+        Rectangle area = Area(host);
+        Assert.True(area.Contains(popup.Bounds), "outside the window: " + popup.Bounds + " in " + area);
+    }
+
     // ---- the delay ----
 
     [Fact]

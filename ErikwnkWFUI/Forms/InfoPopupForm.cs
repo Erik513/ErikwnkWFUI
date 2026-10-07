@@ -40,6 +40,14 @@ namespace ErikwnkWFUI.Forms
     /// <c>Close</c> disposes it, as for any form shown with an owner, and it closes with its
     /// owner form.
     ///
+    /// Compared with the standard <c>ToolTip</c>: the title and the text (<see cref="InfoPopupSection"/>),
+    /// the time before it shows (<see cref="Delay"/>, the ToolTip's InitialDelay), the time it
+    /// stays (<see cref="Duration"/>, AutoPopDelay) and the colors are offered; the popup is
+    /// shown when you call it and is not attached to a control by itself. Not offered:
+    /// balloon style and icons, fading and animation, a separate time for moving to the next
+    /// control (ReshowDelay), and showing while the window is not in front (ShowAlways).
+    /// An ampersand is shown as it is, not as a mnemonic.
+    ///
     /// The library sets, and an application's own values are replaced: <c>BackColor</c> and the
     /// text colors (use <see cref="Colors"/>), the fonts, the border style and
     /// <c>ShowInTaskbar</c>. How see-through it is, is <see cref="Transparency"/> (medium by
@@ -63,6 +71,7 @@ namespace ErikwnkWFUI.Forms
             TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.Left;
 
         private readonly OwnerFollower _follower = new OwnerFollower();
+        private Control _lastAnchor;
         private Timer _showDelayTimer;
         private Control _pendingAnchor;
         private Point _pendingMouseScreenPosition;
@@ -358,7 +367,7 @@ namespace ErikwnkWFUI.Forms
         // when its content is taken.
         private bool CanShow(Control anchor)
         {
-            if (anchor == null || anchor.IsDisposed)
+            if (IsDisposed || anchor == null || anchor.IsDisposed)
                 return false;
 
             if (!HasContent)
@@ -388,6 +397,7 @@ namespace ErikwnkWFUI.Forms
             }
 
             _follower.Attach(this, ownerForm);
+            _lastAnchor = anchor;
 
             _hideTimer.Stop();
             _hideTimer.Start();
@@ -401,6 +411,7 @@ namespace ErikwnkWFUI.Forms
             {
                 _follower.Detach();
                 _hideTimer.Stop();
+                _lastAnchor = null;
             }
         }
 
@@ -566,6 +577,10 @@ namespace ErikwnkWFUI.Forms
             ClientSize = client;
             MinimumSize = Size;
             MaximumSize = Size;
+
+            // A popup that is up and changes size must still fit inside the window.
+            if (Visible && _lastAnchor != null && !_lastAnchor.IsDisposed)
+                Location = KeepInside(Location, GetPlacementArea(_lastAnchor), Screen.FromControl(_lastAnchor).WorkingArea);
 
             ApplyRoundedCorners();
             Invalidate();
