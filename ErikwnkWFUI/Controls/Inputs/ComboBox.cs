@@ -125,8 +125,10 @@ namespace ErikwnkWFUI.Controls
                     SetWindowTheme(info.hwndList, "", "");
 
                 // The list's own frame is the system's (blue in the dark style); the box's
-                // border color is drawn over it.
-                _listFrame.AssignHandle(info.hwndList);
+                // border color is drawn over it. A Simple box shows its list all the time as
+                // part of the box, which keeps the system's drawing.
+                if (DropDownStyle != ComboBoxStyle.Simple)
+                    _listFrame.AssignHandle(info.hwndList);
             }
         }
 
@@ -362,7 +364,7 @@ namespace ErikwnkWFUI.Controls
                 UIColorSet colors = GetColors();
 
                 if (DroppedDown)
-                    return UIColors.EnsureContrast(colors.Pressed, BackColor, 6.0);
+                    return ListBorderColor;
 
                 if (_isHot)
                     return UIColors.EnsureContrast(colors.Hover, BackColor, 4.5);

@@ -146,6 +146,18 @@ public class ComboBoxInputEdgeTests : IDisposable
     }
 
     [Fact]
+    public void TheListFrame_IsPaintedForTheListStyles_NotForTheAlwaysVisibleListOfSimple()
+    {
+        foreach (ComboBoxStyle style in new[] { ComboBoxStyle.DropDownList, ComboBoxStyle.DropDown, ComboBoxStyle.Simple })
+        {
+            ErikwnkWFUI.Controls.ComboBox box = Show(style);
+            NativeWindow frame = box.GetPrivateField<NativeWindow>("_listFrame")!;
+
+            Assert.Equal(style != ComboBoxStyle.Simple, frame.Handle != IntPtr.Zero);
+        }
+    }
+
+    [Fact]
     public void TheEditableStyle_FollowsTheHoverBorder_AndTheDisabledTextFieldIsMutedNotWhite()
     {
         ErikwnkWFUI.Controls.ComboBox box = Show(ComboBoxStyle.DropDown);
