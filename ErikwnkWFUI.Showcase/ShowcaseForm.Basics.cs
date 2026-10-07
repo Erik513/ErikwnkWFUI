@@ -297,10 +297,10 @@ namespace ErikwnkWFUI.Showcase
         private void AddContextMenusSection(PropertyTable table)
         {
             Button standardButton = UIStyles.Buttons.CreateStandard("Right-click here (Standard)", size: new Size(220, 32));
-            standardButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenus.CreateStandard());
+            standardButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreateStandard());
 
             Button primaryButton = UIStyles.Buttons.CreateStandard("Right-click here (Primary)", size: new Size(220, 32));
-            primaryButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenus.CreatePrimary());
+            primaryButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreatePrimary());
 
             table.AddRow("CreateStandard", standardButton);
             table.AddRow("CreatePrimary", primaryButton);

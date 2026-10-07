@@ -55,7 +55,7 @@ public class ContextMenuStripConstructionTests
     [Fact]
     public void CreateStandard_KeepsSelectionColorGray()
     {
-        using WfuiContextMenuStrip menu = UIStyles.ContextMenus.CreateStandard();
+        using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard();
 
         Assert.Equal(UIColors.BorderLight, menu.SelectionBackColor);
     }
@@ -63,7 +63,7 @@ public class ContextMenuStripConstructionTests
     [Fact]
     public void CreatePrimary_SetsSelectionColorToAccent()
     {
-        using WfuiContextMenuStrip menu = UIStyles.ContextMenus.CreatePrimary();
+        using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreatePrimary();
 
         Assert.Equal(UIColors.Primary, menu.SelectionBackColor);
     }

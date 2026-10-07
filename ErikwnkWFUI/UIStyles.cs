@@ -967,7 +967,7 @@ namespace ErikwnkWFUI
         }
 
         /// <summary>A <see cref="Controls.ContextMenuStrip"/> themed to match the rest of ErikwnkWFUI instead of the plain OS-default popup menu - functionally identical to the native control.</summary>
-        public static class ContextMenus
+        public static class ContextMenuStrips
         {
             public static Controls.ContextMenuStrip CreateStandard()
             {
