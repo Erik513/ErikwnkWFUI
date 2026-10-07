@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
@@ -6,9 +6,9 @@ using WfuiContextMenuStrip = ErikwnkWFUI.Controls.ContextMenuStrip;
 namespace ErikwnkWFUI.Tests.Controls.ContextMenuStrip;
 
 /// <summary>
-/// A submenu is a drop-down of its own that does not take over the image and check margins of
-/// the parent menu: ContextMenuStrip.OnOpening walks the whole item tree and sets them (and the
-/// renderer) every time the menu is about to show (see ApplyThemeToSubmenus). The opening is
+/// A submenu is a drop-down of its own that takes the renderer of its owner but not the image and
+/// check margins of the parent menu: ContextMenuStrip.OnOpening walks the whole item tree and
+/// sets them every time the menu is about to show (see ApplyThemeToSubmenus). The opening is
 /// raised through reflection, not by showing a menu on screen.
 /// </summary>
 public class ContextMenuStripSubmenuTests

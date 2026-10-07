@@ -37,7 +37,7 @@ namespace ErikwnkWFUI.Controls
                 ? UIColors.GetReadableFill(_colors.Hover, _colors.HoverText)
                 : UIColors.BorderLight);
 
-            Renderer = CreateRenderer();
+            Renderer = new ThemedRenderer(this);
         }
 
         /// <summary>
@@ -79,9 +79,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // A submenu is a drop-down of its own that does not take over the image and check margins
-        // of this menu. They are set on the whole tree at every opening, not once when an item
-        // is added, because items can still come until the menu shows. After the Opening event,
+        // A submenu is a drop-down of its own that takes the renderer of its owner but not the
+        // image and check margins of this menu. They are set on the whole tree at every opening,
+        // not once when an item is added, because items can still come until the menu shows. After the Opening event,
         // not before: that is where applications fill a menu on demand.
         protected override void OnOpening(CancelEventArgs e)
         {
@@ -100,20 +100,12 @@ namespace ErikwnkWFUI.Controls
                 if (item is ToolStripMenuItem menuItem
                     && menuItem.DropDown is ToolStripDropDownMenu dropDown)
                 {
-                    dropDown.Renderer = CreateRenderer();
                     dropDown.ShowImageMargin = ShowImageMargin;
                     dropDown.ShowCheckMargin = ShowCheckMargin;
 
                     ApplyThemeToSubmenus(menuItem.DropDownItems);
                 }
             }
-        }
-
-        // The renderer reads this menu's colors live; submenus get one too, so they do not
-        // depend on how the framework passes the owner's renderer down.
-        private ToolStripRenderer CreateRenderer()
-        {
-            return new ThemedRenderer(this);
         }
 
         private sealed class ThemedRenderer : ToolStripProfessionalRenderer

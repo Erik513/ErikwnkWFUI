@@ -153,10 +153,14 @@ public class ContextMenuStripBehaviorTests
         using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreateStandard();
         ToolStripSystemRenderer own = new ToolStripSystemRenderer();
 
+        ToolStripMenuItem parent = new ToolStripMenuItem("Parent");
+        parent.DropDownItems.Add("Child");
+
         menu.Renderer = own;
-        menu.Items.Add("Item");
+        menu.Items.Add(parent);
         RaiseOpening(menu);
 
         Assert.Same(own, menu.Renderer);
+        Assert.Same(own, parent.DropDown.Renderer);
     }
 }
