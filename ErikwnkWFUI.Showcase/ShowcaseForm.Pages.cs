@@ -102,6 +102,10 @@ namespace ErikwnkWFUI.Showcase
                  "Text input in the theme colors. Standard has a border, Borderless blends into the surface behind it. Left enabled, right disabled.",
                  AddTextBoxesSection),
 
+                ("ToastForm",
+                 "A small confirmation that closes itself after a few seconds, near the bottom of the window. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high.",
+                 AddToastsSection),
+
                 ("ToggleSwitches",
                  "An on/off switch in three sizes (Small, Standard, Large) with optional captions. The columns show on, off and disabled.",
                  AddToggleSwitchesSection),

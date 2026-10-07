@@ -12,7 +12,7 @@ using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
 
 namespace ErikwnkWFUI.Showcase
 {
-    // The buttons that open MessageBox and ToastForm.
+    // The button that opens MessageBox (ToastForm and InfoPopupForm have tabs of their own).
     public partial class ShowcaseForm
     {
         private void AddPopupsSection(PropertyTable table)
@@ -30,22 +30,7 @@ namespace ErikwnkWFUI.Showcase
                     this);
             };
 
-            Button toastButton = UIStyles.Buttons.CreateStandard("Show ToastForm", size: new Size(160, 32));
-            toastButton.Click += delegate
-            {
-                ToastForm.ShowToast("Sample toast message", this);
-            };
-
             table.AddRow("MessageBox", messageBoxButton);
-            table.AddRow("ToastForm", toastButton);
-
-            foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.High })
-            {
-                PopupTransparency shown = level;
-                Button levelButton = UIStyles.Buttons.CreateStandard("Show ToastForm (" + shown + ")", size: new Size(200, 32));
-                levelButton.Click += delegate { ToastForm.ShowToast("Sample toast message", this, shown); };
-                table.AddRow("ToastForm (" + shown + ")", levelButton);
-            }
         }
     }
 }
