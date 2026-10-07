@@ -37,6 +37,7 @@ namespace ErikwnkWFUI.Controls
     public class ComboBox : System.Windows.Forms.ComboBox
     {
         private const int WM_ERASEBKGND = 0x0014;
+        private const int WM_NCPAINT = 0x0085;
         private const int WM_CTLCOLOREDIT = 0x0133;
         private const int WM_CTLCOLORSTATIC = 0x0138;
         private const int WM_PRINT = 0x0317;
@@ -52,12 +53,14 @@ namespace ErikwnkWFUI.Controls
         // one can show up with pixels of the other (the text of the neighbor).
         private readonly BufferedGraphicsContext _bufferContext = new BufferedGraphicsContext();
 
+        private readonly ListFrame _listFrame;
         private bool _isHot;
         private bool _lastInputWasMouse;
         private UIColorSet _colors;
 
         public ComboBox()
         {
+            _listFrame = new ListFrame(this);
             // The rows are owner-drawn: the list of the system always highlights the hovered
             // row in the system's accent color, no matter what is set. Drawing every row is
             // the only way to make it follow the library's colors.
@@ -118,6 +121,64 @@ namespace ErikwnkWFUI.Controls
                     NativeControlTheme.ApplyToScrollBars(info.hwndList);
                 else
                     SetWindowTheme(info.hwndList, "", "");
+
+                // The list's own frame is the system's (blue in the dark style); the box's
+                // border color is drawn over it.
+                _listFrame.AssignHandle(info.hwndList);
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _listFrame.ReleaseHandle();
+            base.OnHandleDestroyed(e);
+        }
+
+        // Watches the window of the open list and paints its outer edge after the system did.
+        private sealed class ListFrame : NativeWindow
+        {
+            private readonly ComboBox _owner;
+
+            public ListFrame(ComboBox owner)
+            {
+                _owner = owner;
+            }
+
+            protected override void WndProc(ref Message m)
+            {
+                base.WndProc(ref m);
+
+                if (m.Msg != WM_NCPAINT)
+                    return;
+
+                NativeRect rect;
+                IntPtr hdc = GetWindowDC(Handle);
+
+                if (hdc == IntPtr.Zero || !GetWindowRect(Handle, out rect))
+                    return;
+
+                try
+                {
+                    using (Graphics g = Graphics.FromHdc(hdc))
+                    using (Pen pen = new Pen(_owner.ListBorderColor))
+                        g.DrawRectangle(pen, 0, 0, rect.Right - rect.Left - 1, rect.Bottom - rect.Top - 1);
+                }
+                finally
+                {
+                    ReleaseDC(Handle, hdc);
+                }
+            }
+        }
+
+        // The list's frame has the color the box shows while the list is open.
+        private Color ListBorderColor
+        {
+            get
+            {
+                if (!Enabled)
+                    return UIColors.DisabledGray;
+
+                return UIColors.EnsureContrast(GetColors().Pressed, BackColor, 6.0);
             }
         }
 
