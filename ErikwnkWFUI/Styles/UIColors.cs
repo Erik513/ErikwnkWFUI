@@ -517,6 +517,39 @@ namespace ErikwnkWFUI.Styles
                 (int)(color.B * (1 - amount)));
         }
 
+        // The red -> yellow -> green of a status progress bar. Two segments rather than one
+        // straight blend, which would pass through a muddy brown around the middle instead of a
+        // clear yellow. The breakpoint is not the middle (0.5): green should only dominate near
+        // the top, so red -> yellow gets the larger share (0-65%) and only the last third blends
+        // yellow -> green; a flat 50/50 split turned green too early.
+        private const double YellowBreakpoint = 0.65;
+
+        /// <summary>
+        /// The status color of <paramref name="value"/> between <paramref name="minimum"/> and
+        /// <paramref name="maximum"/>: red at the low end, yellow towards the middle, green at the top.
+        /// </summary>
+        internal static Color GetStatusColor(int value, int minimum, int maximum)
+        {
+            double range = maximum - minimum;
+            double fraction = range > 0 ? (value - minimum) / range : 0;
+            fraction = Math.Max(0, Math.Min(1, fraction));
+
+            if (fraction <= YellowBreakpoint)
+                return Blend(Red, Yellow, fraction / YellowBreakpoint);
+
+            return Blend(Yellow, Green, (fraction - YellowBreakpoint) / (1 - YellowBreakpoint));
+        }
+
+        private static Color Blend(Color from, Color to, double t)
+        {
+            t = Math.Max(0, Math.Min(1, t));
+
+            return Color.FromArgb(
+                (int)Math.Round(from.R + (to.R - from.R) * t),
+                (int)Math.Round(from.G + (to.G - from.G) * t),
+                (int)Math.Round(from.B + (to.B - from.B) * t));
+        }
+
         /// <summary>
         /// Text of a disabled control on <paramref name="surface"/>: the best text color blended
         /// toward the surface, as on the buttons and the check box. The theme's

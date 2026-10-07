@@ -1976,23 +1976,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         private void CycleSort(int columnIndex)
         {
-            if (columnIndex != _sortedColumnIndex)
-            {
-                _sortedColumnIndex = columnIndex;
-                _sortOrder = SortOrder.Ascending;
-            }
-            else if (_sortOrder == SortOrder.Ascending)
-            {
-                _sortOrder = SortOrder.Descending;
-            }
-            else if (_sortOrder == SortOrder.Descending)
-            {
-                _sortOrder = SortOrder.None;
-            }
-            else
-            {
-                _sortOrder = SortOrder.Ascending;
-            }
+            SortCycle.Advance(columnIndex, ref _sortedColumnIndex, ref _sortOrder);
 
             foreach (DataGridViewColumn column in Columns)
             {

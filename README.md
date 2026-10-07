@@ -48,8 +48,8 @@ one-line summary of what it's for.
   need to reach past what a factory method gives you (e.g. subscribing to
   an event, or a property `UIStyles` doesn't proxy).
 - **`Forms/`** - `StyledForm` (the base every ErikwnkWFUI window builds on),
-  plus ready-made dialogs (`MessageBoxForm`, `InfoPopupForm`,
-  `UpdateAvailableForm`, `StyledOptionsForm`).
+  plus ready-made dialogs and popups (`MessageBoxForm`, `ToastForm`,
+  `InfoPopupForm`, `UpdateAvailableForm`, `StyledOptionsForm`).
 - **`Factories/`** - internal. `UIStyles` is the only supported public
   entry point to these; if you're referencing anything under
   `ErikwnkWFUI.Factories` directly, use the equivalent `UIStyles.*` instead.
@@ -58,6 +58,32 @@ one-line summary of what it's for.
 - **`Helpers/`** - low-level plumbing (borderless resize hit-testing,
   window dragging, sleep prevention) used internally by the controls above;
   not something you'd normally use directly.
+
+## Color sets
+
+Every `CreateStandard` takes an optional `colors` parameter - a color set
+(`UIStyles.Colors.Sets.Green`, `UIStyles.Colors.CreateSet(color)`, or simply a
+`Color`) that colors the control in all its states; hover, pressed, disabled and
+the text on each are worked out for you. Without it the control is the neutral
+gray, and `CreatePrimary` is the same control in the current accent.
+
+```csharp
+var green = UIStyles.ComboBoxes.CreateStandard(colors: UIStyles.Colors.Sets.Green);
+var accent = UIStyles.ComboBoxes.CreatePrimary();
+```
+
+## Popups
+
+- **`ToastForm.ShowToast(message, window)`** - a small confirmation that closes
+  itself. It belongs to its window (moves with it, never takes the focus) and is
+  shown only while that window is in front; a toast that cannot be shown waits and
+  appears when the window is active again (at most three, for one minute).
+- **`UIStyles.InfoPopups`** - a popup with blocks of a header and a text, as a
+  replacement for the standard tooltip. `popup.AttachTo(control, "Text")` makes it
+  the tooltip of a control (one popup can serve many); or set the content with
+  `SetContent` and show it where you want (`ShowNextTo`, `ShowAtMouse`,
+  `ShowCenteredAbove`). Transparency, how long it stays and the delay before it
+  shows are set with `PopupTransparency`, `PopupDuration` and `PopupDelay`.
 
 ## Symbol buttons
 

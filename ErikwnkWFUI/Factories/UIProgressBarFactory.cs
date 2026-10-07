@@ -196,7 +196,7 @@ namespace ErikwnkWFUI.Factories
                 if (_useStatusGradient && m.Msg == WM_PAINT)
                 {
                     Color statusColor = Enabled
-                        ? ComputeStatusColor(Value, Minimum, Maximum)
+                        ? UIColors.GetStatusColor(Value, Minimum, Maximum)
                         : UIColors.DisabledGray;
 
                     if (ForeColor != statusColor)
@@ -253,39 +253,6 @@ namespace ErikwnkWFUI.Factories
                         ReleaseDC(Handle, windowDc);
                     }
                 }
-            }
-
-            // Two-segment blend - red to yellow, then yellow to green -
-            // rather than a straight red-to-green blend, which would pass
-            // through a muddy brown/olive around the midpoint instead of a
-            // clear yellow "midway" cue. The breakpoint between the two
-            // segments is NOT the midpoint (0.5): green reading as "done"
-            // should only dominate near the top of the range, so the
-            // red->yellow segment gets the larger share (0-65%) and only
-            // the last third blends yellow->green - a flat 50/50 split
-            // turned green too early ("es wird zu schnell grün").
-            private const double YellowBreakpoint = 0.65;
-
-            private static Color ComputeStatusColor(int value, int minimum, int maximum)
-            {
-                double range = maximum - minimum;
-                double fraction = range > 0 ? (value - minimum) / range : 0;
-                fraction = Math.Max(0, Math.Min(1, fraction));
-
-                if (fraction <= YellowBreakpoint)
-                    return Lerp(UIColors.Red, UIColors.Yellow, fraction / YellowBreakpoint);
-
-                return Lerp(UIColors.Yellow, UIColors.Green, (fraction - YellowBreakpoint) / (1 - YellowBreakpoint));
-            }
-
-            private static Color Lerp(Color from, Color to, double t)
-            {
-                t = Math.Max(0, Math.Min(1, t));
-
-                return Color.FromArgb(
-                    (int)Math.Round(from.R + (to.R - from.R) * t),
-                    (int)Math.Round(from.G + (to.G - from.G) * t),
-                    (int)Math.Round(from.B + (to.B - from.B) * t));
             }
         }
     }

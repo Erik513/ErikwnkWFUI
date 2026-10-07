@@ -192,19 +192,28 @@ namespace ErikwnkWFUI.Forms
             ContentPanel.Controls.Add(rootPanel);
         }
 
-        private Control CreatePromptContent()
+        // The panel and the top-down layout both of the window's contents are built from.
+        private static Panel CreateContentPanel(out FlowLayoutPanel layout)
         {
             Panel panel = UIPanelFactory.CreateMedium();
             panel.Dock = DockStyle.Fill;
             panel.Padding = new Padding(24, 18, 24, 8);
 
-            FlowLayoutPanel layout = new FlowLayoutPanel
+            layout = new FlowLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 FlowDirection = FlowDirection.TopDown,
                 WrapContents = false,
                 BackColor = Color.Transparent
             };
+
+            return panel;
+        }
+
+        private Control CreatePromptContent()
+        {
+            FlowLayoutPanel layout;
+            Panel panel = CreateContentPanel(out layout);
 
             Label headline = UILabelFactory.CreateNormal(UIStrings.Get("UpdateAvailable.Message"));
             headline.AutoSize = true;
@@ -227,17 +236,8 @@ namespace ErikwnkWFUI.Forms
 
         private Control CreateProgressContent()
         {
-            Panel panel = UIPanelFactory.CreateMedium();
-            panel.Dock = DockStyle.Fill;
-            panel.Padding = new Padding(24, 18, 24, 8);
-
-            FlowLayoutPanel layout = new FlowLayoutPanel
-            {
-                Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.TopDown,
-                WrapContents = false,
-                BackColor = Color.Transparent
-            };
+            FlowLayoutPanel layout;
+            Panel panel = CreateContentPanel(out layout);
 
             _progressStatusLabel = UILabelFactory.CreateNormal(string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 0));
             _progressStatusLabel.AutoSize = true;

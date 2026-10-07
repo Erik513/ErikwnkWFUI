@@ -60,10 +60,15 @@ public class OutsideClickFilterTests
     {
         OutsideClickFilter filter = new OutsideClickFilter(w => true, () => { });
 
-        filter.Start();
-        filter.Start();
-        filter.Stop();
-        filter.Stop();
-        filter.Dispose();
+        Exception? thrown = Record.Exception(() =>
+        {
+            filter.Start();
+            filter.Start();
+            filter.Stop();
+            filter.Stop();
+            filter.Dispose();
+        });
+
+        Assert.Null(thrown);
     }
 }

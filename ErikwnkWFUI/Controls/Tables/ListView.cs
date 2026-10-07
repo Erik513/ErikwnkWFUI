@@ -914,23 +914,7 @@ namespace ErikwnkWFUI.Controls
                 _originalOrder = new List<ListViewItem>(Items.Cast<ListViewItem>());
             }
 
-            if (columnIndex != _sortedColumnIndex)
-            {
-                _sortedColumnIndex = columnIndex;
-                _sortOrder = SortOrder.Ascending;
-            }
-            else if (_sortOrder == SortOrder.Ascending)
-            {
-                _sortOrder = SortOrder.Descending;
-            }
-            else if (_sortOrder == SortOrder.Descending)
-            {
-                _sortOrder = SortOrder.None;
-            }
-            else
-            {
-                _sortOrder = SortOrder.Ascending;
-            }
+            SortCycle.Advance(columnIndex, ref _sortedColumnIndex, ref _sortOrder);
 
             if (_sortOrder == SortOrder.None)
             {
