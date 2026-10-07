@@ -365,6 +365,22 @@ namespace ErikwnkWFUI.Styles
                 BlendToward(text, set.Disabled, DisabledTextBlend));
         }
 
+        /// <summary>
+        /// <paramref name="fill"/> shifted in lightness just far enough that <paramref name="text"/>
+        /// reads on it (<paramref name="minimum"/>:1) - for a set whose fill is so mid-tone that
+        /// neither light nor dark text gets there. A fill that already carries the text stays as it is.
+        /// </summary>
+        internal static Color GetReadableFill(Color fill, Color text, double minimum = 4.5)
+        {
+            double step = GetContrastRatio(text, Color.White) < GetContrastRatio(text, Color.Black) ? -0.01 : 0.01;
+            Color result = fill;
+
+            for (int i = 0; i < 40 && GetContrastRatio(text, result) < minimum; i++)
+                result = ShiftLightness(result, step);
+
+            return result;
+        }
+
         private static Color DarkenUntilReadable(Color fill, Color text, double minimumContrast)
         {
             Color result = fill;

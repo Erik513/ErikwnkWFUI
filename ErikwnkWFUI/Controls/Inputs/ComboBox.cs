@@ -227,7 +227,7 @@ namespace ErikwnkWFUI.Controls
             // neutral gray of the other controls' selections without a set.
             Color backColor = !isSelected
                 ? UIColors.BackgroundMedium
-                : _colors != null ? GetReadableFill(_colors.Hover, _colors.HoverText) : UIColors.BorderLight;
+                : _colors != null ? UIColors.GetReadableFill(_colors.Hover, _colors.HoverText) : UIColors.BorderLight;
 
             // A disabled box draws its text muted.
             Color textColor = !Enabled
@@ -371,20 +371,6 @@ namespace ErikwnkWFUI.Controls
 
                 return UIColors.GetOutlineColor(BackColor);
             }
-        }
-
-        // The set's hover color for the selected row, shifted in lightness just far enough that
-        // the set's text reads on it (4.5:1): a few sets have a mid-tone hover color where neither
-        // light nor dark text gets there.
-        private static Color GetReadableFill(Color fill, Color text)
-        {
-            double step = UIColors.GetContrastRatio(text, Color.White) < UIColors.GetContrastRatio(text, Color.Black) ? -0.01 : 0.01;
-            Color result = fill;
-
-            for (int i = 0; i < 40 && UIColors.GetContrastRatio(text, result) < 4.5; i++)
-                result = UIColors.ShiftLightness(result, step);
-
-            return result;
         }
 
         // Disabled text, as on the buttons and the check box: the contrasting color blended toward

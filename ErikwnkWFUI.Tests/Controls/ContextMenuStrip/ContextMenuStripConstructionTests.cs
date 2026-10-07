@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -61,10 +61,11 @@ public class ContextMenuStripConstructionTests
     }
 
     [Fact]
-    public void CreatePrimary_SetsSelectionColorToAccent()
+    public void CreatePrimary_UsesThePrimarySet()
     {
         using WfuiContextMenuStrip menu = UIStyles.ContextMenuStrips.CreatePrimary();
 
-        Assert.Equal(UIColors.Primary, menu.SelectionBackColor);
+        Assert.Equal(UIColors.PrimarySet.Hover, menu.Colors!.Hover);
+        Assert.Equal(UIColors.GetReadableFill(UIColors.PrimarySet.Hover, UIColors.PrimarySet.HoverText), menu.SelectionBackColor);
     }
 }

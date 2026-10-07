@@ -5,20 +5,15 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIContextMenuStripFactory
     {
-        public static ContextMenuStrip CreateStandard()
+        public static ContextMenuStrip CreateStandard(UIColorSet colors = null)
         {
-            return new ContextMenuStrip();
+            return new ContextMenuStrip { Colors = colors };
         }
 
-        // Same control, hover/selection-highlighted in the current accent
-        // instead of the fixed neutral gray CreateStandard keeps - mirrors
-        // UIListBoxFactory.CreatePrimary.
+        // The Standard one with the accent: the highlight in the primary color set.
         public static ContextMenuStrip CreatePrimary()
         {
-            return new ContextMenuStrip
-            {
-                SelectionBackColor = UIColors.Primary
-            };
+            return CreateStandard(UIColors.PrimarySet);
         }
     }
 }

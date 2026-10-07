@@ -14,20 +14,38 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     public class ContextMenuStrip : System.Windows.Forms.ContextMenuStrip
     {
-        private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.BorderLight);
+        private readonly ThemeColor _selectionBackColor;
+        private UIColorSet _colors;
 
         public ContextMenuStrip()
         {
+            // The highlighted item: the set's hover color (brought to where its text reads), or
+            // the neutral gray without a set.
+            _selectionBackColor = new ThemeColor(() => _colors != null
+                ? UIColors.GetReadableFill(_colors.Hover, _colors.HoverText)
+                : UIColors.BorderLight);
+
             Renderer = CreateRenderer();
         }
 
         /// <summary>
-        /// Background of a hovered/selected menu item. Defaults to a fixed,
-        /// neutral gray (<see cref="UIColors.BorderLight"/>), not the
-        /// current accent - set this explicitly (e.g. to
-        /// <see cref="UIColors.Primary"/>) for an accent-colored highlight
-        /// instead, matching <see cref="ListBox.SelectedBackColor"/>'s own
-        /// CreateStandard/CreatePrimary split.
+        /// The colors of the menu: the hovered item takes the set's hover color and text, an item
+        /// whose submenu is open the pressed ones. Left null, the neutral gray;
+        /// <c>UIStyles.ContextMenuStrips.CreatePrimary</c> makes one in the accent color. A
+        /// <see cref="SelectionBackColor"/> set explicitly wins over the set's hover color.
+        /// </summary>
+        public UIColorSet Colors
+        {
+            get { return _colors; }
+            set { _colors = value; }
+        }
+
+        /// <summary>
+        /// Background of a hovered/selected menu item. Defaults to the hover color of
+        /// <see cref="Colors"/>, or without a set to a fixed, neutral gray
+        /// (<see cref="UIColors.BorderLight"/>); set this explicitly to use any color. The
+        /// menus of the grids, the list view and the tab control set it to follow their own
+        /// highlight color.
         /// </summary>
         public Color SelectionBackColor
         {
@@ -69,16 +87,16 @@ namespace ErikwnkWFUI.Controls
         // to pass in a different color source.
         private ToolStripRenderer CreateRenderer()
         {
-            return new ThemedRenderer(() => SelectionBackColor);
+            return new ThemedRenderer(this);
         }
 
         private sealed class ThemedRenderer : ToolStripProfessionalRenderer
         {
-            private readonly Func<Color> _selectionBackColor;
+            private readonly ContextMenuStrip _menu;
 
-            public ThemedRenderer(Func<Color> selectionBackColor) : base(new ThemedColorTable(selectionBackColor))
+            public ThemedRenderer(ContextMenuStrip menu) : base(new ThemedColorTable(menu))
             {
-                _selectionBackColor = selectionBackColor;
+                _menu = menu;
                 RoundedEdges = false;
             }
 
@@ -100,7 +118,16 @@ namespace ErikwnkWFUI.Controls
                     return UIColors.TextDisabled;
 
                 bool highlighted = item.Selected || item.Pressed;
-                return highlighted ? UIColors.GetContrastingForeColor(_selectionBackColor()) : UIColors.TextPrimary;
+
+                if (!highlighted)
+                    return UIColors.TextPrimary;
+
+                // The set's own text, on its own fill; an explicit selection color gets the best
+                // text for that color.
+                if (_menu._colors != null && !_menu._selectionBackColor.IsSet)
+                    return item.Pressed ? _menu._colors.PressedText : _menu._colors.HoverText;
+
+                return UIColors.GetContrastingForeColor(_menu.SelectionBackColor);
             }
         }
 
@@ -111,12 +138,14 @@ namespace ErikwnkWFUI.Controls
         // correctly after a theme/accent change.
         private sealed class ThemedColorTable : ProfessionalColorTable
         {
-            private readonly Func<Color> _selectionBackColor;
+            private readonly ContextMenuStrip _menu;
 
-            public ThemedColorTable(Func<Color> selectionBackColor)
+            public ThemedColorTable(ContextMenuStrip menu)
             {
-                _selectionBackColor = selectionBackColor;
+                _menu = menu;
             }
+
+            private Color Selection => _menu.SelectionBackColor;
 
             public override Color ToolStripDropDownBackground => UIColors.BackgroundMediumElevated;
             public override Color ImageMarginGradientBegin => UIColors.BackgroundMediumElevated;
@@ -146,26 +175,35 @@ namespace ErikwnkWFUI.Controls
             {
                 get
                 {
-                    Color fill = _selectionBackColor();
+                    Color fill = Selection;
                     bool fillIsLight = UIColors.IsLight(fill);
                     return fillIsLight ? UIColors.Darken(fill, 40) : UIColors.Lighten(fill, 40);
                 }
             }
 
-            public override Color MenuItemSelectedGradientBegin => _selectionBackColor();
-            public override Color MenuItemSelectedGradientEnd => _selectionBackColor();
+            public override Color MenuItemSelectedGradientBegin => Selection;
+            public override Color MenuItemSelectedGradientEnd => Selection;
 
             public override Color MenuItemPressedGradientBegin => PressedFill;
             public override Color MenuItemPressedGradientMiddle => PressedFill;
             public override Color MenuItemPressedGradientEnd => PressedFill;
 
             public override Color CheckBackground => UIColors.BackgroundMediumElevated;
-            public override Color CheckSelectedBackground => _selectionBackColor();
+            public override Color CheckSelectedBackground => Selection;
             public override Color CheckPressedBackground => PressedFill;
 
-            // A single darkened-fill value backing all four "pressed" roles
-            // above, instead of each repeating the same Darken call.
-            private Color PressedFill => UIColors.Darken(_selectionBackColor(), 30);
+            // One value backing all four "pressed" roles above: the set's pressed color (readable
+            // for its text), else the selection fill darkened.
+            private Color PressedFill
+            {
+                get
+                {
+                    if (_menu._colors != null && !_menu._selectionBackColor.IsSet)
+                        return UIColors.GetReadableFill(_menu._colors.Pressed, _menu._colors.PressedText);
+
+                    return UIColors.Darken(Selection, 30);
+                }
+            }
         }
     }
 }

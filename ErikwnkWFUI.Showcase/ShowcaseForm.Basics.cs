@@ -302,8 +302,12 @@ namespace ErikwnkWFUI.Showcase
             Button primaryButton = UIStyles.Buttons.CreateStandard("Right-click here (Primary)", size: new Size(220, 32));
             primaryButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreatePrimary());
 
+            Button colorsButton = UIStyles.Buttons.CreateStandard("Right-click here (Green)", size: new Size(220, 32));
+            colorsButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green));
+
             table.AddRow("CreateStandard", standardButton);
             table.AddRow("CreatePrimary", primaryButton);
+            table.AddRow("CreateStandard(colors)", colorsButton);
         }
 
         // Exercises every native ToolStripMenuItem feature (icon, checkmark,

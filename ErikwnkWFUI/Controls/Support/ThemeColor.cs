@@ -26,6 +26,8 @@ namespace ErikwnkWFUI.Controls
             _defaultColor = defaultColor;
         }
 
+        public bool IsSet => _isOverridden;
+
         public Color Value => _isOverridden ? _override : _defaultColor();
 
         public void Set(Color value)
