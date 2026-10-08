@@ -29,20 +29,21 @@ namespace ErikwnkWFUI.Forms
     /// A message without text shows no toast. A call from another thread is carried over to
     /// the thread of the window. The toast is placed inside the window (and on the screen) as
     /// far as it fits; a window narrower than the toast gets it at its left edge. A long message
-    /// is cut with an ellipsis, the toast keeps its size.
+    /// is cut with an ellipsis, the toast keeps its size, which and
+    /// whose places inside follow the scaling of the screen the window is on.
     /// </para>
     /// <para>
     /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text,
     /// the time it stays (<see cref="Duration"/>) and the colors are offered. Not offered: a
     /// title, other icons than the check mark (warning, error), an event for a click on the
-    /// toast or for its closing, and a toast that stays until it is clicked. The size is fixed
-    /// and not scaled for high DPI.
+    /// toast or for its closing, and a toast that stays until it is clicked.
     /// </para>
     /// </remarks>
     public class ToastForm : Form
     {
-        private const int ToastWidth = 350;
-        private const int ToastHeight = 80;
+        // The measures at 96 dpi; ApplyDpi scales them for the screen the window is on.
+        private const int ToastWidth96 = 350;
+        private const int ToastHeight96 = 80;
 
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
         public const int MaxPendingToasts = 3;
@@ -75,6 +76,7 @@ namespace ErikwnkWFUI.Forms
             ConfigureForm();
             CreateControls();
             CreateTimer();
+            ApplyDpi(DeviceDpi);
 
             SizeChanged += OnToastSizeChanged;
             Load += OnToastLoad;
@@ -218,6 +220,7 @@ namespace ErikwnkWFUI.Forms
             ToastForm toast = new ToastForm();
             _currentToast = toast;
             toast._ownerForm = owner;
+            toast.ApplyDpi(OwnerDpi(owner));
             toast.Transparency = transparency;
             toast.Duration = duration;
             toast.Colors = colors;
@@ -355,7 +358,7 @@ namespace ErikwnkWFUI.Forms
         {
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
-            Size = new Size(ToastWidth, ToastHeight);
+            AutoScaleMode = AutoScaleMode.None;
             ShowInTaskbar = false;
             Opacity = PopupTransparency.Medium.ToOpacity();
         }
@@ -424,6 +427,29 @@ namespace ErikwnkWFUI.Forms
             _messageLabel.Text = string.IsNullOrWhiteSpace(message)
                 ? ""
                 : message;
+        }
+
+        // The size of the toast and the places inside it follow the screen's scaling: a toast on a
+        // screen at 150% is 1.5 times as large, so its text keeps its room. The window it is
+        // shown for says which screen that is.
+        // The scaling of the screen a window is on. Replaceable so a test can give another one.
+        internal static Func<Form, int> OwnerDpi = owner => owner.DeviceDpi;
+
+        internal void ApplyDpi(int dpi)
+        {
+            if (IsDisposed)
+                return;
+
+            Size = new Size(Scaled(ToastWidth96, dpi), Scaled(ToastHeight96, dpi));
+            _contentPanel.Padding = new Padding(Scaled(15, dpi), Scaled(10, dpi), Scaled(15, dpi), Scaled(10, dpi));
+            _successIcon.Size = new Size(Scaled(30, dpi), Scaled(30, dpi));
+            _successIcon.Location = new Point(Scaled(10, dpi), Scaled(25, dpi));
+            _messageLabel.Padding = new Padding(Scaled(40, dpi), 0, Scaled(10, dpi), 0);
+        }
+
+        private static int Scaled(int value96, int dpi)
+        {
+            return (int)Math.Round(value96 * dpi / 96.0);
         }
 
         private static void CloseCurrentToast()
