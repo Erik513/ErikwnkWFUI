@@ -163,15 +163,49 @@ public class ToastEdgeCaseTests : IDisposable
     }
 
     [Fact]
-    public void ALongMessage_DoesNotChangeTheSizeOfTheToast()
+    public void ALongMessage_MakesTheToastHigherUpToAPoint_TheWidthStays()
     {
-        Form host = Host(new Point(100, 100), new Size(500, 300));
+        Form host = Host(new Point(100, 100), new Size(600, 400));
 
         ToastForm.ShowToast("Short", host);
-        Size shortSize = Current()!.Size;
-        ToastForm.ShowToast(new string('x', 400) + " and a lot more words that do not fit on one line of the toast at all", host);
+        Size oneLine = Current()!.Size;
+        ToastForm.ShowToast("A message that is long enough to need a second line in the toast, and then some more.", host);
+        Size twoLines = Current()!.Size;
+        ToastForm.ShowToast(string.Join(" ", Enumerable.Repeat("a long message of many words", 8)), host);
+        Size fourLines = Current()!.Size;
+        ToastForm.ShowToast(string.Join(" ", Enumerable.Repeat("a long message of many words", 60)), host);
+        Size more = Current()!.Size;
 
-        Assert.Equal(shortSize, Current()!.Size);
+        // Two lines still fit in the usual height; more make it higher, up to four lines.
+        Assert.Equal(oneLine, twoLines);
+        Assert.True(fourLines.Height > oneLine.Height, "a long message did not make the toast higher");
+        Assert.Equal(oneLine.Width, fourLines.Width);
+        Assert.Equal(fourLines.Height, more.Height);
+        Assert.True(Area(host).Contains(Current()!.Bounds));
+    }
+
+    [Fact]
+    public void TheCheckMark_SitsInTheMiddleOfTheHeight_AtEverySize()
+    {
+        Form host = Host(new Point(100, 100), new Size(600, 400));
+
+        foreach (string message in new[] { "One line", string.Join(" ", Enumerable.Repeat("many words in the message", 20)) })
+        {
+            ToastForm.ShowToast(message, host);
+            Label icon = Current()!.GetPrivateField<Label>("_successIcon")!;
+
+            Assert.Equal((Current()!.Height - icon.Height) / 2, icon.Top);
+        }
+    }
+
+    [Fact]
+    public void AnAmpersandInTheMessage_IsShownAsItIs()
+    {
+        Form host = Host(new Point(100, 100), new Size(600, 400));
+
+        ToastForm.ShowToast("Fish & Chips", host);
+
+        Assert.False(Current()!.GetPrivateField<Label>("_messageLabel")!.UseMnemonic);
     }
 
     [Fact]

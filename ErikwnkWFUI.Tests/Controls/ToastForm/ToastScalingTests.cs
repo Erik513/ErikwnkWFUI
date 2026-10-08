@@ -46,7 +46,7 @@ public class ToastScalingTests : IDisposable
 
         Assert.Equal(new Size(width, height), toast.Size);
         Assert.Equal(new Size(Scaled(30, dpi), Scaled(30, dpi)), Part(toast, "_successIcon").Size);
-        Assert.Equal(new Point(Scaled(10, dpi), Scaled(25, dpi)), Part(toast, "_successIcon").Location);
+        Assert.Equal(new Point(Scaled(10, dpi), (height - Scaled(30, dpi)) / 2), Part(toast, "_successIcon").Location);
         Assert.Equal(Scaled(40, dpi), Part(toast, "_messageLabel").Padding.Left);
     }
 

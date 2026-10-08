@@ -29,8 +29,9 @@ namespace ErikwnkWFUI.Forms
     /// A message without text shows no toast. A call from another thread is carried over to
     /// the thread of the window. The toast is placed inside the window (and on the screen) as
     /// far as it fits; a window narrower than the toast gets it at its left edge. A long message
-    /// is cut with an ellipsis, the toast keeps its size, which and
-    /// whose places inside follow the scaling of the screen the window is on.
+    /// makes the toast higher, up to four lines (more ends in an ellipsis); its
+    /// width stays. The size and the places inside follow the scaling of the screen the window
+    /// is on. An ampersand is shown as it is.
     /// </para>
     /// <para>
     /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text,
@@ -44,6 +45,8 @@ namespace ErikwnkWFUI.Forms
         // The measures at 96 dpi; ApplyDpi scales them for the screen the window is on.
         private const int ToastWidth96 = 350;
         private const int ToastHeight96 = 80;
+        private const int MaxMessageLines = 4;
+        private int _dpi = 96;
 
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
         public const int MaxPendingToasts = 3;
@@ -411,6 +414,7 @@ namespace ErikwnkWFUI.Forms
                 AutoSize = false,
                 Dock = DockStyle.Fill,
                 Padding = new Padding(40, 0, 10, 0),
+                UseMnemonic = false,
                 AutoEllipsis = true
             };
         }
@@ -427,6 +431,7 @@ namespace ErikwnkWFUI.Forms
             _messageLabel.Text = string.IsNullOrWhiteSpace(message)
                 ? ""
                 : message;
+            FitToMessage();
         }
 
         // The size of the toast and the places inside it follow the screen's scaling: a toast on a
@@ -440,11 +445,38 @@ namespace ErikwnkWFUI.Forms
             if (IsDisposed)
                 return;
 
-            Size = new Size(Scaled(ToastWidth96, dpi), Scaled(ToastHeight96, dpi));
+            _dpi = dpi;
             _contentPanel.Padding = new Padding(Scaled(15, dpi), Scaled(10, dpi), Scaled(15, dpi), Scaled(10, dpi));
             _successIcon.Size = new Size(Scaled(30, dpi), Scaled(30, dpi));
-            _successIcon.Location = new Point(Scaled(10, dpi), Scaled(25, dpi));
             _messageLabel.Padding = new Padding(Scaled(40, dpi), 0, Scaled(10, dpi), 0);
+            FitToMessage();
+        }
+
+        // The toast is as wide as always and as high as its message needs, from one line (the
+        // usual height) to a few lines; what is more than that ends in an ellipsis. The check
+        // mark sits in the middle of the height.
+        private void FitToMessage()
+        {
+            int width = Scaled(ToastWidth96, _dpi);
+            int textWidth = width - _contentPanel.Padding.Horizontal - _messageLabel.Padding.Horizontal;
+            int lineHeight = TextRenderer.MeasureText("Ag", _messageLabel.Font, Size.Empty, TextFormatFlags.NoPadding).Height;
+            Size measured = TextRenderer.MeasureText(
+                _messageLabel.Text,
+                _messageLabel.Font,
+                new Size(Math.Max(1, textWidth), int.MaxValue),
+                TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+
+            int textHeight = Math.Min(measured.Height, lineHeight * MaxMessageLines);
+            int height = Math.Max(Scaled(ToastHeight96, _dpi), textHeight + 2 * Scaled(20, _dpi));
+
+            Size = new Size(width, height);
+
+            // The room above and below the text is what is left of the height, less a little
+            // slack (the label's lines are a bit higher than the measure), so the message shows
+            // no more lines than its limit.
+            int vertical = Math.Max(0, (height - textHeight - Scaled(6, _dpi)) / 2);
+            _contentPanel.Padding = new Padding(_contentPanel.Padding.Left, vertical, _contentPanel.Padding.Right, vertical);
+            _successIcon.Location = new Point(Scaled(10, _dpi), (height - _successIcon.Height) / 2);
         }
 
         private static int Scaled(int value96, int dpi)
