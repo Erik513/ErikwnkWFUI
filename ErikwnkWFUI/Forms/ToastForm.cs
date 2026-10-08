@@ -380,14 +380,11 @@ namespace ErikwnkWFUI.Forms
                 (int)(owner.ClientSize.Height * 0.75) - toast.Height / 2));
         }
 
-        // Win11 rounds window corners itself via DWM (anti-aliased, all four
-        // identical, and it's what draws the thin gray border InfoPopupForm
-        // has - matched here rather than kept as a plain-rectangle GDI
-        // Region, which never gets that border). On pre-Win11 the call is a
-        // silent no-op and the toast is simply a plain rectangle - see
-        // InfoPopupForm.ApplyRoundedRegion, which uses the same approach.
-
-        private void ApplyRoundedRegion()
+        // Win11 rounds window corners itself via DWM (anti-aliased, all four identical, with the
+        // thin border of the info popup); a window Region never gets that. Before Windows 11
+        // the call does nothing and the toast is a plain rectangle - the same as
+        // InfoPopupForm.ApplyRoundedCorners.
+        private void ApplyRoundedCorners()
         {
             if (!IsHandleCreated)
                 return;
@@ -405,12 +402,12 @@ namespace ErikwnkWFUI.Forms
 
         private void OnToastLoad(object sender, EventArgs e)
         {
-            ApplyRoundedRegion();
+            ApplyRoundedCorners();
         }
 
         private void OnToastSizeChanged(object sender, EventArgs e)
         {
-            ApplyRoundedRegion();
+            ApplyRoundedCorners();
         }
 
         private void OnCloseTimerTick(object sender, EventArgs e)
