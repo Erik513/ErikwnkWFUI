@@ -63,7 +63,6 @@ namespace ErikwnkWFUI.Controls
         private bool _isRowRangeDragging;
         private int _rowRangeDragAnchorIndex = -1;
         private int _rowRangeDragLastAppliedIndex = -1;
-        private int _rowRangeAutoScrollDirection;
         private readonly Timer _rowRangeDragPollTimer;
         private readonly OutsideClickFilter _outsideClickDeselectFilter;
 
@@ -1318,7 +1317,6 @@ namespace ErikwnkWFUI.Controls
         {
             _isRowRangeDragging = false;
             _rowRangeDragAnchorIndex = -1;
-            _rowRangeAutoScrollDirection = 0;
             _rowRangeDragPollTimer.Stop();
 
             if (e.Button != MouseButtons.Left || ModifierKeys != Keys.None)
@@ -1346,7 +1344,6 @@ namespace ErikwnkWFUI.Controls
         {
             _isRowRangeDragging = false;
             _rowRangeDragAnchorIndex = -1;
-            _rowRangeAutoScrollDirection = 0;
             _rowRangeDragPollTimer.Stop();
         }
 
@@ -1381,8 +1378,7 @@ namespace ErikwnkWFUI.Controls
             if ((MouseButtons & MouseButtons.Left) == 0)
             {
                 _isRowRangeDragging = false;
-                _rowRangeAutoScrollDirection = 0;
-                _rowRangeDragPollTimer.Stop();
+                    _rowRangeDragPollTimer.Stop();
                 return;
             }
 
@@ -1392,7 +1388,6 @@ namespace ErikwnkWFUI.Controls
             // clamps to the true first/last row regardless of scroll
             // position, so the selection itself doesn't depend on this.
             int direction = location.Y < _headerHeight ? -1 : location.Y >= ClientSize.Height ? 1 : 0;
-            _rowRangeAutoScrollDirection = direction;
 
             if (direction != 0)
             {

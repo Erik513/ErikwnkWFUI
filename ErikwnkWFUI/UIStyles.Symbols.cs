@@ -59,6 +59,7 @@ namespace ErikwnkWFUI
                 }
                 catch (System.Exception)
                 {
+                    // The installed fonts cannot be listed: both symbol fonts count as not installed.
                 }
             }
 

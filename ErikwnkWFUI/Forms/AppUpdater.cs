@@ -58,6 +58,8 @@ namespace ErikwnkWFUI.Forms
             }
             catch
             {
+                // A check for an update runs on its own in the background: a failure (no network,
+                // GitHub not reachable, a window that is gone) must never disturb the application.
             }
         }
 

@@ -113,6 +113,7 @@ namespace ErikwnkWFUI.Forms
                 }
                 catch
                 {
+                    // No icon can be read from the executable: the window simply has none.
                 }
             }
 
