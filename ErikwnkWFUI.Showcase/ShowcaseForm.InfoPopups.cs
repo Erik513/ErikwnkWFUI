@@ -31,31 +31,6 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateStandard(colors)", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Green), "Show popup", 160,
                 popup => popup.SetContent(SampleBlocks)));
 
-            table.AddSection("Fixed size - one short value, like the 70% over a slider");
-
-            table.AddRow("Standard", CreateClickButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Show value 70%", 160,
-                popup => popup.SetContent("70%")));
-
-            table.AddRow("Primary", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), "Show value 70%", 160,
-                popup => popup.SetContent("70%")));
-
-            table.AddSection("Content");
-
-            table.AddRow("Several blocks", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
-                popup => popup.SetContent(
-                    new InfoPopupSection("First block", "A header with its text."),
-                    new InfoPopupSection("Second block", "Another header with its text."),
-                    new InfoPopupSection(null, "A block with a text only."),
-                    new InfoPopupSection("A block with a header only", null))));
-
-            table.AddRow("Own colors", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
-                popup => popup.SetContent(
-                    new InfoPopupSection("A red header", "A plain text, white on the gray.") { HeaderColor = Color.FromArgb(255, 110, 110) },
-                    new InfoPopupSection("A plain header", "A text in its own light green.") { TextColor = Color.FromArgb(150, 255, 150) })));
-
-            table.AddRow("On a light color", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Yellow), "Show popup", 160,
-                popup => popup.SetContent("Light background", "The text turns black when white would not read.")));
-
             table.AddSection("Transparency");
 
             foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
@@ -81,6 +56,31 @@ namespace ErikwnkWFUI.Showcase
                 table.AddRow(delay == PopupDelay.Medium ? "Medium (default)" : delay.ToString(),
                     CreateHoverButton(UIStyles.InfoPopups.CreateStandard(delay: delay), "Rest on me", 160, true));
             }
+
+            table.AddSection("Fixed size - one short value, like the 70% over a slider");
+
+            table.AddRow("Standard", CreateClickButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Show value 70%", 160,
+                popup => popup.SetContent("70%")));
+
+            table.AddRow("Primary", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), "Show value 70%", 160,
+                popup => popup.SetContent("70%")));
+
+            table.AddSection("Content");
+
+            table.AddRow("Several blocks", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
+                popup => popup.SetContent(
+                    new InfoPopupSection("First block", "A header with its text."),
+                    new InfoPopupSection("Second block", "Another header with its text."),
+                    new InfoPopupSection(null, "A block with a text only."),
+                    new InfoPopupSection("A block with a header only", null))));
+
+            table.AddRow("Own colors", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
+                popup => popup.SetContent(
+                    new InfoPopupSection("A red header", "A plain text, white on the gray.") { HeaderColor = Color.FromArgb(255, 110, 110) },
+                    new InfoPopupSection("A plain header", "A text in its own light green.") { TextColor = Color.FromArgb(150, 255, 150) })));
+
+            table.AddRow("On a light color", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Yellow), "Show popup", 160,
+                popup => popup.SetContent("Light background", "The text turns black when white would not read.")));
 
             table.AddSection("AttachTo - the popup as a tooltip");
 

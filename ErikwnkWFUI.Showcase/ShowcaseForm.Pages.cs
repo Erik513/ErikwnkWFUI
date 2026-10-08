@@ -103,7 +103,7 @@ namespace ErikwnkWFUI.Showcase
                  AddTextBoxesSection),
 
                 ("ToastForm",
-                 "A small confirmation that closes itself after a few seconds, near the bottom of the window. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high, and it stays a short, medium (the default) or long time. It can also wait before it appears: not at all (the default), a short, medium or long time.",
+                 "A small confirmation that closes itself after a few seconds, near the bottom of the window. ShowStandard is neutral gray, ShowPrimary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does; the text is white, or black on a light color. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high, and it stays a short, medium (the default) or long time. It can also wait before it appears: not at all (the default), a short, medium or long time.",
                  AddToastsSection),
 
                 ("ToggleSwitches",

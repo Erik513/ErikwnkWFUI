@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Helpers
 {
@@ -32,6 +33,60 @@ namespace ErikwnkWFUI.Helpers
             }
 
             return false;
+        }
+
+        // The text of a popup: white, or black when the set's color is too light for white. On the
+        // color itself one of the two always reads (at least 4.58:1).
+        internal static Color GetTextColor(UIColorSet colors)
+        {
+            Color basic = colors.Basic;
+
+            return UIColors.GetContrastRatio(Color.White, basic) >= UIColors.GetContrastRatio(Color.Black, basic)
+                ? Color.White
+                : Color.Black;
+        }
+
+        // The background of a popup: the set's basic color, kept readable through the
+        // transparency. The whole window is see-through, so the text fades with it and the page
+        // behind (white or black, the worst) shines through the background; with a white page
+        // behind, white text on a mid-tone color can drop far below 4.5:1. The color is shifted
+        // away from the text (darker for white text, lighter for black) just far enough for the
+        // text to read over both a white and a black page. A color that reads already stays.
+        internal static Color GetBackground(UIColorSet colors, double opacity)
+        {
+            Color back = colors.Basic;
+            Color text = GetTextColor(colors);
+            double step = text == Color.White ? -0.01 : 0.01;
+
+            for (int i = 0; i < 100 && WorstContrast(text, back, opacity) < 4.5; i++)
+                back = UIColors.ShiftLightness(back, step);
+
+            return back;
+        }
+
+        // The lower of the contrasts the text has over a white page and over a black page.
+        private static double WorstContrast(Color text, Color back, double opacity)
+        {
+            double worst = double.MaxValue;
+
+            foreach (Color page in new[] { Color.White, Color.Black })
+            {
+                Color seenBack = Mix(back, page, opacity);
+                Color seenText = Mix(text, page, opacity);
+
+                worst = Math.Min(worst, UIColors.GetContrastRatio(seenText, seenBack));
+            }
+
+            return worst;
+        }
+
+        // A color seen through the window: its share of the opacity, the rest from the page.
+        private static Color Mix(Color color, Color page, double opacity)
+        {
+            return Color.FromArgb(
+                (int)Math.Round(color.R * opacity + page.R * (1 - opacity)),
+                (int)Math.Round(color.G * opacity + page.G * (1 - opacity)),
+                (int)Math.Round(color.B * opacity + page.B * (1 - opacity)));
         }
 
         // A popup is owned by its window, and showing an owned window raises that window: with

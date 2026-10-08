@@ -42,6 +42,7 @@ namespace ErikwnkWFUI.Forms
             public DateTime Time;
             public PopupTransparency Transparency;
             public PopupDuration Duration;
+            public UIColorSet Colors;
         }
 
         private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
@@ -52,6 +53,7 @@ namespace ErikwnkWFUI.Forms
         private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _closeTimer;
         private Label _messageLabel;
+        private Label _successIcon;
         private Panel _contentPanel;
 
         public ToastForm()
@@ -67,12 +69,14 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         /// <param name="message">The text of the toast.</param>
         /// <param name="owner">The window the toast belongs to and is shown over.</param>
+        /// <param name="colors">A color set for the background of the toast (its text is white or black) instead of the neutral gray: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="Color"/>. <c>UIStyles.Toasts.ShowPrimary</c> uses the accent.</param>
         /// <param name="transparency">How see-through the toast is; medium by default.</param>
         /// <param name="duration">How long the toast stays: short, medium (2.5 seconds, the default) or long. The time runs from when it is shown, not from when it was asked for.</param>
         /// <param name="delay">How long to wait before the toast is shown: not at all (the default), 0.2, 0.4 or 0.8 seconds. Whether the window is in front is checked when the wait is over.</param>
         public static void ShowToast(
             string message,
             Form owner,
+            UIColorSet colors = null,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant)
@@ -82,19 +86,54 @@ namespace ErikwnkWFUI.Forms
 
             if (delay != PopupDelay.Instant)
             {
-                Schedule(message, owner, transparency, duration, delay);
+                Schedule(message, owner, colors, transparency, duration, delay);
 
                 return;
             }
 
             if (!PopupSupport.CanShowOver(owner))
             {
-                Enqueue(message, owner, transparency, duration);
+                Enqueue(message, owner, colors, transparency, duration);
 
                 return;
             }
 
-            ShowNow(message, owner, transparency, duration);
+            ShowNow(message, owner, colors, transparency, duration);
+        }
+
+        /// <summary>
+        /// The colors of the toast: its background is the set's basic color and the text white
+        /// or black. Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
+        /// <c>UIStyles.Toasts.ShowPrimary</c> makes one in the accent color.
+        /// </summary>
+        public UIColorSet Colors
+        {
+            get { return _colors; }
+            set
+            {
+                _colors = value;
+                ApplyColors();
+            }
+        }
+
+        private UIColorSet _colors;
+
+        // The background (kept readable through the transparency) and the text on it.
+        private void ApplyColors()
+        {
+            if (IsDisposed)
+                return;
+
+            UIColorSet colors = _colors ?? UIStyles.Colors.Sets.Gray;
+            Color text = PopupSupport.GetTextColor(colors);
+
+            BackColor = PopupSupport.GetBackground(colors, Opacity);
+
+            if (_successIcon != null)
+                _successIcon.ForeColor = text;
+
+            if (_messageLabel != null)
+                _messageLabel.ForeColor = text;
         }
 
         /// <summary>How long the toast stays before it closes itself.</summary>
@@ -120,6 +159,7 @@ namespace ErikwnkWFUI.Forms
             {
                 _transparency = value;
                 Opacity = value.ToOpacity();
+                ApplyColors();
             }
         }
 
@@ -128,7 +168,7 @@ namespace ErikwnkWFUI.Forms
         // The toasts that wait for their delay; one timer each, gone when it has fired.
         private static readonly List<Timer> _scheduled = new List<Timer>();
 
-        private static void Schedule(string message, Form owner, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
+        private static void Schedule(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
         {
             Timer timer = new Timer { Interval = delay.ToMilliseconds() };
             _scheduled.Add(timer);
@@ -138,13 +178,13 @@ namespace ErikwnkWFUI.Forms
                 timer.Stop();
                 _scheduled.Remove(timer);
                 timer.Dispose();
-                ShowToast(message, owner, transparency, duration, PopupDelay.Instant);
+                ShowToast(message, owner, colors, transparency, duration, PopupDelay.Instant);
             };
 
             timer.Start();
         }
 
-        private static void ShowNow(string message, Form owner, PopupTransparency transparency, PopupDuration duration)
+        private static void ShowNow(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
         {
             CloseCurrentToast();
 
@@ -153,6 +193,7 @@ namespace ErikwnkWFUI.Forms
             toast._ownerForm = owner;
             toast.Transparency = transparency;
             toast.Duration = duration;
+            toast.Colors = colors;
 
             toast.SetMessage(message);
             toast.Location = GetToastLocation(owner, toast);
@@ -164,7 +205,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(string message, Form owner, PopupTransparency transparency, PopupDuration duration)
+        private static void Enqueue(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
         {
             List<PendingToast> queue;
 
@@ -180,7 +221,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count > 0 && queue[queue.Count - 1].Message == message)
                 return;
 
-            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration });
+            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors });
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -234,7 +275,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Message, owner, next.Transparency, next.Duration);
+            ShowNow(next.Message, owner, next.Colors, next.Transparency, next.Duration);
         }
 
         // The toast must not take the activation from the window it confirms something in.
@@ -284,10 +325,6 @@ namespace ErikwnkWFUI.Forms
             FormBorderStyle = FormBorderStyle.None;
             StartPosition = FormStartPosition.Manual;
             Size = new Size(ToastWidth, ToastHeight);
-            // A shade darker than the raw accent (PrimaryDark, the same
-            // shade CreatePrimary buttons use as their idle background) -
-            // the toast used to be the accent itself, unchanged.
-            BackColor = UIColors.PrimaryDark;
             ShowInTaskbar = false;
             Opacity = PopupTransparency.Medium.ToOpacity();
         }
@@ -296,13 +333,14 @@ namespace ErikwnkWFUI.Forms
         {
             _contentPanel = CreateContentPanel();
 
-            Label successIcon = CreateSuccessIcon();
+            _successIcon = CreateSuccessIcon();
             _messageLabel = CreateMessageLabel();
 
             _contentPanel.Controls.Add(_messageLabel);
-            _contentPanel.Controls.Add(successIcon);
+            _contentPanel.Controls.Add(_successIcon);
 
             Controls.Add(_contentPanel);
+            ApplyColors();
         }
 
         private Panel CreateContentPanel()
@@ -320,12 +358,6 @@ namespace ErikwnkWFUI.Forms
             return new Label
             {
                 Text = UIStyles.Symbols.Check,
-                // AccentForeColor is computed against the raw accent
-                // (Primary), not the darker PrimaryDark this form actually
-                // uses as its background - contrast has to be computed
-                // against the real background, same principle as button
-                // text throughout this library.
-                ForeColor = UIColors.GetContrastingForeColor(UIColors.PrimaryDark),
                 Font = UIFonts.Icon,
                 Size = new Size(30, 30),
                 Location = new Point(10, 25),
@@ -339,7 +371,6 @@ namespace ErikwnkWFUI.Forms
             return new Label
             {
                 Text = "",
-                ForeColor = UIColors.GetContrastingForeColor(UIColors.PrimaryDark),
                 Font = UIFonts.Normal,
                 TextAlign = ContentAlignment.MiddleLeft,
                 BackColor = Color.Transparent,

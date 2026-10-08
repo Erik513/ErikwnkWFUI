@@ -1,0 +1,31 @@
+﻿using System.Windows.Forms;
+using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Styles;
+
+namespace ErikwnkWFUI.Factories
+{
+    internal static class UIToastFactory
+    {
+        public static void ShowStandard(
+            string message,
+            Form owner,
+            UIColorSet colors = null,
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
+        {
+            ToastForm.ShowToast(message, owner, colors, transparency, duration, delay);
+        }
+
+        // The Standard one in the current accent - the primary color set.
+        public static void ShowPrimary(
+            string message,
+            Form owner,
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
+        {
+            ShowStandard(message, owner, UIColors.PrimarySet, transparency, duration, delay);
+        }
+    }
+}

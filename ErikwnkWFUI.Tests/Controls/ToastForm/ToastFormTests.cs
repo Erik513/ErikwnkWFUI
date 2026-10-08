@@ -127,13 +127,13 @@ public class ToastFormTests : IDisposable
         Assert.Equal(PopupTransparency.Medium, CurrentToast()!.Transparency);
         Assert.Equal(0.80, CurrentToast()!.Opacity, 2);
 
-        ToastForm.ShowToast("Opaque", host, PopupTransparency.Opaque);
+        ToastForm.ShowToast("Opaque", host, transparency: PopupTransparency.Opaque);
         Assert.Equal(1.0, CurrentToast()!.Opacity, 2);
 
-        ToastForm.ShowToast("High", host, PopupTransparency.High);
+        ToastForm.ShowToast("High", host, transparency: PopupTransparency.High);
         Assert.True(CurrentToast()!.Opacity < 0.80);
 
-        ToastForm.ShowToast("Low", host, PopupTransparency.Low);
+        ToastForm.ShowToast("Low", host, transparency: PopupTransparency.Low);
         Assert.True(CurrentToast()!.Opacity > 0.80 && CurrentToast()!.Opacity < 1.0);
     }
 
@@ -266,7 +266,7 @@ public class ToastFormTests : IDisposable
     {
         Form host = CreateHost();
         PopupSupport.OwnerIsActive = _ => false;
-        ToastForm.ShowToast("Waits", host, PopupTransparency.Opaque);
+        ToastForm.ShowToast("Waits", host, transparency: PopupTransparency.Opaque);
 
         PopupSupport.OwnerIsActive = _ => true;
         Activate(host);
