@@ -66,7 +66,7 @@ namespace ErikwnkWFUI.Forms
         private const int FixedPadding96 = 4;
         private const int BlockGap96 = 8;
         private const int HeaderGap96 = 3;
-        private const int ScreenMargin = 10;
+        private const int ScreenMargin = PopupSupport.ScreenMargin;
         private const int AnchorGap96 = 6;
         private const int MouseOffset96 = 12;
         private const int AnchorOffsetX = 8;
@@ -284,7 +284,7 @@ namespace ErikwnkWFUI.Forms
             int gap = Scale(AnchorGap96);
             int y = anchorTop.Y - Height - gap;
 
-            if (y < GetPlacementArea(anchor).Top + ScreenMargin)
+            if (y < PopupSupport.GetPlacementArea(anchor).Top + ScreenMargin)
                 y = anchorTop.Y + anchor.Height + gap;
 
             Place(anchor, new Point(x, y));
@@ -378,7 +378,7 @@ namespace ErikwnkWFUI.Forms
                 Hide();
 
             BackColor = GetBackColor();
-            Location = KeepInside(location, GetPlacementArea(anchor), Screen.FromControl(anchor).WorkingArea);
+            Location = PopupSupport.KeepInside(location, Size, PopupSupport.GetPlacementArea(anchor), Screen.FromControl(anchor).WorkingArea);
 
             if (!Visible)
             {
@@ -417,7 +417,7 @@ namespace ErikwnkWFUI.Forms
         {
             int offset = Scale(MouseOffset96);
             Point result = new Point(mouseScreenPosition.X + offset, mouseScreenPosition.Y + offset);
-            Rectangle area = GetPlacementArea(anchor);
+            Rectangle area = PopupSupport.GetPlacementArea(anchor);
 
             if (result.X + Width > area.Right - ScreenMargin)
                 result.X = mouseScreenPosition.X - Width - offset;
@@ -426,43 +426,6 @@ namespace ErikwnkWFUI.Forms
                 result.Y = mouseScreenPosition.Y - Height - offset;
 
             return result;
-        }
-
-        // Where the popup may be: inside the window of its control, and on the screen where that
-        // window reaches beyond it. A control without a form has the screen.
-        private static Rectangle GetPlacementArea(Control anchor)
-        {
-            Rectangle screen = Screen.FromControl(anchor).WorkingArea;
-            Form form = anchor.FindForm();
-
-            if (form == null)
-                return screen;
-
-            Rectangle inside = Rectangle.Intersect(form.Bounds, screen);
-
-            return inside.IsEmpty ? screen : inside;
-        }
-
-        // Moves the popup inside the area, with a margin to its edge where there is room for
-        // it. A popup that is larger than the area cannot fit: it sits at the start of the area
-        // (the top left), as far as the screen shows it.
-        private Point KeepInside(Point location, Rectangle area, Rectangle screen)
-        {
-            return new Point(
-                KeepInside(location.X, Width, area.Left, area.Right, screen.Left, screen.Right),
-                KeepInside(location.Y, Height, area.Top, area.Bottom, screen.Top, screen.Bottom));
-        }
-
-        private static int KeepInside(int position, int size, int start, int end, int screenStart, int screenEnd)
-        {
-            if (size > end - start)
-                return Math.Max(screenStart, Math.Min(start, screenEnd - size));
-
-            int margin = size + 2 * ScreenMargin <= end - start ? ScreenMargin : 0;
-            int first = start + margin;
-            int last = end - margin - size;
-
-            return Math.Max(first, Math.Min(position, last));
         }
 
         // ---- colors ----
@@ -570,7 +533,7 @@ namespace ErikwnkWFUI.Forms
 
             // A popup that is up and changes size must still fit inside the window.
             if (Visible && _lastAnchor != null && !_lastAnchor.IsDisposed)
-                Location = KeepInside(Location, GetPlacementArea(_lastAnchor), Screen.FromControl(_lastAnchor).WorkingArea);
+                Location = PopupSupport.KeepInside(Location, Size, PopupSupport.GetPlacementArea(_lastAnchor), Screen.FromControl(_lastAnchor).WorkingArea);
 
             ApplyRoundedCorners();
             Invalidate();

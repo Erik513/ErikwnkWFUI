@@ -89,6 +89,45 @@ namespace ErikwnkWFUI.Helpers
                 (int)Math.Round(color.B * opacity + page.B * (1 - opacity)));
         }
 
+        internal const int ScreenMargin = 10;
+
+        // Where a popup may be: inside the window of its control, and on the screen where that
+        // window reaches beyond it. A control without a form has the screen.
+        internal static Rectangle GetPlacementArea(Control control)
+        {
+            Rectangle screen = Screen.FromControl(control).WorkingArea;
+            Form form = control.FindForm();
+
+            if (form == null)
+                return screen;
+
+            Rectangle inside = Rectangle.Intersect(form.Bounds, screen);
+
+            return inside.IsEmpty ? screen : inside;
+        }
+
+        // Moves a popup of this size inside the area, with a margin to its edge where there is
+        // room for it. A popup larger than the area cannot fit: it sits at the start of the area
+        // (the top left), as far as the screen shows it.
+        internal static Point KeepInside(Point location, Size size, Rectangle area, Rectangle screen)
+        {
+            return new Point(
+                KeepInside(location.X, size.Width, area.Left, area.Right, screen.Left, screen.Right),
+                KeepInside(location.Y, size.Height, area.Top, area.Bottom, screen.Top, screen.Bottom));
+        }
+
+        private static int KeepInside(int position, int size, int start, int end, int screenStart, int screenEnd)
+        {
+            if (size > end - start)
+                return Math.Max(screenStart, Math.Min(start, screenEnd - size));
+
+            int margin = size + 2 * ScreenMargin <= end - start ? ScreenMargin : 0;
+            int first = start + margin;
+            int last = end - margin - size;
+
+            return Math.Max(first, Math.Min(position, last));
+        }
+
         // A popup is owned by its window, and showing an owned window raises that window: with
         // another window or program in front the popup would pull its window up over it. So
         // nothing is shown unless that window is in front, and not over a minimized one.

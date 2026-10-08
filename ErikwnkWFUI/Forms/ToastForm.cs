@@ -24,6 +24,20 @@ namespace ErikwnkWFUI.Forms
     /// waited longer than <see cref="PendingLifetime"/> is dropped, as it would be out of date.
     /// Several waiting toasts are shown one after the other. A window that closes takes its
     /// waiting toasts with it.
+    ///
+    /// <para>
+    /// A message without text shows no toast. A call from another thread is carried over to
+    /// the thread of the window. The toast is placed inside the window (and on the screen) as
+    /// far as it fits; a window narrower than the toast gets it at its left edge. A long message
+    /// is cut with an ellipsis, the toast keeps its size.
+    /// </para>
+    /// <para>
+    /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text,
+    /// the time it stays (<see cref="Duration"/>) and the colors are offered. Not offered: a
+    /// title, other icons than the check mark (warning, error), an event for a click on the
+    /// toast or for its closing, and a toast that stays until it is clicked. The size is fixed
+    /// and not scaled for high DPI.
+    /// </para>
     /// </remarks>
     public class ToastForm : Form
     {
@@ -81,8 +95,17 @@ namespace ErikwnkWFUI.Forms
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant)
         {
-            if (owner == null || owner.IsDisposed)
+            if (owner == null || owner.IsDisposed || string.IsNullOrWhiteSpace(message))
                 return;
+
+            // A toast is often asked for when a task has finished, on another thread: it is shown
+            // on the thread of its window, where it has its message loop and its timer.
+            if (owner.IsHandleCreated && owner.InvokeRequired)
+            {
+                owner.BeginInvoke(new Action(() => ShowToast(message, owner, colors, transparency, duration, delay)));
+
+                return;
+            }
 
             if (delay != PopupDelay.Instant)
             {
@@ -158,6 +181,10 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _transparency = value;
+
+                if (IsDisposed)
+                    return;
+
                 Opacity = value.ToOpacity();
                 ApplyColors();
             }
@@ -196,7 +223,11 @@ namespace ErikwnkWFUI.Forms
             toast.Colors = colors;
 
             toast.SetMessage(message);
-            toast.Location = GetToastLocation(owner, toast);
+            toast.Location = PopupSupport.KeepInside(
+                GetToastLocation(owner, toast),
+                toast.Size,
+                PopupSupport.GetPlacementArea(owner),
+                Screen.FromControl(owner).WorkingArea);
 
             toast._closeTimer.Start();
             toast.Show(owner);
