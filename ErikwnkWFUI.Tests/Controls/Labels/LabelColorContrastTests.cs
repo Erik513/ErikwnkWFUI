@@ -121,4 +121,84 @@ public class LabelColorContrastTests
             }
         });
     }
+
+    // ---- what is really on the screen ----
+
+    // The painted picture of a label of the kind, in a shown window (out of sight) on the medium surface.
+    private static Bitmap PaintOnMedium(Label label, List<Form> forms)
+    {
+        label.Size = new Size(160, 26);
+        label.Location = new Point(5, 5);
+
+        Form form = new Form
+        {
+            FormBorderStyle = FormBorderStyle.None,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-3000, 0),
+            ShowInTaskbar = false,
+            BackColor = UIColors.BackgroundMedium,
+            ClientSize = new Size(170, 36)
+        };
+        form.Controls.Add(label);
+        form.Show();
+        forms.Add(form);
+
+        using Bitmap whole = new Bitmap(form.Width, form.Height);
+        form.DrawToBitmap(whole, new Rectangle(0, 0, form.Width, form.Height));
+
+        return whole.Clone(new Rectangle(5, 5, 160, 26), whole.PixelFormat);
+    }
+
+    // The pixel that differs most from the surface: the text at its strongest.
+    private static double StrongestContrast(Bitmap bitmap)
+    {
+        Color surface = bitmap.GetPixel(0, 0);
+        double strongest = 1;
+
+        for (int y = 0; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+                strongest = Math.Max(strongest, ColorContrastHelper.GetContrastRatio(bitmap.GetPixel(x, y), surface));
+        }
+
+        return strongest;
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void TheTextOnTheScreen_ReadsInBothThemes_AlsoWhileItMoves(string themeName)
+    {
+        List<Form> forms = new List<Form>();
+
+        try
+        {
+            RunWithTheme(ThemeNamed(themeName), shortfalls =>
+            {
+                foreach ((string kind, Label label) in new (string, Label)[]
+                {
+                    ("Standard", UIStyles.Labels.CreateStandard("Readable text on the screen")),
+                    ("Title", UIStyles.Labels.CreateTitle("Readable text on the screen")),
+                    ("Muted", UIStyles.Labels.CreateMuted("Readable text on the screen")),
+                    ("Standard, moving", UIStyles.Labels.CreateStandard("Readable text on the screen, long enough to move around", scroll: LabelScroll.BackAndForth())),
+                    ("Primary, endless", UIStyles.Labels.CreatePrimary("Readable text on the screen, long enough to move around", LabelScroll.Endless()))
+                })
+                {
+                    using (label)
+                    {
+                        using Bitmap painted = PaintOnMedium(label, forms);
+                        double strongest = StrongestContrast(painted);
+
+                        // (The smoothed letters never reach the full contrast of the color: a pixel here and there.)
+                        if (strongest < 2.5)
+                            shortfalls.Add(themeName + " " + kind + ": the strongest pixel only " + strongest.ToString("0.0"));
+                    }
+                }
+            });
+        }
+        finally
+        {
+            foreach (Form form in forms)
+                form.Dispose();
+        }
+    }
 }
