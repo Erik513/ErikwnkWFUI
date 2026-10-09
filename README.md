@@ -74,14 +74,17 @@ var accent = UIStyles.ComboBoxes.CreatePrimary();
 
 ## Popups
 
-- **`ToastForm.ShowToast(message, window)`** - a small confirmation that closes
-  itself. It belongs to its window (moves with it, never takes the focus) and is
-  shown only while that window is in front; a toast that cannot be shown waits and
-  appears when the window is active again (at most three, for one minute).
-  A title, own text colors and a symbol (`ToastIcon`: check mark, info, warning,
-  error; none by default, or any `UIStyles.Symbols` symbol) are optional; `UIStyles.Toasts.CreateStandard` keeps the
-  settings as properties for repeated use. `ToastPosition` picks the place in the
-  window (below the middle by default, middle, top, bottom, corners; a fixed distance from the edges).
+- **`UIStyles.Toasts`** (`ToastForm.ShowToast(message, window)`) - a small message
+  that closes itself, in the neutral gray or a color set (`ShowStandard`,
+  `ShowPrimary`). It belongs to its window (moves with it, never takes the focus)
+  and is shown only while that window is in front; a toast that cannot be shown
+  waits and appears when the window is active again (at most three, for one
+  minute). Optional: a title and own text colors (`InfoPopupSection`), a symbol
+  (`ToastIcon`: check mark, info, warning, error, or any `UIStyles.Symbols`
+  symbol), a place in the window (`ToastPosition`, below the middle by default),
+  transparency, duration and delay. A click closes it, and it stays while the mouse
+  is on it. `UIStyles.Toasts.CreateStandard` keeps all these settings as
+  properties for repeated use.
 - **`UIStyles.InfoPopups`** - a popup with blocks of a header and a text, as a
   replacement for the standard tooltip. `popup.AttachTo(control, "Text")` makes it
   the tooltip of a control (one popup can serve many); or set the content with

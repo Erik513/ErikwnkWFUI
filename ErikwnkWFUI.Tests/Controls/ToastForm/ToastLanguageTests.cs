@@ -16,39 +16,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// German text wraps and ends in an ellipsis instead of growing the toast without end.
 /// </summary>
 [Collection(LanguageTestCollection.Name)]
-public class ToastLanguageTests : IDisposable
+public class ToastLanguageTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastLanguageTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(800, 600) };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
-    private static Label Part(string name) => Current()!.GetPrivateField<Label>(name)!;
-
     [Fact]
     public void ATextThatWasHandedOver_IsShownAsItIs_InEveryLanguage()
     {

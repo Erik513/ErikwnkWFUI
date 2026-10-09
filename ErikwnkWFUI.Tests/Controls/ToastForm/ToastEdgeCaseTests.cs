@@ -13,49 +13,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// while a toast waits or is up. [Collection]: the colors read the live accent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastEdgeCaseTests : IDisposable
+public class ToastEdgeCaseTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private readonly List<Form> _forms = new List<Form>();
-
-    public ToastEdgeCaseTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-
-        foreach (Form form in _forms)
-            form.Dispose();
-
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
-
-    private Form Host(Point location, Size client)
-    {
-        Form host = new Form
-        {
-            StartPosition = FormStartPosition.Manual,
-            Location = location,
-            ShowInTaskbar = false,
-            ClientSize = client
-        };
-        host.Show();
-        _forms.Add(host);
-
-        return host;
-    }
-
-    private static ToastForm? Current()
-    {
-        FieldInfo field = typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-        return (ToastForm?)field.GetValue(null);
-    }
-
     private static Rectangle Area(Form host)
     {
         return Rectangle.Intersect(host.Bounds, Screen.FromControl(host).WorkingArea);

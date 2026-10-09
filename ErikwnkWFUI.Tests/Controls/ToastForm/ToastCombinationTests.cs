@@ -13,52 +13,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// scaling with a title; fonts that are given back.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastCombinationTests : IDisposable
+public class ToastCombinationTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private readonly Func<Form, int> _originalDpi = ToastForm.OwnerDpi;
-    private Form? _host;
-
-    public ToastCombinationTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        ToastForm.OwnerDpi = _originalDpi;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-
-        foreach (System.Windows.Forms.Timer timer in Scheduled().ToArray())
-        {
-            timer.Stop();
-            timer.Dispose();
-        }
-
-        Scheduled().Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(800, 600) };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
-    private static List<System.Windows.Forms.Timer> Scheduled()
-    {
-        return (List<System.Windows.Forms.Timer>)typeof(ToastForm).GetField("_scheduled", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-    }
-
     // A disposed GDI+ font has no native handle any more.
     private static bool IsDisposed(Font font)
     {
@@ -67,8 +23,6 @@ public class ToastCombinationTests : IDisposable
 
         return (IntPtr)handle.GetValue(font)! == IntPtr.Zero;
     }
-
-    private static Label Part(string name) => Current()!.GetPrivateField<Label>(name)!;
 
     private static readonly Color Red = Color.FromArgb(255, 110, 110);
 
@@ -292,6 +246,45 @@ public class ToastCombinationTests : IDisposable
             .GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!)[host]!;
 
         Assert.Equal(ToastForm.MaxPendingToasts, queue.Cast<object>().Count());
+    }
+
+    // Two toasts in a row that differ in one thing are two; in nothing, one.
+    [Theory]
+    [InlineData("title")]
+    [InlineData("message")]
+    [InlineData("color of the title")]
+    [InlineData("icon")]
+    [InlineData("symbol")]
+    [InlineData("position")]
+    public void WaitingToasts_AreOneOnlyWhenTheyShowTheSame(string difference)
+    {
+        Form host = Host();
+        PopupSupport.OwnerIsActive = _ => false;
+
+        void Show(bool other)
+        {
+            InfoPopupSection content = new InfoPopupSection(
+                difference == "title" && other ? "Other" : "Title",
+                difference == "message" && other ? "Other" : "Message");
+
+            if (difference == "color of the title" && other)
+                content.HeaderColor = Red;
+
+            ToastForm.ShowToast(
+                content,
+                host,
+                icon: difference == "icon" && other ? ToastIcon.Error : ToastIcon.Warning,
+                symbol: difference == "symbol" && other ? ErikwnkWFUI.UIStyles.Symbols.Delete : ErikwnkWFUI.UIStyles.Symbols.Copy,
+                position: difference == "position" && other ? ToastPosition.TopLeft : ToastPosition.BottomRight);
+        }
+
+        Show(false);
+        Show(false);
+        Assert.Equal(1, WaitingCount(host));
+
+        Show(true);
+        Show(true);
+        Assert.Equal(2, WaitingCount(host));
     }
 
     [Fact]

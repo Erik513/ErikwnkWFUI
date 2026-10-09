@@ -9,47 +9,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 
 /// <summary>The toast settings as properties: created by the factory, changed later, used by every toast.</summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToasterTests : IDisposable
+public class ToasterTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToasterTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-
-        System.Collections.IList scheduled = (System.Collections.IList)typeof(ToastForm).GetField("_scheduled", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-
-        foreach (System.Windows.Forms.Timer timer in scheduled.Cast<System.Windows.Forms.Timer>().ToArray())
-        {
-            timer.Stop();
-            timer.Dispose();
-        }
-
-        scheduled.Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(600, 400) };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
     [Fact]
     public void CreateStandard_HasTheDefaults_AndCreatePrimaryTheAccent()
     {
@@ -128,5 +89,50 @@ public class ToasterTests : IDisposable
 
         Assert.Null(thrown);
         Assert.Null(Current());
+    }
+
+    // The symbol, the symbol of one's own and the place travel through every way to show a toast.
+    [Fact]
+    public void EveryWayToShowAToast_PassesTheIconTheSymbolAndThePositionOn()
+    {
+        Form host = Host();
+        Rectangle client = host.RectangleToScreen(host.ClientRectangle);
+        InfoPopupSection content = new InfoPopupSection("t", "c");
+        Toaster toaster = ErikwnkWFUI.UIStyles.Toasts.CreateStandard(
+            icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft);
+
+        Dictionary<string, Action> ways = new Dictionary<string, Action>
+        {
+            ["ShowStandard(message)"] = () => ErikwnkWFUI.UIStyles.Toasts.ShowStandard("a", host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["ShowStandard(content)"] = () => ErikwnkWFUI.UIStyles.Toasts.ShowStandard(content, host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["ShowPrimary(message)"] = () => ErikwnkWFUI.UIStyles.Toasts.ShowPrimary("a", host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["ShowPrimary(content)"] = () => ErikwnkWFUI.UIStyles.Toasts.ShowPrimary(content, host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["ShowToast(message)"] = () => ToastForm.ShowToast("a", host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["ShowToast(content)"] = () => ToastForm.ShowToast(content, host, icon: ToastIcon.Warning, symbol: ErikwnkWFUI.UIStyles.Symbols.Copy, position: ToastPosition.TopLeft),
+            ["Toaster.Show(message)"] = () => toaster.Show("a", host),
+            ["Toaster.Show(content)"] = () => toaster.Show(content, host)
+        };
+
+        foreach (KeyValuePair<string, Action> way in ways)
+        {
+            Current()?.Dispose();
+            way.Value();
+
+            Assert.True(Current() != null, way.Key + " showed no toast");
+            Assert.Equal(ToastIcon.Warning, Current()!.Symbol);
+            Assert.Equal(ErikwnkWFUI.UIStyles.Symbols.Copy, Part("_iconLabel").Text);
+            Assert.True(Current()!.Left < client.Left + client.Width / 4 && Current()!.Top < client.Top + client.Height / 4, way.Key + " did not pass the position on: " + Current()!.Location);
+        }
+    }
+
+    [Fact]
+    public void TheToasterProperties_AreTheOnesTheFactoryTookAsParameters()
+    {
+        Toaster toaster = ErikwnkWFUI.UIStyles.Toasts.CreatePrimary(
+            icon: ToastIcon.Info, symbol: ErikwnkWFUI.UIStyles.Symbols.Delete, position: ToastPosition.Center);
+
+        Assert.Equal(ToastIcon.Info, toaster.Icon);
+        Assert.Equal(ErikwnkWFUI.UIStyles.Symbols.Delete, toaster.CustomSymbol);
+        Assert.Equal(ToastPosition.Center, toaster.Position);
     }
 }

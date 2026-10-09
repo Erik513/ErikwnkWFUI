@@ -9,45 +9,18 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 
 /// <summary>Where the toast is shown in its window: the default and the fixed places.</summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastPositionTests : IDisposable
+public class ToastPositionTests : ToastTestBase
 {
     private static readonly Rectangle Area = new Rectangle(100, 200, 800, 600);
     private static readonly Size Toast = new Size(350, 80);
     private const int Edge = 20;
 
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastPositionTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
+    private Form Host(Size client) => Host(null, client);
 
     private static Point Locate(ToastPosition position)
     {
         return (Point)typeof(ToastForm).GetMethod("GetToastLocation", BindingFlags.NonPublic | BindingFlags.Static)!
             .Invoke(null, new object[] { Area, Toast, position, Edge })!;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
-    private Form Host(Size client)
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = client };
-        _host.Show();
-
-        return _host;
     }
 
     private static int CenterX => Area.Left + (Area.Width - Toast.Width) / 2;
@@ -160,52 +133,4 @@ public class ToastPositionTests : IDisposable
         }
     }
 
-    [Fact]
-    public void TheFactories_AndTheToaster_PassThePositionOn()
-    {
-        Form host = Host(new Size(800, 600));
-        Rectangle client = host.RectangleToScreen(host.ClientRectangle);
-
-        ErikwnkWFUI.UIStyles.Toasts.ShowStandard("a", host, position: ToastPosition.TopLeft);
-        int standardLeft = Current()!.Left;
-        ErikwnkWFUI.UIStyles.Toasts.ShowPrimary("b", host, position: ToastPosition.TopLeft);
-        int primaryLeft = Current()!.Left;
-        ErikwnkWFUI.UIStyles.Toasts.ShowStandard(new InfoPopupSection("t", "c"), host, position: ToastPosition.TopLeft);
-        int contentLeft = Current()!.Left;
-
-        Assert.Equal(standardLeft, primaryLeft);
-        Assert.Equal(standardLeft, contentLeft);
-        Assert.True(standardLeft < client.Left + client.Width / 4);
-
-        Toaster toaster = ErikwnkWFUI.UIStyles.Toasts.CreateStandard(position: ToastPosition.BottomRight);
-        Assert.Equal(ToastPosition.BottomRight, toaster.Position);
-        toaster.Show("d", host);
-        Assert.True(Current()!.Left > client.Left + client.Width / 2);
-
-        toaster.Position = ToastPosition.BelowCenter;
-        toaster.Show("e", host);
-        Assert.Equal(client.Left + (client.Width - Current()!.Width) / 2, Current()!.Left);
-    }
-
-    [Fact]
-    public void AToastThatWaits_KeepsItsPosition_AndTwoOfTheSameTextAtOtherPlacesAreTwo()
-    {
-        Form host = Host(new Size(800, 600));
-        PopupSupport.OwnerIsActive = _ => false;
-
-        ToastForm.ShowToast("Same", host, position: ToastPosition.TopLeft);
-        ToastForm.ShowToast("Same", host, position: ToastPosition.BottomRight);
-        ToastForm.ShowToast("Same", host, position: ToastPosition.BottomRight);
-
-        var queue = (System.Collections.IEnumerable)((System.Collections.IDictionary)typeof(ToastForm)
-            .GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!)[host]!;
-
-        Assert.Equal(2, queue.Cast<object>().Count());
-
-        PopupSupport.OwnerIsActive = _ => true;
-        typeof(ToastForm).GetMethod("OnOwnerActivated", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { host, EventArgs.Empty });
-        Rectangle client = host.RectangleToScreen(host.ClientRectangle);
-
-        Assert.True(Current()!.Left < client.Left + client.Width / 4, "the first one is shown at the top left");
-    }
 }

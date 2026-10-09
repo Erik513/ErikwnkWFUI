@@ -9,37 +9,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 
 /// <summary>The symbol of a toast: none by default, a check mark, info, warning or error on request.</summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastIconTests : IDisposable
+public class ToastIconTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastIconTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(600, 400) };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
     private static Label IconLabel() => Current()!.GetPrivateField<Label>("_iconLabel")!;
 
     private static Label MessageLabel() => Current()!.GetPrivateField<Label>("_messageLabel")!;
@@ -129,48 +100,4 @@ public class ToastIconTests : IDisposable
         Assert.Null(Record.Exception(() => toast.Symbol = ToastIcon.Warning));
     }
 
-    [Fact]
-    public void AToastThatWaits_KeepsItsSymbol_AndTwoOfTheSameTextWithOtherSymbolsAreTwo()
-    {
-        Form host = Host();
-        PopupSupport.OwnerIsActive = _ => false;
-
-        ToastForm.ShowToast("Same", host, icon: ToastIcon.Warning);
-        ToastForm.ShowToast("Same", host, icon: ToastIcon.Error);
-        ToastForm.ShowToast("Same", host, icon: ToastIcon.Error);
-
-        var queue = (System.Collections.IEnumerable)((System.Collections.IDictionary)typeof(ToastForm)
-            .GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!)[host]!;
-
-        Assert.Equal(2, queue.Cast<object>().Count());
-
-        PopupSupport.OwnerIsActive = _ => true;
-        typeof(ToastForm).GetMethod("OnOwnerActivated", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { host, EventArgs.Empty });
-
-        Assert.Equal(ToastIcon.Warning, Current()!.Symbol);
-    }
-
-    [Fact]
-    public void TheFactories_AndTheToaster_PassTheIconOn()
-    {
-        Form host = Host();
-
-        ErikwnkWFUI.UIStyles.Toasts.ShowStandard("a", host, icon: ToastIcon.Info);
-        Assert.Equal(ToastIcon.Info, Current()!.Symbol);
-
-        ErikwnkWFUI.UIStyles.Toasts.ShowPrimary("b", host, icon: ToastIcon.Warning);
-        Assert.Equal(ToastIcon.Warning, Current()!.Symbol);
-
-        ErikwnkWFUI.UIStyles.Toasts.ShowStandard(new InfoPopupSection("t", "c"), host, icon: ToastIcon.Error);
-        Assert.Equal(ToastIcon.Error, Current()!.Symbol);
-
-        Toaster toaster = ErikwnkWFUI.UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Success);
-        Assert.Equal(ToastIcon.Success, toaster.Icon);
-        toaster.Show("d", host);
-        Assert.Equal(ToastIcon.Success, Current()!.Symbol);
-
-        toaster.Icon = ToastIcon.None;
-        toaster.Show("e", host);
-        Assert.Equal(ToastIcon.None, Current()!.Symbol);
-    }
 }

@@ -9,44 +9,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 
 /// <summary>A click closes the toast; a toast the mouse is on stays until the mouse has left.</summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastInteractionTests : IDisposable
+public class ToastInteractionTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private readonly Func<Point> _originalCursor = ToastForm.CursorPosition;
-    private Form? _host;
-
-    public ToastInteractionTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        ToastForm.CursorPosition = _originalCursor;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(600, 400) };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
-    private static void Tick(ToastForm toast)
-    {
-        toast.InvokePrivate("OnCloseTimerTick", toast, EventArgs.Empty);
-    }
-
     private static void Click(Control control)
     {
         control.GetType().GetMethod("OnClick", BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(control, new object[] { EventArgs.Empty });

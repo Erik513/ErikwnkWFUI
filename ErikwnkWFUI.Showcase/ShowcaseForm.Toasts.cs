@@ -10,53 +10,61 @@ namespace ErikwnkWFUI.Showcase
     // The ToastForm tab.
     public partial class ShowcaseForm
     {
+        private const string SampleToastMessage = "Sample toast message";
+
         private void AddToastsSection(PropertyTable table)
         {
+            UIColorSet accent = UIStyles.Colors.Sets.Primary;
+
             table.AddSection("Factory methods");
 
-            table.AddRow("ShowStandard", CreateToastButton("Show toast", 160, null, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
-            table.AddRow("ShowPrimary", CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
-            table.AddRow("ShowStandard(colors)", CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Green, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
+            table.AddRow("ShowStandard", CreateToastButton(() => UIStyles.Toasts.ShowStandard(SampleToastMessage, this, icon: ToastIcon.Success)));
+            table.AddRow("ShowPrimary", CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, icon: ToastIcon.Success)));
+            table.AddRow("ShowStandard(colors)", CreateToastButton(() => UIStyles.Toasts.ShowStandard(SampleToastMessage, this, UIStyles.Colors.Sets.Green, icon: ToastIcon.Success)));
 
             table.AddSection("CreateStandard / CreatePrimary - the settings as properties");
 
             Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Green, PopupTransparency.Low, PopupDuration.Long, icon: ToastIcon.Success);
-            table.AddRow("CreateStandard(colors)", CreateToasterButton(standard, "Show toast"));
-            table.AddRow("CreatePrimary", CreateToasterButton(UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Success), "Show toast"));
+            table.AddRow("CreateStandard(colors)", CreateToastButton(() => standard.Show(SampleToastMessage, this)));
+
+            Toaster primary = UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Success);
+            table.AddRow("CreatePrimary", CreateToastButton(() => primary.Show(SampleToastMessage, this)));
 
             Toaster changing = UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Info);
-            Button cycle = CreateToasterButton(changing, "Show toast");
-            cycle.Click += delegate
+            table.AddRow("Duration changed after each click", CreateToastButton(() =>
             {
+                changing.Show(SampleToastMessage, this);
                 changing.Duration = changing.Duration == PopupDuration.Short ? PopupDuration.Long : PopupDuration.Short;
-            };
-            table.AddRow("Duration changed after each click", cycle);
+            }));
 
             table.AddSection("Transparency");
 
             foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
             {
+                PopupTransparency shown = level;
                 table.AddRow(
                     level == PopupTransparency.Medium ? "Medium (default)" : level.ToString(),
-                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, level, PopupDuration.Medium, PopupDelay.Instant));
+                    CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, shown, icon: ToastIcon.Success)));
             }
 
             table.AddSection("Duration");
 
             foreach (PopupDuration duration in new[] { PopupDuration.Short, PopupDuration.Medium, PopupDuration.Long })
             {
+                PopupDuration shown = duration;
                 table.AddRow(
                     duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
-                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, duration, PopupDelay.Instant));
+                    CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, duration: shown, icon: ToastIcon.Success)));
             }
 
             table.AddSection("Delay");
 
             foreach (PopupDelay delay in new[] { PopupDelay.Instant, PopupDelay.Short, PopupDelay.Medium, PopupDelay.Long })
             {
+                PopupDelay shown = delay;
                 table.AddRow(
                     delay == PopupDelay.Instant ? "Instant (default)" : delay.ToString(),
-                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, PopupDuration.Medium, delay));
+                    CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, delay: shown, icon: ToastIcon.Success)));
             }
 
             table.AddSection("Icon");
@@ -68,88 +76,48 @@ namespace ErikwnkWFUI.Showcase
                     : icon == ToastIcon.Info ? "A new version is available."
                     : icon == ToastIcon.Warning ? "The disk is almost full."
                     : icon == ToastIcon.Error ? "The file could not be saved."
-                    : "Sample toast message";
-                Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-                button.Click += delegate { UIStyles.Toasts.ShowPrimary(message, this, icon: shown); };
-                table.AddRow(icon == ToastIcon.None ? "None (default)" : icon.ToString(), button);
+                    : SampleToastMessage;
+
+                table.AddRow(
+                    icon == ToastIcon.None ? "None (default)" : icon.ToString(),
+                    CreateToastButton(() => UIStyles.Toasts.ShowPrimary(message, this, icon: shown)));
             }
 
-            table.AddRow("Own symbol", CreateCustomSymbolButton(UIStyles.Symbols.Copy, "Copied to the clipboard."));
-            table.AddRow("Own symbol (Delete)", CreateCustomSymbolButton(UIStyles.Symbols.Delete, "The entry was deleted."));
+            table.AddRow("Own symbol", CreateToastButton(() => UIStyles.Toasts.ShowPrimary("Copied to the clipboard.", this, symbol: UIStyles.Symbols.Copy)));
+            table.AddRow("Own symbol (Delete)", CreateToastButton(() => UIStyles.Toasts.ShowPrimary("The entry was deleted.", this, symbol: UIStyles.Symbols.Delete)));
 
             table.AddSection("Position");
 
             foreach (ToastPosition position in Enum.GetValues(typeof(ToastPosition)))
             {
                 ToastPosition shown = position;
-                Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-                button.Click += delegate { UIStyles.Toasts.ShowPrimary(shown.ToString(), this, icon: ToastIcon.Info, position: shown); };
-                table.AddRow(position == ToastPosition.BelowCenter ? "BelowCenter (default)" : position.ToString(), button);
+                table.AddRow(
+                    position == ToastPosition.BelowCenter ? "BelowCenter (default)" : position.ToString(),
+                    CreateToastButton(() => UIStyles.Toasts.ShowPrimary(shown.ToString(), this, icon: ToastIcon.Info, position: shown)));
             }
 
             table.AddSection("Content");
 
-            table.AddRow("With a title", CreateContentToastButton(UIStyles.Colors.Sets.Primary,
-                new InfoPopupSection("Saved", "The file was written to disk.")));
+            InfoPopupSection saved = new InfoPopupSection("Saved", "The file was written to disk.");
+            InfoPopupSection longMessage = new InfoPopupSection("Saved", "The file was written to disk, and a copy of it was put into the backup folder next to it, so nothing is lost.");
+            InfoPopupSection ownColors = new InfoPopupSection("A red title", "A text in its own light green.")
+            {
+                HeaderColor = Color.FromArgb(255, 110, 110),
+                TextColor = Color.FromArgb(150, 255, 150)
+            };
+            InfoPopupSection onLight = new InfoPopupSection("Light background", "The text turns black when white would not read.");
 
-            table.AddRow("A long message", CreateContentToastButton(UIStyles.Colors.Sets.Primary,
-                new InfoPopupSection("Saved", "The file was written to disk, and a copy of it was put into the backup folder next to it, so nothing is lost.")));
-
-            table.AddRow("Own colors", CreateContentToastButton(null,
-                new InfoPopupSection("A red title", "A text in its own light green.")
-                {
-                    HeaderColor = Color.FromArgb(255, 110, 110),
-                    TextColor = Color.FromArgb(150, 255, 150)
-                }));
-
-            table.AddRow("On a light color", CreateContentToastButton(UIStyles.Colors.Sets.Yellow,
-                new InfoPopupSection("Light background", "The text turns black when white would not read.")));
+            table.AddRow("With a title", CreateToastButton(() => UIStyles.Toasts.ShowStandard(saved, this, accent, icon: ToastIcon.Success)));
+            table.AddRow("A long message", CreateToastButton(() => UIStyles.Toasts.ShowStandard(longMessage, this, accent, icon: ToastIcon.Success)));
+            table.AddRow("Own colors", CreateToastButton(() => UIStyles.Toasts.ShowStandard(ownColors, this, icon: ToastIcon.Success)));
+            table.AddRow("On a light color", CreateToastButton(() => UIStyles.Toasts.ShowStandard(onLight, this, UIStyles.Colors.Sets.Yellow, icon: ToastIcon.Success)));
         }
 
-        private Button CreateCustomSymbolButton(string symbol, string message)
+        // The button of a row: a click shows that row's toast.
+        private Button CreateToastButton(Action show)
         {
             Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-
-            button.Click += delegate
-            {
-                UIStyles.Toasts.ShowPrimary(message, this, symbol: symbol);
-            };
-
-            return button;
-        }
-
-        private Button CreateToasterButton(Toaster toaster, string caption)
-        {
-            Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(160, 32));
-
-            button.Click += delegate
-            {
-                toaster.Show("Sample toast message", this);
-            };
-
-            return button;
-        }
-
-        private Button CreateContentToastButton(UIColorSet colors, InfoPopupSection content)
-        {
-            Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-
-            button.Click += delegate
-            {
-                ToastForm.ShowToast(content, this, colors, icon: ToastIcon.Success);
-            };
-
-            return button;
-        }
-
-        private Button CreateToastButton(string caption, int width, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
-        {
-            Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(width, 32));
-
-            button.Click += delegate
-            {
-                ToastForm.ShowToast("Sample toast message", this, colors, transparency, duration, delay, ToastIcon.Success);
-            };
+            button.Click += delegate { show(); };
 
             return button;
         }

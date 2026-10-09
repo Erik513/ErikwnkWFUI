@@ -13,45 +13,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// [Collection]: the colors read the live accent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastContentTests : IDisposable
+public class ToastContentTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastContentTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        Current()?.Dispose();
-        _host?.Dispose();
-        ((System.Collections.IDictionary)typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!).Clear();
-    }
-
-    private Form Host()
-    {
-        _host = new Form
-        {
-            StartPosition = FormStartPosition.Manual,
-            Location = new Point(100, 100),
-            ShowInTaskbar = false,
-            ClientSize = new Size(600, 400)
-        };
-        _host.Show();
-
-        return _host;
-    }
-
-    private static ToastForm? Current()
-    {
-        return (ToastForm?)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null);
-    }
-
-    private static Label Part(string name) => Current()!.GetPrivateField<Label>(name)!;
-
     [Fact]
     public void AMessageOnly_ShowsNoTitle()
     {
@@ -193,22 +156,6 @@ public class ToastContentTests : IDisposable
 
         Assert.Equal("Waiting", Part("_titleLabel").Text);
         Assert.Equal(red, Part("_titleLabel").ForeColor);
-    }
-
-    [Fact]
-    public void TwoWaitingToasts_WithTheSameTextButAnotherTitle_AreNotTheSame()
-    {
-        Form host = Host();
-        PopupSupport.OwnerIsActive = _ => false;
-
-        ToastForm.ShowToast(new InfoPopupSection("One", "Same"), host);
-        ToastForm.ShowToast(new InfoPopupSection("Two", "Same"), host);
-        ToastForm.ShowToast(new InfoPopupSection("Two", "Same"), host);
-
-        var queue = (System.Collections.IEnumerable)((System.Collections.IDictionary)typeof(ToastForm)
-            .GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!)[host]!;
-
-        Assert.Equal(2, queue.Cast<object>().Count());
     }
 
     [Fact]

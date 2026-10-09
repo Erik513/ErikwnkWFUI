@@ -13,22 +13,8 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// [Collection]: the colors read the live accent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastScalingTests : IDisposable
+public class ToastScalingTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastScalingTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        _host?.Dispose();
-    }
-
     private static int Scaled(int value96, int dpi) => (int)Math.Round(value96 * dpi / 96.0);
 
     private static Label Part(ToastForm toast, string name) => toast.GetPrivateField<Label>(name)!;
@@ -53,23 +39,12 @@ public class ToastScalingTests : IDisposable
     [Fact]
     public void AToast_TakesTheScalingOfTheScreenItsWindowIsOn()
     {
-        Func<Form, int> before = ToastForm.OwnerDpi;
-        _host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(100, 100), ShowInTaskbar = false, ClientSize = new Size(900, 500) };
-        _host.Show();
+        Form host = Host(client: new Size(900, 500));
 
-        try
-        {
-            ToastForm.OwnerDpi = _ => 144;
-            ToastForm.ShowToast("Scaled", _host);
-            ToastForm toast = (ToastForm)typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
+        ToastForm.OwnerDpi = _ => 144;
+        ToastForm.ShowToast("Scaled", host);
 
-            Assert.Equal(new Size(525, 120), toast.Size);
-            toast.Dispose();
-        }
-        finally
-        {
-            ToastForm.OwnerDpi = before;
-        }
+        Assert.Equal(new Size(525, 120), Current()!.Size);
     }
 
     [Fact]

@@ -13,41 +13,14 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 /// Toasts are shown for real (briefly) over a host form.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ToastFormTests : IDisposable
+public class ToastFormTests : ToastTestBase
 {
-    private readonly Func<Form, bool> _originalActiveCheck = PopupSupport.OwnerIsActive;
-    private Form? _host;
-
-    public ToastFormTests()
-    {
-        PopupSupport.OwnerIsActive = _ => true;
-    }
-
-    public void Dispose()
-    {
-        PopupSupport.OwnerIsActive = _originalActiveCheck;
-        ToastForm.PendingLifetime = TimeSpan.FromSeconds(60);
-        CurrentToast()?.Dispose();
-        _host?.Dispose();
-        Pending().Clear();
-
-        foreach (System.Windows.Forms.Timer timer in Scheduled().ToArray())
-        {
-            timer.Stop();
-            timer.Dispose();
-        }
-
-        Scheduled().Clear();
-        _second?.Dispose();
-    }
-
     private Form? _second;
 
-    private static System.Collections.IDictionary Pending()
+    public override void Dispose()
     {
-        FieldInfo field = typeof(ToastForm).GetField("_pending", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-        return (System.Collections.IDictionary)field.GetValue(null)!;
+        base.Dispose();
+        _second?.Dispose();
     }
 
     private static string[] WaitingFor(Form owner)
@@ -65,49 +38,18 @@ public class ToastFormTests : IDisposable
 
     private static string ShownMessage()
     {
-        Label label = CurrentToast()!.GetPrivateField<Label>("_messageLabel")!;
+        Label label = Current()!.GetPrivateField<Label>("_messageLabel")!;
 
         return label.Text;
-    }
-
-    private static void Activate(Form form)
-    {
-        typeof(ToastForm).GetMethod("OnOwnerActivated", BindingFlags.NonPublic | BindingFlags.Static)!.Invoke(null, new object[] { form, EventArgs.Empty });
-    }
-
-    private static void CloseByTime(ToastForm toast)
-    {
-        toast.InvokePrivate("OnCloseTimerTick", toast, EventArgs.Empty);
-    }
-
-    private static ToastForm? CurrentToast()
-    {
-        FieldInfo field = typeof(ToastForm).GetField("_currentToast", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-        return (ToastForm?)field.GetValue(null);
-    }
-
-    private Form CreateHost()
-    {
-        _host = new Form
-        {
-            StartPosition = FormStartPosition.Manual,
-            Location = new Point(-4000, -4000),
-            ShowInTaskbar = false,
-            ClientSize = new Size(500, 300)
-        };
-        _host.Show();
-
-        return _host;
     }
 
     [Fact]
     public void AToast_IsShownOverTheWindow_NotTopmost_WithoutTakingTheActivation()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("Done", host);
-        ToastForm toast = CurrentToast()!;
+        ToastForm toast = Current()!;
 
         Assert.True(toast.Visible);
         Assert.False(toast.TopMost);
@@ -121,48 +63,41 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void TheToast_IsMediumTransparentByDefault_AndTakesAnotherLevel()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("Default", host);
-        Assert.Equal(PopupTransparency.Medium, CurrentToast()!.Transparency);
-        Assert.Equal(0.80, CurrentToast()!.Opacity, 2);
+        Assert.Equal(PopupTransparency.Medium, Current()!.Transparency);
+        Assert.Equal(0.80, Current()!.Opacity, 2);
 
         ToastForm.ShowToast("Opaque", host, transparency: PopupTransparency.Opaque);
-        Assert.Equal(1.0, CurrentToast()!.Opacity, 2);
+        Assert.Equal(1.0, Current()!.Opacity, 2);
 
         ToastForm.ShowToast("High", host, transparency: PopupTransparency.High);
-        Assert.True(CurrentToast()!.Opacity < 0.80);
+        Assert.True(Current()!.Opacity < 0.80);
 
         ToastForm.ShowToast("Low", host, transparency: PopupTransparency.Low);
-        Assert.True(CurrentToast()!.Opacity > 0.80 && CurrentToast()!.Opacity < 1.0);
-    }
-
-    private static List<System.Windows.Forms.Timer> Scheduled()
-    {
-        FieldInfo field = typeof(ToastForm).GetField("_scheduled", BindingFlags.NonPublic | BindingFlags.Static)!;
-
-        return (List<System.Windows.Forms.Timer>)field.GetValue(null)!;
+        Assert.True(Current()!.Opacity > 0.80 && Current()!.Opacity < 1.0);
     }
 
     [Fact]
     public void WithoutADelay_TheToastShowsAtOnce_ByDefault()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("Now", host);
 
-        Assert.NotNull(CurrentToast());
+        Assert.NotNull(Current());
         Assert.Empty(Scheduled());
     }
 
     [Fact]
     public void WithADelay_TheToastWaitsForItsTime_ThenShows()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("Later", host, delay: PopupDelay.Medium);
 
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
         Assert.Single(Scheduled());
         Assert.Equal(400, Scheduled()[0].Interval);
 
@@ -175,7 +110,7 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void TheDelayLevels_AreOrdered()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("a", host, delay: PopupDelay.Short);
         ToastForm.ShowToast("b", host, delay: PopupDelay.Long);
@@ -190,27 +125,27 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void AToastWhoseWindowIsNotInFrontWhenTheDelayEnds_Waits_LikeAnyOther()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         ToastForm.ShowToast("Late", host, delay: PopupDelay.Short);
 
         PopupSupport.OwnerIsActive = _ => false;
         Scheduled()[0].InvokePrivate("OnTick", EventArgs.Empty);
 
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
         Assert.Equal(new[] { "Late" }, WaitingFor(host));
     }
 
     [Fact]
     public void AClosedWindow_IsNotAProblem_WhenTheDelayEnds()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         ToastForm.ShowToast("Gone", host, delay: PopupDelay.Short);
         host.Dispose();
 
         Exception? thrown = Record.Exception(() => Scheduled()[0].InvokePrivate("OnTick", EventArgs.Empty));
 
         Assert.Null(thrown);
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
     }
 
     private static int Interval(ToastForm toast) => toast.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Interval;
@@ -218,28 +153,28 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void TheDuration_IsMediumByDefault_AndTheThreeLevelsAreOrdered()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("Default", host);
-        Assert.Equal(PopupDuration.Medium, CurrentToast()!.Duration);
-        Assert.Equal(2500, Interval(CurrentToast()!));
+        Assert.Equal(PopupDuration.Medium, Current()!.Duration);
+        Assert.Equal(2500, Interval(Current()!));
 
         ToastForm.ShowToast("Short", host, duration: PopupDuration.Short);
-        int shortTime = Interval(CurrentToast()!);
+        int shortTime = Interval(Current()!);
 
         ToastForm.ShowToast("Long", host, duration: PopupDuration.Long);
-        int longTime = Interval(CurrentToast()!);
+        int longTime = Interval(Current()!);
 
         Assert.True(shortTime < 2500 && 2500 < longTime, "the levels are not ordered");
-        Assert.Equal(PopupDuration.Long, CurrentToast()!.Duration);
+        Assert.Equal(PopupDuration.Long, Current()!.Duration);
     }
 
     [Fact]
     public void ADurationChangedOnTheToast_ChangesItsTimer()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         ToastForm.ShowToast("x", host);
-        ToastForm toast = CurrentToast()!;
+        ToastForm toast = Current()!;
 
         toast.Duration = PopupDuration.Short;
 
@@ -249,52 +184,52 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void AWaitingToast_KeepsItsDuration_AndItsTimeRunsFromWhenItIsShown()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("Waits", host, duration: PopupDuration.Long);
 
         PopupSupport.OwnerIsActive = _ => true;
         Activate(host);
 
-        Assert.Equal(PopupDuration.Long, CurrentToast()!.Duration);
-        Assert.Equal(4000, Interval(CurrentToast()!));
-        Assert.True(CurrentToast()!.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Enabled, "the time did not start with the show");
+        Assert.Equal(PopupDuration.Long, Current()!.Duration);
+        Assert.Equal(4000, Interval(Current()!));
+        Assert.True(Current()!.GetPrivateField<System.Windows.Forms.Timer>("_closeTimer")!.Enabled, "the time did not start with the show");
     }
 
     [Fact]
     public void AWaitingToast_KeepsItsTransparency()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("Waits", host, transparency: PopupTransparency.Opaque);
 
         PopupSupport.OwnerIsActive = _ => true;
         Activate(host);
 
-        Assert.Equal(PopupTransparency.Opaque, CurrentToast()!.Transparency);
+        Assert.Equal(PopupTransparency.Opaque, Current()!.Transparency);
     }
 
     [Fact]
     public void WhileItsWindowIsNotInFront_TheToastIsNotShown_ButWaits()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
 
         ToastForm.ShowToast("Done", host);
 
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
         Assert.Equal(new[] { "Done" }, WaitingFor(host));
     }
 
     [Fact]
     public void WhenTheWindowComesToTheFront_TheWaitingToastIsShown()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("Saved", host);
 
         Activate(host);
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
 
         PopupSupport.OwnerIsActive = _ => true;
         Activate(host);
@@ -306,7 +241,7 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void Waiting_KeepsTheNewestThree_AndTheSameTextTwiceIsOne()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
 
         foreach (string message in new[] { "A", "B", "B", "C", "D", "E" })
@@ -318,7 +253,7 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void AToastThatWaitedTooLong_IsDropped()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("Old", host);
 
@@ -326,14 +261,14 @@ public class ToastFormTests : IDisposable
         PopupSupport.OwnerIsActive = _ => true;
         Activate(host);
 
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
         Assert.Empty(WaitingFor(host));
     }
 
     [Fact]
     public void SeveralWaitingToasts_AreShownOneAfterTheOther_EachWhenTheLastOneClosed()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("One", host);
         ToastForm.ShowToast("Two", host);
@@ -342,7 +277,7 @@ public class ToastFormTests : IDisposable
         Activate(host);
         Assert.Equal("One", ShownMessage());
 
-        CloseByTime(CurrentToast()!);
+        Tick(Current()!);
         Assert.Equal("Two", ShownMessage());
         Assert.Empty(WaitingFor(host));
     }
@@ -350,7 +285,7 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void ANewToast_ReplacesTheOneThatIsShown_AsBefore()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
 
         ToastForm.ShowToast("First", host);
         ToastForm.ShowToast("Second", host);
@@ -361,13 +296,13 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void AToast_WaitsForItsOwnWindow_NotForAnother()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         _second = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-3000, -3000), ShowInTaskbar = false, ClientSize = new Size(300, 200) };
         _second.Show();
         PopupSupport.OwnerIsActive = owner => owner == _second;
 
         ToastForm.ShowToast("For the first", host);
-        Assert.Null(CurrentToast());
+        Assert.Null(Current());
         Assert.Equal(new[] { "For the first" }, WaitingFor(host));
 
         ToastForm.ShowToast("For the second", _second);
@@ -377,7 +312,7 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void AClosedWindow_TakesItsWaitingToastsWithIt()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         PopupSupport.OwnerIsActive = _ => false;
         ToastForm.ShowToast("Lost with the window", host);
 
@@ -405,9 +340,9 @@ public class ToastFormTests : IDisposable
     [Fact]
     public void WhenTheWindowIsMoved_TheToastGoesWithIt()
     {
-        Form host = CreateHost();
+        Form host = Host(new Point(-4000, -4000), new Size(500, 300));
         ToastForm.ShowToast("Done", host);
-        ToastForm toast = CurrentToast()!;
+        ToastForm toast = Current()!;
         Point before = toast.Location;
 
         host.Location = new Point(host.Left + 35, host.Top + 20);
