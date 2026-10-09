@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
-using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -43,7 +42,7 @@ namespace ErikwnkWFUI.Forms
     /// click on the toast or for its closing, and a toast that stays until it is clicked.
     /// </para>
     /// </remarks>
-    public class ToastForm : Form
+    public class ToastForm : PopupFormBase
     {
         // The measures at 96 dpi; ApplyDpi scales them for the screen the window is on.
         private const int ToastWidth96 = 350;
@@ -71,7 +70,6 @@ namespace ErikwnkWFUI.Forms
         private static ToastForm _currentToast;
         private Form _ownerForm;
 
-        private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _closeTimer;
         private Label _titleLabel;
         private Label _messageLabel;
@@ -86,8 +84,6 @@ namespace ErikwnkWFUI.Forms
             CreateTimer();
             ApplyDpi(DeviceDpi);
 
-            SizeChanged += OnToastSizeChanged;
-            Load += OnToastLoad;
         }
 
         /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
@@ -209,23 +205,11 @@ namespace ErikwnkWFUI.Forms
 
         private PopupDuration _duration = PopupDuration.Medium;
 
-        /// <summary>How see-through the toast is: not at all, slightly, clearly (the default) or strongly.</summary>
-        public PopupTransparency Transparency
+        // The background is kept readable through the transparency.
+        protected override void OnTransparencyChanged()
         {
-            get { return _transparency; }
-            set
-            {
-                _transparency = value;
-
-                if (IsDisposed)
-                    return;
-
-                Opacity = value.ToOpacity();
-                ApplyColors();
-            }
+            ApplyColors();
         }
-
-        private PopupTransparency _transparency = PopupTransparency.Medium;
 
         // The toasts that wait for their delay; one timer each, gone when it has fired.
         private static readonly List<Timer> _scheduled = new List<Timer>();
@@ -267,7 +251,7 @@ namespace ErikwnkWFUI.Forms
 
             toast._closeTimer.Start();
             toast.Show(owner);
-            toast._follower.Attach(toast, owner);
+            toast.Follower.Attach(toast, owner);
         }
 
         // ---- toasts that wait for their window ----
@@ -345,32 +329,10 @@ namespace ErikwnkWFUI.Forms
             ShowNow(next.Content, owner, next.Colors, next.Transparency, next.Duration);
         }
 
-        // The toast must not take the activation from the window it confirms something in.
-        protected override bool ShowWithoutActivation
-        {
-            get { return true; }
-        }
-
-        private const int WS_EX_NOACTIVATE = 0x08000000;
-
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams parameters = base.CreateParams;
-                parameters.ExStyle |= WS_EX_NOACTIVATE;
-
-                return parameters;
-            }
-        }
-
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                SizeChanged -= OnToastSizeChanged;
-                Load -= OnToastLoad;
-                _follower.Detach();
 
                 if (_closeTimer != null)
                 {
@@ -389,11 +351,7 @@ namespace ErikwnkWFUI.Forms
 
         private void ConfigureForm()
         {
-            FormBorderStyle = FormBorderStyle.None;
-            StartPosition = FormStartPosition.Manual;
             AutoScaleMode = AutoScaleMode.None;
-            ShowInTaskbar = false;
-            Opacity = PopupTransparency.Medium.ToOpacity();
         }
 
         private void CreateControls()
@@ -563,36 +521,6 @@ namespace ErikwnkWFUI.Forms
             return owner.PointToScreen(new Point(
                 (owner.ClientSize.Width - toast.Width) / 2,
                 (int)(owner.ClientSize.Height * 0.75) - toast.Height / 2));
-        }
-
-        // Win11 rounds window corners itself via DWM (anti-aliased, all four identical, with the
-        // thin border of the info popup); a window Region never gets that. Before Windows 11
-        // the call does nothing and the toast is a plain rectangle - the same as
-        // InfoPopupForm.ApplyRoundedCorners.
-        private void ApplyRoundedCorners()
-        {
-            if (!IsHandleCreated)
-                return;
-
-            int pref = DWMWCP_ROUND;
-            try
-            {
-                DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref pref, sizeof(int));
-            }
-            catch
-            {
-                // pre-Win11 - no rounded corners, plain rectangle
-            }
-        }
-
-        private void OnToastLoad(object sender, EventArgs e)
-        {
-            ApplyRoundedCorners();
-        }
-
-        private void OnToastSizeChanged(object sender, EventArgs e)
-        {
-            ApplyRoundedCorners();
         }
 
         private void OnCloseTimerTick(object sender, EventArgs e)

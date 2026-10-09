@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Forms
     /// over a slider). Header and text are white, or black on a background too light for white;
     /// every header and text can have its own color (<see cref="InfoPopupSection.HeaderColor"/>,
     /// <see cref="InfoPopupSection.TextColor"/>). <see cref="Colors"/> sets the background and
-    /// <see cref="Transparency"/> how see-through the popup is.
+    /// <see cref="PopupFormBase.Transparency"/> how see-through the popup is.
     /// </para>
     /// <para>
     /// Window: the popup belongs to the window of the control it is shown for. It is placed
@@ -59,7 +59,7 @@ namespace ErikwnkWFUI.Forms
     /// supported.
     /// </para>
     /// </remarks>
-    public partial class InfoPopupForm : Form
+    public partial class InfoPopupForm : PopupFormBase
     {
         private const int MaxTextWidth96 = 260;
         private const int Padding96 = 20;
@@ -71,12 +71,10 @@ namespace ErikwnkWFUI.Forms
         private const int MouseOffset96 = 12;
         private const int AnchorOffsetX = 8;
         private const int AnchorOffsetY = -10;
-        private const int WS_EX_NOACTIVATE = 0x08000000;
 
         private const TextFormatFlags MeasureFlags =
             TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.Left;
 
-        private readonly OwnerFollower _follower = new OwnerFollower();
         private Control _lastAnchor;
         private Timer _showDelayTimer;
         private Control _pendingAnchor;
@@ -84,7 +82,6 @@ namespace ErikwnkWFUI.Forms
         private Func<InfoPopupSection[]> _pendingContent;
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
-        private PopupTransparency _transparency = PopupTransparency.Medium;
         private PopupDuration _duration = PopupDuration.Medium;
         private PopupDelay _delay = PopupDelay.Medium;
         private Timer _hideTimer;
@@ -92,11 +89,7 @@ namespace ErikwnkWFUI.Forms
 
         public InfoPopupForm()
         {
-            FormBorderStyle = FormBorderStyle.None;
-            ShowInTaskbar = false;
-            StartPosition = FormStartPosition.Manual;
             DoubleBuffered = true;
-            Opacity = PopupTransparency.Medium.ToOpacity();
             BackColor = GetBackColor();
 
             _showDelayTimer = new Timer { Interval = _delay.ToMilliseconds() };
@@ -108,8 +101,6 @@ namespace ErikwnkWFUI.Forms
                 _hideTimer.Stop();
                 Hide();
             };
-
-            Load += delegate { ApplyRoundedCorners(); };
         }
 
         /// <summary>
@@ -145,20 +136,9 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        /// <summary>How see-through the popup is: not at all, slightly, clearly (the default) or strongly.</summary>
-        public PopupTransparency Transparency
+        protected override void OnTransparencyChanged()
         {
-            get { return _transparency; }
-            set
-            {
-                _transparency = value;
-
-                if (IsDisposed)
-                    return;
-
-                Opacity = value.ToOpacity();
-                BackColor = GetBackColor();
-            }
+            BackColor = GetBackColor();
         }
 
         /// <summary>
@@ -193,25 +173,6 @@ namespace ErikwnkWFUI.Forms
             {
                 _fixedSize = value;
                 UpdateSize();
-            }
-        }
-
-        // A popup must never take the activation away from the window it is shown for (the window
-        // of a slider that is being dragged, say).
-        protected override bool ShowWithoutActivation
-        {
-            get { return true; }
-        }
-
-        // The same for a click on the popup: it does not activate either.
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams parameters = base.CreateParams;
-                parameters.ExStyle |= WS_EX_NOACTIVATE;
-
-                return parameters;
             }
         }
 
@@ -386,7 +347,7 @@ namespace ErikwnkWFUI.Forms
                 BringToFront();
             }
 
-            _follower.Attach(this, ownerForm);
+            Follower.Attach(this, ownerForm);
             _lastAnchor = anchor;
             NoteShownFor(anchor);
 
@@ -400,7 +361,7 @@ namespace ErikwnkWFUI.Forms
 
             if (!Visible)
             {
-                _follower.Detach();
+                Follower.Detach();
                 _hideTimer.Stop();
                 _lastAnchor = null;
             }
@@ -585,30 +546,9 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        // Win11 rounds window corners itself via DWM (anti-aliased, all four identical): just
-        // ask for the radius. A window Region fights this and leaves one corner square; on
-        // Win10 the call does nothing and the popup is a plain rectangle.
-        private void ApplyRoundedCorners()
+        protected override int CornerPreference
         {
-            if (!IsHandleCreated)
-                return;
-
-            int preference = IsFixed ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND;
-
-            try
-            {
-                DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
-            }
-            catch
-            {
-                // before Windows 11: no rounded corners
-            }
-        }
-
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            ApplyRoundedCorners();
+            get { return IsFixed ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND; }
         }
 
         protected override void Dispose(bool disposing)
@@ -618,7 +558,7 @@ namespace ErikwnkWFUI.Forms
                 foreach (Control control in new List<Control>(_bindings.Keys))
                     Detach(control);
 
-                _follower.Detach();
+                Follower.Detach();
 
                 if (_hideTimer != null)
                 {
