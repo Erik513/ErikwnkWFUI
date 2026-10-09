@@ -86,8 +86,9 @@ public class LabelScrollSettingsTests
             foreach (ThemedLabel label in new[]
             {
                 UIStyles.Labels.CreateStandard("x", scroll: scroll), UIStyles.Labels.CreatePrimary("x", scroll),
-                UIStyles.Labels.CreateTitle("x", scroll), UIStyles.Labels.CreateMuted("x", scroll),
-                UIStyles.Labels.CreateStandard("x", UIStyles.Colors.Sets.Green, scroll)
+                UIStyles.Labels.CreateTitle("x", scroll: scroll), UIStyles.Labels.CreateMuted("x", scroll: scroll),
+                UIStyles.Labels.CreateStandard("x", UIStyles.Colors.Sets.Green, scroll),
+                UIStyles.Labels.CreateTitle("x", UIStyles.Colors.Sets.Green, scroll), UIStyles.Labels.CreateMuted("x", UIStyles.Colors.Sets.Green, scroll)
             })
             {
                 using (label)

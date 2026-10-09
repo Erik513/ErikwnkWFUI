@@ -7,9 +7,9 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UILabelFactory
     {
-        public static ThemedLabel CreateTitle(string text = "", LabelScroll scroll = null)
+        public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(UIColors.TextPrimary, null)
+            ThemedLabel label = new ThemedLabel(UIColors.TextPrimary, colors)
             {
                 Text = text ?? "",
                 Font = UIFonts.Title,
@@ -56,9 +56,9 @@ namespace ErikwnkWFUI.Factories
             return CreateStandard(text, UIColors.PrimarySet, scroll);
         }
 
-        public static ThemedLabel CreateMuted(string text = "", LabelScroll scroll = null)
+        public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(UIColors.TextMuted, null)
+            ThemedLabel label = new ThemedLabel(UIColors.TextMuted, colors, muted: true)
             {
                 Text = text ?? "",
                 Font = UIFonts.Small,

@@ -44,18 +44,20 @@ namespace ErikwnkWFUI
 
             /// <summary>A heading: bold and larger, centered, on the background it sits on (transparent).</summary>
             /// <param name="text">The text of the label.</param>
+            /// <param name="colors">A color set for the text instead of the usual color of this label: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>; as for <see cref="CreateStandard"/>.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreateTitle(string text = "", LabelScroll scroll = null)
+            public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
             {
-                return UILabelFactory.CreateTitle(text, scroll);
+                return UILabelFactory.CreateTitle(text, colors, scroll);
             }
 
-            /// <summary>De-emphasized text: smaller and dimmer than the standard one.</summary>
+            /// <summary>De-emphasized text: smaller and dimmer than the standard one. With a color set the text takes its main color, dimmed toward the page behind it, so it stays quiet.</summary>
             /// <param name="text">The text of the label.</param>
+            /// <param name="colors">A color set for the text: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>. The text takes the main color of the set but dimmed toward the page behind it (and never below a contrast of 3:1), so it stays muted.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreateMuted(string text = "", LabelScroll scroll = null)
+            public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
             {
-                return UILabelFactory.CreateMuted(text, scroll);
+                return UILabelFactory.CreateMuted(text, colors, scroll);
             }
 
             /// <summary>The old name of <see cref="CreateStandard"/>.</summary>

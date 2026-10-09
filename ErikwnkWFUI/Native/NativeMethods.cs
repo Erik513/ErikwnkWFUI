@@ -24,6 +24,10 @@ namespace ErikwnkWFUI.Native
         public const int WM_MOUSEWHEEL = 0x020A;
         public const int WM_XBUTTONDOWN = 0x020B;
         public const int WM_CAPTURECHANGED = 0x0215;
+        public const int WM_SETTINGCHANGE = 0x001A;
+
+        // SystemParametersInfo: whether the animations in windows are on (Windows settings, Accessibility).
+        public const uint SPI_GETCLIENTAREAANIMATION = 0x1042;
 
         // Messages of the application itself start here.
         public const int WM_APP = 0x8000;
@@ -34,6 +38,11 @@ namespace ErikwnkWFUI.Native
         public const int DWMWCP_ROUNDSMALL = 3;
 
         // ---- user32: messages ----
+        // Reads a setting of Windows; the value is a BOOL here (0 or 1).
+        [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SystemParametersInfo(uint action, uint parameter, ref int value, uint winIni);
+
         // Puts a message in the queue of the window and returns at once (from any thread).
         [DllImport("user32.dll", EntryPoint = "PostMessageW")]
         [return: MarshalAs(UnmanagedType.Bool)]

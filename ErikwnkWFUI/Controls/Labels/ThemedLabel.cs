@@ -30,6 +30,11 @@ namespace ErikwnkWFUI.Controls
         // The least contrast the text of a label with a color set has against what is behind it.
         private const double TextContrast = 4.5;
 
+        // The muted label takes the color of its set dimmed: this share of the way toward the page behind it,
+        // and never below this contrast (it is meant to be quiet, not unreadable).
+        private const double MutedBlend = 0.35;
+        private const double MutedContrast = 3.0;
+
         // The moving text goes a little further than its end, so that the last sign is clear of the edge.
         private const int EndRoom = 2;
 
@@ -42,6 +47,7 @@ namespace ErikwnkWFUI.Controls
         // ---- the colors ----
         private readonly Color _enabledForeColor;
         private readonly UIColorSet _colors;
+        private readonly bool _muted;
         private bool _hasOwnForeColor;
 
         // ---- the settings of the movement ----
@@ -50,6 +56,8 @@ namespace ErikwnkWFUI.Controls
         private LabelScrollPause _scrollPause = LabelScrollPause.Medium;
         private LabelScrollDirection _scrollDirection = LabelScrollDirection.Left;
         private LabelScrollSeparator _scrollSeparator = LabelScrollSeparator.Dot;
+        private bool _scrollPauseOnHover;
+        private bool _hovered;
 
         // ---- the movement ----
         // How wide the text is; back and forth: how far the text can go to show its end; endless: how long
@@ -81,10 +89,23 @@ namespace ErikwnkWFUI.Controls
         private int _framePending;
         private volatile IntPtr _postHandle;
 
-        internal ThemedLabel(Color enabledForeColor, UIColorSet colors)
+        internal ThemedLabel(Color enabledForeColor, UIColorSet colors, bool muted = false)
         {
             _enabledForeColor = enabledForeColor;
             _colors = colors;
+            _muted = muted;
+        }
+
+        // Whether Windows lets windows animate (Settings, Accessibility, "Animation effects"). Replaceable so a test
+        // can switch it.
+        internal static Func<bool> AnimationsEnabled = ReadAnimationSetting;
+
+        private static bool ReadAnimationSetting()
+        {
+            int on = 1;
+
+            // Where Windows cannot say, the animation is allowed.
+            return !SystemParametersInfo(SPI_GETCLIENTAREAANIMATION, 0, ref on, 0) || on != 0;
         }
 
         // The time of the moving text. Replaceable so a test can let time pass.
@@ -122,6 +143,13 @@ namespace ErikwnkWFUI.Controls
             set { _scrollPause = value; }
         }
 
+        /// <summary>Whether the moving text stands still while the mouse is on the label, so that it can be read. Off by default.</summary>
+        public bool ScrollPauseOnHover
+        {
+            get { return _scrollPauseOnHover; }
+            set { _scrollPauseOnHover = value; }
+        }
+
         /// <summary>Which way the text moves in the endless mode: to the left (the default) or to the right. Back and forth always starts to the left.</summary>
         public LabelScrollDirection ScrollDirection
         {
@@ -155,9 +183,9 @@ namespace ErikwnkWFUI.Controls
                 switch (_scrollMode)
                 {
                     case LabelScrollMode.BackAndForth:
-                        return LabelScroll.BackAndForth(_scrollSpeed, _scrollPause);
+                        return LabelScroll.BackAndForth(_scrollSpeed, _scrollPause, _scrollPauseOnHover);
                     case LabelScrollMode.Endless:
-                        return LabelScroll.Endless(_scrollDirection, _scrollSeparator, _scrollSpeed);
+                        return LabelScroll.Endless(_scrollDirection, _scrollSeparator, _scrollSpeed, _scrollPauseOnHover);
                     default:
                         return LabelScroll.None;
                 }
@@ -170,6 +198,7 @@ namespace ErikwnkWFUI.Controls
                 _scrollPause = scroll.Pause;
                 _scrollDirection = scroll.Direction;
                 _scrollSeparator = scroll.Separator;
+                _scrollPauseOnHover = scroll.PauseOnHover;
                 _scrollMode = scroll.Mode;
                 Restart();
             }
@@ -213,7 +242,7 @@ namespace ErikwnkWFUI.Controls
             _maxOffset = 0;
             _cycle = 0;
 
-            if (_scrollMode == LabelScrollMode.None || !Enabled || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
+            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return;
 
             int inner = ClientSize.Width - Padding.Horizontal;
@@ -279,6 +308,10 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
+            // The user may have switched the animations of Windows on or off: the text moves, or stops, at once.
+            if (m.Msg == WM_SETTINGCHANGE)
+                Restart();
+
             base.WndProc(ref m);
         }
 
@@ -307,6 +340,15 @@ namespace ErikwnkWFUI.Controls
         private bool Step()
         {
             long now = Milliseconds();
+
+            // While the mouse is on the label the text stands still, and what is left of its rest stays.
+            if (_scrollPauseOnHover && _hovered)
+            {
+                _restUntil += now - _lastFrame;
+                _lastFrame = now;
+
+                return false;
+            }
 
             if (_cycle > 0)
                 return StepEndless(now);
@@ -357,6 +399,18 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
 
             return true;
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _hovered = true;
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _hovered = false;
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -614,7 +668,14 @@ namespace ErikwnkWFUI.Controls
             if (_colors == null)
                 return _enabledForeColor;
 
-            return UIColors.EnsureContrast(_colors.Hover, GetEffectiveBackColor(), TextContrast);
+            Color back = GetEffectiveBackColor();
+            Color color = UIColors.EnsureContrast(_colors.Hover, back, TextContrast);
+
+            // A muted label is the same color, but quiet.
+            if (_muted)
+                color = UIColors.EnsureContrast(UIColors.BlendToward(color, back, MutedBlend), back, MutedContrast);
+
+            return color;
         }
 
         private Color GetEffectiveBackColor()
