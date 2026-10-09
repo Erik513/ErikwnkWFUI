@@ -121,6 +121,9 @@ namespace ErikwnkWFUI.Showcase
             ReadOnlyTabControl tabs = UIStyles.TabControls.CreateReadOnlyPrimary();
             tabs.Dock = DockStyle.Fill;
 
+            // With this many pages the strip wraps onto a second row instead of scrolling.
+            tabs.Multiline = true;
+
             // The header is transparent by default and would show the window
             // color behind it, which is dark even in the light theme.
             tabs.HeaderBackColor = UIColors.BackgroundMedium;
