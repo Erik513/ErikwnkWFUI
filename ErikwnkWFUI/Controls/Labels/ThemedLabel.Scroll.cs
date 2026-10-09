@@ -112,7 +112,9 @@ namespace ErikwnkWFUI.Controls
         /// direction. A text that fits stands still. It applies to a text of one line in a label that is
         /// enabled; a disabled label shows the start of the text with an ellipsis. A label with
         /// <see cref="Label.AutoSize"/> is as big as its text, so back and forth does not move it; endless does, and
-        /// the size of the label stays what AutoSize makes it (a label with a maximum width wraps its text and does not move). While the text moves it starts at the left whatever <see cref="Label.TextAlign"/>
+        /// the size of the label stays what AutoSize makes it (a label with a maximum width wraps its text and does not move).
+        /// With several texts (<see cref="LabelScroll.Texts"/>) AutoSize is not of much use: the label is as wide as all
+        /// the texts together, so there is little left to move. While the text moves it starts at the left whatever <see cref="Label.TextAlign"/>
         /// says (the vertical place is kept), and right-to-left is not supported (as everywhere in the library).
         /// An image of the label is not shown while the text moves, only while it stands still.
         /// </summary>
@@ -165,6 +167,11 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _scrollSeparator = value;
+
+                // (The text the label shows where it does not move names the separator too.)
+                if (_texts != null)
+                    ShowJoinedTexts();
+
                 Restart();
             }
         }
@@ -203,15 +210,18 @@ namespace ErikwnkWFUI.Controls
                 _textsJoined = null;
 
                 if (_texts != null)
-                {
-                    // The label shows the texts one after the other where it does not move.
-                    string sign = _scrollSeparator.ToText();
-                    _textsJoined = string.Join(sign.Length > 0 ? " " + sign + " " : " ", _texts);
-                    Text = _textsJoined;
-                }
+                    ShowJoinedTexts();
 
                 Restart();
             }
+        }
+
+        // The label shows the texts one after the other, the separator between them, where it does not move.
+        private void ShowJoinedTexts()
+        {
+            string sign = _scrollSeparator.ToText();
+            _textsJoined = string.Join(sign.Length > 0 ? " " + sign + " " : " ", _texts);
+            Text = _textsJoined;
         }
 
         // ---- starting and measuring ----

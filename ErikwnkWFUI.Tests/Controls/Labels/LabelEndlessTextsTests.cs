@@ -88,6 +88,17 @@ public class LabelEndlessTextsTests : IDisposable
     }
 
     [Fact]
+    public void ANewSeparator_ChangesTheJoinedText_AndTheTextsStay()
+    {
+        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
+
+        label.ScrollSeparator = LabelScrollSeparator.Bar;
+
+        Assert.Equal("One | Two", label.Text);
+        Assert.Equal(new[] { "One", "Two" }, label.Scroll.Texts);
+    }
+
+    [Fact]
     public void WithoutASeparator_TheTextsAreJoinedByASpace()
     {
         using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }, separator: LabelScrollSeparator.None));

@@ -69,6 +69,10 @@ namespace ErikwnkWFUI.Controls
         /// separator, where it does not move.
         /// </summary>
         /// <param name="texts">The texts; empty ones are left out.</param>
+        /// <param name="direction">Which way they move; to the left by default.</param>
+        /// <param name="separator">The sign between two texts; a dot by default.</param>
+        /// <param name="speed">How fast they move; medium by default.</param>
+        /// <param name="pauseOnHover">Whether the texts stand still while the mouse is on the label (to read them); off by default.</param>
         public static LabelScroll Endless(
             IEnumerable<string> texts,
             LabelScrollDirection direction = LabelScrollDirection.Left,
