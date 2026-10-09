@@ -32,9 +32,11 @@ namespace ErikwnkWFUI.Controls
         private const double TextContrast = 4.5;
 
         // The muted label takes the color of its set dimmed: this share of the way toward the page behind it,
-        // and never below this contrast (it is meant to be quiet, not unreadable).
+        // and never below this contrast (it is meant to be quiet, not unreadable). A disabled label is held to
+        // the same floor: WCAG does not ask for more, but the text has to be seen.
         private const double MutedBlend = 0.35;
         private const double MutedContrast = 3.0;
+        private const double DisabledContrast = 3.0;
 
         // The moving text goes a little further than its end, so that the last sign is clear of the edge.
         private const int EndRoom = 2;
@@ -700,26 +702,30 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Disabled, always the one gray of the library, whatever the ForeColor.
+        // Disabled, always the one gray of the library, whatever the ForeColor - moved lighter or darker
+        // only where the page behind it would leave it unseen.
         internal Color GetTextColor()
         {
-            return Enabled ? GetEnabledTextColor() : UIColors.DisabledGray;
+            return Enabled
+                ? GetEnabledTextColor()
+                : UIColors.EnsureContrast(UIColors.DisabledGray, GetEffectiveBackColor(), DisabledContrast);
         }
 
-        // A ForeColor that was set wins. With a color set the text takes the main color of
-        // the set (the one its controls show hovered), lightened or darkened where the page
-        // behind it needs that to read; the page is looked at when the label is painted, so
-        // a theme change is followed.
+        // A ForeColor that was set wins. Without one the text has the color of its kind (or of its set: the
+        // main color of the set, the one its controls show hovered), lightened or darkened where the page
+        // behind it needs that to read; the page is looked at when the label is painted, so a theme
+        // change, or a label on a surface of another shade, is followed. A color that reads already stays.
         private Color GetEnabledTextColor()
         {
             // (Before the constructor has run, the base class may already ask.)
             if (_hasOwnForeColor || _enabledForeColor.IsEmpty)
                 return base.ForeColor;
 
-            if (_colors == null)
-                return _enabledForeColor;
-
             Color back = GetEffectiveBackColor();
+
+            if (_colors == null)
+                return UIColors.EnsureContrast(_enabledForeColor, back, _muted ? MutedContrast : TextContrast);
+
             Color color = UIColors.EnsureContrast(_colors.Hover, back, TextContrast);
 
             // A muted label is the same color, but quiet.

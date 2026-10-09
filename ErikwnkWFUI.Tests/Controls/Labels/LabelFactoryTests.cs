@@ -88,11 +88,16 @@ public class LabelFactoryTests
     }
 
     [Fact]
-    public void ALabelWithoutASet_IgnoresThePageBehindIt()
+    public void ALabelWithoutASet_KeepsItsColor_WhereItReadsAlready_AndAdaptsWhereItDoesNot()
     {
-        using Label label = OnPage(UIStyles.Labels.CreateStandard("x"), Color.White);
+        // On a dark page the light gray of the standard label reads: it stays as it is.
+        using Label onDark = OnPage(UIStyles.Labels.CreateStandard("x"), Color.FromArgb(30, 30, 30));
+        Assert.Equal(UIColors.TextSecondary, TextColor(onDark));
 
-        Assert.Equal(UIColors.TextSecondary, TextColor(label));
+        // On a white page it would not (light gray on white): it is made darker until it does.
+        using Label onWhite = OnPage(UIStyles.Labels.CreateStandard("x"), Color.White);
+        Assert.NotEqual(UIColors.TextSecondary, TextColor(onWhite));
+        Assert.True(ColorContrastHelper.GetContrastRatio(TextColor(onWhite), Color.White) >= 4.49);
     }
 
     [Fact]
