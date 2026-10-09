@@ -25,6 +25,8 @@ namespace ErikwnkWFUI.Forms
     /// waiting toasts with it.
     ///
     /// <para>
+    /// A click on the toast closes it. A toast the mouse is on when its time is up stays until the
+    /// mouse has left it.
     /// By default the toast is centered in the lower part of the window; <see cref="ToastPosition"/>
     /// puts it in the middle, above the middle, at the top or bottom or in a corner, with a fixed
     /// distance to the edge. A window that is too small for the distance still keeps it inside.
@@ -488,6 +490,19 @@ namespace ErikwnkWFUI.Forms
 
             Controls.Add(_contentPanel);
             ApplyColors();
+
+            // A click anywhere on the toast closes it; the hand shows that it can be clicked.
+            Cursor = Cursors.Hand;
+            Click += OnToastClick;
+            ForEachControl(_contentPanel, control => control.Click += OnToastClick);
+        }
+
+        private static void ForEachControl(Control parent, Action<Control> action)
+        {
+            action(parent);
+
+            foreach (Control child in parent.Controls)
+                ForEachControl(child, action);
         }
 
         private Panel CreateContentPanel()
@@ -679,14 +694,45 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        // How often a toast whose time is up looks whether the mouse has left it.
+        private const int HoverCheckMilliseconds = 200;
+
+        // Where the mouse is, in screen coordinates. Replaceable so a test can put it somewhere.
+        internal static Func<Point> CursorPosition = () => Cursor.Position;
+
+        // The time is up. A toast the mouse is on stays (so a long message can be read at ease)
+        // and closes when the mouse has left it.
         private void OnCloseTimerTick(object sender, EventArgs e)
         {
             _closeTimer.Stop();
 
+            if (Bounds.Contains(CursorPosition()))
+            {
+                _closeTimer.Interval = HoverCheckMilliseconds;
+                _closeTimer.Start();
+
+                return;
+            }
+
+            Dismiss();
+        }
+
+        private void OnToastClick(object sender, EventArgs e)
+        {
+            Dismiss();
+        }
+
+        // Closed by its own time or by a click (not replaced by a newer toast): the next
+        // waiting one is due.
+        private void Dismiss()
+        {
+            if (IsDisposed)
+                return;
+
+            _closeTimer.Stop();
+
             Form owner = _ownerForm;
             Close();
-
-            // Closed by its own time (not replaced by a newer toast): the next waiting one is due.
             ShowNextPending(owner);
         }
     }
