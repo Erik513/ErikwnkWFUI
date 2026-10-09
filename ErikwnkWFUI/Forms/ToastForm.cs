@@ -55,6 +55,9 @@ namespace ErikwnkWFUI.Forms
         private const int ToastHeight96 = 80;
         private const int MaxMessageLines = 4;
         private const int EdgeDistance96 = 20;
+
+        // How far the text starts from the left when a symbol is shown (the symbol sits in front of that).
+        private const int TextIndentWithSymbol96 = 30;
         private int _dpi = 96;
 
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
@@ -295,7 +298,7 @@ namespace ErikwnkWFUI.Forms
         // The text starts after the symbol, or near the edge without one.
         private void ApplyTextPadding()
         {
-            int left = GetShownGlyph().Length == 0 ? 0 : 40;
+            int left = GetShownGlyph().Length == 0 ? 0 : TextIndentWithSymbol96;
 
             _messageLabel.Padding = new Padding(Scaled(left, _dpi), 0, Scaled(10, _dpi), 0);
             _titleLabel.Padding = _messageLabel.Padding;
