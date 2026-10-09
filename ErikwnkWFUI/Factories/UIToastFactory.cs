@@ -38,6 +38,24 @@ namespace ErikwnkWFUI.Factories
             ShowStandard(content, owner, UIColors.PrimarySet, transparency, duration, delay);
         }
 
+        public static Toaster CreateStandard(
+            UIColorSet colors = null,
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
+        {
+            return new Toaster { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay };
+        }
+
+        // The Standard one in the current accent - the primary color set.
+        public static Toaster CreatePrimary(
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
+        {
+            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay);
+        }
+
         // The Standard one in the current accent - the primary color set.
         public static void ShowPrimary(
             string message,

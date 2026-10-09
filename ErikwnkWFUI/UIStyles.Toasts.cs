@@ -10,6 +10,29 @@ namespace ErikwnkWFUI
         /// <summary>A small confirmation that closes itself, shown near the bottom of a window. It belongs to that window (moves with it, never takes the focus) and is shown only while the window is in front; a toast that cannot be shown waits for it. See <see cref="ToastForm"/>.</summary>
         public static class Toasts
         {
+            /// <summary>Creates the settings of a toast as properties, to show toasts with them again and again (<see cref="Toaster.Show(string, Form)"/>); in the neutral gray unless <paramref name="colors"/> says otherwise.</summary>
+            /// <param name="colors">A color set for the background instead of the neutral gray: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>.</param>
+            /// <param name="transparency">How see-through the toasts are; medium by default.</param>
+            /// <param name="duration">How long they stay (1.5, 2.5 or 4 seconds); medium by default.</param>
+            /// <param name="delay">How long to wait before one is shown; not at all by default.</param>
+            public static Toaster CreateStandard(
+                UIColorSet colors = null,
+                PopupTransparency transparency = PopupTransparency.Medium,
+                PopupDuration duration = PopupDuration.Medium,
+                PopupDelay delay = PopupDelay.Instant)
+            {
+                return UIToastFactory.CreateStandard(colors, transparency, duration, delay);
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but in the current accent color - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
+            public static Toaster CreatePrimary(
+                PopupTransparency transparency = PopupTransparency.Medium,
+                PopupDuration duration = PopupDuration.Medium,
+                PopupDelay delay = PopupDelay.Instant)
+            {
+                return UIToastFactory.CreatePrimary(transparency, duration, delay);
+            }
+
             /// <summary>Shows a toast in the neutral gray.</summary>
             /// <param name="message">The text of the toast.</param>
             /// <param name="owner">The window the toast belongs to and is shown over.</param>

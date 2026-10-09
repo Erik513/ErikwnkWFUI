@@ -18,6 +18,20 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("ShowPrimary", CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
             table.AddRow("ShowStandard(colors)", CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Green, PopupTransparency.Medium, PopupDuration.Medium, PopupDelay.Instant));
 
+            table.AddSection("CreateStandard / CreatePrimary - the settings as properties");
+
+            Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Green, PopupTransparency.Low, PopupDuration.Long);
+            table.AddRow("CreateStandard(colors)", CreateToasterButton(standard, "Show toast"));
+            table.AddRow("CreatePrimary", CreateToasterButton(UIStyles.Toasts.CreatePrimary(), "Show toast"));
+
+            Toaster changing = UIStyles.Toasts.CreateStandard();
+            Button cycle = CreateToasterButton(changing, "Show toast");
+            cycle.Click += delegate
+            {
+                changing.Duration = changing.Duration == PopupDuration.Short ? PopupDuration.Long : PopupDuration.Short;
+            };
+            table.AddRow("Duration changed after each click", cycle);
+
             table.AddSection("Transparency");
 
             foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
@@ -62,6 +76,18 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("On a light color", CreateContentToastButton(UIStyles.Colors.Sets.Yellow,
                 new InfoPopupSection("Light background", "The text turns black when white would not read.")));
+        }
+
+        private Button CreateToasterButton(Toaster toaster, string caption)
+        {
+            Button button = UIStyles.Buttons.CreateStandard(caption, size: new Size(160, 32));
+
+            button.Click += delegate
+            {
+                toaster.Show("Sample toast message", this);
+            };
+
+            return button;
         }
 
         private Button CreateContentToastButton(UIColorSet colors, InfoPopupSection content)
