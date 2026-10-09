@@ -72,7 +72,18 @@ namespace ErikwnkWFUI.Controls
                 WaitForNextPicture();
 
                 foreach (ThemedLabel label in labels)
-                    label.RequestFrame();
+                {
+                    // One label that fails must not end the beat of all the others (and with it the thread, which
+                    // would then never be started again).
+                    try
+                    {
+                        label.RequestFrame();
+                    }
+                    catch (Exception)
+                    {
+                        // the label is gone or in a bad state: it asks for the next beat again or leaves the clock
+                    }
+                }
             }
         }
 

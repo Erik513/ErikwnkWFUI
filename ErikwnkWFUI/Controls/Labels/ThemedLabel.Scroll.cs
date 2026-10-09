@@ -371,7 +371,8 @@ namespace ErikwnkWFUI.Controls
         {
             long now = Milliseconds();
 
-            // While the mouse is on the label the text stands still, and what is left of its rest stays.
+            // While the mouse is on the label the text stands still, and what is left of its rest stays: the end of
+            // the rest moves on as much as the time does (one that was over stays over).
             if (_scrollPauseOnHover && _hovered)
             {
                 _restUntil += now - _lastFrame;
@@ -457,10 +458,29 @@ namespace ErikwnkWFUI.Controls
             Restart();
         }
 
+        // A size is changed again and again while a window is resized: the text must not jump back to its
+        // start each time. The measure is made again, the place in the movement stays (as far as it still exists).
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
+
+            float offset = _offset;
+            int direction = _direction;
+            long restUntil = _restUntil;
+            bool wasMoving = _animating;
+
             Restart();
+
+            if (wasMoving && _cycle > 0)
+            {
+                _offset = offset % _cycle;
+            }
+            else if (wasMoving && _maxOffset > 0)
+            {
+                _offset = Math.Min(offset, _maxOffset);
+                _direction = direction;
+                _restUntil = restUntil;
+            }
         }
 
         protected override void OnPaddingChanged(EventArgs e)
@@ -472,6 +492,9 @@ namespace ErikwnkWFUI.Controls
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
+
+            // (A label that is disabled gets no MouseLeave: the mouse is not "on" it any more.)
+            _hovered = false;
             Restart();
         }
 
@@ -480,6 +503,9 @@ namespace ErikwnkWFUI.Controls
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
+
+            // (A label that is hidden gets no MouseLeave either.)
+            _hovered = false;
             Restart();
         }
 
@@ -493,6 +519,7 @@ namespace ErikwnkWFUI.Controls
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _postHandle = IntPtr.Zero;
+            _hovered = false;
 
             if (_animating)
                 StopAnimating();

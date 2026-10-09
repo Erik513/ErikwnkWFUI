@@ -512,4 +512,102 @@ public class LabelScrollEdgeCaseTests : IDisposable
         Assert.False(Moving(label));
         Assert.Equal(before - 1, LabelAnimationClock.Count);
     }
+
+    // ---- a mouse that stays, a label that is resized ----
+
+    [Fact]
+    public void ALongHover_AfterTheRestWasOver_DoesNotMakeTheNextRestLonger()
+    {
+        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short, pauseOnHover: true));
+        Tick(label, 1000);
+        Tick(label, 500);
+        float partway = Offset(label);
+        Assert.True(partway > 0f);
+
+        // The mouse stays on the label for a long time, while the text is not at rest.
+        label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+
+        for (int i = 0; i < 200; i++)
+            Tick(label, 100);
+
+        Assert.Equal(partway, Offset(label));
+
+        // It goes on at once when the mouse has left, without a rest that the hover has made.
+        label.InvokePrivate("OnMouseLeave", EventArgs.Empty);
+        Tick(label, 100);
+
+        Assert.True(Offset(label) > partway, "the text stayed at rest after the hover");
+    }
+
+    [Fact]
+    public void ALabelThatIsHiddenOrDisabled_IsNotHoveredAnyMore()
+    {
+        using ThemedLabel label = Create(LabelScroll.Endless(pauseOnHover: true));
+        FieldInfo hovered = typeof(ThemedLabel).GetField("_hovered", BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+        label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        label.Visible = false;
+        Assert.False((bool)hovered.GetValue(label)!);
+
+        label.Visible = true;
+        label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        label.Enabled = false;
+        Assert.False((bool)hovered.GetValue(label)!);
+
+        label.Enabled = true;
+        Tick(label, 1000);
+        Assert.Equal(45f, Offset(label), 0);
+    }
+
+    [Fact]
+    public void WhenALabelIsResized_BackAndForthKeepsItsPlace_AsFarAsItStillExists()
+    {
+        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
+        Tick(label, 1000);
+        Tick(label, 1500);
+        float place = Offset(label);
+        Assert.True(place > 20f);
+        int before = MaxOffset(label);
+
+        // A little narrower: the way is longer, the place stays.
+        label.Width -= 10;
+        Assert.Equal(before + 10, MaxOffset(label));
+        Assert.Equal(place, Offset(label));
+        Assert.True(Moving(label));
+
+        // Much narrower or wider: it stays where there is room, and goes on its way.
+        label.Width += 40;
+        Assert.Equal(Math.Min(place, MaxOffset(label)), Offset(label));
+    }
+
+    [Fact]
+    public void WhenALabelIsResized_TheEndlessTextKeepsItsPlace()
+    {
+        using ThemedLabel label = Create(LabelScroll.Endless());
+        Tick(label, 2000);
+        float place = Offset(label);
+        Assert.True(place > 50f);
+
+        for (int i = 0; i < 5; i++)
+            label.Width += 3;
+
+        Assert.Equal(place, Offset(label));
+    }
+
+    [Fact]
+    public void WhenAResizedLabelHasRoomForTheText_ItStopsAtTheStart_AndWhenNarrowAgainItStartsAtTheStart()
+    {
+        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
+        Tick(label, 1000);
+        Tick(label, 1500);
+        Assert.True(Offset(label) > 0f);
+
+        label.Width = 1500;
+        Assert.Equal(0f, Offset(label));
+        Assert.False(Moving(label));
+
+        label.Width = 120;
+        Assert.Equal(0f, Offset(label));
+        Assert.True(Moving(label));
+    }
 }
