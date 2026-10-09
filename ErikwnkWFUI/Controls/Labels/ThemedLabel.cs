@@ -82,6 +82,10 @@ namespace ErikwnkWFUI.Controls
         private Bitmap _picture;
         private Color _pictureColor;
 
+        // What an ampersand was in the last measure and in the last picture (see GetHotkeyPrefix).
+        private HotkeyPrefix _measuredPrefix;
+        private HotkeyPrefix _pictureHotkeyPrefix;
+
         // Whether the label is on the beat of LabelAnimationClock, whether it has been asked for a picture
         // that it has not made yet (so that a slow window is asked once, not many times), and the handle the
         // clock posts to (kept here: the clock thread must not ask the control for its Handle).
@@ -117,7 +121,8 @@ namespace ErikwnkWFUI.Controls
         /// Whether and how a text that is too long for the label moves instead of ending in an ellipsis:
         /// not at all (the default), back and forth with a rest at both ends, or endlessly in one
         /// direction. A text that fits stands still. It applies to a text of one line in a label that is
-        /// enabled; a disabled label shows the start of the text with an ellipsis.
+        /// enabled; a disabled label shows the start of the text with an ellipsis. An image of the label is
+        /// not shown while the text moves, only while it stands still.
         /// </summary>
         public LabelScrollMode ScrollMode
         {
@@ -249,6 +254,8 @@ namespace ErikwnkWFUI.Controls
             int inset = GetTextInset();
             int separatorWidth = 0;
 
+            _measuredPrefix = GetHotkeyPrefix();
+
             using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
             using (StringFormat format = CreateMovingTextFormat())
             {
@@ -271,8 +278,9 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            if (_textWidth <= MaxPictureWidth)
-                _maxOffset = Math.Max(0, _textWidth + 2 * inset - inner + EndRoom);
+            // One that fits (even just) stands still; only one that does not fit has a way to go.
+            if (_textWidth + 2 * inset > inner && _textWidth <= MaxPictureWidth)
+                _maxOffset = _textWidth + 2 * inset - inner + EndRoom;
         }
 
         // The gap before and behind the separator of the endless mode: about the height of a letter.
@@ -321,6 +329,15 @@ namespace ErikwnkWFUI.Controls
 
             if (!_animating || IsDisposed)
                 return;
+
+            // A window that is hidden does not tell its labels (they get no VisibleChanged): the clock
+            // finds out here, and the label is on it again when it is shown (VisibleChanged then comes).
+            if (!Visible)
+            {
+                StopAnimating();
+
+                return;
+            }
 
             if (Step() && IsHandleCreated)
             {
@@ -518,6 +535,23 @@ namespace ErikwnkWFUI.Controls
                 Math.Max(0, ClientSize.Width - Padding.Horizontal),
                 Math.Max(0, ClientSize.Height - Padding.Vertical));
 
+            // UseMnemonic cannot tell the label when it changes: it is seen here. With or without the
+            // ampersand the text has another width (measure again), only the underline: another picture.
+            HotkeyPrefix prefix = GetHotkeyPrefix();
+
+            if ((prefix == HotkeyPrefix.None) != (_measuredPrefix == HotkeyPrefix.None))
+                Restart();
+            else if (prefix != _pictureHotkeyPrefix)
+                DisposePicture();
+
+            if (_maxOffset <= 0 && _cycle <= 0)
+            {
+                // The new measure says the text fits: nothing to move.
+                base.OnPaint(new PaintEventArgs(graphics, ClientRectangle));
+
+                return;
+            }
+
             Bitmap picture = GetPicture();
             int y = GetPictureTop(inner, picture.Height);
 
@@ -609,6 +643,7 @@ namespace ErikwnkWFUI.Controls
 
             _picture = picture;
             _pictureColor = color;
+            _pictureHotkeyPrefix = GetHotkeyPrefix();
 
             return _picture;
         }
@@ -628,9 +663,16 @@ namespace ErikwnkWFUI.Controls
         {
             StringFormat format = new StringFormat(StringFormat.GenericTypographic);
             format.FormatFlags |= StringFormatFlags.NoWrap | StringFormatFlags.MeasureTrailingSpaces;
-            format.HotkeyPrefix = !UseMnemonic ? HotkeyPrefix.None : ShowKeyboardCues ? HotkeyPrefix.Show : HotkeyPrefix.Hide;
+            format.HotkeyPrefix = GetHotkeyPrefix();
 
             return format;
+        }
+
+        // An ampersand is a sign of the text, or - with UseMnemonic - the mark of a key (underlined only
+        // while the keyboard cues are shown).
+        private HotkeyPrefix GetHotkeyPrefix()
+        {
+            return !UseMnemonic ? HotkeyPrefix.None : ShowKeyboardCues ? HotkeyPrefix.Show : HotkeyPrefix.Hide;
         }
 
         // ---- colors ----
