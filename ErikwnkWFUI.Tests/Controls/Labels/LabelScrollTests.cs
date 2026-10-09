@@ -1,0 +1,437 @@
+﻿using System.Drawing;
+using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
+
+namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
+
+/// <summary>
+/// The text that moves back and forth when it is too long (ScrollWhenTooLong): off by default, rests
+/// at both ends, moves at its speed whatever the timer does, stands still when it fits, when the
+/// label is disabled or hidden, and gives its timer back. The time is a clock the tests set.
+/// [Collection]: the colors read the live accent.
+/// </summary>
+[Collection(AccentColorTestCollection.Name)]
+public class LabelScrollTests : IDisposable
+{
+    private const string LongText = "A text that is much longer than the label it is shown in, so it has to move";
+
+    private readonly Func<long> _originalClock = ThemedLabel.Milliseconds;
+    private readonly List<Form> _forms = new List<Form>();
+    private long _now = 1_000_000;
+
+    public LabelScrollTests()
+    {
+        ThemedLabel.Milliseconds = () => _now;
+    }
+
+    public void Dispose()
+    {
+        ThemedLabel.Milliseconds = _originalClock;
+
+        foreach (Form form in _forms)
+            form.Dispose();
+    }
+
+    // A label of 120 pixels with a long text, in a window that is shown (out of sight).
+    private ThemedLabel Create(bool scroll = true, string text = LongText)
+    {
+        ThemedLabel label = UIStyles.Labels.CreateStandard(text);
+        label.Size = new Size(120, 24);
+        label.ScrollWhenTooLong = scroll;
+
+        Form form = new Form
+        {
+            FormBorderStyle = FormBorderStyle.None,
+            StartPosition = FormStartPosition.Manual,
+            Location = new Point(-3000, 0),
+            ShowInTaskbar = false,
+            BackColor = Color.FromArgb(40, 40, 40),
+            ClientSize = new Size(200, 60)
+        };
+        label.Location = new Point(5, 5);
+        form.Controls.Add(label);
+        form.Show();
+        _forms.Add(form);
+
+        return label;
+    }
+
+    private static float Offset(ThemedLabel label) => label.GetPrivateField<float>("_offset");
+
+    private static int MaxOffset(ThemedLabel label) => label.GetPrivateField<int>("_maxOffset");
+
+    private static System.Windows.Forms.Timer Timer(ThemedLabel label) => label.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
+
+    // The timer ticks after this long.
+    private void Tick(ThemedLabel label, int milliseconds)
+    {
+        _now += milliseconds;
+        label.InvokePrivate("OnFrame", label, EventArgs.Empty);
+    }
+
+    private static Bitmap Paint(ThemedLabel label)
+    {
+        Bitmap bitmap = new Bitmap(label.Width, label.Height);
+        label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
+
+        return bitmap;
+    }
+
+    private static bool Same(Bitmap a, Bitmap b)
+    {
+        for (int y = 0; y < a.Height; y++)
+        {
+            for (int x = 0; x < a.Width; x++)
+            {
+                if (a.GetPixel(x, y) != b.GetPixel(x, y))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
+    [Fact]
+    public void ByDefault_TheTextDoesNotMove_AndEndsInAnEllipsis()
+    {
+        using ThemedLabel label = Create(scroll: false);
+
+        Assert.False(label.ScrollWhenTooLong);
+        Assert.Equal(0, MaxOffset(label));
+        Assert.False(Timer(label).Enabled);
+        Assert.True(label.AutoEllipsis);
+    }
+
+    [Fact]
+    public void ALongText_WhenTheScrollingIsOn_GetsARoomToMove_AndATimer()
+    {
+        using ThemedLabel label = Create();
+
+        Assert.True(MaxOffset(label) > 0);
+        Assert.True(Timer(label).Enabled);
+    }
+
+    [Fact]
+    public void TheTextRestsAtTheStart_ThenMoves_AtItsSpeed()
+    {
+        using ThemedLabel label = Create();
+
+        Tick(label, 2000);
+        Assert.Equal(0f, Offset(label));
+
+        // The pause (2.2 seconds) is over; the movement counts from there, 45 pixels a second.
+        Tick(label, 200);
+        Assert.Equal(0f, Offset(label));
+
+        Tick(label, 1000);
+        Assert.Equal(45f, Offset(label), 1);
+
+        Tick(label, 1000);
+        Assert.Equal(90f, Offset(label), 1);
+    }
+
+    [Fact]
+    public void TheSpeed_DoesNotDependOnHowOftenTheTimerTicks()
+    {
+        // One label whose timer ticks every 20 milliseconds, one whose timer ticks once a second.
+        using ThemedLabel often = Create();
+        Tick(often, 2200);
+
+        for (int i = 0; i < 50; i++)
+            Tick(often, 20);
+
+        using ThemedLabel seldom = Create();
+        Tick(seldom, 2200);
+        Tick(seldom, 1000);
+
+        Assert.Equal(45f, Offset(often), 0);
+        Assert.Equal(45f, Offset(seldom), 0);
+    }
+
+    [Fact]
+    public void TheThreeSpeeds_AreSlowMediumFast()
+    {
+        float Moved(LabelScrollSpeed speed)
+        {
+            using ThemedLabel label = Create(scroll: false);
+            label.ScrollSpeed = speed;
+            label.ScrollWhenTooLong = true;
+            Tick(label, 2200);
+            Tick(label, 1000);
+
+            return Offset(label);
+        }
+
+        Assert.Equal(25f, Moved(LabelScrollSpeed.Slow), 0);
+        Assert.Equal(45f, Moved(LabelScrollSpeed.Medium), 0);
+        Assert.Equal(90f, Moved(LabelScrollSpeed.Fast), 0);
+    }
+
+    // Lets time pass in steps until the label's text has got to where it should.
+    private void RunUntil(ThemedLabel label, Func<bool> reached)
+    {
+        for (int i = 0; i < 400 && !reached(); i++)
+            Tick(label, 50);
+
+        Assert.True(reached(), "the text did not get there");
+    }
+
+    [Fact]
+    public void AtTheEnd_TheTextRests_ThenMovesBack_AndRestsAtTheStartAgain()
+    {
+        using ThemedLabel label = Create(scroll: false);
+        label.ScrollSpeed = LabelScrollSpeed.Fast;
+        label.EdgePause = LabelScrollPause.Short;
+        label.ScrollWhenTooLong = true;
+
+        // The pause at the start (1 second), then it moves to the end.
+        Tick(label, 1000);
+        Assert.Equal(0f, Offset(label));
+        RunUntil(label, () => Offset(label) >= MaxOffset(label));
+        Assert.Equal(MaxOffset(label), (int)Offset(label));
+
+        // It rests at the end for the pause and does not move.
+        Tick(label, 500);
+        Assert.Equal(MaxOffset(label), (int)Offset(label));
+
+        // The pause is over: it moves back.
+        Tick(label, 600);
+        Assert.InRange(Offset(label), 1f, MaxOffset(label) - 1f);
+        RunUntil(label, () => Offset(label) <= 0f);
+
+        // At the start it rests again, then goes forward.
+        Tick(label, 500);
+        Assert.Equal(0f, Offset(label));
+        Tick(label, 600);
+        Assert.InRange(Offset(label), 1f, MaxOffset(label) - 1f);
+    }
+
+    [Fact]
+    public void TheThreePauses_AreShortMediumLong()
+    {
+        // How long the text rests at the start, found by letting time pass until it moves.
+        int Rest(LabelScrollPause pause)
+        {
+            using ThemedLabel label = Create(scroll: false);
+            label.EdgePause = pause;
+            label.ScrollWhenTooLong = true;
+            int rested = 0;
+
+            while (rested < 10000)
+            {
+                Tick(label, 100);
+                rested += 100;
+
+                if (Offset(label) > 0f)
+                    break;
+            }
+
+            return rested;
+        }
+
+        Assert.InRange(Rest(LabelScrollPause.Short), 1000, 1200);
+        Assert.InRange(Rest(LabelScrollPause.Medium), 2200, 2400);
+        Assert.InRange(Rest(LabelScrollPause.Long), 4000, 4200);
+    }
+
+    [Fact]
+    public void ATextThatFits_StandsStill_WithoutATimer()
+    {
+        using ThemedLabel label = Create(text: "Short");
+
+        Assert.Equal(0, MaxOffset(label));
+        Assert.False(Timer(label).Enabled);
+    }
+
+    [Fact]
+    public void WhenTheLabelBecomesWideEnough_ItStopsMoving_AndWhenNarrowAgain_StartsAnew()
+    {
+        using ThemedLabel label = Create();
+        Tick(label, 2200);
+        Tick(label, 500);
+        Assert.True(Offset(label) > 0f);
+
+        label.Width = 1000;
+        Assert.Equal(0, MaxOffset(label));
+        Assert.Equal(0f, Offset(label));
+        Assert.False(Timer(label).Enabled);
+
+        label.Width = 120;
+        Assert.True(MaxOffset(label) > 0);
+        Assert.True(Timer(label).Enabled);
+        Assert.Equal(0f, Offset(label));
+    }
+
+    [Fact]
+    public void ANewText_ANewFont_AndANewPadding_StartTheMovementOver()
+    {
+        using ThemedLabel label = Create();
+        Tick(label, 2200);
+        Tick(label, 500);
+
+        label.Text = LongText + " and longer";
+        Assert.Equal(0f, Offset(label));
+
+        Tick(label, 2200);
+        Tick(label, 500);
+        label.Font = UIFonts.Title;
+        Assert.Equal(0f, Offset(label));
+
+        Tick(label, 2200);
+        Tick(label, 500);
+        label.Padding = new Padding(10, 0, 10, 0);
+        Assert.Equal(0f, Offset(label));
+    }
+
+    [Fact]
+    public void AfterAChange_TheTextRestsFirst()
+    {
+        using ThemedLabel label = Create();
+        label.Text = LongText + " again";
+
+        Tick(label, 2000);
+
+        Assert.Equal(0f, Offset(label));
+    }
+
+    [Fact]
+    public void ADisabledLabel_DoesNotMove_AndStopsItsTimer()
+    {
+        using ThemedLabel label = Create();
+        Tick(label, 2200);
+        Tick(label, 500);
+
+        label.Enabled = false;
+
+        Assert.Equal(0, MaxOffset(label));
+        Assert.Equal(0f, Offset(label));
+        Assert.False(Timer(label).Enabled);
+
+        label.Enabled = true;
+
+        Assert.True(Timer(label).Enabled);
+    }
+
+    [Fact]
+    public void AHiddenLabel_HasNoTimerRunning()
+    {
+        using ThemedLabel label = Create();
+
+        label.Visible = false;
+        Assert.False(Timer(label).Enabled);
+
+        label.Visible = true;
+        Assert.True(Timer(label).Enabled);
+    }
+
+    [Fact]
+    public void ALabelThatIsDisposed_GivesItsTimerBack()
+    {
+        ThemedLabel label = Create();
+        System.Windows.Forms.Timer timer = Timer(label);
+
+        label.Dispose();
+
+        Assert.False(timer.Enabled);
+        Assert.Null(Record.Exception(() => label.ScrollWhenTooLong = false));
+    }
+
+    [Fact]
+    public void AnAutoSizedLabel_AndATextOfSeveralLines_DoNotMove()
+    {
+        using ThemedLabel autoSized = Create();
+        autoSized.AutoSize = true;
+        autoSized.Text = LongText + " and more";
+
+        using ThemedLabel lines = Create(text: LongText + "\nSecond line");
+
+        Assert.Equal(0, MaxOffset(autoSized));
+        Assert.Equal(0, MaxOffset(lines));
+    }
+
+    [Fact]
+    public void TheMovingText_IsPaintedFurtherLeft_AsItMoves_AndStaysInsideTheLabel()
+    {
+        using ThemedLabel label = Create();
+        label.Padding = new Padding(10, 0, 10, 0);
+        using Bitmap start = Paint(label);
+
+        Tick(label, 2200);
+        Tick(label, 2000);
+        using Bitmap later = Paint(label);
+
+        Assert.False(Same(start, later), "the picture did not change as the text moved");
+
+        // Nothing is painted in the padding, at the left and at the right.
+        for (int y = 0; y < later.Height; y++)
+        {
+            for (int x = 0; x < 10; x++)
+            {
+                Assert.True(later.GetPixel(x, y) == later.GetPixel(0, 0) || later.GetPixel(x, y).GetBrightness() < 0.2f, "ink in the left padding at " + x + "," + y);
+                Assert.True(later.GetPixel(later.Width - 1 - x, y).GetBrightness() < 0.2f, "ink in the right padding");
+            }
+        }
+    }
+
+    [Fact]
+    public void ADisabledLabel_LooksTheSame_WithOrWithoutTheScrolling()
+    {
+        using ThemedLabel scrolling = Create();
+        using ThemedLabel still = Create(scroll: false);
+        scrolling.Enabled = still.Enabled = false;
+
+        using Bitmap first = Paint(scrolling);
+        using Bitmap second = Paint(still);
+
+        Assert.True(Same(first, second));
+    }
+
+    [Fact]
+    public void AnUnknownSpeedOrPause_IsTakenAsTheMediumOne()
+    {
+        Assert.Equal(45f, ((LabelScrollSpeed)99).ToPixelsPerSecond());
+        Assert.Equal(2200, ((LabelScrollPause)99).ToMilliseconds());
+    }
+
+    [Fact]
+    public void TheThreeSpeedsAndThePauses_AreInOrder()
+    {
+        Assert.True(LabelScrollSpeed.Slow.ToPixelsPerSecond() < LabelScrollSpeed.Medium.ToPixelsPerSecond());
+        Assert.True(LabelScrollSpeed.Medium.ToPixelsPerSecond() < LabelScrollSpeed.Fast.ToPixelsPerSecond());
+        Assert.True(LabelScrollPause.Short.ToMilliseconds() < LabelScrollPause.Medium.ToMilliseconds());
+        Assert.True(LabelScrollPause.Medium.ToMilliseconds() < LabelScrollPause.Long.ToMilliseconds());
+    }
+
+    [Fact]
+    public void TheDefaults_AreTheMediumOnes_AndTheScrollingIsOff()
+    {
+        using ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+
+        Assert.Equal(LabelScrollSpeed.Medium, label.ScrollSpeed);
+        Assert.Equal(LabelScrollPause.Medium, label.EdgePause);
+        Assert.False(label.ScrollWhenTooLong);
+        Assert.Equal(1, (int)LabelScrollSpeed.Medium);
+        Assert.Equal(1, (int)LabelScrollPause.Medium);
+    }
+
+    [Fact]
+    public void AllFourKinds_CanScroll()
+    {
+        foreach (ThemedLabel label in new[]
+        {
+            UIStyles.Labels.CreateStandard(LongText), UIStyles.Labels.CreatePrimary(LongText),
+            UIStyles.Labels.CreateTitle(LongText), UIStyles.Labels.CreateMuted(LongText)
+        })
+        {
+            using (label)
+            {
+                label.Size = new Size(120, 24);
+                label.ScrollWhenTooLong = true;
+
+                Assert.True(label.GetPrivateField<int>("_maxOffset") >= 0);
+            }
+        }
+    }
+}

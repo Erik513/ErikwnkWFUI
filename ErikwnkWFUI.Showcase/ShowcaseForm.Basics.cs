@@ -350,6 +350,35 @@ namespace ErikwnkWFUI.Showcase
             AddLabelRow(table, "CreateStandard(colors)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
             AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
             AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));
+
+            // A text that is too long for its label moves back and forth instead of ending in an ellipsis.
+            const string longText = "This text is much longer than the label it is shown in, so it rests at its start, moves to its end, rests there and moves back again - and a label that is disabled shows the start with an ellipsis instead.";
+
+            AddLabelRow(table, "CreateStandard (scrolling)", longText, text =>
+            {
+                ThemedLabel label = UIStyles.Labels.CreateStandard(text);
+                label.ScrollWhenTooLong = true;
+
+                return label;
+            });
+
+            AddLabelRow(table, "CreateTitle (scrolling)", longText, text =>
+            {
+                ThemedLabel label = UIStyles.Labels.CreateTitle(text);
+                label.ScrollWhenTooLong = true;
+
+                return label;
+            });
+
+            AddLabelRow(table, "CreatePrimary (fast, short pause)", longText, text =>
+            {
+                ThemedLabel label = UIStyles.Labels.CreatePrimary(text);
+                label.ScrollWhenTooLong = true;
+                label.ScrollSpeed = LabelScrollSpeed.Fast;
+                label.EdgePause = LabelScrollPause.Short;
+
+                return label;
+            });
         }
 
         // One row: the label, and the same label disabled in the second column.

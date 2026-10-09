@@ -27,32 +27,32 @@ namespace ErikwnkWFUI
             /// <see cref="System.Drawing.Color"/>. The text takes the main color of the set,
             /// lightened or darkened where the page behind it needs that to read.
             /// </param>
-            public static Label CreateStandard(string text = "", UIColorSet colors = null)
+            public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null)
             {
                 return UILabelFactory.CreateStandard(text, colors);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
-            public static Label CreatePrimary(string text = "")
+            public static ThemedLabel CreatePrimary(string text = "")
             {
                 return UILabelFactory.CreatePrimary(text);
             }
 
             /// <summary>A heading: bold and larger, centered.</summary>
-            public static Label CreateTitle(string text = "")
+            public static ThemedLabel CreateTitle(string text = "")
             {
                 return UILabelFactory.CreateTitle(text);
             }
 
             /// <summary>De-emphasized text: smaller and dimmer than the standard one.</summary>
-            public static Label CreateMuted(string text = "")
+            public static ThemedLabel CreateMuted(string text = "")
             {
                 return UILabelFactory.CreateMuted(text);
             }
 
             /// <summary>The old name of <see cref="CreateStandard"/>.</summary>
             [Obsolete("Use CreateStandard.")]
-            public static Label CreateNormal(string text = "")
+            public static ThemedLabel CreateNormal(string text = "")
             {
                 return UILabelFactory.CreateStandard(text);
             }

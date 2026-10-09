@@ -33,7 +33,7 @@ using (var form = new StyledForm("My App"))
 ```
 
 Everything goes through `UIStyles` - `UIStyles.Buttons.CreateStandard(...)`,
-`UIStyles.Labels.CreateNormal(...)`, `UIStyles.ToggleSwitches.CreateStandard(...)`,
+`UIStyles.Labels.CreateStandard(...)`, `UIStyles.ToggleSwitches.CreateStandard(...)`,
 and so on. Start there and let IntelliSense guide you through what's
 available; each nested class (`Buttons`, `Labels`, `Panels`, ...) has a
 one-line summary of what it's for.
