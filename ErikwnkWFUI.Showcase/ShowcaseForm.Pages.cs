@@ -195,7 +195,7 @@ namespace ErikwnkWFUI.Showcase
             strip.Dock = DockStyle.Top;
             strip.Padding = new Padding(16, 12, 16, 12);
 
-            Label label = UIStyles.Labels.CreateNormal(text);
+            Label label = UIStyles.Labels.CreateStandard(text);
             label.AutoSize = false;
             label.AutoEllipsis = false;
             label.TextAlign = ContentAlignment.TopLeft;

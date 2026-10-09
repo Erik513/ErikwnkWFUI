@@ -215,13 +215,13 @@ namespace ErikwnkWFUI.Forms
             FlowLayoutPanel layout;
             Panel panel = CreateContentPanel(out layout);
 
-            Label headline = UILabelFactory.CreateNormal(UIStrings.Get("UpdateAvailable.Message"));
+            Label headline = UILabelFactory.CreateStandard(UIStrings.Get("UpdateAvailable.Message"));
             headline.AutoSize = true;
             headline.Font = UIFonts.Title;
             headline.ForeColor = UIColors.TextPrimary;
             headline.Margin = new Padding(0, 0, 0, 10);
 
-            Label versionLine = UILabelFactory.CreateNormal(
+            Label versionLine = UILabelFactory.CreateStandard(
                 "v" + _currentVersion + "  →  v" + _latestVersion);
             versionLine.AutoSize = true;
             versionLine.Font = UIFonts.Normal;
@@ -239,7 +239,7 @@ namespace ErikwnkWFUI.Forms
             FlowLayoutPanel layout;
             Panel panel = CreateContentPanel(out layout);
 
-            _progressStatusLabel = UILabelFactory.CreateNormal(string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 0));
+            _progressStatusLabel = UILabelFactory.CreateStandard(string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 0));
             _progressStatusLabel.AutoSize = true;
             _progressStatusLabel.Font = UIFonts.Normal;
             _progressStatusLabel.ForeColor = UIColors.TextPrimary;

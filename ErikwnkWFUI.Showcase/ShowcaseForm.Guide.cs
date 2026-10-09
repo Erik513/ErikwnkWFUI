@@ -128,7 +128,7 @@ namespace ErikwnkWFUI.Showcase
             panel.Dock = DockStyle.Fill;
             panel.Padding = new Padding(14, 10, 14, 10);
 
-            Label label = UIStyles.Labels.CreateNormal(text);
+            Label label = UIStyles.Labels.CreateStandard(text);
             label.AutoSize = false;
             label.AutoEllipsis = false;
             label.Font = font;
@@ -151,7 +151,7 @@ namespace ErikwnkWFUI.Showcase
             block.Dock = DockStyle.Top;
             block.Padding = padding;
 
-            Label label = UIStyles.Labels.CreateNormal(text);
+            Label label = UIStyles.Labels.CreateStandard(text);
             label.AutoSize = false;
             label.AutoEllipsis = false;
             label.TextAlign = ContentAlignment.TopLeft;

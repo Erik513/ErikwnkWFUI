@@ -8,7 +8,7 @@ namespace ErikwnkWFUI.Factories
     {
         public static Label CreateTitle(string text = "")
         {
-            return new OwnerDrawLabel(UIColors.TextPrimary)
+            return new OwnerDrawLabel(UIColors.TextPrimary, null)
             {
                 Text = text ?? "",
                 Font = UIFonts.Title,
@@ -21,9 +21,9 @@ namespace ErikwnkWFUI.Factories
             };
         }
 
-        public static Label CreateNormal(string text = "")
+        public static Label CreateStandard(string text = "", UIColorSet colors = null)
         {
-            return new OwnerDrawLabel(UIColors.TextSecondary)
+            return new OwnerDrawLabel(UIColors.TextSecondary, colors)
             {
                 Text = text ?? "",
                 Font = UIFonts.Normal,
@@ -37,9 +37,15 @@ namespace ErikwnkWFUI.Factories
             };
         }
 
+        // The Standard one in the current accent - the primary color set.
+        public static Label CreatePrimary(string text = "")
+        {
+            return CreateStandard(text, UIColors.PrimarySet);
+        }
+
         public static Label CreateMuted(string text = "")
         {
-            return new OwnerDrawLabel(UIColors.TextMuted)
+            return new OwnerDrawLabel(UIColors.TextMuted, null)
             {
                 Text = text ?? "",
                 Font = UIFonts.Small,
@@ -64,11 +70,16 @@ namespace ErikwnkWFUI.Factories
         // across every control type and both themes.
         private sealed class OwnerDrawLabel : Label
         {
-            private readonly Color _enabledForeColor;
+            // The least contrast the text of a label with a color set has against what is behind it.
+            private const double TextContrast = 4.5;
 
-            public OwnerDrawLabel(Color enabledForeColor)
+            private readonly Color _enabledForeColor;
+            private readonly UIColorSet _colors;
+
+            public OwnerDrawLabel(Color enabledForeColor, UIColorSet colors)
             {
                 _enabledForeColor = enabledForeColor;
+                _colors = colors;
 
                 SetStyle(
                     ControlStyles.AllPaintingInWmPaint |
@@ -103,7 +114,7 @@ namespace ErikwnkWFUI.Factories
                 using (SolidBrush eraseBrush = new SolidBrush(GetEffectiveBackColor()))
                     g.FillRectangle(eraseBrush, ClientRectangle);
 
-                Color textColor = Enabled ? _enabledForeColor : UIColors.DisabledGray;
+                Color textColor = GetTextColor();
 
                 TextFormatFlags flags = ToTextFormatFlags(TextAlign);
 
@@ -131,6 +142,21 @@ namespace ErikwnkWFUI.Factories
 
                 // Deliberately no base.OnPaint(e) call - see the class
                 // comment above.
+            }
+
+            // Disabled, always the one gray of the library. With a color set the text takes the
+            // main color of the set (the one its controls show hovered), lightened or darkened
+            // where the page behind it needs that to read; the page is looked at when the label
+            // is painted, so a theme change is followed.
+            internal Color GetTextColor()
+            {
+                if (!Enabled)
+                    return UIColors.DisabledGray;
+
+                if (_colors == null)
+                    return _enabledForeColor;
+
+                return UIColors.EnsureContrast(_colors.Hover, GetEffectiveBackColor(), TextContrast);
             }
 
             private Color GetEffectiveBackColor()

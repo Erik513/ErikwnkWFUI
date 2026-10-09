@@ -203,7 +203,7 @@ namespace ErikwnkWFUI.Showcase
             flow.WrapContents = false;
             flow.Margin = new Padding(0);
 
-            Label themeLabel = UIStyles.Labels.CreateNormal("Theme:");
+            Label themeLabel = UIStyles.Labels.CreateStandard("Theme:");
             themeLabel.AutoSize = true;
             themeLabel.Margin = new Padding(0, 18, 8, 0);
             flow.Controls.Add(themeLabel);
@@ -230,7 +230,7 @@ namespace ErikwnkWFUI.Showcase
             };
             flow.Controls.Add(lightButton);
 
-            Label accentLabel = UIStyles.Labels.CreateNormal("Accent:");
+            Label accentLabel = UIStyles.Labels.CreateStandard("Accent:");
             accentLabel.AutoSize = true;
             accentLabel.Margin = new Padding(0, 18, 8, 0);
             flow.Controls.Add(accentLabel);

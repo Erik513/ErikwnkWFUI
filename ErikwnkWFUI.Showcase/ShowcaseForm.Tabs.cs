@@ -332,7 +332,7 @@ namespace ErikwnkWFUI.Showcase
 
         private static System.Windows.Forms.Label CreateTabPageLabel(string text)
         {
-            System.Windows.Forms.Label label = UIStyles.Labels.CreateNormal(text);
+            System.Windows.Forms.Label label = UIStyles.Labels.CreateStandard(text);
             label.AutoSize = true;
             label.Location = new System.Drawing.Point(10, 10);
             return label;

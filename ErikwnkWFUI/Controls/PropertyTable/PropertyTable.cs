@@ -275,7 +275,7 @@ namespace ErikwnkWFUI.Controls
 
         private Label CreateRowLabel(string text)
         {
-            Label label = Labels.CreateNormal(text ?? "");
+            Label label = Labels.CreateStandard(text ?? "");
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;

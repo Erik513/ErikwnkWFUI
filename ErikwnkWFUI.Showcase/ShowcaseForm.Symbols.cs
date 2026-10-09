@@ -73,7 +73,7 @@ namespace ErikwnkWFUI.Showcase
                 cell.Size = new Size(SymbolCellWidth, SymbolCellHeight);
                 cell.Margin = new Padding(0, 0, 4, 4);
 
-                Label glyph = UIStyles.Labels.CreateNormal(all[name]);
+                Label glyph = UIStyles.Labels.CreateStandard(all[name]);
                 glyph.AutoEllipsis = false;
                 glyph.Font = new Font(UIStyles.Symbols.GetFontName(all[name]), 20f);
                 glyph.TextAlign = ContentAlignment.MiddleCenter;

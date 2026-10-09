@@ -243,7 +243,7 @@ namespace ErikwnkWFUI.Forms
 
         private Label CreateMessageLabel()
         {
-            Label label = UILabelFactory.CreateNormal(_message);
+            Label label = UILabelFactory.CreateStandard(_message);
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleCenter;

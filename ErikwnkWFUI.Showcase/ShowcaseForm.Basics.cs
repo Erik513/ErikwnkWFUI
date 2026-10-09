@@ -345,20 +345,21 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddLabelsSection(PropertyTable table)
         {
-            Label title = UIStyles.Labels.CreateTitle("Title label");
-            Label titleDisabled = UIStyles.Labels.CreateTitle("Title label");
-            titleDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateTitle", title, titleDisabled);
+            AddLabelRow(table, "CreateStandard", "Standard body text", text => UIStyles.Labels.CreateStandard(text));
+            AddLabelRow(table, "CreatePrimary", "Body text in the accent color", text => UIStyles.Labels.CreatePrimary(text));
+            AddLabelRow(table, "CreateStandard(colors)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
+            AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
+            AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));
+        }
 
-            Label normal = UIStyles.Labels.CreateNormal("Normal body text");
-            Label normalDisabled = UIStyles.Labels.CreateNormal("Normal body text");
-            normalDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateNormal", normal, normalDisabled);
+        // One row: the label, and the same label disabled in the second column.
+        private void AddLabelRow(PropertyTable table, string name, string text, Func<string, Label> create)
+        {
+            Label label = create(text);
+            Label disabled = create(text);
+            disabled.Enabled = false;
 
-            Label muted = UIStyles.Labels.CreateMuted("Muted / de-emphasized text");
-            Label mutedDisabled = UIStyles.Labels.CreateMuted("Muted / de-emphasized text");
-            mutedDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateMuted", muted, mutedDisabled);
+            AddTwoColumnRow(table, name, label, disabled);
         }
 
         private void AddPanelsSection(PropertyTable table)
@@ -373,7 +374,7 @@ namespace ErikwnkWFUI.Showcase
 
             foreach ((string name, Panel panel) in swatches)
             {
-                Label caption = UIStyles.Labels.CreateNormal(name);
+                Label caption = UIStyles.Labels.CreateStandard(name);
                 caption.AutoSize = true;
                 caption.Location = new Point(6, 6);
                 caption.BackColor = Color.Transparent;
