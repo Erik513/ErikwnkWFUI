@@ -212,26 +212,51 @@ public class ToastFactoryTests : IDisposable
         Assert.True(shortfalls.Count == 0, string.Join(", ", shortfalls));
     }
 
+    // The toast does not read the theme: its colors come from its color set (or the accent), so
+    // a light window gets the same toast as a dark one - every set, the primary one, the title
+    // and the symbol included.
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void TheToast_LooksTheSame_InBothThemes(bool lightTheme)
     {
+        Form host = Host();
+        List<UIColorSet?> sets = new List<UIColorSet?> { null, UIStyles.Colors.Sets.Primary };
+
+        foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
+            sets.Add((UIColorSet)property.GetValue(null)!);
+
         try
         {
             UIColors.ApplyTheme(UIThemes.Dark);
-            UIStyles.Toasts.ShowStandard("Done", Host(), UIStyles.Colors.Sets.Orange);
-            Color dark = Current()!.BackColor;
-            Current()!.Dispose();
+            List<Color[]> dark = sets.Select(set => Look(host, set)).ToList();
 
             UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
-            UIStyles.Toasts.ShowStandard("Done", _host!, UIStyles.Colors.Sets.Orange);
+            List<Color[]> other = sets.Select(set => Look(host, set)).ToList();
 
-            Assert.Equal(dark, Current()!.BackColor);
+            for (int i = 0; i < sets.Count; i++)
+                Assert.Equal(dark[i], other[i]);
         }
         finally
         {
             UIColors.ApplyTheme(UIThemes.Dark);
         }
+    }
+
+    // Background, message, title and symbol colors of a toast in this set.
+    private static Color[] Look(Form host, UIColorSet? set)
+    {
+        ToastForm.ShowToast(new InfoPopupSection("Title", "Message"), host, set, icon: ToastIcon.Info);
+        ToastForm toast = Current()!;
+        Color[] look =
+        {
+            toast.BackColor,
+            MessageColor(toast),
+            toast.GetPrivateField<Label>("_titleLabel")!.ForeColor,
+            IconColor(toast)
+        };
+        toast.Dispose();
+
+        return look;
     }
 }
