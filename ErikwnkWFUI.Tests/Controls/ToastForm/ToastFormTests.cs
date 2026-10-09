@@ -59,7 +59,7 @@ public class ToastFormTests : IDisposable
 
         return ((System.Collections.IEnumerable)pending[owner]!)
             .Cast<object>()
-            .Select(item => (string)item.GetType().GetField("Message")!.GetValue(item)!)
+            .Select(item => ((InfoPopupSection)item.GetType().GetField("Content")!.GetValue(item)!).Text!)
             .ToArray();
     }
 

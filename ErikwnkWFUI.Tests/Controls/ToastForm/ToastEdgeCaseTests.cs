@@ -68,7 +68,9 @@ public class ToastEdgeCaseTests : IDisposable
 
         ToastForm.ShowToast("", host);
         ToastForm.ShowToast("   ", host);
-        ToastForm.ShowToast(null!, host);
+        ToastForm.ShowToast((string)null!, host);
+        ToastForm.ShowToast((InfoPopupSection)null!, host);
+        ToastForm.ShowToast(new InfoPopupSection("  ", null), host);
 
         Assert.Null(Current());
     }

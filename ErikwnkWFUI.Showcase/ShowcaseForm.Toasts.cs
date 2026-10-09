@@ -44,6 +44,36 @@ namespace ErikwnkWFUI.Showcase
                     delay == PopupDelay.Instant ? "Instant (default)" : delay.ToString(),
                     CreateToastButton("Show toast", 160, null, PopupTransparency.Medium, PopupDuration.Medium, delay));
             }
+
+            table.AddSection("Content");
+
+            table.AddRow("With a title", CreateContentToastButton(null,
+                new InfoPopupSection("Saved", "The file was written to disk.")));
+
+            table.AddRow("A long message", CreateContentToastButton(null,
+                new InfoPopupSection("Saved", "The file was written to disk, and a copy of it was put into the backup folder next to it, so nothing is lost.")));
+
+            table.AddRow("Own colors", CreateContentToastButton(null,
+                new InfoPopupSection("A red title", "A text in its own light green.")
+                {
+                    HeaderColor = Color.FromArgb(255, 110, 110),
+                    TextColor = Color.FromArgb(150, 255, 150)
+                }));
+
+            table.AddRow("On a light color", CreateContentToastButton(UIStyles.Colors.Sets.Yellow,
+                new InfoPopupSection("Light background", "The text turns black when white would not read.")));
+        }
+
+        private Button CreateContentToastButton(UIColorSet colors, InfoPopupSection content)
+        {
+            Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
+
+            button.Click += delegate
+            {
+                ToastForm.ShowToast(content, this, colors);
+            };
+
+            return button;
         }
 
         private Button CreateToastButton(string caption, int width, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)

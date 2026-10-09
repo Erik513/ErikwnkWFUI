@@ -10,8 +10,8 @@ namespace ErikwnkWFUI.Forms
 {
     /// <summary>
     /// A small, rounded, self-dismissing confirmation toast (checkmark +
-    /// message), closing itself after a short, medium or long <see cref="PopupDuration"/> -
-    /// call the static <see cref="ShowToast"/> rather than
+    /// an optional title and the message), closing itself after a short, medium or long <see cref="PopupDuration"/> -
+    /// call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay)"/> rather than
     /// constructing this directly. Only one toast shows at a time; showing
     /// a new one closes whatever's currently up. The toast belongs to its window: it is
     /// shown only while that window is in front, stays above its window but not above other
@@ -26,6 +26,9 @@ namespace ErikwnkWFUI.Forms
     /// waiting toasts with it.
     ///
     /// <para>
+    /// A toast without a title and without a message shows nothing. The title is one line (an
+    /// ellipsis ends what is too long), in bold; title and message may have their own colors
+    /// (<see cref="InfoPopupSection"/>, as in the info popup).
     /// A message without text shows no toast. A call from another thread is carried over to
     /// the thread of the window. The toast is placed inside the window (and on the screen) as
     /// far as it fits; a window narrower than the toast gets it at its left edge. A long message
@@ -35,9 +38,9 @@ namespace ErikwnkWFUI.Forms
     /// </para>
     /// <para>
     /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text,
-    /// the time it stays (<see cref="Duration"/>) and the colors are offered. Not offered: a
-    /// title, other icons than the check mark (warning, error), an event for a click on the
-    /// toast or for its closing, and a toast that stays until it is clicked.
+    /// a title, the colors of both, and the time it stays (<see cref="Duration"/>) are
+    /// offered. Not offered: other icons than the check mark (warning, error), an event for a
+    /// click on the toast or for its closing, and a toast that stays until it is clicked.
     /// </para>
     /// </remarks>
     public class ToastForm : Form
@@ -56,7 +59,7 @@ namespace ErikwnkWFUI.Forms
 
         private sealed class PendingToast
         {
-            public string Message;
+            public InfoPopupSection Content;
             public DateTime Time;
             public PopupTransparency Transparency;
             public PopupDuration Duration;
@@ -70,8 +73,10 @@ namespace ErikwnkWFUI.Forms
 
         private readonly OwnerFollower _follower = new OwnerFollower();
         private Timer _closeTimer;
+        private Label _titleLabel;
         private Label _messageLabel;
         private Label _successIcon;
+        private InfoPopupSection _content = new InfoPopupSection(null, null);
         private Panel _contentPanel;
 
         public ToastForm()
@@ -100,33 +105,55 @@ namespace ErikwnkWFUI.Forms
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant)
         {
-            if (owner == null || owner.IsDisposed || string.IsNullOrWhiteSpace(message))
+            ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay);
+        }
+
+        /// <summary>Like the call with a message, but with a title above the message and, if wanted, own colors for each (<see cref="InfoPopupSection.HeaderColor"/> for the title, <see cref="InfoPopupSection.TextColor"/> for the message). A part left empty is not shown; with neither there is no toast.</summary>
+        /// <param name="content">The title (<see cref="InfoPopupSection.Header"/>) and the message (<see cref="InfoPopupSection.Text"/>).</param>
+        /// <param name="owner">The window the toast belongs to and is shown over.</param>
+        /// <param name="colors">A color set for the background, as for the call with a message.</param>
+        /// <param name="transparency">How see-through the toast is; medium by default.</param>
+        /// <param name="duration">How long the toast stays; medium by default.</param>
+        /// <param name="delay">How long to wait before the toast is shown; not at all by default.</param>
+        public static void ShowToast(
+            InfoPopupSection content,
+            Form owner,
+            UIColorSet colors = null,
+            PopupTransparency transparency = PopupTransparency.Medium,
+            PopupDuration duration = PopupDuration.Medium,
+            PopupDelay delay = PopupDelay.Instant)
+        {
+            InfoPopupSection[] kept = InfoPopupSection.Normalize(new[] { content });
+
+            if (owner == null || owner.IsDisposed || kept.Length == 0)
                 return;
+
+            content = kept[0];
 
             // A toast is often asked for when a task has finished, on another thread: it is shown
             // on the thread of its window, where it has its message loop and its timer.
             if (owner.IsHandleCreated && owner.InvokeRequired)
             {
-                owner.BeginInvoke(new Action(() => ShowToast(message, owner, colors, transparency, duration, delay)));
+                owner.BeginInvoke(new Action(() => ShowToast(content, owner, colors, transparency, duration, delay)));
 
                 return;
             }
 
             if (delay != PopupDelay.Instant)
             {
-                Schedule(message, owner, colors, transparency, duration, delay);
+                Schedule(content, owner, colors, transparency, duration, delay);
 
                 return;
             }
 
             if (!PopupSupport.CanShowOver(owner))
             {
-                Enqueue(message, owner, colors, transparency, duration);
+                Enqueue(content, owner, colors, transparency, duration);
 
                 return;
             }
 
-            ShowNow(message, owner, colors, transparency, duration);
+            ShowNow(content, owner, colors, transparency, duration);
         }
 
         /// <summary>
@@ -160,8 +187,11 @@ namespace ErikwnkWFUI.Forms
             if (_successIcon != null)
                 _successIcon.ForeColor = text;
 
+            if (_titleLabel != null)
+                _titleLabel.ForeColor = _content.HeaderColor.IsEmpty ? text : _content.HeaderColor;
+
             if (_messageLabel != null)
-                _messageLabel.ForeColor = text;
+                _messageLabel.ForeColor = _content.TextColor.IsEmpty ? text : _content.TextColor;
         }
 
         /// <summary>How long the toast stays before it closes itself.</summary>
@@ -200,7 +230,7 @@ namespace ErikwnkWFUI.Forms
         // The toasts that wait for their delay; one timer each, gone when it has fired.
         private static readonly List<Timer> _scheduled = new List<Timer>();
 
-        private static void Schedule(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
+        private static void Schedule(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay)
         {
             Timer timer = new Timer { Interval = delay.ToMilliseconds() };
             _scheduled.Add(timer);
@@ -210,13 +240,13 @@ namespace ErikwnkWFUI.Forms
                 timer.Stop();
                 _scheduled.Remove(timer);
                 timer.Dispose();
-                ShowToast(message, owner, colors, transparency, duration, PopupDelay.Instant);
+                ShowToast(content, owner, colors, transparency, duration, PopupDelay.Instant);
             };
 
             timer.Start();
         }
 
-        private static void ShowNow(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
+        private static void ShowNow(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
         {
             CloseCurrentToast();
 
@@ -228,7 +258,7 @@ namespace ErikwnkWFUI.Forms
             toast.Duration = duration;
             toast.Colors = colors;
 
-            toast.SetMessage(message);
+            toast.SetContent(content);
             toast.Location = PopupSupport.KeepInside(
                 GetToastLocation(owner, toast),
                 toast.Size,
@@ -242,7 +272,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(string message, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
+        private static void Enqueue(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration)
         {
             List<PendingToast> queue;
 
@@ -254,11 +284,11 @@ namespace ErikwnkWFUI.Forms
                 owner.FormClosed += OnOwnerClosed;
             }
 
-            // The same text twice in a row is one message.
-            if (queue.Count > 0 && queue[queue.Count - 1].Message == message)
+            // The same content twice in a row is one message.
+            if (queue.Count > 0 && InfoPopupSection.SameContent(new[] { queue[queue.Count - 1].Content }, new[] { content }))
                 return;
 
-            queue.Add(new PendingToast { Message = message, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors });
+            queue.Add(new PendingToast { Content = content, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors });
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -312,7 +342,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Message, owner, next.Colors, next.Transparency, next.Duration);
+            ShowNow(next.Content, owner, next.Colors, next.Transparency, next.Duration);
         }
 
         // The toast must not take the activation from the window it confirms something in.
@@ -371,9 +401,12 @@ namespace ErikwnkWFUI.Forms
             _contentPanel = CreateContentPanel();
 
             _successIcon = CreateSuccessIcon();
+            _titleLabel = CreateTitleLabel();
             _messageLabel = CreateMessageLabel();
 
+            // The one added last is docked first: the title at the top, then the message fills the rest.
             _contentPanel.Controls.Add(_messageLabel);
+            _contentPanel.Controls.Add(_titleLabel);
             _contentPanel.Controls.Add(_successIcon);
 
             Controls.Add(_contentPanel);
@@ -403,6 +436,23 @@ namespace ErikwnkWFUI.Forms
             };
         }
 
+        private Label CreateTitleLabel()
+        {
+            return new Label
+            {
+                Text = "",
+                Font = UIFonts.Title,
+                TextAlign = ContentAlignment.BottomLeft,
+                BackColor = Color.Transparent,
+                AutoSize = false,
+                Dock = DockStyle.Top,
+                Padding = new Padding(40, 0, 10, 0),
+                UseMnemonic = false,
+                AutoEllipsis = true,
+                Visible = false
+            };
+        }
+
         private Label CreateMessageLabel()
         {
             return new Label
@@ -426,11 +476,14 @@ namespace ErikwnkWFUI.Forms
             _closeTimer.Tick += OnCloseTimerTick;
         }
 
-        private void SetMessage(string message)
+        private void SetContent(InfoPopupSection content)
         {
-            _messageLabel.Text = string.IsNullOrWhiteSpace(message)
-                ? ""
-                : message;
+            _content = content;
+            _titleLabel.Text = content.Header ?? "";
+            _titleLabel.Visible = content.Header != null;
+            _messageLabel.Text = content.Text ?? "";
+            _messageLabel.TextAlign = content.Header != null ? ContentAlignment.TopLeft : ContentAlignment.MiddleLeft;
+            ApplyColors();
             FitToMessage();
         }
 
@@ -449,6 +502,7 @@ namespace ErikwnkWFUI.Forms
             _contentPanel.Padding = new Padding(Scaled(15, dpi), Scaled(10, dpi), Scaled(15, dpi), Scaled(10, dpi));
             _successIcon.Size = new Size(Scaled(30, dpi), Scaled(30, dpi));
             _messageLabel.Padding = new Padding(Scaled(40, dpi), 0, Scaled(10, dpi), 0);
+            _titleLabel.Padding = _messageLabel.Padding;
             FitToMessage();
         }
 
@@ -466,7 +520,17 @@ namespace ErikwnkWFUI.Forms
                 new Size(Math.Max(1, textWidth), int.MaxValue),
                 TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
 
-            int textHeight = Math.Min(measured.Height, lineHeight * MaxMessageLines);
+            // The title is one line, with a little room to the message below it.
+            int titleHeight = 0;
+
+            if (_content.Header != null)
+            {
+                titleHeight = TextRenderer.MeasureText("Ag", _titleLabel.Font, Size.Empty, TextFormatFlags.NoPadding).Height
+                    + Scaled(2, _dpi);
+                _titleLabel.Height = titleHeight;
+            }
+
+            int textHeight = titleHeight + Math.Min(measured.Height, lineHeight * MaxMessageLines);
             int height = Math.Max(Scaled(ToastHeight96, _dpi), textHeight + 2 * Scaled(20, _dpi));
 
             Size = new Size(width, height);
@@ -474,7 +538,8 @@ namespace ErikwnkWFUI.Forms
             // The room above and below the text is what is left of the height, less a little
             // slack (the label's lines are a bit higher than the measure), so the message shows
             // no more lines than its limit.
-            int vertical = Math.Max(0, (height - textHeight - Scaled(6, _dpi)) / 2);
+            int slack = string.IsNullOrEmpty(_messageLabel.Text) ? 0 : Scaled(6, _dpi);
+            int vertical = Math.Max(0, (height - textHeight - slack) / 2);
             _contentPanel.Padding = new Padding(_contentPanel.Padding.Left, vertical, _contentPanel.Padding.Right, vertical);
             _successIcon.Location = new Point(Scaled(10, _dpi), (height - _successIcon.Height) / 2);
         }

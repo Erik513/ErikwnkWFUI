@@ -32,7 +32,25 @@ namespace ErikwnkWFUI
                 UIToastFactory.ShowStandard(message, owner, colors, transparency, duration, delay);
             }
 
-            /// <summary>Like <see cref="ShowStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
+            /// <summary>Shows a toast in the neutral gray with a title above the message and, if wanted, own colors for each (see <see cref="InfoPopupSection"/>).</summary>
+            /// <param name="content">The title (<see cref="InfoPopupSection.Header"/>) and the message (<see cref="InfoPopupSection.Text"/>).</param>
+            /// <param name="owner">The window the toast belongs to and is shown over.</param>
+            /// <param name="colors">A color set for the background instead of the neutral gray.</param>
+            /// <param name="transparency">How see-through the toast is; medium by default.</param>
+            /// <param name="duration">How long it stays (1.5, 2.5 or 4 seconds); medium by default.</param>
+            /// <param name="delay">How long to wait before it is shown; not at all by default.</param>
+            public static void ShowStandard(
+                InfoPopupSection content,
+                Form owner,
+                UIColorSet colors = null,
+                PopupTransparency transparency = PopupTransparency.Medium,
+                PopupDuration duration = PopupDuration.Medium,
+                PopupDelay delay = PopupDelay.Instant)
+            {
+                UIToastFactory.ShowStandard(content, owner, colors, transparency, duration, delay);
+            }
+
+            /// <summary>Like <see cref="ShowStandard(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay)"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
             public static void ShowPrimary(
                 string message,
                 Form owner,
@@ -41,6 +59,17 @@ namespace ErikwnkWFUI
                 PopupDelay delay = PopupDelay.Instant)
             {
                 UIToastFactory.ShowPrimary(message, owner, transparency, duration, delay);
+            }
+
+            /// <summary>Like <see cref="ShowPrimary(string, Form, PopupTransparency, PopupDuration, PopupDelay)"/>, with a title and, if wanted, own colors for the title and the message.</summary>
+            public static void ShowPrimary(
+                InfoPopupSection content,
+                Form owner,
+                PopupTransparency transparency = PopupTransparency.Medium,
+                PopupDuration duration = PopupDuration.Medium,
+                PopupDelay delay = PopupDelay.Instant)
+            {
+                UIToastFactory.ShowPrimary(content, owner, transparency, duration, delay);
             }
         }
     }
