@@ -17,13 +17,14 @@ namespace ErikwnkWFUI.Controls
     /// or endlessly (<see cref="ScrollMode"/>, <see cref="Scroll"/>).
     /// </summary>
     /// <remarks>
-    /// The standard label does the painting - text, alignment, padding, ellipsis, mnemonic, border,
-    /// image, transparent background - with the <see cref="ForeColor"/> this class answers. Only one
-    /// thing it does not let us decide: a disabled label ignores its ForeColor and takes a fixed system
-    /// gray (set ForeColor to pure red, the disabled text is still that gray). So a disabled label alone
-    /// is painted here, in <c>UIColors.DisabledGray</c>, the one gray every other control uses for
-    /// "disabled", so that it reads the same in every control and both themes. The moving text is painted
-    /// here too: it needs a place of its own for every frame.
+    /// Who paints what: a label that is enabled and whose text stands still is painted by the standard label -
+    /// text, alignment, padding, ellipsis, mnemonic, border, image, transparent background - with the
+    /// <see cref="ForeColor"/> this class answers (a color set, or one that was set, or the color of its kind).
+    /// A <b>disabled</b> label is painted here: the standard one ignores its ForeColor when disabled and takes a
+    /// fixed system gray, so the text is drawn in <c>UIColors.DisabledGray</c>, the one gray every other control
+    /// uses for "disabled", and reads the same in every control and both themes. The <b>moving</b> text is
+    /// painted here as well, from a picture of its own that can be put between two pixels (see
+    /// <see cref="ScrollMode"/>); the picture is made and moved on the beat of <c>LabelAnimationClock</c>.
     /// </remarks>
     public sealed class ThemedLabel : Label
     {
@@ -57,6 +58,8 @@ namespace ErikwnkWFUI.Controls
         private LabelScrollDirection _scrollDirection = LabelScrollDirection.Left;
         private LabelScrollSeparator _scrollSeparator = LabelScrollSeparator.Dot;
         private bool _scrollPauseOnHover;
+
+        // Whether the mouse is on the label now (for the pause on hover).
         private bool _hovered;
 
         // ---- the movement ----
@@ -346,14 +349,16 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // One step of the movement; the time that has passed decides how far, so the speed does not
-        // depend on how often the clock manages to beat.
+        // One beat without the painting: what the tests call to let the clock beat when they want to look at
+        // the movement only.
         private void OnFrame(object sender, EventArgs e)
         {
             Step();
         }
 
-        // One step of the movement; whether the text has moved (then it is invalidated).
+        // One step of the movement, back and forth: it counts the time that has passed since the last step,
+        // so the speed does not depend on how often the clock manages to beat. Whether the text has moved
+        // (then it is invalidated and a picture is due).
         private bool Step()
         {
             long now = Milliseconds();
@@ -460,6 +465,8 @@ namespace ErikwnkWFUI.Controls
             Restart();
         }
 
+        // A label hidden by itself, or a window shown again, comes here; a window that is hidden does not tell
+        // its labels (see MakeFrame).
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -526,7 +533,8 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The picture of the text from the place it has moved to, shown only inside the label (the padding
-        // stays free). The place may lie between two pixels; the picture is then mixed between them.
+        // stays free). The place may lie between two pixels; the picture is then mixed between them. It is
+        // also where a changed UseMnemonic is noticed, because the label is not told about it.
         private void PaintMovingText(Graphics graphics)
         {
             Rectangle inner = new Rectangle(
@@ -602,6 +610,7 @@ namespace ErikwnkWFUI.Controls
             return Math.Max(0, (padded - bare) / 2);
         }
 
+        // The top of the picture: at the top, at the bottom or in the middle of the room, as TextAlign says.
         private int GetPictureTop(Rectangle inner, int height)
         {
             switch (GetVerticalFlag(TextAlign))
@@ -720,6 +729,8 @@ namespace ErikwnkWFUI.Controls
             return color;
         }
 
+        // What the text is read against: the color of the label, or - for a transparent one - of the first
+        // ancestor that has one, or the medium background of the theme where there is none.
         private Color GetEffectiveBackColor()
         {
             if (BackColor.A > 0)

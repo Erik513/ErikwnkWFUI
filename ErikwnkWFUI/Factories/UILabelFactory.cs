@@ -45,6 +45,7 @@ namespace ErikwnkWFUI.Factories
                 UseCompatibleTextRendering = false
             };
 
+            // Last: the movement needs the text, the font and the size to be there.
             label.Scroll = scroll;
 
             return label;

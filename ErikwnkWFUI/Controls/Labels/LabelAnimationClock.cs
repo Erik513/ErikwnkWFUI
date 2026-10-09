@@ -7,8 +7,9 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// The beat for the moving text of all labels: one thread that wakes with the display (about 60
-    /// times a second) and asks every label that moves for its next picture. A Windows Forms timer
+    /// The beat for the moving text of all labels: one thread that wakes with the display (as often as
+    /// the display shows a new picture, 60 times a second or more) and asks every label that moves for its
+    /// next picture. A Windows Forms timer
     /// cannot do that: it ticks about every 31 milliseconds, late and unevenly, behind everything else
     /// in the message queue, and the text then moves in jerks. The thread runs only while a label moves.
     /// </summary>

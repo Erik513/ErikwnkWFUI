@@ -72,6 +72,23 @@ var green = UIStyles.ComboBoxes.CreateStandard(colors: UIStyles.Colors.Sets.Gree
 var accent = UIStyles.ComboBoxes.CreatePrimary();
 ```
 
+## Labels
+
+`UIStyles.Labels` has `CreateStandard` (body text), `CreatePrimary` (the same in the
+accent color), `CreateTitle` (bold, larger, centered) and `CreateMuted` (quiet text);
+`CreateStandard`, `CreateTitle` and `CreateMuted` also take a color set. A text that is
+too long can move instead of ending in an ellipsis, back and forth or endlessly, by
+handing a `LabelScroll` to the factory:
+
+```csharp
+var back = UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth());
+var ticker = UIStyles.Labels.CreateStandard(text,
+    scroll: LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Dot));
+```
+
+The text moves smoothly on the beat of the display, stands still when it fits, and not at
+all where Windows has the animations switched off.
+
 ## Popups
 
 - **`UIStyles.Toasts`** (`ToastForm.ShowToast(message, window)`) - a small message
