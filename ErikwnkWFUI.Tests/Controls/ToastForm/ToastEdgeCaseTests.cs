@@ -193,8 +193,8 @@ public class ToastEdgeCaseTests : IDisposable
 
         foreach (string message in new[] { "One line", string.Join(" ", Enumerable.Repeat("many words in the message", 20)) })
         {
-            ToastForm.ShowToast(message, host);
-            Label icon = Current()!.GetPrivateField<Label>("_successIcon")!;
+            ToastForm.ShowToast(message, host, icon: ToastIcon.Success);
+            Label icon = Current()!.GetPrivateField<Label>("_iconLabel")!;
 
             Assert.Equal((Current()!.Height - icon.Height) / 2, icon.Top);
         }

@@ -55,7 +55,7 @@ public class ToastFactoryTests : IDisposable
 
     private static Color MessageColor(ToastForm toast) => toast.GetPrivateField<Label>("_messageLabel")!.ForeColor;
 
-    private static Color IconColor(ToastForm toast) => toast.GetPrivateField<Label>("_successIcon")!.ForeColor;
+    private static Color IconColor(ToastForm toast) => toast.GetPrivateField<Label>("_iconLabel")!.ForeColor;
 
     // What shows on the screen: the window, and the text on it, blended with the page behind.
     private static double Effective(ToastForm toast, Color page)

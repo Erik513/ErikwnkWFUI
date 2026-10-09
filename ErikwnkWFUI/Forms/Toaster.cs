@@ -25,16 +25,22 @@ namespace ErikwnkWFUI.Forms
         /// <summary>How long to wait before a toast is shown; not at all by default.</summary>
         public PopupDelay Delay { get; set; } = PopupDelay.Instant;
 
+        /// <summary>The symbol for the kind of message; none by default.</summary>
+        public ToastIcon Icon { get; set; } = ToastIcon.None;
+
+        /// <summary>Any other symbol instead of <see cref="Icon"/>, one of <c>UIStyles.Symbols</c>; null (the default) uses <see cref="Icon"/>.</summary>
+        public string CustomSymbol { get; set; }
+
         /// <summary>Shows a toast with this message near the bottom of <paramref name="owner"/>.</summary>
         public void Show(string message, Form owner)
         {
-            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay);
+            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol);
         }
 
         /// <summary>Shows a toast with a title and a message (and their own colors) near the bottom of <paramref name="owner"/>.</summary>
         public void Show(InfoPopupSection content, Form owner)
         {
-            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay);
+            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol);
         }
     }
 }

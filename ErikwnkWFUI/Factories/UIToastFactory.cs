@@ -12,9 +12,11 @@ namespace ErikwnkWFUI.Factories
             UIColorSet colors = null,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            ToastForm.ShowToast(message, owner, colors, transparency, duration, delay);
+            ToastForm.ShowToast(message, owner, colors, transparency, duration, delay, icon, symbol);
         }
 
         public static void ShowStandard(
@@ -23,9 +25,11 @@ namespace ErikwnkWFUI.Factories
             UIColorSet colors = null,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            ToastForm.ShowToast(content, owner, colors, transparency, duration, delay);
+            ToastForm.ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol);
         }
 
         public static void ShowPrimary(
@@ -33,27 +37,33 @@ namespace ErikwnkWFUI.Factories
             Form owner,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            ShowStandard(content, owner, UIColors.PrimarySet, transparency, duration, delay);
+            ShowStandard(content, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
         }
 
         public static Toaster CreateStandard(
             UIColorSet colors = null,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            return new Toaster { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay };
+            return new Toaster { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay, Icon = icon, CustomSymbol = symbol };
         }
 
         // The Standard one in the current accent - the primary color set.
         public static Toaster CreatePrimary(
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay);
+            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
         }
 
         // The Standard one in the current accent - the primary color set.
@@ -62,9 +72,11 @@ namespace ErikwnkWFUI.Factories
             Form owner,
             PopupTransparency transparency = PopupTransparency.Medium,
             PopupDuration duration = PopupDuration.Medium,
-            PopupDelay delay = PopupDelay.Instant)
+            PopupDelay delay = PopupDelay.Instant,
+            ToastIcon icon = ToastIcon.None,
+            string symbol = null)
         {
-            ShowStandard(message, owner, UIColors.PrimarySet, transparency, duration, delay);
+            ShowStandard(message, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
         }
     }
 }

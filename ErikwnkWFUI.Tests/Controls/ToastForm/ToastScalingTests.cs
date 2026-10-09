@@ -40,13 +40,13 @@ public class ToastScalingTests : IDisposable
     [InlineData(192, 700, 160)]
     public void TheSizeAndThePlacesInside_ScaleWithTheDpi(int dpi, int width, int height)
     {
-        using ToastForm toast = new ToastForm();
+        using ToastForm toast = new ToastForm { Symbol = ToastIcon.Success };
 
         toast.ApplyDpi(dpi);
 
         Assert.Equal(new Size(width, height), toast.Size);
-        Assert.Equal(new Size(Scaled(30, dpi), Scaled(30, dpi)), Part(toast, "_successIcon").Size);
-        Assert.Equal(new Point(Scaled(10, dpi), (height - Scaled(30, dpi)) / 2), Part(toast, "_successIcon").Location);
+        Assert.Equal(new Size(Scaled(30, dpi), Scaled(30, dpi)), Part(toast, "_iconLabel").Size);
+        Assert.Equal(new Point(Scaled(10, dpi), (height - Scaled(30, dpi)) / 2), Part(toast, "_iconLabel").Location);
         Assert.Equal(Scaled(40, dpi), Part(toast, "_messageLabel").Padding.Left);
     }
 

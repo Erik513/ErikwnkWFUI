@@ -59,6 +59,24 @@ namespace ErikwnkWFUI.Showcase
                     CreateToastButton("Show toast", 160, null, PopupTransparency.Medium, PopupDuration.Medium, delay));
             }
 
+            table.AddSection("Icon");
+
+            foreach (ToastIcon icon in new[] { ToastIcon.None, ToastIcon.Success, ToastIcon.Info, ToastIcon.Warning, ToastIcon.Error })
+            {
+                ToastIcon shown = icon;
+                string message = icon == ToastIcon.Success ? "The file was saved."
+                    : icon == ToastIcon.Info ? "A new version is available."
+                    : icon == ToastIcon.Warning ? "The disk is almost full."
+                    : icon == ToastIcon.Error ? "The file could not be saved."
+                    : "Sample toast message";
+                Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
+                button.Click += delegate { UIStyles.Toasts.ShowStandard(message, this, icon: shown); };
+                table.AddRow(icon == ToastIcon.None ? "None (default)" : icon.ToString(), button);
+            }
+
+            table.AddRow("Own symbol", CreateCustomSymbolButton(UIStyles.Symbols.Copy, "Copied to the clipboard."));
+            table.AddRow("Own symbol (Delete)", CreateCustomSymbolButton(UIStyles.Symbols.Delete, "The entry was deleted."));
+
             table.AddSection("Content");
 
             table.AddRow("With a title", CreateContentToastButton(null,
@@ -76,6 +94,18 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("On a light color", CreateContentToastButton(UIStyles.Colors.Sets.Yellow,
                 new InfoPopupSection("Light background", "The text turns black when white would not read.")));
+        }
+
+        private Button CreateCustomSymbolButton(string symbol, string message)
+        {
+            Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
+
+            button.Click += delegate
+            {
+                UIStyles.Toasts.ShowStandard(message, this, symbol: symbol);
+            };
+
+            return button;
         }
 
         private Button CreateToasterButton(Toaster toaster, string caption)
