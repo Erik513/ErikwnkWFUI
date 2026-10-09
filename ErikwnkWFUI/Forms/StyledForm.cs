@@ -166,12 +166,11 @@ namespace ErikwnkWFUI.Forms
                     AutoSize = false,
                     Margin = new Padding(0),
                     Padding = new Padding(0, 0, 10, 0),
-                    // Explicit, not left to the transparent-background
-                    // ancestor-walk every OwnerDrawLabel does - the strip's
-                    // own edges (outside the label's now AutoSize width)
-                    // would otherwise show through with the FlowLayoutPanel's
-                    // default gray SystemColors.Control instead of matching
-                    // the rest of the window.
+                    // Explicit, not left to the transparent background of the
+                    // label - the strip's own edges (outside the label's now
+                    // AutoSize width) would otherwise show through with the
+                    // FlowLayoutPanel's default gray SystemColors.Control
+                    // instead of matching the rest of the window.
                     BackColor = UIColors.BackgroundBlack
                 };
                 _versionStrip.Controls.Add(_versionLabel);
