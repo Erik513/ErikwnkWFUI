@@ -13,8 +13,8 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// The label of the library, made by <c>UIStyles.Labels</c>: the standard <see cref="Label"/> in the
-    /// colors of the library, with a text that can move back and forth when it is too long
-    /// (<see cref="ScrollWhenTooLong"/>).
+    /// colors of the library, with a text that can move when it is too long for the label: back and forth
+    /// or endlessly (<see cref="ScrollMode"/>, <see cref="Scroll"/>).
     /// </summary>
     /// <remarks>
     /// The standard label does the painting - text, alignment, padding, ellipsis, mnemonic, border,
@@ -30,33 +30,43 @@ namespace ErikwnkWFUI.Controls
         // The least contrast the text of a label with a color set has against what is behind it.
         private const double TextContrast = 4.5;
 
-        // The text moves a little further than its end, so that the last sign is clear of the edge.
+        // The moving text goes a little further than its end, so that the last sign is clear of the edge.
         private const int EndRoom = 2;
 
+        // A picture wider than this is not made: the text of such a label ends in an ellipsis.
+        private const int MaxPictureWidth = 16000;
+
+        // The message that asks the label for its next picture.
+        private const int WM_NEXT_PICTURE = WM_APP + 0x4C;
+
+        // ---- the colors ----
         private readonly Color _enabledForeColor;
         private readonly UIColorSet _colors;
         private bool _hasOwnForeColor;
 
-        // Whether the label is on the beat of LabelAnimationClock, and whether it has been asked for a
-        // picture that it has not made yet (so that a slow window is asked once, not many times).
-        private bool _animating;
-        private int _framePending;
-
-        // The message that asks the label for its next picture, and the handle the clock posts it to
-        // (kept here: the clock thread must not ask the control for its Handle).
-        private const int WM_NEXT_PICTURE = WM_APP + 0x4C;
-        private volatile IntPtr _postHandle;
-        private bool _scrollWhenTooLong;
+        // ---- the settings of the movement ----
+        private LabelScrollMode _scrollMode = LabelScrollMode.None;
         private LabelScrollSpeed _scrollSpeed = LabelScrollSpeed.Medium;
-        private LabelScrollPause _edgePause = LabelScrollPause.Medium;
+        private LabelScrollPause _scrollPause = LabelScrollPause.Medium;
+        private LabelScrollDirection _scrollDirection = LabelScrollDirection.Left;
+        private LabelScrollSeparator _scrollSeparator = LabelScrollSeparator.Dot;
 
-        // The moving text: how far it is moved to the left, which way it goes, how far it can go,
-        // how wide it is, until when it rests and when it was last moved.
+        // ---- the movement ----
+        // How wide the text is; back and forth: how far the text can go to show its end; endless: how long
+        // one round is (the text, a gap, the separator, a gap). Of the last two, at most one is more than 0,
+        // and both are 0 while the text does not move.
+        private int _textWidth;
+        private int _maxOffset;
+        private int _cycle;
+
+        // How far the text has moved to the left (to the right when it is endless and goes that way), the
+        // offset of the last picture, and - back and forth only - which way it goes now (1 to its end, -1
+        // back), until when it rests and when it was last moved.
         private float _offset;
         private float _paintedOffset;
         private int _direction = 1;
-        private int _maxOffset;
-        private int _textWidth;
+        private long _restUntil;
+        private long _lastFrame;
 
         // The moving text as a picture of its own (grayscale smoothing on a clear background), made when
         // the text starts to move: the picture can be put at any place between two pixels, which the
@@ -64,10 +74,12 @@ namespace ErikwnkWFUI.Controls
         private Bitmap _picture;
         private Color _pictureColor;
 
-        // A picture wider than this is not made: the text of such a label ends in an ellipsis.
-        private const int MaxPictureWidth = 16000;
-        private long _restUntil;
-        private long _lastFrame;
+        // Whether the label is on the beat of LabelAnimationClock, whether it has been asked for a picture
+        // that it has not made yet (so that a slow window is asked once, not many times), and the handle the
+        // clock posts to (kept here: the clock thread must not ask the control for its Handle).
+        private bool _animating;
+        private int _framePending;
+        private volatile IntPtr _postHandle;
 
         internal ThemedLabel(Color enabledForeColor, UIColorSet colors)
         {
@@ -81,17 +93,17 @@ namespace ErikwnkWFUI.Controls
         // ---- the moving text ----
 
         /// <summary>
-        /// Whether a text that is too long for the label moves back and forth instead of ending in an
-        /// ellipsis: it rests at the start, moves to its end, rests there, moves back, and so on.
-        /// A text that fits stands still. Off by default. It applies to a text of one line in a label
-        /// that is enabled; a disabled label shows the start of the text with an ellipsis.
+        /// Whether and how a text that is too long for the label moves instead of ending in an ellipsis:
+        /// not at all (the default), back and forth with a rest at both ends, or endlessly in one
+        /// direction. A text that fits stands still. It applies to a text of one line in a label that is
+        /// enabled; a disabled label shows the start of the text with an ellipsis.
         /// </summary>
-        public bool ScrollWhenTooLong
+        public LabelScrollMode ScrollMode
         {
-            get { return _scrollWhenTooLong; }
+            get { return _scrollMode; }
             set
             {
-                _scrollWhenTooLong = value;
+                _scrollMode = value;
                 Restart();
             }
         }
@@ -103,11 +115,64 @@ namespace ErikwnkWFUI.Controls
             set { _scrollSpeed = value; }
         }
 
-        /// <summary>How long the moving text rests at the start and at the end: a short time, a medium one (the default) or a long one.</summary>
-        public LabelScrollPause EdgePause
+        /// <summary>How long the text rests at the start and at the end when it moves back and forth: a short time, a medium one (the default) or a long one.</summary>
+        public LabelScrollPause ScrollPause
         {
-            get { return _edgePause; }
-            set { _edgePause = value; }
+            get { return _scrollPause; }
+            set { _scrollPause = value; }
+        }
+
+        /// <summary>Which way the text moves in the endless mode: to the left (the default) or to the right. Back and forth always starts to the left.</summary>
+        public LabelScrollDirection ScrollDirection
+        {
+            get { return _scrollDirection; }
+            set
+            {
+                _scrollDirection = value;
+                Restart();
+            }
+        }
+
+        /// <summary>The sign between the end of the text and its next appearance in the endless mode: a dot (the default), a bar, a diamond or none.</summary>
+        public LabelScrollSeparator ScrollSeparator
+        {
+            get { return _scrollSeparator; }
+            set
+            {
+                _scrollSeparator = value;
+                Restart();
+            }
+        }
+
+        /// <summary>
+        /// All of the above in one value: set to take over every setting at once (the movement starts over
+        /// once), read to get the settings the label has now. Null is no movement.
+        /// </summary>
+        public LabelScroll Scroll
+        {
+            get
+            {
+                switch (_scrollMode)
+                {
+                    case LabelScrollMode.BackAndForth:
+                        return LabelScroll.BackAndForth(_scrollSpeed, _scrollPause);
+                    case LabelScrollMode.Endless:
+                        return LabelScroll.Endless(_scrollDirection, _scrollSeparator, _scrollSpeed);
+                    default:
+                        return LabelScroll.None;
+                }
+            }
+            set
+            {
+                LabelScroll scroll = value ?? LabelScroll.None;
+
+                _scrollSpeed = scroll.Speed;
+                _scrollPause = scroll.Pause;
+                _scrollDirection = scroll.Direction;
+                _scrollSeparator = scroll.Separator;
+                _scrollMode = scroll.Mode;
+                Restart();
+            }
         }
 
         // Back to the start, and to the question whether the text moves at all. Called whenever
@@ -118,11 +183,13 @@ namespace ErikwnkWFUI.Controls
             _paintedOffset = 0f;
             DisposePicture();
             _direction = 1;
-            _maxOffset = MeasureMaxOffset();
-            _restUntil = Milliseconds() + _edgePause.ToMilliseconds();
+            Measure();
+
+            // Back and forth rests at the start first (the endless text goes on at once and ignores the rest).
+            _restUntil = Milliseconds() + _scrollPause.ToMilliseconds();
             _lastFrame = Milliseconds();
 
-            bool moves = _maxOffset > 0 && Visible && IsHandleCreated;
+            bool moves = (_maxOffset > 0 || _cycle > 0) && Visible && IsHandleCreated;
 
             if (moves && !_animating)
             {
@@ -137,25 +204,52 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // How far the text has to move to show its end: 0 when it fits, or when it does not move at all
-        // (off, disabled, more than one line).
-        private int MeasureMaxOffset()
+        // How the text has to move: back and forth needs to know how far to go to show its end, the endless
+        // mode how long one round is. Neither when the text does not move at all (off, disabled, one that fits,
+        // more than one line).
+        private void Measure()
         {
             _textWidth = 0;
+            _maxOffset = 0;
+            _cycle = 0;
 
-            if (!_scrollWhenTooLong || !Enabled || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
-                return 0;
+            if (_scrollMode == LabelScrollMode.None || !Enabled || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
+                return;
+
+            int inner = ClientSize.Width - Padding.Horizontal;
+            int inset = GetTextInset();
+            int separatorWidth = 0;
 
             using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
             using (StringFormat format = CreateMovingTextFormat())
             {
                 _textWidth = (int)Math.Ceiling(graphics.MeasureString(Text, Font, PointF.Empty, format).Width);
+
+                string separator = _scrollSeparator.ToText();
+
+                if (separator.Length > 0)
+                    separatorWidth = (int)Math.Ceiling(graphics.MeasureString(separator, Font, PointF.Empty, format).Width);
             }
 
-            if (_textWidth > MaxPictureWidth)
-                return 0;
+            if (_scrollMode == LabelScrollMode.Endless)
+            {
+                int gap = GetGap();
+                int cycle = _textWidth + gap + separatorWidth + gap;
 
-            return Math.Max(0, _textWidth + 2 * GetTextInset() - (ClientSize.Width - Padding.Horizontal) + EndRoom);
+                if (_textWidth + 2 * inset > inner && cycle <= MaxPictureWidth)
+                    _cycle = cycle;
+
+                return;
+            }
+
+            if (_textWidth <= MaxPictureWidth)
+                _maxOffset = Math.Max(0, _textWidth + 2 * inset - inner + EndRoom);
+        }
+
+        // The gap before and behind the separator of the endless mode: about the height of a letter.
+        private int GetGap()
+        {
+            return Math.Max(4, (int)Math.Round(Font.GetHeight()));
         }
 
         private void StopAnimating()
@@ -203,7 +297,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // One step of the movement; the time that has passed decides how far, so the speed does not
-        // depend on how often the timer manages to tick.
+        // depend on how often the clock manages to beat.
         private void OnFrame(object sender, EventArgs e)
         {
             Step();
@@ -213,6 +307,10 @@ namespace ErikwnkWFUI.Controls
         private bool Step()
         {
             long now = Milliseconds();
+
+            if (_cycle > 0)
+                return StepEndless(now);
+
             long from = Math.Max(_lastFrame, _restUntil);
             _lastFrame = now;
 
@@ -225,16 +323,33 @@ namespace ErikwnkWFUI.Controls
             {
                 _offset = _maxOffset;
                 _direction = -1;
-                _restUntil = now + _edgePause.ToMilliseconds();
+                _restUntil = now + _scrollPause.ToMilliseconds();
             }
             else if (_direction < 0 && _offset <= 0f)
             {
                 _offset = 0f;
                 _direction = 1;
-                _restUntil = now + _edgePause.ToMilliseconds();
+                _restUntil = now + _scrollPause.ToMilliseconds();
             }
 
             // A picture only when the text has moved at all (not while it rests).
+            if (_offset == _paintedOffset)
+                return false;
+
+            _paintedOffset = _offset;
+            Invalidate();
+
+            return true;
+        }
+
+        // The endless text goes on at its speed, round after round, without a rest.
+        private bool StepEndless(long now)
+        {
+            long passed = now - _lastFrame;
+            _lastFrame = now;
+
+            _offset = (_offset + _scrollSpeed.ToPixelsPerSecond() * passed / 1000f) % _cycle;
+
             if (_offset == _paintedOffset)
                 return false;
 
@@ -329,7 +444,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            if (_maxOffset > 0)
+            if (_maxOffset > 0 || _cycle > 0)
             {
                 PaintMovingText(e.Graphics);
 
@@ -350,8 +465,15 @@ namespace ErikwnkWFUI.Controls
                 Math.Max(0, ClientSize.Height - Padding.Vertical));
 
             Bitmap picture = GetPicture();
-            float x = inner.Left + GetTextInset() - _offset;
             int y = GetPictureTop(inner, picture.Height);
+
+            // Back and forth: the picture moves to the left as far as it has gone. Endless: round after
+            // round, to the left or to the right, so the picture is put twice, one round apart, and the
+            // two cover the label.
+            float x = inner.Left + GetTextInset() - _offset;
+
+            if (_cycle > 0 && _scrollDirection == LabelScrollDirection.Right)
+                x = inner.Left + GetTextInset() + _offset - _cycle;
 
             GraphicsState state = graphics.Save();
 
@@ -365,6 +487,15 @@ namespace ErikwnkWFUI.Controls
                     new RectangleF(x, y, picture.Width, picture.Height),
                     new RectangleF(0, 0, picture.Width, picture.Height),
                     GraphicsUnit.Pixel);
+
+                if (_cycle > 0)
+                {
+                    graphics.DrawImage(
+                        picture,
+                        new RectangleF(x + _cycle, y, picture.Width, picture.Height),
+                        new RectangleF(0, 0, picture.Width, picture.Height),
+                        GraphicsUnit.Pixel);
+                }
             }
             finally
             {
@@ -406,7 +537,9 @@ namespace ErikwnkWFUI.Controls
 
             DisposePicture();
 
-            Bitmap picture = new Bitmap(Math.Max(1, _textWidth + EndRoom), Math.Max(1, (int)Math.Ceiling(Font.GetHeight())) + 2, PixelFormat.Format32bppPArgb);
+            // The endless picture is one round: the text, a gap, the separator and a gap.
+            int width = _cycle > 0 ? _cycle : _textWidth + EndRoom;
+            Bitmap picture = new Bitmap(Math.Max(1, width), Math.Max(1, (int)Math.Ceiling(Font.GetHeight())) + 2, PixelFormat.Format32bppPArgb);
 
             using (Graphics graphics = Graphics.FromImage(picture))
             using (SolidBrush brush = new SolidBrush(color))
@@ -415,6 +548,9 @@ namespace ErikwnkWFUI.Controls
                 graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 graphics.Clear(Color.Transparent);
                 graphics.DrawString(Text, Font, brush, new PointF(0f, 1f), format);
+
+                if (_cycle > 0 && _scrollSeparator != LabelScrollSeparator.None)
+                    graphics.DrawString(_scrollSeparator.ToText(), Font, brush, new PointF(_textWidth + GetGap(), 1f), format);
             }
 
             _picture = picture;

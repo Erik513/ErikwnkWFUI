@@ -351,34 +351,27 @@ namespace ErikwnkWFUI.Showcase
             AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
             AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));
 
-            // A text that is too long for its label moves back and forth instead of ending in an ellipsis.
+            // A text that is too long for its label moves instead of ending in an ellipsis: back and forth with a
+            // rest at both ends, or endlessly in one direction, coming again behind a gap and a separator.
             const string longText = "This text is much longer than the label it is shown in, so it rests at its start, moves to its end, rests there and moves back again - and a label that is disabled shows the start with an ellipsis instead.";
 
-            AddLabelRow(table, "CreateStandard (scrolling)", longText, text =>
-            {
-                ThemedLabel label = UIStyles.Labels.CreateStandard(text);
-                label.ScrollWhenTooLong = true;
+            AddLabelRow(table, "CreateStandard (scroll: BackAndForth)", longText,
+                text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth()));
 
-                return label;
-            });
+            AddLabelRow(table, "CreateTitle (scroll: BackAndForth)", longText,
+                text => UIStyles.Labels.CreateTitle(text, LabelScroll.BackAndForth()));
 
-            AddLabelRow(table, "CreateTitle (scrolling)", longText, text =>
-            {
-                ThemedLabel label = UIStyles.Labels.CreateTitle(text);
-                label.ScrollWhenTooLong = true;
+            AddLabelRow(table, "CreatePrimary (scroll: BackAndForth, fast, short pause)", longText,
+                text => UIStyles.Labels.CreatePrimary(text, LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short)));
 
-                return label;
-            });
+            AddLabelRow(table, "CreateStandard (scroll: Endless, to the left)", longText,
+                text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.Endless()));
 
-            AddLabelRow(table, "CreatePrimary (fast, short pause)", longText, text =>
-            {
-                ThemedLabel label = UIStyles.Labels.CreatePrimary(text);
-                label.ScrollWhenTooLong = true;
-                label.ScrollSpeed = LabelScrollSpeed.Fast;
-                label.EdgePause = LabelScrollPause.Short;
+            AddLabelRow(table, "CreatePrimary (scroll: Endless, to the right, diamond)", longText,
+                text => UIStyles.Labels.CreatePrimary(text, LabelScroll.Endless(LabelScrollDirection.Right, LabelScrollSeparator.Diamond)));
 
-                return label;
-            });
+            AddLabelRow(table, "CreateMuted (scroll: Endless, bar, fast)", longText,
+                text => UIStyles.Labels.CreateMuted(text, LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Bar, LabelScrollSpeed.Fast)));
         }
 
         // One row: the label, and the same label disabled in the second column.

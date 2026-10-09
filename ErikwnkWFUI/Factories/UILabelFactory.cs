@@ -7,9 +7,9 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UILabelFactory
     {
-        public static ThemedLabel CreateTitle(string text = "")
+        public static ThemedLabel CreateTitle(string text = "", LabelScroll scroll = null)
         {
-            return new ThemedLabel(UIColors.TextPrimary, null)
+            ThemedLabel label = new ThemedLabel(UIColors.TextPrimary, null)
             {
                 Text = text ?? "",
                 Font = UIFonts.Title,
@@ -22,11 +22,15 @@ namespace ErikwnkWFUI.Factories
                 // disabled and the moving text are drawn that way too - whatever the application chose.
                 UseCompatibleTextRendering = false
             };
+
+            label.Scroll = scroll;
+
+            return label;
         }
 
-        public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null)
+        public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            return new ThemedLabel(UIColors.TextSecondary, colors)
+            ThemedLabel label = new ThemedLabel(UIColors.TextSecondary, colors)
             {
                 Text = text ?? "",
                 Font = UIFonts.Normal,
@@ -40,17 +44,21 @@ namespace ErikwnkWFUI.Factories
                 // disabled and the moving text are drawn that way too - whatever the application chose.
                 UseCompatibleTextRendering = false
             };
+
+            label.Scroll = scroll;
+
+            return label;
         }
 
         // The Standard one in the current accent - the primary color set.
-        public static ThemedLabel CreatePrimary(string text = "")
+        public static ThemedLabel CreatePrimary(string text = "", LabelScroll scroll = null)
         {
-            return CreateStandard(text, UIColors.PrimarySet);
+            return CreateStandard(text, UIColors.PrimarySet, scroll);
         }
 
-        public static ThemedLabel CreateMuted(string text = "")
+        public static ThemedLabel CreateMuted(string text = "", LabelScroll scroll = null)
         {
-            return new ThemedLabel(UIColors.TextMuted, null)
+            ThemedLabel label = new ThemedLabel(UIColors.TextMuted, null)
             {
                 Text = text ?? "",
                 Font = UIFonts.Small,
@@ -64,6 +72,10 @@ namespace ErikwnkWFUI.Factories
                 // disabled and the moving text are drawn that way too - whatever the application chose.
                 UseCompatibleTextRendering = false
             };
+
+            label.Scroll = scroll;
+
+            return label;
         }
     }
 }

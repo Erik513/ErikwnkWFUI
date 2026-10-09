@@ -7,9 +7,10 @@ using ErikwnkWFUI.Tests.Infrastructure;
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
 /// <summary>
-/// The text that moves back and forth when it is too long (ScrollWhenTooLong): off by default, rests
-/// at both ends, moves at its speed whatever the timer does, stands still when it fits, when the
-/// label is disabled or hidden, and gives its timer back. The time is a clock the tests set.
+/// The text that moves back and forth when it is too long (ScrollMode.BackAndForth): off by default,
+/// rests at both ends, moves at its speed however often the animation clock beats, stands still when it
+/// fits, when the label is disabled or hidden, and leaves the clock when it is done. The time is a clock the
+/// tests set.
 /// [Collection]: the colors read the live accent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
@@ -39,7 +40,7 @@ public class LabelScrollTests : IDisposable
     {
         ThemedLabel label = UIStyles.Labels.CreateStandard(text);
         label.Size = new Size(120, 24);
-        label.ScrollWhenTooLong = scroll;
+        label.ScrollMode = scroll ? LabelScrollMode.BackAndForth : LabelScrollMode.None;
 
         Form form = new Form
         {
@@ -65,7 +66,7 @@ public class LabelScrollTests : IDisposable
     // Whether the label is on the beat of the animation clock (the thing that makes it move).
     private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
 
-    // The timer ticks after this long.
+    // The animation clock beats after this long.
     private void Tick(ThemedLabel label, int milliseconds)
     {
         _now += milliseconds;
@@ -99,7 +100,7 @@ public class LabelScrollTests : IDisposable
     {
         using ThemedLabel label = Create(scroll: false);
 
-        Assert.False(label.ScrollWhenTooLong);
+        Assert.Equal(LabelScrollMode.None, label.ScrollMode);
         Assert.Equal(0, MaxOffset(label));
         Assert.False(Moving(label));
         Assert.True(label.AutoEllipsis);
@@ -134,9 +135,9 @@ public class LabelScrollTests : IDisposable
     }
 
     [Fact]
-    public void TheSpeed_DoesNotDependOnHowOftenTheTimerTicks()
+    public void TheSpeed_DoesNotDependOnHowOftenTheClockBeats()
     {
-        // One label whose timer ticks every 20 milliseconds, one whose timer ticks once a second.
+        // One label whose clock beats every 20 milliseconds, one whose clock beats once a second.
         using ThemedLabel often = Create();
         Tick(often, 2200);
 
@@ -158,7 +159,7 @@ public class LabelScrollTests : IDisposable
         {
             using ThemedLabel label = Create(scroll: false);
             label.ScrollSpeed = speed;
-            label.ScrollWhenTooLong = true;
+            label.ScrollMode = LabelScrollMode.BackAndForth;
             Tick(label, 2200);
             Tick(label, 1000);
 
@@ -184,8 +185,8 @@ public class LabelScrollTests : IDisposable
     {
         using ThemedLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Fast;
-        label.EdgePause = LabelScrollPause.Short;
-        label.ScrollWhenTooLong = true;
+        label.ScrollPause = LabelScrollPause.Short;
+        label.ScrollMode = LabelScrollMode.BackAndForth;
 
         // The pause at the start (1 second), then it moves to the end.
         Tick(label, 1000);
@@ -216,8 +217,8 @@ public class LabelScrollTests : IDisposable
         int Rest(LabelScrollPause pause)
         {
             using ThemedLabel label = Create(scroll: false);
-            label.EdgePause = pause;
-            label.ScrollWhenTooLong = true;
+            label.ScrollPause = pause;
+            label.ScrollMode = LabelScrollMode.BackAndForth;
             int rested = 0;
 
             while (rested < 10000)
@@ -242,7 +243,7 @@ public class LabelScrollTests : IDisposable
     {
         using ThemedLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Slow;
-        label.ScrollWhenTooLong = true;
+        label.ScrollMode = LabelScrollMode.BackAndForth;
 
         // While it rests there is nothing new to show.
         _now += 1000;
@@ -262,7 +263,7 @@ public class LabelScrollTests : IDisposable
     {
         using ThemedLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Slow;
-        label.ScrollWhenTooLong = true;
+        label.ScrollMode = LabelScrollMode.BackAndForth;
         _now += 2200;
 
         // Half a pixel further: 20 milliseconds at 25 pixels a second.
@@ -287,7 +288,7 @@ public class LabelScrollTests : IDisposable
     {
         using ThemedLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Fast;
-        label.ScrollWhenTooLong = true;
+        label.ScrollMode = LabelScrollMode.BackAndForth;
         _now += 2200;
         _now += 1000;
 
@@ -388,7 +389,7 @@ public class LabelScrollTests : IDisposable
     }
 
     [Fact]
-    public void ADisabledLabel_DoesNotMove_AndStopsItsTimer()
+    public void ADisabledLabel_DoesNotMove_AndLeavesTheClock()
     {
         using ThemedLabel label = Create();
         Tick(label, 2200);
@@ -427,7 +428,7 @@ public class LabelScrollTests : IDisposable
 
         Assert.False(Moving(label));
         Assert.Equal(0, LabelAnimationClock.Count);
-        Assert.Null(Record.Exception(() => label.ScrollWhenTooLong = false));
+        Assert.Null(Record.Exception(() => label.ScrollMode = LabelScrollMode.None));
     }
 
     [Fact]
@@ -502,8 +503,8 @@ public class LabelScrollTests : IDisposable
         using ThemedLabel label = UIStyles.Labels.CreateStandard("x");
 
         Assert.Equal(LabelScrollSpeed.Medium, label.ScrollSpeed);
-        Assert.Equal(LabelScrollPause.Medium, label.EdgePause);
-        Assert.False(label.ScrollWhenTooLong);
+        Assert.Equal(LabelScrollPause.Medium, label.ScrollPause);
+        Assert.Equal(LabelScrollMode.None, label.ScrollMode);
         Assert.Equal(1, (int)LabelScrollSpeed.Medium);
         Assert.Equal(1, (int)LabelScrollPause.Medium);
     }
@@ -520,7 +521,7 @@ public class LabelScrollTests : IDisposable
             using (label)
             {
                 label.Size = new Size(120, 24);
-                label.ScrollWhenTooLong = true;
+                label.ScrollMode = LabelScrollMode.BackAndForth;
 
                 Assert.True(label.GetPrivateField<int>("_maxOffset") >= 0);
             }
