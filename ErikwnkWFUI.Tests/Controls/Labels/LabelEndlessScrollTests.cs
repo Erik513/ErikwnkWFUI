@@ -143,12 +143,63 @@ public class LabelEndlessScrollTests : IDisposable
     }
 
     [Fact]
-    public void ATextThatFits_StandsStill_InTheEndlessModeToo()
+    public void ATextThatFits_MovesInTheEndlessMode_AndTheRoundIsAsWideAsTheLabel()
     {
         using ThemedLabel label = Create(text: "Short");
 
-        Assert.Equal(0, Cycle(label));
-        Assert.False(Moving(label));
+        // The label is 120 pixels: one round is the label, so the room behind the word stays.
+        Assert.Equal(120, Cycle(label));
+        Assert.True(Moving(label));
+    }
+
+    [Theory]
+    [InlineData(LabelScrollDirection.Left)]
+    [InlineData(LabelScrollDirection.Right)]
+    public void AShortWord_ComesBackAfterTheRoomOfTheLabel_AndLeavesItEmptyUntilThen(LabelScrollDirection direction)
+    {
+        using ThemedLabel label = Create(direction, LabelScrollSeparator.None, text: "Hi");
+        label.Width = 200;
+        int cycle = Cycle(label);
+        Assert.Equal(200, cycle);
+
+        int InkFrom(int from, int to)
+        {
+            using Bitmap bitmap = Paint(label);
+            int ink = 0;
+
+            for (int x = from; x < to; x++)
+            {
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    if (bitmap.GetPixel(x, y).GetBrightness() > 0.45f)
+                        ink++;
+                }
+            }
+
+            return ink;
+        }
+
+        // At the start the word stands at the left and the rest of the label is empty (no second word).
+        SetOffset(label, direction == LabelScrollDirection.Left ? 0f : cycle - 1f);
+        Assert.True(InkFrom(0, 40) > 0, "the word is not at the start");
+        Assert.Equal(0, InkFrom(60, 200));
+    }
+
+    [Fact]
+    public void ALabelMuchWiderThanTheWord_ShowsTheWordOnceAnd_AShortRoundNever()
+    {
+        using ThemedLabel label = Create(text: "Hi");
+        label.Width = 1000;
+
+        Assert.Equal(1000, Cycle(label));
+    }
+
+    [Fact]
+    public void ALongText_KeepsItsOwnRound_WhichIsWiderThanTheLabel()
+    {
+        using ThemedLabel label = Create();
+
+        Assert.True(Cycle(label) > label.Width);
     }
 
     [Fact]
@@ -375,7 +426,7 @@ public class LabelEndlessScrollTests : IDisposable
         Assert.True(bigger > longer);
 
         label.Width = 4000;
-        Assert.Equal(0, Cycle(label));
+        Assert.Equal(4000, Cycle(label));
     }
 
     [Fact]

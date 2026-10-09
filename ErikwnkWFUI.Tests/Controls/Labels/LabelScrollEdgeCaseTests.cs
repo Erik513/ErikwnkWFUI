@@ -110,10 +110,11 @@ public class LabelScrollEdgeCaseTests : IDisposable
 
     // ---- the text that just fits ----
 
-    [Theory]
-    [MemberData(nameof(BothModes))]
-    public void AText_ThatJustFits_StandsStill(LabelScrollMode mode)
+    // (The endless text moves whether it fits or not.)
+    [Fact]
+    public void AText_ThatJustFits_StandsStill()
     {
+        LabelScrollMode mode = LabelScrollMode.BackAndForth;
         using ThemedLabel probe = Create(For(mode));
         int needed = probe.GetPrivateField<int>("_textWidth") + 2 * probe.InvokePrivate<int>("GetTextInset");
 

@@ -86,7 +86,8 @@ var ticker = UIStyles.Labels.CreateStandard(text,
     scroll: LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Dot));
 ```
 
-The text moves smoothly on the beat of the display, stands still when it fits, and not at
+The text moves smoothly on the beat of the display, back and forth stands still when the text fits (endless keeps going, a short text
+keeps the room of the label), and not at
 all where Windows has the animations switched off.
 
 ## Popups

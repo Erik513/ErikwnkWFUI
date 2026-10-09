@@ -9,7 +9,7 @@
         /// <summary>The text moves to its end, rests there, moves back to its start, rests there, and so on.</summary>
         BackAndForth,
 
-        /// <summary>The text moves on without rest and comes again behind a gap and a separator, one direction for good (<see cref="ThemedLabel.ScrollDirection"/>).</summary>
+        /// <summary>The text moves on without rest and comes again behind a gap and a separator, one direction for good (<see cref="ThemedLabel.ScrollDirection"/>). It moves whether the text fits or not; a short text keeps the room of the label (a word of 10 pixels in 50 comes back after 40 empty ones).</summary>
         Endless
     }
 

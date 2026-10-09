@@ -102,8 +102,11 @@ namespace ErikwnkWFUI.Controls
         /// Whether and how a text that is too long for the label moves instead of ending in an ellipsis:
         /// not at all (the default), back and forth with a rest at both ends, or endlessly in one
         /// direction. A text that fits stands still. It applies to a text of one line in a label that is
-        /// enabled; a disabled label shows the start of the text with an ellipsis. An image of the label is
-        /// not shown while the text moves, only while it stands still.
+        /// enabled; a disabled label shows the start of the text with an ellipsis. A label with
+        /// <see cref="Label.AutoSize"/> does not move its text either: it grows to the text (and, up to its
+        /// maximum size, wraps it). While the text moves it starts at the left whatever <see cref="Label.TextAlign"/>
+        /// says (the vertical place is kept), and right-to-left is not supported (as everywhere in the library).
+        /// An image of the label is not shown while the text moves, only while it stands still.
         /// </summary>
         public LabelScrollMode ScrollMode
         {
@@ -235,15 +238,15 @@ namespace ErikwnkWFUI.Controls
         }
 
         // How the text has to move: back and forth needs to know how far to go to show its end, the endless
-        // mode how long one round is. Neither when the text does not move at all (off, disabled, one that fits,
-        // more than one line).
+        // mode how long one round is. Neither when the text does not move at all (off, disabled, back and forth with a
+        // text that fits, an empty text, more than one line).
         private void Measure()
         {
             _textWidth = 0;
             _maxOffset = 0;
             _cycle = 0;
 
-            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
+            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || AutoSize || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return;
 
             int inner = ClientSize.Width - Padding.Horizontal;
@@ -266,9 +269,14 @@ namespace ErikwnkWFUI.Controls
             if (_scrollMode == LabelScrollMode.Endless)
             {
                 int gap = GetGap();
-                int cycle = _textWidth + gap + separatorWidth + gap;
 
-                if (_textWidth + 2 * inset > inner && cycle <= MaxPictureWidth)
+                // One round is the text, a gap, the separator and a gap - and at least as wide as the label, so
+                // that a short text keeps the room the label has for it (a word of 10 pixels in a label of 50
+                // shows once, with 40 pixels of room behind it, and comes back after them). The endless text
+                // moves whether it fits or not.
+                int cycle = Math.Max(_textWidth + gap + separatorWidth + gap, inner);
+
+                if (cycle <= MaxPictureWidth)
                     _cycle = cycle;
 
                 return;
@@ -586,8 +594,8 @@ namespace ErikwnkWFUI.Controls
             int y = GetPictureTop(inner, picture.Height);
 
             // Back and forth: the picture moves to the left as far as it has gone. Endless: round after
-            // round, to the left or to the right, so the picture is put twice, one round apart, and the
-            // two cover the label.
+            // round, to the left or to the right, so the picture is put again and again, one round apart,
+            // as often as the label needs to be covered.
             float x = inner.Left + _textInset - _offset;
 
             if (_cycle > 0 && _scrollDirection == LabelScrollDirection.Right)
@@ -608,11 +616,14 @@ namespace ErikwnkWFUI.Controls
 
                 if (_cycle > 0)
                 {
-                    graphics.DrawImage(
-                        picture,
-                        new RectangleF(x + _cycle, y, picture.Width, picture.Height),
-                        new RectangleF(0, 0, picture.Width, picture.Height),
-                        GraphicsUnit.Pixel);
+                    for (float next = x + _cycle; next < inner.Right; next += _cycle)
+                    {
+                        graphics.DrawImage(
+                            picture,
+                            new RectangleF(next, y, picture.Width, picture.Height),
+                            new RectangleF(0, 0, picture.Width, picture.Height),
+                            GraphicsUnit.Pixel);
+                    }
                 }
             }
             finally

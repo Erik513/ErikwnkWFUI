@@ -357,11 +357,14 @@ namespace ErikwnkWFUI.Showcase
             // rest at both ends, or endlessly in one direction, coming again behind a gap and a separator.
             const string longText = "This text is much longer than the label it is shown in, so it rests at its start, moves to its end, rests there and moves back again - and a label that is disabled shows the start with an ellipsis instead.";
 
-            AddLabelRow(table, "CreateStandard (scroll: BackAndForth)", longText,
-                text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth()));
+            table.AddRow("CreateStandard (scroll: BackAndForth)",
+                UIColumn.Percent(UIStyles.Labels.CreateStandard(longText, scroll: LabelScroll.BackAndForth()), TwoColumnPercent));
 
-            AddLabelRow(table, "CreateStandard (scroll: Endless)", longText,
-                text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.Endless()));
+            // Endless moves whether the text fits or not: a long text, and (second column) a short one that
+            // keeps the room of the label.
+            AddTwoColumnRow(table, "CreateStandard (scroll: Endless)",
+                UIStyles.Labels.CreateStandard(longText, scroll: LabelScroll.Endless()),
+                UIStyles.Labels.CreateStandard("Short text", scroll: LabelScroll.Endless()));
         }
 
         // One row: the label, and the same label disabled in the second column.
