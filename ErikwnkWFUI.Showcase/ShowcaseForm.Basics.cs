@@ -360,23 +360,8 @@ namespace ErikwnkWFUI.Showcase
             AddLabelRow(table, "CreateStandard (scroll: BackAndForth)", longText,
                 text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth()));
 
-            AddLabelRow(table, "CreateTitle (scroll: BackAndForth)", longText,
-                text => UIStyles.Labels.CreateTitle(text, scroll: LabelScroll.BackAndForth()));
-
-            AddLabelRow(table, "CreatePrimary (scroll: BackAndForth, fast, short pause)", longText,
-                text => UIStyles.Labels.CreatePrimary(text, LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short)));
-
-            AddLabelRow(table, "CreateStandard (scroll: BackAndForth, stops under the mouse)", longText,
-                text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth(pauseOnHover: true)));
-
-            AddLabelRow(table, "CreateStandard (scroll: Endless, to the left)", longText,
+            AddLabelRow(table, "CreateStandard (scroll: Endless)", longText,
                 text => UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.Endless()));
-
-            AddLabelRow(table, "CreatePrimary (scroll: Endless, to the right, diamond)", longText,
-                text => UIStyles.Labels.CreatePrimary(text, LabelScroll.Endless(LabelScrollDirection.Right, LabelScrollSeparator.Diamond)));
-
-            AddLabelRow(table, "CreateMuted (scroll: Endless, bar, fast)", longText,
-                text => UIStyles.Labels.CreateMuted(text, scroll: LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Bar, LabelScrollSpeed.Fast)));
         }
 
         // One row: the label, and the same label disabled in the second column.
