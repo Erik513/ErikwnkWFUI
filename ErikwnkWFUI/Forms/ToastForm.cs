@@ -69,19 +69,32 @@ namespace ErikwnkWFUI.Forms
         /// <summary>How long a toast waits for its window to come to the front before it is dropped. One minute by default.</summary>
         public static TimeSpan PendingLifetime { get; set; } = TimeSpan.FromSeconds(60);
 
-        private sealed class PendingToast
+        // Everything one toast is asked for with; kept while it waits for its delay or its window.
+        private sealed class ToastRequest
         {
             public InfoPopupSection Content;
-            public DateTime Time;
+            public UIColorSet Colors;
             public PopupTransparency Transparency;
             public PopupDuration Duration;
-            public UIColorSet Colors;
+            public PopupDelay Delay;
             public ToastIcon Icon;
             public string Symbol;
             public ToastPosition Position;
+
+            // When it began to wait for its window.
+            public DateTime Time;
+
+            // The same message with the same symbol in the same place.
+            public bool IsSameAs(ToastRequest other)
+            {
+                return Icon == other.Icon
+                    && Symbol == other.Symbol
+                    && Position == other.Position
+                    && InfoPopupSection.SameContent(new[] { Content }, new[] { other.Content });
+            }
         }
 
-        private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
+        private static readonly Dictionary<Form, List<ToastRequest>> _pending = new Dictionary<Form, List<ToastRequest>>();
 
         private static ToastForm _currentToast;
         private Form _ownerForm;
@@ -96,11 +109,10 @@ namespace ErikwnkWFUI.Forms
 
         public ToastForm()
         {
-            ConfigureForm();
+            AutoScaleMode = AutoScaleMode.None;
             CreateControls();
             CreateTimer();
             ApplyDpi(DeviceDpi);
-
         }
 
         /// <summary>Shows a toast in <paramref name="owner"/>, at <paramref name="position"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
@@ -153,32 +165,28 @@ namespace ErikwnkWFUI.Forms
             if (owner == null || owner.IsDisposed || kept.Length == 0)
                 return;
 
-            content = kept[0];
+            ToastRequest request = new ToastRequest
+            {
+                Content = kept[0],
+                Colors = colors,
+                Transparency = transparency,
+                Duration = duration,
+                Delay = delay,
+                Icon = icon,
+                Symbol = symbol,
+                Position = position
+            };
 
             // A toast is often asked for when a task has finished, on another thread: it is shown
             // on the thread of its window, where it has its message loop and its timer.
             if (owner.IsHandleCreated && owner.InvokeRequired)
             {
-                owner.BeginInvoke(new Action(() => ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol, position)));
+                owner.BeginInvoke(new Action(() => Present(request, owner)));
 
                 return;
             }
 
-            if (delay != PopupDelay.Instant)
-            {
-                Schedule(content, owner, colors, transparency, duration, delay, icon, symbol, position);
-
-                return;
-            }
-
-            if (!PopupSupport.CanShowOver(owner))
-            {
-                Enqueue(content, owner, colors, transparency, duration, icon, symbol, position);
-
-                return;
-            }
-
-            ShowNow(content, owner, colors, transparency, duration, icon, symbol, position);
+            Present(request, owner);
         }
 
         /// <summary>
@@ -293,6 +301,12 @@ namespace ErikwnkWFUI.Forms
                 _iconFont = new Font(UIStyles.Symbols.GetFontName(glyph), UIFonts.Icon.Size);
                 _iconLabel.Font = _iconFont;
             }
+            else
+            {
+                // Without a symbol the label must not keep a font that is about to be given back.
+                _iconFont = null;
+                _iconLabel.Font = UIFonts.Icon;
+            }
 
             if (previous != null)
                 previous.Dispose();
@@ -331,9 +345,25 @@ namespace ErikwnkWFUI.Forms
         // The toasts that wait for their delay; one timer each, gone when it has fired.
         private static readonly List<Timer> _scheduled = new List<Timer>();
 
-        private static void Schedule(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay, ToastIcon icon, string symbol, ToastPosition position)
+        // Shows the toast, or lets it wait for its delay or for its window.
+        private static void Present(ToastRequest request, Form owner)
         {
-            Timer timer = new Timer { Interval = delay.ToMilliseconds() };
+            if (owner.IsDisposed)
+                return;
+
+            if (request.Delay != PopupDelay.Instant)
+            {
+                Schedule(request, owner);
+
+                return;
+            }
+
+            ShowOrWait(request, owner);
+        }
+
+        private static void Schedule(ToastRequest request, Form owner)
+        {
+            Timer timer = new Timer { Interval = request.Delay.ToMilliseconds() };
             _scheduled.Add(timer);
 
             timer.Tick += delegate
@@ -341,13 +371,24 @@ namespace ErikwnkWFUI.Forms
                 timer.Stop();
                 _scheduled.Remove(timer);
                 timer.Dispose();
-                ShowToast(content, owner, colors, transparency, duration, PopupDelay.Instant, icon, symbol, position);
+
+                if (!owner.IsDisposed)
+                    ShowOrWait(request, owner);
             };
 
             timer.Start();
         }
 
-        private static void ShowNow(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol, ToastPosition position)
+        // Whether the window is in front is looked at now, when the toast is due.
+        private static void ShowOrWait(ToastRequest request, Form owner)
+        {
+            if (PopupSupport.CanShowOver(owner))
+                ShowNow(request, owner);
+            else
+                Enqueue(request, owner);
+        }
+
+        private static void ShowNow(ToastRequest request, Form owner)
         {
             CloseCurrentToast();
 
@@ -355,15 +396,15 @@ namespace ErikwnkWFUI.Forms
             _currentToast = toast;
             toast._ownerForm = owner;
             toast.ApplyDpi(OwnerDpi(owner));
-            toast.Transparency = transparency;
-            toast.Duration = duration;
-            toast.Colors = colors;
-            toast.Symbol = icon;
-            toast.CustomSymbol = symbol;
+            toast.Transparency = request.Transparency;
+            toast.Duration = request.Duration;
+            toast.Colors = request.Colors;
+            toast.Symbol = request.Icon;
+            toast.CustomSymbol = request.Symbol;
 
-            toast.SetContent(content);
+            toast.SetContent(request.Content);
             toast.Location = PopupSupport.KeepInside(
-                GetToastLocation(GetClientArea(owner), toast.Size, position, Scaled(EdgeDistance96, toast._dpi)),
+                GetToastLocation(GetClientArea(owner), toast.Size, request.Position, Scaled(EdgeDistance96, toast._dpi)),
                 toast.Size,
                 PopupSupport.GetPlacementArea(owner),
                 Screen.FromControl(owner).WorkingArea);
@@ -375,25 +416,24 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol, ToastPosition position)
+        private static void Enqueue(ToastRequest request, Form owner)
         {
-            List<PendingToast> queue;
+            List<ToastRequest> queue;
 
             if (!_pending.TryGetValue(owner, out queue))
             {
-                queue = new List<PendingToast>();
+                queue = new List<ToastRequest>();
                 _pending[owner] = queue;
                 owner.Activated += OnOwnerActivated;
                 owner.FormClosed += OnOwnerClosed;
             }
 
-            // The same toast (content, symbol and place) twice in a row is one message.
-            if (queue.Count > 0 && queue[queue.Count - 1].Icon == icon && queue[queue.Count - 1].Symbol == symbol
-                && queue[queue.Count - 1].Position == position
-                && InfoPopupSection.SameContent(new[] { queue[queue.Count - 1].Content }, new[] { content }))
+            // The same toast twice in a row is one message.
+            if (queue.Count > 0 && queue[queue.Count - 1].IsSameAs(request))
                 return;
 
-            queue.Add(new PendingToast { Content = content, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors, Icon = icon, Symbol = symbol, Position = position });
+            request.Time = DateTime.UtcNow;
+            queue.Add(request);
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -422,7 +462,7 @@ namespace ErikwnkWFUI.Forms
         // the next one follows when this one has closed.
         private static void ShowNextPending(Form owner)
         {
-            List<PendingToast> queue;
+            List<ToastRequest> queue;
 
             if (owner == null || owner.IsDisposed || !_pending.TryGetValue(owner, out queue))
                 return;
@@ -441,20 +481,19 @@ namespace ErikwnkWFUI.Forms
             if (!PopupSupport.CanShowOver(owner))
                 return;
 
-            PendingToast next = queue[0];
+            ToastRequest next = queue[0];
             queue.RemoveAt(0);
 
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Content, owner, next.Colors, next.Transparency, next.Duration, next.Icon, next.Symbol, next.Position);
+            ShowNow(next, owner);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-
                 if (_closeTimer != null)
                 {
                     _closeTimer.Stop();
@@ -474,11 +513,6 @@ namespace ErikwnkWFUI.Forms
             }
 
             base.Dispose(disposing);
-        }
-
-        private void ConfigureForm()
-        {
-            AutoScaleMode = AutoScaleMode.None;
         }
 
         private void CreateControls()

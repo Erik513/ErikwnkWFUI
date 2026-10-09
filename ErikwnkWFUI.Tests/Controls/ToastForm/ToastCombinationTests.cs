@@ -249,6 +249,21 @@ public class ToastCombinationTests : IDisposable
     }
 
     [Fact]
+    public void WithoutASymbol_TheLabelHasTheSharedFontAgain_NotOneThatWasGivenBack()
+    {
+        ToastForm.ShowToast("Up", Host(), icon: ToastIcon.Warning);
+        ToastForm toast = Current()!;
+        Font used = toast.GetPrivateField<Font>("_iconFont")!;
+
+        toast.Symbol = ToastIcon.None;
+
+        Assert.True(IsDisposed(used));
+        Assert.Same(ErikwnkWFUI.Styles.UIFonts.Icon, Part("_iconLabel").Font);
+        Assert.Null(toast.GetPrivateField<Font>("_iconFont"));
+        Assert.False(IsDisposed(Part("_iconLabel").Font));
+    }
+
+    [Fact]
     public void AClickOnAToastThatWasReplaced_IsHarmless_AndDoesNotCloseTheNewOne()
     {
         Form host = Host();
