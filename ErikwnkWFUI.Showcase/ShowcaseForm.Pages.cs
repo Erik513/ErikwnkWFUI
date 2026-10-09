@@ -63,7 +63,7 @@ namespace ErikwnkWFUI.Showcase
                  AddListBoxControlSection),
 
                 ("ListView",
-                 "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does.",
+                 "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. FixedRowCount makes it exactly as big as its columns and a number of rows (here 5), without scroll bars; sorting and reordering the columns stay. AutoSizeToContent grows with the items up to a maximum size and then scrolls, the scroll bar next to the columns.",
                  AddListViewSection),
 
                 ("NumericUpDown",

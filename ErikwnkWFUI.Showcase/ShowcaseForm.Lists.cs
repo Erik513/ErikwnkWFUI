@@ -61,6 +61,35 @@ namespace ErikwnkWFUI.Showcase
             PopulateListViewDemo(purpleListView);
             table.AddRow("colors: Purple", 260, UIColumn.Absolute(purpleListView, demoWidth));
             PinToDemoWidth(purpleListView, demoWidth);
+
+            // A list as big as its columns and its rows (here 5), no scroll bars.
+            var displayListView = (ErikwnkWFUI.Controls.ListView)UIStyles.ListViews.CreateStandard();
+            displayListView.FixedRowCount = 5;
+            displayListView.AllowColumnResizing = false;
+            displayListView.Columns.Add("Item", 180);
+            displayListView.Columns.Add("Status", 100);
+
+            foreach (string[] row in new[] { new[] { "First", "Done" }, new[] { "Second", "Done" }, new[] { "Third", "Open" }, new[] { "Fourth", "Open" }, new[] { "Fifth", "Open" } })
+                displayListView.Items.Add(new ListViewItem(row));
+
+            table.AddRow("FixedRowCount = 5", 200, UIColumn.Absolute(displayListView, demoWidth));
+            displayListView.Dock = DockStyle.None;
+            displayListView.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+
+            // As big as its items, up to a maximum height (150): beyond it the list scrolls, and its scroll bar
+            // gets room of its own next to the columns instead of covering them.
+            var autoListView = UIStyles.ListViews.CreateStandard() as ErikwnkWFUI.Controls.ListView;
+            autoListView.AutoSizeToContent = true;
+            autoListView.MaximumSize = new Size(0, 150);
+            autoListView.Columns.Add("Item", 180);
+            autoListView.Columns.Add("Status", 100);
+
+            for (int i = 1; i <= 12; i++)
+                autoListView.Items.Add(new ListViewItem(new[] { "Item " + i, i % 2 == 0 ? "Done" : "Open" }));
+
+            table.AddRow("AutoSizeToContent (max 150)", 190, UIColumn.Absolute(autoListView, demoWidth));
+            autoListView.Dock = DockStyle.None;
+            autoListView.Anchor = AnchorStyles.Top | AnchorStyles.Left;
         }
 
         // AddRow's UIColumn.Absolute only bounds the WRAPPER cell to

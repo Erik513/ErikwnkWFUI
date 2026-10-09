@@ -52,7 +52,7 @@ namespace ErikwnkWFUI.Controls
     /// and <see cref="Controls.ListBox"/> - the base type reference below
     /// stays fully qualified so the class doesn't try to inherit from itself.
     /// </remarks>
-    public class ListView : System.Windows.Forms.ListView
+    public partial class ListView : System.Windows.Forms.ListView
     {
         private const int DefaultMinimumColumnWidth = 40;
 
@@ -256,6 +256,7 @@ namespace ErikwnkWFUI.Controls
             {
                 _headerFontOverride = value;
                 Invalidate();
+                RequestFixedSize();
             }
         }
 
@@ -278,11 +279,13 @@ namespace ErikwnkWFUI.Controls
                 {
                     _rowHeightImageList = null;
                     SmallImageList = null;
+                    RequestFixedSize();
                     return;
                 }
 
                 _rowHeightImageList = new ImageList { ImageSize = new Size(1, value) };
                 SmallImageList = _rowHeightImageList;
+                RequestFixedSize();
             }
         }
 
@@ -380,7 +383,11 @@ namespace ErikwnkWFUI.Controls
         public bool AllowColumnResizing
         {
             get => _columnResizing.AllowedByDefault;
-            set => _columnResizing.AllowedByDefault = value;
+            set
+            {
+                _columnResizing.AllowedByDefault = value;
+                ApplyHeaderSizingStyle();
+            }
         }
 
         /// <summary>
@@ -563,10 +570,39 @@ namespace ErikwnkWFUI.Controls
                 _headerInputSubclass.AssignHandle(headerHandle);
             }
 
+            ApplyHeaderSizingStyle();
+
+            // A display list now knows how high its header and rows really are.
+            UpdateFixedSize();
+
             // The first paint after a handle recreate (e.g. a theme switch)
             // can land before colors have settled - defer one tick to
             // repaint with the final ones.
             BeginInvoke(new MethodInvoker(Invalidate));
+        }
+
+        // Where no column can be resized, the header is told so (HDS_NOSIZING): it then never shows its resize
+        // cursor at a divider, which no answer to WM_SETCURSOR could keep from flickering in between. A list where
+        // only some columns are fixed keeps the header as it is; the cursor is corrected for those (see
+        // HeaderInputSubclass).
+        private void ApplyHeaderSizingStyle()
+        {
+            if (!IsHandleCreated)
+                return;
+
+            System.IntPtr header = HeaderInputSubclass.GetHeaderHandle(Handle);
+
+            if (header == System.IntPtr.Zero)
+                return;
+
+            const int GWL_STYLE = -16;
+            const int HDS_NOSIZING = 0x0800;
+
+            int style = GetWindowLong(header, GWL_STYLE);
+            int wanted = AllowColumnResizing ? style & ~HDS_NOSIZING : style | HDS_NOSIZING;
+
+            if (wanted != style)
+                SetWindowLong(header, GWL_STYLE, wanted);
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
@@ -647,6 +683,10 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            // A list that is as big as its content: a column or an item that comes, goes or changes is seen
+            // here (the list is told once the message is done).
+            NoteMessageForSize(m.Msg);
 
             if (m.Msg == WM_NCPAINT)
                 PaintScrollBarCorner();
@@ -1839,6 +1879,27 @@ namespace ErikwnkWFUI.Controls
                     }
                 }
 
+                // The system asks for the cursor again and again while the mouse moves, before every mouse move; the
+                // header answers with its resize cursor at a divider. Where that column cannot be resized the
+                // answer is the arrow, given here instead of the header's - correcting it only after the mouse move
+                // (see below) let the resize cursor flicker in between.
+                // The mouse move at such a divider is not handed to the header at all (it would set its resize
+                // cursor on the way): no button is down then, so there is nothing for it to track.
+                if (m.Msg == WM_MOUSEMOVE && _resizingColumn == null && (Control.MouseButtons & MouseButtons.Left) == 0
+                    && _owner.IsNearNonResizableColumnBorder(GetX(m.LParam)))
+                {
+                    Cursor.Current = Cursors.Default;
+                    m.Result = System.IntPtr.Zero;
+                    return;
+                }
+
+                if (m.Msg == WM_SETCURSOR && IsOnNonResizableBorder())
+                {
+                    Cursor.Current = Cursors.Default;
+                    m.Result = (System.IntPtr)1;
+                    return;
+                }
+
                 base.WndProc(ref m);
 
                 switch (m.Msg)
@@ -1849,9 +1910,9 @@ namespace ErikwnkWFUI.Controls
 
                     case WM_MOUSEMOVE:
                         // Runs after base.WndProc: the header sets its own
-                        // resize cursor from its own mouse-move handling,
-                        // so correcting it after (not via WM_SETCURSOR
-                        // first) is what actually sticks.
+                        // resize cursor from its own mouse-move handling
+                        // as well, so the arrow is set after it (and for
+                        // WM_SETCURSOR above, instead of it).
                         TrySuppressResizeCursor(GetX(m.LParam));
                         OnMouseMove(GetX(m.LParam));
                         break;
@@ -1971,8 +2032,16 @@ namespace ErikwnkWFUI.Controls
                 InvalidateHeaderNow();
             }
 
-            // See the WM_MOUSEMOVE case above for why this runs after
-            // base.WndProc instead of intercepting WM_SETCURSOR.
+            // Whether the mouse is on a divider of a column that cannot be resized.
+            private bool IsOnNonResizableBorder()
+            {
+                if (!GetWindowRect(Handle, out NativeRect window))
+                    return false;
+
+                return _owner.IsNearNonResizableColumnBorder(Cursor.Position.X - window.Left);
+            }
+
+            // The mouse move itself sets the header's resize cursor too, so the arrow is set again after it.
             private void TrySuppressResizeCursor(int x)
             {
                 if (_owner.IsNearNonResizableColumnBorder(x))

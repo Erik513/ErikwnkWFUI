@@ -16,6 +16,7 @@ namespace ErikwnkWFUI.Native
         public const int WM_NCRBUTTONDOWN = 0x00A4;
         public const int WM_HSCROLL = 0x0114;
         public const int WM_VSCROLL = 0x0115;
+        public const int WM_SETCURSOR = 0x0020;
         public const int WM_MOUSEMOVE = 0x0200;
         public const int WM_LBUTTONDOWN = 0x0201;
         public const int WM_LBUTTONUP = 0x0202;
@@ -77,6 +78,9 @@ namespace ErikwnkWFUI.Native
 
         [DllImport("user32.dll")]
         public static extern int GetWindowLong(IntPtr hWnd, int index);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongW")]
+        public static extern int SetWindowLong(IntPtr hWnd, int index, int value);
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetParent(IntPtr hWnd);
