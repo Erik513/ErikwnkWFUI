@@ -71,8 +71,8 @@ public class DataGridViewColumnResizeTests
         //
         // _sortedColumnIndex, not HeaderCell.SortGlyphDirection, is the
         // actual source of truth read back here - the glyph OnCellPainting
-        // draws comes from that field (SortGlyphDirection is only ever set
-        // for AT/screen-reader purposes, see CycleSort's own remarks on it).
+        // draws comes from that field (SortGlyphDirection is never set,
+        // see CycleSort's own remarks on it).
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("B", 2), ("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
 

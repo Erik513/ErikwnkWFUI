@@ -1990,24 +1990,10 @@ namespace ErikwnkWFUI.Controls
             }
             else
             {
-                // Still set for AT/screen-reader purposes (this is the
-                // property they'd actually look at), but not what the
-                // arrow on screen is drawn from - see OnCellPainting's own
-                // remarks on why. Skipped for the enumeration column
-                // specifically - confirmed live that combining this native
-                // property with an EMPTY HeaderText (see
-                // UpdateEnumerationHeaderText) makes WinForms' own default
-                // header painting draw a second, native glyph on top of
-                // ColumnHeaderPainting.DrawSortGlyph's own, the two
-                // overlapping into a single "bowtie" blob instead of one
-                // clean triangle. Every other column keeps real header
-                // text, where this same combination never showed that
-                // extra glyph at all.
-                if (!IsEnumerationColumn(columnIndex))
-                {
-                    Columns[columnIndex].HeaderCell.SortGlyphDirection = _sortOrder;
-                }
-
+                // The native SortGlyphDirection is NOT set: it paints a glyph of its own on top of
+                // ColumnHeaderPainting.DrawSortGlyph's (two triangles overlapping into one "bowtie"
+                // blob), on every column, not just the enumeration column with its empty HeaderText.
+                // The arrow on screen is drawn from _sortedColumnIndex/_sortOrder alone.
                 ReorderDataSource(BuildSortedOrder(columnIndex, _sortOrder));
             }
 
@@ -2057,15 +2043,10 @@ namespace ErikwnkWFUI.Controls
             e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
         }
 
-        // ColumnHeaderPainting.DrawSortGlyph below draws its own triangle,
-        // not the native SortGlyphDirection glyph (still set on the column,
-        // for AT/screen-reader purposes, but not what actually paints here):
-        // that glyph rides on the OS's own visual-style painting, which
-        // EnableHeadersVisualStyles = false deliberately opts out of
-        // everywhere else on this control (so its own
-        // ColumnHeadersDefaultCellStyle colors apply instead of the OS
-        // theme) - confirmed live that with it off, the native glyph
-        // doesn't paint at all, not even faintly.
+        // ColumnHeaderPainting.DrawSortGlyph below draws the triangle. The
+        // native SortGlyphDirection glyph is never set on a column (see
+        // CycleSort): it does paint, in a style of its own, and the two
+        // overlap into a "bowtie" blob.
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             base.OnCellPainting(e);

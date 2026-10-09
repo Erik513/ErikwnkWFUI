@@ -190,12 +190,25 @@ public class ReadOnlyDataGridViewEnumerationTests
         Assert.Equal(string.Empty, column.HeaderText);
     }
 
-    // Confirmed live: setting the NATIVE SortGlyphDirection alongside an
-    // EMPTY HeaderText makes WinForms' own default header painting draw a
-    // second, native glyph on top of ColumnHeaderPainting.DrawSortGlyph's
-    // own - the two overlapping into a single "bowtie" blob instead of one
-    // clean triangle. CycleSort skips the native property for this column
-    // specifically to avoid it; this locks that in.
+    // Confirmed live: setting the NATIVE SortGlyphDirection makes WinForms'
+    // own default header painting draw a second, native glyph on top of
+    // ColumnHeaderPainting.DrawSortGlyph's own - the two overlapping into a
+    // single "bowtie" blob instead of one clean triangle. CycleSort never
+    // sets the native property, on any column; this locks that in.
+    [Fact]
+    public void CycleSort_NeverSetsNativeSortGlyphDirection_OnAnyColumn()
+    {
+        using WfuiReadOnlyDataGridView grid = new WfuiReadOnlyDataGridView();
+        grid.Columns.Add("a", "A");
+        grid.Columns.Add("b", "B");
+
+        grid.InvokePrivate("CycleSort", 1); // ascending
+        Assert.All(grid.Columns.Cast<DataGridViewColumn>(), c => Assert.Equal(SortOrder.None, c.HeaderCell.SortGlyphDirection));
+
+        grid.InvokePrivate("CycleSort", 1); // descending
+        Assert.All(grid.Columns.Cast<DataGridViewColumn>(), c => Assert.Equal(SortOrder.None, c.HeaderCell.SortGlyphDirection));
+    }
+
     [Fact]
     public void CycleSort_OnEnumerationColumn_NeverSetsNativeSortGlyphDirection()
     {
