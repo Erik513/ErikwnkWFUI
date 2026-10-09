@@ -55,7 +55,7 @@ namespace ErikwnkWFUI.Showcase
                  AddInfoPopupsSection),
 
                 ("Labels",
-                 "Three text styles: Title, Normal and Muted (for secondary text). Left enabled, right disabled.",
+                 "Text in the theme colors: Standard (body text), Primary (accent color), Title (bold, larger) and Muted (quiet), each also in a color set. Left enabled, right disabled. A text that is too long can move instead of ending in an ellipsis: back and forth with a rest at both ends, or endlessly, one text or several one behind the other.",
                  AddLabelsSection),
 
                 ("ListBoxControl",
