@@ -120,12 +120,63 @@ public class LabelScrollOptionsTests : IDisposable
         using ThemedLabel label = Create(LabelScroll.Endless());
         Assert.True(Moving(label));
 
+        // Windows tells the labels through LabelSettingsWatcher (a window hears of a setting only for itself).
         animations = false;
-        SendMessage(label.Handle, WM_SETTINGCHANGE, IntPtr.Zero, IntPtr.Zero);
+        LabelSettingsWatcher.Raise();
+        PumpUntil(() => !Moving(label));
         Assert.False(Moving(label));
 
         animations = true;
-        SendMessage(label.Handle, WM_SETTINGCHANGE, IntPtr.Zero, IntPtr.Zero);
+        LabelSettingsWatcher.Raise();
+        PumpUntil(() => Moving(label));
+        Assert.True(Moving(label));
+    }
+
+    private static void PumpUntil(Func<bool> reached)
+    {
+        for (int i = 0; i < 100 && !reached(); i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(10);
+        }
+    }
+
+    // The labels that could move wait for the system; the others do not, and the watcher is off then.
+    [Fact]
+    public void OnlyLabelsThatCouldMove_WaitForTheSettingsOfWindows()
+    {
+        int before = LabelSettingsWatcher.Count;
+        ThemedLabel idle = Create(LabelScroll.None);
+        Assert.Equal(before, LabelSettingsWatcher.Count);
+
+        ThemedLabel moving = Create(LabelScroll.Endless());
+        Assert.Equal(before + 1, LabelSettingsWatcher.Count);
+
+        // Also one whose text fits: the setting may matter when it is made smaller.
+        ThemedLabel fits = Create(LabelScroll.BackAndForth(), text: "Short");
+        Assert.Equal(before + 2, LabelSettingsWatcher.Count);
+
+        moving.ScrollMode = LabelScrollMode.None;
+        Assert.Equal(before + 1, LabelSettingsWatcher.Count);
+
+        moving.Dispose();
+        fits.Dispose();
+        idle.Dispose();
+        Assert.Equal(before, LabelSettingsWatcher.Count);
+    }
+
+    [Fact]
+    public void AFixedLabel_ThatHasTheAnimationsSwitchedOnLater_StartsToMove()
+    {
+        bool animations = false;
+        ThemedLabel.AnimationsEnabled = () => animations;
+        using ThemedLabel label = Create(LabelScroll.BackAndForth());
+        Assert.False(Moving(label));
+
+        animations = true;
+        LabelSettingsWatcher.Raise();
+        PumpUntil(() => Moving(label));
+
         Assert.True(Moving(label));
     }
 

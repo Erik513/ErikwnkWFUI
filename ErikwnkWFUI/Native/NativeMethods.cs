@@ -24,7 +24,6 @@ namespace ErikwnkWFUI.Native
         public const int WM_MOUSEWHEEL = 0x020A;
         public const int WM_XBUTTONDOWN = 0x020B;
         public const int WM_CAPTURECHANGED = 0x0215;
-        public const int WM_SETTINGCHANGE = 0x001A;
 
         // SystemParametersInfo: whether the animations in windows are on (Windows settings, Accessibility).
         public const uint SPI_GETCLIENTAREAANIMATION = 0x1042;
