@@ -25,12 +25,20 @@ namespace ErikwnkWFUI.Native
         public const int WM_XBUTTONDOWN = 0x020B;
         public const int WM_CAPTURECHANGED = 0x0215;
 
+        // Messages of the application itself start here.
+        public const int WM_APP = 0x8000;
+
         // ---- window corners (Windows 11) ----
         public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
         public const int DWMWCP_ROUND = 2;
         public const int DWMWCP_ROUNDSMALL = 3;
 
         // ---- user32: messages ----
+        // Puts a message in the queue of the window and returns at once (from any thread).
+        [DllImport("user32.dll", EntryPoint = "PostMessageW")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool PostMessage(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam);
+
         [DllImport("user32.dll", EntryPoint = "SendMessageW")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, IntPtr lParam);
 
@@ -115,6 +123,10 @@ namespace ErikwnkWFUI.Native
         // ---- other ----
         [DllImport("uxtheme.dll", CharSet = CharSet.Unicode)]
         public static extern int SetWindowTheme(IntPtr hWnd, string subAppName, string subIdList);
+
+        // Returns when the desktop has put the next picture on the screen: the beat of the display.
+        [DllImport("dwmapi.dll")]
+        public static extern int DwmFlush();
 
         [DllImport("dwmapi.dll")]
         public static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);

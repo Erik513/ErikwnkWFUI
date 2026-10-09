@@ -2,8 +2,12 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Drawing.Text;
+using System.Threading;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -26,9 +30,6 @@ namespace ErikwnkWFUI.Controls
         // The least contrast the text of a label with a color set has against what is behind it.
         private const double TextContrast = 4.5;
 
-        // How often the moving text is drawn anew (about 60 times a second).
-        private const int FrameMilliseconds = 16;
-
         // The text moves a little further than its end, so that the last sign is clear of the edge.
         private const int EndRoom = 2;
 
@@ -36,7 +37,15 @@ namespace ErikwnkWFUI.Controls
         private readonly UIColorSet _colors;
         private bool _hasOwnForeColor;
 
-        private readonly Timer _timer = new Timer { Interval = FrameMilliseconds };
+        // Whether the label is on the beat of LabelAnimationClock, and whether it has been asked for a
+        // picture that it has not made yet (so that a slow window is asked once, not many times).
+        private bool _animating;
+        private int _framePending;
+
+        // The message that asks the label for its next picture, and the handle the clock posts it to
+        // (kept here: the clock thread must not ask the control for its Handle).
+        private const int WM_NEXT_PICTURE = WM_APP + 0x4C;
+        private volatile IntPtr _postHandle;
         private bool _scrollWhenTooLong;
         private LabelScrollSpeed _scrollSpeed = LabelScrollSpeed.Medium;
         private LabelScrollPause _edgePause = LabelScrollPause.Medium;
@@ -44,9 +53,19 @@ namespace ErikwnkWFUI.Controls
         // The moving text: how far it is moved to the left, which way it goes, how far it can go,
         // how wide it is, until when it rests and when it was last moved.
         private float _offset;
+        private float _paintedOffset;
         private int _direction = 1;
         private int _maxOffset;
         private int _textWidth;
+
+        // The moving text as a picture of its own (grayscale smoothing on a clear background), made when
+        // the text starts to move: the picture can be put at any place between two pixels, which the
+        // text of the screen font cannot - and the text then moves without jerks.
+        private Bitmap _picture;
+        private Color _pictureColor;
+
+        // A picture wider than this is not made: the text of such a label ends in an ellipsis.
+        private const int MaxPictureWidth = 16000;
         private long _restUntil;
         private long _lastFrame;
 
@@ -54,8 +73,6 @@ namespace ErikwnkWFUI.Controls
         {
             _enabledForeColor = enabledForeColor;
             _colors = colors;
-
-            _timer.Tick += OnFrame;
         }
 
         // The time of the moving text. Replaceable so a test can let time pass.
@@ -98,6 +115,8 @@ namespace ErikwnkWFUI.Controls
         private void Restart()
         {
             _offset = 0f;
+            _paintedOffset = 0f;
+            DisposePicture();
             _direction = 1;
             _maxOffset = MeasureMaxOffset();
             _restUntil = Milliseconds() + _edgePause.ToMilliseconds();
@@ -105,10 +124,15 @@ namespace ErikwnkWFUI.Controls
 
             bool moves = _maxOffset > 0 && Visible && IsHandleCreated;
 
-            if (moves && !_timer.Enabled)
-                _timer.Start();
-            else if (!moves && _timer.Enabled)
-                _timer.Stop();
+            if (moves && !_animating)
+            {
+                _animating = true;
+                LabelAnimationClock.Add(this);
+            }
+            else if (!moves && _animating)
+            {
+                StopAnimating();
+            }
 
             Invalidate();
         }
@@ -122,21 +146,78 @@ namespace ErikwnkWFUI.Controls
             if (!_scrollWhenTooLong || !Enabled || AutoSize || string.IsNullOrEmpty(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return 0;
 
-            _textWidth = TextRenderer.MeasureText(Text, Font, new Size(int.MaxValue, int.MaxValue), GetMovingTextFlags()).Width;
+            using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
+            using (StringFormat format = CreateMovingTextFormat())
+            {
+                _textWidth = (int)Math.Ceiling(graphics.MeasureString(Text, Font, PointF.Empty, format).Width);
+            }
 
-            return Math.Max(0, _textWidth - (ClientSize.Width - Padding.Horizontal) + EndRoom);
+            if (_textWidth > MaxPictureWidth)
+                return 0;
+
+            return Math.Max(0, _textWidth + 2 * GetTextInset() - (ClientSize.Width - Padding.Horizontal) + EndRoom);
+        }
+
+        private void StopAnimating()
+        {
+            _animating = false;
+            LabelAnimationClock.Remove(this);
+        }
+
+        // Called from the thread of the clock: ask the window for the next picture, once.
+        internal void RequestFrame()
+        {
+            IntPtr handle = _postHandle;
+
+            if (handle == IntPtr.Zero || Interlocked.Exchange(ref _framePending, 1) == 1)
+                return;
+
+            if (!PostMessage(handle, WM_NEXT_PICTURE, IntPtr.Zero, IntPtr.Zero))
+                Interlocked.Exchange(ref _framePending, 0);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            if (m.Msg == WM_NEXT_PICTURE)
+            {
+                MakeFrame();
+
+                return;
+            }
+
+            base.WndProc(ref m);
+        }
+
+        private void MakeFrame()
+        {
+            Interlocked.Exchange(ref _framePending, 0);
+
+            if (!_animating || IsDisposed)
+                return;
+
+            if (Step() && IsHandleCreated)
+            {
+                // At once, not when the queue has nothing better to do: the picture belongs to this beat.
+                Update();
+            }
         }
 
         // One step of the movement; the time that has passed decides how far, so the speed does not
         // depend on how often the timer manages to tick.
         private void OnFrame(object sender, EventArgs e)
         {
+            Step();
+        }
+
+        // One step of the movement; whether the text has moved (then it is invalidated).
+        private bool Step()
+        {
             long now = Milliseconds();
             long from = Math.Max(_lastFrame, _restUntil);
             _lastFrame = now;
 
             if (now <= _restUntil)
-                return;
+                return false;
 
             _offset += _direction * _scrollSpeed.ToPixelsPerSecond() * (now - from) / 1000f;
 
@@ -153,7 +234,14 @@ namespace ErikwnkWFUI.Controls
                 _restUntil = now + _edgePause.ToMilliseconds();
             }
 
+            // A picture only when the text has moved at all (not while it rests).
+            if (_offset == _paintedOffset)
+                return false;
+
+            _paintedOffset = _offset;
             Invalidate();
+
+            return true;
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -195,12 +283,17 @@ namespace ErikwnkWFUI.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            _postHandle = Handle;
             Restart();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
-            _timer.Stop();
+            _postHandle = IntPtr.Zero;
+
+            if (_animating)
+                StopAnimating();
+
             base.OnHandleDestroyed(e);
         }
 
@@ -208,9 +301,10 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
-                _timer.Stop();
-                _timer.Tick -= OnFrame;
-                _timer.Dispose();
+                if (_animating)
+                    StopAnimating();
+
+                DisposePicture();
             }
 
             base.Dispose(disposing);
@@ -245,7 +339,8 @@ namespace ErikwnkWFUI.Controls
             base.OnPaint(e);
         }
 
-        // The text from the place it has moved to, shown only inside the label (the padding stays free).
+        // The picture of the text from the place it has moved to, shown only inside the label (the padding
+        // stays free). The place may lie between two pixels; the picture is then mixed between them.
         private void PaintMovingText(Graphics graphics)
         {
             Rectangle inner = new Rectangle(
@@ -254,25 +349,98 @@ namespace ErikwnkWFUI.Controls
                 Math.Max(0, ClientSize.Width - Padding.Horizontal),
                 Math.Max(0, ClientSize.Height - Padding.Vertical));
 
-            Rectangle textArea = new Rectangle(
-                inner.Left - (int)Math.Round(_offset),
-                inner.Top,
-                _textWidth + EndRoom,
-                inner.Height);
+            Bitmap picture = GetPicture();
+            float x = inner.Left + GetTextInset() - _offset;
+            int y = GetPictureTop(inner, picture.Height);
 
             GraphicsState state = graphics.Save();
 
             try
             {
                 graphics.IntersectClip(inner);
-                // (Without PreserveGraphicsClipping the text would ignore the clip and show in the padding.)
-                TextRenderer.DrawText(graphics, Text, Font, textArea, ForeColor,
-                    GetMovingTextFlags() | GetVerticalFlag(TextAlign) | TextFormatFlags.PreserveGraphicsClipping);
+                graphics.InterpolationMode = InterpolationMode.Bilinear;
+                graphics.PixelOffsetMode = PixelOffsetMode.Half;
+                graphics.DrawImage(
+                    picture,
+                    new RectangleF(x, y, picture.Width, picture.Height),
+                    new RectangleF(0, 0, picture.Width, picture.Height),
+                    GraphicsUnit.Pixel);
             }
             finally
             {
                 graphics.Restore(state);
             }
+        }
+
+        // The room the screen font puts before the text (a few pixels, as much as the text of a label that
+        // does not move has), so that the text does not jump when the label starts to move.
+        private int GetTextInset()
+        {
+            Size big = new Size(int.MaxValue, int.MaxValue);
+            int padded = TextRenderer.MeasureText("A", Font, big, TextFormatFlags.Default).Width;
+            int bare = TextRenderer.MeasureText("A", Font, big, TextFormatFlags.NoPadding).Width;
+
+            return Math.Max(0, (padded - bare) / 2);
+        }
+
+        private int GetPictureTop(Rectangle inner, int height)
+        {
+            switch (GetVerticalFlag(TextAlign))
+            {
+                case TextFormatFlags.Top:
+                    return inner.Top;
+                case TextFormatFlags.Bottom:
+                    return inner.Bottom - height;
+                default:
+                    return inner.Top + (inner.Height - height) / 2;
+            }
+        }
+
+        // The picture of the text in the color it has now.
+        private Bitmap GetPicture()
+        {
+            Color color = ForeColor;
+
+            if (_picture != null && _pictureColor == color)
+                return _picture;
+
+            DisposePicture();
+
+            Bitmap picture = new Bitmap(Math.Max(1, _textWidth + EndRoom), Math.Max(1, (int)Math.Ceiling(Font.GetHeight())) + 2, PixelFormat.Format32bppPArgb);
+
+            using (Graphics graphics = Graphics.FromImage(picture))
+            using (SolidBrush brush = new SolidBrush(color))
+            using (StringFormat format = CreateMovingTextFormat())
+            {
+                graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+                graphics.Clear(Color.Transparent);
+                graphics.DrawString(Text, Font, brush, new PointF(0f, 1f), format);
+            }
+
+            _picture = picture;
+            _pictureColor = color;
+
+            return _picture;
+        }
+
+        private void DisposePicture()
+        {
+            if (_picture != null)
+            {
+                _picture.Dispose();
+                _picture = null;
+            }
+        }
+
+        // One line from the left, as it is, without the room GDI+ would add around it; what an ampersand is
+        // follows UseMnemonic.
+        private StringFormat CreateMovingTextFormat()
+        {
+            StringFormat format = new StringFormat(StringFormat.GenericTypographic);
+            format.FormatFlags |= StringFormatFlags.NoWrap | StringFormatFlags.MeasureTrailingSpaces;
+            format.HotkeyPrefix = !UseMnemonic ? HotkeyPrefix.None : ShowKeyboardCues ? HotkeyPrefix.Show : HotkeyPrefix.Hide;
+
+            return format;
         }
 
         // ---- colors ----
@@ -337,12 +505,6 @@ namespace ErikwnkWFUI.Controls
                 return TextFormatFlags.NoPrefix;
 
             return ShowKeyboardCues ? TextFormatFlags.Default : TextFormatFlags.HidePrefix;
-        }
-
-        // The moving text: one line, from the left, no ellipsis.
-        private TextFormatFlags GetMovingTextFlags()
-        {
-            return TextFormatFlags.Left | GetPrefixFlags();
         }
 
         // How the disabled text is laid out, as the standard label does it: the alignment, what

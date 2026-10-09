@@ -62,7 +62,8 @@ public class LabelScrollTests : IDisposable
 
     private static int MaxOffset(ThemedLabel label) => label.GetPrivateField<int>("_maxOffset");
 
-    private static System.Windows.Forms.Timer Timer(ThemedLabel label) => label.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
+    // Whether the label is on the beat of the animation clock (the thing that makes it move).
+    private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
 
     // The timer ticks after this long.
     private void Tick(ThemedLabel label, int milliseconds)
@@ -100,17 +101,17 @@ public class LabelScrollTests : IDisposable
 
         Assert.False(label.ScrollWhenTooLong);
         Assert.Equal(0, MaxOffset(label));
-        Assert.False(Timer(label).Enabled);
+        Assert.False(Moving(label));
         Assert.True(label.AutoEllipsis);
     }
 
     [Fact]
-    public void ALongText_WhenTheScrollingIsOn_GetsARoomToMove_AndATimer()
+    public void ALongText_WhenTheScrollingIsOn_GetsARoomToMove_AndIsOnTheClock()
     {
         using ThemedLabel label = Create();
 
         Assert.True(MaxOffset(label) > 0);
-        Assert.True(Timer(label).Enabled);
+        Assert.True(Moving(label));
     }
 
     [Fact]
@@ -237,12 +238,102 @@ public class LabelScrollTests : IDisposable
     }
 
     [Fact]
-    public void ATextThatFits_StandsStill_WithoutATimer()
+    public void APictureIsOnlyMade_WhenTheTextHasMoved_AtAnyPlaceBetweenTwoPixels()
+    {
+        using ThemedLabel label = Create(scroll: false);
+        label.ScrollSpeed = LabelScrollSpeed.Slow;
+        label.ScrollWhenTooLong = true;
+
+        // While it rests there is nothing new to show.
+        _now += 1000;
+        Assert.False(label.InvokePrivate<bool>("Step"));
+
+        // The pause is over; a few milliseconds later it has moved a fraction of a pixel (25 a second):
+        // that is a new picture too, the text can stand between two pixels.
+        _now += 1200;
+        Assert.False(label.InvokePrivate<bool>("Step"));
+        _now += 10;
+        Assert.True(label.InvokePrivate<bool>("Step"));
+        Assert.True(Offset(label) > 0f && Offset(label) < 1f, "not a fraction of a pixel: " + Offset(label));
+    }
+
+    [Fact]
+    public void BetweenTwoPixels_TheTextIsPaintedBetweenThem()
+    {
+        using ThemedLabel label = Create(scroll: false);
+        label.ScrollSpeed = LabelScrollSpeed.Slow;
+        label.ScrollWhenTooLong = true;
+        _now += 2200;
+
+        // Half a pixel further: 20 milliseconds at 25 pixels a second.
+        _now += 20;
+        label.InvokePrivate<bool>("Step");
+        using Bitmap half = Paint(label);
+
+        _now += 20;
+        label.InvokePrivate<bool>("Step");
+        using Bitmap whole = Paint(label);
+
+        _now += 40;
+        label.InvokePrivate<bool>("Step");
+        using Bitmap two = Paint(label);
+
+        Assert.False(Same(half, whole));
+        Assert.False(Same(whole, two));
+    }
+
+    [Fact]
+    public void TheClock_ReachesTheLabel_ThroughItsMessageQueue_AndTheLabelMoves()
+    {
+        using ThemedLabel label = Create(scroll: false);
+        label.ScrollSpeed = LabelScrollSpeed.Fast;
+        label.ScrollWhenTooLong = true;
+        _now += 2200;
+        _now += 1000;
+
+        label.RequestFrame();
+
+        for (int i = 0; i < 50 && Offset(label) == 0f; i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(10);
+        }
+
+        Assert.True(Offset(label) > 0f, "the label did not make its picture");
+    }
+
+    [Fact]
+    public void ALabelThatIsAskedTwice_BeforeItAnswers_IsAskedOnce()
+    {
+        using ThemedLabel label = Create();
+
+        label.RequestFrame();
+        label.RequestFrame();
+        label.RequestFrame();
+
+        Assert.Equal(1, label.GetPrivateField<int>("_framePending"));
+
+        Application.DoEvents();
+    }
+
+    [Fact]
+    public void AskingALabelWithoutAWindow_IsHarmless()
+    {
+        ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+
+        Assert.Null(Record.Exception(() => label.RequestFrame()));
+
+        label.Dispose();
+        Assert.Null(Record.Exception(() => label.RequestFrame()));
+    }
+
+    [Fact]
+    public void ATextThatFits_StandsStill_OffTheClock()
     {
         using ThemedLabel label = Create(text: "Short");
 
         Assert.Equal(0, MaxOffset(label));
-        Assert.False(Timer(label).Enabled);
+        Assert.False(Moving(label));
     }
 
     [Fact]
@@ -256,11 +347,11 @@ public class LabelScrollTests : IDisposable
         label.Width = 1000;
         Assert.Equal(0, MaxOffset(label));
         Assert.Equal(0f, Offset(label));
-        Assert.False(Timer(label).Enabled);
+        Assert.False(Moving(label));
 
         label.Width = 120;
         Assert.True(MaxOffset(label) > 0);
-        Assert.True(Timer(label).Enabled);
+        Assert.True(Moving(label));
         Assert.Equal(0f, Offset(label));
     }
 
@@ -307,34 +398,35 @@ public class LabelScrollTests : IDisposable
 
         Assert.Equal(0, MaxOffset(label));
         Assert.Equal(0f, Offset(label));
-        Assert.False(Timer(label).Enabled);
+        Assert.False(Moving(label));
 
         label.Enabled = true;
 
-        Assert.True(Timer(label).Enabled);
+        Assert.True(Moving(label));
     }
 
     [Fact]
-    public void AHiddenLabel_HasNoTimerRunning()
+    public void AHiddenLabel_IsOffTheClock()
     {
         using ThemedLabel label = Create();
 
         label.Visible = false;
-        Assert.False(Timer(label).Enabled);
+        Assert.False(Moving(label));
 
         label.Visible = true;
-        Assert.True(Timer(label).Enabled);
+        Assert.True(Moving(label));
     }
 
     [Fact]
-    public void ALabelThatIsDisposed_GivesItsTimerBack()
+    public void ALabelThatIsDisposed_LeavesTheClock()
     {
         ThemedLabel label = Create();
-        System.Windows.Forms.Timer timer = Timer(label);
+        Assert.True(LabelAnimationClock.Count >= 1);
 
         label.Dispose();
 
-        Assert.False(timer.Enabled);
+        Assert.False(Moving(label));
+        Assert.Equal(0, LabelAnimationClock.Count);
         Assert.Null(Record.Exception(() => label.ScrollWhenTooLong = false));
     }
 
