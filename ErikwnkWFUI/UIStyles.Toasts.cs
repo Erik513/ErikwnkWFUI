@@ -7,7 +7,7 @@ namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
-        /// <summary>A small confirmation that closes itself, shown near the bottom of a window. It belongs to that window (moves with it, never takes the focus) and is shown only while the window is in front; a toast that cannot be shown waits for it. See <see cref="ToastForm"/>.</summary>
+        /// <summary>A small message that closes itself, shown in a window (below the middle by default). It belongs to that window (moves with it, never takes the focus) and is shown only while the window is in front; a toast that cannot be shown waits for it. See <see cref="ToastForm"/>.</summary>
         public static class Toasts
         {
             /// <summary>Creates the settings of a toast as properties, to show toasts with them again and again (<see cref="Toaster.Show(string, Form)"/>); in the neutral gray unless <paramref name="colors"/> says otherwise.</summary>

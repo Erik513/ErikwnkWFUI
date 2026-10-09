@@ -8,44 +8,47 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A small, rounded, self-dismissing toast (an optional symbol, an optional title
-    /// and the message), closing itself after a short, medium or long <see cref="PopupDuration"/> -
-    /// call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/> rather than
-    /// constructing this directly. Only one toast shows at a time; showing
-    /// a new one closes whatever's currently up. The toast belongs to its window: it is
-    /// shown only while that window is in front, stays above its window but not above other
-    /// windows or programs, moves with the window and never takes the activation.
+    /// A small, rounded, self-dismissing toast: an optional symbol, an optional title and a
+    /// message. Call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/>
+    /// (or <c>UIStyles.Toasts</c>) rather than constructing this directly. Only one toast shows
+    /// at a time; a new one closes the one that is up.
     /// </summary>
     /// <remarks>
-    /// A toast that cannot be shown because its window is not in front is not lost: it waits,
-    /// and is shown when the window is activated again. At most <see cref="MaxPendingToasts"/>
-    /// wait for one window (the newest; the same text twice counts once), and one that has
-    /// waited longer than <see cref="PendingLifetime"/> is dropped, as it would be out of date.
-    /// Several waiting toasts are shown one after the other. A window that closes takes its
-    /// waiting toasts with it.
-    ///
     /// <para>
-    /// A click on the toast closes it. A toast the mouse is on when its time is up stays until the
-    /// mouse has left it.
-    /// By default the toast is centered in the lower part of the window; <see cref="ToastPosition"/>
-    /// puts it in the middle, above the middle, at the top or bottom or in a corner, with a fixed
-    /// distance to the edge. A window that is too small for the distance still keeps it inside.
-    /// A toast without a title and without a message shows nothing. The title is one line (an
-    /// ellipsis ends what is too long), in bold; title and message may have their own colors
-    /// (<see cref="InfoPopupSection"/>, as in the info popup).
-    /// A message without text shows no toast. A call from another thread is carried over to
-    /// the thread of the window. The toast is placed inside the window (and on the screen) as
-    /// far as it fits; a window narrower than the toast gets it at its left edge. A long message
-    /// makes the toast higher, up to four lines (more ends in an ellipsis); its
-    /// width stays. The size and the places inside follow the scaling of the screen the window
-    /// is on. An ampersand is shown as it is.
+    /// <b>Window.</b> The toast belongs to its window: it is shown only while that window is in
+    /// front, stays above it but not above other windows or programs, moves with it and never
+    /// takes the activation. A toast that cannot be shown because its window is not in front
+    /// is not lost: it waits and is shown when the window is activated again. At most
+    /// <see cref="MaxPendingToasts"/> wait for one window (the newest; the same content twice in
+    /// a row counts once), one that has waited longer than <see cref="PendingLifetime"/> is
+    /// dropped as out of date, and several are shown one after the other. A window that closes
+    /// takes its waiting toasts with it. A call from another thread is carried over to the
+    /// thread of the window.
     /// </para>
     /// <para>
-    /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text,
-    /// a title, the colors of both, and the time it stays (<see cref="Duration"/>) are
-    /// offered, and a symbol for the kind of message (<see cref="ToastIcon"/>: check mark, info,
-    /// warning, error; none by default). Not offered: an event for a click on the toast or for
-    /// its closing, and a toast that stays until it is clicked.
+    /// <b>Place and size.</b> By default the toast is centered in the lower part of the window;
+    /// <see cref="ToastPosition"/> puts it in the middle, above the middle, at the top or
+    /// bottom or in a corner, with a fixed distance to the edge. It stays inside the window (and
+    /// on the screen) as far as it fits; a window narrower than the toast gets it at its left
+    /// edge. The width is fixed; a long message makes the toast higher, up to four lines (more
+    /// ends in an ellipsis). The size and the places inside follow the scaling of the screen the
+    /// window is on.
+    /// </para>
+    /// <para>
+    /// <b>Content.</b> A message, an optional title (one line, bold; an ellipsis ends what is too
+    /// long) and an optional symbol (<see cref="ToastIcon"/>, or any <c>UIStyles.Symbols</c>
+    /// symbol). Title and message may have their own colors (<see cref="InfoPopupSection"/>, as
+    /// in the info popup). A toast without a title and without a message shows nothing. An
+    /// ampersand is shown as it is.
+    /// </para>
+    /// <para>
+    /// <b>Closing.</b> The toast closes itself after its <see cref="Duration"/>, or at once on a
+    /// click. A toast the mouse is on when its time is up stays until the mouse has left it.
+    /// </para>
+    /// <para>
+    /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text, a
+    /// title, a symbol, the colors and the time it stays are offered. Not offered: an event for
+    /// a click on the toast or for its closing, and a toast that stays until it is clicked.
     /// </para>
     /// </remarks>
     public class ToastForm : PopupFormBase
@@ -100,7 +103,7 @@ namespace ErikwnkWFUI.Forms
 
         }
 
-        /// <summary>Shows a toast near the bottom-center of <paramref name="owner"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
+        /// <summary>Shows a toast in <paramref name="owner"/>, at <paramref name="position"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         /// <param name="message">The text of the toast.</param>
         /// <param name="owner">The window the toast belongs to and is shown over.</param>
         /// <param name="colors">A color set for the background of the toast (its text is white or black) instead of the neutral gray: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="Color"/>. <c>UIStyles.Toasts.ShowPrimary</c> uses the accent.</param>
@@ -384,7 +387,7 @@ namespace ErikwnkWFUI.Forms
                 owner.FormClosed += OnOwnerClosed;
             }
 
-            // The same content (and symbol) twice in a row is one message.
+            // The same toast (content, symbol and place) twice in a row is one message.
             if (queue.Count > 0 && queue[queue.Count - 1].Icon == icon && queue[queue.Count - 1].Symbol == symbol
                 && queue[queue.Count - 1].Position == position
                 && InfoPopupSection.SameContent(new[] { queue[queue.Count - 1].Content }, new[] { content }))
@@ -583,12 +586,12 @@ namespace ErikwnkWFUI.Forms
             FitToMessage();
         }
 
-        // The size of the toast and the places inside it follow the screen's scaling: a toast on a
-        // screen at 150% is 1.5 times as large, so its text keeps its room. The window it is
-        // shown for says which screen that is.
         // The scaling of the screen a window is on. Replaceable so a test can give another one.
         internal static Func<Form, int> OwnerDpi = owner => owner.DeviceDpi;
 
+        // The size of the toast and the places inside it follow the screen's scaling: a toast on a
+        // screen at 150% is 1.5 times as large, so its text keeps its room. The window it is
+        // shown for says which screen that is.
         internal void ApplyDpi(int dpi)
         {
             if (IsDisposed)
@@ -602,8 +605,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         // The toast is as wide as always and as high as its message needs, from one line (the
-        // usual height) to a few lines; what is more than that ends in an ellipsis. The check
-        // mark sits in the middle of the height.
+        // usual height) to a few lines; what is more than that ends in an ellipsis. The symbol
+        // sits in the middle of the height.
         private void FitToMessage()
         {
             int width = Scaled(ToastWidth96, _dpi);
@@ -664,8 +667,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         // The top left of a toast of this size in the area. The edges and corners keep
-        // <paramref name="edgeDistance"/> from the edge; the default and the "above the middle"
-        // place sit at three and one quarter of the height.
+        // <paramref name="edgeDistance"/> from the edge; BelowCenter and AboveCenter sit at three
+        // and one quarter of the height.
         internal static Point GetToastLocation(Rectangle area, Size size, ToastPosition position, int edgeDistance)
         {
             int centerX = area.Left + (area.Width - size.Width) / 2;
