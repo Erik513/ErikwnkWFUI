@@ -714,16 +714,42 @@ namespace ErikwnkWFUI.Controls
             }
 
             var rightEdge = GetColumnsTotalWidth();
-            if (rightEdge >= ClientSize.Width)
-            {
-                return;
-            }
 
             using (var graphics = Graphics.FromHwnd(Handle))
-            using (var background = new SolidBrush(_headerBackColor))
             {
-                graphics.FillRectangle(background, rightEdge, _headerHeight, ClientSize.Width - rightEdge, ClientSize.Height - _headerHeight);
+                // Below the last row (the strip a list that is not a whole number of rows high leaves, or the room
+                // of rows that are not there): the native list paints its column dividers there in the dark theme,
+                // as thin lines over an empty area. Painted over with the plain background.
+                int below = GetRowsBottom();
+
+                if (below < ClientSize.Height)
+                {
+                    using (var plain = new SolidBrush(BackColor))
+                    {
+                        graphics.FillRectangle(plain, 0, below, Math.Min(rightEdge, ClientSize.Width), ClientSize.Height - below);
+                    }
+                }
+
+                if (rightEdge >= ClientSize.Width)
+                {
+                    return;
+                }
+
+                using (var background = new SolidBrush(_headerBackColor))
+                {
+                    graphics.FillRectangle(background, rightEdge, _headerHeight, ClientSize.Width - rightEdge, ClientSize.Height - _headerHeight);
+                }
             }
+        }
+
+        // Where the rows end: the bottom of the last one, or the bottom of the header while there is none. At or
+        // beyond the bottom of the list when the rows fill it (or go on below it).
+        private int GetRowsBottom()
+        {
+            if (Items.Count == 0)
+                return _headerHeight;
+
+            return Math.Max(_headerHeight, Items[Items.Count - 1].Bounds.Bottom);
         }
 
         // The columns' combined width, i.e. where the real header/row
