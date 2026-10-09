@@ -366,6 +366,20 @@ public class LabelBehaviorTests
         return Rectangle.FromLTRB(left, top, right + 1, bottom + 1);
     }
 
+    [Fact]
+    public void ATitle_ShowsThePageBehindIt_NotADarkBox()
+    {
+        using Label title = UIStyles.Labels.CreateTitle("A title");
+        title.Size = new Size(200, 30);
+        Color page = Color.FromArgb(90, 120, 60);
+
+        using Bitmap painted = Paint(title, page);
+
+        // The corners, far from the centered text, are the page.
+        Assert.Equal(page.ToArgb(), painted.GetPixel(1, 1).ToArgb());
+        Assert.Equal(page.ToArgb(), painted.GetPixel(painted.Width - 2, painted.Height - 2).ToArgb());
+    }
+
     // ---- not a drop target ----
 
     [Fact]

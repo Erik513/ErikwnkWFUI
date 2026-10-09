@@ -13,7 +13,7 @@ namespace ErikwnkWFUI.Factories
             {
                 Text = text ?? "",
                 Font = UIFonts.Title,
-                BackColor = UIColors.BackgroundDark,
+                BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.MiddleCenter,
                 AutoEllipsis = true,
                 AutoSize = false,

@@ -42,7 +42,7 @@ namespace ErikwnkWFUI
                 return UILabelFactory.CreatePrimary(text, scroll);
             }
 
-            /// <summary>A heading: bold and larger, centered.</summary>
+            /// <summary>A heading: bold and larger, centered, on the background it sits on (transparent).</summary>
             /// <param name="text">The text of the label.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
             public static ThemedLabel CreateTitle(string text = "", LabelScroll scroll = null)

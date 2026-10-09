@@ -59,7 +59,7 @@ public class LabelFactoryTests
     }
 
     [Fact]
-    public void TheTitleAndTheMutedLabel_AreAsTheyWere()
+    public void TheTitle_IsBoldAndCentered_AndTheMutedLabelIsSmaller()
     {
         using Label title = UIStyles.Labels.CreateTitle("T");
         using Label muted = UIStyles.Labels.CreateMuted("M");
@@ -67,10 +67,24 @@ public class LabelFactoryTests
         Assert.Equal(UIFonts.Title, title.Font);
         Assert.Equal(ContentAlignment.MiddleCenter, title.TextAlign);
         Assert.Equal(UIColors.TextPrimary, TextColor(title));
-        Assert.Equal(UIColors.BackgroundDark, title.BackColor);
+        Assert.Equal(Color.Transparent, title.BackColor);
 
         Assert.Equal(UIFonts.Small, muted.Font);
         Assert.Equal(UIColors.TextMuted, TextColor(muted));
+    }
+
+    [Fact]
+    public void EveryLabel_HasATransparentBackground_SoItShowsTheSurfaceItSitsOn()
+    {
+        foreach (Label label in new[]
+        {
+            UIStyles.Labels.CreateStandard("x"), UIStyles.Labels.CreatePrimary("x"),
+            UIStyles.Labels.CreateTitle("x"), UIStyles.Labels.CreateMuted("x")
+        })
+        {
+            using (label)
+                Assert.Equal(Color.Transparent, label.BackColor);
+        }
     }
 
     [Fact]
