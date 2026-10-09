@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
@@ -169,6 +169,42 @@ public class ToastFactoryTests : IDisposable
 
                     if (ratio < 4.49)
                         shortfalls.Add(property.Name + " " + level + " over " + page.Name + " " + ratio.ToString("0.0"));
+                }
+            }
+        }
+
+        Assert.True(shortfalls.Count == 0, string.Join(", ", shortfalls));
+    }
+
+    [Fact]
+    public void TheTitleAndTheSymbol_ReadLikeTheMessage_EverySetEveryLevel()
+    {
+        Form host = Host();
+        List<string> shortfalls = new List<string>();
+
+        foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
+        {
+            foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
+            {
+                ToastForm.ShowToast(new InfoPopupSection("Title", "Message"), host, (UIColorSet)property.GetValue(null)!, level, icon: ToastIcon.Warning);
+                ToastForm toast = Current()!;
+
+                foreach (string name in new[] { "_titleLabel", "_iconLabel" })
+                {
+                    Color text = toast.GetPrivateField<Label>(name)!.ForeColor;
+
+                    Assert.Equal(MessageColor(toast), text);
+
+                    foreach (Color page in new[] { Color.White, Color.Black })
+                    {
+                        int alpha = (int)Math.Round(toast.Opacity * 255);
+                        double ratio = ColorContrastHelper.GetContrastRatio(
+                            ColorContrastHelper.Composite(Color.FromArgb(alpha, text), page),
+                            ColorContrastHelper.Composite(Color.FromArgb(alpha, toast.BackColor), page));
+
+                        if (ratio < 4.49)
+                            shortfalls.Add(name + " " + property.Name + " " + level + " over " + page.Name + " " + ratio.ToString("0.0"));
+                    }
                 }
             }
         }

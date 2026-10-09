@@ -38,8 +38,8 @@ namespace ErikwnkWFUI.Forms
     /// <b>Content.</b> A message, an optional title (one line, bold; an ellipsis ends what is too
     /// long) and an optional symbol (<see cref="ToastIcon"/>, or any <c>UIStyles.Symbols</c>
     /// symbol). Title and message may have their own colors (<see cref="InfoPopupSection"/>, as
-    /// in the info popup). A toast without a title and without a message shows nothing. An
-    /// ampersand is shown as it is.
+    /// in the info popup); they are used as given and not corrected for readability. A toast
+    /// without a title and without a message shows nothing. An ampersand is shown as it is.
     /// </para>
     /// <para>
     /// <b>Closing.</b> The toast closes itself after its <see cref="Duration"/>, or at once on a
