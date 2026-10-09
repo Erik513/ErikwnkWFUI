@@ -31,16 +31,19 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Any other symbol instead of <see cref="Icon"/>, one of <c>UIStyles.Symbols</c>; null (the default) uses <see cref="Icon"/>.</summary>
         public string CustomSymbol { get; set; }
 
-        /// <summary>Shows a toast with this message near the bottom of <paramref name="owner"/>.</summary>
+        /// <summary>Where the toast is shown in the window; below the middle (centered, in the lower part) by default.</summary>
+        public ToastPosition Position { get; set; } = ToastPosition.BelowCenter;
+
+        /// <summary>Shows a toast with this message in <paramref name="owner"/>, at <see cref="Position"/>.</summary>
         public void Show(string message, Form owner)
         {
-            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol);
+            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position);
         }
 
-        /// <summary>Shows a toast with a title and a message (and their own colors) near the bottom of <paramref name="owner"/>.</summary>
+        /// <summary>Shows a toast with a title and a message (and their own colors) in <paramref name="owner"/>, at <see cref="Position"/>.</summary>
         public void Show(InfoPopupSection content, Form owner)
         {
-            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol);
+            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position);
         }
     }
 }

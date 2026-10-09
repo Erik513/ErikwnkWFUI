@@ -10,7 +10,7 @@ namespace ErikwnkWFUI.Forms
     /// <summary>
     /// A small, rounded, self-dismissing toast (an optional symbol, an optional title
     /// and the message), closing itself after a short, medium or long <see cref="PopupDuration"/> -
-    /// call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string)"/> rather than
+    /// call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/> rather than
     /// constructing this directly. Only one toast shows at a time; showing
     /// a new one closes whatever's currently up. The toast belongs to its window: it is
     /// shown only while that window is in front, stays above its window but not above other
@@ -25,6 +25,9 @@ namespace ErikwnkWFUI.Forms
     /// waiting toasts with it.
     ///
     /// <para>
+    /// By default the toast is centered in the lower part of the window; <see cref="ToastPosition"/>
+    /// puts it in the middle, above the middle, at the top or bottom or in a corner, with a fixed
+    /// distance to the edge. A window that is too small for the distance still keeps it inside.
     /// A toast without a title and without a message shows nothing. The title is one line (an
     /// ellipsis ends what is too long), in bold; title and message may have their own colors
     /// (<see cref="InfoPopupSection"/>, as in the info popup).
@@ -49,6 +52,7 @@ namespace ErikwnkWFUI.Forms
         private const int ToastWidth96 = 350;
         private const int ToastHeight96 = 80;
         private const int MaxMessageLines = 4;
+        private const int EdgeDistance96 = 20;
         private int _dpi = 96;
 
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
@@ -66,6 +70,7 @@ namespace ErikwnkWFUI.Forms
             public UIColorSet Colors;
             public ToastIcon Icon;
             public string Symbol;
+            public ToastPosition Position;
         }
 
         private static readonly Dictionary<Form, List<PendingToast>> _pending = new Dictionary<Form, List<PendingToast>>();
@@ -99,6 +104,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="delay">How long to wait before the toast is shown: not at all (the default), 0.2, 0.4 or 0.8 seconds. Whether the window is in front is checked when the wait is over.</param>
         /// <param name="icon">The symbol for the kind of message: none (the default), a check mark, an info, a warning or an error.</param>
         /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c> (<c>UIStyles.Symbols.Copy</c>, say); null (the default) uses <paramref name="icon"/>.</param>
+        /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
         public static void ShowToast(
             string message,
             Form owner,
@@ -107,9 +113,10 @@ namespace ErikwnkWFUI.Forms
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay, icon, symbol);
+            ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay, icon, symbol, position);
         }
 
         /// <summary>Like the call with a message, but with a title above the message and, if wanted, own colors for each (<see cref="InfoPopupSection.HeaderColor"/> for the title, <see cref="InfoPopupSection.TextColor"/> for the message). A part left empty is not shown; with neither there is no toast.</summary>
@@ -121,6 +128,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="delay">How long to wait before the toast is shown; not at all by default.</param>
         /// <param name="icon">The symbol for the kind of message; none by default.</param>
         /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c>; null (the default) uses <paramref name="icon"/>.</param>
+        /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
         public static void ShowToast(
             InfoPopupSection content,
             Form owner,
@@ -129,7 +137,8 @@ namespace ErikwnkWFUI.Forms
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
             InfoPopupSection[] kept = InfoPopupSection.Normalize(new[] { content });
 
@@ -142,26 +151,26 @@ namespace ErikwnkWFUI.Forms
             // on the thread of its window, where it has its message loop and its timer.
             if (owner.IsHandleCreated && owner.InvokeRequired)
             {
-                owner.BeginInvoke(new Action(() => ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol)));
+                owner.BeginInvoke(new Action(() => ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol, position)));
 
                 return;
             }
 
             if (delay != PopupDelay.Instant)
             {
-                Schedule(content, owner, colors, transparency, duration, delay, icon, symbol);
+                Schedule(content, owner, colors, transparency, duration, delay, icon, symbol, position);
 
                 return;
             }
 
             if (!PopupSupport.CanShowOver(owner))
             {
-                Enqueue(content, owner, colors, transparency, duration, icon, symbol);
+                Enqueue(content, owner, colors, transparency, duration, icon, symbol, position);
 
                 return;
             }
 
-            ShowNow(content, owner, colors, transparency, duration, icon, symbol);
+            ShowNow(content, owner, colors, transparency, duration, icon, symbol, position);
         }
 
         /// <summary>
@@ -314,7 +323,7 @@ namespace ErikwnkWFUI.Forms
         // The toasts that wait for their delay; one timer each, gone when it has fired.
         private static readonly List<Timer> _scheduled = new List<Timer>();
 
-        private static void Schedule(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay, ToastIcon icon, string symbol)
+        private static void Schedule(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, PopupDelay delay, ToastIcon icon, string symbol, ToastPosition position)
         {
             Timer timer = new Timer { Interval = delay.ToMilliseconds() };
             _scheduled.Add(timer);
@@ -324,13 +333,13 @@ namespace ErikwnkWFUI.Forms
                 timer.Stop();
                 _scheduled.Remove(timer);
                 timer.Dispose();
-                ShowToast(content, owner, colors, transparency, duration, PopupDelay.Instant, icon, symbol);
+                ShowToast(content, owner, colors, transparency, duration, PopupDelay.Instant, icon, symbol, position);
             };
 
             timer.Start();
         }
 
-        private static void ShowNow(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol)
+        private static void ShowNow(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol, ToastPosition position)
         {
             CloseCurrentToast();
 
@@ -346,7 +355,7 @@ namespace ErikwnkWFUI.Forms
 
             toast.SetContent(content);
             toast.Location = PopupSupport.KeepInside(
-                GetToastLocation(owner, toast),
+                GetToastLocation(GetClientArea(owner), toast.Size, position, Scaled(EdgeDistance96, toast._dpi)),
                 toast.Size,
                 PopupSupport.GetPlacementArea(owner),
                 Screen.FromControl(owner).WorkingArea);
@@ -358,7 +367,7 @@ namespace ErikwnkWFUI.Forms
 
         // ---- toasts that wait for their window ----
 
-        private static void Enqueue(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol)
+        private static void Enqueue(InfoPopupSection content, Form owner, UIColorSet colors, PopupTransparency transparency, PopupDuration duration, ToastIcon icon, string symbol, ToastPosition position)
         {
             List<PendingToast> queue;
 
@@ -372,10 +381,11 @@ namespace ErikwnkWFUI.Forms
 
             // The same content (and symbol) twice in a row is one message.
             if (queue.Count > 0 && queue[queue.Count - 1].Icon == icon && queue[queue.Count - 1].Symbol == symbol
+                && queue[queue.Count - 1].Position == position
                 && InfoPopupSection.SameContent(new[] { queue[queue.Count - 1].Content }, new[] { content }))
                 return;
 
-            queue.Add(new PendingToast { Content = content, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors, Icon = icon, Symbol = symbol });
+            queue.Add(new PendingToast { Content = content, Time = DateTime.UtcNow, Transparency = transparency, Duration = duration, Colors = colors, Icon = icon, Symbol = symbol, Position = position });
 
             while (queue.Count > MaxPendingToasts)
                 queue.RemoveAt(0);
@@ -429,7 +439,7 @@ namespace ErikwnkWFUI.Forms
             if (queue.Count == 0)
                 Forget(owner);
 
-            ShowNow(next.Content, owner, next.Colors, next.Transparency, next.Duration, next.Icon, next.Symbol);
+            ShowNow(next.Content, owner, next.Colors, next.Transparency, next.Duration, next.Icon, next.Symbol, next.Position);
         }
 
         protected override void Dispose(bool disposing)
@@ -625,11 +635,48 @@ namespace ErikwnkWFUI.Forms
             _currentToast = null;
         }
 
-        private static Point GetToastLocation(Form owner, ToastForm toast)
+        // The part of the window the toast is placed in: its inside (without the title bar and
+        // the frame), as far as the screen shows it.
+        private static Rectangle GetClientArea(Form owner)
         {
-            return owner.PointToScreen(new Point(
-                (owner.ClientSize.Width - toast.Width) / 2,
-                (int)(owner.ClientSize.Height * 0.75) - toast.Height / 2));
+            Rectangle client = owner.RectangleToScreen(owner.ClientRectangle);
+            Rectangle visible = Rectangle.Intersect(client, Screen.FromControl(owner).WorkingArea);
+
+            return visible.IsEmpty ? client : visible;
+        }
+
+        // The top left of a toast of this size in the area. The edges and corners keep
+        // <paramref name="edgeDistance"/> from the edge; the default and the "above the middle"
+        // place sit at three and one quarter of the height.
+        internal static Point GetToastLocation(Rectangle area, Size size, ToastPosition position, int edgeDistance)
+        {
+            int centerX = area.Left + (area.Width - size.Width) / 2;
+            int left = area.Left + edgeDistance;
+            int right = area.Right - edgeDistance - size.Width;
+            int top = area.Top + edgeDistance;
+            int bottom = area.Bottom - edgeDistance - size.Height;
+
+            switch (position)
+            {
+                case ToastPosition.Center:
+                    return new Point(centerX, area.Top + (area.Height - size.Height) / 2);
+                case ToastPosition.AboveCenter:
+                    return new Point(centerX, area.Top + (int)(area.Height * 0.25) - size.Height / 2);
+                case ToastPosition.TopCenter:
+                    return new Point(centerX, top);
+                case ToastPosition.BottomCenter:
+                    return new Point(centerX, bottom);
+                case ToastPosition.TopLeft:
+                    return new Point(left, top);
+                case ToastPosition.TopRight:
+                    return new Point(right, top);
+                case ToastPosition.BottomLeft:
+                    return new Point(left, bottom);
+                case ToastPosition.BottomRight:
+                    return new Point(right, bottom);
+                default: // BelowCenter
+                    return new Point(centerX, area.Top + (int)(area.Height * 0.75) - size.Height / 2);
+            }
         }
 
         private void OnCloseTimerTick(object sender, EventArgs e)

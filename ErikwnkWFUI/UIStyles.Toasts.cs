@@ -17,15 +17,17 @@ namespace ErikwnkWFUI
             /// <param name="delay">How long to wait before one is shown; not at all by default.</param>
             /// <param name="icon">The symbol for the kind of message: none (the default), a check mark, an info, a warning or an error.</param>
             /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c> (<c>UIStyles.Symbols.Copy</c>, say); null (the default) uses <paramref name="icon"/>.</param>
+            /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
             public static Toaster CreateStandard(
                 UIColorSet colors = null,
                 PopupTransparency transparency = PopupTransparency.Medium,
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                return UIToastFactory.CreateStandard(colors, transparency, duration, delay, icon, symbol);
+                return UIToastFactory.CreateStandard(colors, transparency, duration, delay, icon, symbol, position);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
@@ -34,9 +36,10 @@ namespace ErikwnkWFUI
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                return UIToastFactory.CreatePrimary(transparency, duration, delay, icon, symbol);
+                return UIToastFactory.CreatePrimary(transparency, duration, delay, icon, symbol, position);
             }
 
             /// <summary>Shows a toast in the neutral gray.</summary>
@@ -52,6 +55,7 @@ namespace ErikwnkWFUI
             /// <param name="delay">How long to wait before it is shown; not at all by default.</param>
             /// <param name="icon">The symbol for the kind of message: none (the default), a check mark, an info, a warning or an error.</param>
             /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c> (<c>UIStyles.Symbols.Copy</c>, say); null (the default) uses <paramref name="icon"/>.</param>
+            /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
             public static void ShowStandard(
                 string message,
                 Form owner,
@@ -60,9 +64,10 @@ namespace ErikwnkWFUI
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                UIToastFactory.ShowStandard(message, owner, colors, transparency, duration, delay, icon, symbol);
+                UIToastFactory.ShowStandard(message, owner, colors, transparency, duration, delay, icon, symbol, position);
             }
 
             /// <summary>Shows a toast in the neutral gray with a title above the message and, if wanted, own colors for each (see <see cref="InfoPopupSection"/>).</summary>
@@ -74,6 +79,7 @@ namespace ErikwnkWFUI
             /// <param name="delay">How long to wait before it is shown; not at all by default.</param>
             /// <param name="icon">The symbol for the kind of message: none (the default), a check mark, an info, a warning or an error.</param>
             /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c> (<c>UIStyles.Symbols.Copy</c>, say); null (the default) uses <paramref name="icon"/>.</param>
+            /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
             public static void ShowStandard(
                 InfoPopupSection content,
                 Form owner,
@@ -82,12 +88,13 @@ namespace ErikwnkWFUI
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                UIToastFactory.ShowStandard(content, owner, colors, transparency, duration, delay, icon, symbol);
+                UIToastFactory.ShowStandard(content, owner, colors, transparency, duration, delay, icon, symbol, position);
             }
 
-            /// <summary>Like <see cref="ShowStandard(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string)"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
+            /// <summary>Like <see cref="ShowStandard(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
             public static void ShowPrimary(
                 string message,
                 Form owner,
@@ -95,12 +102,13 @@ namespace ErikwnkWFUI
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                UIToastFactory.ShowPrimary(message, owner, transparency, duration, delay, icon, symbol);
+                UIToastFactory.ShowPrimary(message, owner, transparency, duration, delay, icon, symbol, position);
             }
 
-            /// <summary>Like <see cref="ShowPrimary(string, Form, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string)"/>, with a title and, if wanted, own colors for the title and the message.</summary>
+            /// <summary>Like <see cref="ShowPrimary(string, Form, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/>, with a title and, if wanted, own colors for the title and the message.</summary>
             public static void ShowPrimary(
                 InfoPopupSection content,
                 Form owner,
@@ -108,9 +116,10 @@ namespace ErikwnkWFUI
                 PopupDuration duration = PopupDuration.Medium,
                 PopupDelay delay = PopupDelay.Instant,
                 ToastIcon icon = ToastIcon.None,
-                string symbol = null)
+                string symbol = null,
+                ToastPosition position = ToastPosition.BelowCenter)
             {
-                UIToastFactory.ShowPrimary(content, owner, transparency, duration, delay, icon, symbol);
+                UIToastFactory.ShowPrimary(content, owner, transparency, duration, delay, icon, symbol, position);
             }
         }
     }

@@ -80,7 +80,8 @@ var accent = UIStyles.ComboBoxes.CreatePrimary();
   appears when the window is active again (at most three, for one minute).
   A title, own text colors and a symbol (`ToastIcon`: check mark, info, warning,
   error; none by default, or any `UIStyles.Symbols` symbol) are optional; `UIStyles.Toasts.CreateStandard` keeps the
-  settings as properties for repeated use.
+  settings as properties for repeated use. `ToastPosition` picks the place in the
+  window (below the middle by default, middle, top, bottom, corners; a fixed distance from the edges).
 - **`UIStyles.InfoPopups`** - a popup with blocks of a header and a text, as a
   replacement for the standard tooltip. `popup.AttachTo(control, "Text")` makes it
   the tooltip of a control (one popup can serve many); or set the content with

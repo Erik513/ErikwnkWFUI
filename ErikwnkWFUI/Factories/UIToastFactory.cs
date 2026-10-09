@@ -14,9 +14,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            ToastForm.ShowToast(message, owner, colors, transparency, duration, delay, icon, symbol);
+            ToastForm.ShowToast(message, owner, colors, transparency, duration, delay, icon, symbol, position);
         }
 
         public static void ShowStandard(
@@ -27,9 +28,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            ToastForm.ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol);
+            ToastForm.ShowToast(content, owner, colors, transparency, duration, delay, icon, symbol, position);
         }
 
         public static void ShowPrimary(
@@ -39,9 +41,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            ShowStandard(content, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
+            ShowStandard(content, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol, position);
         }
 
         public static Toaster CreateStandard(
@@ -50,9 +53,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            return new Toaster { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay, Icon = icon, CustomSymbol = symbol };
+            return new Toaster { Colors = colors, Transparency = transparency, Duration = duration, Delay = delay, Icon = icon, CustomSymbol = symbol, Position = position };
         }
 
         // The Standard one in the current accent - the primary color set.
@@ -61,9 +65,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
+            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay, icon, symbol, position);
         }
 
         // The Standard one in the current accent - the primary color set.
@@ -74,9 +79,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
-            string symbol = null)
+            string symbol = null,
+            ToastPosition position = ToastPosition.BelowCenter)
         {
-            ShowStandard(message, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol);
+            ShowStandard(message, owner, UIColors.PrimarySet, transparency, duration, delay, icon, symbol, position);
         }
     }
 }

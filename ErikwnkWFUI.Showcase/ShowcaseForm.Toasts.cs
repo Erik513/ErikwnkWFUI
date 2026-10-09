@@ -77,6 +77,16 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("Own symbol", CreateCustomSymbolButton(UIStyles.Symbols.Copy, "Copied to the clipboard."));
             table.AddRow("Own symbol (Delete)", CreateCustomSymbolButton(UIStyles.Symbols.Delete, "The entry was deleted."));
 
+            table.AddSection("Position");
+
+            foreach (ToastPosition position in Enum.GetValues(typeof(ToastPosition)))
+            {
+                ToastPosition shown = position;
+                Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
+                button.Click += delegate { UIStyles.Toasts.ShowStandard(shown.ToString(), this, position: shown); };
+                table.AddRow(position == ToastPosition.BelowCenter ? "BelowCenter (default)" : position.ToString(), button);
+            }
+
             table.AddSection("Content");
 
             table.AddRow("With a title", CreateContentToastButton(null,
