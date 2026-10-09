@@ -365,6 +365,10 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreatePrimary (scroll: Endless)",
                 UIStyles.Labels.CreatePrimary(longText, scroll: LabelScroll.Endless()),
                 UIStyles.Labels.CreatePrimary("Short text", scroll: LabelScroll.Endless()));
+
+            // Several texts, one behind the other: the same room after each of them, the separator in its middle.
+            table.AddRow("CreatePrimary (scroll: Endless, texts)",
+                UIColumn.Percent(UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[] { "First message", "Second message", "Third" })), TwoColumnPercent));
         }
 
         // One row: the label, and the same label disabled in the second column.

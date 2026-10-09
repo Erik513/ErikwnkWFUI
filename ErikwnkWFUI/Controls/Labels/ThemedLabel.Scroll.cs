@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Drawing.Text;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -48,6 +49,12 @@ namespace ErikwnkWFUI.Controls
         private int _maxOffset;
         private int _cycle;
         private int _separatorWidth;
+
+        // Several texts that move one behind the other (the Scroll that was set says so), the text they were joined
+        // to for the label, and how wide each one is. Null while the text of the label moves alone.
+        private string[] _texts;
+        private string _textsJoined;
+        private int[] _pieceWidths;
 
         // How far the text has moved to the left (to the right when it is endless and goes that way), the
         // offset of the last picture, and - back and forth only - which way it goes now (1 to its end, -1
@@ -175,7 +182,9 @@ namespace ErikwnkWFUI.Controls
                     case LabelScrollMode.BackAndForth:
                         return LabelScroll.BackAndForth(_scrollSpeed, _scrollPause, _scrollPauseOnHover);
                     case LabelScrollMode.Endless:
-                        return LabelScroll.Endless(_scrollDirection, _scrollSeparator, _scrollSpeed, _scrollPauseOnHover);
+                        return _texts != null
+                            ? LabelScroll.Endless(_texts, _scrollDirection, _scrollSeparator, _scrollSpeed, _scrollPauseOnHover)
+                            : LabelScroll.Endless(_scrollDirection, _scrollSeparator, _scrollSpeed, _scrollPauseOnHover);
                     default:
                         return LabelScroll.None;
                 }
@@ -190,6 +199,17 @@ namespace ErikwnkWFUI.Controls
                 _scrollSeparator = scroll.Separator;
                 _scrollPauseOnHover = scroll.PauseOnHover;
                 _scrollMode = scroll.Mode;
+                _texts = scroll.Texts?.ToArray();
+                _textsJoined = null;
+
+                if (_texts != null)
+                {
+                    // The label shows the texts one after the other where it does not move.
+                    string sign = _scrollSeparator.ToText();
+                    _textsJoined = string.Join(sign.Length > 0 ? " " + sign + " " : " ", _texts);
+                    Text = _textsJoined;
+                }
+
                 Restart();
             }
         }
@@ -247,6 +267,7 @@ namespace ErikwnkWFUI.Controls
             _maxOffset = 0;
             _cycle = 0;
             _separatorWidth = 0;
+            _pieceWidths = null;
 
             if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || (AutoSize && !MovesWhenAutoSized()) || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return;
@@ -260,7 +281,15 @@ namespace ErikwnkWFUI.Controls
             using (Graphics graphics = Graphics.FromHwnd(IntPtr.Zero))
             using (StringFormat format = CreateMovingTextFormat())
             {
-                _textWidth = (int)Math.Ceiling(graphics.MeasureString(Text, Font, PointF.Empty, format).Width);
+                if (_scrollMode == LabelScrollMode.Endless && _texts != null)
+                {
+                    _pieceWidths = _texts.Select(t => (int)Math.Ceiling(graphics.MeasureString(t, Font, PointF.Empty, format).Width)).ToArray();
+                    _textWidth = _pieceWidths.Sum();
+                }
+                else
+                {
+                    _textWidth = (int)Math.Ceiling(graphics.MeasureString(Text, Font, PointF.Empty, format).Width);
+                }
 
                 string separator = _scrollSeparator.ToText();
 
@@ -276,7 +305,8 @@ namespace ErikwnkWFUI.Controls
                 // that a short text keeps the room the label has for it (a word of 10 pixels in a label of 50
                 // shows once, with 40 pixels of room behind it, and comes back after them). The endless text
                 // moves whether it fits or not.
-                int cycle = Math.Max(_textWidth + gap + separatorWidth + gap, inner);
+                int pieces = _pieceWidths?.Length ?? 1;
+                int cycle = Math.Max(_textWidth + pieces * (gap + separatorWidth + gap), inner);
 
                 if (cycle <= MaxPictureWidth)
                     _cycle = cycle;
@@ -468,6 +498,11 @@ namespace ErikwnkWFUI.Controls
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
+
+            // Another text than the joined one: the label moves that text alone from now on.
+            if (_texts != null && Text != _textsJoined)
+                _texts = null;
+
             Restart();
         }
 
@@ -688,12 +723,30 @@ namespace ErikwnkWFUI.Controls
             {
                 graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
                 graphics.Clear(Color.Transparent);
-                graphics.DrawString(Text, Font, brush, new PointF(0f, 1f), format);
 
-                // The separator is in the middle of the room between the end of the text and its next start
-                // (a gap on both sides when the round is as short as it can be, more when the label is wide).
-                if (_cycle > 0 && _scrollSeparator != LabelScrollSeparator.None)
-                    graphics.DrawString(_scrollSeparator.ToText(), Font, brush, new PointF(_textWidth + (_cycle - _textWidth - _separatorWidth) / 2f, 1f), format);
+                if (_cycle <= 0)
+                {
+                    graphics.DrawString(Text, Font, brush, new PointF(0f, 1f), format);
+                }
+                else
+                {
+                    // Each text is followed by the same room, the separator in the middle of it (a gap on both
+                    // sides when the round is as short as it can be, more when the label is wide).
+                    string[] texts = _pieceWidths != null ? _texts : new[] { Text };
+                    int[] widths = _pieceWidths ?? new[] { _textWidth };
+                    float room = (_cycle - _textWidth) / (float)texts.Length;
+                    float left = 0f;
+
+                    for (int i = 0; i < texts.Length; i++)
+                    {
+                        graphics.DrawString(texts[i], Font, brush, new PointF(left, 1f), format);
+
+                        if (_scrollSeparator != LabelScrollSeparator.None)
+                            graphics.DrawString(_scrollSeparator.ToText(), Font, brush, new PointF(left + widths[i] + (room - _separatorWidth) / 2f, 1f), format);
+
+                        left += widths[i] + room;
+                    }
+                }
             }
 
             _picture = picture;

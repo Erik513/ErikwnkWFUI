@@ -84,6 +84,9 @@ handing a `LabelScroll` to the factory:
 var back = UIStyles.Labels.CreateStandard(text, scroll: LabelScroll.BackAndForth());
 var ticker = UIStyles.Labels.CreateStandard(text,
     scroll: LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Dot));
+
+// a banner: several texts, the same room after each, the separator in the middle of it
+var banner = UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[] { "News", "Sale", "Closed on Monday" }));
 ```
 
 The text moves smoothly on the beat of the display, back and forth stands still when the text fits (endless keeps going, a short text

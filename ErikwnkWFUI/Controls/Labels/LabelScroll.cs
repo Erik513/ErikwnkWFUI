@@ -1,4 +1,7 @@
-﻿namespace ErikwnkWFUI.Controls
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// How the text of a <see cref="ThemedLabel"/> moves when it is too long for the label, all in one value
@@ -14,8 +17,10 @@
             LabelScrollPause pause,
             LabelScrollDirection direction,
             LabelScrollSeparator separator,
-            bool pauseOnHover)
+            bool pauseOnHover,
+            string[] texts = null)
         {
+            Texts = texts;
             Mode = mode;
             Speed = speed;
             Pause = pause;
@@ -56,6 +61,28 @@
         {
             return new LabelScroll(LabelScrollMode.Endless, speed, LabelScrollPause.Medium, direction, separator, pauseOnHover);
         }
+
+        /// <summary>
+        /// Several texts that move one behind the other, the separator between each two of them and behind the last
+        /// (so a banner of several messages is one value). The room is divided evenly, so the gap between two
+        /// texts is always the same. Endless only; a label with these shows them as its text, joined by the
+        /// separator, where it does not move.
+        /// </summary>
+        /// <param name="texts">The texts; empty ones are left out.</param>
+        public static LabelScroll Endless(
+            IEnumerable<string> texts,
+            LabelScrollDirection direction = LabelScrollDirection.Left,
+            LabelScrollSeparator separator = LabelScrollSeparator.Dot,
+            LabelScrollSpeed speed = LabelScrollSpeed.Medium,
+            bool pauseOnHover = false)
+        {
+            string[] list = (texts ?? Enumerable.Empty<string>()).Where(t => !string.IsNullOrWhiteSpace(t)).ToArray();
+
+            return new LabelScroll(LabelScrollMode.Endless, speed, LabelScrollPause.Medium, direction, separator, pauseOnHover, list.Length > 0 ? list : null);
+        }
+
+        /// <summary>The texts that move one behind the other (endless only), or null where the text of the label moves.</summary>
+        public IReadOnlyList<string> Texts { get; }
 
         /// <summary>Whether and how the text moves.</summary>
         public LabelScrollMode Mode { get; }
