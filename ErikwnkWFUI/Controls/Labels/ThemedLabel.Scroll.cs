@@ -47,6 +47,7 @@ namespace ErikwnkWFUI.Controls
         private int _textWidth;
         private int _maxOffset;
         private int _cycle;
+        private int _separatorWidth;
 
         // How far the text has moved to the left (to the right when it is endless and goes that way), the
         // offset of the last picture, and - back and forth only - which way it goes now (1 to its end, -1
@@ -245,6 +246,7 @@ namespace ErikwnkWFUI.Controls
             _textWidth = 0;
             _maxOffset = 0;
             _cycle = 0;
+            _separatorWidth = 0;
 
             if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || (AutoSize && !MovesWhenAutoSized()) || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return;
@@ -263,7 +265,7 @@ namespace ErikwnkWFUI.Controls
                 string separator = _scrollSeparator.ToText();
 
                 if (separator.Length > 0)
-                    separatorWidth = (int)Math.Ceiling(graphics.MeasureString(separator, Font, PointF.Empty, format).Width);
+                    separatorWidth = _separatorWidth = (int)Math.Ceiling(graphics.MeasureString(separator, Font, PointF.Empty, format).Width);
             }
 
             if (_scrollMode == LabelScrollMode.Endless)
@@ -688,8 +690,10 @@ namespace ErikwnkWFUI.Controls
                 graphics.Clear(Color.Transparent);
                 graphics.DrawString(Text, Font, brush, new PointF(0f, 1f), format);
 
+                // The separator is in the middle of the room between the end of the text and its next start
+                // (a gap on both sides when the round is as short as it can be, more when the label is wide).
                 if (_cycle > 0 && _scrollSeparator != LabelScrollSeparator.None)
-                    graphics.DrawString(_scrollSeparator.ToText(), Font, brush, new PointF(_textWidth + GetGap(), 1f), format);
+                    graphics.DrawString(_scrollSeparator.ToText(), Font, brush, new PointF(_textWidth + (_cycle - _textWidth - _separatorWidth) / 2f, 1f), format);
             }
 
             _picture = picture;

@@ -186,6 +186,46 @@ public class LabelEndlessScrollTests : IDisposable
     }
 
     [Fact]
+    public void InAWideLabel_TheSeparatorStandsInTheMiddleOfTheRoomBehindAShortWord()
+    {
+        using ThemedLabel label = Create(LabelScrollDirection.Left, LabelScrollSeparator.Bar, text: "Hi");
+        label.Width = 400;
+        SetOffset(label, 0f);
+        using Bitmap bitmap = Paint(label);
+
+        int first = -1, last = -1, gapStart = -1, gapEnd = -1;
+        int previousInk = -1;
+
+        for (int x = 0; x < bitmap.Width; x++)
+        {
+            bool ink = false;
+
+            for (int y = 0; y < bitmap.Height && !ink; y++)
+                ink = bitmap.GetPixel(x, y).GetBrightness() > 0.45f;
+
+            if (!ink)
+                continue;
+
+            if (first < 0)
+                first = x;
+
+            if (previousInk >= 0 && x - previousInk > 20 && gapStart < 0)
+            {
+                gapStart = previousInk;
+                gapEnd = x;
+            }
+
+            previousInk = x;
+            last = x;
+        }
+
+        // The word at the start, then a wide gap, then the bar around the middle of the label.
+        Assert.True(first >= 0 && gapStart > first, "no word");
+        Assert.InRange(gapEnd, 170, 230);
+        Assert.True(last - gapEnd < 6, "the bar is one stroke");
+    }
+
+    [Fact]
     public void ALabelMuchWiderThanTheWord_ShowsTheWordOnceAnd_AShortRoundNever()
     {
         using ThemedLabel label = Create(text: "Hi");
