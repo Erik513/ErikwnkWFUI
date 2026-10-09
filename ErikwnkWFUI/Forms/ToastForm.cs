@@ -484,9 +484,9 @@ namespace ErikwnkWFUI.Forms
             _messageLabel = CreateMessageLabel();
 
             // The one added last is docked first: the title at the top, then the message fills the rest.
+            _contentPanel.Controls.Add(_iconLabel);
             _contentPanel.Controls.Add(_messageLabel);
             _contentPanel.Controls.Add(_titleLabel);
-            _contentPanel.Controls.Add(_iconLabel);
 
             Controls.Add(_contentPanel);
             ApplyColors();

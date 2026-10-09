@@ -72,6 +72,17 @@ public class ToastIconTests : IDisposable
     }
 
     [Fact]
+    public void TheSymbol_IsInFrontOfTheTexts_SoTheirBackgroundDoesNotCoverIt()
+    {
+        ToastForm.ShowToast("Front", Host(), icon: ToastIcon.Success);
+
+        Control parent = IconLabel().Parent!;
+
+        Assert.True(parent.Controls.GetChildIndex(IconLabel()) < parent.Controls.GetChildIndex(MessageLabel()));
+        Assert.True(parent.Controls.GetChildIndex(IconLabel()) < parent.Controls.GetChildIndex(Current()!.GetPrivateField<Label>("_titleLabel")!));
+    }
+
+    [Fact]
     public void TheFourSymbols_AreDifferent()
     {
         Form host = Host();

@@ -36,7 +36,7 @@ namespace ErikwnkWFUI.Showcase
             foreach (PopupTransparency level in new[] { PopupTransparency.Opaque, PopupTransparency.Low, PopupTransparency.Medium, PopupTransparency.High })
             {
                 table.AddRow(level == PopupTransparency.Medium ? "Medium (default)" : level.ToString(),
-                    CreateClickButton(UIStyles.InfoPopups.CreateStandard(transparency: level), "Show popup", 160,
+                    CreateClickButton(UIStyles.InfoPopups.CreatePrimary(transparency: level), "Show popup", 160,
                         popup => popup.SetContent(SampleBlocks)));
             }
 
@@ -45,7 +45,7 @@ namespace ErikwnkWFUI.Showcase
             foreach (PopupDuration duration in new[] { PopupDuration.Short, PopupDuration.Medium, PopupDuration.Long })
             {
                 table.AddRow(duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
-                    CreateClickButton(UIStyles.InfoPopups.CreateStandard(duration: duration), "Show popup", 160,
+                    CreateClickButton(UIStyles.InfoPopups.CreatePrimary(duration: duration), "Show popup", 160,
                         popup => popup.SetContent(SampleBlocks)));
             }
 
@@ -54,7 +54,7 @@ namespace ErikwnkWFUI.Showcase
             foreach (PopupDelay delay in new[] { PopupDelay.Instant, PopupDelay.Short, PopupDelay.Medium, PopupDelay.Long })
             {
                 table.AddRow(delay == PopupDelay.Medium ? "Medium (default)" : delay.ToString(),
-                    CreateHoverButton(UIStyles.InfoPopups.CreateStandard(delay: delay), "Rest on me", 160, true));
+                    CreateHoverButton(UIStyles.InfoPopups.CreatePrimary(delay: delay), "Rest on me", 160, true));
             }
 
             table.AddSection("Fixed size - one short value, like the 70% over a slider");
@@ -67,7 +67,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("Content");
 
-            table.AddRow("Several blocks", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
+            table.AddRow("Several blocks", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(), "Show popup", 160,
                 popup => popup.SetContent(
                     new InfoPopupSection("First block", "A header with its text."),
                     new InfoPopupSection("Second block", "Another header with its text."),
@@ -84,7 +84,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("AttachTo - the popup as a tooltip");
 
-            InfoPopupForm tooltip = UIStyles.InfoPopups.CreateStandard();
+            InfoPopupForm tooltip = UIStyles.InfoPopups.CreatePrimary();
             _infoPopups.Add(tooltip);
 
             Button textButton = UIStyles.Buttons.CreateStandard("Rest the mouse on me", size: new Size(200, 32));
@@ -106,12 +106,12 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("Places");
 
-            table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreateStandard(), "Show popup", 160,
+            table.AddRow("ShowNextTo", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(), "Show popup", 160,
                 popup => popup.SetContent(SampleBlocks)));
 
-            table.AddRow("ShowAtMouse", CreateHoverButton(UIStyles.InfoPopups.CreateStandard(), "Move over me", 160, false));
-            table.AddRow("ShowCenteredAbove", CreateCenteredAboveButton(UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32)), "Click anywhere on me", 160));
-            table.AddRow("Delayed at mouse", CreateHoverButton(UIStyles.InfoPopups.CreateStandard(), "Rest on me", 160, true));
+            table.AddRow("ShowAtMouse", CreateHoverButton(UIStyles.InfoPopups.CreatePrimary(), "Move over me", 160, false));
+            table.AddRow("ShowCenteredAbove", CreateCenteredAboveButton(UIStyles.InfoPopups.CreatePrimary(new Size(70, 32)), "Click anywhere on me", 160));
+            table.AddRow("Delayed at mouse", CreateHoverButton(UIStyles.InfoPopups.CreatePrimary(), "Rest on me", 160, true));
         }
 
         // A click-to-preview button: the popup is shown next to it and hides itself after its

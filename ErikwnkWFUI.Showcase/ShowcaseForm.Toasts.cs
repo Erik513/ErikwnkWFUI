@@ -20,11 +20,11 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("CreateStandard / CreatePrimary - the settings as properties");
 
-            Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Green, PopupTransparency.Low, PopupDuration.Long);
+            Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Green, PopupTransparency.Low, PopupDuration.Long, icon: ToastIcon.Success);
             table.AddRow("CreateStandard(colors)", CreateToasterButton(standard, "Show toast"));
-            table.AddRow("CreatePrimary", CreateToasterButton(UIStyles.Toasts.CreatePrimary(), "Show toast"));
+            table.AddRow("CreatePrimary", CreateToasterButton(UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Success), "Show toast"));
 
-            Toaster changing = UIStyles.Toasts.CreateStandard();
+            Toaster changing = UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Info);
             Button cycle = CreateToasterButton(changing, "Show toast");
             cycle.Click += delegate
             {
@@ -38,7 +38,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 table.AddRow(
                     level == PopupTransparency.Medium ? "Medium (default)" : level.ToString(),
-                    CreateToastButton("Show toast", 160, null, level, PopupDuration.Medium, PopupDelay.Instant));
+                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, level, PopupDuration.Medium, PopupDelay.Instant));
             }
 
             table.AddSection("Duration");
@@ -47,7 +47,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 table.AddRow(
                     duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
-                    CreateToastButton("Show toast", 160, null, PopupTransparency.Medium, duration, PopupDelay.Instant));
+                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, duration, PopupDelay.Instant));
             }
 
             table.AddSection("Delay");
@@ -56,7 +56,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 table.AddRow(
                     delay == PopupDelay.Instant ? "Instant (default)" : delay.ToString(),
-                    CreateToastButton("Show toast", 160, null, PopupTransparency.Medium, PopupDuration.Medium, delay));
+                    CreateToastButton("Show toast", 160, UIStyles.Colors.Sets.Primary, PopupTransparency.Medium, PopupDuration.Medium, delay));
             }
 
             table.AddSection("Icon");
@@ -70,7 +70,7 @@ namespace ErikwnkWFUI.Showcase
                     : icon == ToastIcon.Error ? "The file could not be saved."
                     : "Sample toast message";
                 Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-                button.Click += delegate { UIStyles.Toasts.ShowStandard(message, this, icon: shown); };
+                button.Click += delegate { UIStyles.Toasts.ShowPrimary(message, this, icon: shown); };
                 table.AddRow(icon == ToastIcon.None ? "None (default)" : icon.ToString(), button);
             }
 
@@ -83,16 +83,16 @@ namespace ErikwnkWFUI.Showcase
             {
                 ToastPosition shown = position;
                 Button button = UIStyles.Buttons.CreateStandard("Show toast", size: new Size(160, 32));
-                button.Click += delegate { UIStyles.Toasts.ShowStandard(shown.ToString(), this, position: shown); };
+                button.Click += delegate { UIStyles.Toasts.ShowPrimary(shown.ToString(), this, icon: ToastIcon.Info, position: shown); };
                 table.AddRow(position == ToastPosition.BelowCenter ? "BelowCenter (default)" : position.ToString(), button);
             }
 
             table.AddSection("Content");
 
-            table.AddRow("With a title", CreateContentToastButton(null,
+            table.AddRow("With a title", CreateContentToastButton(UIStyles.Colors.Sets.Primary,
                 new InfoPopupSection("Saved", "The file was written to disk.")));
 
-            table.AddRow("A long message", CreateContentToastButton(null,
+            table.AddRow("A long message", CreateContentToastButton(UIStyles.Colors.Sets.Primary,
                 new InfoPopupSection("Saved", "The file was written to disk, and a copy of it was put into the backup folder next to it, so nothing is lost.")));
 
             table.AddRow("Own colors", CreateContentToastButton(null,
@@ -112,7 +112,7 @@ namespace ErikwnkWFUI.Showcase
 
             button.Click += delegate
             {
-                UIStyles.Toasts.ShowStandard(message, this, symbol: symbol);
+                UIStyles.Toasts.ShowPrimary(message, this, symbol: symbol);
             };
 
             return button;
@@ -136,7 +136,7 @@ namespace ErikwnkWFUI.Showcase
 
             button.Click += delegate
             {
-                ToastForm.ShowToast(content, this, colors);
+                ToastForm.ShowToast(content, this, colors, icon: ToastIcon.Success);
             };
 
             return button;
@@ -148,7 +148,7 @@ namespace ErikwnkWFUI.Showcase
 
             button.Click += delegate
             {
-                ToastForm.ShowToast("Sample toast message", this, colors, transparency, duration, delay);
+                ToastForm.ShowToast("Sample toast message", this, colors, transparency, duration, delay, ToastIcon.Success);
             };
 
             return button;
