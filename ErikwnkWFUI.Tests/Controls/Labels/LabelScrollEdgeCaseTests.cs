@@ -484,7 +484,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void AutoSize_SwitchedOnWhileMoving_StopsTheMovement()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ThemedLabel label = Create(LabelScroll.BackAndForth());
         Assert.True(Moving(label));
 
         label.AutoSize = true;

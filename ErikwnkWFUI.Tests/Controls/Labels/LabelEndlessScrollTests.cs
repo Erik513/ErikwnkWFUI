@@ -400,14 +400,33 @@ public class LabelEndlessScrollTests : IDisposable
     }
 
     [Fact]
-    public void AMultiLineText_AndAnAutoSizedLabel_DoNotMove_InTheEndlessModeToo()
+    public void AMultiLineText_AndAnAutoSizedLabelThatWraps_DoNotMove_InTheEndlessModeToo()
     {
         using ThemedLabel lines = Create(text: LongText + "\nSecond line");
-        using ThemedLabel autoSized = Create();
-        autoSized.AutoSize = true;
+        using ThemedLabel wrapping = Create();
+        wrapping.MaximumSize = new Size(100, 0);
+        wrapping.AutoSize = true;
 
         Assert.Equal(0, Cycle(lines));
-        Assert.Equal(0, Cycle(autoSized));
+        Assert.Equal(0, Cycle(wrapping));
+    }
+
+    [Fact]
+    public void AnAutoSizedLabel_MovesEndlessly_AndKeepsTheSizeOfItsText()
+    {
+        using ThemedLabel label = Create(text: "Short");
+        label.AutoSize = true;
+        Size size = label.Size;
+
+        int round = Cycle(label);
+        Assert.True(round > 0);
+        Assert.True(Moving(label));
+
+        // The round is the text, a gap, the separator and a gap: more than the label, which is the text.
+        Assert.True(round > size.Width);
+
+        Tick(label, 1000);
+        Assert.Equal(size, label.Size);
     }
 
     [Fact]

@@ -103,8 +103,8 @@ namespace ErikwnkWFUI.Controls
         /// not at all (the default), back and forth with a rest at both ends, or endlessly in one
         /// direction. A text that fits stands still. It applies to a text of one line in a label that is
         /// enabled; a disabled label shows the start of the text with an ellipsis. A label with
-        /// <see cref="Label.AutoSize"/> does not move its text either: it grows to the text (and, up to its
-        /// maximum size, wraps it). While the text moves it starts at the left whatever <see cref="Label.TextAlign"/>
+        /// <see cref="Label.AutoSize"/> is as big as its text, so back and forth does not move it; endless does, and
+        /// the size of the label stays what AutoSize makes it (a label with a maximum width wraps its text and does not move). While the text moves it starts at the left whatever <see cref="Label.TextAlign"/>
         /// says (the vertical place is kept), and right-to-left is not supported (as everywhere in the library).
         /// An image of the label is not shown while the text moves, only while it stands still.
         /// </summary>
@@ -246,7 +246,7 @@ namespace ErikwnkWFUI.Controls
             _maxOffset = 0;
             _cycle = 0;
 
-            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || AutoSize || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
+            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || (AutoSize && !MovesWhenAutoSized()) || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
                 return;
 
             int inner = ClientSize.Width - Padding.Horizontal;
@@ -285,6 +285,15 @@ namespace ErikwnkWFUI.Controls
             // One that fits (even just) stands still; only one that does not fit has a way to go.
             if (_textWidth + 2 * inset > inner && _textWidth <= MaxPictureWidth)
                 _maxOffset = _textWidth + 2 * inset - inner + EndRoom;
+        }
+
+        // A label with AutoSize is exactly as big as its text, so back and forth has nothing to show; the endless
+        // text goes round all the same (the size of the label is not touched: the round is the text, a gap, the
+        // separator and a gap, seen through a window of the text's width). One that wraps (a maximum width) is
+        // not one line.
+        private bool MovesWhenAutoSized()
+        {
+            return _scrollMode == LabelScrollMode.Endless && MaximumSize.Width <= 0;
         }
 
         // The gap before and behind the separator of the endless mode: about the height of a letter.
