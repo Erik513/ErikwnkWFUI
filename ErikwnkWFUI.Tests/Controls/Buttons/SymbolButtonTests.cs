@@ -57,6 +57,21 @@ public class SymbolButtonTests
         Assert.Equal(UIFonts.Icon.Size, standardSize.Font.Size);
     }
 
+    [Fact]
+    public void TheDocument_IsDrawnInTheEmojiFont_AndTheFileInTheUsualOne()
+    {
+        // (Windows has Segoe UI Emoji; without it the usual font is the fallback.)
+        string emoji = UIStyles.Symbols.GetFontName(UIStyles.Symbols.Document);
+
+        using Button document = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Document);
+        using Button file = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.File);
+
+        Assert.NotEqual(UIStyles.Symbols.File, UIStyles.Symbols.Document);
+        Assert.Equal(emoji, document.Font.Name);
+        Assert.Equal(UIStyles.Symbols.GetFontName(UIStyles.Symbols.File), file.Font.Name);
+        Assert.Equal(UIFonts.Icon.FontFamily.Name, file.Font.Name);
+    }
+
     [Theory]
     [InlineData(24)]
     [InlineData(30)]

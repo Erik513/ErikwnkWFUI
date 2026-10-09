@@ -35,8 +35,13 @@ namespace ErikwnkWFUI
             // use it (Copy: two rounded sheets, not the old pair of pages).
             private const string FluentFontName = "Segoe Fluent Icons";
 
+            // The emoji font: a symbol that ends with the emoji selector (U+FE0F) is drawn in it.
+            private const string EmojiFontName = "Segoe UI Emoji";
+            private const char EmojiSelector = '️';
+
             private static readonly bool _isIconFontInstalled;
             private static readonly bool _isFluentFontInstalled;
+            private static readonly bool _isEmojiFontInstalled;
 
             // Which of the two fonts Windows has, looked up once (the list of
             // installed fonts is not cheap to read). If it cannot be read at all, the
@@ -54,6 +59,8 @@ namespace ErikwnkWFUI
                                 _isIconFontInstalled = true;
                             else if (family.Name == FluentFontName)
                                 _isFluentFontInstalled = true;
+                            else if (family.Name == EmojiFontName)
+                                _isEmojiFontInstalled = true;
                         }
                     }
                 }
@@ -76,6 +83,9 @@ namespace ErikwnkWFUI
             /// </summary>
             public static string GetFontName(string symbol)
             {
+                if (!string.IsNullOrEmpty(symbol) && symbol[symbol.Length - 1] == EmojiSelector && _isEmojiFontInstalled)
+                    return EmojiFontName;
+
                 bool isIconFontSymbol = !string.IsNullOrEmpty(symbol) && symbol[0] >= '\uE000' && symbol[0] <= '\uF8FF';
 
                 if (isIconFontSymbol && symbol == Copy && _isFluentFontInstalled)
@@ -170,6 +180,12 @@ namespace ErikwnkWFUI
             // ---- files ----
             /// <summary>A page.</summary>
             public const string File = "\U0001F4C4";
+            /// <summary>
+            /// A page with lines of text, drawn in the emoji font (Segoe UI Emoji): the outlined
+            /// page that Windows shows for a document, where <see cref="File"/> is a plain
+            /// filled page. The emoji font brings its own colors for the lines.
+            /// </summary>
+            public const string Document = "📄️";
             /// <summary>A closed folder.</summary>
             public const string Folder = "\U0001F4C1";
             /// <summary>An open folder.</summary>

@@ -336,6 +336,9 @@ namespace ErikwnkWFUI
                 /// <summary>Sending: a paper plane, on blue.</summary>
                 public static UIButtonPreset Send { get; } = new UIButtonPreset(Symbols.Send, WhiteOn(Colors.Sets.Blue));
 
+                /// <summary>A document: the outlined page with lines of text (emoji font), on dark gray.</summary>
+                public static UIButtonPreset Document { get; } = new UIButtonPreset(Symbols.Document, WhiteOn(Colors.Sets.Dark));
+
                 /// <summary>Opening a folder: an open folder, on dark gray.</summary>
                 public static UIButtonPreset FolderOpen { get; } = new UIButtonPreset(Symbols.FolderOpen, WhiteOn(Colors.Sets.Dark));
 
