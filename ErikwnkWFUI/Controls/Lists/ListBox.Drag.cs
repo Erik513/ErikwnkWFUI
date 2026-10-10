@@ -1,0 +1,268 @@
+﻿using System;
+using System.Drawing;
+using System.Windows.Forms;
+
+namespace ErikwnkWFUI.Controls
+{
+    // The reordering of the list box: the drag by the handle, the drop line, and MoveItem. The settings, the mouse and
+    // the colors are in ListBox.cs, the painting in ListBox.Drawing.cs.
+    public partial class ListBox
+    {
+        protected override void OnDragLeave(EventArgs e)
+        {
+            InvalidateDragIndicator();
+
+            _dragInsertPosition = -1;
+            InvalidateDragIndicator();
+
+            base.OnDragLeave(e);
+        }
+
+        protected override void OnDragOver(DragEventArgs drgevent)
+        {
+            // Only a drag that started on one of the handles of this list is a reordering; anything else that is
+            // dragged over it (files, items of another control) is left to the handlers of the application, which
+            // decide what it may do.
+            if (!CanReorder || !_isDragging || _dragIndex == -1)
+            {
+                base.OnDragOver(drgevent);
+                return;
+            }
+
+            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
+            int newInsertPosition = GetInsertPosition(point, out DragDropEffects effect);
+
+            drgevent.Effect = effect;
+
+            if (_dragInsertPosition != newInsertPosition)
+            {
+                InvalidateDragIndicator();
+                _dragInsertPosition = newInsertPosition;
+                InvalidateDragIndicator();
+            }
+
+            AutoScrollDuringDrag(point, drgevent);
+
+            base.OnDragOver(drgevent);
+        }
+
+        protected override void OnDragDrop(DragEventArgs drgevent)
+        {
+            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
+
+            bool droppedInside = ClientRectangle.Contains(point);
+
+            if (droppedInside && CanReorder && _dragIndex != -1 && _dragInsertPosition != -1)
+            {
+                ReorderDraggedItem();
+            }
+
+            ResetDragState();
+
+            _hoverIndex = -1;
+            Invalidate();
+
+            base.OnDragDrop(drgevent);
+        }
+
+        protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
+        {
+            gfbevent.UseDefaultCursors = false;
+            Cursor.Current = Cursors.SizeAll;
+
+            base.OnGiveFeedback(gfbevent);
+        }
+
+        /// <summary>Moves an item to a new index without user drag interaction - does not raise <see cref="ItemsReordered"/>.</summary>
+        public void MoveItem(int fromIndex, int toIndex)
+        {
+            if (fromIndex < 0 || fromIndex >= Items.Count || toIndex < 0 || toIndex >= Items.Count)
+                return;
+
+            BeginUpdate();
+
+            try
+            {
+                object item = Items[fromIndex];
+                Items.RemoveAt(fromIndex);
+                Items.Insert(toIndex, item);
+
+                SelectedIndex = toIndex;
+                ItemsReordered?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                EndUpdate();
+            }
+        }
+
+        private bool TryPrepareDrag(int index, Point location)
+        {
+            if (!CanReorder || index == -1)
+                return false;
+
+            Rectangle itemRect = GetItemRectangle(index);
+            Rectangle dragRect = GetDragHandleRectangle(itemRect);
+
+            if (!dragRect.Contains(location))
+                return false;
+
+            _dragIndex = index;
+            _dragStartPoint = location;
+            SelectedIndex = index;
+
+            return true;
+        }
+
+        private void TryStartDrag(MouseEventArgs e)
+        {
+            if (!CanReorder || e.Button != MouseButtons.Left || _isDragging || _dragIndex == -1)
+                return;
+
+            bool movedEnough =
+                Math.Abs(e.X - _dragStartPoint.X) > SystemInformation.DragSize.Width ||
+                Math.Abs(e.Y - _dragStartPoint.Y) > SystemInformation.DragSize.Height;
+
+            if (!movedEnough)
+                return;
+
+            _isDragging = true;
+            DoDragDrop(_dragIndex, DragDropEffects.Move);
+        }
+
+        private int GetInsertPosition(Point point, out DragDropEffects effect)
+        {
+            effect = DragDropEffects.None;
+
+            if (Items.Count == 0)
+            {
+                effect = DragDropEffects.Move;
+                return 0;
+            }
+
+            int targetIndex = IndexFromPoint(point);
+
+            if (targetIndex != -1)
+            {
+                Rectangle itemRect = GetItemRectangle(targetIndex);
+                bool isTopHalf = point.Y < itemRect.Y + itemRect.Height / 2;
+
+                effect = DragDropEffects.Move;
+                return isTopHalf ? targetIndex : targetIndex + 1;
+            }
+
+            if (point.Y > GetItemRectangle(Items.Count - 1).Bottom)
+            {
+                effect = DragDropEffects.Move;
+                return Items.Count;
+            }
+
+            return -1;
+        }
+
+        private void AutoScrollDuringDrag(Point point, DragEventArgs drgevent)
+        {
+            if (point.Y < 20 && TopIndex > 0)
+            {
+                TopIndex--;
+                drgevent.Effect = DragDropEffects.Move;
+            }
+            else if (point.Y > ClientSize.Height - 20 && TopIndex < Items.Count - 1)
+            {
+                TopIndex++;
+                drgevent.Effect = DragDropEffects.Move;
+            }
+        }
+
+        private void ReorderDraggedItem()
+        {
+            // The items may have changed while the item was dragged (a timer, another thread's result): what is
+            // no longer there cannot be moved.
+            if (_dragIndex < 0 || _dragIndex >= Items.Count)
+                return;
+
+            int targetPosition = _dragInsertPosition;
+
+            if (targetPosition > _dragIndex)
+                targetPosition--;
+
+            targetPosition = Math.Max(0, Math.Min(targetPosition, Items.Count));
+
+            if (targetPosition == _dragIndex)
+                return;
+
+            BeginUpdate();
+
+            try
+            {
+                object draggedItem = Items[_dragIndex];
+
+                Items.RemoveAt(_dragIndex);
+
+                if (targetPosition > Items.Count)
+                    targetPosition = Items.Count;
+
+                Items.Insert(targetPosition, draggedItem);
+                SelectedIndex = targetPosition;
+
+                EnsureItemVisible(targetPosition);
+
+                ItemsReordered?.Invoke(this, EventArgs.Empty);
+            }
+            finally
+            {
+                EndUpdate();
+            }
+        }
+
+        private void EnsureItemVisible(int index)
+        {
+            if (index < TopIndex)
+            {
+                TopIndex = index;
+                return;
+            }
+
+            int visibleItemCount = ClientSize.Height / ItemHeight;
+            int lastVisibleIndex = TopIndex + visibleItemCount - 1;
+
+            if (index > lastVisibleIndex)
+            {
+                TopIndex = index - visibleItemCount + 1;
+            }
+        }
+
+        private void ResetDragState()
+        {
+            bool needsInvalidate = _isDragging || _dragIndex != -1 || _dragInsertPosition != -1;
+
+            _isDragging = false;
+            _dragIndex = -1;
+            _dragInsertPosition = -1;
+
+            if (needsInvalidate)
+                Invalidate();
+        }
+
+        // (The rectangle of an item already stops where the scroll bar starts, so the handle needs no room for it.)
+        private Rectangle GetDragHandleRectangle(Rectangle itemRect)
+        {
+            int x = itemRect.Right - DragHandleWidth;
+
+            return new Rectangle(
+                x - DragHandleHitAreaPadding,
+                itemRect.Y,
+                DragHandleWidth + DragHandleHitAreaPadding * 2,
+                itemRect.Height);
+        }
+
+        private void InvalidateDragIndicator()
+        {
+            if (_dragInsertPosition == -1)
+                return;
+
+            int y = GetDragIndicatorYPosition();
+            Invalidate(new Rectangle(0, Math.Max(0, y - 4), Width, 8));
+        }
+    }
+}

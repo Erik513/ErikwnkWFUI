@@ -306,4 +306,119 @@ public class ListBoxEdgeCaseTests : IDisposable
 
         Assert.Equal("", listBox.InvokePrivate<string>("GetDisplayText", "x"));
     }
+
+    // ---- the final check: what the code does around the mouse and the drag ----
+
+    private static int HoverOf(WfuiListBox listBox) => listBox.GetPrivateField<int>("_hoverIndex");
+
+    [Fact]
+    public void APress_OnTheHandle_AndOnTheRoomBelowTheItems_RaiseMouseDownToo()
+    {
+        WfuiListBox listBox = Shown(items: 3, reorder: true);
+        int downs = 0;
+        listBox.MouseDown += (s, e) => downs++;
+
+        // The handle sits at the right end of a row.
+        int y = ItemHeight / 2;
+        SendMessage(listBox.Handle, WM_LBUTTONDOWN, (IntPtr)1, (IntPtr)((listBox.ClientSize.Width - 12) | (y << 16)));
+        SendMessage(listBox.Handle, WM_LBUTTONUP, IntPtr.Zero, (IntPtr)((listBox.ClientSize.Width - 12) | (y << 16)));
+        Assert.Equal(1, downs);
+        Assert.Equal(0, listBox.SelectedIndex);
+
+        // And below the three rows.
+        SendMessage(listBox.Handle, WM_LBUTTONDOWN, (IntPtr)1, (IntPtr)(40 | (180 << 16)));
+        SendMessage(listBox.Handle, WM_LBUTTONUP, IntPtr.Zero, (IntPtr)(40 | (180 << 16)));
+        Assert.Equal(2, downs);
+        Assert.Equal(-1, listBox.SelectedIndex);
+    }
+
+    [Fact]
+    public void ARightClickBelowTheItems_LeavesTheSelectionAlone()
+    {
+        WfuiListBox listBox = Shown();
+        Click(listBox, 1);
+
+        SendMessage(listBox.Handle, WM_RBUTTONDOWN, (IntPtr)2, (IntPtr)(40 | (180 << 16)));
+        SendMessage(listBox.Handle, WM_RBUTTONUP, IntPtr.Zero, (IntPtr)(40 | (180 << 16)));
+
+        Assert.Equal(1, listBox.SelectedIndex);
+    }
+
+    [Fact]
+    public void AForeignDrag_IsLeftToTheHandlersOfTheApplication_ButTheOwnOneIsTheReordering()
+    {
+        WfuiListBox listBox = Shown(items: 4, reorder: true);
+        int handled = 0;
+        DragEventHandler onDragOver = (s, e) => { handled++; e.Effect = DragDropEffects.Copy; };
+        listBox.DragOver += onDragOver;
+        Point inside = listBox.PointToScreen(new Point(40, 40));
+
+        // Files from outside: not a reordering - no drop line, the application's handler decides.
+        DragEventArgs foreign = new DragEventArgs(new DataObject(), 0, inside.X, inside.Y, DragDropEffects.All, DragDropEffects.None);
+        listBox.InvokePrivate("OnDragOver", foreign);
+
+        Assert.Equal(1, handled);
+        Assert.Equal(DragDropEffects.Copy, foreign.Effect);
+        Assert.Equal(-1, listBox.GetPrivateField<int>("_dragInsertPosition"));
+
+        // The list's own drag: the reordering (the drop line and the move effect; a handler of the application would
+        // still have the last word, see above).
+        listBox.DragOver -= onDragOver;
+        listBox.SetPrivateField("_isDragging", true);
+        listBox.SetPrivateField("_dragIndex", 0);
+        DragEventArgs own = new DragEventArgs(new DataObject(), 0, inside.X, inside.Y, DragDropEffects.Move, DragDropEffects.None);
+        listBox.InvokePrivate("OnDragOver", own);
+
+        Assert.Equal(DragDropEffects.Move, own.Effect);
+        Assert.NotEqual(-1, listBox.GetPrivateField<int>("_dragInsertPosition"));
+    }
+
+    [Fact]
+    public void ItemsThatWentWhileOneWasDragged_DoNotBreakTheDrop()
+    {
+        WfuiListBox listBox = Shown(items: 4, reorder: true);
+        listBox.SetPrivateField("_dragIndex", 3);
+        listBox.SetPrivateField("_dragInsertPosition", 0);
+        listBox.Items.Clear();
+
+        Exception? thrown = Record.Exception(() => listBox.InvokePrivate("ReorderDraggedItem"));
+
+        Assert.Null(thrown);
+        Assert.Empty(listBox.Items);
+    }
+
+    [Fact]
+    public void TheHandle_StandsWhereItDoes_WithAndWithoutAScrollBar()
+    {
+        WfuiListBox few = Shown(items: 3, reorder: true);
+        WfuiListBox many = Shown(items: 40, reorder: true);
+
+        Rectangle fewRow = few.GetItemRectangle(0);
+        Rectangle manyRow = many.GetItemRectangle(0);
+        Rectangle fewHandle = few.InvokePrivate<Rectangle>("GetDragHandleRectangle", fewRow);
+        Rectangle manyHandle = many.InvokePrivate<Rectangle>("GetDragHandleRectangle", manyRow);
+
+        // The row of a list with a scroll bar is narrower by the bar already: the handle keeps its place in the row.
+        Assert.True(manyRow.Width < fewRow.Width, "the list with 40 items has no scroll bar");
+        Assert.Equal(fewRow.Right - fewHandle.Right, manyRow.Right - manyHandle.Right);
+    }
+
+    [Fact]
+    public void ARowThatMovesUnderTheMouse_TakesTheHoverWithIt_AndASwitchedOffListLosesIt()
+    {
+        WfuiListBox listBox = Shown(items: 40);
+        listBox.SetPrivateField("_hoverIndex", 2);
+
+        SendMessage(listBox.Handle, 0x020A, (IntPtr)unchecked((int)(-120u << 16)), IntPtr.Zero); // WM_MOUSEWHEEL
+        Application.DoEvents();
+
+        Point mouse = listBox.PointToClient(Cursor.Position);
+        int expected = listBox.ClientRectangle.Contains(mouse) ? listBox.IndexFromPoint(mouse) : -1;
+        Assert.Equal(expected, HoverOf(listBox));
+
+        listBox.SetPrivateField("_hoverIndex", 1);
+        listBox.Enabled = false;
+        listBox.Enabled = true;
+        Assert.Equal(-1, HoverOf(listBox));
+    }
 }

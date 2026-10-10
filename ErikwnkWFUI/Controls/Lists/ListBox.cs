@@ -43,7 +43,7 @@ namespace ErikwnkWFUI.Controls
     /// <c>ErikwnkWFUI.Controls.ListBox</c>.
     /// </para>
     /// </remarks>
-    public class ListBox : System.Windows.Forms.ListBox
+    public partial class ListBox : System.Windows.Forms.ListBox
     {
         private const int DragHandleWidth = 30;
         private const int DragHandleHitAreaPadding = 5;
@@ -412,6 +412,8 @@ namespace ErikwnkWFUI.Controls
         // raw message here, before base.WndProc forwards it to the native
         // control, is the only point that still sees the pre-click state.
         private const int WM_LBUTTONDOWN = 0x0201;
+        private const int WM_VSCROLL = 0x0115;
+        private const int WM_MOUSEWHEEL = 0x020A;
 
         protected override void WndProc(ref Message m)
         {
@@ -421,6 +423,20 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            // The items move under a mouse that stands still: the hover goes with the item that is there now.
+            if ((m.Msg == WM_MOUSEWHEEL || m.Msg == WM_VSCROLL) && IsHandleCreated)
+                UpdateHoverIndex(PointToClient(Cursor.Position));
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            // A list that is switched off is not under the mouse any more, and not when it is back on either until the
+            // mouse moves again.
+            _hoverIndex = -1;
+
+            base.OnEnabledChanged(e);
+            Invalidate();
         }
 
         private void CapturePendingToggleDeselect(IntPtr lParam)
@@ -444,14 +460,17 @@ namespace ErikwnkWFUI.Controls
         {
             int index = IndexFromPoint(e.Location);
 
-            if (TryPrepareDrag(index, e.Location))
+            if (e.Button == MouseButtons.Left && TryPrepareDrag(index, e.Location))
+            {
+                base.OnMouseDown(e);
                 return;
+            }
 
-            if (index == -1)
+            // Below the items: the selection goes (only for the left button - the others leave it alone).
+            if (index == -1 && e.Button == MouseButtons.Left)
             {
                 ClearSelected();
                 _dragIndex = -1;
-                return;
             }
 
             base.OnMouseDown(e);
@@ -495,112 +514,6 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseLeave(e);
         }
 
-        protected override void OnDragLeave(EventArgs e)
-        {
-            InvalidateDragIndicator();
-
-            _dragInsertPosition = -1;
-            InvalidateDragIndicator();
-
-            base.OnDragLeave(e);
-        }
-
-        protected override void OnDragOver(DragEventArgs drgevent)
-        {
-            if (!CanReorder)
-            {
-                drgevent.Effect = DragDropEffects.None;
-                return;
-            }
-
-            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
-            int newInsertPosition = GetInsertPosition(point, out DragDropEffects effect);
-
-            drgevent.Effect = effect;
-
-            if (_dragInsertPosition != newInsertPosition)
-            {
-                InvalidateDragIndicator();
-                _dragInsertPosition = newInsertPosition;
-                InvalidateDragIndicator();
-            }
-
-            AutoScrollDuringDrag(point, drgevent);
-
-            base.OnDragOver(drgevent);
-        }
-
-        protected override void OnDragDrop(DragEventArgs drgevent)
-        {
-            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
-
-            bool droppedInside = ClientRectangle.Contains(point);
-
-            if (droppedInside && CanReorder && _dragIndex != -1 && _dragInsertPosition != -1)
-            {
-                ReorderDraggedItem();
-            }
-
-            ResetDragState();
-
-            _hoverIndex = -1;
-            Invalidate();
-
-            base.OnDragDrop(drgevent);
-        }
-
-        protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
-        {
-            gfbevent.UseDefaultCursors = false;
-            Cursor.Current = Cursors.SizeAll;
-
-            base.OnGiveFeedback(gfbevent);
-        }
-
-        protected override void OnDrawItem(DrawItemEventArgs e)
-        {
-            if (e.Index < 0)
-                return;
-
-            Rectangle rect = e.Bounds;
-            object item = Items[e.Index];
-
-            // A list that is disabled as a whole shows every item the way a disabled item looks.
-            bool isSelected = (e.State & DrawItemState.Selected) != 0 && !_isDragging;
-            bool isHovered = e.Index == _hoverIndex && !_isDragging && Enabled;
-            bool isDisabled = !Enabled || _isItemDisabled?.Invoke(item) == true;
-            bool isVScrollVisible = IsVerticalScrollBarVisible();
-
-            Color backColor = GetBackColor(e.Index, isSelected, isHovered, isDisabled);
-            Color textColor = GetTextColorOn(isSelected, isDisabled, backColor);
-
-            FillItemBackground(e.Graphics, rect, backColor);
-
-            Rectangle dragRect = Rectangle.Empty;
-
-            if (CanReorder)
-            {
-                dragRect = GetDragHandleRectangle(rect, isVScrollVisible);
-                DrawDragHandle(e.Graphics, dragRect, GetDragHandleColor(textColor, backColor));
-            }
-
-            DrawItemContent(e.Graphics, rect, item, e.Index, textColor, dragRect, isVScrollVisible);
-
-            if (_isDragging && _dragInsertPosition != -1)
-            {
-                if (_dragInsertPosition == e.Index)
-                {
-                    DrawIndicatorLine(e.Graphics, rect.Top);
-                }
-                else if (_dragInsertPosition >= Items.Count && e.Index == Items.Count - 1)
-                {
-                    DrawIndicatorLine(e.Graphics, rect.Bottom);
-                }
-            }
-
-            base.OnDrawItem(e);
-        }
-
         /// <summary>Clears the selection (every selected item) and repaints; does nothing when nothing is selected. Hides (does not override) the inherited <see cref="System.Windows.Forms.ListBox.ClearSelected"/>.</summary>
         public new void ClearSelected()
         {
@@ -609,29 +522,6 @@ namespace ErikwnkWFUI.Controls
 
             SelectedIndex = -1;
             Invalidate();
-        }
-
-        /// <summary>Moves an item to a new index without user drag interaction - does not raise <see cref="ItemsReordered"/>.</summary>
-        public void MoveItem(int fromIndex, int toIndex)
-        {
-            if (fromIndex < 0 || fromIndex >= Items.Count || toIndex < 0 || toIndex >= Items.Count)
-                return;
-
-            BeginUpdate();
-
-            try
-            {
-                object item = Items[fromIndex];
-                Items.RemoveAt(fromIndex);
-                Items.Insert(toIndex, item);
-
-                SelectedIndex = toIndex;
-                ItemsReordered?.Invoke(this, EventArgs.Empty);
-            }
-            finally
-            {
-                EndUpdate();
-            }
         }
 
         private void UpdateHoverIndex(Point location)
@@ -649,367 +539,6 @@ namespace ErikwnkWFUI.Controls
 
             InvalidateItem(oldHoverIndex);
             InvalidateItem(_hoverIndex);
-        }
-
-        private bool TryPrepareDrag(int index, Point location)
-        {
-            if (!CanReorder || index == -1)
-                return false;
-
-            Rectangle itemRect = GetItemRectangle(index);
-            Rectangle dragRect = GetDragHandleRectangle(itemRect, IsVerticalScrollBarVisible());
-
-            if (!dragRect.Contains(location))
-                return false;
-
-            _dragIndex = index;
-            _dragStartPoint = location;
-            SelectedIndex = index;
-
-            return true;
-        }
-
-        private void TryStartDrag(MouseEventArgs e)
-        {
-            if (!CanReorder || e.Button != MouseButtons.Left || _isDragging || _dragIndex == -1)
-                return;
-
-            bool movedEnough =
-                Math.Abs(e.X - _dragStartPoint.X) > SystemInformation.DragSize.Width ||
-                Math.Abs(e.Y - _dragStartPoint.Y) > SystemInformation.DragSize.Height;
-
-            if (!movedEnough)
-                return;
-
-            _isDragging = true;
-            DoDragDrop(_dragIndex, DragDropEffects.Move);
-        }
-
-        private int GetInsertPosition(Point point, out DragDropEffects effect)
-        {
-            effect = DragDropEffects.None;
-
-            if (Items.Count == 0)
-            {
-                effect = DragDropEffects.Move;
-                return 0;
-            }
-
-            int targetIndex = IndexFromPoint(point);
-
-            if (targetIndex != -1)
-            {
-                Rectangle itemRect = GetItemRectangle(targetIndex);
-                bool isTopHalf = point.Y < itemRect.Y + itemRect.Height / 2;
-
-                effect = DragDropEffects.Move;
-                return isTopHalf ? targetIndex : targetIndex + 1;
-            }
-
-            if (point.Y > GetItemRectangle(Items.Count - 1).Bottom)
-            {
-                effect = DragDropEffects.Move;
-                return Items.Count;
-            }
-
-            return -1;
-        }
-
-        private void AutoScrollDuringDrag(Point point, DragEventArgs drgevent)
-        {
-            if (point.Y < 20 && TopIndex > 0)
-            {
-                TopIndex--;
-                drgevent.Effect = DragDropEffects.Move;
-            }
-            else if (point.Y > ClientSize.Height - 20 && TopIndex < Items.Count - 1)
-            {
-                TopIndex++;
-                drgevent.Effect = DragDropEffects.Move;
-            }
-        }
-
-        private void ReorderDraggedItem()
-        {
-            int targetPosition = _dragInsertPosition;
-
-            if (targetPosition > _dragIndex)
-                targetPosition--;
-
-            targetPosition = Math.Max(0, Math.Min(targetPosition, Items.Count));
-
-            if (targetPosition == _dragIndex)
-                return;
-
-            BeginUpdate();
-
-            try
-            {
-                object draggedItem = Items[_dragIndex];
-
-                Items.RemoveAt(_dragIndex);
-
-                if (targetPosition > Items.Count)
-                    targetPosition = Items.Count;
-
-                Items.Insert(targetPosition, draggedItem);
-                SelectedIndex = targetPosition;
-
-                EnsureItemVisible(targetPosition);
-
-                ItemsReordered?.Invoke(this, EventArgs.Empty);
-            }
-            finally
-            {
-                EndUpdate();
-            }
-        }
-
-        private void EnsureItemVisible(int index)
-        {
-            if (index < TopIndex)
-            {
-                TopIndex = index;
-                return;
-            }
-
-            int visibleItemCount = ClientSize.Height / ItemHeight;
-            int lastVisibleIndex = TopIndex + visibleItemCount - 1;
-
-            if (index > lastVisibleIndex)
-            {
-                TopIndex = index - visibleItemCount + 1;
-            }
-        }
-
-        private void ResetDragState()
-        {
-            bool needsInvalidate = _isDragging || _dragIndex != -1 || _dragInsertPosition != -1;
-
-            _isDragging = false;
-            _dragIndex = -1;
-            _dragInsertPosition = -1;
-
-            if (needsInvalidate)
-                Invalidate();
-        }
-
-        private void FillItemBackground(Graphics graphics, Rectangle rect, Color backColor)
-        {
-            using (SolidBrush brush = new SolidBrush(backColor))
-            {
-                graphics.FillRectangle(brush, rect);
-            }
-        }
-
-        private void DrawItemContent(
-            Graphics graphics,
-            Rectangle rect,
-            object item,
-            int index,
-            Color textColor,
-            Rectangle dragRect,
-            bool isVScrollVisible)
-        {
-            int textLeft = rect.X + 8;
-            int textRightMargin = 12;
-            int reservedDragWidth = CanReorder ? dragRect.Width : 0;
-            int scrollBarWidth = isVScrollVisible ? SystemInformation.VerticalScrollBarWidth : 0;
-
-            if (_showEnumeration)
-            {
-                textLeft = DrawEnumeration(graphics, rect, index, textLeft, textColor);
-            }
-
-            Image icon = _iconProvider?.Invoke(item);
-
-            if (icon != null)
-            {
-                textLeft = DrawIcon(graphics, rect, icon, textLeft);
-            }
-
-            Rectangle textRect = new Rectangle(
-                textLeft,
-                rect.Y,
-                rect.Width - (textLeft - rect.X) - reservedDragWidth - textRightMargin - scrollBarWidth,
-                rect.Height);
-
-            DrawText(graphics, textRect, GetDisplayText(item), textColor);
-        }
-
-        private int DrawEnumeration(Graphics graphics, Rectangle rect, int index, int textLeft, Color textColor)
-        {
-            string numberText = $"{index + 1}.";
-            SizeF numberSize = graphics.MeasureString(numberText, Font);
-
-            Rectangle numberRect = new Rectangle(
-                textLeft,
-                rect.Y,
-                (int)Math.Ceiling(numberSize.Width) + 4,
-                rect.Height);
-
-            using (SolidBrush brush = new SolidBrush(textColor))
-            {
-                graphics.DrawString(numberText, Font, brush, numberRect, CenterLeftFormat);
-            }
-
-            return textLeft + numberRect.Width + 4;
-        }
-
-        private int DrawIcon(Graphics graphics, Rectangle rect, Image icon, int textLeft)
-        {
-            Rectangle iconRect = new Rectangle(
-                textLeft,
-                rect.Y + (rect.Height - ItemIconSize) / 2,
-                ItemIconSize,
-                ItemIconSize);
-
-            graphics.DrawImage(icon, iconRect);
-
-            return textLeft + ItemIconSize + ItemIconMargin;
-        }
-
-        private void DrawText(Graphics graphics, Rectangle textRect, string text, Color textColor)
-        {
-            using (SolidBrush brush = new SolidBrush(textColor))
-            {
-                graphics.DrawString(text, Font, brush, textRect, CenterLeftFormat);
-            }
-        }
-
-        // The handle of an item: the color that was set, or the text color of the item blended toward its background
-        // (quiet, like a hint) and kept at 3:1 against it - on the gray selection and on a green one alike.
-        private Color GetDragHandleColor(Color textColor, Color backColor)
-        {
-            if (_dragHandleColor.HasValue)
-                return _dragHandleColor.Value;
-
-            return UIColors.EnsureContrast(UIColors.BlendToward(textColor, backColor, 0.4), backColor, 3.0);
-        }
-
-        private void DrawDragHandle(Graphics graphics, Rectangle dragRect, Color color)
-        {
-            using (Pen pen = new Pen(color, 1.5f))
-            {
-                int centerY = dragRect.Y + dragRect.Height / 2;
-                int centerX = dragRect.X + dragRect.Width / 2;
-                int startX = centerX - 6;
-
-                int lineHeight = 3;
-                int spacing = 1;
-
-                for (int i = 0; i < 3; i++)
-                {
-                    int y = centerY - lineHeight - spacing + i * (lineHeight + spacing);
-                    graphics.DrawLine(pen, startX, y, startX + 12, y);
-                }
-            }
-        }
-
-        private void DrawIndicatorLine(Graphics graphics, int y)
-        {
-            using (Pen pen = new Pen(DragIndicatorColor, 3))
-            {
-                // ClientSize, not Width - Width is this control's FULL
-                // outer bounds, which includes a native vertical
-                // scrollbar's own strip when one is visible. A line drawn
-                // all the way to Width would run underneath that
-                // scrollbar instead of stopping at the actual content
-                // area's own right edge.
-                graphics.DrawLine(pen, 0, y, ClientSize.Width, y);
-            }
-        }
-
-        private string GetDisplayText(object item)
-        {
-            if (_displayTextProvider != null)
-                return _displayTextProvider(item) ?? "";
-
-            // The text the standard list box makes of an item: DisplayMember, FormatString and the like are
-            // followed, an item without any of them is its ToString().
-            return item == null ? "" : GetItemText(item) ?? "";
-        }
-
-        private Color GetBackColor(int index, bool isSelected, bool isHovered, bool isDisabled)
-        {
-            // The selection of a disabled list: the selection color, dimmed toward the row it is on (the gray of a
-            // disabled item is the same as the odd rows on the light theme, which would hide it).
-            if (isSelected && !Enabled)
-                return UIColors.BlendToward(GetSelectedBackColor(index), GetRowBackColor(index), 0.6);
-
-            if (isSelected)
-                return GetSelectedBackColor(index);
-
-            if (isHovered)
-                return _hoverBackColor ?? GetHoverBackColor(GetRowBackColor(index));
-
-            if (isDisabled && Enabled)
-                return _disabledBackColor;
-
-            return GetRowBackColor(index);
-        }
-
-        private Color GetHoverBackColor(Color row)
-        {
-            return UIColors.BlendToward(row, _itemForeColor, 0.08);
-        }
-
-        // The row with the selection tint over it (what the eye sees: the one fill the item is painted with).
-        private Color GetSelectedBackColor(int index)
-        {
-            Color row = GetRowBackColor(index);
-            Color tint = _selectedBackColor.Value;
-            bool isGray = tint.R == tint.G && tint.G == tint.B;
-            double alpha = (isGray ? SelectionAlphaGray : SelectionAlphaColor) / 255.0;
-
-            return Color.FromArgb(
-                (int)Math.Round(row.R + (tint.R - row.R) * alpha),
-                (int)Math.Round(row.G + (tint.G - row.G) * alpha),
-                (int)Math.Round(row.B + (tint.B - row.B) * alpha));
-        }
-
-        private Color GetRowBackColor(int index)
-        {
-            return index % 2 == 0
-                ? _itemBackColor
-                : _alternateItemBackColor;
-        }
-
-        private Color GetTextColor(bool isSelected, bool isDisabled)
-        {
-            return GetTextColorOn(isSelected, isDisabled, isSelected ? GetSelectedBackColor(0) : _itemBackColor);
-        }
-
-        // The text on a background of the given color. A disabled one that was not given a color of its own is
-        // worked out from the background (the theme's disabled gray is too faint on some of them).
-        private Color GetTextColorOn(bool isSelected, bool isDisabled, Color backColor)
-        {
-            // The selection is only a tint over the row, so the text of the item reads on it as it does on the
-            // row, unless a SelectedForeColor was set.
-            if (!Enabled)
-                return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
-
-            if (isSelected)
-                return SelectedForeColor;
-
-            if (isDisabled)
-                return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
-
-            return _itemForeColor;
-        }
-
-        private Rectangle GetDragHandleRectangle(Rectangle itemRect, bool isVScrollVisible)
-        {
-            int x = itemRect.Right - DragHandleWidth;
-
-            if (isVScrollVisible)
-                x -= SystemInformation.VerticalScrollBarWidth;
-
-            return new Rectangle(
-                x - DragHandleHitAreaPadding,
-                itemRect.Y,
-                DragHandleWidth + DragHandleHitAreaPadding * 2,
-                itemRect.Height);
         }
 
         private int GetDragIndicatorYPosition()
@@ -1034,26 +563,12 @@ namespace ErikwnkWFUI.Controls
             return Math.Max(0, yPosition);
         }
 
-        private bool IsVerticalScrollBarVisible()
-        {
-            return Items.Count > 0 && Items.Count * ItemHeight > ClientSize.Height;
-        }
-
         private void InvalidateItem(int index)
         {
             if (index < 0 || index >= Items.Count)
                 return;
 
             Invalidate(GetItemRectangle(index));
-        }
-
-        private void InvalidateDragIndicator()
-        {
-            if (_dragInsertPosition == -1)
-                return;
-
-            int y = GetDragIndicatorYPosition();
-            Invalidate(new Rectangle(0, Math.Max(0, y - 4), Width, 8));
         }
 
         private void EnableDoubleBuffering()
