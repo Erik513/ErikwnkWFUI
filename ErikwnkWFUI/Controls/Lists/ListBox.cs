@@ -16,12 +16,32 @@ namespace ErikwnkWFUI.Controls
     /// instead if you also want a header bar above the list.
     /// </summary>
     /// <remarks>
+    /// <para>
+    /// <b>What of the standard list box works as it does there:</b> <c>Items</c>, <c>DataSource</c>,
+    /// <c>DisplayMember</c>, <c>ValueMember</c>, <c>FormatString</c> (they decide the text of an item),
+    /// <c>SelectedIndex/Item/Value</c> and their events, <c>SelectionMode</c> (one, none or several;
+    /// clicking the selected item clears it only in a single selection), <c>Sorted</c>, <c>MultiColumn</c> (without
+    /// reordering), <c>IntegralHeight</c>, <c>ScrollAlwaysVisible</c>, <c>TopIndex</c>, the finding and selecting
+    /// methods, <c>ForeColor</c> (the text color of the items, the same as <see cref="ItemForeColor"/>),
+    /// <c>Enabled</c> (every item shows disabled) and the <c>DrawItem</c> event (raised after the item is painted,
+    /// to paint on top of it).
+    /// </para>
+    /// <para>
+    /// <b>What is deliberately not followed:</b> <c>DrawMode</c> (always owner-drawn, fixed height - the colors and
+    /// icons depend on it), <c>BackColor</c> is the color behind and below the items (the items have
+    /// <see cref="ItemBackColor"/>), <c>BackgroundImage</c>, <c>UseTabStops</c> and <c>CustomTabOffsets</c> (the text is
+    /// one line of drawn text), <c>HorizontalScrollbar</c> and <c>HorizontalExtent</c> (a long text wraps and ends in an
+    /// ellipsis instead of running out of the list) and <c>RightToLeft</c> (not supported in the library).
+    /// <see cref="DisplayTextMember"/> and <see cref="DisplayTextProvider"/> come before <c>DisplayMember</c>.
+    /// </para>
+    /// <para>
     /// Named the same as its own base class, same as
     /// <see cref="Controls.DataGridView"/> - the base type reference below
     /// stays fully qualified so the class doesn't try to inherit from
     /// itself. Go through <see cref="UIStyles.ListBoxes.CreateStandard"/> to
     /// get one without ever having to spell out
     /// <c>ErikwnkWFUI.Controls.ListBox</c>.
+    /// </para>
     /// </remarks>
     public class ListBox : System.Windows.Forms.ListBox
     {
@@ -47,7 +67,7 @@ namespace ErikwnkWFUI.Controls
         private Color _hoverBackColor = UIColors.BackgroundLight;
         private Color _dragHandleColor = UIColors.TextTertiary;
         private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
-        private Color _disabledForeColor = UIColors.TextDisabled;
+        private Color? _disabledForeColor;
         private Color _disabledBackColor = UIColors.BackgroundDarkElevated;
 
         private int _itemHeight = 35;
@@ -130,7 +150,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Whether items can be dragged to reorder them (drag handle on the right of each item) - also controls <see cref="Control.AllowDrop"/>.</summary>
+        // Reordering is for a list of one column: with MultiColumn on, the handle and the drop line are left out.
+        private bool CanReorder
+        {
+            get { return _allowReorder && !MultiColumn; }
+        }
+
+        /// <summary>Whether items can be dragged to reorder them (drag handle on the right of each item) - also controls <see cref="Control.AllowDrop"/>. Not with <see cref="System.Windows.Forms.ListBox.MultiColumn"/>.</summary>
         public bool AllowReorder
         {
             get => _allowReorder;
@@ -193,10 +219,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Text color for an item where <see cref="IsItemDisabled"/> returns true.</summary>
         public Color DisabledForeColor
         {
-            get => _disabledForeColor;
+            get => _disabledForeColor ?? UIColors.TextDisabled;
             set
             {
-                _disabledForeColor = value;
+                _disabledForeColor = value.IsEmpty ? (Color?)null : value;
                 Invalidate();
             }
         }
@@ -258,13 +284,29 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Text color of a normal (not selected/disabled) item.</summary>
+        /// <summary>Text color of a normal (not selected/disabled) item. The same as <see cref="ForeColor"/>.</summary>
         public Color ItemForeColor
         {
             get => _itemForeColor;
             set
             {
                 _itemForeColor = value;
+                base.ForeColor = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>The text color of the items (see <see cref="ItemForeColor"/>), as in the standard list box.</summary>
+        public override Color ForeColor
+        {
+            get => base.ForeColor;
+            set
+            {
+                base.ForeColor = value;
+
+                if (!value.IsEmpty)
+                    _itemForeColor = value;
+
                 Invalidate();
             }
         }
@@ -365,6 +407,14 @@ namespace ErikwnkWFUI.Controls
 
         private void CapturePendingToggleDeselect(IntPtr lParam)
         {
+            // Only a list of one selected item toggles: in a multiple selection a click on a selected item means
+            // something else (keep, extend, take out one), and the native list does that itself.
+            if (SelectionMode != SelectionMode.One)
+            {
+                _pendingToggleDeselectIndex = -1;
+                return;
+            }
+
             int x = unchecked((short)(long)lParam);
             int y = unchecked((short)((long)lParam >> 16));
             int index = IndexFromPoint(new Point(x, y));
@@ -439,7 +489,7 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnDragOver(DragEventArgs drgevent)
         {
-            if (!_allowReorder)
+            if (!CanReorder)
             {
                 drgevent.Effect = DragDropEffects.None;
                 return;
@@ -468,7 +518,7 @@ namespace ErikwnkWFUI.Controls
 
             bool droppedInside = ClientRectangle.Contains(point);
 
-            if (droppedInside && _allowReorder && _dragIndex != -1 && _dragInsertPosition != -1)
+            if (droppedInside && CanReorder && _dragIndex != -1 && _dragInsertPosition != -1)
             {
                 ReorderDraggedItem();
             }
@@ -497,19 +547,20 @@ namespace ErikwnkWFUI.Controls
             Rectangle rect = e.Bounds;
             object item = Items[e.Index];
 
+            // A list that is disabled as a whole shows every item the way a disabled item looks.
             bool isSelected = (e.State & DrawItemState.Selected) != 0 && !_isDragging;
-            bool isHovered = e.Index == _hoverIndex && !_isDragging;
-            bool isDisabled = _isItemDisabled?.Invoke(item) == true;
+            bool isHovered = e.Index == _hoverIndex && !_isDragging && Enabled;
+            bool isDisabled = !Enabled || _isItemDisabled?.Invoke(item) == true;
             bool isVScrollVisible = IsVerticalScrollBarVisible();
 
             Color backColor = GetBackColor(e.Index, isSelected, isHovered, isDisabled);
-            Color textColor = GetTextColor(isSelected, isDisabled);
+            Color textColor = GetTextColorOn(isSelected, isDisabled, backColor);
 
             FillItemBackground(e.Graphics, rect, backColor);
 
             Rectangle dragRect = Rectangle.Empty;
 
-            if (_allowReorder)
+            if (CanReorder)
             {
                 dragRect = GetDragHandleRectangle(rect, isVScrollVisible);
                 DrawDragHandle(e.Graphics, dragRect);
@@ -584,7 +635,7 @@ namespace ErikwnkWFUI.Controls
 
         private bool TryPrepareDrag(int index, Point location)
         {
-            if (!_allowReorder || index == -1)
+            if (!CanReorder || index == -1)
                 return false;
 
             Rectangle itemRect = GetItemRectangle(index);
@@ -602,7 +653,7 @@ namespace ErikwnkWFUI.Controls
 
         private void TryStartDrag(MouseEventArgs e)
         {
-            if (!_allowReorder || e.Button != MouseButtons.Left || _isDragging || _dragIndex == -1)
+            if (!CanReorder || e.Button != MouseButtons.Left || _isDragging || _dragIndex == -1)
                 return;
 
             bool movedEnough =
@@ -744,7 +795,7 @@ namespace ErikwnkWFUI.Controls
         {
             int textLeft = rect.X + 8;
             int textRightMargin = 12;
-            int reservedDragWidth = _allowReorder ? dragRect.Width : 0;
+            int reservedDragWidth = CanReorder ? dragRect.Width : 0;
             int scrollBarWidth = isVScrollVisible ? SystemInformation.VerticalScrollBarWidth : 0;
 
             if (_showEnumeration)
@@ -853,7 +904,9 @@ namespace ErikwnkWFUI.Controls
                 return property?.GetValue(item)?.ToString() ?? "";
             }
 
-            return item?.ToString() ?? "";
+            // The text the standard list box makes of an item: DisplayMember, FormatString and the like are
+            // followed, an item without any of them is its ToString().
+            return item == null ? "" : GetItemText(item) ?? "";
         }
 
         private PropertyInfo GetCachedDisplayProperty(object item)
@@ -874,13 +927,16 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBackColor(int index, bool isSelected, bool isHovered, bool isDisabled)
         {
+            if (isSelected && !Enabled)
+                return _disabledBackColor;
+
             if (isSelected)
                 return _selectedBackColor.Value;
 
             if (isHovered)
                 return _hoverBackColor;
 
-            if (isDisabled)
+            if (isDisabled && Enabled)
                 return _disabledBackColor;
 
             return index % 2 == 0
@@ -890,15 +946,25 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetTextColor(bool isSelected, bool isDisabled)
         {
+            return GetTextColorOn(isSelected, isDisabled, isSelected ? _selectedBackColor.Value : _itemBackColor);
+        }
+
+        // The text on a background of the given color. A disabled one that was not given a color of its own is
+        // worked out from the background (the theme's disabled gray is too faint on some of them).
+        private Color GetTextColorOn(bool isSelected, bool isDisabled, Color backColor)
+        {
             // Derived live from _selectedBackColor (rather than a fixed
             // white) so a custom/accent SelectedBackColor - which might be
             // bright, e.g. yellow - always gets readable text, unless a
             // SelectedForeColor was set.
+            if (!Enabled)
+                return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
+
             if (isSelected)
                 return SelectedForeColor;
 
             if (isDisabled)
-                return _disabledForeColor;
+                return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
 
             return _itemForeColor;
         }
