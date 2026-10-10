@@ -6,10 +6,11 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A <see cref="ListBox"/> with an optional header bar above it.
-    /// Most members here just proxy the same-named member on the inner list
-    /// box (see <see cref="InnerListBox"/>) - reach through InnerListBox
-    /// directly for anything not proxied.
+    /// A <see cref="ListBox"/> with an optional header bar above it - the
+    /// same list box in every other way: every member of <see cref="ListBox"/>
+    /// (and the usual ones of the standard list box) is here too and works on
+    /// the inner list box (see <see cref="InnerListBox"/>, for anything not
+    /// offered here).
     /// </summary>
     public class TitledListBox : UserControl
     {
@@ -164,6 +165,186 @@ namespace ErikwnkWFUI.Controls
         {
             get { return _listBox.SelectedBackColor; }
             set { _listBox.SelectedBackColor = value; }
+        }
+
+        // ---- the rest of the list box: every member of ListBox is here too, so a TitledListBox is used exactly
+        // like a ListBox (the header is all that is added) ----
+
+        public string DisplayTextMember
+        {
+            get { return _listBox.DisplayTextMember; }
+            set { _listBox.DisplayTextMember = value; }
+        }
+
+        public bool ShowEnumeration
+        {
+            get { return _listBox.ShowEnumeration; }
+            set { _listBox.ShowEnumeration = value; }
+        }
+
+        public bool AllowReorder
+        {
+            get { return _listBox.AllowReorder; }
+            set { _listBox.AllowReorder = value; }
+        }
+
+        public Color ItemBackColor
+        {
+            get { return _listBox.ItemBackColor; }
+            set { _listBox.ItemBackColor = value; }
+        }
+
+        public Color ItemForeColor
+        {
+            get { return _listBox.ItemForeColor; }
+            set { _listBox.ItemForeColor = value; }
+        }
+
+        public Color HoverBackColor
+        {
+            get { return _listBox.HoverBackColor; }
+            set { _listBox.HoverBackColor = value; }
+        }
+
+        public Color DisabledForeColor
+        {
+            get { return _listBox.DisabledForeColor; }
+            set { _listBox.DisabledForeColor = value; }
+        }
+
+        public Color DisabledBackColor
+        {
+            get { return _listBox.DisabledBackColor; }
+            set { _listBox.DisabledBackColor = value; }
+        }
+
+        public Color DragHandleColor
+        {
+            get { return _listBox.DragHandleColor; }
+            set { _listBox.DragHandleColor = value; }
+        }
+
+        public SelectionMode SelectionMode
+        {
+            get { return _listBox.SelectionMode; }
+            set { _listBox.SelectionMode = value; }
+        }
+
+        public ListBox.SelectedObjectCollection SelectedItems
+        {
+            get { return _listBox.SelectedItems; }
+        }
+
+        public ListBox.SelectedIndexCollection SelectedIndices
+        {
+            get { return _listBox.SelectedIndices; }
+        }
+
+        public object DataSource
+        {
+            get { return _listBox.DataSource; }
+            set { _listBox.DataSource = value; }
+        }
+
+        public string DisplayMember
+        {
+            get { return _listBox.DisplayMember; }
+            set { _listBox.DisplayMember = value; }
+        }
+
+        public string ValueMember
+        {
+            get { return _listBox.ValueMember; }
+            set { _listBox.ValueMember = value; }
+        }
+
+        public object SelectedValue
+        {
+            get { return _listBox.SelectedValue; }
+            set { _listBox.SelectedValue = value; }
+        }
+
+        public int TopIndex
+        {
+            get { return _listBox.TopIndex; }
+            set { _listBox.TopIndex = value; }
+        }
+
+        public bool Sorted
+        {
+            get { return _listBox.Sorted; }
+            set { _listBox.Sorted = value; }
+        }
+
+        public bool HorizontalScrollbar
+        {
+            get { return _listBox.HorizontalScrollbar; }
+            set { _listBox.HorizontalScrollbar = value; }
+        }
+
+        public bool ScrollAlwaysVisible
+        {
+            get { return _listBox.ScrollAlwaysVisible; }
+            set { _listBox.ScrollAlwaysVisible = value; }
+        }
+
+        public bool MultiColumn
+        {
+            get { return _listBox.MultiColumn; }
+            set { _listBox.MultiColumn = value; }
+        }
+
+        public int ColumnWidth
+        {
+            get { return _listBox.ColumnWidth; }
+            set { _listBox.ColumnWidth = value; }
+        }
+
+        public bool IntegralHeight
+        {
+            get { return _listBox.IntegralHeight; }
+            set { _listBox.IntegralHeight = value; }
+        }
+
+        public event EventHandler SelectedValueChanged
+        {
+            add { _listBox.SelectedValueChanged += value; }
+            remove { _listBox.SelectedValueChanged -= value; }
+        }
+
+        public int FindString(string text)
+        {
+            return _listBox.FindString(text);
+        }
+
+        public int FindString(string text, int startIndex)
+        {
+            return _listBox.FindString(text, startIndex);
+        }
+
+        public int FindStringExact(string text)
+        {
+            return _listBox.FindStringExact(text);
+        }
+
+        public bool GetSelected(int index)
+        {
+            return _listBox.GetSelected(index);
+        }
+
+        public void SetSelected(int index, bool value)
+        {
+            _listBox.SetSelected(index, value);
+        }
+
+        public string GetItemText(object item)
+        {
+            return _listBox.GetItemText(item);
+        }
+
+        public Rectangle GetItemRectangle(int index)
+        {
+            return _listBox.GetItemRectangle(index);
         }
 
         public int IndexFromPoint(Point point)

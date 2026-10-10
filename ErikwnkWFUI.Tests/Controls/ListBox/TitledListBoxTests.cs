@@ -17,6 +17,68 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 [Collection(AccentColorTestCollection.Name)]
 public class TitledListBoxTests
 {
+    // The one rule of this control: it is the ListBox with a title, so whatever the library's ListBox offers
+    // (property, method, event) it offers too, of the same type.
+    [Fact]
+    public void EveryMemberOfTheLibrarysListBox_IsOnTheTitledListBoxToo()
+    {
+        const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.DeclaredOnly;
+        List<string> missing = new List<string>();
+
+        foreach (System.Reflection.PropertyInfo property in typeof(ErikwnkWFUI.Controls.ListBox).GetProperties(flags))
+        {
+            System.Reflection.PropertyInfo mirrored = typeof(WfuiTitledListBox).GetProperty(property.Name);
+
+            if (mirrored == null || mirrored.PropertyType != property.PropertyType)
+                missing.Add("property " + property.Name);
+        }
+
+        foreach (System.Reflection.EventInfo item in typeof(ErikwnkWFUI.Controls.ListBox).GetEvents(flags))
+        {
+            if (typeof(WfuiTitledListBox).GetEvent(item.Name) == null)
+                missing.Add("event " + item.Name);
+        }
+
+        foreach (System.Reflection.MethodInfo method in typeof(ErikwnkWFUI.Controls.ListBox).GetMethods(flags))
+        {
+            if (method.IsSpecialName)
+                continue;
+
+            Type[] parameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();
+
+            if (typeof(WfuiTitledListBox).GetMethod(method.Name, parameters) == null)
+                missing.Add("method " + method.Name);
+        }
+
+        Assert.Empty(missing);
+    }
+
+    [Fact]
+    public void TheMirroredMembers_ReachTheInnerListBox()
+    {
+        using WfuiTitledListBox control = new WfuiTitledListBox();
+
+        control.AllowReorder = true;
+        control.ShowEnumeration = true;
+        control.DisplayTextMember = "Name";
+        control.SelectionMode = SelectionMode.MultiExtended;
+        control.ItemBackColor = Color.Red;
+        control.HoverBackColor = Color.Blue;
+        control.Items.Add("a");
+        control.Items.Add("b");
+        control.SetSelected(1, true);
+
+        Assert.True(control.InnerListBox.AllowReorder);
+        Assert.True(control.InnerListBox.ShowEnumeration);
+        Assert.Equal("Name", control.InnerListBox.DisplayTextMember);
+        Assert.Equal(SelectionMode.MultiExtended, control.InnerListBox.SelectionMode);
+        Assert.Equal(Color.Red, control.InnerListBox.ItemBackColor);
+        Assert.Equal(Color.Blue, control.InnerListBox.HoverBackColor);
+        Assert.True(control.GetSelected(1));
+        Assert.Single(control.SelectedItems);
+        Assert.Equal(1, control.FindString("b"));
+    }
+
     [Fact]
     public void Items_ProxiesToInnerListBox()
     {
