@@ -161,6 +161,12 @@ namespace ErikwnkWFUI.Controls
             set { _listBox.DragIndicatorColor = value; }
         }
 
+        public Color SelectedForeColor
+        {
+            get { return _listBox.SelectedForeColor; }
+            set { _listBox.SelectedForeColor = value; }
+        }
+
         public Color SelectedBackColor
         {
             get { return _listBox.SelectedBackColor; }

@@ -82,7 +82,7 @@ public class ListBoxConstructionTests
     [Theory]
     [InlineData(0)]
     [InlineData(-5)]
-    public void ItemHeightCustom_ClampsToAtLeastOne(int requestedHeight)
+    public void ItemHeight_ClampsToAtLeastOne(int requestedHeight)
     {
         using WfuiListBox listBox = new WfuiListBox
         {

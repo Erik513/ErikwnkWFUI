@@ -58,6 +58,10 @@ namespace ErikwnkWFUI.Showcase
                  "Text in the theme colors: Standard (body text), Primary (accent color), Title (bold, larger) and Muted (quiet), each also in a color set. Left enabled, right disabled. A text that is too long can move instead of ending in an ellipsis: back and forth with a rest at both ends, or endlessly, one text or several one behind the other.",
                  AddLabelsSection),
 
+                ("ListBox",
+                 "A list with icons, numbering and drag-to-reorder (the handle on the right of each item). Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does - it colors the selected item and the line that shows where a dragged item lands.",
+                 AddListBoxSection),
+
                 ("ListView",
                  "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. FixedRowCount makes it exactly as big as its columns and a number of rows (here 5), without scroll bars; sorting and reordering the columns stay. AutoSizeToContent grows with the items up to a maximum size and then scrolls, the scroll bar next to the columns.",
                  AddListViewSection),
@@ -99,7 +103,7 @@ namespace ErikwnkWFUI.Showcase
                  AddTextBoxesSection),
 
                 ("TitledListBox",
-                 "A list with a caption, numbering and drag-to-reorder. Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color.",
+                 "The list box with a title above it - in every other way the same list box. Standard is neutral, Primary follows the accent color, and with colors: a color set any other color does.",
                  AddTitledListBoxSection),
 
                 ("ToastForm",

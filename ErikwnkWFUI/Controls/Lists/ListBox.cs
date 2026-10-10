@@ -43,6 +43,7 @@ namespace ErikwnkWFUI.Controls
         private Color _alternateItemBackColor;
         private Color _itemForeColor = UIColors.TextPrimary;
         private readonly ThemeColor _selectedBackColor = new ThemeColor(() => UIColors.BorderLight);
+        private Color? _selectedForeColor;
         private Color _hoverBackColor = UIColors.BackgroundLight;
         private Color _dragHandleColor = UIColors.TextTertiary;
         private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
@@ -226,6 +227,21 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _selectedBackColor.Set(value);
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Text color of the selected item. Left alone it is worked out from <see cref="SelectedBackColor"/> (light or
+        /// dark, whichever reads on it); <c>UIStyles.ListBoxes.CreateStandard</c> with a color set takes the text color
+        /// of that set. Set to <see cref="Color.Empty"/> to have it worked out again.
+        /// </summary>
+        public Color SelectedForeColor
+        {
+            get => _selectedForeColor ?? UIColors.GetContrastingForeColor(_selectedBackColor.Value);
+            set
+            {
+                _selectedForeColor = value.IsEmpty ? (Color?)null : value;
                 Invalidate();
             }
         }
@@ -876,9 +892,10 @@ namespace ErikwnkWFUI.Controls
         {
             // Derived live from _selectedBackColor (rather than a fixed
             // white) so a custom/accent SelectedBackColor - which might be
-            // bright, e.g. yellow - always gets readable text.
+            // bright, e.g. yellow - always gets readable text, unless a
+            // SelectedForeColor was set.
             if (isSelected)
-                return UIColors.GetContrastingForeColor(_selectedBackColor.Value);
+                return SelectedForeColor;
 
             if (isDisabled)
                 return _disabledForeColor;

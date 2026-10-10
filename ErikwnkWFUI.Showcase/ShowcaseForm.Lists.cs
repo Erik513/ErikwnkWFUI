@@ -15,31 +15,44 @@ namespace ErikwnkWFUI.Showcase
     // List box, list view and data grid.
     public partial class ShowcaseForm
     {
-        private void AddTitledListBoxSection(PropertyTable table)
+        // The same sample items in every list box of the two tabs.
+        private static void FillListBoxDemo(ErikwnkWFUI.Controls.ListBox listBox)
         {
-            TitledListBox listBox = UIStyles.TitledListBoxes.CreateStandard(
-                "Sample list",
-                allowReorder: true,
-                showEnumeration: true);
             listBox.Items.Add("First item");
             listBox.Items.Add("Second item");
             listBox.Items.Add("Third item (drag to reorder)");
             listBox.Items.Add("A much longer item whose text wraps onto a second line instead of getting cut off");
             listBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
+        }
 
-            table.AddRow("CreateStandard", 260, listBox);
+        private void AddListBoxSection(PropertyTable table)
+        {
+            ErikwnkWFUI.Controls.ListBox standard = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(standard);
+            table.AddRow("CreateStandard", 220, standard);
 
-            TitledListBox primaryListBox = UIStyles.TitledListBoxes.CreatePrimary(
-                "Sample list",
-                allowReorder: true,
-                showEnumeration: true);
-            primaryListBox.Items.Add("First item");
-            primaryListBox.Items.Add("Second item");
-            primaryListBox.Items.Add("Third item (drag to reorder)");
-            primaryListBox.Items.Add("A much longer item whose text wraps onto a second line instead of getting cut off");
-            primaryListBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
+            ErikwnkWFUI.Controls.ListBox primary = UIStyles.ListBoxes.CreatePrimary(allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(primary);
+            table.AddRow("CreatePrimary", 220, primary);
 
-            table.AddRow("CreatePrimary", 260, primaryListBox);
+            ErikwnkWFUI.Controls.ListBox green = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
+            FillListBoxDemo(green);
+            table.AddRow("CreateStandard(colors)", 220, green);
+        }
+
+        private void AddTitledListBoxSection(PropertyTable table)
+        {
+            TitledListBox standard = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(standard.InnerListBox);
+            table.AddRow("CreateStandard", 260, standard);
+
+            TitledListBox primary = UIStyles.TitledListBoxes.CreatePrimary("Sample list", allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(primary.InnerListBox);
+            table.AddRow("CreatePrimary", 260, primary);
+
+            TitledListBox green = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
+            FillListBoxDemo(green.InnerListBox);
+            table.AddRow("CreateStandard(colors)", 260, green);
         }
 
         private void AddListViewSection(PropertyTable table)
