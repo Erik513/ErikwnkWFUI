@@ -20,8 +20,8 @@ namespace ErikwnkWFUI.Controls
     /// <b>What of the standard list box works as it does there:</b> <c>Items</c>, <c>DataSource</c>,
     /// <c>DisplayMember</c>, <c>ValueMember</c>, <c>FormatString</c> (they decide the text of an item),
     /// <c>SelectedIndex/Item/Value</c> and their events, <c>SelectionMode</c> (one, none or several;
-    /// clicking the selected item clears it only in a single selection), <c>Sorted</c>, <c>MultiColumn</c> (without
-    /// reordering), <c>IntegralHeight</c>, <c>ScrollAlwaysVisible</c>, <c>TopIndex</c>, the finding and selecting
+    /// clicking the selected item clears it only in a single selection), <c>Sorted</c> and <c>MultiColumn</c> (both
+    /// without reordering), <c>IntegralHeight</c>, <c>ScrollAlwaysVisible</c>, <c>TopIndex</c>, the finding and selecting
     /// methods, <c>ForeColor</c> (the text color of the items, the same as <see cref="ItemForeColor"/>),
     /// <c>Enabled</c> (every item shows disabled) and the <c>DrawItem</c> event (raised after the item is painted,
     /// to paint on top of it).
@@ -125,7 +125,10 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Optional per-item disabled state (grayed out, non-interactive appearance) - independent of the whole control's own <see cref="Control.Enabled"/>.</summary>
+        /// <summary>
+        /// Optional per-item disabled <b>look</b> (grayed out): only how the item is drawn. The item can still be
+        /// clicked, selected and dragged like any other. Independent of the whole control's own <see cref="Control.Enabled"/>.
+        /// </summary>
         public Func<object, bool> IsItemDisabled
         {
             get => _isItemDisabled;
@@ -136,13 +139,15 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Reordering is for a list of one column: with MultiColumn on, the handle and the drop line are left out.
+        // Reordering is for a list of one column whose items are the ones in Items, in the order they were put: with
+        // MultiColumn, Sorted (the list puts every item in its own place) or a DataSource (the items cannot be
+        // moved) the handle and the drop line are left out.
         private bool CanReorder
         {
-            get { return _allowReorder && !MultiColumn; }
+            get { return _allowReorder && !MultiColumn && !Sorted && DataSource == null; }
         }
 
-        /// <summary>Whether items can be dragged to reorder them (drag handle on the right of each item) - also controls <see cref="Control.AllowDrop"/>. Not with <see cref="System.Windows.Forms.ListBox.MultiColumn"/>.</summary>
+        /// <summary>Whether items can be dragged to reorder them (drag handle on the right of each item) - also controls <see cref="Control.AllowDrop"/>. Not with <c>MultiColumn</c>, <c>Sorted</c> or a <c>DataSource</c>.</summary>
         public bool AllowReorder
         {
             get => _allowReorder;
@@ -890,7 +895,7 @@ namespace ErikwnkWFUI.Controls
         private string GetDisplayText(object item)
         {
             if (_displayTextProvider != null)
-                return _displayTextProvider(item);
+                return _displayTextProvider(item) ?? "";
 
             // The text the standard list box makes of an item: DisplayMember, FormatString and the like are
             // followed, an item without any of them is its ToString().
