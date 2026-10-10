@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -32,7 +31,7 @@ namespace ErikwnkWFUI.Controls
     /// <see cref="ItemBackColor"/>), <c>BackgroundImage</c>, <c>UseTabStops</c> and <c>CustomTabOffsets</c> (the text is
     /// one line of drawn text), <c>HorizontalScrollbar</c> and <c>HorizontalExtent</c> (a long text wraps and ends in an
     /// ellipsis instead of running out of the list) and <c>RightToLeft</c> (not supported in the library).
-    /// <see cref="DisplayTextMember"/> and <see cref="DisplayTextProvider"/> come before <c>DisplayMember</c>.
+    /// <see cref="DisplayTextProvider"/> (a function) comes before <c>DisplayMember</c>.
     /// </para>
     /// <para>
     /// Named the same as its own base class, same as
@@ -57,8 +56,6 @@ namespace ErikwnkWFUI.Controls
             Trimming = StringTrimming.EllipsisCharacter
         };
 
-        private readonly Dictionary<Type, PropertyInfo> _displayPropertyCache = new Dictionary<Type, PropertyInfo>();
-
         private Color _itemBackColor = UIColors.BackgroundMedium;
         private Color _alternateItemBackColor;
         private Color _itemForeColor = UIColors.TextPrimary;
@@ -82,7 +79,6 @@ namespace ErikwnkWFUI.Controls
         private int _pendingToggleDeselectIndex = -1;
 
         private Func<object, string> _displayTextProvider;
-        private string _displayTextMember;
         private Func<object, Image> _iconProvider;
         private Func<object, bool> _isItemDisabled;
 
@@ -92,8 +88,9 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// Computes each item's display text from the item itself, e.g.
         /// <c>o => ((Track)o).Title</c>. Takes priority over
-        /// <see cref="DisplayTextMember"/> when both are set; falls back to
-        /// <c>item.ToString()</c> when neither is.
+        /// <c>DisplayMember</c>; without it the text is what the standard list
+        /// box makes of an item (<c>DisplayMember</c>, <c>FormatString</c>, or
+        /// <c>item.ToString()</c>).
         /// </summary>
         public Func<object, string> DisplayTextProvider
         {
@@ -101,18 +98,6 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _displayTextProvider = value;
-                Invalidate();
-            }
-        }
-
-        /// <summary>Name of a property to read each item's display text from via reflection - simpler alternative to <see cref="DisplayTextProvider"/> for the common case.</summary>
-        public string DisplayTextMember
-        {
-            get => _displayTextMember;
-            set
-            {
-                _displayTextMember = value;
-                _displayPropertyCache.Clear();
                 Invalidate();
             }
         }
@@ -897,32 +882,9 @@ namespace ErikwnkWFUI.Controls
             if (_displayTextProvider != null)
                 return _displayTextProvider(item);
 
-            if (!string.IsNullOrWhiteSpace(_displayTextMember))
-            {
-                PropertyInfo property = GetCachedDisplayProperty(item);
-
-                return property?.GetValue(item)?.ToString() ?? "";
-            }
-
             // The text the standard list box makes of an item: DisplayMember, FormatString and the like are
             // followed, an item without any of them is its ToString().
             return item == null ? "" : GetItemText(item) ?? "";
-        }
-
-        private PropertyInfo GetCachedDisplayProperty(object item)
-        {
-            if (item == null)
-                return null;
-
-            Type itemType = item.GetType();
-
-            if (_displayPropertyCache.TryGetValue(itemType, out PropertyInfo cachedProperty))
-                return cachedProperty;
-
-            PropertyInfo property = itemType.GetProperty(_displayTextMember);
-            _displayPropertyCache[itemType] = property;
-
-            return property;
         }
 
         private Color GetBackColor(int index, bool isSelected, bool isHovered, bool isDisabled)

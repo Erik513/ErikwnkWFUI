@@ -6,14 +6,14 @@ namespace ErikwnkWFUI.Factories
     internal static class UIListBoxFactory
     {
         public static ListBox CreateStandard(
-            string displayTextMember = null,
+            string displayMember = null,
             bool allowReorder = false,
             bool showEnumeration = false,
             UIColorSet colors = null)
         {
             ListBox listBox = new ListBox
             {
-                DisplayTextMember = displayTextMember,
+                DisplayMember = displayMember,
                 AllowReorder = allowReorder,
                 ShowEnumeration = showEnumeration
             };
@@ -25,11 +25,11 @@ namespace ErikwnkWFUI.Factories
 
         // The Standard one with the accent: the selection and the drop line in the primary color set.
         public static ListBox CreatePrimary(
-            string displayTextMember = null,
+            string displayMember = null,
             bool allowReorder = false,
             bool showEnumeration = false)
         {
-            return CreateStandard(displayTextMember, allowReorder, showEnumeration, UIColors.PrimarySet);
+            return CreateStandard(displayMember, allowReorder, showEnumeration, UIColors.PrimarySet);
         }
 
         // The set's hover color is the color of the look (it is the accent itself for the primary set): the

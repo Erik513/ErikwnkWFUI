@@ -84,7 +84,7 @@ public class ListBoxFactoryTests
     {
         using WfuiListBox listBox = UIStyles.ListBoxes.CreateStandard("Name", allowReorder: true, showEnumeration: true);
 
-        Assert.Equal("Name", listBox.DisplayTextMember);
+        Assert.Equal("Name", listBox.DisplayMember);
         Assert.True(listBox.AllowReorder);
         Assert.True(listBox.ShowEnumeration);
     }

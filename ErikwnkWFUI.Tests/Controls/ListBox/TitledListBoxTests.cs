@@ -60,7 +60,7 @@ public class TitledListBoxTests
 
         control.AllowReorder = true;
         control.ShowEnumeration = true;
-        control.DisplayTextMember = "Name";
+        control.DisplayMember = "Name";
         control.SelectionMode = SelectionMode.MultiExtended;
         control.ItemBackColor = Color.Red;
         control.HoverBackColor = Color.Blue;
@@ -70,7 +70,7 @@ public class TitledListBoxTests
 
         Assert.True(control.InnerListBox.AllowReorder);
         Assert.True(control.InnerListBox.ShowEnumeration);
-        Assert.Equal("Name", control.InnerListBox.DisplayTextMember);
+        Assert.Equal("Name", control.InnerListBox.DisplayMember);
         Assert.Equal(SelectionMode.MultiExtended, control.InnerListBox.SelectionMode);
         Assert.Equal(Color.Red, control.InnerListBox.ItemBackColor);
         Assert.Equal(Color.Blue, control.InnerListBox.HoverBackColor);

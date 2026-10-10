@@ -95,17 +95,19 @@ public class ListBoxStandardBehaviorTests : IDisposable
     }
 
     [Fact]
-    public void TheProvider_And_TheDisplayTextMember_GoBeforeTheStandardMembers()
+    public void TheProvider_GoesBeforeTheStandardMembers()
     {
         using WfuiListBox listBox = new WfuiListBox { DisplayMember = "Name" };
         Person person = new Person { Name = "Anna", Age = 31 };
         listBox.Items.Add(person);
 
-        listBox.DisplayTextMember = "Age";
-        Assert.Equal("31", TextOf(listBox, person));
+        Assert.Equal("Anna", TextOf(listBox, person));
 
         listBox.DisplayTextProvider = item => "from the provider";
         Assert.Equal("from the provider", TextOf(listBox, person));
+
+        listBox.DisplayTextProvider = null;
+        Assert.Equal("Anna", TextOf(listBox, person));
     }
 
     // ---- ForeColor ----

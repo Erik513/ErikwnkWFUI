@@ -31,7 +31,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>headerTitle left null/empty hides the header bar entirely (the default) - set <see cref="Title"/> later to show it.</summary>
         public TitledListBox(
-            string displayTextMember = null,
+            string displayMember = null,
             bool allowReorder = false,
             bool showEnumeration = false,
             string headerTitle = null,
@@ -41,7 +41,7 @@ namespace ErikwnkWFUI.Controls
 
             _headerPanel = CreateHeaderPanel();
             _titleLabel = CreateTitleLabel(headerTextAlign);
-            _listBox = CreateListBox(displayTextMember, allowReorder, showEnumeration);
+            _listBox = CreateListBox(displayMember, allowReorder, showEnumeration);
 
             _headerPanel.Controls.Add(_titleLabel);
 
@@ -175,12 +175,6 @@ namespace ErikwnkWFUI.Controls
 
         // ---- the rest of the list box: every member of ListBox is here too, so a TitledListBox is used exactly
         // like a ListBox (the header is all that is added) ----
-
-        public string DisplayTextMember
-        {
-            get { return _listBox.DisplayTextMember; }
-            set { _listBox.DisplayTextMember = value; }
-        }
 
         public bool ShowEnumeration
         {
@@ -423,14 +417,14 @@ namespace ErikwnkWFUI.Controls
         }
 
         private ListBox CreateListBox(
-            string displayTextMember,
+            string displayMember,
             bool allowReorder,
             bool showEnumeration)
         {
             return new ListBox
             {
                 Dock = DockStyle.Fill,
-                DisplayTextMember = displayTextMember,
+                DisplayMember = displayMember,
                 AllowReorder = allowReorder,
                 ShowEnumeration = showEnumeration,
                 Margin = new Padding(0)

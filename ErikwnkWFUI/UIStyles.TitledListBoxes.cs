@@ -17,14 +17,14 @@ namespace ErikwnkWFUI
         {
             /// <summary>The titled list box in neutral gray.</summary>
             /// <param name="headerTitle">The title above the list; the bar is left out while it is empty.</param>
-            /// <param name="displayTextMember">Name of the property each item's text is read from; the item's own text (<c>ToString()</c>) when left out.</param>
+            /// <param name="displayMember">Name of the property each item's text is read from (<c>DisplayMember</c>); the item's own text (<c>ToString()</c>) when left out.</param>
             /// <param name="allowReorder">Whether the user can drag an item to another place; off by default.</param>
             /// <param name="showEnumeration">Whether each item starts with its number; off by default.</param>
             /// <param name="headerTextAlign">Where the title stands in its bar; left and centered vertically by default.</param>
             /// <param name="colors">A color set for the selected item and the drop line, as for <see cref="ListBoxes.CreateStandard"/>.</param>
             public static TitledListBox CreateStandard(
                 string headerTitle = null,
-                string displayTextMember = null,
+                string displayMember = null,
                 bool allowReorder = false,
                 bool showEnumeration = false,
                 ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft,
@@ -32,7 +32,7 @@ namespace ErikwnkWFUI
             {
                 return UITitledListBoxFactory.CreateStandard(
                     headerTitle,
-                    displayTextMember,
+                    displayMember,
                     allowReorder,
                     showEnumeration,
                     headerTextAlign,
@@ -42,14 +42,14 @@ namespace ErikwnkWFUI
             /// <summary>Like <see cref="CreateStandard"/> but with the selection and the drop line in the current accent instead of the neutral gray - mirrors <see cref="ListBoxes.CreatePrimary"/>.</summary>
             public static TitledListBox CreatePrimary(
                 string headerTitle = null,
-                string displayTextMember = null,
+                string displayMember = null,
                 bool allowReorder = false,
                 bool showEnumeration = false,
                 ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
             {
                 return UITitledListBoxFactory.CreatePrimary(
                     headerTitle,
-                    displayTextMember,
+                    displayMember,
                     allowReorder,
                     showEnumeration,
                     headerTextAlign);
