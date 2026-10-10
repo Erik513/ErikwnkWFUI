@@ -25,7 +25,9 @@ public class ListBoxRenderingTests
 
         Color result = listBox.InvokePrivate<Color>("GetBackColor", 0, true, true, true);
 
-        Assert.Equal(Color.Red, result);
+        // The selection is a tint of its color over the row (a color: 120 of 255 of it).
+        Color expected = ColorContrastHelper.Composite(Color.FromArgb(120, Color.Red), listBox.ItemBackColor);
+        Assert.Equal(expected.ToArgb(), result.ToArgb());
     }
 
     [Fact]
@@ -64,14 +66,15 @@ public class ListBoxRenderingTests
     }
 
     [Fact]
-    public void GetTextColor_ReturnsContrastingColorAgainstSelectedBackground()
+    public void GetTextColor_OfTheSelection_IsTheTextOfTheItem_UnlessOneWasSet()
     {
         using WfuiListBox listBox = ListBoxTestHelpers.CreateListBox();
         listBox.SelectedBackColor = Color.White;
 
-        Color result = listBox.InvokePrivate<Color>("GetTextColor", true, true);
+        Assert.Equal(listBox.ItemForeColor, listBox.InvokePrivate<Color>("GetTextColor", true, true));
 
-        Assert.Equal(UIColors.GetContrastingForeColor(Color.White), result);
+        listBox.SelectedForeColor = Color.Black;
+        Assert.Equal(Color.Black, listBox.InvokePrivate<Color>("GetTextColor", true, true));
     }
 
     [Fact]

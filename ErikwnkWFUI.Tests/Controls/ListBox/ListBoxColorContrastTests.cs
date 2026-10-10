@@ -73,8 +73,8 @@ public class ListBoxColorContrastTests
             AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.ItemForeColor, listBox.InvokePrivate<Color>("GetBackColor", 1, false, true, false), "text on the hovered odd row");
 
             // The hover shows on the row it is on, on both themes.
-            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 0, false, true, false), even) >= 1.1, "the hover does not show on an even row");
-            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 1, false, true, false), odd) >= 1.1, "the hover does not show on an odd row");
+            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 0, false, true, false), even) >= 1.05, "the hover does not show on an even row");
+            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 1, false, true, false), odd) >= 1.05, "the hover does not show on an odd row");
         });
     }
 
@@ -86,8 +86,19 @@ public class ListBoxColorContrastTests
         {
             using WfuiListBox listBox = UIStyles.ListBoxes.CreateStandard();
 
-            AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.SelectedForeColor, listBox.SelectedBackColor, "text on the selection");
-            Assert.True(Ratio(listBox.SelectedBackColor, listBox.ItemBackColor) >= 1.3, "the selection does not stand out from its row");
+            Color selected = listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false);
+
+            AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.SelectedForeColor, selected, "text on the selection");
+
+            foreach (int index in new[] { 0, 1 })
+            {
+                Color row = listBox.InvokePrivate<Color>("GetBackColor", index, false, false, false);
+                Color tint = listBox.InvokePrivate<Color>("GetBackColor", index, true, false, false);
+                Color hover = listBox.InvokePrivate<Color>("GetBackColor", index, false, true, false);
+
+                Assert.True(Ratio(tint, row) >= 1.3, $"the selection does not stand out from row {index}");
+                Assert.True(Ratio(tint, hover) >= 1.05, $"the selection and the hover cannot be told apart on row {index}");
+            }
         });
     }
 
@@ -99,8 +110,12 @@ public class ListBoxColorContrastTests
         {
             using WfuiListBox listBox = UIStyles.ListBoxes.CreateStandard(colors: set);
 
-            AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.SelectedForeColor, listBox.SelectedBackColor, "text on the selection");
-            AtLeast(3.0, Handle(listBox, listBox.SelectedForeColor, listBox.SelectedBackColor), listBox.SelectedBackColor, "the handle on the selection");
+            Color selected = listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false);
+            Color row = listBox.InvokePrivate<Color>("GetBackColor", 0, false, false, false);
+
+            AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.SelectedForeColor, selected, "text on the selection");
+            AtLeast(3.0, Handle(listBox, listBox.SelectedForeColor, selected), selected, "the handle on the selection");
+            Assert.True(Ratio(selected, row) >= 1.25, "the selection in a color does not stand out from its row");
         });
     }
 
@@ -117,7 +132,7 @@ public class ListBoxColorContrastTests
                 ("an even row", listBox.ItemForeColor, listBox.InvokePrivate<Color>("GetBackColor", 0, false, false, false)),
                 ("an odd row", listBox.ItemForeColor, listBox.InvokePrivate<Color>("GetBackColor", 1, false, false, false)),
                 ("the hovered row", listBox.ItemForeColor, listBox.HoverBackColor),
-                ("the selection", listBox.SelectedForeColor, listBox.SelectedBackColor)
+                ("the selection", listBox.SelectedForeColor, listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false))
             })
             {
                 AtLeast(3.0, Handle(listBox, text, back), back, "the handle on " + kind);

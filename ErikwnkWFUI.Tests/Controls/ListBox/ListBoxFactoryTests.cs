@@ -40,8 +40,7 @@ public class ListBoxFactoryTests
     {
         using WfuiListBox listBox = UIStyles.ListBoxes.CreateStandard(colors: set);
 
-        Assert.Equal(UIColors.GetReadableFill(set.Hover, set.HoverText), listBox.SelectedBackColor);
-        Assert.Equal(set.HoverText, listBox.SelectedForeColor);
+        Assert.Equal(set.Hover, listBox.SelectedBackColor);
         Assert.Equal(set.Hover, listBox.DragIndicatorColor);
     }
 
@@ -64,7 +63,7 @@ public class ListBoxFactoryTests
     {
         using WfuiListBox listBox = UIStyles.ListBoxes.CreateStandard(colors: Color.Teal);
 
-        Assert.Equal(((UIColorSet)Color.Teal).HoverText, listBox.SelectedForeColor);
+        Assert.Equal(((UIColorSet)Color.Teal).Hover, listBox.SelectedBackColor);
     }
 
     [Fact]
@@ -74,7 +73,6 @@ public class ListBoxFactoryTests
         using WfuiListBox standard = UIStyles.ListBoxes.CreateStandard(colors: UIStyles.Colors.Sets.Primary);
 
         Assert.Equal(standard.SelectedBackColor, primary.SelectedBackColor);
-        Assert.Equal(standard.SelectedForeColor, primary.SelectedForeColor);
         Assert.Equal(standard.DragIndicatorColor, primary.DragIndicatorColor);
         Assert.Equal(UIStyles.Colors.Sets.Primary.Hover, primary.DragIndicatorColor);
     }
@@ -98,7 +96,7 @@ public class ListBoxFactoryTests
         Color text = listBox.InvokePrivate<Color>("GetTextColor", true, false);
 
         Assert.True(
-            ColorContrastHelper.MeetsMinimumContrast(text, listBox.SelectedBackColor, ColorContrastHelper.MinimumRatioNormalText),
+            ColorContrastHelper.MeetsMinimumContrast(text, listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false), ColorContrastHelper.MinimumRatioNormalText),
             "the text on the selection does not read");
     }
 
@@ -114,10 +112,10 @@ public class ListBoxFactoryTests
             using WfuiListBox colored = UIStyles.ListBoxes.CreateStandard(colors: UIStyles.Colors.Sets.Green);
             using WfuiListBox gray = UIStyles.ListBoxes.CreateStandard();
 
-            Assert.Equal(UIStyles.Colors.Sets.Green.HoverText, colored.SelectedForeColor);
+            Assert.Equal(UIStyles.Colors.Sets.Green.Hover, colored.SelectedBackColor);
 
             Color text = gray.InvokePrivate<Color>("GetTextColor", true, false);
-            Assert.True(ColorContrastHelper.MeetsMinimumContrast(text, gray.SelectedBackColor, ColorContrastHelper.MinimumRatioNormalText));
+            Assert.True(ColorContrastHelper.MeetsMinimumContrast(text, gray.InvokePrivate<Color>("GetBackColor", 0, true, false, false), ColorContrastHelper.MinimumRatioNormalText));
         }
         finally
         {
@@ -135,7 +133,7 @@ public class ListBoxFactoryTests
         using TitledListBox primary = UIStyles.TitledListBoxes.CreatePrimary("Title");
 
         Assert.Equal(UIColors.BorderLight, gray.SelectedBackColor);
-        Assert.Equal(UIStyles.Colors.Sets.Green.HoverText, green.SelectedForeColor);
+        Assert.Equal(UIStyles.Colors.Sets.Green.Hover, green.SelectedBackColor);
         Assert.Equal(UIStyles.Colors.Sets.Green.Hover, green.DragIndicatorColor);
         Assert.Equal(UIStyles.Colors.Sets.Primary.Hover, primary.DragIndicatorColor);
         Assert.Equal("Title", green.Title);

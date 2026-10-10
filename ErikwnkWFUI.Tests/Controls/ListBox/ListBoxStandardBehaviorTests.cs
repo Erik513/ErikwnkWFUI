@@ -160,7 +160,10 @@ public class ListBoxStandardBehaviorTests : IDisposable
         Assert.Equal(listBox.SelectedForeColor, listBox.InvokePrivate<Color>("GetTextColor", true, true));
         Assert.Equal(UIColors.GetDisabledText(listBox.ItemBackColor), listBox.InvokePrivate<Color>("GetTextColor", false, true));
         Assert.Equal(listBox.DisabledBackColor, listBox.InvokePrivate<Color>("GetBackColor", 0, false, false, true));
-        Assert.Equal(listBox.SelectedBackColor, listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, true));
+        // A selected item that is disabled shows the selection, as before.
+        Assert.Equal(
+            listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false).ToArgb(),
+            listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, true).ToArgb());
     }
 
     [Fact]

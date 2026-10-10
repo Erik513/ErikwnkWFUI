@@ -32,16 +32,15 @@ namespace ErikwnkWFUI.Factories
             return CreateStandard(displayMember, allowReorder, showEnumeration, UIColors.PrimarySet);
         }
 
-        // The set's hover color is the color of the look (it is the accent itself for the primary set): the
-        // selected item (moved in lightness where its text would not read on it, as the combo box and the menu
-        // do) and the line that shows where a dragged item lands. The text on the selection is the set's own.
+        // The set's hover color is the color of the look (it is the accent itself for the primary set): the tint of the
+        // selected item (a see-through one over the row, like the list view's, so the text of the item stays as it is)
+        // and the line that shows where a dragged item lands.
         internal static void ApplyColors(ListBox listBox, UIColorSet colors)
         {
             if (colors == null)
                 return;
 
-            listBox.SelectedBackColor = UIColors.GetReadableFill(colors.Hover, colors.HoverText);
-            listBox.SelectedForeColor = colors.HoverText;
+            listBox.SelectedBackColor = colors.Hover;
             listBox.DragIndicatorColor = colors.Hover;
         }
     }

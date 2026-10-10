@@ -50,6 +50,11 @@ namespace ErikwnkWFUI.Controls
         private const int ItemIconSize = 22;
         private const int ItemIconMargin = 8;
 
+        // How much of the selection color covers the row: a gray (no hue to stand out by) more than a color. A little
+        // more than the list view has, a list of single lines asks for a selection that is seen at a glance.
+        private const int SelectionAlphaGray = 175;
+        private const int SelectionAlphaColor = 120;
+
         private static readonly StringFormat CenterLeftFormat = new StringFormat
         {
             Alignment = StringAlignment.Near,
@@ -234,12 +239,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Background color of the selected item. Defaults to a fixed,
-        /// neutral gray (<see cref="UIColors.BorderLight"/>), not the
-        /// current accent. <c>UIStyles.ListBoxes.CreatePrimary</c> (or
-        /// <c>CreateStandard</c> with a color set) sets it to the accent (the
-        /// color of the set), the same split as
-        /// <see cref="ReadOnlyDataGridView.SelectionBackColor"/> and
+        /// The color of the selection. The selected item shows it as a see-through tint over its row (a gray is
+        /// stronger than a color, as in <see cref="ListView.SelectionOverlayColor"/>, but a little stronger still), the
+        /// text stays the text of the item. Defaults to a fixed, neutral gray (<see cref="UIColors.BorderLight"/>), not the current accent.
+        /// <c>UIStyles.ListBoxes.CreatePrimary</c> (or <c>CreateStandard</c> with a color set) sets it to the accent
+        /// (the color of the set), the same split as <see cref="ReadOnlyDataGridView.SelectionBackColor"/> and
         /// <see cref="ListView.SelectionOverlayColor"/>.
         /// </summary>
         public Color SelectedBackColor
@@ -253,13 +257,13 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Text color of the selected item. Left alone it is worked out from <see cref="SelectedBackColor"/> (light or
-        /// dark, whichever reads on it); <c>UIStyles.ListBoxes.CreateStandard</c> with a color set takes the text color
-        /// of that set. Set to <see cref="Color.Empty"/> to have it worked out again.
+        /// Text color of the selected item. Left alone it is the text color of the other items (the selection is only
+        /// a tint over the row); set to a color to have another one on the selected item, <see cref="Color.Empty"/> to
+        /// have the item color again.
         /// </summary>
         public Color SelectedForeColor
         {
-            get => _selectedForeColor ?? UIColors.GetContrastingForeColor(_selectedBackColor.Value);
+            get => _selectedForeColor ?? _itemForeColor;
             set
             {
                 _selectedForeColor = value.IsEmpty ? (Color?)null : value;
@@ -931,10 +935,10 @@ namespace ErikwnkWFUI.Controls
             // The selection of a disabled list: the selection color, dimmed toward the row it is on (the gray of a
             // disabled item is the same as the odd rows on the light theme, which would hide it).
             if (isSelected && !Enabled)
-                return UIColors.BlendToward(_selectedBackColor.Value, GetRowBackColor(index), 0.6);
+                return UIColors.BlendToward(GetSelectedBackColor(index), GetRowBackColor(index), 0.6);
 
             if (isSelected)
-                return _selectedBackColor.Value;
+                return GetSelectedBackColor(index);
 
             if (isHovered)
                 return _hoverBackColor ?? GetHoverBackColor(GetRowBackColor(index));
@@ -947,7 +951,21 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetHoverBackColor(Color row)
         {
-            return UIColors.BlendToward(row, _itemForeColor, 0.12);
+            return UIColors.BlendToward(row, _itemForeColor, 0.08);
+        }
+
+        // The row with the selection tint over it (what the eye sees: the one fill the item is painted with).
+        private Color GetSelectedBackColor(int index)
+        {
+            Color row = GetRowBackColor(index);
+            Color tint = _selectedBackColor.Value;
+            bool isGray = tint.R == tint.G && tint.G == tint.B;
+            double alpha = (isGray ? SelectionAlphaGray : SelectionAlphaColor) / 255.0;
+
+            return Color.FromArgb(
+                (int)Math.Round(row.R + (tint.R - row.R) * alpha),
+                (int)Math.Round(row.G + (tint.G - row.G) * alpha),
+                (int)Math.Round(row.B + (tint.B - row.B) * alpha));
         }
 
         private Color GetRowBackColor(int index)
@@ -959,17 +977,15 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetTextColor(bool isSelected, bool isDisabled)
         {
-            return GetTextColorOn(isSelected, isDisabled, isSelected ? _selectedBackColor.Value : _itemBackColor);
+            return GetTextColorOn(isSelected, isDisabled, isSelected ? GetSelectedBackColor(0) : _itemBackColor);
         }
 
         // The text on a background of the given color. A disabled one that was not given a color of its own is
         // worked out from the background (the theme's disabled gray is too faint on some of them).
         private Color GetTextColorOn(bool isSelected, bool isDisabled, Color backColor)
         {
-            // Derived live from _selectedBackColor (rather than a fixed
-            // white) so a custom/accent SelectedBackColor - which might be
-            // bright, e.g. yellow - always gets readable text, unless a
-            // SelectedForeColor was set.
+            // The selection is only a tint over the row, so the text of the item reads on it as it does on the
+            // row, unless a SelectedForeColor was set.
             if (!Enabled)
                 return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
 
