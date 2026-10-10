@@ -63,7 +63,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _selectedBackColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _selectedForeColor;
         private Color _hoverBackColor = UIColors.BackgroundLight;
-        private Color _dragHandleColor = UIColors.TextTertiary;
+        private Color? _dragHandleColor;
         private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _disabledForeColor;
         private Color _disabledBackColor = UIColors.BackgroundDarkElevated;
@@ -317,13 +317,18 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Color of the drag-handle glyph shown on the right of each item when <see cref="AllowReorder"/> is true.</summary>
+        /// <summary>
+        /// Color of the drag-handle glyph shown on the right of each item when <see cref="AllowReorder"/> is true.
+        /// Left alone each item has the handle in a quiet version of its own text color (so it reads on a selected
+        /// item in any color too); set to a color to have that one on every item, <see cref="Color.Empty"/> to
+        /// have it worked out again.
+        /// </summary>
         public Color DragHandleColor
         {
-            get => _dragHandleColor;
+            get => _dragHandleColor ?? UIColors.TextTertiary;
             set
             {
-                _dragHandleColor = value;
+                _dragHandleColor = value.IsEmpty ? (Color?)null : value;
                 Invalidate();
             }
         }
@@ -567,7 +572,7 @@ namespace ErikwnkWFUI.Controls
             if (CanReorder)
             {
                 dragRect = GetDragHandleRectangle(rect, isVScrollVisible);
-                DrawDragHandle(e.Graphics, dragRect);
+                DrawDragHandle(e.Graphics, dragRect, GetDragHandleColor(textColor, backColor));
             }
 
             DrawItemContent(e.Graphics, rect, item, e.Index, textColor, dragRect, isVScrollVisible);
@@ -863,9 +868,19 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private void DrawDragHandle(Graphics graphics, Rectangle dragRect)
+        // The handle of an item: the color that was set, or the text color of the item blended toward its background
+        // (quiet, like a hint) and kept at 3:1 against it - on the gray selection and on a green one alike.
+        private Color GetDragHandleColor(Color textColor, Color backColor)
         {
-            using (Pen pen = new Pen(_dragHandleColor, 1.5f))
+            if (_dragHandleColor.HasValue)
+                return _dragHandleColor.Value;
+
+            return UIColors.EnsureContrast(UIColors.BlendToward(textColor, backColor, 0.4), backColor, 3.0);
+        }
+
+        private void DrawDragHandle(Graphics graphics, Rectangle dragRect, Color color)
+        {
+            using (Pen pen = new Pen(color, 1.5f))
             {
                 int centerY = dragRect.Y + dragRect.Height / 2;
                 int centerX = dragRect.X + dragRect.Width / 2;
