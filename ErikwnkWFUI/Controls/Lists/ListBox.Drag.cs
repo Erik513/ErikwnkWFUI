@@ -73,10 +73,18 @@ namespace ErikwnkWFUI.Controls
             base.OnGiveFeedback(gfbevent);
         }
 
-        /// <summary>Moves an item to a new index without user drag interaction - does not raise <see cref="ItemsReordered"/>.</summary>
+        /// <summary>
+        /// Moves an item to a new index without user drag interaction - does not raise <see cref="ItemsReordered"/>.
+        /// An index that is not there, or the same one twice, changes nothing. Not for a sorted list (it puts every
+        /// item in its own place) or one with a <c>DataSource</c> (its items cannot be moved): that is an
+        /// <see cref="InvalidOperationException"/>, before anything is touched.
+        /// </summary>
         public void MoveItem(int fromIndex, int toIndex)
         {
-            if (fromIndex < 0 || fromIndex >= Items.Count || toIndex < 0 || toIndex >= Items.Count)
+            if (Sorted || DataSource != null)
+                throw new InvalidOperationException("The items of a sorted list, or of one with a DataSource, cannot be moved.");
+
+            if (fromIndex < 0 || fromIndex >= Items.Count || toIndex < 0 || toIndex >= Items.Count || fromIndex == toIndex)
                 return;
 
             BeginUpdate();
@@ -87,7 +95,7 @@ namespace ErikwnkWFUI.Controls
                 Items.RemoveAt(fromIndex);
                 Items.Insert(toIndex, item);
 
-                SelectedIndex = toIndex;
+                SelectIndex(toIndex);
                 ItemsReordered?.Invoke(this, EventArgs.Empty);
             }
             finally
@@ -109,7 +117,7 @@ namespace ErikwnkWFUI.Controls
 
             _dragIndex = index;
             _dragStartPoint = location;
-            SelectedIndex = index;
+            SelectIndex(index);
 
             return true;
         }
@@ -127,7 +135,30 @@ namespace ErikwnkWFUI.Controls
                 return;
 
             _isDragging = true;
-            DoDragDrop(_dragIndex, DragDropEffects.Move);
+
+            try
+            {
+                // Returns when the item was dropped (here or elsewhere) or the drag was given up (Esc): the mouse button
+                // went up inside the drag, so no MouseUp tells this list that it is over.
+                if (DragDropStarter != null)
+                    DragDropStarter(_dragIndex);
+                else
+                    DoDragDrop(_dragIndex, DragDropEffects.Move);
+            }
+            finally
+            {
+                ResetDragState();
+            }
+        }
+
+        // What starts the drag of the system (a seam for the tests, which have no message loop for it).
+        internal Action<int> DragDropStarter;
+
+        // A list without a selection (SelectionMode.None) can still be reordered: nothing is selected there.
+        private void SelectIndex(int index)
+        {
+            if (SelectionMode != SelectionMode.None)
+                SelectedIndex = index;
         }
 
         private int GetInsertPosition(Point point, out DragDropEffects effect)
@@ -203,7 +234,7 @@ namespace ErikwnkWFUI.Controls
                     targetPosition = Items.Count;
 
                 Items.Insert(targetPosition, draggedItem);
-                SelectedIndex = targetPosition;
+                SelectIndex(targetPosition);
 
                 EnsureItemVisible(targetPosition);
 

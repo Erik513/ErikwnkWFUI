@@ -15,8 +15,14 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// which UIColorsTests changes via SetAccent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class TitledListBoxTests
+public class TitledListBoxTests : IDisposable
 {
+    public void Dispose()
+    {
+        foreach (Form form in _forms)
+            form.Dispose();
+    }
+
     // The one rule of this control: it is the ListBox with a title, so whatever the library's ListBox offers
     // (property, method, event) it offers too, of the same type.
     [Fact]
@@ -215,5 +221,115 @@ public class TitledListBoxTests
 
         Assert.Equal(UIColors.BorderLight, control.SelectedBackColor);
         Assert.Equal(UIColors.BorderLight, control.DragIndicatorColor);
+    }
+
+    // ---- the events and the properties of the control that every list box has ----
+
+    private readonly List<Form> _forms = new List<Form>();
+
+    private WfuiTitledListBox ShownTitled()
+    {
+        WfuiTitledListBox control = new WfuiTitledListBox(null, false, false, "Title");
+        control.Items.Add("A");
+        control.Items.Add("B");
+        control.Bounds = new System.Drawing.Rectangle(5, 5, 200, 200);
+
+        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new System.Drawing.Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new System.Drawing.Size(220, 220) };
+        form.Controls.Add(control);
+        form.Show();
+        Application.DoEvents();
+        _forms.Add(form);
+
+        return control;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "PostMessageW")]
+    private static extern bool PostMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [Fact]
+    public void TheMouseAndKeyEventsOfTheList_ReachTheOnesOnTheControl_WithTheControlAsSender()
+    {
+        WfuiTitledListBox control = ShownTitled();
+        List<string> seen = new List<string>();
+        object? sender = null;
+        System.Drawing.Point down = System.Drawing.Point.Empty;
+
+        control.MouseDown += (s, e) => { seen.Add("MouseDown"); sender = s; down = e.Location; };
+        control.MouseUp += (s, e) => seen.Add("MouseUp");
+        control.Click += (s, e) => seen.Add("Click");
+        control.MouseClick += (s, e) => seen.Add("MouseClick");
+        control.DoubleClick += (s, e) => seen.Add("DoubleClick");
+        control.KeyDown += (s, e) => seen.Add("KeyDown");
+        control.KeyUp += (s, e) => seen.Add("KeyUp");
+
+        IntPtr at = (IntPtr)(40 | (45 << 16));
+        IntPtr list = control.InnerListBox.Handle;
+        SendMessage(list, 0x0201, (IntPtr)1, at); // WM_LBUTTONDOWN
+        SendMessage(list, 0x0202, IntPtr.Zero, at); // WM_LBUTTONUP
+        SendMessage(list, 0x0203, (IntPtr)1, at); // WM_LBUTTONDBLCLK
+        SendMessage(list, 0x0202, IntPtr.Zero, at); // the double click is raised when the button is up
+        // (A key reaches the events through the message loop, not through a message sent to the window.)
+        PostMessage(list, 0x0100, (IntPtr)0x28, IntPtr.Zero); // WM_KEYDOWN, Down
+        PostMessage(list, 0x0101, (IntPtr)0x28, IntPtr.Zero); // WM_KEYUP
+        Application.DoEvents();
+
+        Assert.Contains("MouseDown", seen);
+        Assert.Contains("MouseUp", seen);
+        Assert.Contains("Click", seen);
+        Assert.Contains("MouseClick", seen);
+        Assert.Contains("DoubleClick", seen);
+        Assert.Contains("KeyDown", seen);
+        Assert.Contains("KeyUp", seen);
+        Assert.Same(control, sender);
+
+        // The place is in the coordinates of the control: the list is below the title bar.
+        Assert.True(control.InnerListBox.Top > 0);
+        Assert.Equal(45 + control.InnerListBox.Top, down.Y);
+    }
+
+    [Fact]
+    public void TheFont_TheTextColor_AndTheContextMenu_AreThoseOfTheList()
+    {
+        using WfuiTitledListBox control = new WfuiTitledListBox();
+        using System.Drawing.Font font = new System.Drawing.Font("Consolas", 14f);
+        using System.Windows.Forms.ContextMenuStrip menu = new System.Windows.Forms.ContextMenuStrip();
+
+        control.Font = font;
+        control.ForeColor = System.Drawing.Color.Red;
+        control.ContextMenuStrip = menu;
+
+        Assert.Equal("Consolas", control.InnerListBox.Font.Name);
+        Assert.Equal(System.Drawing.Color.Red, control.InnerListBox.ForeColor);
+        Assert.Equal(System.Drawing.Color.Red, control.InnerListBox.ItemForeColor);
+        Assert.Same(menu, control.InnerListBox.ContextMenuStrip);
+        Assert.Equal("Consolas", control.Font.Name);
+    }
+
+    [Fact]
+    public void Focus_GoesToTheList()
+    {
+        WfuiTitledListBox control = ShownTitled();
+
+        Assert.True(control.Focus());
+        Assert.True(control.InnerListBox.Focused);
+    }
+
+    [Fact]
+    public void TheEventsOfTheTitledList_SayTheTitledListIsTheSender()
+    {
+        WfuiTitledListBox control = ShownTitled();
+        object? changed = null;
+        object? reordered = null;
+        control.SelectedIndexChanged += (s, e) => changed = s;
+        control.ItemsReordered += (s, e) => reordered = s;
+
+        control.SelectedIndex = 1;
+        control.MoveItem(0, 1);
+
+        Assert.Same(control, changed);
+        Assert.Same(control, reordered);
     }
 }

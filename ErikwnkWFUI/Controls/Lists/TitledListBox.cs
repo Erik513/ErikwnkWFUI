@@ -353,6 +353,57 @@ namespace ErikwnkWFUI.Controls
             return _listBox.GetItemRectangle(index);
         }
 
+        /// <summary>The font of the items (as on the list box; the title has <see cref="HeaderFont"/>).</summary>
+        public override Font Font
+        {
+            get { return _listBox != null ? _listBox.Font : base.Font; }
+            set
+            {
+                if (_listBox != null)
+                    _listBox.Font = value;
+                else
+                    base.Font = value;
+            }
+        }
+
+        /// <summary>The text color of the items (as on the list box; the title has <see cref="HeaderForeColor"/>).</summary>
+        public override Color ForeColor
+        {
+            get { return _listBox != null ? _listBox.ForeColor : base.ForeColor; }
+            set
+            {
+                if (_listBox != null)
+                    _listBox.ForeColor = value;
+                else
+                    base.ForeColor = value;
+            }
+        }
+
+        /// <summary>The context menu of the list (a right click on an item or on the room below the items).</summary>
+        public override System.Windows.Forms.ContextMenuStrip ContextMenuStrip
+        {
+            get { return base.ContextMenuStrip; }
+            set
+            {
+                base.ContextMenuStrip = value;
+
+                if (_listBox != null)
+                    _listBox.ContextMenuStrip = value;
+            }
+        }
+
+        /// <summary>Gives the focus to the list.</summary>
+        public new bool Focus()
+        {
+            return _listBox.Focus();
+        }
+
+        /// <summary>Selects the list (it is the one that takes the keys).</summary>
+        public new void Select()
+        {
+            _listBox.Select();
+        }
+
         public int IndexFromPoint(Point point)
         {
             return _listBox.IndexFromPoint(point);
@@ -446,23 +497,84 @@ namespace ErikwnkWFUI.Controls
             _listBox.ItemsReordered += OnListBoxItemsReordered;
             _listBox.MouseMove += OnListBoxMouseMove;
             _listBox.MouseLeave += OnListBoxMouseLeave;
+            _listBox.Click += OnListBoxClick;
+            _listBox.DoubleClick += OnListBoxDoubleClick;
+            _listBox.MouseClick += OnListBoxMouseClick;
+            _listBox.MouseDoubleClick += OnListBoxMouseDoubleClick;
+            _listBox.MouseDown += OnListBoxMouseDown;
+            _listBox.MouseUp += OnListBoxMouseUp;
+            _listBox.KeyDown += OnListBoxKeyDown;
+            _listBox.KeyUp += OnListBoxKeyUp;
+            _listBox.KeyPress += OnListBoxKeyPress;
         }
 
+        // The events of the list reach the ones on this control with this control as the sender, and the
+        // places of the mouse in this control's own coordinates (the list is below the title bar).
         private void OnListBoxSelectedIndexChanged(object sender, EventArgs e)
         {
             if (SelectedIndexChanged != null)
-                SelectedIndexChanged(sender, e);
+                SelectedIndexChanged(this, e);
         }
 
         private void OnListBoxItemsReordered(object sender, EventArgs e)
         {
             if (ItemsReordered != null)
-                ItemsReordered(sender, e);
+                ItemsReordered(this, e);
+        }
+
+        private MouseEventArgs InOwnCoordinates(MouseEventArgs e)
+        {
+            return new MouseEventArgs(e.Button, e.Clicks, e.X + _listBox.Left, e.Y + _listBox.Top, e.Delta);
         }
 
         private void OnListBoxMouseMove(object sender, MouseEventArgs e)
         {
-            OnMouseMove(e);
+            OnMouseMove(InOwnCoordinates(e));
+        }
+
+        private void OnListBoxClick(object sender, EventArgs e)
+        {
+            OnClick(e);
+        }
+
+        private void OnListBoxDoubleClick(object sender, EventArgs e)
+        {
+            OnDoubleClick(e);
+        }
+
+        private void OnListBoxMouseClick(object sender, MouseEventArgs e)
+        {
+            OnMouseClick(InOwnCoordinates(e));
+        }
+
+        private void OnListBoxMouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            OnMouseDoubleClick(InOwnCoordinates(e));
+        }
+
+        private void OnListBoxMouseDown(object sender, MouseEventArgs e)
+        {
+            OnMouseDown(InOwnCoordinates(e));
+        }
+
+        private void OnListBoxMouseUp(object sender, MouseEventArgs e)
+        {
+            OnMouseUp(InOwnCoordinates(e));
+        }
+
+        private void OnListBoxKeyDown(object sender, KeyEventArgs e)
+        {
+            OnKeyDown(e);
+        }
+
+        private void OnListBoxKeyUp(object sender, KeyEventArgs e)
+        {
+            OnKeyUp(e);
+        }
+
+        private void OnListBoxKeyPress(object sender, KeyPressEventArgs e)
+        {
+            OnKeyPress(e);
         }
 
         private void OnListBoxMouseLeave(object sender, EventArgs e)
@@ -507,6 +619,15 @@ namespace ErikwnkWFUI.Controls
             _listBox.ItemsReordered -= OnListBoxItemsReordered;
             _listBox.MouseMove -= OnListBoxMouseMove;
             _listBox.MouseLeave -= OnListBoxMouseLeave;
+            _listBox.Click -= OnListBoxClick;
+            _listBox.DoubleClick -= OnListBoxDoubleClick;
+            _listBox.MouseClick -= OnListBoxMouseClick;
+            _listBox.MouseDoubleClick -= OnListBoxMouseDoubleClick;
+            _listBox.MouseDown -= OnListBoxMouseDown;
+            _listBox.MouseUp -= OnListBoxMouseUp;
+            _listBox.KeyDown -= OnListBoxKeyDown;
+            _listBox.KeyUp -= OnListBoxKeyUp;
+            _listBox.KeyPress -= OnListBoxKeyPress;
         }
     }
 }

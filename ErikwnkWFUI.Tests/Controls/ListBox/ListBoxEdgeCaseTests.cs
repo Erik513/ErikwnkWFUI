@@ -421,4 +421,82 @@ public class ListBoxEdgeCaseTests : IDisposable
         listBox.Enabled = true;
         Assert.Equal(-1, HoverOf(listBox));
     }
+
+    // ---- the second look: moving, no selection, a drag that is given up ----
+
+    [Fact]
+    public void MoveItem_ToTheSamePlace_ChangesAndRaisesNothing()
+    {
+        WfuiListBox listBox = Shown(items: 3);
+        int raised = 0;
+        listBox.ItemsReordered += (s, e) => raised++;
+
+        listBox.MoveItem(1, 1);
+
+        Assert.Equal(0, raised);
+        Assert.Equal(new object[] { "Item 0", "Item 1", "Item 2" }, listBox.Items.Cast<object>().ToArray());
+    }
+
+    [Fact]
+    public void MoveItem_InASortedList_OrABoundOne_IsAnErrorThatTouchesNothing()
+    {
+        WfuiListBox sorted = Shown(items: 3);
+        sorted.Sorted = true;
+        Assert.Throws<InvalidOperationException>(() => sorted.MoveItem(0, 2));
+        Assert.Equal(3, sorted.Items.Count);
+
+        using WfuiListBox bound = new WfuiListBox { DataSource = new List<string> { "a", "b", "c" } };
+        Assert.Throws<InvalidOperationException>(() => bound.MoveItem(0, 2));
+    }
+
+    [Fact]
+    public void AListWithoutASelection_CanBeReordered_WithoutAFailure()
+    {
+        WfuiListBox listBox = Shown(items: 3, mode: SelectionMode.None, reorder: true);
+
+        Exception? thrown = Record.Exception(() =>
+        {
+            listBox.MoveItem(0, 2);
+
+            // A press on the handle of a row (the drag is prepared, nothing is selected).
+            int y = ItemHeight / 2;
+            IntPtr onTheHandle = (IntPtr)((listBox.ClientSize.Width - 12) | (y << 16));
+            SendMessage(listBox.Handle, WM_LBUTTONDOWN, (IntPtr)1, onTheHandle);
+            SendMessage(listBox.Handle, WM_LBUTTONUP, IntPtr.Zero, onTheHandle);
+        });
+
+        Assert.Null(thrown);
+        Assert.Equal("Item 0", listBox.Items[2]);
+        Assert.Equal(-1, listBox.SelectedIndex);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ADragThatIsGivenUp_OrFails_EndsTheDragState_WithoutAMouseUp(bool fails)
+    {
+        WfuiListBox listBox = Shown(items: 3, reorder: true);
+        listBox.SetPrivateField("_dragIndex", 1);
+        listBox.SetPrivateField("_dragStartPoint", new Point(10, 10));
+        listBox.DragDropStarter = index =>
+        {
+            Assert.True(listBox.GetPrivateField<bool>("_isDragging"), "the drag has started");
+
+            if (fails)
+                throw new InvalidOperationException("the system drag failed");
+        };
+
+        // A move far enough from the press to start the drag.
+        MouseEventArgs move = new MouseEventArgs(MouseButtons.Left, 0, 100, 100, 0);
+        Exception? thrown = Record.Exception(() => listBox.InvokePrivate("TryStartDrag", move));
+
+        Assert.Equal(fails, thrown is not null);
+        Assert.False(listBox.GetPrivateField<bool>("_isDragging"));
+        Assert.Equal(-1, listBox.GetPrivateField<int>("_dragIndex"));
+
+        // And the selected item is painted as selected again, the hover works again.
+        Assert.NotEqual(
+            listBox.InvokePrivate<Color>("GetBackColor", 1, false, false, false),
+            listBox.InvokePrivate<Color>("GetBackColor", 1, true, false, false));
+    }
 }
