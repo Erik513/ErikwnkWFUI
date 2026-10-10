@@ -8,11 +8,12 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// <summary>
 /// GetBackColor/GetTextColor - the priority order OnDrawItem picks a row's
 /// colors from (selected, then hovered, then disabled, then plain
-/// even/odd). Invoked directly via reflection rather than through a real
-/// paint, which would need actual Graphics/rendering infrastructure this
-/// doesn't have; these two methods are pure functions of their own
-/// parameters plus this control's own color properties, so calling them
-/// directly exercises the exact same logic OnDrawItem would.
+/// even/odd). Invoked directly via reflection: these two methods are pure
+/// functions of their own parameters plus this control's own color
+/// properties, so calling them exercises the exact same logic OnDrawItem
+/// would (the disabled list, which also depends on Enabled, and a few
+/// real paints are in ListBoxStandardBehaviorTests and
+/// ListBoxEdgeCaseTests).
 /// </summary>
 public class ListBoxRenderingTests
 {

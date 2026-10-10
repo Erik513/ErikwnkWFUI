@@ -7,20 +7,18 @@ using WfuiListBox = ErikwnkWFUI.Controls.ListBox;
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
 
 /// <summary>
-/// Selection behavior, including the toggle-deselect regression this
-/// control's OnMouseDown/OnMouseUp/WndProc split exists for - see
-/// CapturePendingToggleDeselect's own remarks on why the capture had to
-/// move out of OnMouseDown and into a raw WM_LBUTTONDOWN intercept: a
-/// native ListBox commits its own click-to-select synchronously as part of
-/// that same native message, before OnMouseDown/MouseDown ever fires, so
-/// checking SelectedIndex from OnMouseDown always saw the NEW selection
-/// already applied - every plain click toggled straight back off on
-/// release, not just a second click on an already-selected item. These
-/// tests call CapturePendingToggleDeselect/OnMouseUp directly (via
-/// reflection) rather than dispatching a real WM_LBUTTONDOWN - not a
-/// substitute for the live re-test that actually caught the bug, but they
-/// do lock in that, given an accurate SelectedIndex snapshot, the
-/// arm/clear logic itself stays correct.
+/// Selection behavior, including the toggle-deselect (a click on the selected
+/// item selects nothing) this control's OnMouseDown/OnMouseUp/WndProc split
+/// exists for - see CapturePendingToggleDeselect's own remarks on why the
+/// capture had to move out of OnMouseDown and into a raw WM_LBUTTONDOWN
+/// intercept: a native ListBox commits its own click-to-select synchronously
+/// as part of that same native message, before OnMouseDown/MouseDown ever
+/// fires, so checking SelectedIndex from OnMouseDown always saw the NEW
+/// selection already applied - every plain click toggled straight back off
+/// on release. The first tests call CapturePendingToggleDeselect/OnMouseUp
+/// directly (via reflection) and lock in the arm/clear logic; the last ones
+/// send real mouse messages to a shown list, which is what actually caught
+/// that bug.
 /// </summary>
 public class ListBoxSelectionTests
 {

@@ -5,10 +5,9 @@ using WfuiListBox = ErikwnkWFUI.Controls.ListBox;
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
 
 /// <summary>
-/// Locks down CreateStandard's colors defaulting to a neutral gray (not the
-/// live accent) and CreatePrimary explicitly overriding them back to the
-/// accent - the exact split this control was missing before CreatePrimary
-/// existed at all (see UIListBoxFactory/UITitledListBoxFactory).
+/// The defaults of the control itself, and the first test of the split between
+/// CreateStandard (neutral gray, not the live accent) and CreatePrimary (the
+/// accent) - the factory tests (ListBoxFactoryTests) cover the color sets.
 /// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary,
 /// which UIColorsTests changes via SetAccent.
 /// </summary>

@@ -86,6 +86,7 @@ namespace ErikwnkWFUI.Controls
             set { _listBox.DisplayTextProvider = value; }
         }
 
+        /// <summary>The title in the bar above the list; the bar is not shown while it is empty.</summary>
         public string Title
         {
             get { return _titleLabel.Text; }
@@ -98,30 +99,35 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Height of the title bar in pixels (30 by default).</summary>
         public int HeaderHeight
         {
             get { return _headerPanel.Height; }
             set { _headerPanel.Height = Math.Max(0, value); }
         }
 
+        /// <summary>Background of the title bar. The default is the theme's dark background and stays so whatever color set the list was made with: only setting it changes it.</summary>
         public Color HeaderBackColor
         {
             get { return _headerPanel.BackColor; }
             set { _headerPanel.BackColor = value; }
         }
 
+        /// <summary>Text color of the title. The default is the theme's primary text color; only setting it changes it.</summary>
         public Color HeaderForeColor
         {
             get { return _titleLabel.ForeColor; }
             set { _titleLabel.ForeColor = value; }
         }
 
+        /// <summary>Font of the title (the library's title font by default).</summary>
         public Font HeaderFont
         {
             get { return _titleLabel.Font; }
             set { _titleLabel.Font = value; }
         }
 
+        /// <summary>Where the title stands in its bar (left and centered vertically by default).</summary>
         public ContentAlignment HeaderTextAlign
         {
             get { return _titleLabel.TextAlign; }

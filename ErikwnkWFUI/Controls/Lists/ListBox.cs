@@ -207,7 +207,11 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Text color for an item where <see cref="IsItemDisabled"/> returns true.</summary>
+        /// <summary>
+        /// Text color for an item where <see cref="IsItemDisabled"/> returns true, and for every item of a list that
+        /// is disabled as a whole. Left alone it is worked out from the background the text is on (light or dark,
+        /// blended toward it); set to <see cref="Color.Empty"/> to have it worked out again.
+        /// </summary>
         public Color DisabledForeColor
         {
             get => _disabledForeColor ?? UIColors.TextDisabled;
@@ -218,7 +222,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background color for an item where <see cref="IsItemDisabled"/> returns true.</summary>
+        /// <summary>Background color for an item where <see cref="IsItemDisabled"/> returns true, and for the selected item of a list that is disabled as a whole.</summary>
         public Color DisabledBackColor
         {
             get => _disabledBackColor;
@@ -232,11 +236,11 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// Background color of the selected item. Defaults to a fixed,
         /// neutral gray (<see cref="UIColors.BorderLight"/>), not the
-        /// current accent - set this explicitly (e.g. to
-        /// <see cref="UIColors.Primary"/>) for an accent-colored selection
-        /// instead, matching <see cref="ReadOnlyDataGridView.SelectionBackColor"/>/
-        /// <see cref="ListView.SelectionOverlayColor"/>'s own
-        /// CreateStandard/CreatePrimary split.
+        /// current accent. <c>UIStyles.ListBoxes.CreatePrimary</c> (or
+        /// <c>CreateStandard</c> with a color set) sets it to the accent (the
+        /// color of the set), the same split as
+        /// <see cref="ReadOnlyDataGridView.SelectionBackColor"/> and
+        /// <see cref="ListView.SelectionOverlayColor"/>.
         /// </summary>
         public Color SelectedBackColor
         {
@@ -302,7 +306,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background color of the item currently under the mouse.</summary>
+        /// <summary>Background color of the item currently under the mouse (not shown while the list is disabled or an item is being dragged).</summary>
         public Color HoverBackColor
         {
             get => _hoverBackColor;
@@ -447,11 +451,11 @@ namespace ErikwnkWFUI.Controls
             _pendingToggleDeselectIndex = -1;
 
             // Only deselects if the button actually came back up on the
-            // same item that was already selected going in - this control
-            // is always single-select (see ClearSelected's own remarks)
-            // with no drag-select gesture of its own to distinguish from,
-            // unlike ListView's equivalent toggle-deselect, so a plain
-            // "still the same item" check is enough here.
+            // same item that was already selected going in (a toggle is only
+            // armed in a single selection, see CapturePendingToggleDeselect) -
+            // there is no drag-select gesture to tell it from, unlike
+            // ListView's equivalent toggle-deselect, so a plain "still the
+            // same item" check is enough here.
             if (pendingIndex >= 0 && e.Button == MouseButtons.Left &&
                 IndexFromPoint(e.Location) == pendingIndex && SelectedIndex == pendingIndex)
             {
@@ -583,7 +587,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDrawItem(e);
         }
 
-        /// <summary>Clears the single selection. Deliberately hides (not overrides) the inherited multi-select-clearing <see cref="ListBox.ClearSelected"/> - this control is always single-select.</summary>
+        /// <summary>Clears the selection (every selected item) and repaints; does nothing when nothing is selected. Hides (does not override) the inherited <see cref="System.Windows.Forms.ListBox.ClearSelected"/>.</summary>
         public new void ClearSelected()
         {
             if (SelectedIndex == -1)
