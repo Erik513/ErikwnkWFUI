@@ -25,34 +25,32 @@ namespace ErikwnkWFUI.Showcase
             listBox.Items.Add("An even longer item whose text keeps going well past what even two full lines could ever hold, so the second line itself ends up ellipsized instead of overflowing into a third");
         }
 
+        // The list box and the one with a title above it share a tab: the titled one is the same list box.
         private void AddListBoxSection(PropertyTable table)
         {
             ErikwnkWFUI.Controls.ListBox standard = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true);
             FillListBoxDemo(standard);
-            table.AddRow("CreateStandard", 220, standard);
+            table.AddRow("ListBoxes.CreateStandard", 220, standard);
 
             ErikwnkWFUI.Controls.ListBox primary = UIStyles.ListBoxes.CreatePrimary(allowReorder: true, showEnumeration: true);
             FillListBoxDemo(primary);
-            table.AddRow("CreatePrimary", 220, primary);
+            table.AddRow("ListBoxes.CreatePrimary", 220, primary);
 
             ErikwnkWFUI.Controls.ListBox green = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
             FillListBoxDemo(green);
-            table.AddRow("CreateStandard(colors)", 220, green);
-        }
+            table.AddRow("ListBoxes.CreateStandard(colors)", 220, green);
 
-        private void AddTitledListBoxSection(PropertyTable table)
-        {
-            TitledListBox standard = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true);
-            FillListBoxDemo(standard.InnerListBox);
-            table.AddRow("CreateStandard", 260, standard);
+            TitledListBox titled = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(titled.InnerListBox);
+            table.AddRow("TitledListBoxes.CreateStandard", 260, titled);
 
-            TitledListBox primary = UIStyles.TitledListBoxes.CreatePrimary("Sample list", allowReorder: true, showEnumeration: true);
-            FillListBoxDemo(primary.InnerListBox);
-            table.AddRow("CreatePrimary", 260, primary);
+            TitledListBox titledPrimary = UIStyles.TitledListBoxes.CreatePrimary("Sample list", allowReorder: true, showEnumeration: true);
+            FillListBoxDemo(titledPrimary.InnerListBox);
+            table.AddRow("TitledListBoxes.CreatePrimary", 260, titledPrimary);
 
-            TitledListBox green = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
-            FillListBoxDemo(green.InnerListBox);
-            table.AddRow("CreateStandard(colors)", 260, green);
+            TitledListBox titledGreen = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
+            FillListBoxDemo(titledGreen.InnerListBox);
+            table.AddRow("TitledListBoxes.CreateStandard(colors)", 260, titledGreen);
         }
 
         private void AddListViewSection(PropertyTable table)

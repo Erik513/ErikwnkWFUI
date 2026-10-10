@@ -59,7 +59,7 @@ namespace ErikwnkWFUI.Showcase
                  AddLabelsSection),
 
                 ("ListBox",
-                 "A list with icons, numbering and drag-to-reorder (the handle on the right of each item). Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does - it colors the selected item and the line that shows where a dragged item lands.",
+                 "A list with icons, numbering and drag-to-reorder (the handle on the right of each item). Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does - it colors the selected item and the line that shows where a dragged item lands. The rows below are the same list box with a title above it (TitledListBoxes): in every other way it is the list box.",
                  AddListBoxSection),
 
                 ("ListView",
@@ -101,10 +101,6 @@ namespace ErikwnkWFUI.Showcase
                 ("TextBoxes",
                  "Text input in the theme colors. Standard has a border, Borderless blends into the surface behind it. Left enabled, right disabled.",
                  AddTextBoxesSection),
-
-                ("TitledListBox",
-                 "The list box with a title above it - in every other way the same list box. Standard is neutral, Primary follows the accent color, and with colors: a color set any other color does.",
-                 AddTitledListBoxSection),
 
                 ("ToastForm",
                  "A small confirmation that closes itself after a few seconds, near the bottom of the window. ShowStandard is neutral gray, ShowPrimary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does; the text is white, or black on a light color. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high, and it stays a short, medium (the default) or long time. It can also wait before it appears: not at all (the default), a short, medium or long time.",
