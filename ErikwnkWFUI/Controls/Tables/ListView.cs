@@ -291,6 +291,10 @@ namespace ErikwnkWFUI.Controls
 
         public ListView()
         {
+            // The system's own dark scroll bars on a dark theme. The other dark style for lists (ItemsView) would make
+            // the group headers light and leave the scroll bars light, so only the header gets it.
+            NativeControlTheme.Track(this);
+            NativeControlTheme.Track(this, () => HeaderInputSubclass.GetHeaderHandle(Handle), NativeControlTheme.ApplyToItemsView);
             View = View.Details;
             FullRowSelect = true;
             HideSelection = true;
@@ -553,17 +557,11 @@ namespace ErikwnkWFUI.Controls
             // across a recreate.
             SendMessage(Handle, LVM_SETEXTENDEDLISTVIEWSTYLE, (System.IntPtr)LVS_EX_DOUBLEBUFFER, (System.IntPtr)LVS_EX_DOUBLEBUFFER);
 
-            // Dark scroll bars on a dark theme (the system's own, not drawn by the library). The
-            // other dark style for lists (ItemsView) would make the group headers light, but it
-            // leaves the scroll bars light, and the scroll bars matter more.
-            NativeControlTheme.ApplyToScrollBars(Handle);
-
             // The header is a separate native child window ("SysHeader32"),
             // recreated along with this control's own handle - reattach
             // every time instead of once in the constructor.
             _headerInputSubclass?.ReleaseHandle();
             System.IntPtr headerHandle = HeaderInputSubclass.GetHeaderHandle(Handle);
-            NativeControlTheme.ApplyToItemsView(headerHandle);
             if (headerHandle != System.IntPtr.Zero)
             {
                 _headerInputSubclass = new HeaderInputSubclass(this);

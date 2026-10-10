@@ -52,6 +52,9 @@ namespace ErikwnkWFUI.Controls
 
             _timer = new Timer { Interval = TickMs };
             _timer.Tick += OnTick;
+
+            // The track, the text and the gray arc are read while painting.
+            ThemeWatcher.Attach(this, Invalidate);
         }
 
         /// <summary>Stroke width in pixels. 0 (the default) scales it to the control's size.</summary>

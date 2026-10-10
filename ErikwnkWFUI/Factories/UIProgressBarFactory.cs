@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -16,19 +17,19 @@ namespace ErikwnkWFUI.Factories
         // CreatePrimary just preset a specific fill instead.
         public static ProgressBar CreateStandard()
         {
-            return Create(UIColors.DisabledGray, drawBorder: true);
+            return Create(() => UIColors.DisabledGray, drawBorder: true);
         }
 
         // CreateStandard's grey fill with CreateGreenTransparent's
         // no-border/blend-in look.
         public static ProgressBar CreateStandardTransparent()
         {
-            return Create(UIColors.DisabledGray, drawBorder: false);
+            return Create(() => UIColors.DisabledGray, drawBorder: false);
         }
 
         public static ProgressBar CreateGreen()
         {
-            return Create(UIColors.Green, drawBorder: true);
+            return Create(() => UIColors.Green, drawBorder: true);
         }
 
         // No border, and BackColor deliberately left as whatever the caller
@@ -41,7 +42,7 @@ namespace ErikwnkWFUI.Factories
         // track/border stays the default; this is the explicit opt-out.
         public static ProgressBar CreateGreenTransparent()
         {
-            return Create(UIColors.Green, drawBorder: false);
+            return Create(() => UIColors.Green, drawBorder: false);
         }
 
         // Same as CreateGreen, but the fill follows the app-wide accent
@@ -50,14 +51,14 @@ namespace ErikwnkWFUI.Factories
         // as "this app's own accent", not "success/in-progress" specifically.
         public static ProgressBar CreatePrimary()
         {
-            return Create(UIColors.Primary, drawBorder: true);
+            return Create(() => UIColors.Primary, drawBorder: true);
         }
 
         // CreatePrimary's accent-following fill, with CreateGreenTransparent's
         // no-border/blend-in look.
         public static ProgressBar CreatePrimaryTransparent()
         {
-            return Create(UIColors.Primary, drawBorder: false);
+            return Create(() => UIColors.Primary, drawBorder: false);
         }
 
         // Fill color follows Value instead of being fixed: red at Minimum,
@@ -82,23 +83,26 @@ namespace ErikwnkWFUI.Factories
 
         private static ProgressBar CreateStatusBar(bool drawBorder)
         {
-            return new BorderedProgressBar(drawBorder, useStatusGradient: true)
+            ProgressBar progressBar = new BorderedProgressBar(drawBorder, useStatusGradient: true)
             {
                 Minimum = 0,
                 Maximum = 100,
                 Style = ProgressBarStyle.Continuous,
-                BackColor = UIColors.BackgroundMedium,
                 Margin = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(progressBar, () => UIColors.BackgroundMedium);
+            ThemeWatcher.Attach(progressBar, progressBar.Invalidate); // the border and the status color are read while painting
+
+            return progressBar;
         }
 
-        private static ProgressBar Create(Color foreColor, bool drawBorder)
+        private static ProgressBar Create(Func<Color> foreColor, bool drawBorder)
         {
             ProgressBar progressBar = new BorderedProgressBar(drawBorder)
             {
                 Minimum = 0,
                 Style = ProgressBarStyle.Continuous,
-                ForeColor = foreColor,
                 // BackgroundMedium rather than BackgroundLight - a progress
                 // bar's track needs to read as a recessed surface, not
                 // whatever shade the caller's panel happens to use (several
@@ -113,11 +117,11 @@ namespace ErikwnkWFUI.Factories
                 // edge case where a panel is BackgroundMedium too. Callers
                 // wanting the borderless/blend-in look reassign this
                 // themselves - see CreateTransparent's own comment.
-                BackColor = UIColors.BackgroundMedium,
                 Margin = new Padding(0)
             };
 
-            SetEnabledStyle(progressBar);
+            ThemeWatcher.FollowBackColor(progressBar, () => UIColors.BackgroundMedium);
+            SetEnabledStyle(progressBar, foreColor);
 
             return progressBar;
         }
@@ -137,9 +141,14 @@ namespace ErikwnkWFUI.Factories
         // gray). Disabled progress bars are a rare case in practice, but
         // when one does show up it should read as gray like everything
         // else, not a dark shade of its own accent.
-        private static void SetEnabledStyle(ProgressBar progressBar)
+        //
+        // The fill color follows the theme as long as it is still the one the factory gave (or, while disabled,
+        // the one it would restore): a color set by hand stays.
+        private static void SetEnabledStyle(ProgressBar progressBar, Func<Color> foreColor)
         {
-            Color restoreForeColor = progressBar.ForeColor;
+            Color given = foreColor();
+            Color restoreForeColor = given;
+            progressBar.ForeColor = given;
 
             progressBar.EnabledChanged += delegate
             {
@@ -153,6 +162,25 @@ namespace ErikwnkWFUI.Factories
                     progressBar.ForeColor = UIColors.DisabledGray;
                 }
             };
+
+            ThemeWatcher.Attach(progressBar, () =>
+            {
+                if (progressBar.Enabled)
+                {
+                    if (progressBar.ForeColor == given)
+                        progressBar.ForeColor = foreColor();
+                }
+                else
+                {
+                    if (restoreForeColor == given)
+                        restoreForeColor = foreColor();
+
+                    progressBar.ForeColor = UIColors.DisabledGray;
+                }
+
+                given = foreColor();
+                progressBar.Invalidate();
+            });
         }
 
         // Draws a 1px border around the bar so its extent is still legible

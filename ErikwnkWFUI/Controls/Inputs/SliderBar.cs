@@ -33,6 +33,8 @@ namespace ErikwnkWFUI.Controls
 
         public SliderBar()
         {
+            // Everything is read while painting: a change of the theme only needs a repaint.
+            ThemeWatcher.Attach(this, Invalidate);
             SetStyle(
                 ControlStyles.OptimizedDoubleBuffer
                 | ControlStyles.AllPaintingInWmPaint

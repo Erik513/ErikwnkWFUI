@@ -64,7 +64,11 @@ namespace ErikwnkWFUI.Controls
         public Color TitleForeColor
         {
             get { return _titleLabel.ForeColor; }
-            set { _titleLabel.ForeColor = value; }
+            set
+            {
+                _titleForeColorWasSet = true;
+                _titleLabel.ForeColor = value;
+            }
         }
 
         public ContentAlignment TitleTextAlign
@@ -119,6 +123,7 @@ namespace ErikwnkWFUI.Controls
             Color? backColor = null)
         {
             Color resolvedBackColor = backColor ?? UIColors.BackgroundBlack;
+            _backColorWasGiven = backColor.HasValue;
             _allowWindowSnapAndMaximize = allowWindowSnapAndMaximize;
 
             ConfigureControl(resolvedBackColor);
@@ -138,6 +143,27 @@ namespace ErikwnkWFUI.Controls
 
             UpdateLayout();
             RunWhenHandleReady(UpdateLayout);
+
+            ThemeWatcher.Attach(this, OnThemeChanged);
+        }
+
+        private bool _backColorWasGiven;
+        private bool _titleForeColorWasSet;
+
+        // The theme changed while the bar is shown: the colors that were not given by hand follow (the buttons
+        // follow by themselves, they are made by the button factory).
+        private void OnThemeChanged()
+        {
+            if (!_backColorWasGiven)
+            {
+                BackColor = UIColors.BackgroundBlack;
+                _titleLabel.BackColor = UIColors.BackgroundBlack;
+            }
+
+            if (!_titleForeColorWasSet)
+                _titleLabel.ForeColor = UIColors.TextPrimary;
+
+            Invalidate(true);
         }
 
         // While maximized the button restores the window, and says so.

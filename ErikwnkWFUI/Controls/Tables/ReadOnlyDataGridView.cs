@@ -2475,10 +2475,7 @@ namespace ErikwnkWFUI.Controls
                     continue;
 
                 found.Add(bar);
-                bar.HandleCreated += (sender, e) => NativeControlTheme.ApplyToScrollBars(((Control)sender).Handle);
-
-                if (bar.IsHandleCreated)
-                    NativeControlTheme.ApplyToScrollBars(bar.Handle);
+                NativeControlTheme.Track(bar);
             }
 
             _scrollBars = found.ToArray();

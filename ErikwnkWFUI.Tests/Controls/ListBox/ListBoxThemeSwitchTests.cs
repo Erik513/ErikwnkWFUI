@@ -157,7 +157,7 @@ public class ListBoxThemeSwitchTests : IDisposable
 
         WfuiListBox shown = Show(UIStyles.ListBoxes.CreateStandard());
         TitledListBox titled = Show(UIStyles.TitledListBoxes.CreateStandard("Title"));
-        Assert.Equal(before + 3, Listeners()); // the list, the titled one, and the list inside it
+        Assert.Equal(before + 5, Listeners()); // each list: itself and its scroll bars; the titled one: itself
 
         foreach (Form form in _forms)
             form.Dispose();

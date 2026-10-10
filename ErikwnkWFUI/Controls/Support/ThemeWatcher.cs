@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -9,6 +10,33 @@ namespace ErikwnkWFUI.Controls
     // is not kept alive by the static event), and does its update on its own thread.
     internal static class ThemeWatcher
     {
+        // For a plain control that a factory colors (a panel): its color follows the theme as long as it still is the
+        // color that was given to it - a color set by hand afterwards stays.
+        public static void FollowBackColor(Control control, Func<Color> color)
+        {
+            Follow(control, color, () => control.BackColor, value => control.BackColor = value);
+        }
+
+        public static void FollowForeColor(Control control, Func<Color> color)
+        {
+            Follow(control, color, () => control.ForeColor, value => control.ForeColor = value);
+        }
+
+        private static void Follow(Control control, Func<Color> color, Func<Color> get, Action<Color> set)
+        {
+            Color given = color();
+            set(given);
+
+            Attach(control, () =>
+            {
+                if (get() != given)
+                    return;
+
+                given = color();
+                set(given);
+            });
+        }
+
         public static void Attach(Control control, Action onThemeChanged)
         {
             EventHandler handler = null;

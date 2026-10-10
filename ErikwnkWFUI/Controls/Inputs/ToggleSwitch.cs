@@ -105,6 +105,8 @@ namespace ErikwnkWFUI.Controls
 
         public ToggleSwitch()
         {
+            // Everything is read while painting: a change of the theme only needs a repaint.
+            ThemeWatcher.Attach(this, Invalidate);
             ConfigureControl();
             CreateToolTip();
         }

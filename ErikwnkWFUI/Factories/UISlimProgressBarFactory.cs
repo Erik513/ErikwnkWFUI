@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 
@@ -11,41 +12,47 @@ namespace ErikwnkWFUI.Factories
         // CreateStandard = neutral grey convention used for buttons and sliders.
         public static SlimProgressBar CreateStandard()
         {
-            return Create(UIColors.DisabledGray);
+            return Create(() => UIColors.DisabledGray);
         }
 
         public static SlimProgressBar CreateGreen()
         {
-            return Create(UIColors.Green);
+            return Create(() => UIColors.Green);
         }
 
         public static SlimProgressBar CreatePrimary()
         {
-            return Create(UIColors.Primary);
+            return Create(() => UIColors.Primary);
         }
 
         // Fill color follows Value instead of ForeColor - see
         // SlimProgressBar.UseStatusGradient.
         public static SlimProgressBar CreateStatus()
         {
-            return new SlimProgressBar
+            SlimProgressBar bar = new SlimProgressBar
             {
                 Minimum = 0,
                 Maximum = 100,
-                BackColor = UIColors.BackgroundMedium,
                 UseStatusGradient = true
             };
+
+            ThemeWatcher.FollowBackColor(bar, () => UIColors.BackgroundMedium);
+
+            return bar;
         }
 
-        private static SlimProgressBar Create(Color foreColor)
+        private static SlimProgressBar Create(Func<Color> foreColor)
         {
-            return new SlimProgressBar
+            SlimProgressBar bar = new SlimProgressBar
             {
                 Minimum = 0,
-                Maximum = 100,
-                ForeColor = foreColor,
-                BackColor = UIColors.BackgroundMedium
+                Maximum = 100
             };
+
+            ThemeWatcher.FollowForeColor(bar, foreColor);
+            ThemeWatcher.FollowBackColor(bar, () => UIColors.BackgroundMedium);
+
+            return bar;
         }
     }
 }

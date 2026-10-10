@@ -32,6 +32,9 @@ namespace ErikwnkWFUI.Controls
 
             DoubleBuffered = true;
             Height = DefaultHeight;
+
+            // The disabled gray and the status colors are read while painting.
+            ThemeWatcher.Attach(this, Invalidate);
         }
 
         public int Minimum

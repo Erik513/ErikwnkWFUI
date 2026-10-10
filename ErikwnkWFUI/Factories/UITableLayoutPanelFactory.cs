@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -14,7 +15,7 @@ namespace ErikwnkWFUI.Factories
             return CreateTableLayoutPanel(
                 columnCount,
                 rowCount,
-                UIColors.BackgroundMediumElevated);
+                () => UIColors.BackgroundMediumElevated);
         }
 
         public static TableLayoutPanel CreateDark(
@@ -24,22 +25,25 @@ namespace ErikwnkWFUI.Factories
             return CreateTableLayoutPanel(
                 columnCount,
                 rowCount,
-                UIColors.BackgroundDark);
+                () => UIColors.BackgroundDark);
         }
 
         private static TableLayoutPanel CreateTableLayoutPanel(
             int columnCount,
             int rowCount,
-            Color backColor)
+            Func<Color> backColor)
         {
-            return new TableLayoutPanel
+            TableLayoutPanel panel = new TableLayoutPanel
             {
                 ColumnCount = Math.Max(0, columnCount),
                 RowCount = Math.Max(0, rowCount),
-                BackColor = backColor,
                 Margin = new Padding(0),
                 Padding = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(panel, backColor);
+
+            return panel;
         }
     }
 }

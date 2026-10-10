@@ -358,6 +358,7 @@ namespace ErikwnkWFUI.Controls
         public ListBox()
         {
             ThemeWatcher.Attach(this, OnThemeChanged);
+            NativeControlTheme.Track(this); // the scroll bars are the system's own
 
             DrawMode = DrawMode.OwnerDrawFixed;
             base.ItemHeight = _itemHeight;
@@ -414,8 +415,8 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // The theme or the accent changed while the list is shown: what was not set by hand follows, the system's own
-        // parts (the scroll bars) are asked again, and the list is painted anew.
+        // The theme or the accent changed while the list is shown: what was not set by hand follows, the list is painted anew
+        // (the scroll bars follow through NativeControlTheme.Track).
         private void OnThemeChanged()
         {
             if (!_backColorWasSet)
@@ -424,23 +425,12 @@ namespace ErikwnkWFUI.Controls
             if (!_itemForeColor.IsSet)
                 base.ForeColor = _itemForeColor.Value;
 
-            if (IsHandleCreated)
-            {
-                NativeControlTheme.ApplyToScrollBars(Handle);
-                // The frame (where the scroll bars are) is measured and painted again.
-                ErikwnkWFUI.Native.NativeMethods.SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020);
-            }
-
             Invalidate();
         }
 
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-
-            // The scroll bars are the system's own: dark ones on the dark theme (applied with every new window,
-            // the way the list view and the combo box do it).
-            NativeControlTheme.ApplyToScrollBars(Handle);
 
             ApplyDefaultItemHeight();
         }

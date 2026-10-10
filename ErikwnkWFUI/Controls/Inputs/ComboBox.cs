@@ -60,6 +60,16 @@ namespace ErikwnkWFUI.Controls
 
         public ComboBox()
         {
+            // The list of a dark theme gets the system's dark style, which also gives it dark scroll bars (the plain,
+            // unthemed list has light ones).
+            NativeControlTheme.Track(this, GetListHandle, handle =>
+            {
+                if (NativeControlTheme.IsDark)
+                    NativeControlTheme.ApplyToScrollBars(handle);
+                else
+                    SetWindowTheme(handle, "", "");
+            });
+
             _listFrame = new ListFrame(this);
 
             // The rows are owner-drawn: the list of the system always highlights the hovered
@@ -117,19 +127,19 @@ namespace ErikwnkWFUI.Controls
 
             if (GetComboBoxInfo(Handle, ref info) && info.hwndList != IntPtr.Zero)
             {
-                // The list of a dark theme gets the system's dark style, which also gives it dark
-                // scroll bars (the plain, unthemed list has light ones).
-                if (NativeControlTheme.IsDark)
-                    NativeControlTheme.ApplyToScrollBars(info.hwndList);
-                else
-                    SetWindowTheme(info.hwndList, "", "");
-
                 // The list's own frame is the system's (blue in the dark style); the box's
                 // border color is drawn over it. A Simple box shows its list all the time as
                 // part of the box, which keeps the system's drawing.
                 if (DropDownStyle != ComboBoxStyle.Simple)
                     _listFrame.AssignHandle(info.hwndList);
             }
+        }
+
+        private IntPtr GetListHandle()
+        {
+            NativeComboBoxInfo info = new NativeComboBoxInfo { cbSize = Marshal.SizeOf(typeof(NativeComboBoxInfo)) };
+
+            return GetComboBoxInfo(Handle, ref info) ? info.hwndList : IntPtr.Zero;
         }
 
         protected override void OnHandleDestroyed(EventArgs e)

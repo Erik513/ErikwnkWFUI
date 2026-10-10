@@ -37,16 +37,20 @@ namespace ErikwnkWFUI.Controls
         // ---- the colors ----
 
         // The color of its kind, the color set (or none), whether it is the muted kind, whether a ForeColor was set.
-        private readonly Color _enabledForeColor;
-        private readonly UIColorSet _colors;
+        // (Read each time, so a change of the theme or of the accent is followed.)
+        private readonly Func<Color> _enabledForeColor;
+        private readonly Func<UIColorSet> _colors;
         private readonly bool _muted;
         private bool _hasOwnForeColor;
 
-        internal ThemedLabel(Color enabledForeColor, UIColorSet colors, bool muted = false)
+        internal ThemedLabel(Func<Color> enabledForeColor, Func<UIColorSet> colors, bool muted = false)
         {
             _enabledForeColor = enabledForeColor;
             _colors = colors;
             _muted = muted;
+
+            // The text color is worked out while painting: a change of the theme only needs a repaint.
+            ThemeWatcher.Attach(this, Invalidate);
         }
 
         // ---- the text color ----
@@ -81,15 +85,17 @@ namespace ErikwnkWFUI.Controls
         private Color GetEnabledTextColor()
         {
             // (Before the constructor has run, the base class may already ask.)
-            if (_hasOwnForeColor || _enabledForeColor.IsEmpty)
+            if (_hasOwnForeColor || _enabledForeColor == null)
                 return base.ForeColor;
 
             Color back = GetEffectiveBackColor();
 
-            if (_colors == null)
-                return UIColors.EnsureContrast(_enabledForeColor, back, _muted ? MutedContrast : TextContrast);
+            UIColorSet colors = _colors?.Invoke();
 
-            Color color = UIColors.EnsureContrast(_colors.Hover, back, TextContrast);
+            if (colors == null)
+                return UIColors.EnsureContrast(_enabledForeColor(), back, _muted ? MutedContrast : TextContrast);
+
+            Color color = UIColors.EnsureContrast(colors.Hover, back, TextContrast);
 
             // A muted label is the same color, but quiet.
             if (_muted)

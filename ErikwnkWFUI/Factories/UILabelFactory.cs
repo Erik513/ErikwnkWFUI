@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
@@ -9,7 +10,7 @@ namespace ErikwnkWFUI.Factories
     {
         public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(UIColors.TextPrimary, colors)
+            ThemedLabel label = new ThemedLabel(() => UIColors.TextPrimary, Wrap(colors))
             {
                 Text = text ?? "",
                 Font = UIFonts.Title,
@@ -30,7 +31,17 @@ namespace ErikwnkWFUI.Factories
 
         public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(UIColors.TextSecondary, colors)
+            return Standard(text, Wrap(colors), scroll);
+        }
+
+        private static Func<UIColorSet> Wrap(UIColorSet colors)
+        {
+            return colors == null ? (Func<UIColorSet>)null : () => colors;
+        }
+
+        private static ThemedLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)
+        {
+            ThemedLabel label = new ThemedLabel(() => UIColors.TextSecondary, colors)
             {
                 Text = text ?? "",
                 Font = UIFonts.Normal,
@@ -54,12 +65,12 @@ namespace ErikwnkWFUI.Factories
         // The Standard one in the current accent - the primary color set.
         public static ThemedLabel CreatePrimary(string text = "", LabelScroll scroll = null)
         {
-            return CreateStandard(text, UIColors.PrimarySet, scroll);
+            return Standard(text, () => UIColors.PrimarySet, scroll);
         }
 
         public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(UIColors.TextMuted, colors, muted: true)
+            ThemedLabel label = new ThemedLabel(() => UIColors.TextMuted, Wrap(colors), muted: true)
             {
                 Text = text ?? "",
                 Font = UIFonts.Small,
