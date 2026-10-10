@@ -262,4 +262,21 @@ public class ListBoxStandardBehaviorTests : IDisposable
         Assert.Equal(35, listBox.ItemHeight);
         Assert.Equal(SelectionMode.One, listBox.SelectionMode);
     }
+
+    // The dark scroll bars come from the system's dark visual style, which the test process does not have (checked
+    // on screen); the window is made, and the theme is asked for, without a failure - also with a handle made twice.
+    [Fact]
+    public void TheWindow_IsMadeAndThemed_AlsoWhenItIsMadeAgain()
+    {
+        using WfuiListBox listBox = ListBoxTestHelpers.CreateListBoxWithHandle(30, "A", "B", "C");
+        Assert.True(listBox.IsHandleCreated);
+
+        Exception? thrown = Record.Exception(() =>
+        {
+            typeof(Control).GetMethod("RecreateHandle", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(listBox, null);
+            Application.DoEvents();
+        });
+
+        Assert.Null(thrown);
+    }
 }

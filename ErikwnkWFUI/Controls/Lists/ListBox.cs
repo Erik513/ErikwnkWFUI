@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -355,6 +356,15 @@ namespace ErikwnkWFUI.Controls
             EnableDoubleBuffering();
 
             UpdateStyles();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // The scroll bars are the system's own: dark ones on the dark theme (applied with every new window,
+            // the way the list view and the combo box do it).
+            NativeControlTheme.ApplyToScrollBars(Handle);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
