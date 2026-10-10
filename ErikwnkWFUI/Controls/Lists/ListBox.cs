@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Controls
     /// per-item icons, optional drag-to-reorder (a drag handle appears on
     /// the right of each item), enumeration numbers, and fully overridable
     /// item colors - a themed alternative to the native list box for
-    /// anything beyond plain text rows. Use <see cref="ListBoxControl"/>
+    /// anything beyond plain text rows. Use <see cref="TitledListBox"/>
     /// instead if you also want a header bar above the list.
     /// </summary>
     /// <remarks>
@@ -154,8 +154,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Row height in pixels - use this instead of the inherited <see cref="System.Windows.Forms.ListBox.ItemHeight"/> so the internal default stays in sync.</summary>
-        public int ItemHeightCustom
+        /// <summary>Row height in pixels. Replaces the inherited <see cref="System.Windows.Forms.ListBox.ItemHeight"/> (so the internal default stays in sync, and a height of 0 is not accepted).</summary>
+        public new int ItemHeight
         {
             get => _itemHeight;
             set
@@ -166,7 +166,7 @@ namespace ErikwnkWFUI.Controls
                 // height would turn into a DivideByZeroException the
                 // moment a user actually dragged an item to reorder it.
                 _itemHeight = Math.Max(1, value);
-                ItemHeight = _itemHeight;
+                base.ItemHeight = _itemHeight;
                 Invalidate();
             }
         }
@@ -280,7 +280,7 @@ namespace ErikwnkWFUI.Controls
             _alternateItemBackColor = UIColors.Darken(_itemBackColor, 5);
 
             DrawMode = DrawMode.OwnerDrawFixed;
-            ItemHeight = _itemHeight;
+            base.ItemHeight = _itemHeight;
             BackColor = UIColors.BackgroundDark;
             ForeColor = _itemForeColor;
             BorderStyle = BorderStyle.None;

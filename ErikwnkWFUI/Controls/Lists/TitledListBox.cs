@@ -11,7 +11,7 @@ namespace ErikwnkWFUI.Controls
     /// box (see <see cref="InnerListBox"/>) - reach through InnerListBox
     /// directly for anything not proxied.
     /// </summary>
-    public class ListBoxControl : UserControl
+    public class TitledListBox : UserControl
     {
         private const int DefaultHeaderHeight = 30;
         private const int HeaderSidePadding = 10;
@@ -23,13 +23,13 @@ namespace ErikwnkWFUI.Controls
         public event EventHandler SelectedIndexChanged;
         public event EventHandler ItemsReordered;
 
-        public ListBoxControl()
+        public TitledListBox()
             : this(null, false, false, null, ContentAlignment.MiddleLeft)
         {
         }
 
         /// <summary>headerTitle left null/empty hides the header bar entirely (the default) - set <see cref="Title"/> later to show it.</summary>
-        public ListBoxControl(
+        public TitledListBox(
             string displayTextMember = null,
             bool allowReorder = false,
             bool showEnumeration = false,
@@ -148,10 +148,10 @@ namespace ErikwnkWFUI.Controls
             set { _listBox.SelectedIndex = value; }
         }
 
-        public int ItemHeightCustom
+        public int ItemHeight
         {
-            get { return _listBox.ItemHeightCustom; }
-            set { _listBox.ItemHeightCustom = value; }
+            get { return _listBox.ItemHeight; }
+            set { _listBox.ItemHeight = value; }
         }
 
         public Color DragIndicatorColor

@@ -27,7 +27,7 @@ internal static class ListBoxTestHelpers
     public static WfuiListBox CreateListBoxWithHandle(int itemHeight, params string[] items)
     {
         WfuiListBox listBox = CreateListBox(items);
-        listBox.ItemHeightCustom = itemHeight;
+        listBox.ItemHeight = itemHeight;
         _ = listBox.Handle;
         return listBox;
     }

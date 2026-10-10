@@ -4,16 +4,16 @@ using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
 {
-    internal static class UIListBoxControlFactory
+    internal static class UITitledListBoxFactory
     {
-        public static ListBoxControl CreateStandard(
+        public static TitledListBox CreateStandard(
             string headerTitle = null,
             string displayTextMember = null,
             bool allowReorder = false,
             bool showEnumeration = false,
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
         {
-            return new ListBoxControl(
+            return new TitledListBox(
                 displayTextMember,
                 allowReorder,
                 showEnumeration,
@@ -24,14 +24,14 @@ namespace ErikwnkWFUI.Factories
         // Same control, selection/drag-indicator-colored in the current
         // accent instead of the fixed neutral gray CreateStandard keeps for
         // both - mirrors UIListBoxFactory.CreatePrimary.
-        public static ListBoxControl CreatePrimary(
+        public static TitledListBox CreatePrimary(
             string headerTitle = null,
             string displayTextMember = null,
             bool allowReorder = false,
             bool showEnumeration = false,
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
         {
-            ListBoxControl control = new ListBoxControl(
+            TitledListBox control = new TitledListBox(
                 displayTextMember,
                 allowReorder,
                 showEnumeration,

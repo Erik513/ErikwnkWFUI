@@ -15,9 +15,9 @@ namespace ErikwnkWFUI.Showcase
     // List box, list view and data grid.
     public partial class ShowcaseForm
     {
-        private void AddListBoxControlSection(PropertyTable table)
+        private void AddTitledListBoxSection(PropertyTable table)
         {
-            ListBoxControl listBox = UIStyles.ListBoxControls.CreateStandard(
+            TitledListBox listBox = UIStyles.TitledListBoxes.CreateStandard(
                 "Sample list",
                 allowReorder: true,
                 showEnumeration: true);
@@ -29,7 +29,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("CreateStandard", 260, listBox);
 
-            ListBoxControl primaryListBox = UIStyles.ListBoxControls.CreatePrimary(
+            TitledListBox primaryListBox = UIStyles.TitledListBoxes.CreatePrimary(
                 "Sample list",
                 allowReorder: true,
                 showEnumeration: true);

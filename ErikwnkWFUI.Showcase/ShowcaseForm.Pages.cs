@@ -58,10 +58,6 @@ namespace ErikwnkWFUI.Showcase
                  "Text in the theme colors: Standard (body text), Primary (accent color), Title (bold, larger) and Muted (quiet), each also in a color set. Left enabled, right disabled. A text that is too long can move instead of ending in an ellipsis: back and forth with a rest at both ends, or endlessly, one text or several one behind the other.",
                  AddLabelsSection),
 
-                ("ListBoxControl",
-                 "A list with a caption, numbering and drag-to-reorder. Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color.",
-                 AddListBoxControlSection),
-
                 ("ListView",
                  "The themed list view with sortable and resizable columns. Clicking outside of it clears the selection. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. FixedRowCount makes it exactly as big as its columns and a number of rows (here 5), without scroll bars; sorting and reordering the columns stay. AutoSizeToContent grows with the items up to a maximum size and then scrolls, the scroll bar next to the columns.",
                  AddListViewSection),
@@ -101,6 +97,10 @@ namespace ErikwnkWFUI.Showcase
                 ("TextBoxes",
                  "Text input in the theme colors. Standard has a border, Borderless blends into the surface behind it. Left enabled, right disabled.",
                  AddTextBoxesSection),
+
+                ("TitledListBox",
+                 "A list with a caption, numbering and drag-to-reorder. Long items wrap onto a second line and are cut off with an ellipsis after that. Standard is neutral, Primary follows the accent color.",
+                 AddTitledListBoxSection),
 
                 ("ToastForm",
                  "A small confirmation that closes itself after a few seconds, near the bottom of the window. ShowStandard is neutral gray, ShowPrimary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does; the text is white, or black on a light color. It belongs to its window: it moves with it, never takes the focus and is shown only while that window is in front. A toast that cannot be shown because the window is not in front is not lost - it waits (up to three, for one minute) and appears when the window is activated again. A new toast replaces one that is showing. The transparency is opaque, low, medium (the default) or high, and it stays a short, medium (the default) or long time. It can also wait before it appears: not at all (the default), a short, medium or long time.",

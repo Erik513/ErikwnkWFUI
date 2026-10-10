@@ -27,7 +27,7 @@ namespace ErikwnkWFUI.Styles
             // BackgroundDarkElevated and BackgroundLight were identical) -
             // confirmed live as controls sitting directly on the app's own
             // background (also near-white) becoming nearly invisible with
-            // no border to fall back on, e.g. ListBoxControl's header
+            // no border to fall back on, e.g. TitledListBox's header
             // panel (BackgroundDark) against the Showcase's own
             // BackgroundBlack. Every role here is now a distinct value,
             // and only the very last one (BackgroundLighter) is actual

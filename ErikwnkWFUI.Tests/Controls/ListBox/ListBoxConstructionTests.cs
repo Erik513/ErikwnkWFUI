@@ -8,7 +8,7 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// Locks down CreateStandard's colors defaulting to a neutral gray (not the
 /// live accent) and CreatePrimary explicitly overriding them back to the
 /// accent - the exact split this control was missing before CreatePrimary
-/// existed at all (see UIListBoxFactory/UIListBoxControlFactory).
+/// existed at all (see UIListBoxFactory/UITitledListBoxFactory).
 /// [Collection] (see AccentColorTestCollection) - these read UIColors.Primary,
 /// which UIColorsTests changes via SetAccent.
 /// </summary>
@@ -86,9 +86,9 @@ public class ListBoxConstructionTests
     {
         using WfuiListBox listBox = new WfuiListBox
         {
-            ItemHeightCustom = requestedHeight
+            ItemHeight = requestedHeight
         };
 
-        Assert.Equal(1, listBox.ItemHeightCustom);
+        Assert.Equal(1, listBox.ItemHeight);
     }
 }

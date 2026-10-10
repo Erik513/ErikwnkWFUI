@@ -1,11 +1,11 @@
 ﻿using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using WfuiListBoxControl = ErikwnkWFUI.Controls.ListBoxControl;
+using WfuiTitledListBox = ErikwnkWFUI.Controls.TitledListBox;
 
 namespace ErikwnkWFUI.Tests.Controls.ListBox;
 
 /// <summary>
-/// ListBoxControl is a thin wrapper around ListBox (an optional header bar
+/// TitledListBox is a thin wrapper around ListBox (an optional header bar
 /// plus a set of proxied members - see its own class remarks) - these tests
 /// only cover that the proxying itself is correct and that CreatePrimary
 /// reaches the same colors ListBoxConstructionTests locks in on the plain
@@ -15,12 +15,12 @@ namespace ErikwnkWFUI.Tests.Controls.ListBox;
 /// which UIColorsTests changes via SetAccent.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
-public class ListBoxControlTests
+public class TitledListBoxTests
 {
     [Fact]
     public void Items_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
 
         control.Items.Add("A");
         control.Items.Add("B");
@@ -32,7 +32,7 @@ public class ListBoxControlTests
     [Fact]
     public void SelectedIndex_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
         control.Items.Add("A");
         control.Items.Add("B");
 
@@ -45,7 +45,7 @@ public class ListBoxControlTests
     [Fact]
     public void ClearSelected_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
         control.Items.Add("A");
         control.SelectedIndex = 0;
 
@@ -57,7 +57,7 @@ public class ListBoxControlTests
     [Fact]
     public void MoveItem_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
         control.Items.Add("A");
         control.Items.Add("B");
         control.Items.Add("C");
@@ -72,7 +72,7 @@ public class ListBoxControlTests
     [Fact]
     public void SelectedIndexChanged_FiresWhenInnerListBoxSelectionChanges()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
         control.Items.Add("A");
         bool raised = false;
         control.SelectedIndexChanged += (sender, e) => raised = true;
@@ -85,7 +85,7 @@ public class ListBoxControlTests
     [Fact]
     public void ItemsReordered_FiresWhenInnerListBoxReorders()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl();
+        using WfuiTitledListBox control = new WfuiTitledListBox();
         control.Items.Add("A");
         control.Items.Add("B");
         control.Items.Add("C");
@@ -100,7 +100,7 @@ public class ListBoxControlTests
     [Fact]
     public void SelectedBackColor_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl
+        using WfuiTitledListBox control = new WfuiTitledListBox
         {
             SelectedBackColor = UIColors.Primary
         };
@@ -111,7 +111,7 @@ public class ListBoxControlTests
     [Fact]
     public void DragIndicatorColor_ProxiesToInnerListBox()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl
+        using WfuiTitledListBox control = new WfuiTitledListBox
         {
             DragIndicatorColor = UIColors.Primary
         };
@@ -122,7 +122,7 @@ public class ListBoxControlTests
     [Fact]
     public void Title_RoundTrips()
     {
-        using WfuiListBoxControl control = new WfuiListBoxControl
+        using WfuiTitledListBox control = new WfuiTitledListBox
         {
             Title = "Sample list"
         };
@@ -133,7 +133,7 @@ public class ListBoxControlTests
     [Fact]
     public void CreatePrimary_SetsSelectedBackColorToAccent()
     {
-        using WfuiListBoxControl control = UIStyles.ListBoxControls.CreatePrimary();
+        using WfuiTitledListBox control = UIStyles.TitledListBoxes.CreatePrimary();
 
         Assert.Equal(UIColors.Primary, control.SelectedBackColor);
     }
@@ -141,7 +141,7 @@ public class ListBoxControlTests
     [Fact]
     public void CreatePrimary_SetsDragIndicatorColorToAccent()
     {
-        using WfuiListBoxControl control = UIStyles.ListBoxControls.CreatePrimary();
+        using WfuiTitledListBox control = UIStyles.TitledListBoxes.CreatePrimary();
 
         Assert.Equal(UIColors.Primary, control.DragIndicatorColor);
     }
@@ -149,7 +149,7 @@ public class ListBoxControlTests
     [Fact]
     public void CreateStandard_KeepsColorsGray()
     {
-        using WfuiListBoxControl control = UIStyles.ListBoxControls.CreateStandard();
+        using WfuiTitledListBox control = UIStyles.TitledListBoxes.CreateStandard();
 
         Assert.Equal(UIColors.BorderLight, control.SelectedBackColor);
         Assert.Equal(UIColors.BorderLight, control.DragIndicatorColor);
