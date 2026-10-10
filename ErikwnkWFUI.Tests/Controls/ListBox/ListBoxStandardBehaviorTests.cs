@@ -137,8 +137,8 @@ public class ListBoxStandardBehaviorTests : IDisposable
 
         Color selectedBack = listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false);
 
-        Assert.Equal(listBox.DisabledBackColor, selectedBack);
         Assert.NotEqual(listBox.SelectedBackColor, selectedBack);
+        Assert.NotEqual(listBox.InvokePrivate<Color>("GetBackColor", 0, false, false, false), selectedBack);
 
         // The text of a disabled list is the one worked out for its background - or the one that was set.
         Assert.Equal(UIColors.GetDisabledText(listBox.ItemBackColor), listBox.InvokePrivate<Color>("GetTextColorOn", false, false, listBox.ItemBackColor));

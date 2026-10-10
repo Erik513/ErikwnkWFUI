@@ -175,7 +175,7 @@ public class ListBoxEdgeCaseTests : IDisposable
         Click(listBox, 1);
 
         Assert.False(listBox.Enabled);
-        Assert.Equal(listBox.DisabledBackColor, listBox.InvokePrivate<Color>("GetBackColor", 1, true, true, false));
+        Assert.NotEqual(listBox.SelectedBackColor, listBox.InvokePrivate<Color>("GetBackColor", 1, true, true, false));
 
         // Back on, it works again.
         listBox.Enabled = true;

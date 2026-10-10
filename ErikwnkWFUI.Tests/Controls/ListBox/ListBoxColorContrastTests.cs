@@ -70,6 +70,11 @@ public class ListBoxColorContrastTests
             AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.ItemForeColor, even, "text on an even row");
             AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.ItemForeColor, odd, "text on an odd row");
             AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.ItemForeColor, listBox.HoverBackColor, "text on the hovered row");
+            AtLeast(ColorContrastHelper.MinimumRatioNormalText, listBox.ItemForeColor, listBox.InvokePrivate<Color>("GetBackColor", 1, false, true, false), "text on the hovered odd row");
+
+            // The hover shows on the row it is on, on both themes.
+            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 0, false, true, false), even) >= 1.1, "the hover does not show on an even row");
+            Assert.True(Ratio(listBox.InvokePrivate<Color>("GetBackColor", 1, false, true, false), odd) >= 1.1, "the hover does not show on an odd row");
         });
     }
 
@@ -137,6 +142,15 @@ public class ListBoxColorContrastTests
             Color selectedBack = listBox.InvokePrivate<Color>("GetBackColor", 0, true, false, false);
             AtLeast(3.0, listBox.InvokePrivate<Color>("GetTextColorOn", false, false, rowBack), rowBack, "a row of a disabled list");
             AtLeast(3.0, listBox.InvokePrivate<Color>("GetTextColorOn", true, false, selectedBack), selectedBack, "the selection of a disabled list");
+
+            // The selection of a disabled list still shows, on the row it is on (even and odd).
+            foreach (int index in new[] { 0, 1 })
+            {
+                Color row = listBox.InvokePrivate<Color>("GetBackColor", index, false, false, false);
+                Color selected = listBox.InvokePrivate<Color>("GetBackColor", index, true, false, false);
+
+                Assert.True(Ratio(selected, row) >= 1.1, $"the selection of a disabled list is lost on row {index}: {selected} on {row}");
+            }
             AtLeast(3.0, Handle(listBox, listBox.InvokePrivate<Color>("GetTextColorOn", false, false, rowBack), rowBack), rowBack, "the handle of a disabled list");
         });
     }

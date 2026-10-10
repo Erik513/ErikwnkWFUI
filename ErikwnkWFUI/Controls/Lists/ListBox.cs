@@ -62,7 +62,7 @@ namespace ErikwnkWFUI.Controls
         private Color _itemForeColor = UIColors.TextPrimary;
         private readonly ThemeColor _selectedBackColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _selectedForeColor;
-        private Color _hoverBackColor = UIColors.BackgroundLight;
+        private Color? _hoverBackColor;
         private Color? _dragHandleColor;
         private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _disabledForeColor;
@@ -222,7 +222,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background color for an item where <see cref="IsItemDisabled"/> returns true, and for the selected item of a list that is disabled as a whole.</summary>
+        /// <summary>Background color for an item where <see cref="IsItemDisabled"/> returns true. (The selected item of a list that is disabled as a whole shows the selection color dimmed.)</summary>
         public Color DisabledBackColor
         {
             get => _disabledBackColor;
@@ -306,13 +306,18 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Background color of the item currently under the mouse (not shown while the list is disabled or an item is being dragged).</summary>
+        /// <summary>
+        /// Background color of the item currently under the mouse (not shown while the list is disabled or an item is
+        /// being dragged). Left alone it is the row's own color a little way toward the text color - a step lighter on
+        /// the dark theme, darker on the light one, so it shows on both (this reads the color of an even row); set to a
+        /// color to have that one on every row, <see cref="Color.Empty"/> to have it worked out again.
+        /// </summary>
         public Color HoverBackColor
         {
-            get => _hoverBackColor;
+            get => _hoverBackColor ?? GetHoverBackColor(_itemBackColor);
             set
             {
-                _hoverBackColor = value;
+                _hoverBackColor = value.IsEmpty ? (Color?)null : value;
                 Invalidate();
             }
         }
@@ -923,18 +928,30 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBackColor(int index, bool isSelected, bool isHovered, bool isDisabled)
         {
+            // The selection of a disabled list: the selection color, dimmed toward the row it is on (the gray of a
+            // disabled item is the same as the odd rows on the light theme, which would hide it).
             if (isSelected && !Enabled)
-                return _disabledBackColor;
+                return UIColors.BlendToward(_selectedBackColor.Value, GetRowBackColor(index), 0.6);
 
             if (isSelected)
                 return _selectedBackColor.Value;
 
             if (isHovered)
-                return _hoverBackColor;
+                return _hoverBackColor ?? GetHoverBackColor(GetRowBackColor(index));
 
             if (isDisabled && Enabled)
                 return _disabledBackColor;
 
+            return GetRowBackColor(index);
+        }
+
+        private Color GetHoverBackColor(Color row)
+        {
+            return UIColors.BlendToward(row, _itemForeColor, 0.12);
+        }
+
+        private Color GetRowBackColor(int index)
+        {
             return index % 2 == 0
                 ? _itemBackColor
                 : _alternateItemBackColor;
