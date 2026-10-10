@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Controls
     // fixed for previously, before either used this.
     internal sealed class ThemeColor
     {
-        private readonly Func<Color> _defaultColor;
+        private Func<Color> _defaultColor;
         private Color _override;
         private bool _isOverridden;
 
@@ -29,6 +29,12 @@ namespace ErikwnkWFUI.Controls
         public bool IsSet => _isOverridden;
 
         public Color Value => _isOverridden ? _override : _defaultColor();
+
+        // Another default, still followed live until the color is set by hand (a color set made by a factory).
+        public void SetDefault(Func<Color> defaultColor)
+        {
+            _defaultColor = defaultColor;
+        }
 
         public void Set(Color value)
         {

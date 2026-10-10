@@ -24,6 +24,13 @@ namespace ErikwnkWFUI.Controls
         public event EventHandler SelectedIndexChanged;
         public event EventHandler ItemsReordered;
 
+        // These events of the list box say this control is the sender, like the ones above.
+        public event EventHandler SelectedValueChanged;
+        public event EventHandler DataSourceChanged;
+        public event EventHandler DisplayMemberChanged;
+        public event EventHandler ValueMemberChanged;
+        public event DrawItemEventHandler DrawItem;
+
         public TitledListBox()
             : this(null, false, false, null, ContentAlignment.MiddleLeft)
         {
@@ -49,6 +56,7 @@ namespace ErikwnkWFUI.Controls
             Controls.Add(_headerPanel);
 
             WireEvents();
+            ThemeWatcher.Attach(this, OnThemeChanged);
 
             Title = headerTitle;
             HeaderTextAlign = headerTextAlign;
@@ -99,25 +107,75 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Height of the title bar in pixels (30 by default).</summary>
+        /// <summary>Height of the title bar in pixels (30 at 96 dpi by default, more on a screen with more dots per inch).</summary>
         public int HeaderHeight
         {
             get { return _headerPanel.Height; }
-            set { _headerPanel.Height = Math.Max(0, value); }
+            set
+            {
+                _headerHeightWasSet = true;
+                _headerPanel.Height = Math.Max(0, value);
+            }
+        }
+
+        private bool _headerHeightWasSet;
+        private bool _headerBackColorWasSet;
+        private bool _headerForeColorWasSet;
+
+        // The theme or the accent changed while the control is shown: the title bar that was not colored by hand
+        // follows (the list inside follows by itself).
+        private void OnThemeChanged()
+        {
+            if (!_headerBackColorWasSet)
+                _headerPanel.BackColor = UIColors.BackgroundDark;
+
+            if (!_headerForeColorWasSet)
+                _titleLabel.ForeColor = UIColors.TextPrimary;
+
+            Invalidate(true);
+        }
+
+        // A measure of 96 dpi in the pixels of this screen.
+        private int Px(int value96)
+        {
+            int dpi = DpiOverride > 0 ? DpiOverride : DeviceDpi;
+
+            return (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
+        }
+
+        // A seam for the tests: pretends another screen (0 is the real one).
+        internal int DpiOverride;
+
+        protected override void OnDpiChangedAfterParent(EventArgs e)
+        {
+            base.OnDpiChangedAfterParent(e);
+
+            if (!_headerHeightWasSet)
+                _headerPanel.Height = Px(DefaultHeaderHeight);
+
+            _titleLabel.Padding = GetHeaderPadding(_titleLabel.TextAlign);
         }
 
         /// <summary>Background of the title bar. The default is the theme's dark background and stays so whatever color set the list was made with: only setting it changes it.</summary>
         public Color HeaderBackColor
         {
             get { return _headerPanel.BackColor; }
-            set { _headerPanel.BackColor = value; }
+            set
+            {
+                _headerBackColorWasSet = true;
+                _headerPanel.BackColor = value;
+            }
         }
 
         /// <summary>Text color of the title. The default is the theme's primary text color; only setting it changes it.</summary>
         public Color HeaderForeColor
         {
             get { return _titleLabel.ForeColor; }
-            set { _titleLabel.ForeColor = value; }
+            set
+            {
+                _headerForeColorWasSet = true;
+                _titleLabel.ForeColor = value;
+            }
         }
 
         /// <summary>Font of the title (the library's title font by default).</summary>
@@ -312,10 +370,16 @@ namespace ErikwnkWFUI.Controls
             set { _listBox.IntegralHeight = value; }
         }
 
-        public event EventHandler SelectedValueChanged
+        public string FormatString
         {
-            add { _listBox.SelectedValueChanged += value; }
-            remove { _listBox.SelectedValueChanged -= value; }
+            get { return _listBox.FormatString; }
+            set { _listBox.FormatString = value; }
+        }
+
+        public bool FormattingEnabled
+        {
+            get { return _listBox.FormattingEnabled; }
+            set { _listBox.FormattingEnabled = value; }
         }
 
         public int FindString(string text)
@@ -448,7 +512,7 @@ namespace ErikwnkWFUI.Controls
             return new Panel
             {
                 Dock = DockStyle.Top,
-                Height = DefaultHeaderHeight,
+                Height = Px(DefaultHeaderHeight),
                 BackColor = UIColors.BackgroundDark,
                 Visible = false,
                 Margin = new Padding(0),
@@ -497,6 +561,11 @@ namespace ErikwnkWFUI.Controls
             _listBox.ItemsReordered += OnListBoxItemsReordered;
             _listBox.MouseMove += OnListBoxMouseMove;
             _listBox.MouseLeave += OnListBoxMouseLeave;
+            _listBox.SelectedValueChanged += (s, e) => SelectedValueChanged?.Invoke(this, e);
+            _listBox.DataSourceChanged += (s, e) => DataSourceChanged?.Invoke(this, e);
+            _listBox.DisplayMemberChanged += (s, e) => DisplayMemberChanged?.Invoke(this, e);
+            _listBox.ValueMemberChanged += (s, e) => ValueMemberChanged?.Invoke(this, e);
+            _listBox.DrawItem += (s, e) => DrawItem?.Invoke(this, e);
             _listBox.Click += OnListBoxClick;
             _listBox.DoubleClick += OnListBoxDoubleClick;
             _listBox.MouseClick += OnListBoxMouseClick;
@@ -589,12 +658,12 @@ namespace ErikwnkWFUI.Controls
                 case ContentAlignment.MiddleLeft:
                 case ContentAlignment.TopLeft:
                 case ContentAlignment.BottomLeft:
-                    return new Padding(HeaderSidePadding, 0, 0, 0);
+                    return new Padding(Px(HeaderSidePadding), 0, 0, 0);
 
                 case ContentAlignment.MiddleRight:
                 case ContentAlignment.TopRight:
                 case ContentAlignment.BottomRight:
-                    return new Padding(0, 0, HeaderSidePadding, 0);
+                    return new Padding(0, 0, Px(HeaderSidePadding), 0);
 
                 default:
                     return new Padding(0);

@@ -153,6 +153,20 @@ namespace ErikwnkWFUI.Styles
 
             HoverOverlay = theme.HoverOverlay;
             ActiveOverlay = theme.ActiveOverlay;
+
+            RaiseThemeChanged();
+        }
+
+        /// <summary>
+        /// Raised after the colors have changed (<see cref="ApplyTheme"/>, <see cref="SetAccent"/>): every control of
+        /// the library follows the change by itself, the ones that exist as well as the ones made later. Only a color
+        /// that was set on a control by hand stays as it was set.
+        /// </summary>
+        public static event EventHandler ThemeChanged;
+
+        internal static void RaiseThemeChanged()
+        {
+            ThemeChanged?.Invoke(null, EventArgs.Empty);
         }
 
         /// <summary>
@@ -204,6 +218,8 @@ namespace ErikwnkWFUI.Styles
             Selection = CreateSelectionOverlay(accent);
 
             AccentForeColor = GetContrastingForeColor(accent);
+
+            RaiseThemeChanged();
         }
 
         // Above this, background is bright enough that dark text wins;

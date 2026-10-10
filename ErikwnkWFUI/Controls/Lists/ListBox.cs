@@ -29,7 +29,9 @@ namespace ErikwnkWFUI.Controls
     /// <para>
     /// <b>What is deliberately not followed:</b> <c>DrawMode</c> (always owner-drawn, fixed height - the colors and
     /// icons depend on it), <c>BackColor</c> is the color behind and below the items (the items have
-    /// <see cref="ItemBackColor"/>), <c>BackgroundImage</c>, <c>UseTabStops</c> and <c>CustomTabOffsets</c> (the text is
+    /// <see cref="ItemBackColor"/>), <c>BackgroundImage</c>, the typing of the first letters of an item (it looks at the text of the item - its
+    /// <c>ToString()</c> or <c>DisplayMember</c> - not at <see cref="DisplayTextProvider"/>), <c>UseTabStops</c> and
+    /// <c>CustomTabOffsets</c> (the text is
     /// one line of drawn text), <c>HorizontalScrollbar</c> and <c>HorizontalExtent</c> (a long text wraps and ends in an
     /// ellipsis instead of running out of the list) and <c>RightToLeft</c> (not supported in the library).
     /// <see cref="DisplayTextProvider"/> (a function) comes before <c>DisplayMember</c>.
@@ -45,6 +47,8 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public partial class ListBox : System.Windows.Forms.ListBox
     {
+        // The measures at 96 dpi: they are scaled with the screen (see Px).
+        private const int BaseItemHeight = 35;
         private const int DragHandleWidth = 30;
         private const int DragHandleHitAreaPadding = 5;
         private const int ItemIconSize = 22;
@@ -62,18 +66,20 @@ namespace ErikwnkWFUI.Controls
             Trimming = StringTrimming.EllipsisCharacter
         };
 
-        private Color _itemBackColor = UIColors.BackgroundMedium;
-        private Color _alternateItemBackColor;
-        private Color _itemForeColor = UIColors.TextPrimary;
+        // The colors that follow the theme until they are set (see ThemeWatcher).
+        private readonly ThemeColor _itemBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
+        private readonly ThemeColor _itemForeColor = new ThemeColor(() => UIColors.TextPrimary);
+        private readonly ThemeColor _disabledBackColor = new ThemeColor(() => UIColors.BackgroundDarkElevated);
+        private bool _backColorWasSet;
         private readonly ThemeColor _selectedBackColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _selectedForeColor;
         private Color? _hoverBackColor;
         private Color? _dragHandleColor;
         private readonly ThemeColor _dragIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
         private Color? _disabledForeColor;
-        private Color _disabledBackColor = UIColors.BackgroundDarkElevated;
 
-        private int _itemHeight = 35;
+        private int _itemHeight = BaseItemHeight;
+        private bool _itemHeightWasSet;
         private int _hoverIndex = -1;
 
         private bool _allowReorder = true;
@@ -195,6 +201,7 @@ namespace ErikwnkWFUI.Controls
                 // ClientSize.Height by this during a drag, which a zero
                 // height would turn into a DivideByZeroException the
                 // moment a user actually dragged an item to reorder it.
+                _itemHeightWasSet = true;
                 _itemHeight = Math.Max(1, value);
                 base.ItemHeight = _itemHeight;
                 Invalidate();
@@ -237,10 +244,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color for an item where <see cref="IsItemDisabled"/> returns true. (The selected item of a list that is disabled as a whole shows the selection color dimmed.)</summary>
         public Color DisabledBackColor
         {
-            get => _disabledBackColor;
+            get => _disabledBackColor.Value;
             set
             {
-                _disabledBackColor = value;
+                _disabledBackColor.Set(value);
                 Invalidate();
             }
         }
@@ -270,7 +277,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color SelectedForeColor
         {
-            get => _selectedForeColor ?? _itemForeColor;
+            get => _selectedForeColor ?? _itemForeColor.Value;
             set
             {
                 _selectedForeColor = value.IsEmpty ? (Color?)null : value;
@@ -281,11 +288,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color of a normal (not selected/hovered/disabled) item. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color ItemBackColor
         {
-            get => _itemBackColor;
+            get => _itemBackColor.Value;
             set
             {
-                _itemBackColor = value;
-                _alternateItemBackColor = UIColors.Darken(_itemBackColor, 5);
+                _itemBackColor.Set(value);
                 Invalidate();
             }
         }
@@ -293,10 +299,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Text color of a normal (not selected/disabled) item. The same as <see cref="ForeColor"/>.</summary>
         public Color ItemForeColor
         {
-            get => _itemForeColor;
+            get => _itemForeColor.Value;
             set
             {
-                _itemForeColor = value;
+                _itemForeColor.Set(value);
                 base.ForeColor = value;
                 Invalidate();
             }
@@ -311,7 +317,7 @@ namespace ErikwnkWFUI.Controls
                 base.ForeColor = value;
 
                 if (!value.IsEmpty)
-                    _itemForeColor = value;
+                    _itemForeColor.Set(value);
 
                 Invalidate();
             }
@@ -325,7 +331,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public Color HoverBackColor
         {
-            get => _hoverBackColor ?? GetHoverBackColor(_itemBackColor);
+            get => _hoverBackColor ?? GetHoverBackColor(ItemBackColor);
             set
             {
                 _hoverBackColor = value.IsEmpty ? (Color?)null : value;
@@ -351,12 +357,12 @@ namespace ErikwnkWFUI.Controls
 
         public ListBox()
         {
-            _alternateItemBackColor = UIColors.Darken(_itemBackColor, 5);
+            ThemeWatcher.Attach(this, OnThemeChanged);
 
             DrawMode = DrawMode.OwnerDrawFixed;
             base.ItemHeight = _itemHeight;
-            BackColor = UIColors.BackgroundDark;
-            ForeColor = _itemForeColor;
+            base.BackColor = UIColors.BackgroundDark;
+            base.ForeColor = ItemForeColor;
             BorderStyle = BorderStyle.None;
             Font = UIFonts.Normal;
             IntegralHeight = false;
@@ -388,6 +394,46 @@ namespace ErikwnkWFUI.Controls
             UpdateStyles();
         }
 
+        /// <summary>The color behind and below the items (the items have <see cref="ItemBackColor"/>); follows the theme until it is set.</summary>
+        public override Color BackColor
+        {
+            get => base.BackColor;
+            set
+            {
+                _backColorWasSet = !value.IsEmpty;
+                base.BackColor = value;
+            }
+        }
+
+        // The look of a color set (what UIStyles.ListBoxes.CreateStandard(colors) and CreatePrimary make): the selection and
+        // the drop line take its hover color - read again each time, so the primary set follows the accent.
+        internal void FollowColors(Func<UIColorSet> colors)
+        {
+            _selectedBackColor.SetDefault(() => colors().Hover);
+            _dragIndicatorColor.SetDefault(() => colors().Hover);
+            Invalidate();
+        }
+
+        // The theme or the accent changed while the list is shown: what was not set by hand follows, the system's own
+        // parts (the scroll bars) are asked again, and the list is painted anew.
+        private void OnThemeChanged()
+        {
+            if (!_backColorWasSet)
+                base.BackColor = UIColors.BackgroundDark;
+
+            if (!_itemForeColor.IsSet)
+                base.ForeColor = _itemForeColor.Value;
+
+            if (IsHandleCreated)
+            {
+                NativeControlTheme.ApplyToScrollBars(Handle);
+                // The frame (where the scroll bars are) is measured and painted again.
+                ErikwnkWFUI.Native.NativeMethods.SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0004 | 0x0010 | 0x0020);
+            }
+
+            Invalidate();
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -395,7 +441,38 @@ namespace ErikwnkWFUI.Controls
             // The scroll bars are the system's own: dark ones on the dark theme (applied with every new window,
             // the way the list view and the combo box do it).
             NativeControlTheme.ApplyToScrollBars(Handle);
+
+            ApplyDefaultItemHeight();
         }
+
+        // On a screen with more dots per inch the rows are higher: the default height of an item is 35 pixels at 96 dpi.
+        // A height that was set stays as it was set.
+        protected override void OnDpiChangedAfterParent(EventArgs e)
+        {
+            base.OnDpiChangedAfterParent(e);
+            ApplyDefaultItemHeight();
+        }
+
+        private void ApplyDefaultItemHeight()
+        {
+            if (_itemHeightWasSet)
+                return;
+
+            _itemHeight = Px(BaseItemHeight);
+            base.ItemHeight = _itemHeight;
+            Invalidate();
+        }
+
+        // A measure of 96 dpi in the pixels of this screen.
+        private int Px(int value96)
+        {
+            int dpi = DpiOverride > 0 ? DpiOverride : DeviceDpi;
+
+            return (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
+        }
+
+        // A seam for the tests: pretends another screen (0 is the real one).
+        internal int DpiOverride;
 
         protected override void OnMouseMove(MouseEventArgs e)
         {

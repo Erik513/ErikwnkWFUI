@@ -170,6 +170,17 @@ namespace ErikwnkWFUI
             {
                 UIColors.ApplyTheme(theme);
             }
+
+            /// <summary>
+            /// Raised after the theme or the accent has changed. The controls of the library follow it by
+            /// themselves (a color set on a control by hand stays), so an application only needs this for what it
+            /// draws or colors itself.
+            /// </summary>
+            public static event EventHandler ThemeChanged
+            {
+                add { UIColors.ThemeChanged += value; }
+                remove { UIColors.ThemeChanged -= value; }
+            }
         }
     }
 }

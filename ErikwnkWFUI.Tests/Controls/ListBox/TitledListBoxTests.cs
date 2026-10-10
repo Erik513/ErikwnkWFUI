@@ -332,4 +332,49 @@ public class TitledListBoxTests : IDisposable
         Assert.Same(control, changed);
         Assert.Same(control, reordered);
     }
+
+    [Fact]
+    public void MoreEventsOfTheList_ReachTheControl_WithTheControlAsSender_AndTheFormatIsPassedOn()
+    {
+        WfuiTitledListBox control = ShownTitled();
+        Dictionary<string, object?> senders = new Dictionary<string, object?>();
+        control.SelectedValueChanged += (s, e) => senders["value"] = s;
+        control.DisplayMemberChanged += (s, e) => senders["display"] = s;
+        control.ValueMemberChanged += (s, e) => senders["valuemember"] = s;
+        control.DataSourceChanged += (s, e) => senders["source"] = s;
+        control.DrawItem += (s, e) => senders["draw"] = s;
+
+        control.DisplayMember = "Length";
+        control.ValueMember = "Length";
+        control.SelectedIndex = 1;
+        control.InnerListBox.Invalidate();
+        control.Update();
+        Application.DoEvents();
+
+        Assert.Same(control, senders["display"]);
+        Assert.Same(control, senders["valuemember"]);
+        Assert.Same(control, senders["value"]);
+        Assert.Same(control, senders["draw"]);
+
+        control.FormattingEnabled = true;
+        control.FormatString = "000";
+        Assert.Equal("000", control.InnerListBox.FormatString);
+        Assert.True(control.InnerListBox.FormattingEnabled);
+    }
+
+    [Fact]
+    public void TheTitleBar_GrowsWithTheScreen_AndAHeightThatWasSetStaysAsSet()
+    {
+        using WfuiTitledListBox control = new WfuiTitledListBox(null, false, false, "Title");
+        Assert.Equal(30, control.HeaderHeight);
+
+        control.DpiOverride = 144;
+        control.InvokePrivate("OnDpiChangedAfterParent", EventArgs.Empty);
+        Assert.Equal(45, control.HeaderHeight);
+
+        control.HeaderHeight = 50;
+        control.DpiOverride = 192;
+        control.InvokePrivate("OnDpiChangedAfterParent", EventArgs.Empty);
+        Assert.Equal(50, control.HeaderHeight);
+    }
 }

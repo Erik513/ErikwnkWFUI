@@ -70,7 +70,7 @@ public class SymbolsTests
         foreach ((string name, string glyph) in symbols)
         {
             Assert.False(string.IsNullOrWhiteSpace(glyph), name + " is empty");
-            Assert.True(glyph.Length <= 2, name + " is more than one character");
+            Assert.True(glyph.Length <= (IsEmojiSymbol(glyph) ? 3 : 2), name + " is more than one character");
         }
 
         var duplicates = symbols.GroupBy(s => s.Glyph).Where(g => g.Count() > 1).Select(g => string.Join("=", g.Select(s => s.Name)));
@@ -135,9 +135,11 @@ public class SymbolsTests
             bool isIconFontSymbol = glyph[0] >= '' && glyph[0] <= '';
             string font = UIStyles.Symbols.GetFontName(glyph);
 
-            bool isRight = isIconFontSymbol
-                ? font == "Segoe MDL2 Assets" || font == "Segoe Fluent Icons" || (font == usual && !IsInstalled("Segoe MDL2 Assets"))
-                : font == usual;
+            bool isRight = IsEmojiSymbol(glyph)
+                ? font == "Segoe UI Emoji" || (font == usual && !IsInstalled("Segoe UI Emoji"))
+                : isIconFontSymbol
+                    ? font == "Segoe MDL2 Assets" || font == "Segoe Fluent Icons" || (font == usual && !IsInstalled("Segoe MDL2 Assets"))
+                    : font == usual;
 
             if (!isRight)
                 wrong.Add(name + " -> " + font);
@@ -238,21 +240,32 @@ public class SymbolsTests
     public void EverySymbol_IsOneCharacterOrOneValidPair_WithoutInvisibleExtras()
     {
         // A variation selector (U+FE0F asks for the colored emoji) or a joiner would
-        // change how the symbol looks or glue symbols together.
+        // change how the symbol looks or glue symbols together. The one exception is the
+        // emoji selector at the very end of a symbol that is meant to be drawn in the
+        // emoji font (UIStyles.Symbols.Document: the same page as File, in the other font):
+        // there it is the mark that says so.
         List<string> problems = new List<string>();
 
         foreach ((string name, string glyph) in AllSymbols())
         {
-            if (glyph.Length == 2 && !(char.IsHighSurrogate(glyph[0]) && char.IsLowSurrogate(glyph[1])))
+            string visible = IsEmojiSymbol(glyph) ? glyph.Substring(0, glyph.Length - 1) : glyph;
+
+            if (visible.Length == 2 && !(char.IsHighSurrogate(visible[0]) && char.IsLowSurrogate(visible[1])))
                 problems.Add(name + " is two characters that are not one emoji");
 
-            foreach (char c in glyph)
+            foreach (char c in visible)
             {
-                if ((c >= '\uFE00' && c <= '\uFE0F') || c == '\u200D' || c == '\u200B' || char.IsWhiteSpace(c))
+                if ((c >= '︀' && c <= '️') || c == '‍' || c == '​' || char.IsWhiteSpace(c))
                     problems.Add(name + " contains an invisible character U+" + ((int)c).ToString("X4"));
             }
+
+            if (IsEmojiSymbol(glyph) && IsInstalled("Segoe UI Emoji") && UIStyles.Symbols.GetFontName(glyph) != "Segoe UI Emoji")
+                problems.Add(name + " ends with the emoji selector but is not drawn in the emoji font");
         }
 
         Assert.True(problems.Count == 0, string.Join("; ", problems));
     }
+
+    // A symbol that ends with the emoji selector (U+FE0F) is drawn in the emoji font.
+    private static bool IsEmojiSymbol(string glyph) => glyph.Length > 1 && glyph[glyph.Length - 1] == '️';
 }

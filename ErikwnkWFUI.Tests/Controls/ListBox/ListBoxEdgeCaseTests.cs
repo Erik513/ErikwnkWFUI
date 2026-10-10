@@ -520,4 +520,67 @@ public class ListBoxEdgeCaseTests : IDisposable
 
         Assert.Equal(partlyVisible, listBox.SelectedIndex);
     }
+
+    // ---- a screen with more dots per inch ----
+
+    [Fact]
+    public void TheMeasures_GrowWithTheScreen_AndAHeightThatWasSetStaysAsSet()
+    {
+        using WfuiListBox listBox = new WfuiListBox { DpiOverride = 144 };
+
+        Assert.Equal(53, listBox.InvokePrivate<int>("Px", 35));
+        Assert.Equal(45, listBox.InvokePrivate<int>("Px", 30));
+
+        // The default height of an item is a measure of 96 dpi: it follows the screen ...
+        listBox.InvokePrivate("ApplyDefaultItemHeight");
+        Assert.Equal(53, listBox.ItemHeight);
+
+        // ... a height that was set does not.
+        using WfuiListBox set = new WfuiListBox { DpiOverride = 144, ItemHeight = 40 };
+        set.InvokePrivate("ApplyDefaultItemHeight");
+        Assert.Equal(40, set.ItemHeight);
+
+        // The handle is wider on that screen, and so is the room it is found in.
+        Rectangle row = new Rectangle(0, 0, 300, 53);
+        Rectangle handle = listBox.InvokePrivate<Rectangle>("GetDragHandleRectangle", row);
+        using WfuiListBox normal = new WfuiListBox();
+        Rectangle normalHandle = normal.InvokePrivate<Rectangle>("GetDragHandleRectangle", new Rectangle(0, 0, 300, 35));
+        Assert.True(handle.Width > normalHandle.Width);
+        Assert.InRange(handle.Width, normalHandle.Width * 3 / 2 - 2, normalHandle.Width * 3 / 2 + 2);
+    }
+
+    // ---- the focus in a multiple selection ----
+
+    [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+    private static extern IntPtr SendMessageUiState(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [Fact]
+    public void InAMultipleSelection_TheItemWithTheFocus_ShowsItEvenWhenItIsNotSelected()
+    {
+        WfuiListBox listBox = Shown(items: 3, mode: SelectionMode.MultiExtended);
+        listBox.Focus();
+        SendMessageUiState(listBox.Handle, 0x0127, (IntPtr)(2 | (1 << 16)), IntPtr.Zero); // WM_CHANGEUISTATE: show the focus cues
+        listBox.SetSelected(2, true);
+        listBox.SetSelected(2, false);
+        Application.DoEvents();
+
+        Assert.True(listBox.Focused);
+
+        using Bitmap withFocus = new Bitmap(listBox.Width, listBox.Height);
+        listBox.DrawToBitmap(withFocus, new Rectangle(0, 0, listBox.Width, listBox.Height));
+
+        // The focus item is the last one set (the third row, y 60 to 89): its first line has a line of the focus
+        // rectangle, the row above has none.
+        bool lineInFocusRow = false;
+        bool lineInOtherRow = false;
+
+        for (int x = 20; x < 150; x++)
+        {
+            lineInFocusRow |= withFocus.GetPixel(x, 2 * ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, 2 * ItemHeight + 4).ToArgb();
+            lineInOtherRow |= withFocus.GetPixel(x, ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, ItemHeight + 4).ToArgb();
+        }
+
+        Assert.True(lineInFocusRow, "no focus rectangle on the item with the focus");
+        Assert.False(lineInOtherRow, "a focus rectangle on an item without the focus");
+    }
 }

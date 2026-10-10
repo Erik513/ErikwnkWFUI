@@ -96,12 +96,13 @@ namespace ErikwnkWFUI.Controls
                 Items.Insert(toIndex, item);
 
                 SelectIndex(toIndex);
-                ItemsReordered?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
                 EndUpdate();
             }
+
+            ItemsReordered?.Invoke(this, EventArgs.Empty);
         }
 
         private bool TryPrepareDrag(int index, Rectangle itemRect, Point location)
@@ -236,13 +237,13 @@ namespace ErikwnkWFUI.Controls
                 SelectIndex(targetPosition);
 
                 EnsureItemVisible(targetPosition);
-
-                ItemsReordered?.Invoke(this, EventArgs.Empty);
             }
             finally
             {
                 EndUpdate();
             }
+
+            ItemsReordered?.Invoke(this, EventArgs.Empty);
         }
 
         private void EnsureItemVisible(int index)
@@ -277,12 +278,12 @@ namespace ErikwnkWFUI.Controls
         // (The rectangle of an item already stops where the scroll bar starts, so the handle needs no room for it.)
         private Rectangle GetDragHandleRectangle(Rectangle itemRect)
         {
-            int x = itemRect.Right - DragHandleWidth;
+            int x = itemRect.Right - Px(DragHandleWidth);
 
             return new Rectangle(
-                x - DragHandleHitAreaPadding,
+                x - Px(DragHandleHitAreaPadding),
                 itemRect.Y,
-                DragHandleWidth + DragHandleHitAreaPadding * 2,
+                Px(DragHandleWidth) + Px(DragHandleHitAreaPadding) * 2,
                 itemRect.Height);
         }
 

@@ -37,6 +37,11 @@ namespace ErikwnkWFUI.Controls
 
             DrawItemContent(e.Graphics, rect, item, e.Index, textColor, dragRect);
 
+            // In a multiple selection the item that has the focus can be one that is not selected: the keyboard
+            // needs to see where it is (a single selection shows it by the selection itself).
+            if (SelectionMode != SelectionMode.One && Focused && ShowFocusCues && (e.State & DrawItemState.Focus) != 0)
+                ControlPaint.DrawFocusRectangle(e.Graphics, Rectangle.Inflate(rect, -1, -1), textColor, backColor);
+
             if (_isDragging && _dragInsertPosition != -1)
             {
                 if (_dragInsertPosition == e.Index)
@@ -68,8 +73,8 @@ namespace ErikwnkWFUI.Controls
             Color textColor,
             Rectangle dragRect)
         {
-            int textLeft = rect.X + 8;
-            int textRightMargin = 12;
+            int textLeft = rect.X + Px(8);
+            int textRightMargin = Px(12);
             int reservedDragWidth = CanReorder ? dragRect.Width : 0;
 
             if (_showEnumeration)
@@ -101,7 +106,7 @@ namespace ErikwnkWFUI.Controls
             Rectangle numberRect = new Rectangle(
                 textLeft,
                 rect.Y,
-                (int)Math.Ceiling(numberSize.Width) + 4,
+                (int)Math.Ceiling(numberSize.Width) + Px(4),
                 rect.Height);
 
             using (SolidBrush brush = new SolidBrush(textColor))
@@ -109,20 +114,20 @@ namespace ErikwnkWFUI.Controls
                 graphics.DrawString(numberText, Font, brush, numberRect, CenterLeftFormat);
             }
 
-            return textLeft + numberRect.Width + 4;
+            return textLeft + numberRect.Width + Px(4);
         }
 
         private int DrawIcon(Graphics graphics, Rectangle rect, Image icon, int textLeft)
         {
             Rectangle iconRect = new Rectangle(
                 textLeft,
-                rect.Y + (rect.Height - ItemIconSize) / 2,
-                ItemIconSize,
-                ItemIconSize);
+                rect.Y + (rect.Height - Px(ItemIconSize)) / 2,
+                Px(ItemIconSize),
+                Px(ItemIconSize));
 
             graphics.DrawImage(icon, iconRect);
 
-            return textLeft + ItemIconSize + ItemIconMargin;
+            return textLeft + Px(ItemIconSize) + Px(ItemIconMargin);
         }
 
         private void DrawText(Graphics graphics, Rectangle textRect, string text, Color textColor)
@@ -145,26 +150,26 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawDragHandle(Graphics graphics, Rectangle dragRect, Color color)
         {
-            using (Pen pen = new Pen(color, 1.5f))
+            using (Pen pen = new Pen(color, Px(3) / 2f))
             {
                 int centerY = dragRect.Y + dragRect.Height / 2;
                 int centerX = dragRect.X + dragRect.Width / 2;
-                int startX = centerX - 6;
+                int startX = centerX - Px(6);
 
-                int lineHeight = 3;
-                int spacing = 1;
+                int lineHeight = Px(3);
+                int spacing = Px(1);
 
                 for (int i = 0; i < 3; i++)
                 {
                     int y = centerY - lineHeight - spacing + i * (lineHeight + spacing);
-                    graphics.DrawLine(pen, startX, y, startX + 12, y);
+                    graphics.DrawLine(pen, startX, y, startX + Px(12), y);
                 }
             }
         }
 
         private void DrawIndicatorLine(Graphics graphics, int y)
         {
-            using (Pen pen = new Pen(DragIndicatorColor, 3))
+            using (Pen pen = new Pen(DragIndicatorColor, Px(3)))
             {
                 // ClientSize, not Width - Width is this control's FULL
                 // outer bounds, which includes a native vertical
@@ -200,14 +205,14 @@ namespace ErikwnkWFUI.Controls
                 return _hoverBackColor ?? GetHoverBackColor(GetRowBackColor(index));
 
             if (isDisabled && Enabled)
-                return _disabledBackColor;
+                return DisabledBackColor;
 
             return GetRowBackColor(index);
         }
 
         private Color GetHoverBackColor(Color row)
         {
-            return UIColors.BlendToward(row, _itemForeColor, 0.08);
+            return UIColors.BlendToward(row, ItemForeColor, 0.08);
         }
 
         // The row with the selection tint over it (what the eye sees: the one fill the item is painted with).
@@ -227,13 +232,13 @@ namespace ErikwnkWFUI.Controls
         private Color GetRowBackColor(int index)
         {
             return index % 2 == 0
-                ? _itemBackColor
-                : _alternateItemBackColor;
+                ? ItemBackColor
+                : UIColors.Darken(ItemBackColor, 5);
         }
 
         private Color GetTextColor(bool isSelected, bool isDisabled)
         {
-            return GetTextColorOn(isSelected, isDisabled, isSelected ? GetSelectedBackColor(0) : _itemBackColor);
+            return GetTextColorOn(isSelected, isDisabled, isSelected ? GetSelectedBackColor(0) : ItemBackColor);
         }
 
         // The text on a background of the given color. A disabled one that was not given a color of its own is
@@ -251,7 +256,7 @@ namespace ErikwnkWFUI.Controls
             if (isDisabled)
                 return _disabledForeColor ?? UIColors.GetDisabledText(backColor);
 
-            return _itemForeColor;
+            return ItemForeColor;
         }
     }
 }

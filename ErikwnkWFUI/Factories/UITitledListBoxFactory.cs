@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 
@@ -21,9 +22,7 @@ namespace ErikwnkWFUI.Factories
                 headerTitle,
                 headerTextAlign);
 
-            UIListBoxFactory.ApplyColors(control.InnerListBox, colors);
-
-            return control;
+            return Finish(control, colors == null ? (Func<UIColorSet>)null : () => colors);
         }
 
         // The Standard one with the accent: the selection and the drop line in the primary color set.
@@ -34,7 +33,21 @@ namespace ErikwnkWFUI.Factories
             bool showEnumeration = false,
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
         {
-            return CreateStandard(headerTitle, displayMember, allowReorder, showEnumeration, headerTextAlign, UIColors.PrimarySet);
+            TitledListBox control = new TitledListBox(
+                displayMember,
+                allowReorder,
+                showEnumeration,
+                headerTitle,
+                headerTextAlign);
+
+            return Finish(control, () => UIColors.PrimarySet);
+        }
+
+        private static TitledListBox Finish(TitledListBox control, Func<UIColorSet> colors)
+        {
+            UIListBoxFactory.ApplyColors(control.InnerListBox, colors);
+
+            return control;
         }
     }
 }
