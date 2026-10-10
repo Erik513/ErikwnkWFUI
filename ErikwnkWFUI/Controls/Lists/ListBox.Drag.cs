@@ -104,12 +104,11 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private bool TryPrepareDrag(int index, Point location)
+        private bool TryPrepareDrag(int index, Rectangle itemRect, Point location)
         {
             if (!CanReorder || index == -1)
                 return false;
 
-            Rectangle itemRect = GetItemRectangle(index);
             Rectangle dragRect = GetDragHandleRectangle(itemRect);
 
             if (!dragRect.Contains(location))

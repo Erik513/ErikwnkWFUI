@@ -84,6 +84,13 @@ namespace ErikwnkWFUI.Controls
         private int _dragInsertPosition = -1;
         private int _pendingToggleDeselectIndex = -1;
 
+        // The item that was pressed, as it stood BEFORE the native list handled the press (it selects the item
+        // and, where only a part of it shows, scrolls it into view - after that the same point can lie on another
+        // item or on the room below the items).
+        private bool _pressedKnown;
+        private int _pressedIndex = -1;
+        private Rectangle _pressedRectangle;
+
         private Func<object, string> _displayTextProvider;
         private Func<object, Image> _iconProvider;
         private Func<object, bool> _isItemDisabled;
@@ -441,6 +448,14 @@ namespace ErikwnkWFUI.Controls
 
         private void CapturePendingToggleDeselect(IntPtr lParam)
         {
+            int x = unchecked((short)(long)lParam);
+            int y = unchecked((short)((long)lParam >> 16));
+            int index = IndexFromPoint(new Point(x, y));
+
+            _pressedKnown = true;
+            _pressedIndex = index;
+            _pressedRectangle = index != -1 ? GetItemRectangle(index) : Rectangle.Empty;
+
             // Only a list of one selected item toggles: in a multiple selection a click on a selected item means
             // something else (keep, extend, take out one), and the native list does that itself.
             if (SelectionMode != SelectionMode.One)
@@ -449,18 +464,18 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            int x = unchecked((short)(long)lParam);
-            int y = unchecked((short)((long)lParam >> 16));
-            int index = IndexFromPoint(new Point(x, y));
-
             _pendingToggleDeselectIndex = index != -1 && index == SelectedIndex ? index : -1;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            int index = IndexFromPoint(e.Location);
+            // What was under the mouse when it was pressed - not what is there now: the native list may have scrolled
+            // the pressed item into view meanwhile.
+            int index = _pressedKnown ? _pressedIndex : IndexFromPoint(e.Location);
+            Rectangle itemRectangle = _pressedKnown ? _pressedRectangle : (index != -1 ? GetItemRectangle(index) : Rectangle.Empty);
+            _pressedKnown = false;
 
-            if (e.Button == MouseButtons.Left && TryPrepareDrag(index, e.Location))
+            if (e.Button == MouseButtons.Left && TryPrepareDrag(index, itemRectangle, e.Location))
             {
                 base.OnMouseDown(e);
                 return;

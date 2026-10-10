@@ -499,4 +499,25 @@ public class ListBoxEdgeCaseTests : IDisposable
             listBox.InvokePrivate<Color>("GetBackColor", 1, false, false, false),
             listBox.InvokePrivate<Color>("GetBackColor", 1, true, false, false));
     }
+
+    // ---- a click on a row that is only partly visible at the bottom ----
+
+    [Theory]
+    [InlineData(7)]
+    [InlineData(20)]
+    public void AClickOnTheRowThatIsPartlyVisibleAtTheBottom_SelectsIt_WhateverTheListDoesToShowIt(int items)
+    {
+        WfuiListBox listBox = Shown(items: items);
+        // 200 pixels high, 30 per row: the seventh row (index 6) shows its upper part only.
+        int partlyVisible = 6;
+        int y = 6 * ItemHeight + 5;
+
+        Assert.Equal(partlyVisible, listBox.IndexFromPoint(new Point(40, y)));
+
+        IntPtr at = (IntPtr)(40 | (y << 16));
+        SendMessage(listBox.Handle, WM_LBUTTONDOWN, (IntPtr)1, at);
+        SendMessage(listBox.Handle, WM_LBUTTONUP, IntPtr.Zero, at);
+
+        Assert.Equal(partlyVisible, listBox.SelectedIndex);
+    }
 }
