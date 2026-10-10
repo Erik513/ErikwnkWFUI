@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
@@ -81,6 +82,9 @@ namespace ErikwnkWFUI.Controls
                 ControlStyles.AllPaintingInWmPaint |
                 ControlStyles.UserPaint,
                 true);
+
+            // Everything is read while painting: a change of the theme only needs a repaint.
+            ThemeWatcher.Attach(this, Invalidate);
         }
 
         private bool _isHot;
@@ -95,17 +99,28 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colors; }
+            get { return _colorsSource?.Invoke() ?? _colors; }
             set
             {
                 _colors = value;
+                _colorsSource = null;
                 Invalidate();
             }
         }
 
+        // A set that is asked for again each time (the primary set, which follows the accent).
+        private Func<UIColorSet> _colorsSource;
+
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+            Invalidate();
+        }
+
         private UIColorSet GetColors()
         {
-            return _colors ?? UIStyles.Colors.Sets.Gray;
+            return _colorsSource?.Invoke() ?? _colors ?? UIStyles.Colors.Sets.Gray;
         }
 
         protected override void OnMouseEnter(System.EventArgs e)

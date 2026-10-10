@@ -18,12 +18,13 @@ namespace ErikwnkWFUI.Factories
                 Maximum = maximum,
                 Increment = increment,
                 Value = Math.Min(maximum, Math.Max(minimum, value)),
-                BackColor = Colors.BackgroundLight,
-                ForeColor = Colors.TextPrimary,
                 Font = Fonts.Normal,
                 BorderStyle = BorderStyle.None,
                 TextAlign = HorizontalAlignment.Center
             };
+
+            Controls.ThemeWatcher.FollowBackColor(numericUpDown, () => Colors.BackgroundLight);
+            Controls.ThemeWatcher.FollowForeColor(numericUpDown, () => Colors.TextPrimary);
 
             return numericUpDown;
         }

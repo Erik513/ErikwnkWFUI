@@ -1,4 +1,5 @@
-﻿using ErikwnkWFUI.Controls;
+﻿using System;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -8,14 +9,24 @@ namespace ErikwnkWFUI.Factories
         // The editable variant: right-click a tab to add, rename or close tabs.
         public static TabControl CreateStandard(UIColorSet colors = null)
         {
+            return Standard(colors == null ? (Func<UIColorSet>)null : () => colors);
+        }
+
+        // The display-only variant: tabs can be switched, not edited.
+        public static ReadOnlyTabControl CreateReadOnlyStandard(UIColorSet colors = null)
+        {
+            return ReadOnlyStandard(colors == null ? (Func<UIColorSet>)null : () => colors);
+        }
+
+        private static TabControl Standard(Func<UIColorSet> colors)
+        {
             TabControl tabs = new TabControl();
             ApplyColors(tabs, colors);
 
             return tabs;
         }
 
-        // The display-only variant: tabs can be switched, not edited.
-        public static ReadOnlyTabControl CreateReadOnlyStandard(UIColorSet colors = null)
+        private static ReadOnlyTabControl ReadOnlyStandard(Func<UIColorSet> colors)
         {
             ReadOnlyTabControl tabs = new ReadOnlyTabControl();
             ApplyColors(tabs, colors);
@@ -27,29 +38,30 @@ namespace ErikwnkWFUI.Factories
         // "accent": the bar under the selected tab (the set's pressed shade - a thin
         // line needs more contrast than a filled selection does) and the selection of
         // the right-click menu (the set's own color). The tab fills and the text stay
-        // those of the theme.
-        private static void ApplyColors(ReadOnlyTabControl tabs, UIColorSet colors)
+        // those of the theme. The set is asked for again whenever the theme or the
+        // accent changes (the primary set follows the accent).
+        private static void ApplyColors(ReadOnlyTabControl tabs, Func<UIColorSet> colors)
         {
             if (colors == null)
                 return;
 
-            tabs.SelectedTabIndicatorColor = colors.Pressed;
+            tabs.FollowColors(colors);
 
             TabControl editable = tabs as TabControl;
 
             if (editable != null)
-                editable.ContextMenuSelectionColor = colors.Hover;
+                editable.FollowContextMenuColors(colors);
         }
 
         // The Standard ones in the current accent - the primary color set.
         public static TabControl CreatePrimary()
         {
-            return CreateStandard(UIColors.PrimarySet);
+            return Standard(() => UIColors.PrimarySet);
         }
 
         public static ReadOnlyTabControl CreateReadOnlyPrimary()
         {
-            return CreateReadOnlyStandard(UIColors.PrimarySet);
+            return ReadOnlyStandard(() => UIColors.PrimarySet);
         }
     }
 }

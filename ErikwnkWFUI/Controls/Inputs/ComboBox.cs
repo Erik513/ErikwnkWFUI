@@ -60,6 +60,9 @@ namespace ErikwnkWFUI.Controls
 
         public ComboBox()
         {
+            // The colors are read while painting: a change of the theme needs a repaint (the box colors the factory
+            // gave follow, see UIComboBoxFactory).
+            ThemeWatcher.Attach(this, Invalidate);
             // The list of a dark theme gets the system's dark style, which also gives it dark scroll bars (the plain,
             // unthemed list has light ones).
             NativeControlTheme.Track(this, GetListHandle, handle =>
@@ -88,12 +91,28 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colors; }
+            get { return ResolvedColors; }
             set
             {
                 _colors = value;
+                _colorsSource = null;
                 Invalidate();
             }
+        }
+
+        // A set that is asked for again each time (the primary set, which follows the accent).
+        private Func<UIColorSet> _colorsSource;
+
+        private UIColorSet ResolvedColors
+        {
+            get { return _colorsSource?.Invoke() ?? _colors; }
+        }
+
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+            Invalidate();
         }
 
         // The whole closed box is painted by the library only for a drop-down list; the styles
@@ -237,13 +256,13 @@ namespace ErikwnkWFUI.Controls
             // neutral gray of the other controls' selections without a set.
             Color backColor = !isSelected
                 ? UIColors.BackgroundMedium
-                : _colors != null ? UIColors.GetReadableFill(_colors.Hover, _colors.HoverText) : UIColors.BorderLight;
+                : ResolvedColors != null ? UIColors.GetReadableFill(ResolvedColors.Hover, ResolvedColors.HoverText) : UIColors.BorderLight;
 
             // A disabled box draws its text muted.
             Color textColor = !Enabled
                 ? UIColors.GetDisabledText(backColor)
                 : isSelected
-                    ? (_colors != null ? _colors.HoverText : UIColors.GetContrastingForeColor(backColor))
+                    ? (ResolvedColors != null ? ResolvedColors.HoverText : UIColors.GetContrastingForeColor(backColor))
                     : UIColors.TextPrimary;
 
             using (SolidBrush backBrush = new SolidBrush(backColor))
@@ -352,7 +371,7 @@ namespace ErikwnkWFUI.Controls
 
         private UIColorSet GetColors()
         {
-            return _colors ?? UIStyles.Colors.Sets.Gray;
+            return ResolvedColors ?? UIStyles.Colors.Sets.Gray;
         }
 
         private int Scale(int value96)

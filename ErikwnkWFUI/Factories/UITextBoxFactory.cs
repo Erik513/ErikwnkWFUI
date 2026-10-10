@@ -12,11 +12,11 @@ namespace ErikwnkWFUI.Factories
             TextBox textBox = new TextBox
             {
                 Text = text ?? "",
-                BackColor = UIColors.BackgroundMedium,
-                ForeColor = UIColors.TextPrimary,
                 BorderStyle = BorderStyle.FixedSingle,
                 Font = UIFonts.Normal
             };
+
+            Follow(textBox, () => UIColors.BackgroundMedium);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
                 SetPlaceholder(textBox, placeholder);
@@ -31,16 +31,40 @@ namespace ErikwnkWFUI.Factories
             TextBox textBox = new TextBox
             {
                 Text = text ?? "",
-                BackColor = UIColors.BackgroundLight,
-                ForeColor = UIColors.TextPrimary,
                 BorderStyle = BorderStyle.None,
                 Font = UIFonts.Normal
             };
+
+            Follow(textBox, () => UIColors.BackgroundLight);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
                 SetPlaceholder(textBox, placeholder);
 
             return textBox;
+        }
+
+        // The fill and the text follow the theme as long as they still are the colors the factory gave. The text is
+        // the main color, or the muted one while the placeholder is shown.
+        private static void Follow(TextBox textBox, System.Func<System.Drawing.Color> backColor)
+        {
+            System.Drawing.Color primary = UIColors.TextPrimary;
+            System.Drawing.Color muted = UIColors.TextMuted;
+            textBox.ForeColor = primary;
+
+            Controls.ThemeWatcher.FollowBackColor(textBox, backColor);
+
+            Controls.ThemeWatcher.Attach(textBox, () =>
+            {
+                System.Drawing.Color current = textBox.ForeColor;
+
+                if (current == primary)
+                    textBox.ForeColor = UIColors.TextPrimary;
+                else if (current == muted)
+                    textBox.ForeColor = UIColors.TextMuted;
+
+                primary = UIColors.TextPrimary;
+                muted = UIColors.TextMuted;
+            });
         }
 
         private static void SetPlaceholder(

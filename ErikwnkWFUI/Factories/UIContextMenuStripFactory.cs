@@ -13,7 +13,10 @@ namespace ErikwnkWFUI.Factories
         // The Standard one with the accent: the highlight in the primary color set.
         public static ContextMenuStrip CreatePrimary()
         {
-            return CreateStandard(UIColors.PrimarySet);
+            ContextMenuStrip menu = CreateStandard();
+            menu.FollowColors(() => UIColors.PrimarySet);
+
+            return menu;
         }
     }
 }

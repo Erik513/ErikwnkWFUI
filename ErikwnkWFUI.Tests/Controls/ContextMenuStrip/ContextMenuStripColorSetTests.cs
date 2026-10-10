@@ -149,7 +149,7 @@ public class ContextMenuStripColorSetTests
     }
 
     [Fact]
-    public void CreatePrimary_IsTheStandardWithThePrimarySet_OfTheAccentAtCreation()
+    public void CreatePrimary_IsTheStandardWithThePrimarySet_AndFollowsTheAccent()
     {
         Color accent = UIColors.Primary;
 
@@ -162,7 +162,7 @@ public class ContextMenuStripColorSetTests
             using WfuiContextMenuStrip purple = UIStyles.ContextMenuStrips.CreatePrimary();
 
             Assert.Equal(UIColors.GetReadableFill(UIColors.PrimarySet.Hover, UIColors.PrimarySet.HoverText), purple.SelectionBackColor);
-            Assert.NotEqual(blue.SelectionBackColor, purple.SelectionBackColor);
+            Assert.Equal(purple.SelectionBackColor, blue.SelectionBackColor); // follows the accent
         }
         finally
         {

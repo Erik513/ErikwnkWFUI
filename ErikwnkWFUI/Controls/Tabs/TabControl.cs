@@ -31,6 +31,11 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public partial class TabControl : ReadOnlyTabControl
     {
+        internal void FollowContextMenuColors(Func<UIColorSet> colors)
+        {
+            _contextMenuSelectionColor.SetDefault(() => colors().Hover);
+        }
+
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
 
         private bool _allowUserToAddTabs;

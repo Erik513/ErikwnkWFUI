@@ -43,7 +43,7 @@ public class ListViewColorContrastTests
         RunWithTheme(lightTheme, () =>
         {
             using WfuiListView listView = new WfuiListView();
-            Color alternateRowBackColor = listView.GetPrivateField<Color>("_alternateRowBackColor");
+            Color alternateRowBackColor = UIColors.Darken(listView.RowBackColor, 5);
 
             AssertMeetsContrast(listView.RowForeColor, alternateRowBackColor,
                 ColorContrastHelper.MinimumRatioNormalText, "item text on the alternating row background");

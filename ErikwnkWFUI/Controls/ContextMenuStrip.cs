@@ -34,11 +34,14 @@ namespace ErikwnkWFUI.Controls
         {
             // The highlighted item: the set's hover color (brought to where its text reads), or
             // the neutral gray without a set.
-            _selectionBackColor = new ThemeColor(() => _colors != null
-                ? UIColors.GetReadableFill(_colors.Hover, _colors.HoverText)
+            _selectionBackColor = new ThemeColor(() => ResolvedColors != null
+                ? UIColors.GetReadableFill(ResolvedColors.Hover, ResolvedColors.HoverText)
                 : UIColors.BorderLight);
 
             Renderer = new ThemedRenderer(this);
+
+            // The renderer reads every color while painting: a change of the theme only needs a repaint.
+            ThemeWatcher.Attach(this, Invalidate);
         }
 
         /// <summary>
@@ -50,8 +53,28 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colors; }
-            set { _colors = value; }
+            get { return ResolvedColors; }
+            set
+            {
+                _colors = value;
+                _colorsSource = null;
+                Invalidate();
+            }
+        }
+
+        // A set that is asked for again each time (the primary set, which follows the accent).
+        private Func<UIColorSet> _colorsSource;
+
+        private UIColorSet ResolvedColors
+        {
+            get { return _colorsSource?.Invoke() ?? _colors; }
+        }
+
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+            Invalidate();
         }
 
         /// <summary>
@@ -141,8 +164,8 @@ namespace ErikwnkWFUI.Controls
 
                 // The set's own text, on its own fill; an explicit selection color gets the best
                 // text for that color.
-                if (_menu._colors != null && !_menu._selectionBackColor.IsSet)
-                    return item.Pressed ? _menu._colors.PressedText : _menu._colors.HoverText;
+                if (_menu.ResolvedColors != null && !_menu._selectionBackColor.IsSet)
+                    return item.Pressed ? _menu.ResolvedColors.PressedText : _menu.ResolvedColors.HoverText;
 
                 return UIColors.GetContrastingForeColor(_menu.SelectionBackColor);
             }
@@ -203,8 +226,8 @@ namespace ErikwnkWFUI.Controls
             {
                 get
                 {
-                    if (_menu._colors != null && !_menu._selectionBackColor.IsSet)
-                        return UIColors.GetReadableFill(_menu._colors.Pressed, _menu._colors.PressedText);
+                    if (_menu.ResolvedColors != null && !_menu._selectionBackColor.IsSet)
+                        return UIColors.GetReadableFill(_menu.ResolvedColors.Pressed, _menu.ResolvedColors.PressedText);
 
                     return UIColors.Darken(Selection, 30);
                 }

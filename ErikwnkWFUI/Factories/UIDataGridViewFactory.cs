@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -16,7 +17,7 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource
             };
 
-            ApplyColors(grid, colors);
+            ApplyColors(grid, colors == null ? (Func<UIColorSet>)null : () => colors);
 
             return grid;
         }
@@ -28,7 +29,7 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource
             };
 
-            ApplyColors(grid, colors);
+            ApplyColors(grid, colors == null ? (Func<UIColorSet>)null : () => colors);
 
             return grid;
         }
@@ -40,26 +41,38 @@ namespace ErikwnkWFUI.Factories
         // UIListViewFactory.CreatePrimary.
         public static DataGridView CreatePrimary(object dataSource = null)
         {
-            return CreateStandard(dataSource, UIColors.PrimarySet);
+            Controls.DataGridView grid = new Controls.DataGridView
+            {
+                DataSource = dataSource
+            };
+
+            ApplyColors(grid, () => UIColors.PrimarySet);
+
+            return grid;
         }
 
         // The read-only counterpart to CreatePrimary.
         public static DataGridView CreateReadOnlyPrimary(object dataSource = null)
         {
-            return CreateReadOnlyStandard(dataSource, UIColors.PrimarySet);
+            Controls.ReadOnlyDataGridView grid = new Controls.ReadOnlyDataGridView
+            {
+                DataSource = dataSource
+            };
+
+            ApplyColors(grid, () => UIColors.PrimarySet);
+
+            return grid;
         }
 
         // The set's hover color is the color of the look (it is the accent
-        // itself for the primary set).
-        private static void ApplyColors(Controls.ReadOnlyDataGridView grid, UIColorSet colors)
+        // itself for the primary set). The set is asked for again whenever the
+        // theme or the accent changes.
+        private static void ApplyColors(Controls.ReadOnlyDataGridView grid, Func<UIColorSet> colors)
         {
             if (colors == null)
                 return;
 
-            grid.BorderColor = colors.Hover;
-            grid.SelectionBackColor = colors.Hover;
-            grid.ColumnReorderIndicatorColor = colors.Hover;
-            grid.ContextMenuSelectionColor = colors.Hover;
+            grid.FollowColors(colors);
         }
     }
 }

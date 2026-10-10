@@ -66,16 +66,17 @@ namespace ErikwnkWFUI.Controls
         private readonly Timer _rowRangeDragPollTimer;
         private readonly OutsideClickFilter _outsideClickDeselectFilter;
 
-        private Color _rowBackColor = UIColors.BackgroundMedium;
-        private Color _alternateRowBackColor;
-        private Color _rowForeColor = UIColors.TextPrimary;
+        // The colors that follow the theme until they are set (see ThemeWatcher).
+        private readonly ThemeColor _rowBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
+        private readonly ThemeColor _rowForeColor = new ThemeColor(() => UIColors.TextPrimary);
+        private bool _backColorWasSet;
         // Translucent gray so a row's own color still shows through under a
         // selection; CreatePrimary switches this to the accent. Alpha is
         // higher than UIColors.Selection's 60 - gray blends into a row's
         // own shade much more than blue does at the same opacity.
         private readonly ThemeColor _selectionOverlayColor = new ThemeColor(() => Color.FromArgb(130, UIColors.BorderLight));
-        private Color _headerBackColor = UIColors.BackgroundDarkElevated;
-        private Color _headerForeColor = UIColors.TextTertiary;
+        private readonly ThemeColor _headerBackColor = new ThemeColor(() => UIColors.BackgroundDarkElevated);
+        private readonly ThemeColor _headerForeColor = new ThemeColor(() => UIColors.TextTertiary);
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
         private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
@@ -113,6 +114,48 @@ namespace ErikwnkWFUI.Controls
         private SortOrder _sortOrder = SortOrder.None;
         private bool _suppressNextColumnClickSort;
 
+        /// <summary>The color behind and below the rows; follows the theme until it is set.</summary>
+        public override Color BackColor
+        {
+            get { return base.BackColor; }
+            set
+            {
+                _backColorWasSet = !value.IsEmpty;
+                base.BackColor = value;
+            }
+        }
+
+        // The theme or the accent changed while the list is shown: what was not set by hand follows (the scroll bars
+        // and the header's style through NativeControlTheme.Track), the list is painted anew.
+        private void OnThemeChanged()
+        {
+            if (!_backColorWasSet)
+                base.BackColor = UIColors.BackgroundDark;
+
+            if (!_rowForeColor.IsSet)
+                ForeColor = RowForeColor;
+
+            if (!_contextMenuSelectionColor.IsSet && ContextMenuStrip is ContextMenuStrip menu)
+                menu.SelectionBackColor = ContextMenuSelectionColor;
+
+            Invalidate(true);
+        }
+
+        // The look of a color set (what UIStyles.ListViews.CreateStandard(colors) and CreatePrimary make): the set's
+        // hover color is the color of the look. Asked for again whenever the theme or the accent changes.
+        internal void FollowColors(Func<UIColorSet> colors)
+        {
+            _borderColor.SetDefault(() => colors().Hover);
+            _selectionOverlayColor.SetDefault(() => UIColors.CreateSelectionOverlay(colors().Hover));
+            _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
+            _contextMenuSelectionColor.SetDefault(() => colors().Hover);
+
+            if (ContextMenuStrip is ContextMenuStrip menu)
+                menu.SelectionBackColor = ContextMenuSelectionColor;
+
+            Invalidate();
+        }
+
         /// <summary>No column can be resized narrower than this.</summary>
         public int MinimumColumnWidth
         {
@@ -126,11 +169,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color of a normal (not selected) row. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color RowBackColor
         {
-            get { return _rowBackColor; }
+            get { return _rowBackColor.Value; }
             set
             {
-                _rowBackColor = value;
-                _alternateRowBackColor = UIColors.Darken(value, 5);
+                _rowBackColor.Set(value);
                 Invalidate();
             }
         }
@@ -138,10 +180,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Text color of a normal (not selected) row.</summary>
         public Color RowForeColor
         {
-            get { return _rowForeColor; }
+            get { return _rowForeColor.Value; }
             set
             {
-                _rowForeColor = value;
+                _rowForeColor.Set(value);
                 Invalidate();
             }
         }
@@ -219,10 +261,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
         {
-            get { return _headerBackColor; }
+            get { return _headerBackColor.Value; }
             set
             {
-                _headerBackColor = value;
+                _headerBackColor.Set(value);
                 Invalidate();
             }
         }
@@ -230,10 +272,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Text color of the column header row.</summary>
         public Color HeaderForeColor
         {
-            get { return _headerForeColor; }
+            get { return _headerForeColor.Value; }
             set
             {
-                _headerForeColor = value;
+                _headerForeColor.Set(value);
                 Invalidate();
             }
         }
@@ -309,8 +351,8 @@ namespace ErikwnkWFUI.Controls
             // apartment-state gating.
             DragDropSupport.EnableDropIfSta(this);
             BorderStyle = BorderStyle.None;
-            BackColor = UIColors.BackgroundDark;
-            ForeColor = _rowForeColor;
+            base.BackColor = UIColors.BackgroundDark;
+            ForeColor = RowForeColor;
             Font = UIFonts.Normal;
             // Clickable so ColumnClick actually fires for header sorting
             // (see SortingEnabled). OwnerDraw paints every header pixel
@@ -319,7 +361,7 @@ namespace ErikwnkWFUI.Controls
             HeaderStyle = ColumnHeaderStyle.Clickable;
             OwnerDraw = true;
 
-            _alternateRowBackColor = UIColors.Darken(_rowBackColor, 5);
+            ThemeWatcher.Attach(this, OnThemeChanged);
 
             SetStyle(
                 ControlStyles.OptimizedDoubleBuffer |
@@ -733,7 +775,7 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                using (var background = new SolidBrush(_headerBackColor))
+                using (var background = new SolidBrush(HeaderBackColor))
                 {
                     graphics.FillRectangle(background, rightEdge, _headerHeight, ClientSize.Width - rightEdge, ClientSize.Height - _headerHeight);
                 }
@@ -915,7 +957,7 @@ namespace ErikwnkWFUI.Controls
         {
             _headerHeight = e.Bounds.Height;
 
-            using (var background = new SolidBrush(_headerBackColor))
+            using (var background = new SolidBrush(HeaderBackColor))
             using (var divider = new Pen(BorderColor))
             using (var font = HeaderFont)
             {
@@ -926,7 +968,7 @@ namespace ErikwnkWFUI.Controls
                     e.Header.Text,
                     font,
                     new Rectangle(e.Bounds.X + 7, e.Bounds.Y, Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height),
-                    GetEffectiveColor(_headerForeColor),
+                    GetEffectiveColor(HeaderForeColor),
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
 
@@ -941,7 +983,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.Bounds, Font, GetEffectiveColor(_headerForeColor), _sortOrder);
+            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.Bounds, Font, GetEffectiveColor(HeaderForeColor), _sortOrder);
         }
 
         protected override void OnColumnClick(ColumnClickEventArgs e)
@@ -1087,7 +1129,7 @@ namespace ErikwnkWFUI.Controls
                 ? new Rectangle(headerBounds.Left, e.Bounds.Top, headerBounds.Width, e.Bounds.Height)
                 : e.Bounds;
 
-            var baseBackColor = e.ItemIndex % 2 == 0 ? _rowBackColor : _alternateRowBackColor;
+            var baseBackColor = e.ItemIndex % 2 == 0 ? RowBackColor : UIColors.Darken(RowBackColor, 5);
             using (var background = new SolidBrush(baseBackColor))
             {
                 e.Graphics.FillRectangle(background, bounds);

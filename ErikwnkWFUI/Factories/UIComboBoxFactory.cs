@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -12,21 +13,27 @@ namespace ErikwnkWFUI.Factories
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
             UIColorSet colors = null)
         {
-            return new Controls.ComboBox
+            Controls.ComboBox comboBox = new Controls.ComboBox
             {
-                BackColor = UIColors.BackgroundMedium,
-                ForeColor = UIColors.TextPrimary,
                 Font = UIFonts.Normal,
                 DropDownStyle = comboBoxStyle,
                 Colors = colors
             };
+
+            Controls.ThemeWatcher.FollowBackColor(comboBox, () => UIColors.BackgroundMedium);
+            Controls.ThemeWatcher.FollowForeColor(comboBox, () => UIColors.TextPrimary);
+
+            return comboBox;
         }
 
         // The Standard one with the accent: the selected row in the primary color set.
         public static ComboBox CreatePrimary(
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
         {
-            return CreateStandard(comboBoxStyle, UIColors.PrimarySet);
+            Controls.ComboBox comboBox = (Controls.ComboBox)CreateStandard(comboBoxStyle);
+            comboBox.FollowColors(() => UIColors.PrimarySet);
+
+            return comboBox;
         }
 
         // Preserves selection by POSITION (same index in the new list as

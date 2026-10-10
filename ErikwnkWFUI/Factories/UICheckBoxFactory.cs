@@ -35,10 +35,10 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             bool isChecked = true)
         {
-            return CreateStandard(
-                text,
-                isChecked,
-                UIColors.PrimarySet);
+            CheckBox checkBox = CreateStandard(text, isChecked);
+            ((Controls.CheckBox)checkBox).FollowColors(() => UIColors.PrimarySet);
+
+            return checkBox;
         }
 
         public static CheckBox CreateStandardCompact(
@@ -60,9 +60,10 @@ namespace ErikwnkWFUI.Factories
         public static CheckBox CreatePrimaryCompact(
             bool isChecked = true)
         {
-            return CreateStandardCompact(
-                isChecked,
-                UIColors.PrimarySet);
+            CheckBox checkBox = CreateStandardCompact(isChecked);
+            ((Controls.CheckBox)checkBox).FollowColors(() => UIColors.PrimarySet);
+
+            return checkBox;
         }
 
     }

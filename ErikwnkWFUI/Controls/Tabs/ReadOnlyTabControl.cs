@@ -195,6 +195,7 @@ namespace ErikwnkWFUI.Controls
             {
                 Color previous = _pageBackColor.Value;
                 _pageBackColor.Set(value);
+                _followedPageBackColor = value;
                 ApplyPageBackColor(previous);
                 Repaint();
             }
@@ -275,6 +276,8 @@ namespace ErikwnkWFUI.Controls
 
             Font = UIFonts.Normal;
             ForeColor = UIColors.TextPrimary;
+            _followedForeColor = ForeColor;
+            _followedPageBackColor = PageBackColor;
             HotTrack = true;
 
             SetStyle(
@@ -286,6 +289,37 @@ namespace ErikwnkWFUI.Controls
                 true);
 
             UpdateStyles();
+
+            ThemeWatcher.Attach(this, OnThemeChanged);
+        }
+
+        // The colors the control has as long as nothing sets them (the tab colors read the theme each time).
+        private Color _followedForeColor;
+        private Color _followedPageBackColor;
+
+        // The theme or the accent changed while the control is shown: pages and text that still have the color the
+        // control gave them take the new one; everything the control draws is read again.
+        private void OnThemeChanged()
+        {
+            if (ForeColor == _followedForeColor)
+                ForeColor = UIColors.TextPrimary;
+
+            _followedForeColor = UIColors.TextPrimary;
+
+            Color previous = _followedPageBackColor;
+            _followedPageBackColor = PageBackColor;
+
+            if (previous != _followedPageBackColor)
+                ApplyPageBackColor(previous);
+
+            Repaint();
+        }
+
+        // The colors of a color set, asked for again each time (the primary set follows the accent).
+        internal void FollowColors(Func<UIColorSet> colors)
+        {
+            _accentColor.SetDefault(() => colors().Pressed);
+            Repaint();
         }
 
         protected override void WndProc(ref Message m)

@@ -36,11 +36,11 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public class ReadOnlyDataGridView : System.Windows.Forms.DataGridView
     {
-        private Color _headerBackColor = UIColors.BackgroundDarkElevated;
-        private Color _headerForeColor = UIColors.TextTertiary;
-        private Color _rowBackColor = UIColors.BackgroundMedium;
-        private Color _alternateRowBackColor;
-        private Color _rowForeColor = UIColors.TextPrimary;
+        // The colors that follow the theme until they are set (see ThemeWatcher).
+        private readonly ThemeColor _headerBackColor = new ThemeColor(() => UIColors.BackgroundDarkElevated);
+        private readonly ThemeColor _headerForeColor = new ThemeColor(() => UIColors.TextTertiary);
+        private readonly ThemeColor _rowBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
+        private readonly ThemeColor _rowForeColor = new ThemeColor(() => UIColors.TextPrimary);
         private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.BorderLight);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
@@ -116,15 +116,15 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
         {
-            get => _headerBackColor;
-            set { _headerBackColor = value; ApplyStyles(); }
+            get => _headerBackColor.Value;
+            set { _headerBackColor.Set(value); ApplyStyles(); }
         }
 
         /// <summary>Text color of the column header row.</summary>
         public Color HeaderForeColor
         {
-            get => _headerForeColor;
-            set { _headerForeColor = value; ApplyStyles(); }
+            get => _headerForeColor.Value;
+            set { _headerForeColor.Set(value); ApplyStyles(); }
         }
 
         /// <summary>
@@ -166,11 +166,10 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Background color of a normal (not selected) row. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color RowBackColor
         {
-            get => _rowBackColor;
+            get => _rowBackColor.Value;
             set
             {
-                _rowBackColor = value;
-                _alternateRowBackColor = UIColors.Darken(value, 5);
+                _rowBackColor.Set(value);
                 ApplyStyles();
             }
         }
@@ -178,8 +177,8 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Text color of a normal (not selected) row.</summary>
         public Color RowForeColor
         {
-            get => _rowForeColor;
-            set { _rowForeColor = value; ApplyStyles(); }
+            get => _rowForeColor.Value;
+            set { _rowForeColor.Set(value); ApplyStyles(); }
         }
 
         /// <summary>
@@ -705,9 +704,7 @@ namespace ErikwnkWFUI.Controls
 
         public ReadOnlyDataGridView()
         {
-            _alternateRowBackColor = UIColors.Darken(_rowBackColor, 5);
-
-            BackgroundColor = UIColors.BackgroundDark;
+            _followedBackgroundColor = BackgroundColor = UIColors.BackgroundDark;
 
             // Fixed, independent of BorderColor - only each header cell's
             // own border (see DrawHeaderCellBorder below) follows
@@ -715,7 +712,7 @@ namespace ErikwnkWFUI.Controls
             // BETWEEN cells stay this same neutral color regardless, so
             // CreatePrimary doesn't turn every row separator into a wash of
             // accent color too.
-            GridColor = UIColors.BorderMedium;
+            _followedGridColor = GridColor = UIColors.BorderMedium;
 
             BorderStyle = BorderStyle.None;
             CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
@@ -781,6 +778,8 @@ namespace ErikwnkWFUI.Controls
             EnableDoubleBuffering();
             ThemeScrollBars();
             ApplyStyles();
+
+            ThemeWatcher.Attach(this, OnThemeChanged);
 
             MouseDown += HandleMouseDown;
             MouseDown += HandleContextMenuMouseDown;
@@ -1242,11 +1241,58 @@ namespace ErikwnkWFUI.Controls
             }));
         }
 
+        // The colors the grid has as long as nothing sets them.
+        private Color _followedBackgroundColor;
+        private Color _followedGridColor;
+        private Color _followedButtonBackColor;
+        private Color _followedButtonForeColor;
+        private Color[] _followedLinkColors = new Color[3];
+
+        // The theme or the accent changed while the grid is shown: what was not set by hand follows (the scroll bars
+        // through NativeControlTheme.Track), and the grid is painted anew.
+        private void OnThemeChanged()
+        {
+            if (BackgroundColor == _followedBackgroundColor)
+                BackgroundColor = UIColors.BackgroundDark;
+
+            _followedBackgroundColor = UIColors.BackgroundDark;
+
+            if (GridColor == _followedGridColor)
+                GridColor = UIColors.BorderMedium;
+
+            _followedGridColor = UIColors.BorderMedium;
+
+            if (!_contextMenuSelectionColor.IsSet && ContextMenuStrip is ContextMenuStrip menu)
+                menu.SelectionBackColor = ContextMenuSelectionColor;
+
+            ApplyStyles();
+
+            foreach (DataGridViewColumn column in Columns)
+                ThemeColumnType(column, onlyWhatFollowed: true);
+
+            Invalidate(true);
+        }
+
+        // The look of a color set (what the factories make with colors and CreatePrimary): the set's hover color is the
+        // color of the look. Asked for again whenever the theme or the accent changes.
+        internal void FollowColors(Func<UIColorSet> colors)
+        {
+            _borderColor.SetDefault(() => colors().Hover);
+            _selectionBackColor.SetDefault(() => colors().Hover);
+            _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
+            _contextMenuSelectionColor.SetDefault(() => colors().Hover);
+
+            if (ContextMenuStrip is ContextMenuStrip menu)
+                menu.SelectionBackColor = ContextMenuSelectionColor;
+
+            ApplyStyles();
+        }
+
         // The columns that are not text keep the system's look unless told otherwise: white
         // buttons and combo boxes and dark-blue links on the dark rows. Put in the grid's
         // colors here, when the column comes in; a consumer can still change them afterwards.
         // (Check box and image columns already follow the cell colors.)
-        private void ThemeColumnType(DataGridViewColumn column)
+        private void ThemeColumnType(DataGridViewColumn column, bool onlyWhatFollowed = false)
         {
             DataGridViewButtonColumn button = column as DataGridViewButtonColumn;
             DataGridViewComboBoxColumn combo = column as DataGridViewComboBoxColumn;
@@ -1255,8 +1301,16 @@ namespace ErikwnkWFUI.Controls
             if (button != null)
             {
                 button.FlatStyle = FlatStyle.Flat;
-                button.DefaultCellStyle.BackColor = UIColors.BackgroundLighter;
-                button.DefaultCellStyle.ForeColor = UIColors.TextPrimary;
+
+                // Changed again only where it still has the color the grid gave it.
+                if (!onlyWhatFollowed || button.DefaultCellStyle.BackColor == _followedButtonBackColor)
+                    button.DefaultCellStyle.BackColor = UIColors.BackgroundLighter;
+
+                if (!onlyWhatFollowed || button.DefaultCellStyle.ForeColor == _followedButtonForeColor)
+                    button.DefaultCellStyle.ForeColor = UIColors.TextPrimary;
+
+                _followedButtonBackColor = UIColors.BackgroundLighter;
+                _followedButtonForeColor = UIColors.TextPrimary;
             }
             else if (combo != null)
             {
@@ -1268,10 +1322,25 @@ namespace ErikwnkWFUI.Controls
             else if (link != null)
             {
                 // A link has to be seen against the row color in both themes.
-                Color row = _rowBackColor;
-                link.LinkColor = UIColors.EnsureContrast(UIColors.Primary, row, 4.5);
-                link.VisitedLinkColor = UIColors.EnsureContrast(UIColors.ShiftLightness(UIColors.Primary, -0.15), row, 4.5);
-                link.ActiveLinkColor = UIColors.TextPrimary;
+                Color row = RowBackColor;
+                Color[] followed = _followedLinkColors;
+                Color[] wanted =
+                {
+                    UIColors.EnsureContrast(UIColors.Primary, row, 4.5),
+                    UIColors.EnsureContrast(UIColors.ShiftLightness(UIColors.Primary, -0.15), row, 4.5),
+                    UIColors.TextPrimary
+                };
+
+                if (!onlyWhatFollowed || link.LinkColor == followed[0])
+                    link.LinkColor = wanted[0];
+
+                if (!onlyWhatFollowed || link.VisitedLinkColor == followed[1])
+                    link.VisitedLinkColor = wanted[1];
+
+                if (!onlyWhatFollowed || link.ActiveLinkColor == followed[2])
+                    link.ActiveLinkColor = wanted[2];
+
+                _followedLinkColors = wanted;
             }
         }
 
@@ -2087,7 +2156,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.CellBounds, Font, _headerForeColor, _sortOrder);
+            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.CellBounds, Font, HeaderForeColor, _sortOrder);
         }
 
         private void DrawHeaderCellBorder(DataGridViewCellPaintingEventArgs e)
@@ -2426,8 +2495,8 @@ namespace ErikwnkWFUI.Controls
             // this same way, no exceptions for a control's own fixed/
             // accent colors (see ListView's SetEnabledStyle-style
             // handling, and UIProgressBarFactory's disabled fill).
-            Color rowForeColor = Enabled ? _rowForeColor : UIColors.DisabledGray;
-            Color headerForeColor = Enabled ? _headerForeColor : UIColors.DisabledGray;
+            Color rowForeColor = Enabled ? RowForeColor : UIColors.DisabledGray;
+            Color headerForeColor = Enabled ? HeaderForeColor : UIColors.DisabledGray;
             Color selectionBackColor = Enabled ? SelectionBackColor : UIColors.DisabledGray;
             // The true best contrast, not a brightness rule of thumb: on the mid
             // tones a color set can bring (lime green, say) the rule picks the
@@ -2436,19 +2505,19 @@ namespace ErikwnkWFUI.Controls
 
             using (var headerFont = new Font(Font, FontStyle.Bold))
             {
-                ColumnHeadersDefaultCellStyle.BackColor = _headerBackColor;
+                ColumnHeadersDefaultCellStyle.BackColor = HeaderBackColor;
                 ColumnHeadersDefaultCellStyle.ForeColor = headerForeColor;
                 ColumnHeadersDefaultCellStyle.Font = headerFont;
-                ColumnHeadersDefaultCellStyle.SelectionBackColor = _headerBackColor;
+                ColumnHeadersDefaultCellStyle.SelectionBackColor = HeaderBackColor;
                 ColumnHeadersDefaultCellStyle.SelectionForeColor = headerForeColor;
             }
 
-            DefaultCellStyle.BackColor = _rowBackColor;
+            DefaultCellStyle.BackColor = RowBackColor;
             DefaultCellStyle.ForeColor = rowForeColor;
             DefaultCellStyle.SelectionBackColor = selectionBackColor;
             DefaultCellStyle.SelectionForeColor = selectionForeColor;
 
-            AlternatingRowsDefaultCellStyle.BackColor = _alternateRowBackColor;
+            AlternatingRowsDefaultCellStyle.BackColor = UIColors.Darken(RowBackColor, 5);
             AlternatingRowsDefaultCellStyle.ForeColor = rowForeColor;
             AlternatingRowsDefaultCellStyle.SelectionBackColor = selectionBackColor;
             AlternatingRowsDefaultCellStyle.SelectionForeColor = selectionForeColor;
