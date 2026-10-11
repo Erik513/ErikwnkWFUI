@@ -1,4 +1,5 @@
 ﻿using System;
+using ErikwnkWFUI.Controls;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
@@ -110,7 +111,6 @@ namespace ErikwnkWFUI.Forms
             : base(StyledFormOptions.CreateDialog(
                 title: title,
                 titleTextAlign: ContentAlignment.MiddleLeft,
-                backColor: UIStyles.Colors.BackgroundBlack,
                 icon: GetTitleBarIcon(icon)))
         {
             _message = message ?? "";
@@ -216,7 +216,7 @@ namespace ErikwnkWFUI.Forms
             TableLayoutPanel layout = UITableLayoutPanelFactory.CreateStandard(1, 2);
 
             layout.Dock = DockStyle.Fill;
-            layout.BackColor = UIStyles.Colors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(layout, () => UIStyles.Colors.BackgroundMedium);
             layout.Padding = new Padding(0);
             layout.Margin = new Padding(0);
 
@@ -247,7 +247,7 @@ namespace ErikwnkWFUI.Forms
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleCenter;
-            label.ForeColor = UIStyles.Colors.TextPrimary;
+            ThemeWatcher.FollowForeColor(label, () => UIStyles.Colors.TextPrimary);
             label.Font = UIStyles.Fonts.Normal;
             label.BackColor = Color.Transparent;
             label.AutoEllipsis = false;
@@ -262,7 +262,7 @@ namespace ErikwnkWFUI.Forms
             TableLayoutPanel buttonPanel = UITableLayoutPanelFactory.CreateStandard(1, 1);
 
             buttonPanel.Dock = DockStyle.Fill;
-            buttonPanel.BackColor = UIColors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(buttonPanel, () => UIColors.BackgroundMedium);
             buttonPanel.Padding = preset.ButtonPanelPadding;
             buttonPanel.Margin = new Padding(0);
 

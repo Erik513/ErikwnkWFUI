@@ -1,4 +1,5 @@
 ﻿using System;
+using ErikwnkWFUI.Controls;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -98,7 +99,6 @@ namespace ErikwnkWFUI.Forms
             : base(StyledFormOptions.CreateDialog(
                 title: title ?? UIStrings.Get("UpdateAvailable.Title"),
                 titleTextAlign: ContentAlignment.MiddleLeft,
-                backColor: UIStyles.Colors.BackgroundBlack,
                 icon: SystemIcons.Information.ToBitmap()))
         {
             _currentVersion = currentVersion ?? "";
@@ -161,7 +161,7 @@ namespace ErikwnkWFUI.Forms
 
             TableLayoutPanel mainLayout = UITableLayoutPanelFactory.CreateStandard(1, 2);
             mainLayout.Dock = DockStyle.Fill;
-            mainLayout.BackColor = UIColors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(mainLayout, () => UIColors.BackgroundMedium);
             mainLayout.Padding = new Padding(0);
             mainLayout.Margin = new Padding(0);
             mainLayout.RowStyles.Clear();
@@ -218,14 +218,14 @@ namespace ErikwnkWFUI.Forms
             Label headline = UILabelFactory.CreateStandard(UIStrings.Get("UpdateAvailable.Message"));
             headline.AutoSize = true;
             headline.Font = UIFonts.Title;
-            headline.ForeColor = UIColors.TextPrimary;
+            ThemeWatcher.FollowForeColor(headline, () => UIColors.TextPrimary);
             headline.Margin = new Padding(0, 0, 0, 10);
 
             Label versionLine = UILabelFactory.CreateStandard(
                 "v" + _currentVersion + "  →  v" + _latestVersion);
             versionLine.AutoSize = true;
             versionLine.Font = UIFonts.Normal;
-            versionLine.ForeColor = UIColors.TextSecondary;
+            ThemeWatcher.FollowForeColor(versionLine, () => UIColors.TextSecondary);
 
             layout.Controls.Add(headline);
             layout.Controls.Add(versionLine);
@@ -242,7 +242,7 @@ namespace ErikwnkWFUI.Forms
             _progressStatusLabel = UILabelFactory.CreateStandard(string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 0));
             _progressStatusLabel.AutoSize = true;
             _progressStatusLabel.Font = UIFonts.Normal;
-            _progressStatusLabel.ForeColor = UIColors.TextPrimary;
+            ThemeWatcher.FollowForeColor(_progressStatusLabel, () => UIColors.TextPrimary);
             _progressStatusLabel.Margin = new Padding(0, 6, 0, 14);
 
             _progressBar = new ProgressBar
@@ -266,7 +266,7 @@ namespace ErikwnkWFUI.Forms
         {
             TableLayoutPanel buttonPanel = UITableLayoutPanelFactory.CreateStandard(3, 1);
             buttonPanel.Dock = DockStyle.Fill;
-            buttonPanel.BackColor = UIColors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(buttonPanel, () => UIColors.BackgroundMedium);
             buttonPanel.Padding = new Padding(12, 12, 24, 18);
             buttonPanel.Margin = new Padding(0);
 

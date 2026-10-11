@@ -164,8 +164,13 @@ namespace ErikwnkWFUI.Styles
         /// </summary>
         public static event EventHandler ThemeChanged;
 
+        // Counts the changes: a control without a window (never shown, hidden) misses the event and catches up with this
+        // when its window is created (see ThemeWatcher).
+        internal static int ThemeVersion { get; private set; }
+
         internal static void RaiseThemeChanged()
         {
+            ThemeVersion++;
             ThemeChanged?.Invoke(null, EventArgs.Empty);
         }
 

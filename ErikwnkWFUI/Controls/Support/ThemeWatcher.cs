@@ -41,11 +41,14 @@ namespace ErikwnkWFUI.Controls
         {
             EventHandler handler = null;
             bool listening = false;
+            int seen = UIColors.ThemeVersion;
 
             handler = (sender, e) =>
             {
                 if (control.IsDisposed || !control.IsHandleCreated)
                     return;
+
+                seen = UIColors.ThemeVersion;
 
                 if (control.InvokeRequired)
                     control.BeginInvoke(onThemeChanged);
@@ -60,6 +63,13 @@ namespace ErikwnkWFUI.Controls
 
                 listening = true;
                 UIColors.ThemeChanged += handler;
+
+                // A control that had no window while the theme changed (never shown, or hidden) catches up now.
+                if (seen != UIColors.ThemeVersion)
+                {
+                    seen = UIColors.ThemeVersion;
+                    onThemeChanged();
+                }
             };
 
             Action stop = () =>

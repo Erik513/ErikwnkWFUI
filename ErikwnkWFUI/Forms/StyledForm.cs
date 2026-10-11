@@ -121,8 +121,8 @@ namespace ErikwnkWFUI.Forms
                 FormBorderStyle = FormBorderStyle.None;
 
             DoubleBuffered = true;
-            BackColor = UIColors.BackgroundBlack;
-            
+            ThemeWatcher.FollowBackColor(this, () => UIColors.BackgroundBlack);
+
             int borderSize = 0;
             if (options.Borderless)
                 borderSize = options.Resizable ? 2 : 1;
@@ -141,10 +141,11 @@ namespace ErikwnkWFUI.Forms
             _contentPanel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = UIColors.BackgroundMedium,
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(_contentPanel, () => UIColors.BackgroundMedium);
 
             string versionText = options.VersionText;
             if (string.IsNullOrEmpty(versionText) && options.Type == StyledFormType.Settings)
@@ -165,14 +166,14 @@ namespace ErikwnkWFUI.Forms
                     WrapContents = false,
                     AutoSize = false,
                     Margin = new Padding(0),
-                    Padding = new Padding(0, 0, 10, 0),
+                    Padding = new Padding(0, 0, 10, 0)
                     // Explicit, not left to the transparent background of the
                     // label - the strip's own edges (outside the label's now
                     // AutoSize width) would otherwise show through with the
                     // FlowLayoutPanel's default gray SystemColors.Control
                     // instead of matching the rest of the window.
-                    BackColor = UIColors.BackgroundBlack
                 };
+                ThemeWatcher.FollowBackColor(_versionStrip, () => UIColors.BackgroundBlack);
                 _versionStrip.Controls.Add(_versionLabel);
             }
 
@@ -260,7 +261,7 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
         public bool AllowWindowSnapAndMaximize { get; set; } = true;
 
-        public Color? TitleBarBackColor { get; set; } = UIStyles.Colors.BackgroundBlack;
+        public Color? TitleBarBackColor { get; set; }
 
         /// <summary>The OS-level icon (taskbar, Alt-Tab, system menu) - not the title bar logo, see <see cref="Icon"/> for that. Falls back to the running exe's own icon when left null.</summary>
         public Icon WindowIcon { get; set; } = null;

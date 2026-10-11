@@ -69,7 +69,7 @@ namespace ErikwnkWFUI.Forms
             // BackgroundMedium, so its (transparent) label column blended
             // straight into the form - darker tone makes it read as its
             // own card.
-            _propertyTable.BackColor = UIStyles.Colors.BackgroundDark;
+            ThemeWatcher.FollowBackColor(_propertyTable, () => UIStyles.Colors.BackgroundDark);
 
             // Same BackgroundMedium as ContentPanel - so the form reads as
             // one consistent color, with only the property table set apart.

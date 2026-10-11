@@ -25,7 +25,7 @@ namespace ErikwnkWFUI.Controls
             Dock = DockStyle.Top;
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            BackColor = Colors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(this, () => Colors.BackgroundMedium);
             Margin = new Padding(0);
             Padding = new Padding(0);
 
@@ -159,10 +159,11 @@ namespace ErikwnkWFUI.Controls
                 AutoSize = true,
                 ColumnCount = 2,
                 RowCount = 0,
-                BackColor = Colors.BackgroundMedium,
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(layout, () => Colors.BackgroundMedium);
 
             layout.ColumnStyles.Add(
                 new ColumnStyle(
@@ -188,10 +189,11 @@ namespace ErikwnkWFUI.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = columnCount,
                 RowCount = 1,
-                BackColor = Colors.BackgroundMedium,
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(layout, () => Colors.BackgroundMedium);
 
             layout.RowStyles.Add(
                 new RowStyle(
@@ -233,7 +235,6 @@ namespace ErikwnkWFUI.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                BackColor = Colors.BackgroundLight,
                 Padding = new Padding(6, 0, 8, 0),
                 // 1px, not 0 - leaves the cell panel's own border (see
                 // CreateEditorCellPanel) actually visible all the way
@@ -241,6 +242,8 @@ namespace ErikwnkWFUI.Controls
                 // Dock=Fill child.
                 Margin = new Padding(1)
             };
+
+            ThemeWatcher.FollowBackColor(wrapper, () => Colors.BackgroundLight);
 
             wrapper.ColumnStyles.Add(
                 new ColumnStyle(SizeType.Percent, 100));
@@ -281,7 +284,7 @@ namespace ErikwnkWFUI.Controls
             label.TextAlign = ContentAlignment.MiddleLeft;
             label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
             label.Margin = new Padding(0);
-            label.BackColor = Colors.BackgroundMedium;
+            ThemeWatcher.FollowBackColor(label, () => Colors.BackgroundMedium);
 
             return label;
         }
@@ -294,20 +297,23 @@ namespace ErikwnkWFUI.Controls
             label.TextAlign = ContentAlignment.MiddleLeft;
             label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
             label.Margin = new Padding(0);
-            label.BackColor = Colors.BackgroundDark;
+            ThemeWatcher.FollowBackColor(label, () => Colors.BackgroundDark);
 
             return label;
         }
 
         private Panel CreateEditorAreaPanel()
         {
-            return new Panel
+            Panel panel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Colors.BackgroundMedium,
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+
+            ThemeWatcher.FollowBackColor(panel, () => Colors.BackgroundMedium);
+
+            return panel;
         }
 
         private Panel CreateEditorCellPanel()
@@ -315,7 +321,6 @@ namespace ErikwnkWFUI.Controls
             Panel panel = new Panel
             {
                 Dock = DockStyle.Fill,
-                BackColor = Colors.BackgroundLight,
                 Padding = new Padding(0),
                 // Right margin matches the existing top/bottom margin, so
                 // the table's own background shows as a border on all three
@@ -324,6 +329,8 @@ namespace ErikwnkWFUI.Controls
                 // there.
                 Margin = new Padding(0, 2, 2, 2)
             };
+
+            ThemeWatcher.FollowBackColor(panel, () => Colors.BackgroundLight);
 
             // A themed border around each editor cell, independent of how
             // close BackgroundLight happens to sit next to the surrounding
