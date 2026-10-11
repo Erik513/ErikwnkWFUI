@@ -124,10 +124,6 @@ namespace ErikwnkWFUI.Showcase
             // With this many pages the strip wraps onto a second row instead of scrolling.
             tabs.Multiline = true;
 
-            // The header is transparent by default and would show the window
-            // color behind it, which is dark even in the light theme.
-            tabs.HeaderBackColor = UIColors.BackgroundMedium;
-
             // Always first: the guide for someone new to the library.
             tabs.TabPages.Add(new TabPage("Guide") { Tag = new PageInfo { Custom = CreateGuidePage } });
 

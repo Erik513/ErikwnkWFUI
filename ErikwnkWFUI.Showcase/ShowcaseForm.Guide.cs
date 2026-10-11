@@ -28,7 +28,7 @@ namespace ErikwnkWFUI.Showcase
                 "- One tab per control. The text at the top of each tab says what the control is and how its variants differ.\n" +
                 "- One row per factory method. The name on the left (for example CreatePrimary) is the method you call.\n" +
                 "- The columns show the same control in its states, usually enabled and disabled.\n" +
-                "- Theme and accent color are switched in the bar at the top; every page is rebuilt with the new look.\n" +
+                "- Theme and accent color are switched in the bar at the top; every control follows the change by itself.\n" +
                 "- The buttons on the right open the dialogs and popups. They belong to no single control, so they sit outside the tabs."));
 
             blocks.Add(Heading("Getting a control"));
@@ -58,8 +58,7 @@ namespace ErikwnkWFUI.Showcase
             blocks.Add(Heading("Theme, accent color and language"));
             blocks.Add(Paragraph(
                 "Two settings change the whole look, plus one for the texts the library brings along (menus, tooltips, dialog buttons). " +
-                "Set them once before you build your windows. Many controls follow a later change on their own, but not all, " +
-                "so the reliable way to switch at runtime is to rebuild the UI - which is what this window does."));
+                "Both can be changed at any time: the controls of the library follow by themselves, only a color you set on a control by hand stays. The language is set once before you build your windows."));
             blocks.Add(Code(
                 "UIStyles.Colors.ApplyTheme(UIThemes.Light);          // or UIThemes.Dark\n" +
                 "UIStyles.Colors.SetAccent(UIAccentColors.Purple);    // or any Color\n" +
