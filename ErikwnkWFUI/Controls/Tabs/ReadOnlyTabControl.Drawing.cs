@@ -183,7 +183,7 @@ namespace ErikwnkWFUI.Controls
                 graphics.FillRectangle(brush, outline);
             }
 
-            DrawTabBorder(graphics, outline);
+            DrawTabBorder(graphics, outline, FacesPage(outline));
 
             if (selected)
             {
@@ -275,10 +275,34 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Whether the tab's side toward the page lies on the page: only the row of tabs next to the page does. With
+        // several rows (Multiline) the other rows have tabs or nothing at all on that side.
+        private bool FacesPage(Rectangle bounds)
+        {
+            Rectangle area = GetPageAreaBounds();
+            const int tolerance = 2;
+
+            switch (Alignment)
+            {
+                case TabAlignment.Bottom:
+                    return Math.Abs(bounds.Top - area.Bottom) <= tolerance;
+
+                case TabAlignment.Left:
+                    return Math.Abs(bounds.Right - area.Left) <= tolerance;
+
+                case TabAlignment.Right:
+                    return Math.Abs(bounds.Left - area.Right) <= tolerance;
+
+                default:
+                    return Math.Abs(bounds.Bottom - area.Top) <= tolerance;
+            }
+        }
+
         // Outline on the three sides facing away from the page - the fourth
         // one is the page's own border (or, for the selected tab, nothing,
-        // so it flows into the page).
-        private void DrawTabBorder(Graphics graphics, Rectangle bounds)
+        // so it flows into the page). A tab that is not next to the page (another row of a
+        // multi-row strip) gets that side as well.
+        private void DrawTabBorder(Graphics graphics, Rectangle bounds, bool facesPage)
         {
             int left = bounds.Left;
             int top = bounds.Top;
@@ -293,24 +317,40 @@ namespace ErikwnkWFUI.Controls
                         graphics.DrawLine(pen, left, top, left, bottom);
                         graphics.DrawLine(pen, right, top, right, bottom);
                         graphics.DrawLine(pen, left, bottom, right, bottom);
+
+                        if (!facesPage)
+                            graphics.DrawLine(pen, left, top, right, top);
+
                         break;
 
                     case TabAlignment.Left:
                         graphics.DrawLine(pen, left, top, right, top);
                         graphics.DrawLine(pen, left, bottom, right, bottom);
                         graphics.DrawLine(pen, left, top, left, bottom);
+
+                        if (!facesPage)
+                            graphics.DrawLine(pen, right, top, right, bottom);
+
                         break;
 
                     case TabAlignment.Right:
                         graphics.DrawLine(pen, left, top, right, top);
                         graphics.DrawLine(pen, left, bottom, right, bottom);
                         graphics.DrawLine(pen, right, top, right, bottom);
+
+                        if (!facesPage)
+                            graphics.DrawLine(pen, left, top, left, bottom);
+
                         break;
 
                     default:
                         graphics.DrawLine(pen, left, top, left, bottom);
                         graphics.DrawLine(pen, right, top, right, bottom);
                         graphics.DrawLine(pen, left, top, right, top);
+
+                        if (!facesPage)
+                            graphics.DrawLine(pen, left, bottom, right, bottom);
+
                         break;
                 }
             }
