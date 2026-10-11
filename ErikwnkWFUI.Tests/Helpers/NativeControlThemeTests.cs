@@ -57,6 +57,30 @@ public class NativeControlThemeTests : IDisposable
     }
 
     [Fact]
+    public void ATextBoxFromTheFactory_IsTracked_AMultilineOneToo()
+    {
+        int before = Listeners();
+        TextBox box = UIStyles.TextBoxes.CreateStandard("x");
+        box.Multiline = true;
+        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(120, 120) };
+        form.Controls.Add(box);
+        form.Show();
+        Application.DoEvents();
+        _forms.Add(form);
+
+        // The follow of its colors, and the style of its scroll bars: three listeners while it has a window (fill, text, native parts).
+        Assert.Equal(before + 3, Listeners());
+    }
+
+    private static int Listeners()
+    {
+        System.Reflection.FieldInfo field = typeof(UIColors).GetField("ThemeChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+        Delegate? handlers = (Delegate?)field.GetValue(null);
+
+        return handlers == null ? 0 : handlers.GetInvocationList().Length;
+    }
+
+    [Fact]
     public void ANativeWindowThatIsNotThere_IsLeftAlone()
     {
         int calls = 0;

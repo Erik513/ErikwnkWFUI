@@ -53,6 +53,9 @@ namespace ErikwnkWFUI.Factories
 
             Controls.ThemeWatcher.FollowBackColor(textBox, backColor);
 
+            // Scroll bars of a multi-line box: the system's dark ones on a dark theme.
+            Helpers.NativeControlTheme.Track(textBox);
+
             Controls.ThemeWatcher.Attach(textBox, () =>
             {
                 System.Drawing.Color current = textBox.ForeColor;
