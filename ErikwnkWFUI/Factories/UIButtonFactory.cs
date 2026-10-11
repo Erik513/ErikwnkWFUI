@@ -281,7 +281,7 @@ namespace ErikwnkWFUI.Factories
         // What the text is "at rest" is read when the button leaves rest, not
         // at creation - callers may recolor a button after creating it - and
         // that is what comes back. The pressed fill is read at press time,
-        // because TitleBarControl.RefreshTheme changes it later.
+        // because a theme change changes it later.
         private static Action<ButtonLook, ButtonLook> SetStateForeColors(Button button, ButtonLook[] current)
         {
             bool isHovered = false;

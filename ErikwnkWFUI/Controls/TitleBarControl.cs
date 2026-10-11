@@ -182,41 +182,6 @@ namespace ErikwnkWFUI.Controls
             return UIStrings.Get(_isMaximized ? "TitleBar.Restore" : "TitleBar.Maximize");
         }
 
-        /// <summary>
-        /// Re-reads the current theme's colors and reapplies them to this
-        /// title bar and its sub-controls (title label, minimize/maximize/
-        /// close buttons) - only needed by an app that switches theme after
-        /// the owning StyledForm was already built, since every color here
-        /// is otherwise only ever read once, at construction. Overwrites a
-        /// custom <c>StyledFormOptions.TitleBarBackColor</c> set at
-        /// construction time with the current theme's default; only call
-        /// this if that's the behavior you want.
-        /// </summary>
-        public void RefreshTheme()
-        {
-            BackColor = UIColors.BackgroundBlack;
-
-            _titleLabel.BackColor = UIColors.BackgroundBlack;
-            _titleLabel.ForeColor = UIColors.TextPrimary;
-
-            // Matches every property CreateStandard itself sets (see
-            // UIButtonFactory.CreateStandard) - BackColor/ForeColor alone
-            // left FlatAppearance.BorderColor/MouseOverBackColor/
-            // MouseDownBackColor stuck on the OLD theme's values, so a
-            // button that used to be a barely-visible dark border on a dark
-            // background became a dark border on a now-light background -
-            // reported as "the minimize button's border looks thicker" and
-            // "the buttons look totally different from MessageBox's".
-            foreach (Button button in new[] { _minimizeButton, _maximizeButton, _closeButton })
-            {
-                button.BackColor = UIColors.BackgroundMedium;
-                button.ForeColor = UIColors.TextPrimary;
-                button.FlatAppearance.BorderColor = UIColors.BorderDark;
-                button.FlatAppearance.MouseOverBackColor = UIColors.BackgroundLighter;
-                button.FlatAppearance.MouseDownBackColor = UIColors.Primary;
-            }
-        }
-
         public void DisposeDragHandle()
         {
             if (_titleBarDragHandle != null)

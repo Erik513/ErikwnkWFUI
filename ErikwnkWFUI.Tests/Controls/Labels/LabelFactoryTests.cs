@@ -8,8 +8,8 @@ namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
 /// <summary>
 /// The factory API of the labels: CreateStandard (gray body text, with an optional color set),
-/// CreatePrimary (the same in the accent), CreateTitle and CreateMuted as they were, and the old
-/// name CreateNormal as an alias. [Collection]: the sets read the live accent, and the tests
+/// CreatePrimary (the same in the accent), CreateTitle and CreateMuted as they were.
+/// [Collection]: the sets read the live accent, and the tests
 /// switch themes.
 /// </summary>
 [Collection(AccentColorTestCollection.Name)]
@@ -193,18 +193,5 @@ public class LabelFactoryTests
         {
             UIColors.SetAccent(before);
         }
-    }
-
-    [Fact]
-    public void CreateNormal_IsTheOldNameOfCreateStandard()
-    {
-#pragma warning disable CS0618
-        using Label old = UIStyles.Labels.CreateNormal("x");
-#pragma warning restore CS0618
-        using Label standard = UIStyles.Labels.CreateStandard("x");
-
-        Assert.Equal(standard.Font, old.Font);
-        Assert.Equal(standard.TextAlign, old.TextAlign);
-        Assert.Equal(TextColor(standard), TextColor(old));
     }
 }

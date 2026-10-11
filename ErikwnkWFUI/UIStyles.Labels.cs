@@ -59,13 +59,6 @@ namespace ErikwnkWFUI
             {
                 return UILabelFactory.CreateMuted(text, colors, scroll);
             }
-
-            /// <summary>The old name of <see cref="CreateStandard"/>.</summary>
-            [Obsolete("Use CreateStandard.")]
-            public static ThemedLabel CreateNormal(string text = "")
-            {
-                return UILabelFactory.CreateStandard(text);
-            }
         }
     }
 }

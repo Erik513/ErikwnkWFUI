@@ -127,15 +127,6 @@ namespace ErikwnkWFUI.Showcase
             if (_pageTabs is System.Windows.Forms.TabControl oldTabs && oldTabs.SelectedIndex >= 0)
                 _selectedPageIndex = oldTabs.SelectedIndex;
 
-            // StyledForm/TitleBarControl only read theme colors once, at
-            // construction - this window itself is never recreated (only its
-            // content is, which is why the rest of BuildUi exists at all),
-            // so without this the title bar stayed on whatever theme was
-            // active when the app first launched, regardless of later
-            // Dark/Light switches.
-            BackColor = UIColors.BackgroundBlack;
-            TitleBar.RefreshTheme();
-
             ContentPanel.SuspendLayout();
             ContentPanel.Controls.Clear();
 
