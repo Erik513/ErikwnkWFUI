@@ -148,11 +148,9 @@ namespace ErikwnkWFUI
             /// <summary>
             /// Replaces the blue accent used throughout every built-in
             /// control (buttons, toggle switches, selection highlights,
-            /// ...) with shades computed from a single color. Set once, as
-            /// early as possible - before building any UI - same as
-            /// <see cref="Language"/>; a couple of controls only read their
-            /// accent color once at construction time, so they won't
-            /// retroactively pick up a change made after they're built.
+            /// ...) with shades computed from a single color. May be called at
+            /// any time: the controls that exist follow the change by
+            /// themselves (see <see cref="ThemeChanged"/>).
             /// </summary>
             public static void SetAccent(Color accent)
             {
@@ -161,8 +159,9 @@ namespace ErikwnkWFUI
 
             /// <summary>
             /// Switches the base theme (backgrounds/text/borders), e.g.
-            /// UIThemes.Light to move off the dark default. Same "call once,
-            /// before building any UI" caveat as <see cref="SetAccent"/>. Combine
+            /// UIThemes.Light to move off the dark default. May be called at
+            /// any time: the controls that exist follow the change by
+            /// themselves (a color set on a control by hand stays). Combine
             /// freely with SetAccent - the two are independent (e.g. a light
             /// theme with a purple accent).
             /// </summary>

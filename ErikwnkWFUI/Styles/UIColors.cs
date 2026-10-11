@@ -119,13 +119,10 @@ namespace ErikwnkWFUI.Styles
         /// hover/active tints - everything except the accent, which is set
         /// independently via <see cref="SetAccent"/>) with the ones from the
         /// given theme, e.g. <see cref="UIThemes.Light"/> to switch away from
-        /// the dark default. Same "call once, as early as possible - before
-        /// building any UI" caveat as SetAccent: every control that already
-        /// exists keeps the colors it was built with, since none of them
-        /// re-read UIColors after construction. Applying <see
-        /// cref="UIThemes.Dark"/> is a no-op unless something else already
-        /// changed the theme, since Dark matches today's original defaults
-        /// exactly.
+        /// the dark default. May be called at any time, also while windows are
+        /// shown: every control of the library follows the change by itself
+        /// (see <see cref="ThemeChanged"/>); only a color set on a control by
+        /// hand stays as it was set.
         /// </summary>
         public static void ApplyTheme(UIColorTheme theme)
         {
@@ -178,11 +175,9 @@ namespace ErikwnkWFUI.Styles
         /// Replaces every accent shade (Primary/Secondary/Selection/
         /// BorderPrimary - everything a consuming app would otherwise have
         /// to override control-by-control) with tints and shades computed
-        /// from a single base color. Call once, as early as possible
-        /// (before building any UI) - a handful of controls read their
-        /// accent color once into a field at construction time rather than
-        /// on every paint, so they won't pick up a change made after
-        /// they're already built.
+        /// from a single base color. May be called at any time, also while
+        /// windows are shown: the controls of the library follow the change by
+        /// themselves (see <see cref="ThemeChanged"/>).
         /// </summary>
         public static void SetAccent(Color accent)
         {

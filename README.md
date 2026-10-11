@@ -151,9 +151,9 @@ draws with `TextRenderer`. The Showcase's Symbols tab shows every symbol.
 
 ## Theming
 
-Two independent knobs, both **set once, before building any UI** - already-
-built controls read their colors at construction time and won't pick up a
-change made afterward:
+Two independent knobs. Both can be changed **at any time, also while windows
+are shown** - the controls of the library follow by themselves (a color set
+on a control by hand stays as it was set):
 
 ```csharp
 // Accent color: replaces the default blue everywhere (buttons, toggle
@@ -165,6 +165,10 @@ UIStyles.Colors.SetAccent(UIAccentColors.Purple);
 // (ErikwnkWFUI's original dark gray palette) - switch to UIThemes.Light
 // for a light theme. Combine freely with SetAccent.
 UIStyles.Colors.ApplyTheme(UIThemes.Light);
+
+// Raised after either change - only needed for what the application draws
+// or colors itself.
+UIStyles.Colors.ThemeChanged += (sender, e) => { /* ... */ };
 ```
 
 Most controls also expose their own colors as regular properties for a

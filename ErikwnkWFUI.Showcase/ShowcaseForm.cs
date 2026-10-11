@@ -15,11 +15,7 @@ namespace ErikwnkWFUI.Showcase
     // A single window that instantiates one of every ErikwnkWFUI control so
     // its look (and, for the interactive ones, its behavior) can all be
     // checked in one place instead of hunting through consuming apps. Theme
-    // and accent switching rebuild every control from scratch rather than
-    // recoloring in place, because several factories only read
-    // UIColors/accent at construction time (documented on SetAccent/ApplyTheme
-    // themselves) - there's no supported way to retint an already-built
-    // control short of recreating it.
+    // and accent switching happen live: the controls follow by themselves.
     //
     // Laid out as one tab per control (see ShowcaseForm.Pages): an
     // explanation on top and the variants below, each in a PropertyTable - a
@@ -190,8 +186,26 @@ namespace ErikwnkWFUI.Showcase
             return button;
         }
 
+        // Theme and accent change live: every control follows by itself, nothing is rebuilt. Only the marker on the
+        // theme buttons (a border in the accent) is the showcase's own.
+        private readonly List<Button> _themeButtons = new List<Button>();
+
+        private void MarkSelectedTheme()
+        {
+            foreach (Button button in _themeButtons)
+            {
+                UIColorTheme theme = (UIColorTheme)button.Tag;
+                bool selected = (theme == UIThemes.Light) == _isLightTheme;
+
+                button.FlatAppearance.BorderSize = selected ? 2 : 1;
+                button.FlatAppearance.BorderColor = selected ? UIColors.PrimaryLight : theme.BorderMedium;
+            }
+        }
+
         private Panel BuildToolbar()
         {
+            _themeButtons.Clear();
+
             Panel toolbar = UIStyles.Panels.CreateElevated();
             toolbar.Dock = DockStyle.Top;
             toolbar.Height = 56;
@@ -209,24 +223,28 @@ namespace ErikwnkWFUI.Showcase
             flow.Controls.Add(themeLabel);
 
             Button darkButton = CreateThemeButton("Dark", UIThemes.Dark, !_isLightTheme);
+            darkButton.Tag = UIThemes.Dark;
+            _themeButtons.Add(darkButton);
             darkButton.Margin = new Padding(0, 10, 6, 0);
             darkButton.Width = 70;
             darkButton.Click += delegate
             {
                 _isLightTheme = false;
                 UIStyles.Colors.ApplyTheme(UIThemes.Dark);
-                BuildUi();
+                MarkSelectedTheme();
             };
             flow.Controls.Add(darkButton);
 
             Button lightButton = CreateThemeButton("Light", UIThemes.Light, _isLightTheme);
+            lightButton.Tag = UIThemes.Light;
+            _themeButtons.Add(lightButton);
             lightButton.Margin = new Padding(0, 10, 24, 0);
             lightButton.Width = 70;
             lightButton.Click += delegate
             {
                 _isLightTheme = true;
                 UIStyles.Colors.ApplyTheme(UIThemes.Light);
-                BuildUi();
+                MarkSelectedTheme();
             };
             flow.Controls.Add(lightButton);
 
@@ -248,7 +266,7 @@ namespace ErikwnkWFUI.Showcase
                 swatch.Click += delegate
                 {
                     UIStyles.Colors.SetAccent(color);
-                    BuildUi();
+                    MarkSelectedTheme();
                 };
 
                 flow.Controls.Add(swatch);
