@@ -84,7 +84,7 @@ namespace ErikwnkWFUI.Styles
         public static Color TextPrimaryDim { get; set; } = Color.FromArgb(220, 220, 220);
         public static Color TextSecondary { get; set; } = Color.FromArgb(180, 180, 180);
         public static Color TextTertiary { get; set; } = Color.FromArgb(140, 140, 140);
-        public static Color TextDisabled { get; set; } = Color.FromArgb(100, 100, 100);
+        public static Color TextDisabled { get; set; } = Color.FromArgb(110, 110, 110);
         public static Color TextMuted { get; set; } = Color.FromArgb(120, 120, 120);
 
         public static Color BorderDark { get; set; } = Color.FromArgb(50, 50, 50);

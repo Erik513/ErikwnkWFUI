@@ -44,7 +44,7 @@ namespace ErikwnkWFUI.Styles
             TextPrimaryDim = Color.FromArgb(45, 45, 45),
             TextSecondary = Color.FromArgb(90, 90, 90),
             TextTertiary = Color.FromArgb(120, 120, 120),
-            TextDisabled = Color.FromArgb(170, 170, 170),
+            TextDisabled = Color.FromArgb(150, 150, 150),
             TextMuted = Color.FromArgb(140, 140, 140),
 
             BorderDark = Color.FromArgb(220, 220, 220),

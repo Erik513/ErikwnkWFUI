@@ -29,7 +29,7 @@ namespace ErikwnkWFUI.Styles
         public Color TextPrimaryDim { get; set; } = Color.FromArgb(220, 220, 220);
         public Color TextSecondary { get; set; } = Color.FromArgb(180, 180, 180);
         public Color TextTertiary { get; set; } = Color.FromArgb(140, 140, 140);
-        public Color TextDisabled { get; set; } = Color.FromArgb(100, 100, 100);
+        public Color TextDisabled { get; set; } = Color.FromArgb(110, 110, 110);
         public Color TextMuted { get; set; } = Color.FromArgb(120, 120, 120);
 
         public Color BorderDark { get; set; } = Color.FromArgb(50, 50, 50);
