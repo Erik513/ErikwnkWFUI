@@ -79,7 +79,7 @@ namespace ErikwnkWFUI.Showcase
             blocks.Add(Paragraph(
                 "- Disabled controls get a muted look of their own; look at the last column of most tabs.\n" +
                 "- Most controls also have properties for a one-off color change on a single instance.\n" +
-                "- The drop-down list of a ComboBox and the arrows of a NumericUpDown are drawn by Windows and keep the system colors."));
+                "- The drop-down list of a ComboBox is drawn by Windows and keeps the system colors."));
 
             Panel scroll = UIStyles.Panels.CreateMedium();
             scroll.Dock = DockStyle.Fill;

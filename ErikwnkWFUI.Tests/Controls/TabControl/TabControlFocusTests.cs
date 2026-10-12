@@ -101,7 +101,7 @@ public class TabControlFocusTests
 
             case Content.NumericUpDown:
             {
-                NumericUpDown number = new NumericUpDown { Minimum = 0, Maximum = 1000, Value = 1 };
+                System.Windows.Forms.NumericUpDown number = new System.Windows.Forms.NumericUpDown { Minimum = 0, Maximum = 1000, Value = 1 };
                 return new Subject(number, () => number.Text);
             }
 

@@ -12,16 +12,36 @@ namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
-        /// <summary>A themed <see cref="NumericUpDown"/>. Note: the up/down spinner buttons themselves stay system-colored - only the field's own colors follow the theme.</summary>
+        /// <summary>
+        /// A themed <see cref="System.Windows.Forms.NumericUpDown"/>: <see cref="CreateStandard"/> (neutral gray
+        /// arrow fields, or those of a color set) and <see cref="CreatePrimary"/> (in the accent). The field takes
+        /// the colors of the theme; the two arrow fields are drawn by the library.
+        /// </summary>
         public static class NumericUpDowns
         {
-            public static NumericUpDown CreateStandard(
+            public static System.Windows.Forms.NumericUpDown CreateStandard(
+                decimal minimum = 0,
+                decimal maximum = 100,
+                decimal increment = 1,
+                decimal value = 0,
+                UIColorSet colors = null)
+            {
+                return UINumericUpDownFactory.CreateStandard(
+                    minimum,
+                    maximum,
+                    increment,
+                    value,
+                    colors);
+            }
+
+            /// <summary>Like <see cref="CreateStandard"/> but with the arrow fields in the current accent.</summary>
+            public static System.Windows.Forms.NumericUpDown CreatePrimary(
                 decimal minimum = 0,
                 decimal maximum = 100,
                 decimal increment = 1,
                 decimal value = 0)
             {
-                return UINumericUpDownFactory.CreateStandard(
+                return UINumericUpDownFactory.CreatePrimary(
                     minimum,
                     maximum,
                     increment,

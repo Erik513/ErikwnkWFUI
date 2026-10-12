@@ -46,7 +46,7 @@ public class ThemeFollowInputControlsTests : IDisposable
             look += $" {button.FlatAppearance.BorderColor.ToArgb()} {button.FlatAppearance.MouseOverBackColor.ToArgb()} {button.FlatAppearance.MouseDownBackColor.ToArgb()}";
 
         // The check box and the combo box paint themselves from the theme: the picture shows what they read.
-        if (control is ErikwnkWFUI.Controls.CheckBox || control is ErikwnkWFUI.Controls.ComboBox)
+        if (control is ErikwnkWFUI.Controls.CheckBox || control is ErikwnkWFUI.Controls.ComboBox || control is ErikwnkWFUI.Controls.NumericUpDown)
         {
             using Bitmap bitmap = new Bitmap(control.Width, control.Height);
             control.DrawToBitmap(bitmap, new Rectangle(Point.Empty, control.Size));
@@ -81,6 +81,8 @@ public class ThemeFollowInputControlsTests : IDisposable
             ("TextBoxes.Placeholder", () => UIStyles.TextBoxes.CreateStandard("", "Hint")),
             ("TextBoxes.None", () => UIStyles.TextBoxes.CreateBorderstyleNone("Text")),
             ("NumericUpDowns.Standard", () => UIStyles.NumericUpDowns.CreateStandard()),
+            ("NumericUpDowns.Primary", () => UIStyles.NumericUpDowns.CreatePrimary()),
+            ("NumericUpDowns.Green", () => UIStyles.NumericUpDowns.CreateStandard(colors: UIStyles.Colors.Sets.Green)),
         })
             yield return new object[] { entry.Item1, entry.Item2 };
     }

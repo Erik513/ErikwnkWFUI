@@ -337,10 +337,18 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddNumericUpDownsSection(PropertyTable table)
         {
-            NumericUpDown numeric = UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42);
-            NumericUpDown numericDisabled = UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42);
-            numericDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", numeric, numericDisabled);
+            AddNumericUpDownRow(table, "CreateStandard", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
+            AddNumericUpDownRow(table, "CreatePrimary", () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
+            AddNumericUpDownRow(table, "CreateStandard(colors)", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
+        }
+
+        // Enabled on the left, disabled on the right.
+        private void AddNumericUpDownRow(PropertyTable table, string label, Func<System.Windows.Forms.NumericUpDown> create)
+        {
+            System.Windows.Forms.NumericUpDown enabled = create();
+            System.Windows.Forms.NumericUpDown disabled = create();
+            disabled.Enabled = false;
+            AddTwoColumnRow(table, label, enabled, disabled);
         }
 
         private void AddLabelsSection(PropertyTable table)
