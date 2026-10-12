@@ -42,11 +42,11 @@ namespace ErikwnkWFUI.Factories
                 Increment = increment,
                 Value = Math.Min(maximum, Math.Max(minimum, value)),
                 Font = Fonts.Normal,
-                BorderStyle = BorderStyle.None,
+                BorderStyle = BorderStyle.FixedSingle,
                 TextAlign = HorizontalAlignment.Center
             };
 
-            Controls.ThemeWatcher.FollowBackColor(numericUpDown, () => Colors.BackgroundLight);
+            Controls.InputField.FollowBackground(numericUpDown);
             Controls.ThemeWatcher.FollowForeColor(numericUpDown, () => Colors.TextPrimary);
 
             return numericUpDown;

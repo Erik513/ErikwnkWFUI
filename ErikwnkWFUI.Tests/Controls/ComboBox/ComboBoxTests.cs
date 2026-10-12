@@ -52,7 +52,7 @@ public class ComboBoxTests
         Assert.Equal(ComboBoxStyle.DropDownList, box.DropDownStyle);
         Assert.Equal(FlatStyle.Flat, box.FlatStyle);
         Assert.Equal(DrawMode.OwnerDrawFixed, box.DrawMode);
-        Assert.Equal(UIColors.BackgroundMedium, box.BackColor);
+        Assert.Equal(UIColors.BackgroundLight, box.BackColor);
         Assert.Equal(UIColors.TextPrimary, box.ForeColor);
         Assert.Same(UIFonts.Normal, box.Font);
 
@@ -65,7 +65,7 @@ public class ComboBoxTests
     {
         using System.Windows.Forms.ComboBox box = Create();
 
-        Assert.Equal(UIColors.BackgroundMedium, Background(box, 0, DrawItemState.None));
+        Assert.Equal(UIColors.BackgroundLight, Background(box, 0, DrawItemState.None));
         Assert.Equal(UIColors.BorderLight, Background(box, 0, DrawItemState.Selected));
     }
 
@@ -77,7 +77,7 @@ public class ComboBoxTests
             Color.FromArgb(10, 70, 30), Color.FromArgb(10, 80, 40), Color.FromArgb(40, 180, 90), Color.FromArgb(255, 210, 0));
         using System.Windows.Forms.ComboBox box = Create(set);
 
-        Assert.Equal(UIColors.BackgroundMedium, Background(box, 0, DrawItemState.None));
+        Assert.Equal(UIColors.BackgroundLight, Background(box, 0, DrawItemState.None));
         Assert.Equal(set.Hover, Background(box, 0, DrawItemState.Selected));
 
         // The text: some pixel of the row is exactly the text color of the set.
@@ -152,7 +152,7 @@ public class ComboBoxTests
         using System.Windows.Forms.ComboBox box = Create(UIStyles.Colors.Sets.Green);
 
         Assert.Equal(
-            UIColors.BackgroundMedium,
+            UIColors.BackgroundLight,
             Background(box, 0, DrawItemState.Selected | DrawItemState.ComboBoxEdit));
     }
 

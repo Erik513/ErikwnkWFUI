@@ -42,6 +42,8 @@ namespace ErikwnkWFUI.Controls
         private const int WM_LBUTTONUP = 0x0202;
 
         private readonly Control _buttons;
+        private readonly Control _edit;
+        private bool _centering;
         private readonly ArrowFields _arrowFields;
         private UIColorSet _colors;
         private Func<UIColorSet> _colorsSource;
@@ -52,6 +54,13 @@ namespace ErikwnkWFUI.Controls
         {
             _buttons = FindButtons();
             _arrowFields = new ArrowFields(this);
+            _edit = FindEdit();
+
+            if (_edit != null)
+            {
+                _edit.LocationChanged += (sender, e) => CenterNumber();
+                _edit.SizeChanged += (sender, e) => CenterNumber();
+            }
 
             if (_buttons != null)
             {
@@ -61,8 +70,13 @@ namespace ErikwnkWFUI.Controls
                     _arrowFields.AssignHandle(_buttons.Handle);
             }
 
+            // The border of BorderStyle.FixedSingle (the factory's) is part of the window outside its client area, in the
+            // system's color: the library paints its own frame over it - a quiet outline, with the focus the color of
+            // the set.
+            InputField.AttachFrame(this, () => BorderStyle == BorderStyle.FixedSingle, () => InputField.GetFrameColor(this, Colors, ContainsFocus));
+
             // The colors are read while painting: a change of the theme only needs a repaint.
-            ThemeWatcher.Attach(this, RepaintArrows);
+            ThemeWatcher.Attach(this, () => { RepaintArrows(); Invalidate(); });
         }
 
         /// <summary>
@@ -103,13 +117,17 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnEnter(e);
             RepaintArrows();
+            Invalidate();
         }
 
         protected override void OnLeave(EventArgs e)
         {
             base.OnLeave(e);
             RepaintArrows();
+            Invalidate();
         }
+
+
 
         // ---- prefix and suffix ----
 
@@ -227,6 +245,22 @@ namespace ErikwnkWFUI.Controls
             return text;
         }
 
+        // The standard control draws a ring around its text field (black when it is disabled); what lies outside the two
+        // children is painted in the field's color over it.
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            using (Region ring = new Region(ClientRectangle))
+            using (SolidBrush back = new SolidBrush(BackColor))
+            {
+                foreach (Control child in Controls)
+                    ring.Exclude(child.Bounds);
+
+                e.Graphics.FillRegion(back, ring);
+            }
+        }
+
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -234,6 +268,7 @@ namespace ErikwnkWFUI.Controls
             _hotField = -1;
             _pressedField = -1;
             RepaintArrows();
+            Invalidate();
         }
 
         // The arrow buttons are a child control of the standard control (UpDownButtons, not public).
@@ -246,6 +281,51 @@ namespace ErikwnkWFUI.Controls
             }
 
             return null;
+        }
+
+        private Control FindEdit()
+        {
+            foreach (Control child in Controls)
+            {
+                if (child != _buttons)
+                    return child;
+            }
+
+            return null;
+        }
+
+        // The text field of the standard control puts the line of text at its top edge, a fixed distance from the border,
+        // so the number sits above the middle of the box with a small font and below it with a large one (measured
+        // for 8 to 24 points: one pixel too high up to a line height of 16, centered from 18 to 25, then more and more
+        // too low). The field is moved by that much. The standard control places it again whenever the size or the
+        // font changes, which is why this follows the field's own location.
+        private int _shiftedTop = int.MinValue;
+        private int _appliedShift;
+
+        private void CenterNumber()
+        {
+            if (_centering || _edit == null)
+                return;
+
+            _centering = true;
+
+            try
+            {
+                // Where the standard control put the field: what it has now, less what this moved it by before.
+                int baseTop = _edit.Top == _shiftedTop ? _edit.Top - _appliedShift : _edit.Top;
+                int lineHeight = Font.Height;
+                int shift = lineHeight <= 16 ? 1 : lineHeight >= 30 ? -(int)Math.Round((lineHeight - 26) / 7.0) : 0;
+
+                _appliedShift = shift;
+                _shiftedTop = baseTop + shift;
+
+                if (_edit.Top != _shiftedTop)
+                    _edit.Top = _shiftedTop;
+            }
+            finally
+            {
+                _centering = false;
+            }
         }
 
         // 0 = the upper field (up), 1 = the lower one (down).
@@ -310,6 +390,7 @@ namespace ErikwnkWFUI.Controls
 
             UIColorSet colors = Colors ?? UIStyles.Colors.Sets.Gray;
             int gap = Math.Max(1, Px(1));
+
             int cellHeight = (size.Height - 3 * gap) / 2;
             Rectangle up = new Rectangle(gap, gap, size.Width - 2 * gap, cellHeight);
             Rectangle down = new Rectangle(gap, size.Height - gap - cellHeight, size.Width - 2 * gap, cellHeight);

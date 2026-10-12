@@ -255,7 +255,7 @@ namespace ErikwnkWFUI.Controls
             // The selected (or hovered) row: the set's color with the set's text, or the
             // neutral gray of the other controls' selections without a set.
             Color backColor = !isSelected
-                ? UIColors.BackgroundMedium
+                ? (isDisplayArea ? BackColor : InputField.Background)
                 : ResolvedColors != null ? UIColors.GetReadableFill(ResolvedColors.Hover, ResolvedColors.HoverText) : UIColors.BorderLight;
 
             // A disabled box draws its text muted.

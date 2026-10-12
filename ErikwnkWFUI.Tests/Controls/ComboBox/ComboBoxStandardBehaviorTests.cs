@@ -71,7 +71,7 @@ public class ComboBoxStandardBehaviorTests
         Assert.Equal(new object[] { "Apple", "Banana", "Cherry" }, box.Items.Cast<object>().ToArray());
 
         using Bitmap row = DrawRow(box, 1, DrawItemState.None);
-        Assert.Equal(UIColors.BackgroundMedium, row.GetPixel(115, 12));
+        Assert.Equal(UIColors.BackgroundLight, row.GetPixel(115, 12));
     }
 
     [Fact]

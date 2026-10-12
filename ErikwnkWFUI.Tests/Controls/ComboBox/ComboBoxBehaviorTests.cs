@@ -39,7 +39,7 @@ public class ComboBoxBehaviorTests : IDisposable
             Location = new Point(-4000, -4000),
             ShowInTaskbar = false,
             ClientSize = new Size(300, 260),
-            BackColor = UIColors.BackgroundMedium
+            BackColor = UIColors.BackgroundLight
         };
 
         host.Controls.Add(box);

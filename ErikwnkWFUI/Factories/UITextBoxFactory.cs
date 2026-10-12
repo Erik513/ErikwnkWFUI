@@ -16,7 +16,8 @@ namespace ErikwnkWFUI.Factories
                 Font = UIFonts.Normal
             };
 
-            Follow(textBox, () => UIColors.BackgroundMedium);
+            Follow(textBox);
+            Controls.InputField.FrameTextBox(textBox);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
                 SetPlaceholder(textBox, placeholder);
@@ -35,7 +36,7 @@ namespace ErikwnkWFUI.Factories
                 Font = UIFonts.Normal
             };
 
-            Follow(textBox, () => UIColors.BackgroundLight);
+            Follow(textBox);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
                 SetPlaceholder(textBox, placeholder);
@@ -45,13 +46,13 @@ namespace ErikwnkWFUI.Factories
 
         // The fill and the text follow the theme as long as they still are the colors the factory gave. The text is
         // the main color, or the muted one while the placeholder is shown.
-        private static void Follow(TextBox textBox, System.Func<System.Drawing.Color> backColor)
+        private static void Follow(TextBox textBox)
         {
             System.Drawing.Color primary = UIColors.TextPrimary;
             System.Drawing.Color muted = UIColors.TextMuted;
             textBox.ForeColor = primary;
 
-            Controls.ThemeWatcher.FollowBackColor(textBox, backColor);
+            Controls.InputField.FollowBackground(textBox);
 
             // Scroll bars of a multi-line box: the system's dark ones on a dark theme.
             Helpers.NativeControlTheme.Track(textBox);

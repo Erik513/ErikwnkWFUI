@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Factories
                 Colors = colors
             };
 
-            Controls.ThemeWatcher.FollowBackColor(comboBox, () => UIColors.BackgroundMedium);
+            Controls.InputField.FollowBackground(comboBox);
             Controls.ThemeWatcher.FollowForeColor(comboBox, () => UIColors.TextPrimary);
 
             return comboBox;

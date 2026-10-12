@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -55,7 +55,10 @@ public class NumericUpDownTests : IDisposable
         box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
         Control buttons = Buttons(box);
 
-        return bitmap.GetPixel(buttons.Left + xInButtons, buttons.Top + yInButtons);
+        // (The bitmap is of the whole window: the system's border, if there is one, comes before the client area.)
+        int border = (box.Width - box.ClientSize.Width) / 2;
+
+        return bitmap.GetPixel(border + buttons.Left + xInButtons, border + buttons.Top + yInButtons);
     }
 
     // Inside the upper / lower field, beside the arrow and inside the frame of the focus.
@@ -236,6 +239,66 @@ public class NumericUpDownTests : IDisposable
                 }
 
         return new Size(maxX - minX + 1, 1);
+    }
+
+    // ---- the number in the middle ----
+
+    // The space above and below the digits in the box.
+    private static (int Above, int Below) DigitSpace(System.Windows.Forms.NumericUpDown box)
+    {
+        using Bitmap bitmap = new Bitmap(box.Width, box.Height);
+        box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
+        int top = -1, bottom = -1;
+        Color text = box.ForeColor;
+
+        for (int y = 2; y < box.Height - 2; y++)
+            for (int x = 6; x < box.Width - 24; x++)
+                if (bitmap.GetPixel(x, y).R > 150)
+                {
+                    if (top < 0)
+                        top = y;
+
+                    bottom = y;
+                }
+
+        return (top, box.Height - 1 - bottom);
+    }
+
+    [Theory]
+    [InlineData(8f)]
+    [InlineData(9f)]
+    [InlineData(10f)]
+    [InlineData(12f)]
+    [InlineData(14f)]
+    [InlineData(18f)]
+    [InlineData(24f)]
+    public void TheNumber_IsInTheMiddleOfTheBox_ForEveryFontSize(float points)
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 8));
+
+        using Font font = new Font("Segoe UI", points);
+        box.Font = font;
+        Application.DoEvents();
+        var space = DigitSpace(box);
+
+        Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{points} pt: {space.Above} above, {space.Below} below");
+    }
+
+    [Fact]
+    public void TheNumber_StaysInTheMiddle_AfterAChangeOfTheFontAndBack()
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 8));
+
+        using (Font big = new Font("Segoe UI", 20))
+            box.Font = big;
+
+        Application.DoEvents();
+        using Font normal = new Font("Segoe UI", 9);
+        box.Font = normal;
+        Application.DoEvents();
+        var space = DigitSpace(box);
+
+        Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{space.Above} above, {space.Below} below");
     }
 
     // ---- the outline, the focus ----

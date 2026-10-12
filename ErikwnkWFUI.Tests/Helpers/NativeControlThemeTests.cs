@@ -68,8 +68,8 @@ public class NativeControlThemeTests : IDisposable
         Application.DoEvents();
         _forms.Add(form);
 
-        // The follow of its colors, and the style of its scroll bars: three listeners while it has a window (fill, text, native parts).
-        Assert.Equal(before + 3, Listeners());
+        // The follow of its colors, and the style of its scroll bars: four listeners while it has a window (fill, text, native parts, frame).
+        Assert.Equal(before + 4, Listeners());
     }
 
     private static int Listeners()

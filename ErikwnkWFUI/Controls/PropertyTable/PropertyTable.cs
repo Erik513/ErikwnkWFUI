@@ -418,6 +418,8 @@ namespace ErikwnkWFUI.Controls
             }
             if (control is NumericUpDown)
             {
+                // The cell has its own frame.
+                ((NumericUpDown)control).BorderStyle = BorderStyle.None;
                 control.Dock = DockStyle.Left;
                 control.Margin = new Padding(0);
                 return;
