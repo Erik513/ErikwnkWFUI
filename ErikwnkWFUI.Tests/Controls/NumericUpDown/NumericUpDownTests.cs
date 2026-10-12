@@ -58,10 +58,10 @@ public class NumericUpDownTests : IDisposable
         return bitmap.GetPixel(buttons.Left + xInButtons, buttons.Top + yInButtons);
     }
 
-    // Inside the upper / lower field, beside the arrow.
-    private static Color UpperField(System.Windows.Forms.NumericUpDown box) => Pixel(box, 3, 3);
+    // Inside the upper / lower field, beside the arrow and inside the frame of the focus.
+    private static Color UpperField(System.Windows.Forms.NumericUpDown box) => Pixel(box, 4, 4);
 
-    private static Color LowerField(System.Windows.Forms.NumericUpDown box) => Pixel(box, 3, Buttons(box).Height - 4);
+    private static Color LowerField(System.Windows.Forms.NumericUpDown box) => Pixel(box, 4, Buttons(box).Height - 5);
 
     // The tip of an arrow lies at the middle of its field.
     private static Color UpperArrow(System.Windows.Forms.NumericUpDown box) => Pixel(box, Buttons(box).Width / 2, Buttons(box).Height / 4);
@@ -278,7 +278,38 @@ public class NumericUpDownTests : IDisposable
 
         Assert.True(box.ContainsFocus);
         Assert.NotEqual(before.ToArgb(), framed.ToArgb());
-        Assert.Equal(UIColors.EnsureContrast(UIColors.PrimarySet.Hover, box.BackColor, 3.0).ToArgb(), framed.ToArgb());
+        Assert.True(UIColors.GetContrastRatio(framed, box.BackColor) >= 3.0);
+    }
+
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(false, 1)]
+    [InlineData(false, 2)]
+    [InlineData(true, 0)]
+    [InlineData(true, 1)]
+    [InlineData(true, 2)]
+    public void TheFocusFrame_IsSeenAgainstTheFieldAndAgainstTheFill_InBothThemes(bool light, int kind)
+    {
+        UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
+
+        try
+        {
+            System.Windows.Forms.NumericUpDown box = Show(kind == 0
+                ? UIStyles.NumericUpDowns.CreateStandard()
+                : kind == 1 ? UIStyles.NumericUpDowns.CreatePrimary() : UIStyles.NumericUpDowns.CreateStandard(colors: UIStyles.Colors.Sets.Green));
+            Color fill = ((WfuiNumericUpDown)box).Colors?.Basic ?? UIStyles.Colors.Sets.Gray.Basic;
+
+            box.Focus();
+            Application.DoEvents();
+            Color frame = Pixel(box, 1, 1);
+
+            Assert.True(UIColors.GetContrastRatio(frame, box.BackColor) >= 3.0, $"against the field {UIColors.GetContrastRatio(frame, box.BackColor):F2}");
+            Assert.True(UIColors.GetContrastRatio(frame, fill) >= 1.5, $"against the fill {UIColors.GetContrastRatio(frame, fill):F2}");
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
     }
 
     // ---- prefix and suffix ----

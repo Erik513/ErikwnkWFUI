@@ -31,6 +31,9 @@ namespace ErikwnkWFUI.Controls
         // A field whose fill differs less than this from the field's color (contrast ratio) gets an outline.
         private const double OutlineBelowContrast = 2.0;
 
+        // The frame of the focus must differ at least this much from the fill it surrounds.
+        private const double FocusFrameAgainstFill = 1.5;
+
         private const int WM_ERASEBKGND = 0x0014;
         private const int WM_PRINTCLIENT = 0x0318;
         private const int WM_MOUSELEAVE = 0x02A3;
@@ -315,6 +318,18 @@ namespace ErikwnkWFUI.Controls
             PaintField(g, down, colors, 1, false);
         }
 
+        // The frame of the focus: the color of the set where it is seen against the field and against the fill it
+        // surrounds; the neutral gray set is too close to its own fill for that, so it gets the text color.
+        private Color GetFocusColor(UIColorSet colors, Color fill)
+        {
+            Color frame = UIColors.EnsureContrast(colors.Hover, BackColor, 3.0);
+
+            if (UIColors.GetContrastRatio(frame, fill) >= FocusFrameAgainstFill)
+                return frame;
+
+            return UIColors.EnsureContrast(ForeColor, BackColor, 4.5);
+        }
+
         private void PaintField(Graphics g, Rectangle cell, UIColorSet colors, int field, bool pointsUp)
         {
             Color fill;
@@ -352,8 +367,12 @@ namespace ErikwnkWFUI.Controls
             // a dark fill on a light field needs none.
             if (ContainsFocus && Enabled)
             {
-                using (Pen pen = new Pen(UIColors.EnsureContrast(colors.Hover, BackColor, 3.0), Math.Max(1, Px(1))))
+                // Two pixels, drawn inside the field: the fields are small, a thin frame is hardly seen.
+                using (Pen pen = new Pen(GetFocusColor(colors, fill), Math.Max(2, Px(2))))
+                {
+                    pen.Alignment = PenAlignment.Inset;
                     g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);
+                }
             }
             else if (UIColors.GetContrastRatio(fill, BackColor) < OutlineBelowContrast)
             {
