@@ -237,6 +237,101 @@ public class NumericUpDownTests : IDisposable
         return new Size(maxX - minX + 1, 1);
     }
 
+    // ---- what the standard control offers ----
+
+    [Fact]
+    public void ReadOnly_KeepsTheColorOfTheField_AndTheArrowsStillChangeTheValue()
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        Color back = box.BackColor;
+
+        box.ReadOnly = true;
+        Control buttons = Buttons(box);
+        Click(box, buttons.Width / 2, 3);
+
+        Assert.Equal(back, box.BackColor);
+        Assert.Equal(55, box.Value);
+        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), LowerField(box).ToArgb());
+    }
+
+    [Fact]
+    public void TheArrowsOnTheLeft_AreDrawnThere()
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
+
+        box.UpDownAlign = LeftRightAlignment.Left;
+        Application.DoEvents();
+
+        Assert.Equal(0, Buttons(box).Left);
+        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), UpperField(box).ToArgb());
+    }
+
+    [Theory]
+    [InlineData(BorderStyle.None)]
+    [InlineData(BorderStyle.FixedSingle)]
+    [InlineData(BorderStyle.Fixed3D)]
+    public void TheArrowFields_AreDrawnWithEveryBorderStyle(BorderStyle style)
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
+
+        box.BorderStyle = style;
+        Application.DoEvents();
+
+        // (The standard control lays its border over the edge of the buttons, so the fill is looked for, not
+        // read at one point.)
+        using Bitmap bitmap = new Bitmap(box.Width, box.Height);
+        box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
+        Control buttons = Buttons(box);
+        int fill = UIStyles.Colors.Sets.Gray.Basic.ToArgb();
+        int count = 0;
+
+        for (int x = 0; x < buttons.Width; x++)
+            for (int y = 0; y < buttons.Height; y++)
+                if (bitmap.GetPixel(buttons.Left + x, buttons.Top + y).ToArgb() == fill)
+                    count++;
+
+        Assert.True(count > 40, $"{count} pixels of the fill");
+    }
+
+    [Fact]
+    public void ALargerFont_MakesTheFieldsAndTheArrowsBigger()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard());
+        int smallHeight = box.Height;
+        Size small;
+
+        using (Bitmap bitmap = new Bitmap(box.Width, box.Height))
+        {
+            box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
+            small = ArrowSize(bitmap, box);
+        }
+
+        using Font big = new Font("Segoe UI", 20);
+        box.Font = big;
+        Application.DoEvents();
+
+        using Bitmap bigBitmap = new Bitmap(box.Width, box.Height);
+        box.DrawToBitmap(bigBitmap, new Rectangle(Point.Empty, box.Size));
+
+        Assert.True(box.Height > smallHeight);
+        Assert.True(ArrowSize(bigBitmap, box).Width > small.Width);
+    }
+
+    [Fact]
+    public void TheNumberFormats_AreTheStandardOnes()
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard(0, 100000, 1, 255));
+
+        box.Hexadecimal = true;
+        Assert.Equal("FF", box.Text);
+
+        box.Hexadecimal = false;
+        box.DecimalPlaces = 2;
+        box.ThousandsSeparator = true;
+        box.Value = 1234;
+        Assert.Equal(1234m.ToString("N2"), box.Text);
+    }
+
     // ---- the standard behavior stays ----
 
     private static void Click(System.Windows.Forms.NumericUpDown box, int x, int y)

@@ -18,6 +18,13 @@ namespace ErikwnkWFUI.Controls
     /// Followed live: a change of the theme or the accent repaints the arrows (the set of
     /// <c>UIStyles.NumericUpDowns.CreatePrimary</c> follows the accent). The colors of the field itself are the
     /// standard control's <c>BackColor</c> and <c>ForeColor</c>; the factory sets them from the theme.
+    /// <para>
+    /// Left to the standard control: the border of <c>BorderStyle.FixedSingle</c>/<c>Fixed3D</c> (drawn by Windows in
+    /// its own colors - the factory makes the control borderless), the text of a disabled field (Windows draws it in
+    /// its gray) and right-to-left layouts (not supported by the library). Everything else the standard control
+    /// offers - <c>ReadOnly</c>, <c>UpDownAlign</c>, <c>Hexadecimal</c>, <c>DecimalPlaces</c>,
+    /// <c>ThousandsSeparator</c>, <c>InterceptArrowKeys</c>, <c>Accelerations</c>, <c>TextAlign</c> - works as before.
+    /// </para>
     /// </remarks>
     public class NumericUpDown : System.Windows.Forms.NumericUpDown
     {
@@ -212,8 +219,10 @@ namespace ErikwnkWFUI.Controls
             using (Pen pen = new Pen(UIColors.GetOutlineColor(BackColor)))
                 g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);
 
-            float width = Px(8);
-            float height = Px(4);
+            // The arrow grows with a field that is taller than usual (a larger font), up to three times.
+            float scale = Math.Min(3f, Math.Max(1f, cell.Height / (float)Px(10)));
+            float width = Px(8) * scale;
+            float height = Px(4) * scale;
             float centerX = cell.Left + cell.Width / 2f;
             float centerY = cell.Top + cell.Height / 2f;
 
