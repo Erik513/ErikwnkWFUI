@@ -35,6 +35,7 @@ public class NumericUpDownTests : IDisposable
     private T Show<T>(T control) where T : Control
     {
         control.Location = new Point(10, 10);
+        control.TabStop = false;
         control.Width = 110;
         Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(140, 60), BackColor = UIColors.BackgroundMedium };
         form.Controls.Add(control);
@@ -235,6 +236,148 @@ public class NumericUpDownTests : IDisposable
                 }
 
         return new Size(maxX - minX + 1, 1);
+    }
+
+    // ---- the outline, the focus ----
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void TheOutline_OnlyWhereTheFillIsCloseToTheField(bool light)
+    {
+        UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
+
+        try
+        {
+            System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
+            Color fill = UIStyles.Colors.Sets.Gray.Basic;
+            bool close = UIColors.GetContrastRatio(fill, box.BackColor) < 2.0;
+            Color outline = UIColors.GetOutlineColor(box.BackColor);
+
+            // The corner of the field: its outline, or - without one - the fill itself.
+            Color corner = Pixel(box, 1, 1);
+
+            Assert.Equal((close ? outline : fill).ToArgb(), corner.ToArgb());
+            Assert.Equal(!light, close);
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+    }
+
+    [Fact]
+    public void WithTheFocus_TheFieldsAreFramedInTheColorOfTheSet()
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreatePrimary());
+        Color before = Pixel(box, 1, 1);
+
+        box.Focus();
+        Application.DoEvents();
+        Color framed = Pixel(box, 1, 1);
+
+        Assert.True(box.ContainsFocus);
+        Assert.NotEqual(before.ToArgb(), framed.ToArgb());
+        Assert.Equal(UIColors.EnsureContrast(UIColors.PrimarySet.Hover, box.BackColor, 3.0).ToArgb(), framed.ToArgb());
+    }
+
+    // ---- prefix and suffix ----
+
+    [Fact]
+    public void ASuffix_IsShownAfterTheNumber_TheValueStaysTheNumber()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+
+        box.Suffix = " %";
+
+        Assert.Equal("50 %", box.Text);
+        Assert.Equal(50, box.Value);
+    }
+
+    [Fact]
+    public void APrefixAndASuffix_BothShow_AlsoAfterAnArrowStep()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        box.Prefix = "~";
+        box.Suffix = " px";
+        Assert.Equal("~50 px", box.Text);
+
+        Click(box, Buttons(box).Width / 2, 3);
+
+        Assert.Equal(55, box.Value);
+        Assert.Equal("~55 px", box.Text);
+    }
+
+    [Theory]
+    [InlineData("70 %", 70)]
+    [InlineData("70%", 70)]
+    [InlineData("70", 70)]
+    [InlineData(" 70 % ", 70)]
+    public void ATypedNumber_IsReadWithOrWithoutTheSuffix_AndShownWithIt(string typed, int expected)
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        box.Suffix = " %";
+
+        box.Text = typed;
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(expected, box.Value);
+        Assert.Equal(expected + " %", box.Text);
+    }
+
+    [Fact]
+    public void ATypedValueOutsideTheLimits_IsKeptInsideAndShownWithTheSuffix()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        box.Suffix = " %";
+
+        box.Text = "500 %";
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(100, box.Value);
+        Assert.Equal("100 %", box.Text);
+    }
+
+    [Fact]
+    public void Garbage_KeepsTheValue_AndShowsItWithTheSuffix()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        box.Suffix = " %";
+
+        box.Text = "abc";
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(50, box.Value);
+        Assert.Equal("50 %", box.Text);
+    }
+
+    [Fact]
+    public void WithoutAnAffix_NothingChanges_AndRemovingThemGoesBack()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 5, 50));
+        Assert.Equal("50", box.Text);
+
+        box.Suffix = " %";
+        box.Suffix = "";
+
+        Assert.Equal("50", box.Text);
+    }
+
+    [Fact]
+    public void TheAffixes_WorkWithDecimalPlacesAndHexadecimal()
+    {
+        WfuiNumericUpDown box = (WfuiNumericUpDown)Show(UIStyles.NumericUpDowns.CreateStandard(0, 1000, 1, 255));
+        box.Prefix = "0x";
+        box.Hexadecimal = true;
+        Assert.Equal("0xFF", box.Text);
+
+        box.Hexadecimal = false;
+        box.DecimalPlaces = 1;
+        box.Suffix = " ms";
+        box.Text = "12,5 ms";
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(12.5m, box.Value);
     }
 
     // ---- what the standard control offers ----

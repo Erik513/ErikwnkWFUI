@@ -67,7 +67,7 @@ namespace ErikwnkWFUI.Showcase
                  AddListViewSection),
 
                 ("NumericUpDown",
-                 "Number input with the arrow fields drawn by the library. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Left enabled, right disabled.",
+                 "Number input with the arrow fields drawn by the library. Standard is neutral, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. Suffix (and Prefix) show a unit in the field while the value stays a number. Left enabled, right disabled.",
                  AddNumericUpDownsSection),
 
                 ("Panels",

@@ -340,6 +340,13 @@ namespace ErikwnkWFUI.Showcase
             AddNumericUpDownRow(table, "CreateStandard", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
             AddNumericUpDownRow(table, "CreatePrimary", () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
             AddNumericUpDownRow(table, "CreateStandard(colors)", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
+            AddNumericUpDownRow(table, "Suffix", () =>
+            {
+                ErikwnkWFUI.Controls.NumericUpDown box = (ErikwnkWFUI.Controls.NumericUpDown)UIStyles.NumericUpDowns.CreatePrimary(0, 100, 5, 40);
+                box.Suffix = " %";
+
+                return box;
+            });
         }
 
         // Enabled on the left, disabled on the right.

@@ -28,6 +28,9 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public class NumericUpDown : System.Windows.Forms.NumericUpDown
     {
+        // A field whose fill differs less than this from the field's color (contrast ratio) gets an outline.
+        private const double OutlineBelowContrast = 2.0;
+
         private const int WM_ERASEBKGND = 0x0014;
         private const int WM_PRINTCLIENT = 0x0318;
         private const int WM_MOUSELEAVE = 0x02A3;
@@ -91,6 +94,134 @@ namespace ErikwnkWFUI.Controls
             int dpi = DpiOverride > 0 ? DpiOverride : DeviceDpi;
 
             return (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
+        }
+
+        protected override void OnEnter(EventArgs e)
+        {
+            base.OnEnter(e);
+            RepaintArrows();
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            base.OnLeave(e);
+            RepaintArrows();
+        }
+
+        // ---- prefix and suffix ----
+
+        private string _prefix = "";
+        private string _suffix = "";
+
+        /// <summary>Text shown before the number in the field (for example "$ "); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
+        public string Prefix
+        {
+            get { return _prefix; }
+            set
+            {
+                _prefix = value ?? "";
+                UpdateEditText();
+            }
+        }
+
+        /// <summary>Text shown after the number in the field (for example " %" or " px"); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
+        public string Suffix
+        {
+            get { return _suffix; }
+            set
+            {
+                _suffix = value ?? "";
+                UpdateEditText();
+            }
+        }
+
+        protected override void UpdateEditText()
+        {
+            base.UpdateEditText();
+
+            if (_prefix.Length == 0 && _suffix.Length == 0)
+                return;
+
+            // Not a change by the user (that would make the standard control read the text as an edit).
+            ChangingText = true;
+
+            try
+            {
+                Text = _prefix + Text + _suffix;
+            }
+            finally
+            {
+                ChangingText = false;
+            }
+        }
+
+        // What the user typed may still carry the prefix and the suffix (or have lost a space of them): they are taken
+        // off before the number is read (the standard control reads it when the field is left and before an arrow
+        // steps), and put back afterwards.
+        protected override void ValidateEditText()
+        {
+            TakeOffAffixes();
+            base.ValidateEditText();
+            PutOnAffixes();
+        }
+
+        public override void UpButton()
+        {
+            TakeOffAffixes();
+            base.UpButton();
+            PutOnAffixes();
+        }
+
+        public override void DownButton()
+        {
+            TakeOffAffixes();
+            base.DownButton();
+            PutOnAffixes();
+        }
+
+        private void TakeOffAffixes()
+        {
+            if (_prefix.Length == 0 && _suffix.Length == 0)
+                return;
+
+            string bare = RemoveAffixes(Text);
+
+            if (bare != Text)
+                Text = bare;
+        }
+
+        private void PutOnAffixes()
+        {
+            if (_prefix.Length > 0 || _suffix.Length > 0)
+                UpdateEditText();
+        }
+
+        private string RemoveAffixes(string text)
+        {
+            text = text.Trim();
+            text = RemoveAffix(text, _prefix, atStart: true);
+
+            return RemoveAffix(text, _suffix, atStart: false);
+        }
+
+        private static string RemoveAffix(string text, string affix, bool atStart)
+        {
+            if (affix.Length == 0)
+                return text;
+
+            foreach (string candidate in new[] { affix, affix.Trim() })
+            {
+                if (candidate.Length == 0)
+                    continue;
+
+                if (atStart && text.StartsWith(candidate, StringComparison.Ordinal))
+                    return text.Substring(candidate.Length).TrimStart();
+
+                if (!atStart && text.EndsWith(candidate, StringComparison.Ordinal))
+                    return text.Substring(0, text.Length - candidate.Length).TrimEnd();
+            }
+
+            return text;
         }
 
         protected override void OnEnabledChanged(EventArgs e)
@@ -174,8 +305,6 @@ namespace ErikwnkWFUI.Controls
             using (SolidBrush back = new SolidBrush(BackColor))
                 g.FillRectangle(back, new Rectangle(Point.Empty, size));
 
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-
             UIColorSet colors = Colors ?? UIStyles.Colors.Sets.Gray;
             int gap = Math.Max(1, Px(1));
             int cellHeight = (size.Height - 3 * gap) / 2;
@@ -212,12 +341,27 @@ namespace ErikwnkWFUI.Controls
                 arrow = colors.BasicText;
             }
 
+            // The fields and their outline are drawn sharp; only the arrow is smoothed.
+            g.SmoothingMode = SmoothingMode.None;
+
             using (SolidBrush brush = new SolidBrush(fill))
                 g.FillRectangle(brush, cell);
 
-            // The fill is kept apart from the field by an outline where the two come close in brightness.
-            using (Pen pen = new Pen(UIColors.GetOutlineColor(BackColor)))
-                g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);
+            // With the focus the fields are framed in the color of the set (brought to where it is seen against the
+            // field); otherwise by a quiet outline, and only where the fill comes close to the field in brightness -
+            // a dark fill on a light field needs none.
+            if (ContainsFocus && Enabled)
+            {
+                using (Pen pen = new Pen(UIColors.EnsureContrast(colors.Hover, BackColor, 3.0), Math.Max(1, Px(1))))
+                    g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);
+            }
+            else if (UIColors.GetContrastRatio(fill, BackColor) < OutlineBelowContrast)
+            {
+                using (Pen pen = new Pen(UIColors.GetOutlineColor(BackColor)))
+                    g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);
+            }
+
+            g.SmoothingMode = SmoothingMode.AntiAlias;
 
             // The arrow grows with a field that is taller than usual (a larger font), up to three times.
             float scale = Math.Min(3f, Math.Max(1f, cell.Height / (float)Px(10)));
