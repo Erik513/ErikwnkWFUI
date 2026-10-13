@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -28,7 +28,7 @@ public class NumericUpDownColorContrastTests : IDisposable
 
     private static UIColorSet[] Sets() => new[]
     {
-        UIStyles.Colors.Sets.Gray, UIStyles.Colors.Sets.Green, UIStyles.Colors.Sets.Red, UIStyles.Colors.Sets.Blue, UIStyles.Colors.Sets.Dark, UIColors.PrimarySet,
+        WfuiNumericUpDown.GetNeutralSet(), UIStyles.Colors.Sets.Green, UIStyles.Colors.Sets.Red, UIStyles.Colors.Sets.Blue, UIStyles.Colors.Sets.Dark, UIColors.PrimarySet,
     };
 
     private static void UseTheme(bool light) => UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
@@ -84,15 +84,15 @@ public class NumericUpDownColorContrastTests : IDisposable
     public void TheArrow_IsReadableOnItsField_InEveryStateOfEverySet(bool light)
     {
         UseTheme(light);
-
-        foreach (UIColorSet set in Sets())
+        foreach (UIColorSet set in Sets().Append(WfuiNumericUpDown.GetNeutralSet()))
         {
-            foreach (var state in new[] { ("rest", set.Basic, set.BasicText), ("hover", set.Hover, set.HoverText), ("pressed", set.Pressed, set.PressedText), ("disabled", set.Disabled, set.DisabledText) })
+            for (int state = 0; state < 4; state++)
             {
-                Color arrow = WfuiNumericUpDown.GetArrowColor(state.Item3, state.Item2);
-                double ratio = ColorContrastHelper.GetContrastRatio(arrow, state.Item2);
+                var colors = WfuiNumericUpDown.GetStateColors(set, state, UIColors.BackgroundLight);
+                double ratio = ColorContrastHelper.GetContrastRatio(colors.Arrow, colors.Fill);
 
-                Assert.True(ratio >= 3.0, $"{state.Item1}: {ratio:F2} (fill {state.Item2}, arrow {state.Item3})");
+                // A disabled arrow is muted on purpose: it only has to be seen.
+                Assert.True(ratio >= (state == 3 ? 2.0 : 3.0), $"state {state}: {ratio:F2} (fill {colors.Fill}, arrow {colors.Arrow})");
             }
         }
     }

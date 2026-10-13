@@ -167,7 +167,7 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         int border = (box.Width - box.ClientSize.Width) / 2;
         Control buttons = Buttons(box);
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Disabled.ToArgb(), bitmap.GetPixel(border + buttons.Left + 4, border + buttons.Top + 4).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetStateColors(WfuiNumericUpDown.GetNeutralSet(), 3, box.BackColor).Fill.ToArgb(), bitmap.GetPixel(border + buttons.Left + 4, border + buttons.Top + 4).ToArgb());
 
         box.Enabled = true;
         Assert.True(box.Enabled);

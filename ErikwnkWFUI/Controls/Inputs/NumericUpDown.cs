@@ -434,7 +434,7 @@ namespace ErikwnkWFUI.Controls
                 g.FillRectangle(back, new Rectangle(Point.Empty, size));
 
             // A field per arrow, one pixel from the edge and from the other field.
-            UIColorSet colors = Colors ?? UIStyles.Colors.Sets.Gray;
+            UIColorSet colors = Colors ?? GetNeutralSet();
             int gap = Math.Max(1, Px(1));
             int cellHeight = (size.Height - 3 * gap) / 2;
             Rectangle up = new Rectangle(gap, gap, size.Width - 2 * gap, cellHeight);
@@ -456,6 +456,39 @@ namespace ErikwnkWFUI.Controls
             return UIColors.EnsureContrast(ForeColor, BackColor, 4.5);
         }
 
+        // The look of the control without a set: neutral gray fields. On a dark theme the gray set of the library; on a
+        // light theme a pale gray with a dark arrow (the dark blocks of the gray set are heavy next to a white field).
+        private static UIColorSet _lightNeutralSet;
+
+        internal static UIColorSet GetNeutralSet()
+        {
+            if (!UIColors.IsLight(UIColors.BackgroundMedium))
+                return UIStyles.Colors.Sets.Gray;
+
+            return _lightNeutralSet ?? (_lightNeutralSet = UIColors.CreateSet(Color.FromArgb(228, 228, 228), Color.FromArgb(212, 212, 212), Color.FromArgb(190, 190, 190)));
+        }
+
+        // The fill and the arrow of a field in a state (0 rest, 1 hovered, 2 pressed, 3 disabled). A disabled field is the
+        // rest fill drawn toward the color of the field, with a muted arrow, so it reads as switched off in both themes.
+        internal static (Color Fill, Color Arrow) GetStateColors(UIColorSet colors, int state, Color field)
+        {
+            switch (state)
+            {
+                case 1:
+                    return (colors.Hover, GetArrowColor(colors.HoverText, colors.Hover));
+
+                case 2:
+                    return (colors.Pressed, GetArrowColor(colors.PressedText, colors.Pressed));
+
+                case 3:
+                    Color fill = UIColors.BlendToward(colors.Basic, field, 0.65);
+                    return (fill, UIColors.GetDisabledText(fill));
+
+                default:
+                    return (colors.Basic, GetArrowColor(colors.BasicText, colors.Basic));
+            }
+        }
+
         // The arrow of a set is its text color on that fill; where a set leaves less than 3:1 between the two (the pressed
         // fill of the green set), the better of black and white is taken, so the arrow is always seen.
         internal static Color GetArrowColor(Color arrow, Color fill)
@@ -465,29 +498,8 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintField(Graphics g, Rectangle cell, UIColorSet colors, int field, bool pointsUp)
         {
-            Color fill;
-            Color arrow;
-
-            if (!Enabled)
-            {
-                fill = colors.Disabled;
-                arrow = colors.DisabledText;
-            }
-            else if (_pressedField == field)
-            {
-                fill = colors.Pressed;
-                arrow = colors.PressedText;
-            }
-            else if (_hotField == field)
-            {
-                fill = colors.Hover;
-                arrow = colors.HoverText;
-            }
-            else
-            {
-                fill = colors.Basic;
-                arrow = colors.BasicText;
-            }
+            int state = !Enabled ? 3 : _pressedField == field ? 2 : _hotField == field ? 1 : 0;
+            (Color fill, Color arrow) = GetStateColors(colors, state, BackColor);
 
             // The fields and their outline are drawn sharp; only the arrow is smoothed.
             g.SmoothingMode = SmoothingMode.None;
@@ -536,7 +548,7 @@ namespace ErikwnkWFUI.Controls
                     new PointF(centerX, centerY + height / 2)
                 };
 
-            using (SolidBrush brush = new SolidBrush(GetArrowColor(arrow, fill)))
+            using (SolidBrush brush = new SolidBrush(arrow))
                 g.FillPolygon(brush, triangle);
         }
 

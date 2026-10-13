@@ -122,10 +122,10 @@ public class NumericUpDownTests : IDisposable
         System.Windows.Forms.NumericUpDown gray = Show(UIStyles.NumericUpDowns.CreateStandard());
         System.Windows.Forms.NumericUpDown green = Show(UIStyles.NumericUpDowns.CreateStandard(colors: UIStyles.Colors.Sets.Green));
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), UpperField(gray).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), LowerField(gray).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), UpperField(gray).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), LowerField(gray).ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Green.Basic.ToArgb(), UpperField(green).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.BasicText.ToArgb(), UpperArrow(gray).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().BasicText.ToArgb(), UpperArrow(gray).ToArgb());
     }
 
     [Fact]
@@ -134,13 +134,13 @@ public class NumericUpDownTests : IDisposable
         System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
         box.InvokePrivate("SetHotField", 0);
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Hover.ToArgb(), UpperField(box).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), LowerField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Hover.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), LowerField(box).ToArgb());
 
         box.InvokePrivate("SetHotField", 1);
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), UpperField(box).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Hover.ToArgb(), LowerField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Hover.ToArgb(), LowerField(box).ToArgb());
     }
 
     [Fact]
@@ -168,8 +168,8 @@ public class NumericUpDownTests : IDisposable
         box.SetPrivateField("_hotField", 0);
         box.SetPrivateField("_pressedField", 0);
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Pressed.ToArgb(), UpperField(box).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), LowerField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Pressed.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), LowerField(box).ToArgb());
     }
 
     [Fact]
@@ -179,8 +179,8 @@ public class NumericUpDownTests : IDisposable
         box.InvokePrivate("SetHotField", 0);
         box.Enabled = false;
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Disabled.ToArgb(), UpperField(box).ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Disabled.ToArgb(), LowerField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetStateColors(WfuiNumericUpDown.GetNeutralSet(), 3, box.BackColor).Fill.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetStateColors(WfuiNumericUpDown.GetNeutralSet(), 3, box.BackColor).Fill.ToArgb(), LowerField(box).ToArgb());
         Assert.Equal(-1, box.GetPrivateField<int>("_hotField"));
     }
 
@@ -202,7 +202,7 @@ public class NumericUpDownTests : IDisposable
         box.InvokePrivate("RecreateHandle");
         Application.DoEvents();
 
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), UpperField(box).ToArgb());
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class NumericUpDownTests : IDisposable
     {
         Control buttons = Buttons(box);
         int minX = int.MaxValue, maxX = int.MinValue;
-        int arrow = UIStyles.Colors.Sets.Gray.BasicText.ToArgb();
+        int arrow = WfuiNumericUpDown.GetNeutralSet().BasicText.ToArgb();
 
         for (int x = 0; x < buttons.Width; x++)
             for (int y = 0; y < buttons.Height / 2; y++)
@@ -306,14 +306,14 @@ public class NumericUpDownTests : IDisposable
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public void TheOutline_OnlyWhereTheFillIsCloseToTheField(bool light)
+    public void TheNeutralFields_HaveTheOutline_BecauseTheyAreCloseToTheField(bool light)
     {
         UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
 
         try
         {
             System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
-            Color fill = UIStyles.Colors.Sets.Gray.Basic;
+            Color fill = WfuiNumericUpDown.GetNeutralSet().Basic;
             bool close = UIColors.GetContrastRatio(fill, box.BackColor) < 2.0;
             Color outline = UIColors.GetOutlineColor(box.BackColor);
 
@@ -321,7 +321,7 @@ public class NumericUpDownTests : IDisposable
             Color corner = Pixel(box, 1, 1);
 
             Assert.Equal((close ? outline : fill).ToArgb(), corner.ToArgb());
-            Assert.Equal(!light, close);
+            Assert.True(close, "the neutral fields are close to the field in both themes, so they have the outline");
         }
         finally
         {
@@ -360,7 +360,7 @@ public class NumericUpDownTests : IDisposable
             System.Windows.Forms.NumericUpDown box = Show(kind == 0
                 ? UIStyles.NumericUpDowns.CreateStandard()
                 : kind == 1 ? UIStyles.NumericUpDowns.CreatePrimary() : UIStyles.NumericUpDowns.CreateStandard(colors: UIStyles.Colors.Sets.Green));
-            Color fill = ((WfuiNumericUpDown)box).Colors?.Basic ?? UIStyles.Colors.Sets.Gray.Basic;
+            Color fill = ((WfuiNumericUpDown)box).Colors?.Basic ?? WfuiNumericUpDown.GetNeutralSet().Basic;
 
             box.Focus();
             Application.DoEvents();
@@ -488,7 +488,7 @@ public class NumericUpDownTests : IDisposable
 
         Assert.Equal(back, box.BackColor);
         Assert.Equal(55, box.Value);
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), LowerField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), LowerField(box).ToArgb());
     }
 
     [Fact]
@@ -500,7 +500,7 @@ public class NumericUpDownTests : IDisposable
         Application.DoEvents();
 
         Assert.Equal(0, Buttons(box).Left);
-        Assert.Equal(UIStyles.Colors.Sets.Gray.Basic.ToArgb(), UpperField(box).ToArgb());
+        Assert.Equal(WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb(), UpperField(box).ToArgb());
     }
 
     [Theory]
@@ -519,7 +519,7 @@ public class NumericUpDownTests : IDisposable
         using Bitmap bitmap = new Bitmap(box.Width, box.Height);
         box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
         Control buttons = Buttons(box);
-        int fill = UIStyles.Colors.Sets.Gray.Basic.ToArgb();
+        int fill = WfuiNumericUpDown.GetNeutralSet().Basic.ToArgb();
         int count = 0;
 
         for (int x = 0; x < buttons.Width; x++)
