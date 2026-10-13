@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
-using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 

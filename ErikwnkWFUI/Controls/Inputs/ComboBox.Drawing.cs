@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Native;
 using ErikwnkWFUI.Styles;
-using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {

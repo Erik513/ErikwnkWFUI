@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Controls
