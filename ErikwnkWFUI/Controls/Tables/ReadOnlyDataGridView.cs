@@ -1073,6 +1073,8 @@ namespace ErikwnkWFUI.Controls
             {
                 UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
                 _copyConfirmationToolTip.Dispose();
+                _headerFont?.Dispose();
+                _headerFont = null;
             }
 
             base.Dispose(disposing);
@@ -2484,14 +2486,11 @@ namespace ErikwnkWFUI.Controls
             // wrong text color.
             Color selectionForeColor = UIColors.GetBestTextColor(selectionBackColor);
 
-            using (var headerFont = new Font(Font, FontStyle.Bold))
-            {
-                ColumnHeadersDefaultCellStyle.BackColor = HeaderBackColor;
-                ColumnHeadersDefaultCellStyle.ForeColor = headerForeColor;
-                ColumnHeadersDefaultCellStyle.Font = headerFont;
-                ColumnHeadersDefaultCellStyle.SelectionBackColor = HeaderBackColor;
-                ColumnHeadersDefaultCellStyle.SelectionForeColor = headerForeColor;
-            }
+            ColumnHeadersDefaultCellStyle.BackColor = HeaderBackColor;
+            ColumnHeadersDefaultCellStyle.ForeColor = headerForeColor;
+            ApplyHeaderFont();
+            ColumnHeadersDefaultCellStyle.SelectionBackColor = HeaderBackColor;
+            ColumnHeadersDefaultCellStyle.SelectionForeColor = headerForeColor;
 
             DefaultCellStyle.BackColor = RowBackColor;
             DefaultCellStyle.ForeColor = rowForeColor;
@@ -2510,6 +2509,26 @@ namespace ErikwnkWFUI.Controls
         // standard grid, named differently on .NET Framework and .NET); they get the dark visual
         // style whenever their window is created.
         private Control[] _scrollBars = new Control[0];
+
+        // The bold font of the column headers. The cell style keeps the reference it is given (it does not copy the
+        // font), so the font has to live as long as the style uses it: it is held here, made again when the font of the
+        // grid changes, and freed with the grid.
+        private Font _headerFont;
+        private Font _headerFontSource;
+
+        private void ApplyHeaderFont()
+        {
+            if (_headerFont != null && ReferenceEquals(_headerFontSource, Font))
+                return;
+
+            Font previous = _headerFont;
+            _headerFont = new Font(Font, FontStyle.Bold);
+            _headerFontSource = Font;
+            ColumnHeadersDefaultCellStyle.Font = _headerFont;
+
+            // After the style has the new one.
+            previous?.Dispose();
+        }
 
         private void ThemeScrollBars()
         {
