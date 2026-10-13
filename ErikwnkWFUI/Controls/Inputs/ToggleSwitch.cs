@@ -268,7 +268,7 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawBackground(Graphics graphics, Rectangle rectangle)
         {
-            GraphicsPath path = CreateRoundedRectanglePath(
+            GraphicsPath path = RoundedRectangle.CreatePath(
                 rectangle,
                 rectangle.Height / 2);
 
@@ -287,7 +287,7 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawBorder(Graphics graphics, Rectangle rectangle)
         {
-            GraphicsPath path = CreateRoundedRectanglePath(
+            GraphicsPath path = RoundedRectangle.CreatePath(
                 rectangle,
                 rectangle.Height / 2);
 
@@ -423,51 +423,6 @@ namespace ErikwnkWFUI.Controls
                 return UIColors.LightForeColor;
 
             return UIStyles.Colors.White;
-        }
-
-        private GraphicsPath CreateRoundedRectanglePath(
-            Rectangle rectangle,
-            int radius)
-        {
-            int diameter = radius * 2;
-
-            GraphicsPath path = new GraphicsPath();
-
-            path.AddArc(
-                rectangle.X,
-                rectangle.Y,
-                diameter,
-                diameter,
-                180,
-                90);
-
-            path.AddArc(
-                rectangle.Right - diameter,
-                rectangle.Y,
-                diameter,
-                diameter,
-                270,
-                90);
-
-            path.AddArc(
-                rectangle.Right - diameter,
-                rectangle.Bottom - diameter,
-                diameter,
-                diameter,
-                0,
-                90);
-
-            path.AddArc(
-                rectangle.X,
-                rectangle.Bottom - diameter,
-                diameter,
-                diameter,
-                90,
-                90);
-
-            path.CloseFigure();
-
-            return path;
         }
     }
 }

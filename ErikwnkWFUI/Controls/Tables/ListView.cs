@@ -1160,7 +1160,7 @@ namespace ErikwnkWFUI.Controls
                 Color fill = Enabled ? BorderColor : UIColors.DisabledGray;
                 Color outline = Enabled ? UIColors.GetOutlineColor(baseBackColor) : UIColors.DisabledGray;
 
-                CheckBox.DrawGlyph(
+                CheckGlyph.Draw(
                     e.Graphics,
                     box,
                     isChecked ? CheckState.Checked : CheckState.Unchecked,

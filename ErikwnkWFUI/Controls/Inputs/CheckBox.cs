@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -398,7 +399,7 @@ namespace ErikwnkWFUI.Controls
 
             Color borderColor = GetBorderColor(parentBackColor);
 
-            using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, metrics.Scale(3)))
+            using (GraphicsPath boxPath = RoundedRectangle.CreatePath(boxRect, metrics.Scale(3)))
             {
                 if (isFilled)
                 {
@@ -416,9 +417,9 @@ namespace ErikwnkWFUI.Controls
             }
 
             if (CheckState == CheckState.Checked)
-                DrawCheckmark(g, boxRect, markColor, metrics.Scale(2));
+                CheckGlyph.DrawCheckmark(g, boxRect, markColor, metrics.Scale(2));
             else if (CheckState == CheckState.Indeterminate)
-                DrawDash(g, boxRect, markColor, metrics.Scale(2));
+                CheckGlyph.DrawDash(g, boxRect, markColor, metrics.Scale(2));
         }
 
         // A mnemonic ("&Save") shows its underline only once the Alt key was used, as on any
@@ -487,82 +488,6 @@ namespace ErikwnkWFUI.Controls
 
             area.Intersect(new Rectangle(0, 0, Width, Height));
             ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, parentBackColor);
-        }
-
-        /// <summary>
-        /// Draws just the box of a check box - outline, fill when checked or undetermined, and the
-        /// mark - for other controls that show check boxes (the list view). The colors are the
-        /// caller's; the measures follow the screen's scaling.
-        /// </summary>
-        internal static void DrawGlyph(Graphics g, Rectangle box, CheckState state, Color outline, Color fill, Color mark, int dpi)
-        {
-            Metrics metrics = new Metrics(dpi);
-            SmoothingMode previous = g.SmoothingMode;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-
-            using (GraphicsPath path = CreateRoundedRectanglePath(box, metrics.Scale(3)))
-            {
-                if (state != CheckState.Unchecked)
-                {
-                    using (SolidBrush brush = new SolidBrush(fill))
-                        g.FillPath(brush, path);
-                }
-
-                using (Pen pen = new Pen(outline, metrics.Scale(15) / 10f))
-                    g.DrawPath(pen, path);
-            }
-
-            if (state == CheckState.Checked)
-                DrawCheckmark(g, box, mark, metrics.Scale(2));
-            else if (state == CheckState.Indeterminate)
-                DrawDash(g, box, mark, metrics.Scale(2));
-
-            g.SmoothingMode = previous;
-        }
-
-        private static void DrawDash(Graphics g, Rectangle box, Color color, float width)
-        {
-            int y = box.Y + box.Height / 2;
-            int left = box.X + (int)(box.Width * 0.26);
-            int right = box.X + (int)(box.Width * 0.74);
-
-            using (Pen pen = new Pen(color, width))
-            {
-                pen.StartCap = LineCap.Round;
-                pen.EndCap = LineCap.Round;
-
-                g.DrawLine(pen, left, y, right, y);
-            }
-        }
-
-        private static void DrawCheckmark(Graphics g, Rectangle box, Color color, float width)
-        {
-            Point p1 = new Point(box.X + (int)(box.Width * 0.22), box.Y + (int)(box.Height * 0.52));
-            Point p2 = new Point(box.X + (int)(box.Width * 0.42), box.Y + (int)(box.Height * 0.74));
-            Point p3 = new Point(box.X + (int)(box.Width * 0.80), box.Y + (int)(box.Height * 0.26));
-
-            using (Pen pen = new Pen(color, width))
-            {
-                pen.StartCap = LineCap.Round;
-                pen.EndCap = LineCap.Round;
-                pen.LineJoin = LineJoin.Round;
-
-                g.DrawLines(pen, new[] { p1, p2, p3 });
-            }
-        }
-
-        private static GraphicsPath CreateRoundedRectanglePath(Rectangle rect, int radius)
-        {
-            int diameter = radius * 2;
-            GraphicsPath path = new GraphicsPath();
-
-            path.AddArc(rect.X, rect.Y, diameter, diameter, 180, 90);
-            path.AddArc(rect.Right - diameter, rect.Y, diameter, diameter, 270, 90);
-            path.AddArc(rect.Right - diameter, rect.Bottom - diameter, diameter, diameter, 0, 90);
-            path.AddArc(rect.X, rect.Bottom - diameter, diameter, diameter, 90, 90);
-            path.CloseFigure();
-
-            return path;
         }
     }
 }
