@@ -562,103 +562,36 @@ namespace ErikwnkWFUI.Controls
             };
         }
 
+        // The events of the list reach the ones on this control with this control as the sender, and the places of the
+        // mouse in this control's own coordinates (the list is below the title bar). The list is a child of this control
+        // and goes with it, so nothing needs to be taken off again.
         private void WireEvents()
         {
-            if (_listBox == null)
-                return;
-
-            _listBox.SelectedIndexChanged += OnListBoxSelectedIndexChanged;
-            _listBox.ItemsReordered += OnListBoxItemsReordered;
-            _listBox.MouseMove += OnListBoxMouseMove;
-            _listBox.MouseLeave += OnListBoxMouseLeave;
+            _listBox.SelectedIndexChanged += (s, e) => SelectedIndexChanged?.Invoke(this, e);
+            _listBox.ItemsReordered += (s, e) => ItemsReordered?.Invoke(this, e);
             _listBox.SelectedValueChanged += (s, e) => SelectedValueChanged?.Invoke(this, e);
             _listBox.DataSourceChanged += (s, e) => DataSourceChanged?.Invoke(this, e);
             _listBox.DisplayMemberChanged += (s, e) => DisplayMemberChanged?.Invoke(this, e);
             _listBox.ValueMemberChanged += (s, e) => ValueMemberChanged?.Invoke(this, e);
             _listBox.DrawItem += (s, e) => DrawItem?.Invoke(this, e);
-            _listBox.Click += OnListBoxClick;
-            _listBox.DoubleClick += OnListBoxDoubleClick;
-            _listBox.MouseClick += OnListBoxMouseClick;
-            _listBox.MouseDoubleClick += OnListBoxMouseDoubleClick;
-            _listBox.MouseDown += OnListBoxMouseDown;
-            _listBox.MouseUp += OnListBoxMouseUp;
-            _listBox.KeyDown += OnListBoxKeyDown;
-            _listBox.KeyUp += OnListBoxKeyUp;
-            _listBox.KeyPress += OnListBoxKeyPress;
-        }
 
-        // The events of the list reach the ones on this control with this control as the sender, and the
-        // places of the mouse in this control's own coordinates (the list is below the title bar).
-        private void OnListBoxSelectedIndexChanged(object sender, EventArgs e)
-        {
-            if (SelectedIndexChanged != null)
-                SelectedIndexChanged(this, e);
-        }
+            _listBox.MouseMove += (s, e) => OnMouseMove(InOwnCoordinates(e));
+            _listBox.MouseClick += (s, e) => OnMouseClick(InOwnCoordinates(e));
+            _listBox.MouseDoubleClick += (s, e) => OnMouseDoubleClick(InOwnCoordinates(e));
+            _listBox.MouseDown += (s, e) => OnMouseDown(InOwnCoordinates(e));
+            _listBox.MouseUp += (s, e) => OnMouseUp(InOwnCoordinates(e));
+            _listBox.MouseLeave += (s, e) => OnMouseLeave(e);
+            _listBox.Click += (s, e) => OnClick(e);
+            _listBox.DoubleClick += (s, e) => OnDoubleClick(e);
 
-        private void OnListBoxItemsReordered(object sender, EventArgs e)
-        {
-            if (ItemsReordered != null)
-                ItemsReordered(this, e);
+            _listBox.KeyDown += (s, e) => OnKeyDown(e);
+            _listBox.KeyUp += (s, e) => OnKeyUp(e);
+            _listBox.KeyPress += (s, e) => OnKeyPress(e);
         }
 
         private MouseEventArgs InOwnCoordinates(MouseEventArgs e)
         {
             return new MouseEventArgs(e.Button, e.Clicks, e.X + _listBox.Left, e.Y + _listBox.Top, e.Delta);
-        }
-
-        private void OnListBoxMouseMove(object sender, MouseEventArgs e)
-        {
-            OnMouseMove(InOwnCoordinates(e));
-        }
-
-        private void OnListBoxClick(object sender, EventArgs e)
-        {
-            OnClick(e);
-        }
-
-        private void OnListBoxDoubleClick(object sender, EventArgs e)
-        {
-            OnDoubleClick(e);
-        }
-
-        private void OnListBoxMouseClick(object sender, MouseEventArgs e)
-        {
-            OnMouseClick(InOwnCoordinates(e));
-        }
-
-        private void OnListBoxMouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            OnMouseDoubleClick(InOwnCoordinates(e));
-        }
-
-        private void OnListBoxMouseDown(object sender, MouseEventArgs e)
-        {
-            OnMouseDown(InOwnCoordinates(e));
-        }
-
-        private void OnListBoxMouseUp(object sender, MouseEventArgs e)
-        {
-            OnMouseUp(InOwnCoordinates(e));
-        }
-
-        private void OnListBoxKeyDown(object sender, KeyEventArgs e)
-        {
-            OnKeyDown(e);
-        }
-
-        private void OnListBoxKeyUp(object sender, KeyEventArgs e)
-        {
-            OnKeyUp(e);
-        }
-
-        private void OnListBoxKeyPress(object sender, KeyPressEventArgs e)
-        {
-            OnKeyPress(e);
-        }
-
-        private void OnListBoxMouseLeave(object sender, EventArgs e)
-        {
-            OnMouseLeave(e);
         }
 
         private Padding GetHeaderPadding(ContentAlignment textAlign)
@@ -678,35 +611,6 @@ namespace ErikwnkWFUI.Controls
                 default:
                     return new Padding(0);
             }
-        }
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                UnwireEvents();
-            }
-
-            base.Dispose(disposing);
-        }
-
-        private void UnwireEvents()
-        {
-            if (_listBox == null)
-                return;
-
-            _listBox.SelectedIndexChanged -= OnListBoxSelectedIndexChanged;
-            _listBox.ItemsReordered -= OnListBoxItemsReordered;
-            _listBox.MouseMove -= OnListBoxMouseMove;
-            _listBox.MouseLeave -= OnListBoxMouseLeave;
-            _listBox.Click -= OnListBoxClick;
-            _listBox.DoubleClick -= OnListBoxDoubleClick;
-            _listBox.MouseClick -= OnListBoxMouseClick;
-            _listBox.MouseDoubleClick -= OnListBoxMouseDoubleClick;
-            _listBox.MouseDown -= OnListBoxMouseDown;
-            _listBox.MouseUp -= OnListBoxMouseUp;
-            _listBox.KeyDown -= OnListBoxKeyDown;
-            _listBox.KeyUp -= OnListBoxKeyUp;
-            _listBox.KeyPress -= OnListBoxKeyPress;
         }
     }
 }
