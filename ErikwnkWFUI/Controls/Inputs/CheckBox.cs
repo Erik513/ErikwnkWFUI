@@ -216,8 +216,11 @@ namespace ErikwnkWFUI.Controls
             base.OnEnabledChanged(e);
 
             // A disabled control gets no MouseUp: a press that was still going
-            // (a handler that disables the box) must not outlive it.
+            // (a handler that disables the box) must not outlive it. Nor does it get a
+            // MouseLeave: whether the mouse is over the box is looked at again when it is
+            // enabled, so it does not look hovered with the mouse somewhere else.
             _isPressed = false;
+            _isHot = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
             Invalidate();
         }
 

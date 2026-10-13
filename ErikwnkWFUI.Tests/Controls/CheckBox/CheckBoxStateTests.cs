@@ -267,7 +267,9 @@ public class CheckBoxStateTests
         box.Enabled = false;
         box.Enabled = true;
 
-        Assert.Equal(Green.Hover, Inside(box));
+        // Not pressed, and - the mouse is not really over the box - not hovered either.
+        Assert.NotEqual(Green.Pressed, Inside(box));
+        Assert.Equal(Green.Basic, Inside(box));
     }
 
     [Fact]
