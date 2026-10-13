@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -485,9 +486,6 @@ namespace ErikwnkWFUI.Controls
         // selection" regardless of what it was before. Intercepting the
         // raw message here, before base.WndProc forwards it to the native
         // control, is the only point that still sees the pre-click state.
-        private const int WM_LBUTTONDOWN = 0x0201;
-        private const int WM_VSCROLL = 0x0115;
-        private const int WM_MOUSEWHEEL = 0x020A;
 
         protected override void WndProc(ref Message m)
         {

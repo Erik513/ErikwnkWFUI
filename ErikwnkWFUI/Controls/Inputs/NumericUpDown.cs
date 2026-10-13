@@ -45,13 +45,6 @@ namespace ErikwnkWFUI.Controls
         // The frame of the focus must differ at least this much from the fill it surrounds.
         private const double FocusFrameAgainstFill = 1.5;
 
-        private const int WM_ERASEBKGND = 0x0014;
-        private const int WM_PRINTCLIENT = 0x0318;
-        private const int WM_MOUSELEAVE = 0x02A3;
-        private const int WM_CAPTURECHANGED = 0x0215;
-        private const int WM_LBUTTONDOWN = 0x0201;
-        private const int WM_LBUTTONUP = 0x0202;
-
         // The two children of the standard control: the arrow buttons (UpDownButtons, not public) and the text field.
         private readonly Control _buttons;
         private readonly Control _edit;

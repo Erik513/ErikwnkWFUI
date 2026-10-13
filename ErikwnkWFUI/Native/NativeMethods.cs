@@ -25,6 +25,18 @@ namespace ErikwnkWFUI.Native
         public const int WM_MOUSEWHEEL = 0x020A;
         public const int WM_XBUTTONDOWN = 0x020B;
         public const int WM_CAPTURECHANGED = 0x0215;
+        public const int WM_ERASEBKGND = 0x0014;
+        public const int WM_WINDOWPOSCHANGING = 0x0046;
+        public const int WM_WINDOWPOSCHANGED = 0x0047;
+        public const int WM_NCCALCSIZE = 0x0083;
+        public const int WM_NCPAINT = 0x0085;
+        public const int WM_KEYDOWN = 0x0100;
+        public const int WM_CTLCOLOREDIT = 0x0133;
+        public const int WM_CTLCOLORSTATIC = 0x0138;
+        public const int WM_PARENTNOTIFY = 0x0210;
+        public const int WM_MOUSELEAVE = 0x02A3;
+        public const int WM_PRINT = 0x0317;
+        public const int WM_PRINTCLIENT = 0x0318;
 
         // SystemParametersInfo: whether the animations in windows are on (Windows settings, Accessibility).
         public const uint SPI_GETCLIENTAREAANIMATION = 0x1042;

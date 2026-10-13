@@ -26,12 +26,6 @@ namespace ErikwnkWFUI.Controls
 
         private const string ClassName = "msctls_updown32";
 
-        private const int WM_WINDOWPOSCHANGING = 0x0046;
-        private const int WM_WINDOWPOSCHANGED = 0x0047;
-        private const int WM_ERASEBKGND = 0x0014;
-        private const int WM_MOUSELEAVE = 0x02A3;
-        private const int WM_PRINTCLIENT = 0x0318;
-
         private const int GWL_STYLE = -16;
         private const int UDS_HORZ = 0x0040;
         private const int UDM_GETRANGE32 = 0x0470;

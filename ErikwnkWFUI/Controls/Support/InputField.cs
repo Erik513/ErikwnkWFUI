@@ -139,9 +139,6 @@ namespace ErikwnkWFUI.Controls
 
         private sealed class FrameWindow : NativeWindow
         {
-            private const int WM_NCCALCSIZE = 0x0083;
-            private const int WM_NCPAINT = 0x0085;
-            private const int WM_PRINT = 0x0317;
             private const int PRF_NONCLIENT = 0x0002;
             private const uint RDW_INVALIDATE = 0x0001;
             private const uint RDW_FRAME = 0x0400;

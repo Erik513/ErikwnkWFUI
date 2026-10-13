@@ -657,7 +657,6 @@ namespace ErikwnkWFUI.Controls
         // partial-repaint artifact on an owner-drawn control) - forcing a
         // full repaint on every scroll message gets rid of it.
 
-        private const int WM_NCPAINT = 0x0085;
         private const int GWL_STYLE = -16;
         private const int WS_HSCROLL = 0x00100000;
         private const int WS_VSCROLL = 0x00200000;

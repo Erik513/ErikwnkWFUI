@@ -36,12 +36,6 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public class ComboBox : System.Windows.Forms.ComboBox
     {
-        private const int WM_ERASEBKGND = 0x0014;
-        private const int WM_NCPAINT = 0x0085;
-        private const int WM_CTLCOLOREDIT = 0x0133;
-        private const int WM_CTLCOLORSTATIC = 0x0138;
-        private const int WM_PRINT = 0x0317;
-        private const int WM_PRINTCLIENT = 0x0318;
         private const int PRF_CLIENT = 0x00000004;
 
         // The width of the arrow part at 96 dpi, and the padding of the text.

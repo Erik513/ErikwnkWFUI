@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -54,10 +55,6 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _accentColor = new ThemeColor(() => UIColors.TextTertiary);
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly ThemeColor _pageBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
-
-        private const int WM_PARENTNOTIFY = 0x0210;
-        private const int WM_HSCROLL = 0x0114;
-        private const int WM_VSCROLL = 0x0115;
 
         private readonly TabScrollButtons _scrollButtons;
 
