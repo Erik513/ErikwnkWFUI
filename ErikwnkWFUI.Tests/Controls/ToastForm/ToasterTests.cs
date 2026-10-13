@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
@@ -11,6 +12,32 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 [Collection(AccentColorTestCollection.Name)]
 public class ToasterTests : ToastTestBase
 {
+    [Fact]
+    public void APrimaryToaster_FollowsAChangeOfTheAccent_AndASetColorStopsIt()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            Toaster primary = ErikwnkWFUI.UIStyles.Toasts.CreatePrimary();
+            Toaster standard = ErikwnkWFUI.UIStyles.Toasts.CreateStandard(ErikwnkWFUI.UIStyles.Colors.Sets.Green);
+
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            Assert.Equal(UIColors.PrimarySet.Basic, primary.Colors!.Basic);
+            Assert.Equal(ErikwnkWFUI.UIStyles.Colors.Sets.Green.Basic, standard.Colors!.Basic);
+
+            primary.Colors = ErikwnkWFUI.UIStyles.Colors.Sets.Red;
+            UIColors.SetAccent(accent);
+
+            Assert.Equal(ErikwnkWFUI.UIStyles.Colors.Sets.Red.Basic, primary.Colors!.Basic);
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
+    }
+
     [Fact]
     public void CreateStandard_HasTheDefaults_AndCreatePrimaryTheAccent()
     {

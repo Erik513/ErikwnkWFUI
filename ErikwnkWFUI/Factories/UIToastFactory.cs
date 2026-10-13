@@ -68,7 +68,10 @@ namespace ErikwnkWFUI.Factories
             string symbol = null,
             ToastPosition position = ToastPosition.BelowCenter)
         {
-            return CreateStandard(UIColors.PrimarySet, transparency, duration, delay, icon, symbol, position);
+            Toaster toaster = CreateStandard(null, transparency, duration, delay, icon, symbol, position);
+            toaster.FollowColors(() => UIColors.PrimarySet);
+
+            return toaster;
         }
 
         // The Standard one in the current accent - the primary color set.
