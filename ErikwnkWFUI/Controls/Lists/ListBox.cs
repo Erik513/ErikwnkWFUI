@@ -33,7 +33,7 @@ namespace ErikwnkWFUI.Controls
     /// <see cref="ItemBackColor"/>), <c>BackgroundImage</c>, the typing of the first letters of an item (it looks at the text of the item - its
     /// <c>ToString()</c> or <c>DisplayMember</c> - not at <see cref="DisplayTextProvider"/>), <c>UseTabStops</c> and
     /// <c>CustomTabOffsets</c> (the text is
-    /// one line of drawn text), <c>HorizontalScrollbar</c> and <c>HorizontalExtent</c> (a long text wraps and ends in an
+    /// one line of drawn text), <c>HorizontalScrollbar</c> and <c>HorizontalExtent</c> (a long text ends in an
     /// ellipsis instead of running out of the list) and <c>RightToLeft</c> (not supported in the library).
     /// <see cref="DisplayTextProvider"/> (a function) comes before <c>DisplayMember</c>.
     /// </para>
@@ -60,12 +60,11 @@ namespace ErikwnkWFUI.Controls
         private const int SelectionAlphaGray = 175;
         private const int SelectionAlphaColor = 120;
 
-        private static readonly StringFormat CenterLeftFormat = new StringFormat
-        {
-            Alignment = StringAlignment.Near,
-            LineAlignment = StringAlignment.Center,
-            Trimming = StringTrimming.EllipsisCharacter
-        };
+        // One line, from the left, in the middle of the row; a text that is too long ends in an ellipsis. Drawn with GDI
+        // (TextRenderer) like the text of every other control of the library; an ampersand is a sign of the text.
+        private const TextFormatFlags ItemTextFlags =
+            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
+            TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
 
         // The colors that follow the theme until they are set (see ThemeWatcher).
         private readonly ThemeColor _itemBackColor = new ThemeColor(() => UIColors.BackgroundMedium);

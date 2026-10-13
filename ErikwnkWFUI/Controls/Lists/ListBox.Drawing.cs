@@ -101,18 +101,11 @@ namespace ErikwnkWFUI.Controls
         private int DrawEnumeration(Graphics graphics, Rectangle rect, int index, int textLeft, Color textColor)
         {
             string numberText = $"{index + 1}.";
-            SizeF numberSize = graphics.MeasureString(numberText, Font);
+            int numberWidth = TextRenderer.MeasureText(graphics, numberText, Font, Size.Empty, ItemTextFlags).Width;
 
-            Rectangle numberRect = new Rectangle(
-                textLeft,
-                rect.Y,
-                (int)Math.Ceiling(numberSize.Width) + Px(4),
-                rect.Height);
+            Rectangle numberRect = new Rectangle(textLeft, rect.Y, numberWidth + Px(4), rect.Height);
 
-            using (SolidBrush brush = new SolidBrush(textColor))
-            {
-                graphics.DrawString(numberText, Font, brush, numberRect, CenterLeftFormat);
-            }
+            TextRenderer.DrawText(graphics, numberText, Font, numberRect, textColor, ItemTextFlags);
 
             return textLeft + numberRect.Width + Px(4);
         }
@@ -132,10 +125,7 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawText(Graphics graphics, Rectangle textRect, string text, Color textColor)
         {
-            using (SolidBrush brush = new SolidBrush(textColor))
-            {
-                graphics.DrawString(text, Font, brush, textRect, CenterLeftFormat);
-            }
+            TextRenderer.DrawText(graphics, text, Font, textRect, textColor, ItemTextFlags);
         }
 
         // The handle of an item: the color that was set, or the text color of the item blended toward its background
