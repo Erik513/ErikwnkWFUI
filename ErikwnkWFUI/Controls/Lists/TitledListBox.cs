@@ -13,6 +13,12 @@ namespace ErikwnkWFUI.Controls
     /// the inner list box (see <see cref="InnerListBox"/>, for anything not
     /// offered here).
     /// </summary>
+    /// <remarks>
+    /// Of the events of the list, the ones for the mouse (click, double click, move, down, up, leave), the keys, the selection,
+    /// the data source and its members, the reordering and <c>DrawItem</c> are passed on, with this control as the sender
+    /// (the places of the mouse in its own coordinates). Others - <c>MouseWheel</c>, <c>GotFocus</c> and <c>LostFocus</c> among
+    /// them - are on <see cref="InnerListBox"/>.
+    /// </remarks>
     // In two files: this one (the title bar, the events, the layout) and TitledListBox.Members.cs (the members of the list box that are
     // passed on to the list inside).
     public partial class TitledListBox : UserControl
