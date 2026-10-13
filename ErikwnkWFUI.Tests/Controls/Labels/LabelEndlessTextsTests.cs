@@ -88,6 +88,18 @@ public class LabelEndlessTextsTests : IDisposable
     }
 
     [Fact]
+    public void TheTextsOfAScroll_CannotBeChangedThroughTheList()
+    {
+        string[] given = { "One", "Two" };
+        LabelScroll scroll = LabelScroll.Endless(given);
+
+        Assert.False(scroll.Texts is string[]);
+        Assert.Throws<NotSupportedException>(() => ((IList<string>)scroll.Texts!)[0] = "Changed");
+        given[0] = "Changed";
+        Assert.Equal(new[] { "One", "Two" }, scroll.Texts);
+    }
+
+    [Fact]
     public void ANewSeparator_ChangesTheJoinedText_AndTheTextsStay()
     {
         using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));

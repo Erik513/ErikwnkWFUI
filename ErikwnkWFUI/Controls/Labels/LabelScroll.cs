@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace ErikwnkWFUI.Controls
@@ -20,7 +21,7 @@ namespace ErikwnkWFUI.Controls
             bool pauseOnHover,
             string[] texts = null)
         {
-            Texts = texts;
+            Texts = texts == null ? null : new ReadOnlyCollection<string>(texts);
             Mode = mode;
             Speed = speed;
             Pause = pause;
