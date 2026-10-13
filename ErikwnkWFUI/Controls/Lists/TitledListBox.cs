@@ -350,12 +350,6 @@ namespace ErikwnkWFUI.Controls
             set { _listBox.Sorted = value; }
         }
 
-        public bool HorizontalScrollbar
-        {
-            get { return _listBox.HorizontalScrollbar; }
-            set { _listBox.HorizontalScrollbar = value; }
-        }
-
         public bool ScrollAlwaysVisible
         {
             get { return _listBox.ScrollAlwaysVisible; }
