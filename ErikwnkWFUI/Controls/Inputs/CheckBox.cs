@@ -258,18 +258,43 @@ namespace ErikwnkWFUI.Controls
             // onto the control. The text does not: ClearType colors its pixels for the real
             // screen, and through an intermediate bitmap it came out soft and fringed. So
             // the label is drawn last, straight onto the control's own surface.
-            using (Bitmap buffer = new Bitmap(Width, Height, PixelFormat.Format24bppRgb))
-            {
-                using (Graphics g = Graphics.FromImage(buffer))
-                    PaintShapes(g);
+            Bitmap buffer = GetBuffer();
 
-                e.Graphics.DrawImageUnscaled(buffer, 0, 0);
-            }
+            using (Graphics g = Graphics.FromImage(buffer))
+                PaintShapes(g);
+
+            e.Graphics.DrawImageUnscaled(buffer, 0, 0);
 
             PaintText(e.Graphics);
             PaintFocus(e.Graphics);
 
             // No base.OnPaint: the native drawing must not run (see the class comment).
+        }
+
+        // The private bitmap of OnPaint: kept from one paint to the next (a new one for every paint is a lot of garbage
+        // where many boxes sit in a table), made again when the size changes. PaintShapes erases all of it first.
+        private Bitmap _buffer;
+
+        private Bitmap GetBuffer()
+        {
+            if (_buffer == null || _buffer.Width != Width || _buffer.Height != Height)
+            {
+                _buffer?.Dispose();
+                _buffer = new Bitmap(Width, Height, PixelFormat.Format24bppRgb);
+            }
+
+            return _buffer;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _buffer?.Dispose();
+                _buffer = null;
+            }
+
+            base.Dispose(disposing);
         }
 
         // The outline of the box at rest: the best text color for the parent, moved toward
