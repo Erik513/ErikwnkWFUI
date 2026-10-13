@@ -21,6 +21,9 @@ namespace ErikwnkWFUI.Showcase
             // A page that is not a description plus a table of variants
             // (the guide) builds its whole content itself.
             public Func<Control> Custom;
+
+            // A page whose variants are not rows of a table (the input fields side by side): the body replaces the table.
+            public Func<Control> Body;
             public bool Built;
         }
 
@@ -53,6 +56,10 @@ namespace ErikwnkWFUI.Showcase
                 ("InfoPopupForm",
                  "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps one fixed size for a single short value that changes while it is shown (the percentage over a slider), and is opaque or slightly, clearly (the default) or strongly transparent. It hides itself after a short, medium (the default) or long time; every show call starts the time again, so it stays while the mouse moves over its control. For a hover popup the wait before it appears is none, short, medium (the default) or long. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. AttachTo makes it the tooltip of any control (one popup serves many controls). Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
                  AddInfoPopupsSection),
+
+                ("InputFields",
+                 "The three input fields side by side - text box, combo box and numeric up/down - to compare them: the same background, a quiet frame (with the focus: click into a field - in the color of the set), and a dimmed background when disabled.",
+                 null),
 
                 ("Labels",
                  "Text in the theme colors: Standard (body text), Primary (accent color), Title (bold, larger) and Muted (quiet), each also in a color set. Left enabled, right disabled. A text that is too long can move instead of ending in an ellipsis: back and forth with a rest at both ends, or endlessly, one text or several one behind the other.",
@@ -131,7 +138,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 TabPage page = new TabPage(title)
                 {
-                    Tag = new PageInfo { Description = description, Fill = fill }
+                    Tag = new PageInfo { Description = description, Fill = fill, Body = title == "InputFields" ? (Func<Control>)CreateInputFieldsBody : null }
                 };
 
                 tabs.TabPages.Add(page);
@@ -173,10 +180,17 @@ namespace ErikwnkWFUI.Showcase
             scrollHost.Dock = DockStyle.Fill;
             scrollHost.AutoScroll = true;
 
-            PropertyTable table = UIStyles.PropertyTables.CreateStandard();
-            table.Dock = DockStyle.Top;
-            info.Fill(table);
-            scrollHost.Controls.Add(table);
+            if (info.Body != null)
+            {
+                scrollHost.Controls.Add(info.Body());
+            }
+            else
+            {
+                PropertyTable table = UIStyles.PropertyTables.CreateStandard();
+                table.Dock = DockStyle.Top;
+                info.Fill(table);
+                scrollHost.Controls.Add(table);
+            }
 
             page.Controls.Add(scrollHost);
             page.Controls.Add(CreateDescription(info.Description));

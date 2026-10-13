@@ -264,6 +264,83 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateBorderstyleNone", borderless, borderlessDisabled);
         }
 
+        // The three input fields next to each other, to compare their backgrounds, frames, focus and disabled look:
+        // text box, combo box and numeric up/down per row. Not in a PropertyTable: its cells draw a frame of their own
+        // around every editor, which would hide the frames of the fields themselves.
+        private Control CreateInputFieldsBody()
+        {
+            TableLayoutPanel grid = UIStyles.TableLayoutPanels.CreateStandard(4, 0);
+            grid.Dock = DockStyle.Top;
+            grid.AutoSize = true;
+            grid.Padding = new Padding(16, 12, 16, 12);
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
+
+            AddInputFieldsRow(grid, "CreateStandard", true,
+                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
+                () => UIStyles.ComboBoxes.CreateStandard(),
+                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
+
+            AddInputFieldsRow(grid, "CreateStandard (disabled)", false,
+                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
+                () => UIStyles.ComboBoxes.CreateStandard(),
+                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
+
+            AddInputFieldsRow(grid, "CreatePrimary", true,
+                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
+                () => UIStyles.ComboBoxes.CreatePrimary(),
+                () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
+
+            AddInputFieldsRow(grid, "colors: Green", true,
+                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
+                () => UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green),
+                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
+
+            AddInputFieldsRow(grid, "Borderless text box", true,
+                () => UIStyles.TextBoxes.CreateBorderstyleNone("Text", ""),
+                () => UIStyles.ComboBoxes.CreateStandard(),
+                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
+
+            return grid;
+        }
+
+        private void AddInputFieldsRow(
+            TableLayoutPanel grid,
+            string label,
+            bool enabled,
+            Func<TextBox> createText,
+            Func<System.Windows.Forms.ComboBox> createCombo,
+            Func<System.Windows.Forms.NumericUpDown> createNumeric)
+        {
+            TextBox text = createText();
+            System.Windows.Forms.ComboBox combo = createCombo();
+            combo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+            combo.SelectedIndex = 0;
+            System.Windows.Forms.NumericUpDown numeric = createNumeric();
+
+            Label caption = UIStyles.Labels.CreateStandard(label);
+            caption.Anchor = AnchorStyles.Left;
+            caption.AutoSize = true;
+            caption.Margin = new Padding(0, 0, 8, 0);
+
+            int row = grid.RowCount++;
+            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            grid.Controls.Add(caption, 0, row);
+
+            int column = 1;
+
+            foreach (Control field in new Control[] { text, combo, numeric })
+            {
+                field.Enabled = enabled;
+                field.Width = column == 3 ? 130 : 210;
+                field.Anchor = AnchorStyles.Left;
+                field.Margin = new Padding(0, 8, 16, 8);
+                grid.Controls.Add(field, column++, row);
+            }
+        }
+
         private void AddComboBoxesSection(PropertyTable table)
         {
             System.Windows.Forms.ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
