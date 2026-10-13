@@ -117,9 +117,9 @@ namespace ErikwnkWFUI
 
             // ---- actions ----
             /// <summary>A plus.</summary>
-            public const string Add = "➕";
+            public const string Add = "\u2795";
             /// <summary>A minus.</summary>
-            public const string Remove = "➖";
+            public const string Remove = "\u2796";
             /// <summary>
             /// A trash can, from the Windows icon font: the trash can emoji is a color glyph
             /// that ignores the text color and comes out thin and dim, and no other character
@@ -127,7 +127,7 @@ namespace ErikwnkWFUI
             /// </summary>
             public const string Delete = "\uE74D";
             /// <summary>A pencil.</summary>
-            public const string Edit = "✎";
+            public const string Edit = "\u270E";
             /// <summary>A floppy disk.</summary>
             public const string Save = "\U0001F4BE";
             /// <summary>A circular arrow.</summary>
@@ -139,19 +139,19 @@ namespace ErikwnkWFUI
             /// <summary>A magnifier.</summary>
             public const string Search = "\U0001F50D";
             /// <summary>A gear.</summary>
-            public const string Settings = "⚙";
+            public const string Settings = "\u2699";
             /// <summary>A cross.</summary>
-            public const string Close = "✕";
+            public const string Close = "\u2715";
             /// <summary>A heavy cross.</summary>
-            public const string Cancel = "✖";
+            public const string Cancel = "\u2716";
             /// <summary>A check mark.</summary>
-            public const string Check = "✔";
+            public const string Check = "\u2714";
             /// <summary>A curved arrow pointing back.</summary>
-            public const string Undo = "↶";
+            public const string Undo = "\u21B6";
             /// <summary>A curved arrow pointing forward.</summary>
-            public const string Redo = "↷";
+            public const string Redo = "\u21B7";
             /// <summary>Scissors.</summary>
-            public const string Cut = "✂";
+            public const string Cut = "\u2702";
             /// <summary>A clipboard with a sheet.</summary>
             public const string Paste = "\uE77F";
             /// <summary>Two overlapping sheets (rounded ones in Windows 11, the older pair of pages in Windows 10).</summary>
@@ -193,17 +193,17 @@ namespace ErikwnkWFUI
 
             // ---- navigation ----
             /// <summary>An arrow to the left.</summary>
-            public const string Back = "⬅";
+            public const string Back = "\u2B05";
             /// <summary>An arrow to the right.</summary>
-            public const string Forward = "➡";
+            public const string Forward = "\u27A1";
             /// <summary>An arrow up.</summary>
-            public const string Up = "⬆";
+            public const string Up = "\u2B06";
             /// <summary>An arrow down.</summary>
-            public const string Down = "⬇";
+            public const string Down = "\u2B07";
             /// <summary>A house.</summary>
-            public const string Home = "⌂";
+            public const string Home = "\u2302";
             /// <summary>Three lines.</summary>
-            public const string Menu = "☰";
+            public const string Menu = "\u2630";
             /// <summary>A solid triangle pointing up - for sort arrows and markers.</summary>
             public const string TriangleUp = "\u25B2";
             /// <summary>A solid triangle pointing down - for sort arrows and markers.</summary>
@@ -219,23 +219,23 @@ namespace ErikwnkWFUI
 
             // ---- media ----
             /// <summary>A triangle pointing right.</summary>
-            public const string Play = "▶";
+            public const string Play = "\u25B6";
             /// <summary>Two bars.</summary>
-            public const string Pause = "⏸";
+            public const string Pause = "\u23F8";
             /// <summary>A square.</summary>
-            public const string Stop = "⏹";
+            public const string Stop = "\u23F9";
             /// <summary>A circle.</summary>
-            public const string Record = "⏺";
+            public const string Record = "\u23FA";
             /// <summary>A bar with a double triangle pointing left.</summary>
-            public const string SkipBack = "⏮";
+            public const string SkipBack = "\u23EE";
             /// <summary>A bar with a double triangle pointing right.</summary>
-            public const string SkipForward = "⏭";
+            public const string SkipForward = "\u23ED";
             /// <summary>A loudspeaker with sound waves.</summary>
             public const string Volume = "\U0001F50A";
             /// <summary>A crossed-out loudspeaker.</summary>
             public const string Mute = "\U0001F507";
             /// <summary>A musical note.</summary>
-            public const string Music = "♫";
+            public const string Music = "\u266B";
             /// <summary>Two crossing arrows.</summary>
             public const string Shuffle = "\uE8B1";
             /// <summary>Arrows in a loop.</summary>
@@ -247,13 +247,13 @@ namespace ErikwnkWFUI
             /// <summary>A triangle with an exclamation mark.</summary>
             public const string Warning = "\uE7BA";
             /// <summary>A no-entry sign.</summary>
-            public const string Error = "⛔";
+            public const string Error = "\u26D4";
             /// <summary>A question mark.</summary>
-            public const string Help = "❓";
+            public const string Help = "\u2753";
             /// <summary>A lightning bolt.</summary>
             public const string Lightning = "\uE945";
             /// <summary>A heart.</summary>
-            public const string Heart = "♥";
+            public const string Heart = "\u2665";
 
             // ---- window (the buttons of the title bar) ----
             /// <summary>A bar at the bottom, as on the title bar of a window.</summary>
@@ -273,15 +273,15 @@ namespace ErikwnkWFUI
             /// <summary>An arrow leaving a frame.</summary>
             public const string Logout = "\uF3B1";
             /// <summary>The power sign.</summary>
-            public const string Power = "⏻";
+            public const string Power = "\u23FB";
 
             // ---- things ----
             /// <summary>An envelope.</summary>
-            public const string Mail = "✉";
+            public const string Mail = "\u2709";
             /// <summary>A calendar page.</summary>
             public const string Calendar = "\U0001F4C5";
             /// <summary>An alarm clock.</summary>
-            public const string Clock = "⏰";
+            public const string Clock = "\u23F0";
             /// <summary>A bell.</summary>
             public const string Bell = "\U0001F514";
             /// <summary>A chain link.</summary>
