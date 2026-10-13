@@ -86,6 +86,14 @@ namespace ErikwnkWFUI.Controls
             if (fromIndex < 0 || fromIndex >= Items.Count || toIndex < 0 || toIndex >= Items.Count || fromIndex == toIndex)
                 return;
 
+            MoveAndSelect(fromIndex, toIndex);
+
+            ItemsReordered?.Invoke(this, EventArgs.Empty);
+        }
+
+        // Takes the item out, puts it in at its new place and selects it there - in one update, so the list is painted once.
+        private void MoveAndSelect(int fromIndex, int toIndex)
+        {
             BeginUpdate();
 
             try
@@ -100,8 +108,6 @@ namespace ErikwnkWFUI.Controls
             {
                 EndUpdate();
             }
-
-            ItemsReordered?.Invoke(this, EventArgs.Empty);
         }
 
         private bool TryPrepareDrag(int index, Rectangle itemRect, Point location)
@@ -221,31 +227,14 @@ namespace ErikwnkWFUI.Controls
             if (targetPosition > _dragIndex)
                 targetPosition--;
 
-            targetPosition = Math.Max(0, Math.Min(targetPosition, Items.Count));
+            // (After the item is taken out the list is one shorter: the last place is Count - 1.)
+            targetPosition = Math.Max(0, Math.Min(targetPosition, Items.Count - 1));
 
             if (targetPosition == _dragIndex)
                 return;
 
-            BeginUpdate();
-
-            try
-            {
-                object draggedItem = Items[_dragIndex];
-
-                Items.RemoveAt(_dragIndex);
-
-                if (targetPosition > Items.Count)
-                    targetPosition = Items.Count;
-
-                Items.Insert(targetPosition, draggedItem);
-                SelectIndex(targetPosition);
-
-                EnsureItemVisible(targetPosition);
-            }
-            finally
-            {
-                EndUpdate();
-            }
+            MoveAndSelect(_dragIndex, targetPosition);
+            EnsureItemVisible(targetPosition);
 
             ItemsReordered?.Invoke(this, EventArgs.Empty);
         }
