@@ -103,7 +103,7 @@ namespace ErikwnkWFUI.Forms
             toast.Transparency = request.Transparency;
             toast.Duration = request.Duration;
             toast.Colors = request.Colors;
-            toast.Icon = request.Icon;
+            toast.MessageIcon = request.Icon;
             toast.CustomSymbol = request.CustomSymbol;
 
             toast.SetContent(request.Content);

@@ -196,7 +196,7 @@ public class ToastCombinationTests : ToastTestBase
         ToastForm toast = Current()!;
         Font old = toast.GetPrivateField<Font>("_iconFont")!;
 
-        toast.Icon = ToastIcon.Warning;
+        toast.MessageIcon = ToastIcon.Warning;
 
         Assert.NotSame(old, toast.GetPrivateField<Font>("_iconFont"));
         Assert.True(IsDisposed(old), "the old font was not given back");
@@ -209,7 +209,7 @@ public class ToastCombinationTests : ToastTestBase
         ToastForm toast = Current()!;
         Font used = toast.GetPrivateField<Font>("_iconFont")!;
 
-        toast.Icon = ToastIcon.None;
+        toast.MessageIcon = ToastIcon.None;
 
         Assert.True(IsDisposed(used));
         Assert.Same(ErikwnkWFUI.Styles.UIFonts.Icon, Part("_iconLabel").Font);

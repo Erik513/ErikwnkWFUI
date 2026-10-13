@@ -216,7 +216,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>The symbol at the left of the toast; none by default, then the text has the whole width.</summary>
-        public ToastIcon Icon
+        public ToastIcon MessageIcon
         {
             get { return _icon; }
             set
@@ -235,9 +235,9 @@ namespace ErikwnkWFUI.Forms
         private ToastIcon _icon = ToastIcon.None;
 
         /// <summary>
-        /// Any symbol instead of <see cref="Icon"/>, one of <c>UIStyles.Symbols</c> (say
+        /// Any symbol instead of <see cref="MessageIcon"/>, one of <c>UIStyles.Symbols</c> (say
         /// <c>UIStyles.Symbols.Copy</c>) or a character of your own that the symbol font has.
-        /// Null or empty (the default) uses <see cref="Icon"/>.
+        /// Null or empty (the default) uses <see cref="MessageIcon"/>.
         /// </summary>
         public string CustomSymbol
         {

@@ -20,7 +20,7 @@ public class ToastIconTests : ToastTestBase
     {
         ToastForm.ShowToast("Plain", Host());
 
-        Assert.Equal(ToastIcon.None, Current()!.Icon);
+        Assert.Equal(ToastIcon.None, Current()!.MessageIcon);
         Assert.False(IconLabel().Visible);
         Assert.Equal("", IconLabel().Text);
         Assert.Equal(0, MessageLabel().Padding.Left);
@@ -35,7 +35,7 @@ public class ToastIconTests : ToastTestBase
     {
         ToastForm.ShowToast("With a symbol", Host(), icon: icon);
 
-        Assert.Equal(icon, Current()!.Icon);
+        Assert.Equal(icon, Current()!.MessageIcon);
         Assert.True(IconLabel().Visible);
         Assert.False(string.IsNullOrEmpty(IconLabel().Text));
         Assert.True(MessageLabel().Padding.Left > 0);
@@ -83,10 +83,10 @@ public class ToastIconTests : ToastTestBase
         ToastForm toast = Current()!;
         string error = IconLabel().Text;
 
-        toast.Icon = ToastIcon.Success;
+        toast.MessageIcon = ToastIcon.Success;
         Assert.NotEqual(error, IconLabel().Text);
 
-        toast.Icon = ToastIcon.None;
+        toast.MessageIcon = ToastIcon.None;
         Assert.False(IconLabel().Visible);
         Assert.Equal(0, MessageLabel().Padding.Left);
     }
@@ -97,7 +97,7 @@ public class ToastIconTests : ToastTestBase
         ToastForm toast = new ToastForm();
         toast.Dispose();
 
-        Assert.Null(Record.Exception(() => toast.Icon = ToastIcon.Warning));
+        Assert.Null(Record.Exception(() => toast.MessageIcon = ToastIcon.Warning));
     }
 
 }

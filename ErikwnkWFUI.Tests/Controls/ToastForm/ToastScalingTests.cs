@@ -26,7 +26,7 @@ public class ToastScalingTests : ToastTestBase
     [InlineData(192, 700, 160)]
     public void TheSizeAndThePlacesInside_ScaleWithTheDpi(int dpi, int width, int height)
     {
-        using ToastForm toast = new ToastForm { Icon = ToastIcon.Success };
+        using ToastForm toast = new ToastForm { MessageIcon = ToastIcon.Success };
 
         toast.ApplyDpi(dpi);
 
