@@ -34,56 +34,93 @@ namespace ErikwnkWFUI.Controls
     /// a plain <see cref="System.Windows.Forms.DataGridView"/>-typed
     /// reference.
     /// </remarks>
-    public class ReadOnlyDataGridView : System.Windows.Forms.DataGridView
+    // In seven files: this one (properties, constructor, the common events), and ReadOnlyDataGridView.Columns.cs (moving and
+    // resizing columns), .Sorting.cs, .DataSource.cs (changes the grid makes to its data source), .Menu.cs (right-click menu,
+    // copying), .Enumeration.cs (the numbered column) and .Theme.cs (colors, cell styles, painting).
+    public partial class ReadOnlyDataGridView : System.Windows.Forms.DataGridView
     {
         // The colors that follow the theme until they are set (see ThemeWatcher).
         private readonly ThemeColor _headerBackColor = new ThemeColor(() => UIColors.BackgroundDarkElevated);
+
         private readonly ThemeColor _headerForeColor = new ThemeColor(() => UIColors.TextTertiary);
+
         private readonly ThemeColor _rowBackColor = new ThemeColor(() => UIColors.BackgroundMedium);
+
         private readonly ThemeColor _rowForeColor = new ThemeColor(() => UIColors.TextPrimary);
+
         private readonly ThemeColor _selectionBackColor = new ThemeColor(() => UIColors.BorderLight);
+
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
+
         private readonly ColumnFeatureSwitch _columnReordering = new ColumnFeatureSwitch();
+
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
+
         private bool _isDraggingColumn;
+
         private int _dragColumnIndex = -1;
+
         private int _dragInsertBeforeDisplayIndex = -1;
+
         private int _pendingReorderColumnIndex = -1;
+
         private int _pendingReorderStartX;
+
         private readonly ColumnFeatureSwitch _columnResizing = new ColumnFeatureSwitch();
+
         private int _minimumColumnWidth = DefaultMinimumColumnWidth;
+
         private bool _isResizingColumn;
+
         private int _resizeColumnIndex = -1;
+
         private int _resizeStartX;
+
         private int _resizeStartWidth;
+
         private bool _suppressNextHeaderClickSort;
+
 
         // Snapshot of DataBoundItem references in the order they were bound,
         // captured on each fresh bind/reset - lets a header click's third
         // state ("original") restore that order without the underlying data
         // source needing to support sorting itself.
         private List<object> _originalOrder = new List<object>();
+
         private int _sortedColumnIndex = -1;
+
         private SortOrder _sortOrder = SortOrder.None;
+
         private bool _clearSelectionOnNextVisible;
+
         private bool _isApplyingInternalDataChange;
+
         private readonly Dictionary<DataGridViewColumn, IComparer> _columnSortComparers =
             new Dictionary<DataGridViewColumn, IComparer>();
+
         private DataGridViewColumn _enumerationColumn;
+
         private readonly ToolTip _copyConfirmationToolTip = new ToolTip();
+
 
         // Matches Controls.ContextMenuStrip's own CreateStandard default. The menu that is built in the constructor takes
         // its highlight from here each time it is painted (see BuildContextMenu), so a later change is seen by it.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
+
         // Same shape as ListView's own menu: "Copy selection" and "Copy all"
         // are submenu parents, each holding the plain action and "As table"
         // (the same content plus a header row) - "As table" appears twice,
         // so this is 6 items for 3 distinct pieces of text.
         private ToolStripMenuItem _contextMenuCopySelectionItem;
+
         private ToolStripMenuItem _contextMenuCopySelectionWithHeaderItem;
+
         private ToolStripMenuItem _contextMenuCopyAllItem;
+
         private ToolStripMenuItem _contextMenuCopyAllWithHeaderItem;
+
         private ToolStripMenuItem _contextMenuSelectAllItem;
+
 
         /// <summary>
         /// Background of a hovered/selected item in this grid's own
@@ -99,6 +136,7 @@ namespace ErikwnkWFUI.Controls
             set { _contextMenuSelectionColor.Set(value); }
         }
 
+
         /// <summary>Background color of the column header row.</summary>
         public Color HeaderBackColor
         {
@@ -106,12 +144,14 @@ namespace ErikwnkWFUI.Controls
             set { _headerBackColor.Set(value); ApplyStyles(); }
         }
 
+
         /// <summary>Text color of the column header row.</summary>
         public Color HeaderForeColor
         {
             get => _headerForeColor.Value;
             set { _headerForeColor.Set(value); ApplyStyles(); }
         }
+
 
         /// <summary>
         /// Color of each column header cell's own border only - the
@@ -149,6 +189,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+
         /// <summary>Background color of a normal (not selected) row. Odd/even rows alternate between this and a slightly darker shade of it.</summary>
         public Color RowBackColor
         {
@@ -160,12 +201,14 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+
         /// <summary>Text color of a normal (not selected) row.</summary>
         public Color RowForeColor
         {
             get => _rowForeColor.Value;
             set { _rowForeColor.Set(value); ApplyStyles(); }
         }
+
 
         /// <summary>
         /// Background color of a selected cell/row. Defaults to a fixed,
@@ -184,6 +227,7 @@ namespace ErikwnkWFUI.Controls
                 ApplyStyles();
             }
         }
+
 
         /// <summary>
         /// Master switch for whether ANY column can be dragged to reorder
@@ -208,22 +252,6 @@ namespace ErikwnkWFUI.Controls
             set => _columnReordering.AllowedByDefault = value;
         }
 
-        /// <summary>
-        /// Configurable per column, independent of
-        /// <see cref="AllowColumnReordering"/>: a column can be pinned in
-        /// place (e.g. <see cref="DataGridView"/>'s own delete-row column,
-        /// always pinned rightmost) while the rest can still be freely
-        /// dragged into a new order.
-        /// </summary>
-        public void SetColumnReorderable(int columnIndex, bool reorderable)
-        {
-            _columnReordering.SetAllowed(columnIndex, reorderable);
-        }
-
-        public bool IsColumnReorderable(int columnIndex)
-        {
-            return _columnReordering.IsAllowed(columnIndex);
-        }
 
         /// <summary>
         /// Color of the vertical line the header shows while a column is
@@ -237,6 +265,7 @@ namespace ErikwnkWFUI.Controls
             get => _columnReorderIndicatorColor.Value;
             set => _columnReorderIndicatorColor.Set(value);
         }
+
 
         /// <summary>
         /// Master switch for whether ANY column can be resized by dragging
@@ -272,6 +301,7 @@ namespace ErikwnkWFUI.Controls
             set => _columnResizing.AllowedByDefault = value;
         }
 
+
         /// <summary>
         /// No column can be resized narrower than this - mirrors
         /// <see cref="ListView.MinimumColumnWidth"/>. Whichever of this or
@@ -298,25 +328,9 @@ namespace ErikwnkWFUI.Controls
             set => _minimumColumnWidth = Math.Max(1, value);
         }
 
+
         private const int DefaultMinimumColumnWidth = 40;
 
-        /// <summary>
-        /// Configurable per column, independent of
-        /// <see cref="AllowColumnResizing"/>: a column can be locked at its
-        /// current width entirely (e.g. <see cref="DataGridView"/>'s own
-        /// delete-row column) while the rest can still be freely resized.
-        /// Mirrors <see cref="ListView.SetColumnResizable"/>.
-        /// </summary>
-        public void SetColumnResizable(int columnIndex, bool resizable)
-        {
-            _columnResizing.SetAllowed(columnIndex, resizable);
-        }
-
-        /// <summary>Mirrors <see cref="ListView.IsColumnResizable"/> - see <see cref="AllowColumnResizing"/>/<see cref="SetColumnResizable"/>.</summary>
-        public bool IsColumnResizable(int columnIndex)
-        {
-            return _columnResizing.IsAllowed(columnIndex);
-        }
 
         /// <summary>
         /// Whether clicking a column header cycles it through ascending,
@@ -342,41 +356,6 @@ namespace ErikwnkWFUI.Controls
         /// </remarks>
         public bool SortingEnabled { get; set; } = true;
 
-        /// <summary>
-        /// Registers a custom comparer for a specific column, used by
-        /// column-header sorting (see <see cref="SortingEnabled"/>/
-        /// <see cref="CycleSort"/>) instead of the default comparison
-        /// (<see cref="IComparable"/>, falling back to case-insensitive
-        /// string comparison) - useful for a column whose cell values
-        /// don't sort correctly as plain strings/IComparables on their
-        /// own, e.g. dates stored in a non-lexicographic text format, or
-        /// numbers stored as strings. The comparer receives the two
-        /// cells' raw <see cref="DataGridViewCell.Value"/> objects and is
-        /// expected to compare them in plain ascending order - this
-        /// control still applies ascending/descending itself, the same
-        /// way it already does for the default comparison, so a
-        /// registered comparer never needs to know which direction is
-        /// currently active. Pass <c>null</c> as <paramref name="comparer"/>
-        /// to remove one and revert that column to the default. Set any
-        /// time after the column exists; not tied to binding order the
-        /// way <see cref="SortingEnabled"/> is.
-        /// </summary>
-        public void SetSortComparer(DataGridViewColumn column, IComparer comparer)
-        {
-            if (column == null)
-            {
-                throw new ArgumentNullException(nameof(column));
-            }
-
-            if (comparer == null)
-            {
-                _columnSortComparers.Remove(column);
-            }
-            else
-            {
-                _columnSortComparers[column] = comparer;
-            }
-        }
 
         /// <summary>
         /// How a copy, or any of DataGridView's own editing actions (cut,
@@ -389,149 +368,9 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public CopyConfirmationStyle ActionConfirmation { get; set; } = CopyConfirmationStyle.Toast;
 
-        // Every copy (native Ctrl+C, or DataGridView's own context-menu
-        // Copy/Cut, which both ultimately call this same virtual method)
-        // goes through here - a single choke point for both showing the
-        // confirmation and, if ShowEnumeration is on, keeping its column
-        // out of the copied text. DataGridView's own override (its own
-        // delete column, plus placeholder-row exclusion) wraps this same
-        // method rather than duplicating any of it - deselects ITS
-        // excluded cells first, then calls base (here), which deselects
-        // the enumeration column on top before the real, native copy runs,
-        // so SelectedCells.Count below is already correct for whichever of
-        // the two (or both) actually applies.
-        public override DataObject GetClipboardContent()
-        {
-            return ExcludingSelectedCells(cell => IsEnumerationColumn(cell.ColumnIndex), () =>
-            {
-                DataObject content = base.GetClipboardContent();
-                ShowCopyConfirmation(SelectedCells.Count);
-                return content;
-            });
-        }
-
-        // Shared by both this override and DataGridView's own (delete
-        // column + placeholder row) - only the exclusion predicate and the
-        // action actually differ between them. `action` (not a hardcoded
-        // call to base.GetClipboardContent() in here) is what lets
-        // DataGridView's own override compose correctly: its own lambda's
-        // "base.GetClipboardContent()" call resolves against DataGridView's
-        // own base (this class), reaching the override just above - calling
-        // that from inside a helper method living HERE would instead reach
-        // straight past it to the native implementation, skipping the
-        // enumeration-column exclusion entirely whenever both this and
-        // ShowEnumeration are in play together.
-        protected T ExcludingSelectedCells<T>(Predicate<DataGridViewCell> exclude, Func<T> action)
-        {
-            List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
-
-            foreach (DataGridViewCell cell in SelectedCells)
-            {
-                if (exclude(cell))
-                {
-                    excludedCells.Add(cell);
-                }
-            }
-
-            if (excludedCells.Count == 0)
-            {
-                return action();
-            }
-
-            foreach (DataGridViewCell cell in excludedCells)
-            {
-                cell.Selected = false;
-            }
-
-            try
-            {
-                return action();
-            }
-            finally
-            {
-                foreach (DataGridViewCell cell in excludedCells)
-                {
-                    cell.Selected = true;
-                }
-            }
-        }
-
-        private void ShowCopyConfirmation(int copiedCellCount)
-        {
-            if (copiedCellCount <= 0)
-            {
-                return;
-            }
-
-            ShowActionConfirmation(GetCopyConfirmationMessage(copiedCellCount));
-        }
-
-        // Says so when the header text went along too - the same
-        // " (with header)" suffix ListView's own copy toast carries. The
-        // clipboard mode itself is the signal (CopySelectionToClipboard
-        // switches it for the "with header" entries), so a consumer who
-        // sets EnableAlwaysIncludeHeaderText for Ctrl+C gets the suffix too.
-        private string GetCopyConfirmationMessage(int copiedCellCount)
-        {
-            string message = copiedCellCount == 1
-                ? UIStrings.Get("DataGridView.CellCopied")
-                : string.Format(UIStrings.Get("DataGridView.CellsCopied"), copiedCellCount);
-
-            return ClipboardCopyMode == DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText
-                ? message + UIStrings.Get("DataGridView.WithHeaderSuffix")
-                : message;
-        }
-
-        /// <summary>
-        /// Shows <paramref name="message"/> via <see cref="ActionConfirmation"/> -
-        /// the same mechanism <see cref="GetClipboardContent"/> uses for its
-        /// own "copied" message, exposed so <see cref="DataGridView"/> can
-        /// confirm its own editing actions (cut, paste, clear, delete rows,
-        /// insert row) the same way, instead of each carrying its own copy
-        /// of this same three-way Toast/ToolTip/None dispatch.
-        /// </summary>
-        protected void ShowActionConfirmation(string message)
-        {
-            if (_suppressActionConfirmation)
-            {
-                return;
-            }
-
-            OnActionConfirmation(message);
-        }
-
-        // Its own virtual seam (rather than making ShowActionConfirmation
-        // itself virtual) so a test subclass can spy on exactly which
-        // messages actually got displayed - i.e. only the ones that survive
-        // the suppression check above - without being able to observe calls
-        // RunWithSuppressedActionConfirmation swallowed.
-        protected virtual void OnActionConfirmation(string message)
-        {
-            CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip);
-        }
 
         private bool _suppressActionConfirmation;
 
-        /// <summary>
-        /// Runs <paramref name="action"/> with every <see cref="ShowActionConfirmation"/>
-        /// call inside it silenced - for composite operations like Cut
-        /// (copy, then clear) where the individual steps' own "copied"/
-        /// "cleared" messages would otherwise fire before the composite's
-        /// own, single "cut" message does.
-        /// </summary>
-        protected void RunWithSuppressedActionConfirmation(Action action)
-        {
-            bool previous = _suppressActionConfirmation;
-            _suppressActionConfirmation = true;
-            try
-            {
-                action();
-            }
-            finally
-            {
-                _suppressActionConfirmation = previous;
-            }
-        }
 
         /// <summary>
         /// Whether an optional "#" row-number column is shown, pinned as
@@ -601,92 +440,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>
-        /// Whether <paramref name="columnIndex"/> is the optional
-        /// enumeration column (see <see cref="ShowEnumeration"/>) - exposed
-        /// so <see cref="DataGridView"/> can exclude it from copy/paste/the
-        /// right-click menu the same way it already excludes its own
-        /// delete-row column, without the backing field itself needing to
-        /// be any more visible than that.
-        /// </summary>
-        protected bool IsEnumerationColumn(int columnIndex)
-        {
-            return _enumerationColumn != null && columnIndex == _enumerationColumn.Index;
-        }
 
         private const int EnumerationColumnPadding = 20;
 
-        // The displayed number for each row is always its CURRENT position -
-        // recomputed here from scratch rather than tracked incrementally,
-        // since every operation that could change row order or count (a
-        // fresh bind, a sort, DataGridView's own paste/insert/delete) already
-        // funnels through either this property's own setter (toggling the
-        // column on) or OnDataBindingComplete below exactly once. IsNewRow
-        // (the "type here to add a row" placeholder, only ever present on a
-        // DataGridView with AllowUserToAddRows enabled) is left blank, same
-        // as the delete column shows nothing there - nothing to number yet.
-        private void RenumberEnumeration()
-        {
-            if (_enumerationColumn == null)
-            {
-                return;
-            }
-
-            int columnIndex = _enumerationColumn.Index;
-
-            int realRowCount = 0;
-            foreach (DataGridViewRow row in Rows)
-            {
-                if (!row.IsNewRow)
-                {
-                    realRowCount++;
-                }
-            }
-
-            // Counts down from the row count instead of up from 1 while
-            // this column is itself the active DESCENDING sort column -
-            // otherwise a click that reverses the row order (confirmed live
-            // that it does - see CycleSort/ReorderDataSource) had no visible
-            // effect on the numbers themselves, since renumbering to match
-            // whatever the new top-to-bottom order is always produced the
-            // same 1..N sequence regardless of which direction the rows
-            // actually got reordered in. Every other case (ascending, no
-            // active sort, or a DIFFERENT column being sorted) still just
-            // counts up - this column's job there is "which visual row is
-            // this", unrelated to what's being sorted.
-            bool countDown = columnIndex == _sortedColumnIndex && _sortOrder == SortOrder.Descending;
-            int number = countDown ? realRowCount : 1;
-
-            foreach (DataGridViewRow row in Rows)
-            {
-                if (row.IsNewRow)
-                {
-                    row.Cells[columnIndex].Value = null;
-                    continue;
-                }
-
-                row.Cells[columnIndex].Value = number;
-                number += countDown ? -1 : 1;
-            }
-
-            _enumerationColumn.Width = GetEnumerationColumnWidth(Rows.Count);
-        }
-
-        // Rows.Count, not the real (possibly one-smaller, once the
-        // placeholder is excluded) count of numbered rows - the difference
-        // is at most one digit's worth of slack, and this avoids needing to
-        // special-case AllowUserToAddRows here just to shave that off.
-        private int GetEnumerationColumnWidth(int rowCount)
-        {
-            int digitCount = Math.Max(1, rowCount.ToString().Length);
-            string widest = new string('9', digitCount);
-
-            using (Font font = new Font(Font, FontStyle.Bold))
-            {
-                Size textSize = TextRenderer.MeasureText(widest, font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.NoPadding);
-                return textSize.Width + EnumerationColumnPadding;
-            }
-        }
 
         public ReadOnlyDataGridView()
         {
@@ -774,6 +530,7 @@ namespace ErikwnkWFUI.Controls
             ContextMenuStrip = BuildContextMenu();
         }
 
+
         // Which cell the context menu is about to act on - captured at
         // right-click time (see OnCellMouseDown/HandleContextMenuMouseDown),
         // read by the menu's own Opening handler and, in DataGridView, by
@@ -783,8 +540,11 @@ namespace ErikwnkWFUI.Controls
         // menu's Opening handler or an item's click actually runs (e.g. the
         // click itself may already have advanced it).
         protected int _contextMenuRowIndex = -1;
+
         protected int _contextMenuColumnIndex = -1;
+
         protected bool _contextMenuRowWasPlaceholder;
+
 
         // The one, single way this class family ever decides "is this row
         // the 'type here to add a row' placeholder, not real data" - every
@@ -810,6 +570,7 @@ namespace ErikwnkWFUI.Controls
             return rowIndex >= 0 && rowIndex == NewRowIndex;
         }
 
+
         // A column whose cells hold no real data of the bound item's own -
         // the optional enumeration number here, plus DataGridView's
         // delete-row button (see its override) - excluded everywhere a
@@ -821,251 +582,6 @@ namespace ErikwnkWFUI.Controls
             return IsEnumerationColumn(columnIndex);
         }
 
-        private bool IsRowSelected(int rowIndex)
-        {
-            foreach (DataGridViewCell cell in SelectedCells)
-            {
-                if (cell.RowIndex == rowIndex)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        // Right-clicking a row that isn't already part of the current
-        // selection replaces it with just that row - otherwise the context
-        // menu's row-scoped actions (Copy here; Cut, Delete selected rows,
-        // ... in DataGridView) would silently apply to whatever was
-        // selected before, not the row actually under the cursor. A row
-        // already part of a larger selection is left alone, so right-
-        // clicking within an existing multi-row selection keeps it intact.
-        // A system column's cell never triggers this (the menu itself is
-        // cancelled there - see the Opening handlers).
-        private void CaptureRightClickTarget(
-            DataGridViewCellMouseEventArgs e, bool rowWasSelectedBeforeThisClick, bool rowWasPlaceholderBeforeThisClick)
-        {
-            _contextMenuRowIndex = e.RowIndex;
-            _contextMenuColumnIndex = e.ColumnIndex;
-            _contextMenuRowWasPlaceholder = rowWasPlaceholderBeforeThisClick;
-
-            if (e.RowIndex >= 0 && !IsSystemColumn(e.ColumnIndex) && !rowWasSelectedBeforeThisClick)
-            {
-                SelectRow(e.RowIndex, e.ColumnIndex);
-            }
-        }
-
-        // Selects every data cell in a row (skipping system columns - they
-        // aren't a meaningful part of "this row is selected" the way the
-        // right-click handling means it), making the actual cell that was
-        // clicked current - not just whichever one happens to be first - so
-        // the current cell stays under the cursor instead of jumping to the
-        // row's first column.
-        private void SelectRow(int rowIndex, int clickedColumnIndex)
-        {
-            ClearSelection();
-
-            DataGridViewCell firstCell = null;
-            DataGridViewCell clickedCell = null;
-
-            foreach (DataGridViewColumn column in Columns)
-            {
-                if (IsSystemColumn(column.Index))
-                {
-                    continue;
-                }
-
-                DataGridViewCell cell = Rows[rowIndex].Cells[column.Index];
-                firstCell = firstCell ?? cell;
-
-                if (column.Index == clickedColumnIndex)
-                {
-                    clickedCell = cell;
-                }
-            }
-
-            // Regression fix: this control's SelectionMode is CellSelect,
-            // where assigning CurrentCell is itself a side-effecting
-            // operation that collapses SelectedCells down to just the new
-            // current cell - doing this LAST (as this used to) silently
-            // undid every Selected = true the loop above had just made,
-            // leaving only the clicked cell selected instead of the whole
-            // row. Setting it FIRST instead means the loop below, which
-            // selects every remaining cell afterward, is what actually
-            // sticks.
-            CurrentCell = clickedCell ?? firstCell;
-
-            foreach (DataGridViewColumn column in Columns)
-            {
-                if (IsSystemColumn(column.Index))
-                {
-                    continue;
-                }
-
-                Rows[rowIndex].Cells[column.Index].Selected = true;
-            }
-        }
-
-        // Separate from this class's own MouseDown subscription
-        // (HandleMouseDown only clears a stray selection) - this one only
-        // needs to run for a right-click landing on truly empty space (no
-        // cell there at all, so OnCellMouseDown never fires), to forget
-        // which row/column the context menu was about to target.
-        private void HandleContextMenuMouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button != MouseButtons.Right)
-            {
-                return;
-            }
-
-            HitTestInfo hitTest = HitTest(e.X, e.Y);
-
-            if (hitTest.Type == DataGridViewHitTestType.None)
-            {
-                _contextMenuRowIndex = -1;
-                _contextMenuColumnIndex = -1;
-            }
-        }
-
-        // The flat menu both grids (and ListView) share: Copy, Copy with
-        // header | Copy all, Copy all with header | Select all - everything that still makes sense on a display-only grid. DataGridView (the editable
-        // one) adds its own editing entries to this same menu instead of
-        // building a second one (see its AddEditingMenuItems), so these
-        // entries can never drift apart between the two grids.
-        private ContextMenuStrip BuildContextMenu()
-        {
-            ContextMenuStrip menu = new ContextMenuStrip
-            {
-                ShowImageMargin = false
-            };
-
-            menu.FollowSelectionBackColor(() => ContextMenuSelectionColor);
-
-            _contextMenuCopySelectionItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopySelection"), null,
-                (sender, e) => CopySelectionToClipboard());
-            _contextMenuCopySelectionWithHeaderItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopySelectionWithHeader"), null,
-                (sender, e) => CopySelectionToClipboard(includeHeader: true));
-            _contextMenuCopyAllItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopyAll"), null,
-                (sender, e) => CopyAllToClipboard(includeHeader: false));
-            _contextMenuCopyAllWithHeaderItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuCopyAllWithHeader"), null,
-                (sender, e) => CopyAllToClipboard(includeHeader: true));
-            _contextMenuSelectAllItem = new ToolStripMenuItem(
-                UIStrings.Get("DataGridView.ContextMenuSelectAll"), null, (sender, e) => SelectAllRealCells());
-
-            menu.Items.Add(_contextMenuCopySelectionItem);
-            menu.Items.Add(_contextMenuCopySelectionWithHeaderItem);
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(_contextMenuCopyAllItem);
-            menu.Items.Add(_contextMenuCopyAllWithHeaderItem);
-            menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add(_contextMenuSelectAllItem);
-
-            menu.Opening += (sender, e) =>
-            {
-                // No menu at all - not just disabled items - when the
-                // right-click wasn't on any row (the header and empty space
-                // below the rows both report RowIndex -1) or was on a
-                // system column (the enumeration/delete column).
-                if (_contextMenuRowIndex < 0 || IsSystemColumn(_contextMenuColumnIndex))
-                {
-                    e.Cancel = true;
-                    return;
-                }
-
-                bool hasSelection = SelectedCells.Count > 0 && !_contextMenuRowWasPlaceholder;
-                _contextMenuCopySelectionItem.Enabled = hasSelection;
-                _contextMenuCopySelectionWithHeaderItem.Enabled = hasSelection;
-
-                // Only worth offering with at least one real row - a grid
-                // holding nothing but the "type here" placeholder (only ever
-                // the editable one) has nothing meaningful to select or copy.
-                int realRowCount = Rows.Count - (NewRowIndex >= 0 ? 1 : 0);
-                _contextMenuCopyAllItem.Enabled = realRowCount > 0;
-                _contextMenuCopyAllWithHeaderItem.Enabled = realRowCount > 0;
-                _contextMenuSelectAllItem.Enabled = realRowCount > 0;
-            };
-
-            return menu;
-        }
-
-        // Puts the selection (minus system columns/the placeholder - see
-        // GetClipboardContent) on the clipboard, the same content Ctrl+C
-        // produces - shared by both grids' menus. includeHeader also puts
-        // the selected columns' header text on top, in display order - the
-        // native default (EnableWithAutoHeaderText) only does that for whole
-        // rows/columns selected via their headers, which this control's
-        // cell selection never produces, so it has to be asked for
-        // explicitly (then put back, so a plain Ctrl+C is unaffected).
-        protected void CopySelectionToClipboard(bool includeHeader = false)
-        {
-            if (SelectedCells.Count == 0)
-            {
-                return;
-            }
-
-            DataGridViewClipboardCopyMode previousMode = ClipboardCopyMode;
-
-            if (includeHeader)
-            {
-                ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
-            }
-
-            try
-            {
-                DataObject content = GetClipboardContent();
-
-                if (content != null)
-                {
-                    ClipboardAccess.SetDataObject(content);
-                }
-            }
-            finally
-            {
-                ClipboardCopyMode = previousMode;
-            }
-        }
-
-        // Select all, minus the "type here to add a row" placeholder (only
-        // ever present on the editable grid): it isn't a real row, so it
-        // must not count as selected - neither for the copy/cut/delete
-        // actions that follow, nor visually.
-        private void SelectAllRealCells()
-        {
-            SelectAll();
-
-            if (NewRowIndex >= 0)
-            {
-                foreach (DataGridViewCell cell in Rows[NewRowIndex].Cells)
-                {
-                    cell.Selected = false;
-                }
-            }
-        }
-
-        // Ctrl+A goes through the same path as the menu entry. Not while a
-        // cell is being edited - there it selects the text in the editor.
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (e.Control && e.KeyCode == Keys.A && !IsCurrentCellInEditMode)
-            {
-                SelectAllRealCells();
-                e.Handled = true;
-                return;
-            }
-
-            base.OnKeyDown(e);
-        }
-
-        private void CopyAllToClipboard(bool includeHeader)
-        {
-            SelectAllRealCells();
-            CopySelectionToClipboard(includeHeader);
-        }
 
         protected override void Dispose(bool disposing)
         {
@@ -1079,6 +595,7 @@ namespace ErikwnkWFUI.Controls
 
             base.Dispose(disposing);
         }
+
 
         // Keeps this class's own context menu and the enumeration column's
         // header/tooltip in whatever language the rest of the app just
@@ -1105,109 +622,6 @@ namespace ErikwnkWFUI.Controls
             _enumerationColumn.HeaderCell.ToolTipText = UIStrings.Get("DataGridView.RowNumber");
         }
 
-        // "#" normally, but blank while this column is itself the active
-        // sort column - ColumnHeaderPainting.DrawSortGlyph already draws
-        // the ascending/descending arrow there regardless (the sort itself
-        // creates that on its own, independent of this), and showing "#"
-        // right next to a direction-flipping arrow read as if the "#"
-        // itself was changing. Reverts back to "#" on the third click
-        // (SortOrder.None, back to original bind order) same as any other
-        // column losing the glyph.
-        private void UpdateEnumerationHeaderText()
-        {
-            if (_enumerationColumn == null)
-            {
-                return;
-            }
-
-            bool isActiveSortColumn = _enumerationColumn.Index == _sortedColumnIndex && _sortOrder != SortOrder.None;
-            _enumerationColumn.HeaderText = isActiveSortColumn ? string.Empty : UIStrings.Get("DataGridView.EnumerationHeader");
-        }
-
-        protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
-        {
-            base.OnDataBindingComplete(e);
-
-            // Binding to a new DataSource replaces the row collection
-            // entirely, which resets per-row visual state - reapplying
-            // here keeps alternating-row/selection colors correct for
-            // whatever just got bound in, not just whatever existed at
-            // construction time.
-            ApplyStyles();
-
-            // Every row-order/count-changing operation - a fresh bind, a
-            // sort (CycleSort/ReorderDataSource below), or one of
-            // DataGridView's own paste/insert/delete operations in a
-            // subclass - ends up here via ResetBindings(), so renumbering
-            // unconditionally (not just for a fresh bind, like the
-            // bookkeeping below the early-return guard) is what keeps this
-            // column's numbers live-correct after every one of them.
-            RenumberEnumeration();
-
-            if (_isApplyingInternalDataChange)
-            {
-                // This Reset was caused by ApplyBatchedDataSourceChange
-                // rewriting the bound list's contents (CycleSort/
-                // ReorderDataSource here for a sort, or one of
-                // DataGridView's own editing operations in a subclass),
-                // not a real rebind - the bookkeeping below would
-                // otherwise stomp on whatever state that change is
-                // applying right now.
-                return;
-            }
-
-            // A Reset is a fresh bind (DataSource assigned, or the bound
-            // list reset) - that's the only time a "no cell selected on
-            // load" default and a fresh original-order snapshot make sense.
-            // Incremental changes (a row added/edited) leave both alone, so
-            // typing into the grid doesn't fight the user's own selection.
-            if (e.ListChangedType == ListChangedType.Reset)
-            {
-                ClearSelection();
-                CurrentCell = null;
-
-                // Binding normally happens before the control is ever shown,
-                // and WinForms auto-selects the first cell the first time a
-                // grid with rows but no CurrentCell receives focus - which
-                // happens later, as part of the containing form being shown.
-                // Clearing it again once actually visible is what defeats
-                // that (setting it here alone doesn't stick).
-                _clearSelectionOnNextVisible = true;
-
-                _originalOrder = new List<object>();
-                foreach (DataGridViewRow row in Rows)
-                {
-                    if (row.DataBoundItem != null)
-                    {
-                        _originalOrder.Add(row.DataBoundItem);
-                    }
-                }
-
-                _sortedColumnIndex = -1;
-                _sortOrder = SortOrder.None;
-
-                foreach (DataGridViewColumn column in Columns)
-                {
-                    column.HeaderCell.SortGlyphDirection = SortOrder.None;
-                }
-
-                UpdateEnumerationHeaderText();
-            }
-        }
-
-        // The "type here to add a row" placeholder committing to a real row
-        // (AllowUserToAddRows, only ever true on DataGridView) goes through
-        // WinForms' own IBindingList.AddNew()/commit flow directly, never
-        // through ApplyBatchedDataSourceChange/ResetBindings() - so
-        // OnDataBindingComplete's own renumber above never runs for it,
-        // and the enumeration column was left showing stale numbers (and
-        // no number at all for the newly-committed row) until some
-        // unrelated sort/insert/delete happened to trigger a renumber.
-        protected override void OnUserAddedRow(DataGridViewRowEventArgs e)
-        {
-            base.OnUserAddedRow(e);
-            RenumberEnumeration();
-        }
 
         protected override void OnVisibleChanged(EventArgs e)
         {
@@ -1230,102 +644,18 @@ namespace ErikwnkWFUI.Controls
             }));
         }
 
+
         // The colors the grid has as long as nothing sets them.
         private Color _followedBackgroundColor;
+
         private Color _followedGridColor;
+
         private Color _followedButtonBackColor;
+
         private Color _followedButtonForeColor;
+
         private Color[] _followedLinkColors = new Color[3];
 
-        // The theme or the accent changed while the grid is shown: what was not set by hand follows (the scroll bars
-        // through NativeControlTheme.Track), and the grid is painted anew.
-        private void OnThemeChanged()
-        {
-            if (BackgroundColor == _followedBackgroundColor)
-                BackgroundColor = UIColors.BackgroundDark;
-
-            _followedBackgroundColor = UIColors.BackgroundDark;
-
-            if (GridColor == _followedGridColor)
-                GridColor = UIColors.BorderMedium;
-
-            _followedGridColor = UIColors.BorderMedium;
-
-            ApplyStyles();
-
-            foreach (DataGridViewColumn column in Columns)
-                ThemeColumnType(column, onlyWhatFollowed: true);
-
-            Invalidate(true);
-        }
-
-        // The look of a color set (what the factories make with colors and CreatePrimary): the set's hover color is the
-        // color of the look. Asked for again whenever the theme or the accent changes.
-        internal void FollowColors(Func<UIColorSet> colors)
-        {
-            _borderColor.SetDefault(() => colors().Hover);
-            _selectionBackColor.SetDefault(() => colors().Hover);
-            _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
-            _contextMenuSelectionColor.SetDefault(() => colors().Hover);
-
-            ApplyStyles();
-        }
-
-        // The columns that are not text keep the system's look unless told otherwise: white
-        // buttons and combo boxes and dark-blue links on the dark rows. Put in the grid's
-        // colors here, when the column comes in; a consumer can still change them afterwards.
-        // (Check box and image columns already follow the cell colors.)
-        private void ThemeColumnType(DataGridViewColumn column, bool onlyWhatFollowed = false)
-        {
-            DataGridViewButtonColumn button = column as DataGridViewButtonColumn;
-            DataGridViewComboBoxColumn combo = column as DataGridViewComboBoxColumn;
-            DataGridViewLinkColumn link = column as DataGridViewLinkColumn;
-
-            if (button != null)
-            {
-                button.FlatStyle = FlatStyle.Flat;
-
-                // Changed again only where it still has the color the grid gave it.
-                if (!onlyWhatFollowed || button.DefaultCellStyle.BackColor == _followedButtonBackColor)
-                    button.DefaultCellStyle.BackColor = UIColors.BackgroundLighter;
-
-                if (!onlyWhatFollowed || button.DefaultCellStyle.ForeColor == _followedButtonForeColor)
-                    button.DefaultCellStyle.ForeColor = UIColors.TextPrimary;
-
-                _followedButtonBackColor = UIColors.BackgroundLighter;
-                _followedButtonForeColor = UIColors.TextPrimary;
-            }
-            else if (combo != null)
-            {
-                // The arrow button of a flat combo cell is still a white block in the system's
-                // button color: it shows on the current cell only, where the choice is made.
-                combo.FlatStyle = FlatStyle.Flat;
-                combo.DisplayStyleForCurrentCellOnly = true;
-            }
-            else if (link != null)
-            {
-                // A link has to be seen against the row color in both themes.
-                Color row = RowBackColor;
-                Color[] followed = _followedLinkColors;
-                Color[] wanted =
-                {
-                    UIColors.EnsureContrast(UIColors.Primary, row, 4.5),
-                    UIColors.EnsureContrast(UIColors.ShiftLightness(UIColors.Primary, -0.15), row, 4.5),
-                    UIColors.TextPrimary
-                };
-
-                if (!onlyWhatFollowed || link.LinkColor == followed[0])
-                    link.LinkColor = wanted[0];
-
-                if (!onlyWhatFollowed || link.VisitedLinkColor == followed[1])
-                    link.VisitedLinkColor = wanted[1];
-
-                if (!onlyWhatFollowed || link.ActiveLinkColor == followed[2])
-                    link.ActiveLinkColor = wanted[2];
-
-                _followedLinkColors = wanted;
-            }
-        }
 
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
@@ -1388,40 +718,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
-        {
-            base.OnColumnHeaderMouseClick(e);
-
-            // base's own header-click handling can move CurrentCell to the
-            // column's first row as a side effect - SortMode.Programmatic
-            // only suppresses its automatic sort, not that. Clearing again
-            // here (in addition to HandleMouseDown's clear on the way in)
-            // is what stops that from ever reaching the screen.
-            ClearSelection();
-            CurrentCell = null;
-
-            // Regression test: resizing (or even just pressing down right
-            // on top of) a column border still counts as a "click" on
-            // whichever header cell that border belongs to as far as
-            // DataGridView's own click detection is concerned - without
-            // this, finishing a resize drag by releasing the mouse also
-            // silently cycled that column's sort, since the resize itself
-            // is hand-rolled (OnCellMouseDown/OnCellMouseMove) and never
-            // told DataGridView's own click machinery to stay out of it.
-            if (_suppressNextHeaderClickSort)
-            {
-                _suppressNextHeaderClickSort = false;
-                return;
-            }
-
-            bool isSortableColumn =
-                e.ColumnIndex >= 0 && Columns[e.ColumnIndex].SortMode != DataGridViewColumnSortMode.NotSortable;
-
-            if (SortingEnabled && e.Button == MouseButtons.Left && isSortableColumn)
-            {
-                CycleSort(e.ColumnIndex);
-            }
-        }
 
         // Clicking truly empty space below the rows (no cell there at all,
         // so OnCellMouseDown below never fires) leaves a previously
@@ -1438,6 +734,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+
         // Forces a repaint on every selection change - a rapid drag that
         // extends the selection back and forth across many cells could
         // leave an earlier cell's highlight stuck stale: still actually
@@ -1450,6 +747,7 @@ namespace ErikwnkWFUI.Controls
         // during a fast drag-select, and a full-control repaint that often
         // was wasted work; at most one repaint stays queued at a time.
         private bool _selectionRepaintPending;
+
 
         protected override void OnSelectionChanged(EventArgs e)
         {
@@ -1478,412 +776,6 @@ namespace ErikwnkWFUI.Controls
             }));
         }
 
-        protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
-        {
-            // Captured BEFORE base.OnCellMouseDown below, not after -
-            // regression fix: this control's SelectionMode is CellSelect,
-            // whose own native mouse-down handling (run by that base call)
-            // already selects the single clicked cell as its own default
-            // behavior. Checking IsRowSelected afterward, as this used to,
-            // meant the row it just clicked always already had ONE selected
-            // cell (the one just clicked) by the time it was checked -
-            // silently skipping SelectRow below for EVERY previously-
-            // unselected row, every time, and leaving just that one cell
-            // selected instead of the whole row the context menu's own
-            // row-scoped actions actually need.
-            bool rowWasSelectedBeforeThisClick = e.RowIndex >= 0 && IsRowSelected(e.RowIndex);
-
-            // Same reason: moving CurrentCell into the placeholder (which
-            // that base call does for any mouse button) makes WinForms call
-            // IBindingList.AddNew() on its own, after which NewRowIndex
-            // advances past the row that was just clicked - checked
-            // afterward, this would wrongly report "not the placeholder"
-            // and defeat DataGridView's own InsertBlankRow double-insert
-            // guard.
-            bool rowWasPlaceholderBeforeThisClick = IsPlaceholderRowIndex(e.RowIndex);
-
-            base.OnCellMouseDown(e);
-
-            if (e.Button == MouseButtons.Right)
-            {
-                CaptureRightClickTarget(e, rowWasSelectedBeforeThisClick, rowWasPlaceholderBeforeThisClick);
-            }
-
-            if (e.RowIndex != -1)
-            {
-                return;
-            }
-
-            // The MouseDown event (see HandleMouseDown) fires from
-            // Control.OnMouseDown, which DataGridView's own OnMouseDown
-            // override calls partway through its own processing - moving
-            // CurrentCell to this column's first row, as a side effect of
-            // pressing a header, happens to fall AFTER that point, so
-            // clearing selection there never stuck (visible for as long as
-            // the button stayed down, before any Click/MouseUp fired).
-            // base.OnCellMouseDown above is exactly where that side effect
-            // itself happens, so clearing immediately after it - still
-            // within the same synchronous mouse-down handling, before the
-            // control repaints - is what actually keeps it from showing.
-            ClearSelection();
-            CurrentCell = null;
-
-            _pendingReorderColumnIndex = -1;
-
-            // The border/resize check itself now lives in OnMouseDown
-            // below, not here - see its own remarks on why. Only the
-            // reorder-arming stays here, since it genuinely needs a real
-            // column under the cursor to have anything to drag at all.
-            if (e.Button != MouseButtons.Left || e.ColumnIndex < 0 || _isResizingColumn)
-            {
-                return;
-            }
-
-            // DataGridViewCellMouseEventArgs.X/Y are relative to the CELL,
-            // not the control - PointToClient(Cursor.Position) sidesteps
-            // that entirely rather than adding the cell's own display
-            // rectangle back in.
-            int controlX = PointToClient(Cursor.Position).X;
-
-            // !AllowDrop also covers the MTA case the constructor's own
-            // apartment-state check guards against - without a registered
-            // drop target, DoDragDrop has nothing to hand the drag to.
-            if (!AllowDrop || !IsColumnReorderable(e.ColumnIndex))
-            {
-                return;
-            }
-
-            _pendingReorderColumnIndex = e.ColumnIndex;
-            _pendingReorderStartX = controlX;
-        }
-
-        // The border/resize check used to live in OnCellMouseDown above,
-        // gated behind e.ColumnIndex >= 0 - past the last column's own
-        // right edge, in the empty header space beyond every real column,
-        // DataGridView reports RowIndex -1 (still "the header") but
-        // ColumnIndex -1 too (no column there), so that check silently
-        // never ran there at all. OnCellMouseMove's own hover cursor never
-        // had this problem (it computes its own control-relative X instead
-        // of trusting e.ColumnIndex - see its own TryGetColumnAtBorder
-        // call), which is exactly why the VSplit hint could show out there
-        // while actually pressing down to start a resize from that same
-        // spot silently did nothing. This plain Control-level MouseDown -
-        // not tied to resolving a cell at all - is the fix, the same
-        // reasoning as OnMouseUp/OnMouseMove already needed it for ending/
-        // continuing a resize. e.Y < ColumnHeadersHeight stands in for
-        // "RowIndex == -1" here, since MouseEventArgs has no such thing.
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            base.OnMouseDown(e);
-
-            _isResizingColumn = false;
-            _suppressNextHeaderClickSort = false;
-
-            if (e.Button != MouseButtons.Left || e.Y >= ColumnHeadersHeight)
-            {
-                return;
-            }
-
-            int controlX = PointToClient(Cursor.Position).X;
-            int logicalX = controlX + HorizontalScrollingOffset;
-
-            if (!TryGetColumnAtBorder(logicalX, out DataGridViewColumn borderColumn))
-            {
-                return;
-            }
-
-            // A border always wins over a reorder drag OnCellMouseDown may
-            // already have armed for this same press (a real cell right at
-            // a border can resolve to either handler depending on exactly
-            // which pixel, and either could end up running first) - a
-            // locked column's border should do nothing at all, not fall
-            // through into moving the column instead.
-            _pendingReorderColumnIndex = -1;
-
-            // The mouse still went down and (typically) back up on the
-            // same header cell either way, which is exactly what
-            // OnColumnHeaderMouseClick's own click detection is built to
-            // catch - pressing right on a border was never actually
-            // aiming to sort that column, whether or not a real resize
-            // ends up happening from here.
-            _suppressNextHeaderClickSort = true;
-
-            if (!IsColumnResizable(borderColumn))
-            {
-                return;
-            }
-
-            _isResizingColumn = true;
-            _resizeColumnIndex = borderColumn.Index;
-            _resizeStartX = controlX;
-            _resizeStartWidth = borderColumn.Width;
-
-            // Keeps this tracking correctly even if a fast drag carries
-            // the cursor outside the grid's own bounds - without it,
-            // MouseMove/MouseUp simply stop arriving once the cursor
-            // leaves this control's screen area, leaving the resize stuck
-            // "in progress" until some unrelated later click happens to
-            // reset it.
-            Capture = true;
-        }
-
-        protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
-        {
-            base.OnCellMouseMove(e);
-
-            // An active resize is tracked from the plain Control-level
-            // OnMouseMove below instead, not here - see its own remarks on
-            // why. The hover cursor hint moved there too, for the same
-            // underlying reason - see OnMouseMove's own remarks.
-            if (_isResizingColumn || e.RowIndex != -1)
-            {
-                return;
-            }
-
-            int controlX = PointToClient(Cursor.Position).X;
-
-            if (_pendingReorderColumnIndex >= 0 && !_isDraggingColumn &&
-                Math.Abs(controlX - _pendingReorderStartX) >= SystemInformation.DragSize.Width)
-            {
-                int columnIndex = _pendingReorderColumnIndex;
-                _pendingReorderColumnIndex = -1;
-                BeginColumnDragDrop(columnIndex);
-            }
-        }
-
-        protected override void OnCellMouseUp(DataGridViewCellMouseEventArgs e)
-        {
-            base.OnCellMouseUp(e);
-
-            // A plain click (never exceeded the drag threshold) just clears
-            // the pending state - nothing to reorder, nothing to undo,
-            // since BeginColumnDragDrop is only ever called once
-            // OnCellMouseMove sees the threshold exceeded. The header's own
-            // click-to-sort (OnColumnHeaderMouseClick) is unaffected either
-            // way: a real reorder drag is handed off to DoDragDrop below,
-            // which - like any OLE drag-drop - never lets the originating
-            // control see a matching MouseUp/Click of its own once the drag
-            // starts, so there's nothing here that needs to suppress it.
-            _pendingReorderColumnIndex = -1;
-
-            if (_isResizingColumn)
-            {
-                EndColumnResize();
-            }
-        }
-
-        // Also ends an in-progress resize on the plain Control-level
-        // MouseUp, not just OnCellMouseUp above - confirmed live that
-        // OnCellMouseUp/CellMouseUp simply never fires for a MouseUp whose
-        // cursor is outside this control's own bounds at the time (this
-        // control's Capture still routes the underlying message here
-        // regardless, but DataGridView apparently only raises the CELL-
-        // level event once it can resolve an actual cell under the
-        // cursor, and there wasn't one out there). This one is the same
-        // message either way, just not conditioned on resolving a cell
-        // first, so it reliably fires regardless of where the cursor
-        // ends up. OnMouseMove's own button-state check (see its own
-        // remarks) is the other half of this same fix, for the case where
-        // even this somehow doesn't run before the cursor moves again.
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-
-            if (_isResizingColumn)
-            {
-                EndColumnResize();
-            }
-        }
-
-        // A second, independent safety net for the same "Cursor is a
-        // whole-control property" problem EndColumnResize's own reset
-        // covers (see its own remarks) - this one for hovering a border
-        // (arming nothing yet, just showing VSplit) and then leaving the
-        // control entirely without ever resizing at all, which leaves
-        // nothing to trigger that reset. Skipped while a resize is
-        // actually in progress - Capture keeps this control receiving
-        // mouse events even once the cursor is physically outside its
-        // bounds, and MouseLeave still fires for that, but flipping the
-        // cursor back to Default mid-drag would fight the still-accurate
-        // VSplit hint for no reason; EndColumnResize's own reset already
-        // covers the moment the drag actually ends, wherever that is.
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-
-            if (!_isResizingColumn)
-            {
-                Cursor = Cursors.Default;
-            }
-        }
-
-        // An active resize is tracked here, not from OnCellMouseMove, for
-        // exactly the same reason OnMouseUp above is: confirmed live that
-        // widening the LAST column specifically made resizing intermittently
-        // stop responding while the button was still held. Widening it
-        // means the cursor is naturally ahead of that column's own
-        // (not-yet-updated) right edge, past every real cell entirely -
-        // CellMouseMove, needing an actual cell to resolve under the
-        // cursor the same way CellMouseUp needs one, simply never fires
-        // for that position, so ApplyLiveColumnResize never got called
-        // for it. Any OTHER column's right edge still has the NEXT
-        // column's own cell sitting there to catch it, which is why only
-        // the last column ever showed this.
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-
-            if (_isResizingColumn)
-            {
-                if ((MouseButtons & MouseButtons.Left) != MouseButtons.Left)
-                {
-                    EndColumnResize();
-                    return;
-                }
-
-                ApplyLiveColumnResize();
-                return;
-            }
-
-            // Hover-only cursor hint for a resizable border - moved here
-            // from OnCellMouseMove for the same reason OnMouseDown's own
-            // border/resize check moved out of OnCellMouseDown: past the
-            // last column's own right edge, in the empty header space
-            // beyond every real column, CellMouseMove never fires at all,
-            // so a hint set while still over the actual border tolerance
-            // (back when CellMouseMove still fired, right at the column's
-            // own edge) could never be cleared again once the cursor kept
-            // moving right past it - it just stayed VSplit for the WHOLE
-            // remaining empty area instead of only the real tolerance
-            // zone. e.Y < ColumnHeadersHeight stands in for "RowIndex ==
-            // -1" here, the same substitution OnMouseDown already needed.
-            if (e.Y >= ColumnHeadersHeight)
-            {
-                Cursor = Cursors.Default;
-                return;
-            }
-
-            int controlX = PointToClient(Cursor.Position).X;
-            bool overResizableBorder = TryGetColumnAtBorder(controlX + HorizontalScrollingOffset, out DataGridViewColumn hoveredColumn) &&
-                IsColumnResizable(hoveredColumn);
-            Cursor = overResizableBorder ? Cursors.VSplit : Cursors.Default;
-        }
-
-        private void EndColumnResize()
-        {
-            _isResizingColumn = false;
-            _resizeColumnIndex = -1;
-            Capture = false;
-
-            // Cursor is a whole-control property, not a per-pixel one -
-            // once OnCellMouseMove's hover check (or arming the resize
-            // itself) sets it to VSplit, it stays VSplit everywhere on
-            // this control, for however long, until something explicitly
-            // sets it back. That "something" was only ever the next hover
-            // recalculation - fine as long as one actually happens before
-            // the cursor leaves, but confirmed live that moving the mouse
-            // off the control right after finishing a resize (nothing left
-            // to fire a recalculation over) leaves it stuck on VSplit.
-            // Resetting the moment a resize actually ends, regardless of
-            // where the cursor is, means there's nothing left to get stuck.
-            Cursor = Cursors.Default;
-        }
-
-        // Applies the column's new width directly, on every single
-        // mouse-move tick while a resize is in progress - unlike
-        // DataGridView's own native resize-drag (confirmed live to only
-        // move a guideline and apply the real width once, on mouse-up),
-        // setting Width here goes through the ordinary property-changed
-        // path, which repaints normally on each call rather than only once
-        // at the end.
-        private void ApplyLiveColumnResize()
-        {
-            int controlX = PointToClient(Cursor.Position).X;
-            int delta = controlX - _resizeStartX;
-            int minimumWidth = Math.Max(_minimumColumnWidth, Columns[_resizeColumnIndex].MinimumWidth);
-            int newWidth = Math.Max(minimumWidth, _resizeStartWidth + delta);
-
-            if (Columns[_resizeColumnIndex].Width != newWidth)
-            {
-                Columns[_resizeColumnIndex].Width = newWidth;
-            }
-        }
-
-        // Called once OnCellMouseMove sees the drag threshold exceeded.
-        // From here on, tracking the rest of the drag is handed off to
-        // WinForms' own DoDragDrop/OnDragOver/OnDragDrop - the same
-        // mechanism ListView's own column reorder uses, and ListBox's own
-        // item-reorder drag before that.
-        private void BeginColumnDragDrop(int columnIndex)
-        {
-            _dragColumnIndex = columnIndex;
-            _isDraggingColumn = true;
-            _dragInsertBeforeDisplayIndex = -1;
-
-            try
-            {
-                DoDragDrop(columnIndex, DragDropEffects.Move);
-            }
-            finally
-            {
-                // Covers every way the drag can end, including a cancelled
-                // drag (Escape, or dropped somewhere OnDragDrop never
-                // fires) - OnDragDrop itself only needs to perform the
-                // actual move, not reset this shared state.
-                _isDraggingColumn = false;
-                _dragColumnIndex = -1;
-                _dragInsertBeforeDisplayIndex = -1;
-
-                // Unlike ListView, the header here isn't a separate native
-                // child window - it's painted by this control's own
-                // OnCellPainting, so a plain Invalidate() is enough to
-                // make the insertion line disappear.
-                Invalidate();
-            }
-        }
-
-        protected override void OnDragOver(DragEventArgs drgevent)
-        {
-            if (!_isDraggingColumn)
-            {
-                base.OnDragOver(drgevent);
-                return;
-            }
-
-            Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
-            int insertBefore = GetColumnDropInsertionIndex(point.X + HorizontalScrollingOffset);
-
-            drgevent.Effect = DragDropEffects.Move;
-
-            if (insertBefore != _dragInsertBeforeDisplayIndex)
-            {
-                _dragInsertBeforeDisplayIndex = insertBefore;
-                Invalidate();
-            }
-
-            base.OnDragOver(drgevent);
-        }
-
-        protected override void OnDragDrop(DragEventArgs drgevent)
-        {
-            if (_dragColumnIndex >= 0 && _dragInsertBeforeDisplayIndex >= 0)
-            {
-                MoveColumnToDisplayIndex(_dragColumnIndex, _dragInsertBeforeDisplayIndex);
-            }
-
-            base.OnDragDrop(drgevent);
-        }
-
-        protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
-        {
-            if (_isDraggingColumn)
-            {
-                gfbevent.UseDefaultCursors = false;
-                Cursor.Current = Cursors.SizeWE;
-            }
-
-            base.OnGiveFeedback(gfbevent);
-        }
 
         // Rebuilt only when the column SET or ORDER actually changes (see
         // the invalidation call sites: OnColumnAdded/OnColumnRemoved/
@@ -1899,300 +791,13 @@ namespace ErikwnkWFUI.Controls
         // never needs to invalidate this at all.
         private List<DataGridViewColumn> _columnsInDisplayOrderCache;
 
-        private List<DataGridViewColumn> GetColumnsInDisplayOrder()
-        {
-            if (_columnsInDisplayOrderCache != null)
-            {
-                return _columnsInDisplayOrderCache;
-            }
-
-            List<DataGridViewColumn> columns = new List<DataGridViewColumn>();
-            foreach (DataGridViewColumn column in Columns)
-            {
-                columns.Add(column);
-            }
-
-            _columnsInDisplayOrderCache = ColumnLayoutMath.OrderByDisplayIndex(columns, column => column.DisplayIndex);
-            return _columnsInDisplayOrderCache;
-        }
-
-        protected override void OnColumnRemoved(DataGridViewColumnEventArgs e)
-        {
-            base.OnColumnRemoved(e);
-            _columnsInDisplayOrderCache = null;
-        }
-
-        protected override void OnColumnDisplayIndexChanged(DataGridViewColumnEventArgs e)
-        {
-            base.OnColumnDisplayIndexChanged(e);
-            _columnsInDisplayOrderCache = null;
-        }
-
-        private bool IsColumnResizable(DataGridViewColumn column)
-        {
-            return IsColumnResizable(column.Index);
-        }
 
         private const int ResizeGripWidth = 5;
 
-        // x is in "logical" (unscrolled) space - cumulative column widths
-        // from DisplayIndex 0, same space GetColumnDropInsertionIndex uses -
-        // callers convert from control-relative coordinates by adding
-        // HorizontalScrollingOffset first, since this control (unlike
-        // ListView's native header) can scroll its columns independently
-        // of where they're actually drawn. Resizability itself is a
-        // separate question from being AT a border at all (see
-        // IsColumnResizable) - a locked column still has to block a
-        // reorder drag from starting there, it just doesn't also start a
-        // resize.
-        private bool TryGetColumnAtBorder(int x, out DataGridViewColumn column)
-        {
-            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out column);
-        }
-
-        // x is in "logical" (unscrolled) space - see this method's own
-        // caller for why. Mirrors ListView's own GetColumnDropInsertionIndex.
-        private int GetColumnDropInsertionIndex(int x)
-        {
-            List<DataGridViewColumn> orderedColumns = GetColumnsInDisplayOrder();
-            int insertBeforeDisplayIndex = ColumnLayoutMath.GetDropInsertionIndex(orderedColumns, column => column.Width, x);
-            return ClampReorderInsertionIndex(orderedColumns, insertBeforeDisplayIndex);
-        }
-
-        // A real column being dragged must never land ahead of a pinned
-        // leftmost column (ShowEnumeration's own "#" column) or past a
-        // pinned rightmost one (DataGridView's own delete-row column) -
-        // both are already excluded from being the column that STARTS a
-        // drag (see SetColumnReorderable in their own setters), but a drop
-        // target computed purely from cursor position could otherwise still
-        // land in their slot, displacing them there instead. Walks in from
-        // both ends of the CURRENT display order counting how many leading/
-        // trailing columns are non-reorderable, rather than checking the
-        // enumeration/delete columns by name - keeps this working for any
-        // future pinned column the same way, without this class needing to
-        // know DataGridView's own delete-column field exists.
-        private int ClampReorderInsertionIndex(List<DataGridViewColumn> orderedColumns, int insertBeforeDisplayIndex)
-        {
-            int minimum = 0;
-            while (minimum < orderedColumns.Count && !IsColumnReorderable(orderedColumns[minimum].Index))
-            {
-                minimum++;
-            }
-
-            int maximum = orderedColumns.Count;
-            while (maximum > minimum && !IsColumnReorderable(orderedColumns[maximum - 1].Index))
-            {
-                maximum--;
-            }
-
-            return Math.Max(minimum, Math.Min(insertBeforeDisplayIndex, maximum));
-        }
-
-        // Mirrors ListView's own MoveColumnToDisplayIndex.
-        private void MoveColumnToDisplayIndex(int columnIndex, int insertBeforeDisplayIndex)
-        {
-            if (columnIndex < 0 || columnIndex >= Columns.Count)
-            {
-                return;
-            }
-
-            DataGridViewColumn column = Columns[columnIndex];
-            int? targetDisplayIndex = ColumnLayoutMath.GetMoveTargetDisplayIndex(column.DisplayIndex, insertBeforeDisplayIndex);
-            if (targetDisplayIndex == null)
-            {
-                return;
-            }
-
-            column.DisplayIndex = targetDisplayIndex.Value;
-        }
-
-        // Drawn as part of the same OnCellPainting pass as the header
-        // cell's own normal (native) painting, rather than replacing it.
-        // Mirrors ListView's own DrawColumnDragInsertionLine.
-        private void DrawColumnDragInsertionLine(DataGridViewCellPaintingEventArgs e)
-        {
-            if (!_isDraggingColumn || e.ColumnIndex < 0)
-            {
-                return;
-            }
-
-            DataGridViewColumn column = Columns[e.ColumnIndex];
-            ColumnHeaderPainting.DrawColumnDragInsertionLine(
-                e.Graphics, e.CellBounds, column.DisplayIndex, Columns.Count, _dragInsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
-        }
-
-        /// <summary>
-        /// Three-state header click: ascending, then descending, then back
-        /// to the order rows were in when last bound - clicking a different
-        /// column starts that column fresh at ascending.
-        /// </summary>
-        private void CycleSort(int columnIndex)
-        {
-            SortCycle.Advance(columnIndex, ref _sortedColumnIndex, ref _sortOrder);
-
-            foreach (DataGridViewColumn column in Columns)
-            {
-                column.HeaderCell.SortGlyphDirection = SortOrder.None;
-            }
-
-            if (_sortOrder == SortOrder.None)
-            {
-                _sortedColumnIndex = -1;
-                ReorderDataSource(BuildOriginalOrder());
-            }
-            else
-            {
-                // The native SortGlyphDirection is NOT set: it paints a glyph of its own on top of
-                // ColumnHeaderPainting.DrawSortGlyph's (two triangles overlapping into one "bowtie"
-                // blob), on every column, not just the enumeration column with its empty HeaderText.
-                // The arrow on screen is drawn from _sortedColumnIndex/_sortOrder alone.
-                ReorderDataSource(BuildSortedOrder(columnIndex, _sortOrder));
-            }
-
-            UpdateEnumerationHeaderText();
-
-            // Redundant with Invalidate() already happening as a side
-            // effect of ClearSelection()/CurrentCell = null below (via
-            // OnSelectionChanged) in the case where selection actually
-            // changes - but a sort that doesn't move CurrentCell off of
-            // wherever it already was (e.g. nothing was selected to begin
-            // with) wouldn't otherwise repaint the header row at all,
-            // leaving the custom-drawn glyph below stale. -1 addresses the
-            // header row, same as everywhere else in this file that reads
-            // RowIndex against it.
-            InvalidateCell(columnIndex, -1);
-
-            // Whole-header repaint, forced synchronous rather than left for
-            // the next WM_PAINT - the enumeration column's HeaderText just
-            // changed (see UpdateEnumerationHeaderText) and every header
-            // cell's own SortGlyphDirection/border can change too, so a
-            // single-cell InvalidateCell isn't always enough to guarantee
-            // the whole row is actually repainted before this method
-            // returns.
-            Invalidate();
-            Update();
-
-            ClearSelection();
-            CurrentCell = null;
-        }
-
-        // Visually neutral, matching DataGridView's own delete-row column -
-        // WinForms has no built-in "this column can't be selected" switch,
-        // so a click still technically moves CurrentCell there, but giving
-        // it the exact same SelectionBackColor/ForeColor as its own resting
-        // colors means it never actually LOOKS selected, reading as a
-        // passive label instead of a normal data cell.
-        protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
-        {
-            base.OnCellFormatting(e);
-
-            if (_enumerationColumn == null || e.ColumnIndex != _enumerationColumn.Index || e.RowIndex < 0)
-            {
-                return;
-            }
-
-            e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
-            e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
-        }
-
-        // ColumnHeaderPainting.DrawSortGlyph below draws the triangle. The
-        // native SortGlyphDirection glyph is never set on a column (see
-        // CycleSort): it does paint, in a style of its own, and the two
-        // overlap into a "bowtie" blob.
-        protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
-        {
-            base.OnCellPainting(e);
-
-            if (e.RowIndex != -1)
-            {
-                return;
-            }
-
-            // The default header painting (background/native border/text)
-            // has to happen FIRST and be marked Handled here, same reason
-            // as always with this trick - anything drawn before this
-            // point in the method would otherwise just get painted over
-            // once DataGridView's own default painting runs right after
-            // this event handler returns (confirmed live: the insertion
-            // line below drew, then immediately vanished, because it used
-            // to run before this call).
-            e.Paint(e.ClipBounds, e.PaintParts);
-            e.Handled = true;
-
-            // Every header cell's own border is redrawn here in
-            // BorderColor - not the native ColumnHeadersBorderStyle one
-            // (GridColor-driven, and GridColor is deliberately fixed - see
-            // its own remarks on why), the same way ListView's own
-            // OnDrawColumnHeader draws its header divider in BorderColor
-            // regardless of what its (non-existent, for data rows) grid
-            // lines look like. Together, every cell's own rectangle forms
-            // one continuous frame around the whole header strip, matching
-            // ListView's own look - CreatePrimary's header now reads as
-            // accent-colored the same way ListView's does, while the
-            // gridlines between actual rows underneath stay neutral.
-            DrawHeaderCellBorder(e);
-
-            DrawColumnDragInsertionLine(e);
-
-            if (e.ColumnIndex != _sortedColumnIndex)
-            {
-                return;
-            }
-
-            ColumnHeaderPainting.DrawSortGlyph(e.Graphics, e.CellBounds, Font, HeaderForeColor, _sortOrder);
-        }
-
-        private void DrawHeaderCellBorder(DataGridViewCellPaintingEventArgs e)
-        {
-            using (Pen pen = new Pen(BorderColor))
-            {
-                e.Graphics.DrawRectangle(
-                    pen,
-                    e.CellBounds.Left,
-                    e.CellBounds.Top,
-                    e.CellBounds.Width - 1,
-                    e.CellBounds.Height - 1);
-            }
-        }
-
-
-        // DataGridView.Sort(IComparer) is a no-op for the display order when
-        // the control is data bound (it only works unbound, or against a
-        // source that implements IBindingListView) - so instead, the bound
-        // list itself is rewritten in the desired order. Any IList data
-        // source works, not just BindingList&lt;T&gt;.
-        private void ReorderDataSource(List<object> desiredOrder)
-        {
-            if (!(DataSource is IList list))
-            {
-                return;
-            }
-
-            ApplyBatchedDataSourceChange(list, () =>
-            {
-                list.Clear();
-
-                foreach (object item in desiredOrder)
-                {
-                    list.Add(item);
-                }
-            });
-        }
-
-        private readonly struct DataSourceReflectionInfo
-        {
-            public DataSourceReflectionInfo(PropertyInfo raiseListChangedEventsProperty, MethodInfo resetBindingsMethod)
-            {
-                RaiseListChangedEventsProperty = raiseListChangedEventsProperty;
-                ResetBindingsMethod = resetBindingsMethod;
-            }
-
-            public PropertyInfo RaiseListChangedEventsProperty { get; }
-            public MethodInfo ResetBindingsMethod { get; }
-        }
 
         private static readonly BindingFlags AnyInstanceMember =
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+
 
         // GetProperty/GetMethod do their own metadata lookup every call -
         // cheap next to an actual UI interaction, but ApplyBatchedDataSourceChange
@@ -2205,384 +810,20 @@ namespace ErikwnkWFUI.Controls
         private static readonly ConcurrentDictionary<Type, DataSourceReflectionInfo> DataSourceReflectionCache =
             new ConcurrentDictionary<Type, DataSourceReflectionInfo>();
 
-        private static DataSourceReflectionInfo GetDataSourceReflectionInfo(Type dataSourceType)
-        {
-            return DataSourceReflectionCache.GetOrAdd(dataSourceType, type => new DataSourceReflectionInfo(
-                type.GetProperty("RaiseListChangedEvents", AnyInstanceMember),
-                type.GetMethod("ResetBindings", AnyInstanceMember, null, Type.EmptyTypes, null)));
-        }
-
-        // Inserts newItems at insertAtIndex via Clear() + re-Add() in the
-        // exact final order - a direct list.Insert(index, item) at a
-        // hand-picked index was tried first and found to corrupt the
-        // grid's internal row/cell bookkeeping even though the resulting
-        // list CONTENTS were correct (a later, unrelated click threw
-        // InvalidOperationException out of WinForms' own code). Used by
-        // DataGridView's own row-growing editing operations (paste,
-        // insert row above/below) for the same reason. Callers are
-        // expected to already be running inside an
-        // ApplyBatchedDataSourceChange batch - this only rewrites the
-        // list, it doesn't suppress/replay change notifications itself.
-        //
-        // originalItems is a snapshot the CALLER takes, not one this
-        // method derives from list itself - list already contains
-        // newItems by the time every caller here gets to call this
-        // (AddNew() appends to the bound list immediately, before this
-        // runs). Snapshotting list at that point would already include
-        // them at the tail, and the trailing copy loop below would then
-        // re-add that same tail - duplicating every one of newItems once.
-        protected static void InsertItemsAt(
-            IList list, List<object> originalItems, int insertAtIndex, IEnumerable<object> newItems)
-        {
-            list.Clear();
-
-            for (int i = 0; i < insertAtIndex; i++)
-            {
-                list.Add(originalItems[i]);
-            }
-
-            foreach (object newItem in newItems)
-            {
-                list.Add(newItem);
-            }
-
-            for (int i = insertAtIndex; i < originalItems.Count; i++)
-            {
-                list.Add(originalItems[i]);
-            }
-        }
-
-        // The snapshot InsertItemsAt's own originalItems parameter expects
-        // - must be taken BEFORE any AddNew() call the caller makes, per
-        // InsertItemsAt's own remarks above on why.
-        protected static List<object> SnapshotItems(IList list)
-        {
-            List<object> items = new List<object>(list.Count);
-
-            foreach (object item in list)
-            {
-                items.Add(item);
-            }
-
-            return items;
-        }
-
-        // Runs a multi-step change against the bound list (list.Clear()+Add()
-        // for a reorder, or whatever a subclass's own editing operations do)
-        // with change notifications suppressed, then raises exactly one
-        // Reset via ResetBindings() at the end (both BindingList&lt;T&gt;
-        // members - public and protected respectively, reached via
-        // reflection the same way EnableDoubleBuffering reaches a
-        // protected Control property). Without this, each individual
-        // Clear()/Add()/Remove() call gets picked up and repainted
-        // immediately - including whatever intermediate state
-        // DataGridView reacts to along the way (e.g. the list being
-        // briefly empty mid-reorder) - which is what previously showed up
-        // as the first row flashing "selected". Protected (not private)
-        // so a subclass's own editing operations can share this exact
-        // same batching, not just this class's own sorting.
-        protected void ApplyBatchedDataSourceChange(IList list, Action mutate)
-        {
-            OnApplyingBatchedDataSourceChange();
-
-            // ResetBindingsMethod below is exactly what DataGridView treats
-            // as a fresh rebind - the same Reset notification a brand new
-            // DataSource assignment would raise - which snaps the scroll
-            // position back to the top-left the same way a real rebind
-            // does, even though this change (a sort, a paste, a row
-            // insert/delete) has nothing to do with actually rebinding.
-            // Capturing both scroll properties before the change and
-            // restoring them after (clamped to whatever's still valid once
-            // the row count has potentially changed) is what keeps this
-            // from silently scrolling the user back to the top of a long
-            // grid on every one of those operations.
-            int firstDisplayedScrollingRowIndex = Rows.Count > 0 ? FirstDisplayedScrollingRowIndex : -1;
-            int horizontalScrollingOffset = HorizontalScrollingOffset;
-
-            object dataSource = DataSource;
-            DataSourceReflectionInfo reflectionInfo = GetDataSourceReflectionInfo(dataSource.GetType());
-            PropertyInfo raiseEventsProperty = reflectionInfo.RaiseListChangedEventsProperty;
-            bool canSuppressEvents =
-                raiseEventsProperty != null && raiseEventsProperty.CanRead && raiseEventsProperty.CanWrite;
-            bool previousRaiseEvents = true;
-
-            if (canSuppressEvents)
-            {
-                previousRaiseEvents = (bool)raiseEventsProperty.GetValue(dataSource);
-                raiseEventsProperty.SetValue(dataSource, false);
-            }
-
-            _isApplyingInternalDataChange = true;
-
-            try
-            {
-                mutate();
-            }
-            finally
-            {
-                // Stays true through ResetBindings() below, not just the
-                // mutation above - ResetBindings() is what actually raises
-                // the (suppressed-until-now) Reset notification, so it
-                // re-enters OnDataBindingComplete on this same call stack.
-                // Flipping the flag off before that would let that
-                // reentrant call run the "fresh bind" bookkeeping again
-                // mid-change - wiping out the glyph/sort-order CycleSort
-                // just set, and calling ClearSelection() / CurrentCell =
-                // null while the grid is mid-reset, which is exactly the
-                // kind of reentrant state change DataGridView can throw
-                // InvalidOperationException over.
-                if (canSuppressEvents)
-                {
-                    raiseEventsProperty.SetValue(dataSource, previousRaiseEvents);
-                    reflectionInfo.ResetBindingsMethod?.Invoke(dataSource, null);
-                }
-
-                _isApplyingInternalDataChange = false;
-            }
-
-            // FirstDisplayedScrollingRowIndex throws for an out-of-range
-            // value rather than clamping itself (unlike
-            // HorizontalScrollingOffset, which clamps silently) - guarded
-            // for both an empty grid (nothing to scroll to) and a row
-            // count that shrank (e.g. a delete) past where it used to be.
-            if (firstDisplayedScrollingRowIndex >= 0 && Rows.Count > 0)
-            {
-                FirstDisplayedScrollingRowIndex = Math.Min(firstDisplayedScrollingRowIndex, Rows.Count - 1);
-            }
-
-            HorizontalScrollingOffset = horizontalScrollingOffset;
-
-            ClearSelection();
-            CurrentCell = null;
-        }
-
-        // Hook for a subclass to drop any of its own per-row visual state
-        // (DataGridView overrides this to forget its hovered delete-row
-        // index) right before a batched change runs - rows can shift
-        // position without the mouse moving (e.g. the hovered row itself
-        // gets deleted, or a sort reorders things underneath the cursor),
-        // and no mouse-move means no fresh OnCellMouseEnter/Leave to
-        // correct a now-stale index. This class itself has no such state
-        // of its own, so the base implementation is empty.
-        protected virtual void OnApplyingBatchedDataSourceChange()
-        {
-        }
-
-        private List<object> BuildSortedOrder(int columnIndex, SortOrder sortOrder)
-        {
-            int direction = sortOrder == SortOrder.Descending ? -1 : 1;
-            List<KeyValuePair<object, object>> itemsWithValues = new List<KeyValuePair<object, object>>();
-
-            foreach (DataGridViewRow row in Rows)
-            {
-                if (row.DataBoundItem != null)
-                {
-                    itemsWithValues.Add(new KeyValuePair<object, object>(
-                        row.DataBoundItem,
-                        row.Cells[columnIndex].Value));
-                }
-            }
-
-            // A custom comparer (see SetSortComparer) always compares in
-            // plain ascending order - direction is applied the same way
-            // regardless of whether the default comparison or a
-            // registered one is doing the actual comparing, so a
-            // consumer's comparer never has to care which one is active.
-            _columnSortComparers.TryGetValue(Columns[columnIndex], out IComparer customComparer);
-
-            itemsWithValues.Sort((a, b) => customComparer != null
-                ? customComparer.Compare(a.Value, b.Value) * direction
-                : CompareCellValues(a.Value, b.Value, direction));
-
-            List<object> ordered = new List<object>(itemsWithValues.Count);
-
-            foreach (KeyValuePair<object, object> pair in itemsWithValues)
-            {
-                ordered.Add(pair.Key);
-            }
-
-            return ordered;
-        }
-
-        // Rows added after the last bind/reset (e.g. a new row the user just
-        // typed into) sort after every row that was present at that
-        // snapshot, rather than colliding at index -1 (see
-        // ItemOrderMath.BuildOriginalOrder). Mirrors ListView's own
-        // BuildOriginalOrder.
-        private List<object> BuildOriginalOrder()
-        {
-            List<object> dataBoundItems = new List<object>();
-            foreach (DataGridViewRow row in Rows)
-            {
-                if (row.DataBoundItem != null)
-                {
-                    dataBoundItems.Add(row.DataBoundItem);
-                }
-            }
-
-            return ItemOrderMath.BuildOriginalOrder(dataBoundItems, _originalOrder);
-        }
-
-        private static int CompareCellValues(object valueX, object valueY, int direction)
-        {
-            if (valueX == null && valueY == null)
-            {
-                return 0;
-            }
-
-            if (valueX == null)
-            {
-                return -1 * direction;
-            }
-
-            if (valueY == null)
-            {
-                return 1 * direction;
-            }
-
-            if (valueX is IComparable comparable)
-            {
-                try
-                {
-                    return comparable.CompareTo(valueY) * direction;
-                }
-                catch (ArgumentException)
-                {
-                    // Falls through to the string comparison below when the
-                    // two values aren't directly comparable to each other
-                    // (e.g. different underlying cell types).
-                }
-            }
-
-            return string.Compare(
-                Convert.ToString(valueX),
-                Convert.ToString(valueY),
-                StringComparison.CurrentCultureIgnoreCase) * direction;
-        }
-
-        protected override void OnFontChanged(EventArgs e)
-        {
-            base.OnFontChanged(e);
-            ApplyStyles();
-        }
-
-        protected override void OnEnabledChanged(EventArgs e)
-        {
-            base.OnEnabledChanged(e);
-            ApplyStyles();
-        }
-
-        private void ApplyStyles()
-        {
-            // Flat gray when disabled - every control in this library mutes
-            // this same way, no exceptions for a control's own fixed/
-            // accent colors (see ListView's SetEnabledStyle-style
-            // handling, and UIProgressBarFactory's disabled fill).
-            Color rowForeColor = Enabled ? RowForeColor : UIColors.DisabledGray;
-            Color headerForeColor = Enabled ? HeaderForeColor : UIColors.DisabledGray;
-            Color selectionBackColor = Enabled ? SelectionBackColor : UIColors.DisabledGray;
-            // The true best contrast, not a brightness rule of thumb: on the mid
-            // tones a color set can bring (lime green, say) the rule picks the
-            // wrong text color.
-            Color selectionForeColor = UIColors.GetBestTextColor(selectionBackColor);
-
-            ColumnHeadersDefaultCellStyle.BackColor = HeaderBackColor;
-            ColumnHeadersDefaultCellStyle.ForeColor = headerForeColor;
-            ApplyHeaderFont();
-            ColumnHeadersDefaultCellStyle.SelectionBackColor = HeaderBackColor;
-            ColumnHeadersDefaultCellStyle.SelectionForeColor = headerForeColor;
-
-            DefaultCellStyle.BackColor = RowBackColor;
-            DefaultCellStyle.ForeColor = rowForeColor;
-            DefaultCellStyle.SelectionBackColor = selectionBackColor;
-            DefaultCellStyle.SelectionForeColor = selectionForeColor;
-
-            AlternatingRowsDefaultCellStyle.BackColor = UIColors.Darken(RowBackColor, 5);
-            AlternatingRowsDefaultCellStyle.ForeColor = rowForeColor;
-            AlternatingRowsDefaultCellStyle.SelectionBackColor = selectionBackColor;
-            AlternatingRowsDefaultCellStyle.SelectionForeColor = selectionForeColor;
-
-            Invalidate();
-        }
 
         // The scroll bars of the grid are controls of their own inside it (private fields of the
         // standard grid, named differently on .NET Framework and .NET); they get the dark visual
         // style whenever their window is created.
         private Control[] _scrollBars = new Control[0];
 
+
         // The bold font of the column headers. The cell style keeps the reference it is given (it does not copy the
         // font), so the font has to live as long as the style uses it: it is held here, made again when the font of the
         // grid changes, and freed with the grid.
         private Font _headerFont;
+
         private Font _headerFontSource;
 
-        private void ApplyHeaderFont()
-        {
-            if (_headerFont != null && ReferenceEquals(_headerFontSource, Font))
-                return;
-
-            Font previous = _headerFont;
-            _headerFont = new Font(Font, FontStyle.Bold);
-            _headerFontSource = Font;
-            ColumnHeadersDefaultCellStyle.Font = _headerFont;
-
-            // After the style has the new one.
-            previous?.Dispose();
-        }
-
-        private void ThemeScrollBars()
-        {
-            List<Control> found = new List<Control>();
-
-            foreach (string field in new[] { "horizScrollBar", "_horizScrollBar", "vertScrollBar", "_vertScrollBar" })
-            {
-                Control bar = typeof(System.Windows.Forms.DataGridView)
-                    .GetField(field, BindingFlags.NonPublic | BindingFlags.Instance)
-                    ?.GetValue(this) as Control;
-
-                if (bar == null)
-                    continue;
-
-                found.Add(bar);
-                NativeControlTheme.Track(bar);
-            }
-
-            _scrollBars = found.ToArray();
-        }
-
-        // Where the two scroll bars meet is a square the standard grid fills with the system's
-        // button color - a white block on the dark grid. Painted over in the grid's own color.
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            Control horizontal = null;
-            Control vertical = null;
-
-            foreach (Control bar in _scrollBars)
-            {
-                if (!bar.Visible)
-                    continue;
-
-                if (bar is HScrollBar)
-                    horizontal = bar;
-                else if (bar is VScrollBar)
-                    vertical = bar;
-            }
-
-            if (horizontal != null && vertical != null)
-            {
-                using (SolidBrush brush = new SolidBrush(BackgroundColor))
-                    e.Graphics.FillRectangle(brush, new Rectangle(vertical.Left, horizontal.Top, vertical.Width, horizontal.Height));
-            }
-        }
-
-        private void EnableDoubleBuffering()
-        {
-            typeof(Control)
-                .GetProperty("DoubleBuffered", BindingFlags.NonPublic | BindingFlags.Instance)
-                ?.SetValue(this, true, null);
-        }
 
         // See OnColumnAdded - a plain DataGridViewTextBoxCell whose accessible
         // "default action" is blank instead of Windows' own generic "Edit",
