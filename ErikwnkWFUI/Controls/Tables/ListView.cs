@@ -214,9 +214,10 @@ namespace ErikwnkWFUI.Controls
             ContextMenuStrip = BuildContextMenu();
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;
 
-            // A click somewhere else deselects (IsOutsideClickThatDeselects says what counts as somewhere else).
+            // A click somewhere else deselects (IsOutsideClickThatDeselects says what counts as somewhere else). The
+            // filter watches the whole application, so it runs only while the list has a window (OnHandleCreated,
+            // OnHandleDestroyed).
             _outsideClickDeselectFilter = new OutsideClickFilter(IsOutsideClickThatDeselects, DeselectAll, leftButtonOnly: true);
-            _outsideClickDeselectFilter.Start();
         }
 
         protected override void Dispose(bool disposing)
@@ -242,6 +243,8 @@ namespace ErikwnkWFUI.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+
+            _outsideClickDeselectFilter.Start();
 
             // The native list's own double buffering - without it, scrolling can leave stray gray streaks, since
             // owner-drawn content does not go through .NET's OnPaint/DoubleBuffered at all. Applied on every handle
@@ -274,6 +277,7 @@ namespace ErikwnkWFUI.Controls
         {
             _headerInputSubclass?.ReleaseHandle();
             _headerInputSubclass = null;
+            _outsideClickDeselectFilter.Stop();
 
             base.OnHandleDestroyed(e);
         }
