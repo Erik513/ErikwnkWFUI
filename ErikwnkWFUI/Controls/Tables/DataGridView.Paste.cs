@@ -13,7 +13,6 @@ namespace ErikwnkWFUI.Controls
     // Pasting from the clipboard: into the selection, into new rows, converting the text into the values of the columns.
     public partial class DataGridView : ReadOnlyDataGridView
     {
-
         /// <summary>
         /// Pastes tab-separated, newline-separated text (what Excel, Word -
         /// copying a table - and this grid's own Ctrl+C all put on the
@@ -60,73 +59,33 @@ namespace ErikwnkWFUI.Controls
             (int startColumnIndex, int minRowIndex, HashSet<int> selectedRealRowIndexes, bool placeholderWasTouched) =
                 ResolvePasteAnchor(targetColumns);
 
-            // E.g. pasting 10 rows onto a 4-row selection in the middle of
-            // a 20-row list must not clobber rows 5-10 of someone's
-            // existing data - it should push them down by 6 instead.
-            // Sorted so the write loop below can target the actual
-            // selected rows in order, not just walk sequentially from
-            // startDataRowIndex - a non-contiguous selection (e.g. rows 0
-            // and 5 only) must overwrite exactly those rows, not rows 0
-            // and 1.
+            // Pasting 10 rows onto a 4-row selection in the middle of 20 rows pushes the rest down by 6; it does not
+            // overwrite it. Sorted, so that a selection that is not contiguous (rows 0 and 5) overwrites exactly those
+            // rows.
             List<int> sortedSelectedRowIndexes = new List<int>(selectedRealRowIndexes);
             sortedSelectedRowIndexes.Sort();
 
             IBindingList bindingList = list as IBindingList;
 
-            // Growing the list AND writing the pasted values both happen
-            // inside this one suppress-events-then-ResetBindings-once
-            // helper (CycleSort/DeleteRows already use it) rather than as
-            // two separate steps:
-            //
-            // - Reentrancy: with change notifications live, each
-            //   individual mutation reenters the grid's own
-            //   binding-complete handling while still inside this
-            //   key-press handler (the same kind of reentrancy that
-            //   caused real crashes for sort/delete before they went
-            //   through this helper).
-            //
-            // - New rows vanishing: a first version of this wrote pasted
-            //   values afterward, through DataGridViewCell.Value, once
-            //   the grid had already rebound and displayed the freshly
-            //   added blank rows. BindingList&lt;T&gt; treats whatever
-            //   AddNew() just added as still cancellable until something
-            //   commits it - normally a side effect of the grid's own
-            //   edit-commit handling once a user types into a cell - and
-            //   setting Value programmatically doesn't trigger that same
-            //   commit. The row silently vanished the next time focus
-            //   moved elsewhere, as if the add had been cancelled - even
-            //   calling BindingList&lt;T&gt;.EndNew() by hand right after
-            //   AddNew() didn't stop it, so something in the grid's own
-            //   side of this (separate from BindingList's own pending-add
-            //   tracking) was still involved. Setting the pasted values
-            //   directly on the bound objects here instead - before
-            //   ResetBindings ever shows the grid a "freshly added, still
-            //   empty" row at all - sidesteps that whole lifecycle: the
-            //   row only ever appears already complete.
+            // Growing the list and writing the pasted values are one batch (ApplyBatchedDataSourceChange, as for sort and
+            // delete):
+            // - with change notifications live, each mutation re-enters the binding handling of the grid while this key
+            //   handler is still running;
+            // - the values go straight onto the bound objects, before the grid shows the new rows. A row filled in
+            //   afterwards through DataGridViewCell.Value is not committed (BindingList treats what AddNew added as
+            //   cancellable until the grid's edit handling commits it) and vanished at the next change of focus; EndNew()
+            //   by hand did not help.
             ApplyBatchedDataSourceChange(() =>
             {
-                // Discards a pending-but-abandoned placeholder add before
-                // anything below reads list.Count - the placeholder is
-                // purely a visual way to add rows by typing, and pasting
-                // instead of typing means that pending item was never
-                // really wanted (same reasoning as DeleteRows' own
-                // placeholderIndexesToCancel). Must run first, before
-                // anything below reads list.Count - startDataRowIndex's own
-                // fallback (nothing selected -> append at the end) and the
-                // overflow/trim math right after it both need to see the
-                // post-cancel count, not the stale one from before this
-                // batch started.
+                // Discards the pending add of the placeholder first (pasting instead of typing means it was never wanted,
+                // as in DeleteRows): everything below reads list.Count, which has to be the count after this.
                 if (placeholderWasTouched && list is ICancelAddNew cancelAddNew)
                 {
                     cancelAddNew.CancelNew(list.Count - 1);
                 }
 
-                // Every index in selectedRealRowIndexes/minRowIndex is
-                // already guaranteed to be a real row (the placeholder was
-                // excluded above, before either was ever populated) -
-                // nothing selected at all (a plain append at the end of
-                // the list) is the only remaining case minRowIndex's
-                // sentinel has to cover.
+                // All indexes are real rows (the placeholder was left out above); nothing selected at all (append at the
+                // end) is the one case the sentinel of minRowIndex covers.
                 int startDataRowIndex = minRowIndex != int.MaxValue ? minRowIndex : list.Count;
 
                 // Where overflow rows land once InsertItemsAt grows the
@@ -159,16 +118,9 @@ namespace ErikwnkWFUI.Controls
             ShowActionConfirmation(message);
         }
 
-        // Copying exactly one cell, then pasting into a selection of more
-        // than one, fills every selected cell with that same value
-        // (standard spreadsheet "fill" behavior) instead of anchoring at
-        // the top-left and only ever writing the one value there. Copying
-        // more than one cell never fills/tiles a larger selection this
-        // way, regardless of its size - it's always just anchored at the
-        // top-left and extends from there (same as always), matching
-        // Excel's own paste behavior. Returns true when it actually
-        // handled the paste this way, so PasteFromClipboard knows to skip
-        // its own normal anchor-based paste entirely.
+        // One copied cell pasted onto a selection of more cells fills all of them with that value (as a spreadsheet does).
+        // More than one copied cell never fills: it is anchored at the top left and extends from there (as in Excel). True
+        // when the paste was handled this way.
         private bool TryFillSingleValueIntoSelection(IList list, string[] pastedRows)
         {
             if (pastedRows.Length != 1 || pastedRows[0].Split('\t').Length != 1)
@@ -209,23 +161,11 @@ namespace ErikwnkWFUI.Controls
             return true;
         }
 
-        // Where a paste anchors: the top-left of the current SELECTION,
-        // not just CurrentCell - CurrentCell is whichever cell was clicked
-        // or navigated to LAST within a multi-cell selection (e.g. the far
-        // corner of a drag-select or a Shift+Right extension), not
-        // necessarily where the selection starts, so using it alone put
-        // paste in the wrong column/row whenever more than one cell was
-        // selected. The delete column is never a valid anchor (nothing to
-        // paste into it), same as it's never a paste target at all (see
-        // GetPasteTargetColumns). PlaceholderWasTouched is set when the
-        // placeholder was part of what got interacted with (selected, or
-        // left as CurrentCell) - merely that, with nothing typed, already
-        // made WinForms call IBindingList.AddNew() on the bound list on
-        // its own (see InsertBlankRow's own comment on this); the
-        // placeholder itself is still correctly excluded from
-        // SelectedRealRowIndexes either way, this only tracks whether that
-        // now-pending, still-empty item needs cancelling so it doesn't
-        // linger as a permanent stray row once the paste is done.
+        // Where a paste anchors: the top left of the selection, not CurrentCell (that is the cell clicked or reached last,
+        // e.g. the far corner of a drag, and put the paste in the wrong place). The delete column is never an anchor.
+        // PlaceholderWasTouched: merely selecting the placeholder makes WinForms call IBindingList.AddNew() (see
+        // InsertBlankRow). The placeholder is not in SelectedRealRowIndexes, but its pending empty item has to be
+        // cancelled, or it stays as a stray row.
         private (int StartColumnIndex, int MinRowIndex, HashSet<int> SelectedRealRowIndexes, bool PlaceholderWasTouched)
             ResolvePasteAnchor(List<DataGridViewColumn> targetColumns)
         {
@@ -241,12 +181,8 @@ namespace ErikwnkWFUI.Controls
                     continue;
                 }
 
-                // The COLUMN anchor is tracked regardless of whether this
-                // cell's row is the placeholder - selecting column 2 of
-                // the placeholder and pasting must still start at column
-                // 2 for whatever real row the paste ends up writing/
-                // inserting, not silently fall back to column 0 just
-                // because that particular cell's row got excluded below.
+                // The column anchor counts also when the cell is in the placeholder row: a paste that starts in column 2 of
+                // the placeholder starts in column 2 of the real row.
                 DataGridViewColumn column = Columns[cell.ColumnIndex];
 
                 if (minColumn == null || column.DisplayIndex < minColumn.DisplayIndex)
@@ -318,15 +254,8 @@ namespace ErikwnkWFUI.Controls
             IList list, string[] pastedRows, List<int> sortedSelectedRowIndexes,
             int insertAtIndex, List<DataGridViewColumn> targetColumns, int startColumnIndex)
         {
-            // Looked up once per (item type, property name) rather than
-            // once per pasted cell - GetProperty for the same column
-            // resolves to the same PropertyInfo on every row for the
-            // common case of a homogeneous bound list, so repeating that
-            // lookup per row was pure waste on a paste of any real size.
-            // Keyed by the item's own runtime type (not just the property
-            // name) so a list that genuinely mixes item types - unusual,
-            // but IList doesn't rule it out - still resolves correctly per
-            // item.
+            // Looked up once per item type and property name, not per cell (the same for a list of one item type; the item
+            // type is part of the key for lists that mix them).
             Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache =
                 new Dictionary<(Type, string), PropertyInfo>();
 
@@ -392,12 +321,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Shared by PasteFromClipboard's own WritePastedValues and
-        // FillCellsWithValue below, which used to each carry an identical
-        // copy of this same cache-lookup-convert-set sequence. ReadOnly/
-        // unbound columns are silently skipped, same as a cell that fails
-        // to convert (e.g. "abc" into a number column) - best effort,
-        // never aborts the whole paste/fill over one bad cell.
+        // Shared by WritePastedValues and FillCellsWithValue. ReadOnly and unbound columns, and values that do not convert
+        // ("abc" into a number), are skipped: best effort, one bad cell does not stop the paste.
         private static void TrySetCellValueFromText(
             object targetItem, DataGridViewColumn column, string text,
             Dictionary<(Type ItemType, string PropertyName), PropertyInfo> propertyCache)

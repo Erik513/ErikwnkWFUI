@@ -28,7 +28,6 @@ namespace ErikwnkWFUI.Controls
     // (keys, copy, cut, clear), DataGridView.Paste.cs, DataGridView.Rows.cs (inserting and deleting rows) and DataGridView.Menu.cs.
     public partial class DataGridView : ReadOnlyDataGridView
     {
-
         // The base class's own IsSystemColumn (the enumeration column) plus
         // this class's delete-row button - see ReadOnlyDataGridView's own
         // remarks on what "system column" means everywhere it's used.
@@ -37,14 +36,9 @@ namespace ErikwnkWFUI.Controls
             return base.IsSystemColumn(columnIndex) || (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index);
         }
 
-        // True for a cell that's never a meaningful part of "the selected
-        // data" - a system column, or the "type here to add a row"
-        // placeholder - shared by every SelectedCells loop that just needs
-        // to skip both categories outright, without distinguishing which
-        // one excluded a given cell. A couple of other loops (see
-        // TryFillSingleValueIntoSelection/ResolvePasteAnchor) check the two
-        // separately instead, since they need to know specifically whether
-        // the placeholder was touched, not just that a cell was excluded.
+        // A cell that is never part of "the selected data": a system column or the "type here to add a row" placeholder.
+        // The loops that need to know which of the two it was (TryFillSingleValueIntoSelection, ResolvePasteAnchor) check
+        // them separately.
         private bool IsExcludedFromDataSelection(DataGridViewCell cell)
         {
             return IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex);
@@ -52,13 +46,8 @@ namespace ErikwnkWFUI.Controls
 
         public DataGridView()
         {
-            // ReadOnlyDataGridView defaults to a display-only grid - this
-            // is the editable one, so both get turned back to what a
-            // consumer actually expects here. AllowUserToDeleteRows
-            // doubles as this control's own opt-out for row deletion (see
-            // ProcessDataGridViewKey) - a consumer that doesn't want rows
-            // deletable sets this false, same as they would on a stock
-            // DataGridView.
+            // ReadOnlyDataGridView is display-only; this is the editable grid. AllowUserToDeleteRows is also the switch for
+            // deleting rows (see ProcessDataGridViewKey), as on the standard grid.
             ReadOnly = false;
             AllowUserToDeleteRows = true;
             AllowUserToAddRows = true;

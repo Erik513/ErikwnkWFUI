@@ -7,21 +7,11 @@ namespace ErikwnkWFUI.Controls
     // Keys, copying, cutting and clearing the selected cells.
     public partial class DataGridView : ReadOnlyDataGridView
     {
-
-        // Base DataGridView's own IsInputKey already claims Ctrl+C this
-        // same way (that's what having ClipboardCopyMode enabled actually
-        // does under the hood) - returning true here is what stops Windows
-        // treating a key as an unclaimed shortcut/mnemonic and keeps it
-        // routing to this control's own OnKeyDown below instead, which is
-        // where Ctrl+V/Ctrl+X actually get handled.
+        // The base class claims Ctrl+C this way. Returning true keeps Ctrl+V and Ctrl+X from being taken as an unclaimed
+        // shortcut and routes them to OnKeyDown below.
         protected override bool IsInputKey(Keys keyData)
         {
-            // Matches OnKeyDown's own !ReadOnly condition below - claiming
-            // these keys on a ReadOnly grid (where OnKeyDown never acts on
-            // them anyway) would just swallow Ctrl+V/Ctrl+X silently
-            // instead of letting them pass through as an unclaimed
-            // shortcut, same as before this control had any clipboard
-            // support at all.
+            // Like OnKeyDown: on a ReadOnly grid the keys are not claimed, so they pass on as before.
             if (!ReadOnly && (keyData & Keys.Control) == Keys.Control)
             {
                 Keys keyCode = keyData & Keys.KeyCode;
@@ -59,14 +49,8 @@ namespace ErikwnkWFUI.Controls
             return base.ProcessDataGridViewKey(e);
         }
 
-        // Not handled in ProcessDataGridViewKey above like Delete is: the
-        // base class's own OnKeyDown only ever forwards a fixed set of keys
-        // into ProcessDataGridViewKey at all (navigation keys, plus C for
-        // its own Ctrl+C support) - V and X aren't in that set, so putting
-        // this there like Delete would silently never run. OnKeyDown itself
-        // is the actual hook base.OnKeyDown uses to decide that forwarding,
-        // so intercepting Ctrl+V/Ctrl+X here, before calling base.OnKeyDown,
-        // reaches them reliably instead.
+        // Not in ProcessDataGridViewKey like Delete: the base OnKeyDown forwards only a fixed set of keys there
+        // (navigation, C), and V and X are not among them. They are taken here, before base.OnKeyDown.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Control && !IsCurrentCellInEditMode && !ReadOnly)
@@ -89,41 +73,18 @@ namespace ErikwnkWFUI.Controls
             base.OnKeyDown(e);
         }
 
-        // Overriding this (rather than building clipboard text by hand)
-        // fixes copy for Ctrl+C too, not just Cut below - the base class's
-        // own Ctrl+C (ProcessInsertKey) calls this same virtual method to
-        // build what it puts on the clipboard. Two kinds of cells are
-        // excluded here regardless of how the request came in:
-        //
-        // - The delete column's: real values ("✕") and can end up
-        //   selected like any other cell (e.g. a drag-select spanning the
-        //   whole row), but there's nothing meaningful to copy from a
-        //   column that only ever deletes rows.
-        //
-        // - The "type here to add a row" placeholder's: left fully
-        //   selectable like any other row (see the remarks on
-        //   OnRowLeave), so a drag-select or Ctrl+A reaching down that
-        //   far selects it same as stock DataGridView always would - but
-        //   it's still entirely blank, so copying it along would put one
-        //   extra, entirely blank row on the clipboard, and from there
-        //   into whatever gets pasted.
-        //
-        // Both are only excluded from the copied TEXT, not left
-        // deselected afterward - restored in the `finally` below either
-        // way, so the visible selection looks exactly like it would
-        // without this override.
+        // The base class's Ctrl+C calls this too, so overriding it fixes copy as well as cut. Two kinds of cells are left
+        // out of the copied text (the selection itself is restored in the finally below):
+        // - the delete column's (its "X" can be selected in a drag, but means nothing),
+        // - the "type here to add a row" placeholder's (it stays selectable, see OnRowLeave, but copying it would put a
+        //   blank row on the clipboard).
         public override DataObject GetClipboardContent()
         {
             return ExcludingSelectedCells(IsExcludedFromDataSelection, () => base.GetClipboardContent());
         }
 
-        // Cut = copy (via the same clipboard content the base class's own
-        // Ctrl+C builds) then clear, rather than deleting the row outright -
-        // that's a different, already-existing action (see Delete above).
-        // The copy and clear steps' own confirmations are suppressed here -
-        // "copied" followed by "cleared" would be a confusing double toast,
-        // and neither wording actually says "cut" - so a single, dedicated
-        // "cut" message is shown instead, once, after both steps complete.
+        // Cut = copy, then clear (not delete the row, see Delete). The confirmations of both steps are suppressed: "copied"
+        // and then "cleared" would be two toasts, neither saying "cut". One "cut" message is shown after both.
         private void CutSelectionToClipboard()
         {
             if (SelectedCells.Count == 0)
@@ -131,13 +92,8 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Nothing here can actually be cleared (e.g. every selected
-            // cell is ReadOnly) - the copy half still puts the values on the
-            // clipboard, same as a plain Ctrl+C on that selection would,
-            // so it keeps its own normal "copied" confirmation instead of
-            // being suppressed in favor of a "cut" message that would
-            // never show (clearedCount would be 0), which used to leave a
-            // successful copy with no feedback at all.
+            // Nothing can be cleared (every selected cell is ReadOnly): the copy still happens and keeps its own "copied"
+            // confirmation, since a "cut" message would never show.
             if (!HasClearableSelectedCell())
             {
                 DataObject copyOnlyContent = GetClipboardContent();
@@ -193,12 +149,9 @@ namespace ErikwnkWFUI.Controls
             return false;
         }
 
-        // Just the "clear" half of Cut - its own context-menu entry
-        // ("Delete", as in clear the cell contents, not delete the row -
-        // that's the separate "Delete selected rows" entry) needs it
-        // without also touching the clipboard. Returns the cleared count so
-        // Cut can build its own message from it while this method's own
-        // confirmation is suppressed (see RunWithSuppressedActionConfirmation).
+        // The "clear" half of Cut, for its own menu entry ("Delete" clears the cell contents; the rows are deleted by
+        // "Delete selected rows"). It returns the count, so that Cut can build its message while this confirmation is
+        // suppressed (RunWithSuppressedActionConfirmation).
         private int ClearSelectedCellValues()
         {
             int clearedCount = 0;

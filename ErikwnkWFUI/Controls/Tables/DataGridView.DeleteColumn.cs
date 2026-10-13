@@ -38,13 +38,8 @@ namespace ErikwnkWFUI.Controls
 
                 if (value)
                 {
-                    // A plain text column rather than DataGridViewButtonColumn -
-                    // a button cell's face/border draws with the OS's own flat-
-                    // button chrome regardless of DefaultCellStyle (a thin
-                    // light/white edge stayed visible around the glyph even
-                    // with FlatStyle.Flat), so the "X" couldn't be made fully
-                    // red that way. Plain text has no such chrome: ForeColor
-                    // below is the only color involved.
+                    // A text column, not a button column: a button cell draws the system's button chrome (a light edge
+                    // stayed visible around the glyph), so the "X" could not be made fully red. A text cell has no chrome.
                     DataGridViewTextBoxColumn column = new DataGridViewTextBoxColumn
                     {
                         Name = "__deleteRow",
@@ -60,13 +55,8 @@ namespace ErikwnkWFUI.Controls
                         MinimumWidth = DeleteRowColumnWidth
                     };
 
-                    // RedLight, not UIColors.Red - see OnCellFormatting's
-                    // own remarks on why (this is just the column's initial
-                    // default; OnCellFormatting recomputes the same color
-                    // per cell on every paint anyway, but an accessibility
-                    // tool or anything else reading DefaultCellStyle
-                    // directly, before that first format pass, should still
-                    // see the correct color, not the old one).
+                    // RedLight, not Red (see OnCellFormatting). Set here as well, so that anything reading DefaultCellStyle
+                    // before the first format pass sees the right color.
                     column.DefaultCellStyle.ForeColor = UIColors.RedLight;
                     column.DefaultCellStyle.SelectionForeColor = UIColors.RedLight;
                     column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -87,12 +77,8 @@ namespace ErikwnkWFUI.Controls
                     // already excluded from resizing (Resizable above).
                     SetColumnReorderable(column.Index, false);
 
-                    // Resizable above is a fixed native width hint, but
-                    // resizing itself is hand-rolled and tracked separately
-                    // (see AllowColumnResizing's own remarks on why it
-                    // can't just read that property back) - excluded here
-                    // too, or the fixed width from Resizable/MinimumWidth/
-                    // Width above would just get dragged away again.
+                    // The grid resizes columns itself and keeps track of it separately (see AllowColumnResizing): this
+                    // column is excluded there too, or its fixed width would be dragged away.
                     SetColumnResizable(column.Index, false);
                 }
                 else
@@ -109,14 +95,8 @@ namespace ErikwnkWFUI.Controls
 
             if (e.Column == _deleteRowColumn)
             {
-                // SortMode/width etc. are already set on the column object
-                // itself (see ShowDeleteRowColumn) - only the display
-                // position needs handling here, same as below. base's own
-                // OnColumnAdded already left this column's SortMode alone
-                // (it was already NotSortable by the time it ran), and
-                // applied the EditHintTextBoxCell swap harmlessly - this
-                // column's cells never actually reach the "type here to
-                // add a row" placeholder row logic that hint is for.
+                // SortMode and width are set on the column (see ShowDeleteRowColumn); only the position is handled here.
+                // This column never reaches the placeholder-row logic that the base OnColumnAdded prepares.
                 e.Column.DisplayIndex = Columns.Count - 1;
                 return;
             }
@@ -148,21 +128,12 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Captured as the actual bound item, not just e.RowIndex - the
-            // delete itself is deferred (see below), and if two delete-glyph
-            // clicks land before either deferred call runs, resolving by a
-            // raw row index later would hit whatever row has shifted into
-            // that index after the first delete already ran, not the row
-            // that was actually clicked.
+            // The bound item is kept, not the row index: the delete is deferred, and a second click before it runs would
+            // find another row at that index.
             object item = Rows[e.RowIndex].DataBoundItem;
 
-            // Deferred rather than deleted right here: this fires from
-            // inside the clicked cell's own click handling (still on the
-            // call stack), and ApplyBatchedDataSourceChange's
-            // ResetBindings rebuilds the entire Rows collection - including
-            // discarding the very row/cell whose click handling is what's
-            // currently running. BeginInvoke runs the delete once that
-            // finishes unwinding instead of while it's still live.
+            // Deferred: the click handling of this cell is still on the call stack, and the reset of the bindings rebuilds
+            // all rows, this one included. BeginInvoke deletes after it has unwound.
             if (IsHandleCreated)
             {
                 BeginInvoke(new Action(() => DeleteItem(item)));
@@ -178,16 +149,8 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Applies to every cell in the column, including the "type here
-            // to add a row" placeholder (IsNewRow) - that one shows no "X"
-            // below (nothing to delete there yet), but it's still a cell in
-            // this column, and pressing it needs the same fix. e.CellStyle.BackColor
-            // is already whatever this row's own resting color is (normal or
-            // alternating - see the OnCellMouseDown comment above for why
-            // CurrentCell can't just be kept off this cell instead), so this
-            // doesn't hardcode a color of its own - it only carries that same
-            // value over to SelectionBackColor, so a press here never shows
-            // the grid's real (green) selection color.
+            // For every cell of the column, the placeholder included (it shows no "X" but can be pressed): the selection
+            // color is the row's own color, so a press never shows the grid's selection color.
             e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
 
             if (IsPlaceholderRowIndex(e.RowIndex))
@@ -198,20 +161,11 @@ namespace ErikwnkWFUI.Controls
             e.Value = UIStyles.Symbols.Close;
             e.FormattingApplied = true;
 
-            // AlternatingRowsDefaultCellStyle outranks Column.DefaultCellStyle
-            // for odd-indexed rows, so every other row's "X" was coming out
-            // in the normal row text color instead of red. Setting it here,
-            // on the cell style actually used for this paint pass, outranks
-            // both.
+            // AlternatingRowsDefaultCellStyle outranks the column's style for odd rows (their "X" came out in the text
+            // color), so the color is set on the style used for this paint.
             //
-            // RedLight, not the plain UIColors.Red every other red surface
-            // in this library uses - confirmed via ColorContrastHelperTests'
-            // sibling DataGridViewColorContrastTests that plain Red on this
-            // control's own Dark-theme row background only reaches 2.46:1,
-            // below WCAG's 3:1 floor for a UI glyph like this one. Scoped to
-            // just this glyph rather than changing UIColors.Red itself,
-            // which other surfaces use against their own, different
-            // backgrounds.
+            // RedLight, not Red: Red on the dark rows reaches only 2.46:1, below the 3:1 a glyph needs
+            // (DataGridViewColorContrastTests). Scoped to this glyph, because other surfaces use Red on other backgrounds.
             Color foreColor = e.RowIndex == _hoveredDeleteRowIndex
                 ? UIColors.Lighten(UIColors.RedLight, 20)
                 : UIColors.RedLight;

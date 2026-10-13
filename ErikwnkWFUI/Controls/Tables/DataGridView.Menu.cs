@@ -8,7 +8,6 @@ namespace ErikwnkWFUI.Controls
     // The editing entries of the right-click menu and their texts.
     public partial class DataGridView : ReadOnlyDataGridView
     {
-
         // ContextMenuSelectionColor and the right-click row tracking
         // (_contextMenuRowIndex/_contextMenuColumnIndex/
         // _contextMenuRowWasPlaceholder, OnCellMouseDown's row selection)
@@ -45,13 +44,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Adds this class's editing entries to the menu ReadOnlyDataGridView
-        // already built (Copy selection / Copy all / Select all, identical
-        // in both grids and in ListView) rather than building a second,
-        // separate menu - so the shared entries can never drift apart
-        // between the two. Cut goes in front, Paste/Clear right after the
-        // copy entries (before Select all), and the row-level entries
-        // follow, separated.
+        // Adds the editing entries to the menu that ReadOnlyDataGridView built (copy and select all, the same in both grids
+        // and in the ListView), so that the shared entries cannot drift apart. Cut goes in front, Paste and Clear behind
+        // the copy entries, the row entries follow.
         private void AddEditingMenuItems()
         {
             System.Windows.Forms.ContextMenuStrip menu = ContextMenuStrip;
@@ -104,20 +99,10 @@ namespace ErikwnkWFUI.Controls
 
             menu.Opening += (sender, e) =>
             {
-                // The base menu's own Opening handler already ran first and
-                // cancelled the whole menu when the right-click wasn't on
-                // any row (the header and empty space below the rows both
-                // report RowIndex -1) or was on a system column (the delete
-                // column's own left-click already deletes the row; nothing
-                // else makes sense on it either). The "type here to add a
-                // row" placeholder still gets a menu - Paste still makes
-                // sense there, and so can insert row above/below if it's
-                // part of a larger selection that also reaches real rows
-                // (see hasRealRowSelected below) - only the row-scoped items
-                // tied to a specific real row (Cut/Clear/Delete selected
-                // rows, and the base menu's copy entries) are
-                // unconditionally disabled when the clicked row itself was
-                // the placeholder.
+                // The base menu's Opening handler ran first and cancelled the menu where the click was on no row (header,
+                // empty space) or on a system column. The placeholder still gets one: Paste works there, and Insert row
+                // works if the selection reaches real rows (hasRealRowSelected). Only the entries tied to a real row (Cut,
+                // Clear, Delete rows, the copy entries) are disabled when the clicked row is the placeholder.
                 if (e.Cancel)
                 {
                     return;
@@ -132,16 +117,9 @@ namespace ErikwnkWFUI.Controls
                 _contextMenuCutRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
                 _contextMenuDeleteRowsItem.Enabled = hasSelection && AllowUserToDeleteRows && onRealRow;
 
-                // Not onRealRow here - that's about whether the row
-                // actually right-clicked was the placeholder, but insert
-                // above/below now act on the whole selection's topmost/
-                // bottommost row (see TryGetSelectedRowIndexRange), not
-                // the clicked row itself. Right-clicking the placeholder
-                // while it's part of a larger selection that also has
-                // real rows in it (a drag reaching down that far) should
-                // still offer both, targeting those real rows - only
-                // disabled when there's genuinely no real row anywhere in
-                // the selection to insert relative to.
+                // Not onRealRow: Insert above/below work on the topmost and bottommost row of the whole selection
+                // (TryGetSelectedRowIndexRange), not on the clicked row. They stay available when the placeholder is
+                // clicked inside a selection that has real rows, and are off only when there is none.
                 bool hasRealRowSelected = TryGetSelectedRowIndexRange(out int _, out int _);
                 _contextMenuInsertRowAboveItem.Enabled = AllowUserToAddRows && hasRealRowSelected;
                 _contextMenuInsertRowBelowItem.Enabled = AllowUserToAddRows && hasRealRowSelected;

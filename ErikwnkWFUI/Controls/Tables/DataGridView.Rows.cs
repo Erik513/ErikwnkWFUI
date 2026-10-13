@@ -11,42 +11,16 @@ namespace ErikwnkWFUI.Controls
     // Rows: leaving the placeholder row, inserting a blank row, cutting and deleting rows.
     public partial class DataGridView : ReadOnlyDataGridView
     {
-
-        // The "type here to add a row" placeholder is left exactly as
-        // selectable as stock DataGridView already makes it - a drag-
-        // select or Ctrl+A reaching down that far selects it like any
-        // other row. An earlier version forced it back out of
-        // SelectedCells on every selection change instead, but reading/
-        // mutating selection state from OnSelectionChanged while WinForms'
-        // own drag-selection loop was still running dropped the drag's own
-        // anchor cell from the final selection entirely. The real
-        // correctness problems this was trying to solve - copy/paste/
-        // clear/delete treating the placeholder as real data - are handled
-        // individually at each of those call sites instead
-        // (GetClipboardContent, PasteFromClipboard, ClearSelectedCellValues,
-        // DeleteRows), each already checking IsNewRow or list membership on
-        // its own terms.
+        // The "type here to add a row" placeholder stays as selectable as in the standard grid (a drag or Ctrl+A that
+        // reaches it selects it). Forcing it out of the selection on every change dropped the anchor cell of a drag; copy,
+        // paste, clear and delete treat the placeholder individually instead (GetClipboardContent, PasteFromClipboard,
+        // ClearSelectedCellValues, DeleteRows).
         //
-        // The one thing genuinely worth cleaning up here: merely having
-        // moved through the placeholder at all - a drag passing over it,
-        // Ctrl+A, arrow-keying past it, not just clicking directly into
-        // it - already makes WinForms call IBindingList.AddNew() on the
-        // bound list (same cause as InsertBlankRow/PasteFromClipboard).
-        // If nothing was actually typed there, that leaves a genuinely
-        // blank item sitting in the list, invisible for now (that row
-        // still reports IsNewRow == true, same as ever, until something
-        // commits it) - but no longer just a harmless placeholder either:
-        // anything that later rebuilds the grid from the list's current
-        // contents (e.g. a paste) reveals it as a genuine extra blank
-        // row. Leaving the row - rather than every keystroke within it -
-        // is the natural, standard point to settle whether it should
-        // stick around: RowValidating/CellEndEdit (which is what commits
-        // a real edit) already runs before RowLeave, so by the time this
-        // fires, CancelNew is a documented no-op for a row that was
-        // actually typed into - it only undoes an add nobody meant to
-        // make. Deferred via BeginInvoke since CancelNew's own list
-        // mutation would otherwise reenter this same row-leave handling
-        // while it's still on the call stack.
+        // What is worth cleaning up here: merely passing through the placeholder (drag, Ctrl+A, arrow keys) makes WinForms
+        // call IBindingList.AddNew(). If nothing is typed, a blank item stays in the list - invisible, but a rebuild of the
+        // grid from the list (a paste) shows it as a real blank row. Leaving the row is the point to settle that:
+        // RowValidating and CellEndEdit commit a real edit before RowLeave, so CancelNew is then a no-op for a row that was
+        // typed into. Deferred with BeginInvoke, since CancelNew changes the list and would re-enter this handling.
         protected override void OnRowLeave(DataGridViewCellEventArgs e)
         {
             base.OnRowLeave(e);
@@ -68,34 +42,18 @@ namespace ErikwnkWFUI.Controls
 
                 if (list.Count < countBeforeCancel)
                 {
-                    // A pending add really was cancelled (the no-op case,
-                    // e.g. the user actually typed a new row and moved
-                    // on, leaves list.Count unchanged and skips this) -
-                    // CancelNew's own list-shrink is itself enough of a
-                    // change to make WinForms pick some "current" cell of
-                    // its own afterward (observed: the first cell of what
-                    // was the last real row), which nobody asked for.
-                    // Sweeping it up here, rather than leaving it for
-                    // whatever happens to run next, keeps this contained
-                    // to exactly the case it caused.
+                    // A pending add was cancelled (when a real row was typed, the count is unchanged and this is skipped).
+                    // The shrinking list makes WinForms pick a current cell of its own (the first cell of the last real
+                    // row), which nobody asked for: it is cleared here.
                     ClearSelection();
                     CurrentCell = null;
                 }
             }));
         }
 
-        // "Insert row above/below" (see BuildContextMenu) needs the top
-        // and bottom of the WHOLE current selection, not just the single
-        // row that happened to be right-clicked (_contextMenuRowIndex) -
-        // right-clicking a row that's already part of a larger selection
-        // leaves that selection intact (see OnCellMouseDown), so
-        // right-clicking anywhere within a multi-row selection has to
-        // insert above its topmost row / below its bottommost row, not
-        // wherever the cursor happened to land inside it. Returns false
-        // (leaving both out parameters unset) when nothing is selected -
-        // shouldn't normally happen for a row-targeted right-click (see
-        // OnCellMouseDown), but callers fall back to _contextMenuRowIndex
-        // for that case regardless.
+        // Insert above/below need the top and bottom row of the whole selection, not the right-clicked row: a right-click
+        // inside a larger selection keeps it (OnCellMouseDown). False when nothing is selected; callers then use
+        // _contextMenuRowIndex.
         private bool TryGetSelectedRowIndexRange(out int minRowIndex, out int maxRowIndex)
         {
             minRowIndex = int.MaxValue;
@@ -127,16 +85,9 @@ namespace ErikwnkWFUI.Controls
             return maxRowIndex >= 0;
         }
 
-        // Inserts one blank row immediately above or below rowIndex,
-        // through the same batched suppress-events-then-ResetBindings-once
-        // rebuild PasteFromClipboard's own row-insertion uses, for the
-        // same reasons (reentrancy while still inside this event handler,
-        // and a freshly AddNew()'d row otherwise being left in a
-        // still-cancellable state the grid can silently drop later). The
-        // context menu itself never offers either direction for the "type
-        // here to add a row" placeholder - typing into it is already how
-        // a row gets added there - but the guard below still covers it
-        // defensively in case this is ever called some other way.
+        // Inserts a blank row above or below rowIndex through the batch that PasteFromClipboard uses (same reasons: re-
+        // entrancy in the handler, and an AddNew()'d row left cancellable). The menu offers neither for the placeholder
+        // (typing there adds the row); the guard below covers other callers.
         private void InsertBlankRow(int rowIndex, bool above)
         {
             if (!(DataSource is IList list) || rowIndex < 0 || rowIndex > list.Count)
@@ -149,17 +100,9 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            // Right-clicking (or even just clicking) the placeholder
-            // itself already makes WinForms call IBindingList.AddNew() on
-            // the bound list on its own - same cause as the paste bug
-            // this same pattern fixed earlier (see PasteFromClipboard). If
-            // that already grew the list past rowIndex, adding another row
-            // here would insert two for one call. Only skips when rowIndex
-            // is the SAME row that was actually right-clicked
-            // (_contextMenuRowIndex) - rowIndex can also be a different,
-            // real row resolved from a multi-row selection that happens to
-            // include the placeholder (see TryGetSelectedRowIndexRange),
-            // and that row was never auto-grown by the click at all.
+            // Clicking the placeholder already makes WinForms call AddNew() (see PasteFromClipboard); if that grew the list
+            // past rowIndex, another row would make two. Only for the row that was right-clicked: rowIndex can be a real
+            // row of a selection that includes the placeholder, which the click did not grow.
             if (_contextMenuRowWasPlaceholder && rowIndex == _contextMenuRowIndex && rowIndex < list.Count)
             {
                 return;
@@ -177,12 +120,8 @@ namespace ErikwnkWFUI.Controls
             ShowActionConfirmation(UIStrings.Get("DataGridView.RowInserted"));
         }
 
-        // Cut for whole rows: puts every selected row (all of its cells,
-        // not just the ones that happened to be selected) on the clipboard,
-        // then removes those rows - the row-level counterpart of the
-        // cell-level Cut above. Like it, the copy and delete steps' own
-        // confirmations are suppressed in favor of one dedicated "cut"
-        // message.
+        // Cut for whole rows: every selected row with all its cells goes to the clipboard, then the rows are removed. As
+        // for cells, one "cut" message replaces the confirmations of the two steps.
         private void CutSelectedRows()
         {
             HashSet<int> rowIndexes = new HashSet<int>();
@@ -272,17 +211,8 @@ namespace ErikwnkWFUI.Controls
 
             foreach (int rowIndex in rowIndexes)
             {
-                // The placeholder has nothing to remove from the data
-                // source. Selecting it - even just landing CurrentCell on
-                // it as part of a larger selection, no typing required -
-                // already makes WinForms call IBindingList.AddNew() on the
-                // bound list on its own, the same as a real click does
-                // (see InsertBlankRow's own comment on this). Left alone,
-                // that still-empty pending item would never get cleaned up
-                // and would sit in the data source forever as a permanent
-                // stray blank row - CancelNew below discards it instead,
-                // same as WinForms' own native handling does when a
-                // pending add is abandoned rather than committed.
+                // The placeholder has nothing to remove, but selecting it made WinForms call AddNew(); the pending empty
+                // item would stay as a stray row, so it is cancelled (CancelNew, as WinForms does for an abandoned add).
                 if (IsPlaceholderRowIndex(rowIndex))
                 {
                     placeholderIndexesToCancel.Add(rowIndex);
@@ -311,15 +241,8 @@ namespace ErikwnkWFUI.Controls
                     }
                 }
 
-                // Single filtering pass instead of one list.Remove(item)
-                // call per row - Remove is an O(n) IndexOf-then-shift on
-                // List<T>/BindingList<T>, so removing m rows that way costs
-                // O(n*m) instead of the O(n) this rebuild does. Filtered by
-                // POSITION, not by item identity/HashSet<object> - two
-                // different rows can legitimately be bound to the exact
-                // same object reference, and a set of items would then
-                // remove every occurrence instead of just the one(s)
-                // actually selected.
+                // One pass that filters by position, not one Remove per row (O(n*m)) and not by item: two rows can be bound
+                // to the same object, and removing by item would remove all of them.
                 List<object> remainingItems = new List<object>(list.Count);
 
                 for (int i = 0; i < list.Count; i++)
