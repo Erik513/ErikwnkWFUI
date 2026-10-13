@@ -407,6 +407,16 @@ public class LabelBehaviorTests
     // ---- not a drop target ----
 
     [Fact]
+    public void EveryKind_IsAnchoredOnAllFourSides()
+    {
+        foreach (Label label in AllKinds())
+        {
+            using (label)
+                Assert.Equal(AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, label.Anchor);
+        }
+    }
+
+    [Fact]
     public void ALabel_IsNoDropTarget_SoWhatIsDroppedOnTheWindowBehindItStillArrives()
     {
         foreach (Label label in AllKinds())
