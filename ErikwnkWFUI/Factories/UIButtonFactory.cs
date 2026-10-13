@@ -26,14 +26,15 @@ namespace ErikwnkWFUI.Factories
 
         public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateStandard(text, tooltip, size, isIcon, null);
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetStandardLook);
         }
 
-        private static Button CreateStandard(string text, string tooltip, Size? size, bool isIcon, Button instance)
+        // The neutral look: it follows the theme, so it is read again whenever the theme changes.
+        private static ButtonLook GetStandardLook()
         {
-            return CreateButton(text, tooltip, size, isIcon, () => new ButtonLook(
+            return new ButtonLook(
                 UIColors.BackgroundMedium, UIColors.TextPrimary, GetStandardBorderColor(), 1,
-                UIColors.BackgroundLighter, UIColors.Primary), instance);
+                UIColors.BackgroundLighter, UIColors.Primary);
         }
 
         // The one place a symbol button is made - UIStyles.Buttons.CreateSymbol
@@ -52,11 +53,9 @@ namespace ErikwnkWFUI.Factories
 
             // Its own kind of button: it draws the symbol itself, centered on
             // what is actually visible of it (see SymbolButton).
-            SymbolButton instance = new SymbolButton();
-
             Button button = colors != null
-                ? CreateColored(symbol, tooltip, buttonSize, true, () => colors, instance, 1)
-                : CreateStandard(symbol, tooltip, buttonSize, true, instance);
+                ? CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetColoredLook(() => colors, 1))
+                : CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetStandardLook);
 
             float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
             string family = UIStyles.Symbols.GetFontName(symbol);
@@ -79,13 +78,14 @@ namespace ErikwnkWFUI.Factories
         // the same on both themes.
         public static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors)
         {
-            return CreateColored(text, tooltip, size, isIcon, () => colors, null, 1);
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => colors, 1));
         }
 
-        // The set is asked for again whenever the theme or the accent changes (the primary set follows the accent).
-        private static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, Func<UIColorSet> getColors, Button instance, int borderSize)
+        // The look of a color set. The set is asked for again whenever the theme or the accent changes (the primary set
+        // follows the accent).
+        private static Func<ButtonLook> GetColoredLook(Func<UIColorSet> getColors, int borderSize)
         {
-            return CreateButton(text, tooltip, size, isIcon, () =>
+            return () =>
             {
                 UIColorSet colors = getColors();
 
@@ -96,7 +96,7 @@ namespace ErikwnkWFUI.Factories
                     pressedForeColor: colors.PressedText,
                     disabledBackColor: colors.Disabled,
                     disabledForeColor: colors.DisabledText);
-            }, instance);
+            };
         }
 
         // On a dark theme the fill is told apart by a quiet outline. A light
@@ -112,22 +112,24 @@ namespace ErikwnkWFUI.Factories
         // Primary, even a bright one.
         public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateColored(text, tooltip, size, isIcon, () => UIColors.PrimarySet, null, 0);
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIColors.PrimarySet, 0));
         }
 
         public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateColored(text, tooltip, size, isIcon, () => UIStyles.Colors.Sets.Green, null, 1);
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIStyles.Colors.Sets.Green, 1));
         }
 
         public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
         {
-            return CreateColored(text, tooltip, size, isIcon, () => UIStyles.Colors.Sets.Red, null, 1);
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIStyles.Colors.Sets.Red, 1));
         }
 
-        private static Button CreateButton(string text, string tooltip, Size? size, bool isIcon, Func<ButtonLook> getLook, Button instance = null)
+        // The one place a button is put together; the type says what kind (a plain button, or the SymbolButton).
+        private static TButton CreateButton<TButton>(string text, string tooltip, Size? size, bool isIcon, Func<ButtonLook> getLook)
+            where TButton : Button, new()
         {
-            Button button = instance ?? new Button();
+            TButton button = new TButton();
             ButtonLook look = getLook();
 
             button.Text = text ?? "";
