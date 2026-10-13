@@ -411,22 +411,11 @@ namespace ErikwnkWFUI.Controls
         // the end the forward one is.
         private void GetScrollState(out bool canGoBack, out bool canGoForward)
         {
-            IntPtr range = Marshal.AllocHGlobal(2 * sizeof(int));
+            SendMessage(Handle, UDM_GETRANGE32, out int minimum, out int maximum);
+            int position = SendMessage(Handle, UDM_GETPOS32, IntPtr.Zero, IntPtr.Zero).ToInt32();
 
-            try
-            {
-                SendMessage(Handle, UDM_GETRANGE32, range, range + sizeof(int));
-                int minimum = Marshal.ReadInt32(range);
-                int maximum = Marshal.ReadInt32(range, sizeof(int));
-                int position = SendMessage(Handle, UDM_GETPOS32, IntPtr.Zero, IntPtr.Zero).ToInt32();
-
-                canGoBack = position > minimum;
-                canGoForward = position < maximum;
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(range);
-            }
+            canGoBack = position > minimum;
+            canGoForward = position < maximum;
         }
 
     }

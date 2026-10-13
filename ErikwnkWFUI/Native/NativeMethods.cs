@@ -120,6 +120,10 @@ namespace ErikwnkWFUI.Native
         [DllImport("user32.dll", EntryPoint = "SendMessageW")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, ref NativeRect lParam);
 
+        // UDM_GETRANGE32: the two numbers come back through the pointers.
+        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+        public static extern IntPtr SendMessage(IntPtr hWnd, int message, out int wParam, out int lParam);
+
         [DllImport("user32.dll", EntryPoint = "SendMessageW")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int message, IntPtr wParam, ref NativeHeaderHitTest lParam);
 
