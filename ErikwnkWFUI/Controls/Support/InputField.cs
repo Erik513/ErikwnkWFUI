@@ -25,11 +25,12 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The background of a disabled field: a recessed one, a little darker than the enabled field (less on a light
-        /// theme, where a dark field would be a heavy block).
+        /// theme, where a dark field would be a heavy block). Dark enough on a dark theme that the text Windows draws in
+        /// a disabled field (its gray, 109) keeps a contrast of 3:1.
         /// </summary>
         public static Color GetDisabledBackground(Color enabled)
         {
-            return UIColors.Darken(enabled, UIColors.IsLight(enabled) ? 0.06 : 0.25);
+            return UIColors.Darken(enabled, UIColors.IsLight(enabled) ? 0.06 : 0.30);
         }
 
         /// <summary>

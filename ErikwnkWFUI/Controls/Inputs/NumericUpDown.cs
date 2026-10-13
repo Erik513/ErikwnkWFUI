@@ -456,6 +456,13 @@ namespace ErikwnkWFUI.Controls
             return UIColors.EnsureContrast(ForeColor, BackColor, 4.5);
         }
 
+        // The arrow of a set is its text color on that fill; where a set leaves less than 3:1 between the two (the pressed
+        // fill of the green set), the better of black and white is taken, so the arrow is always seen.
+        internal static Color GetArrowColor(Color arrow, Color fill)
+        {
+            return UIColors.GetContrastRatio(arrow, fill) >= 3.0 ? arrow : UIColors.GetBestTextColor(fill);
+        }
+
         private void PaintField(Graphics g, Rectangle cell, UIColorSet colors, int field, bool pointsUp)
         {
             Color fill;
@@ -529,7 +536,7 @@ namespace ErikwnkWFUI.Controls
                     new PointF(centerX, centerY + height / 2)
                 };
 
-            using (SolidBrush brush = new SolidBrush(arrow))
+            using (SolidBrush brush = new SolidBrush(GetArrowColor(arrow, fill)))
                 g.FillPolygon(brush, triangle);
         }
 
