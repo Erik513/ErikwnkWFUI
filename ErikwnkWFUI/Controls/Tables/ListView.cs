@@ -1145,12 +1145,9 @@ namespace ErikwnkWFUI.Controls
             // With CheckBoxes, the first cell starts with the box the system keeps room for (and
             // toggles on a click there); drawn here because the owner-drawn rows would otherwise
             // leave that room empty.
-            int textLeft = bounds.X + 6;
-
-            if (CheckBoxes && e.ColumnIndex == 0)
+            if (HasCheckBox(e.ColumnIndex))
             {
-                int side = (int)Math.Round(16 * DeviceDpi / 96.0);
-                Rectangle box = new Rectangle(bounds.X + (int)Math.Round(2 * DeviceDpi / 96.0), bounds.Y + (bounds.Height - side) / 2, side, side);
+                Rectangle box = GetCheckBoxRectangle(bounds);
                 bool isChecked = e.Item.Checked;
                 Color fill = Enabled ? BorderColor : UIColors.DisabledGray;
                 Color outline = Enabled ? UIColors.GetOutlineColor(baseBackColor) : UIColors.DisabledGray;
@@ -1163,17 +1160,39 @@ namespace ErikwnkWFUI.Controls
                     fill,
                     UIColors.GetBestTextColor(fill),
                     DeviceDpi);
-
-                textLeft = box.Right + (int)Math.Round(6 * DeviceDpi / 96.0);
             }
 
             TextRenderer.DrawText(
                 e.Graphics,
                 text,
                 e.Item.Font ?? Font,
-                new Rectangle(textLeft, bounds.Y, Math.Max(0, bounds.Right - 3 - textLeft), bounds.Height),
+                GetCellTextRectangle(bounds, e.ColumnIndex),
                 GetEffectiveColor(e.Item.ForeColor),
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+        }
+
+        // Only the first cell of a list with CheckBoxes has the box.
+        private bool HasCheckBox(int columnIndex)
+        {
+            return CheckBoxes && columnIndex == 0;
+        }
+
+        private Rectangle GetCheckBoxRectangle(Rectangle cell)
+        {
+            int side = (int)Math.Round(16 * DeviceDpi / 96.0);
+
+            return new Rectangle(cell.X + (int)Math.Round(2 * DeviceDpi / 96.0), cell.Y + (cell.Height - side) / 2, side, side);
+        }
+
+        // Where the text of a cell goes: from 6 px behind its left edge (behind the box, in the first cell of a list with
+        // CheckBoxes) to 3 px before its right edge. What is drawn there and what the tooltip measures are the same.
+        private Rectangle GetCellTextRectangle(Rectangle cell, int columnIndex)
+        {
+            int left = HasCheckBox(columnIndex)
+                ? GetCheckBoxRectangle(cell).Right + (int)Math.Round(6 * DeviceDpi / 96.0)
+                : cell.X + 6;
+
+            return new Rectangle(left, cell.Y, Math.Max(0, cell.Right - 3 - left), cell.Height);
         }
 
         // Flat gray when disabled, same as ReadOnlyDataGridView.ApplyStyles -
@@ -1620,7 +1639,7 @@ namespace ErikwnkWFUI.Controls
             var item = hitTest.Item;
             var text = column.Index < item.SubItems.Count ? item.SubItems[column.Index].Text : string.Empty;
 
-            if (string.IsNullOrEmpty(text) || !IsTextTruncated(text, item.Font ?? Font, column.Width))
+            if (string.IsNullOrEmpty(text) || !IsTextTruncated(text, item.Font ?? Font, column))
             {
                 _cellToolTip.Hide(this);
                 return;
@@ -1641,9 +1660,9 @@ namespace ErikwnkWFUI.Controls
             _cellToolTip.Hide(this);
         }
 
-        private static bool IsTextTruncated(string text, Font font, int columnWidth)
+        private bool IsTextTruncated(string text, Font font, ColumnHeader column)
         {
-            var availableWidth = columnWidth - 9;
+            var availableWidth = GetCellTextRectangle(new Rectangle(0, 0, column.Width, 1), column.Index).Width;
             if (availableWidth <= 0)
             {
                 return true;
