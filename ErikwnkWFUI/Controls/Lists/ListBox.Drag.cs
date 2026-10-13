@@ -191,14 +191,19 @@ namespace ErikwnkWFUI.Controls
             return -1;
         }
 
+        // The list scrolls while a dragged item is within this distance (96 dpi) of its top or bottom edge.
+        private const int AutoScrollZone96 = 20;
+
         private void AutoScrollDuringDrag(Point point, DragEventArgs drgevent)
         {
-            if (point.Y < 20 && TopIndex > 0)
+            int zone = Px(AutoScrollZone96);
+
+            if (point.Y < zone && TopIndex > 0)
             {
                 TopIndex--;
                 drgevent.Effect = DragDropEffects.Move;
             }
-            else if (point.Y > ClientSize.Height - 20 && TopIndex < Items.Count - 1)
+            else if (point.Y > ClientSize.Height - zone && TopIndex < Items.Count - 1)
             {
                 TopIndex++;
                 drgevent.Effect = DragDropEffects.Move;

@@ -70,6 +70,21 @@ public class ListBoxDragReorderTests
         Assert.Equal(DragDropEffects.Move, (DragDropEffects)args[1]!);
     }
 
+    [Theory]
+    [InlineData(96, 30, false)]
+    [InlineData(192, 30, true)]
+    public void TheDragScrollsTheListNearItsEdge_AndTheZoneGrowsWithTheScreen(int dpi, int y, bool scrolls)
+    {
+        using WfuiListBox listBox = ListBoxTestHelpers.CreateListBoxWithHandle(ItemHeight, Enumerable.Range(0, 40).Select(i => "Item " + i).ToArray());
+        listBox.DpiOverride = dpi;
+        listBox.TopIndex = 5;
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
+
+        listBox.InvokePrivate("AutoScrollDuringDrag", new Point(5, y), args);
+
+        Assert.Equal(scrolls ? 4 : 5, listBox.TopIndex);
+    }
+
     [Fact]
     public void ReorderDraggedItem_MovesItemToInsertPosition()
     {
