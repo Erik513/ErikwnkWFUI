@@ -14,7 +14,7 @@ namespace ErikwnkWFUI.Forms
 
         private int Scale(int value96)
         {
-            return (int)Math.Round(value96 * DeviceDpi / 96.0);
+            return Dpi.Scale(this, value96);
         }
 
 

@@ -179,6 +179,9 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The color of the track of the dark scroll bars (the system's own, see NativeControlTheme).
+        private static readonly Color DarkScrollBarTrack = Color.FromArgb(23, 23, 23);
+
         // Where both scroll bars meet, the system leaves a light square even with dark bars.
         // Painted over in the color of the bars' track.
         private void PaintScrollBarCorner()
@@ -207,7 +210,7 @@ namespace ErikwnkWFUI.Controls
             try
             {
                 using (Graphics g = Graphics.FromHdc(hdc))
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(23, 23, 23)))
+                using (SolidBrush brush = new SolidBrush(DarkScrollBarTrack))
                     g.FillRectangle(brush, corner);
             }
             finally

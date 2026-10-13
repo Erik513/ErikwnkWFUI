@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -69,7 +70,7 @@ namespace ErikwnkWFUI.Factories
         {
             Controls.CheckBox checkBox = Create("", isChecked, colors);
 
-            int side = (int)Math.Round(25 * checkBox.DeviceDpi / 96.0);
+            int side = Dpi.Scale(checkBox, 25);
             checkBox.Size = new Size(side, side);
 
             return checkBox;
