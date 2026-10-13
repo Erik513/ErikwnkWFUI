@@ -464,10 +464,24 @@ namespace ErikwnkWFUI.Forms
                 text = TextRenderer.MeasureText(section.Text, UIFonts.Normal, new Size(textWidth, int.MaxValue), MeasureFlags);
         }
 
-        private Size MeasureContent(int textWidth)
+        // Where each block's header and text lie, relative to the content, and the size of all of it. Measured when the
+        // content, the size mode or the screen's scaling changes - not for every paint.
+        private struct BlockLayout
         {
+            public Rectangle Header;
+            public Rectangle Text;
+        }
+
+        private BlockLayout[] _layout = new BlockLayout[0];
+        private Size _contentSize;
+        private int _layoutDpi;
+
+        private void MeasureLayout()
+        {
+            int textWidth = GetTextWidth();
+            BlockLayout[] blocks = new BlockLayout[_sections.Length];
             int width = 0;
-            int height = 0;
+            int y = 0;
 
             for (int i = 0; i < _sections.Length; i++)
             {
@@ -476,17 +490,29 @@ namespace ErikwnkWFUI.Forms
                 MeasureBlock(_sections[i], textWidth, out header, out text);
 
                 if (i > 0)
-                    height += Scale(BlockGap96);
+                    y += Scale(BlockGap96);
 
-                height += header.Height + text.Height;
+                if (header.Height > 0)
+                {
+                    blocks[i].Header = new Rectangle(0, y, textWidth, header.Height);
+                    y += header.Height;
+                }
 
                 if (header.Height > 0 && text.Height > 0)
-                    height += Scale(HeaderGap96);
+                    y += Scale(HeaderGap96);
+
+                if (text.Height > 0)
+                {
+                    blocks[i].Text = new Rectangle(0, y, textWidth, text.Height);
+                    y += text.Height;
+                }
 
                 width = Math.Max(width, Math.Max(header.Width, text.Width));
             }
 
-            return new Size(width, height);
+            _layout = blocks;
+            _contentSize = new Size(width, y);
+            _layoutDpi = DeviceDpi;
         }
 
         // A borderless top-level form cannot go below the system's minimum tracking size
@@ -497,6 +523,8 @@ namespace ErikwnkWFUI.Forms
             if (IsDisposed)
                 return;
 
+            MeasureLayout();
+
             Size client;
 
             if (IsFixed)
@@ -505,9 +533,8 @@ namespace ErikwnkWFUI.Forms
             }
             else
             {
-                Size content = MeasureContent(GetTextWidth());
                 int padding = Scale(Padding96);
-                client = new Size(content.Width + 2 * padding, content.Height + 2 * padding);
+                client = new Size(_contentSize.Width + 2 * padding, _contentSize.Height + 2 * padding);
             }
 
             MinimumSize = Size.Empty;
@@ -531,13 +558,15 @@ namespace ErikwnkWFUI.Forms
             if (!HasContent)
                 return;
 
-            int textWidth = GetTextWidth();
-            Size content = MeasureContent(textWidth);
+            // The window moved to a screen with another scaling: measured again.
+            if (_layoutDpi != DeviceDpi)
+                MeasureLayout();
+
             int padding = IsFixed ? Scale(FixedPadding96) : Scale(Padding96);
 
             // In the fixed size the content sits in the middle, otherwise at the padding.
             int x = padding;
-            int y = IsFixed ? Math.Max(0, (ClientSize.Height - content.Height) / 2) : padding;
+            int y = IsFixed ? Math.Max(0, (ClientSize.Height - _contentSize.Height) / 2) : padding;
 
             Color autoColor = GetForeColor();
             TextFormatFlags align = IsFixed ? TextFormatFlags.HorizontalCenter : TextFormatFlags.Left;
@@ -546,26 +575,18 @@ namespace ErikwnkWFUI.Forms
             for (int i = 0; i < _sections.Length; i++)
             {
                 InfoPopupSection section = _sections[i];
-                Size header;
-                Size text;
-                MeasureBlock(section, textWidth, out header, out text);
+                BlockLayout block = _layout[i];
 
-                if (i > 0)
-                    y += Scale(BlockGap96);
-
-                if (header.Height > 0)
+                if (!block.Header.IsEmpty)
                 {
-                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, new Rectangle(x, y, textWidth, header.Height), section.HeaderColor.IsEmpty ? autoColor : section.HeaderColor, flags);
-                    y += header.Height;
+                    Rectangle header = new Rectangle(block.Header.X + x, block.Header.Y + y, block.Header.Width, block.Header.Height);
+                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, header, section.HeaderColor.IsEmpty ? autoColor : section.HeaderColor, flags);
                 }
 
-                if (header.Height > 0 && text.Height > 0)
-                    y += Scale(HeaderGap96);
-
-                if (text.Height > 0)
+                if (!block.Text.IsEmpty)
                 {
-                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, new Rectangle(x, y, textWidth, text.Height), section.TextColor.IsEmpty ? autoColor : section.TextColor, flags);
-                    y += text.Height;
+                    Rectangle text = new Rectangle(block.Text.X + x, block.Text.Y + y, block.Text.Width, block.Text.Height);
+                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, text, section.TextColor.IsEmpty ? autoColor : section.TextColor, flags);
                 }
             }
         }
