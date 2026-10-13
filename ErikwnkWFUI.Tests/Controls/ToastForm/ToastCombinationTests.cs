@@ -256,6 +256,7 @@ public class ToastCombinationTests : ToastTestBase
     [InlineData("icon")]
     [InlineData("symbol")]
     [InlineData("position")]
+    [InlineData("color")]
     public void WaitingToasts_AreOneOnlyWhenTheyShowTheSame(string difference)
     {
         Form host = Host();
@@ -275,7 +276,8 @@ public class ToastCombinationTests : ToastTestBase
                 host,
                 icon: difference == "icon" && other ? ToastIcon.Error : ToastIcon.Warning,
                 symbol: difference == "symbol" && other ? ErikwnkWFUI.UIStyles.Symbols.Delete : ErikwnkWFUI.UIStyles.Symbols.Copy,
-                position: difference == "position" && other ? ToastPosition.TopLeft : ToastPosition.BottomRight);
+                position: difference == "position" && other ? ToastPosition.TopLeft : ToastPosition.BottomRight,
+                colors: difference == "color" && other ? ErikwnkWFUI.UIStyles.Colors.Sets.Red : null);
         }
 
         Show(false);
@@ -285,6 +287,18 @@ public class ToastCombinationTests : ToastTestBase
         Show(true);
         Show(true);
         Assert.Equal(2, WaitingCount(host));
+    }
+
+    [Fact]
+    public void WaitingToasts_InTheSameColorMadeTwice_AreOne()
+    {
+        Form host = Host();
+        PopupSupport.OwnerIsActive = _ => false;
+
+        ToastForm.ShowToast("Saved", host, colors: ErikwnkWFUI.UIStyles.Colors.CreateSet(Color.Red));
+        ToastForm.ShowToast("Saved", host, colors: ErikwnkWFUI.UIStyles.Colors.CreateSet(Color.Red));
+
+        Assert.Equal(1, WaitingCount(host));
     }
 
     [Fact]

@@ -26,14 +26,21 @@ namespace ErikwnkWFUI.Forms
             // When it began to wait for its window.
             public DateTime Time;
 
-            // The same message with the same symbol in the same place.
+            // The same message with the same symbol and background in the same place.
             public bool IsSameAs(ToastRequest other)
             {
                 return Icon == other.Icon
                     && CustomSymbol == other.CustomSymbol
                     && Position == other.Position
+                    && SameBackground(Colors, other.Colors)
                     && InfoPopupSection.SameContent(new[] { Content }, new[] { other.Content });
             }
+        }
+
+        // A set is not compared as an object (the same color asked for twice makes two sets) but by its background.
+        private static bool SameBackground(UIColorSet a, UIColorSet b)
+        {
+            return a == null || b == null ? a == b : a.Basic == b.Basic;
         }
 
         private static readonly Dictionary<Form, List<ToastRequest>> _pending = new Dictionary<Form, List<ToastRequest>>();
