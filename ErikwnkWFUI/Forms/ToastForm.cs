@@ -305,7 +305,7 @@ namespace ErikwnkWFUI.Forms
         {
             int left = GetShownGlyph().Length == 0 ? 0 : TextIndentWithSymbol96;
 
-            _messageLabel.Padding = new Padding(Scaled(left, _dpi), 0, Scaled(TextRightPadding96, _dpi), 0);
+            _messageLabel.Padding = new Padding(Dpi.Scale(left, _dpi), 0, Dpi.Scale(TextRightPadding96, _dpi), 0);
             _titleLabel.Padding = _messageLabel.Padding;
         }
 

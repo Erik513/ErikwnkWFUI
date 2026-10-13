@@ -101,7 +101,7 @@ namespace ErikwnkWFUI.Forms
 
             toast.SetContent(request.Content);
             toast.Location = PopupSupport.KeepInside(
-                GetToastLocation(GetClientArea(owner), toast.Size, request.Position, Scaled(EdgeDistance96, toast._dpi)),
+                GetToastLocation(GetClientArea(owner), toast.Size, request.Position, Dpi.Scale(EdgeDistance96, toast._dpi)),
                 toast.Size,
                 PopupSupport.GetPlacementArea(owner),
                 Screen.FromControl(owner).WorkingArea);

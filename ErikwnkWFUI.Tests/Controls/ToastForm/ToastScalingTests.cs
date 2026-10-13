@@ -15,7 +15,7 @@ namespace ErikwnkWFUI.Tests.Controls.ToastFormTests;
 [Collection(AccentColorTestCollection.Name)]
 public class ToastScalingTests : ToastTestBase
 {
-    private static int Scaled(int value96, int dpi) => (int)Math.Round(value96 * dpi / 96.0);
+    private static int Scaled(int value96, int dpi) => (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
 
     private static Label Part(ToastForm toast, string name) => toast.GetPrivateField<Label>(name)!;
 

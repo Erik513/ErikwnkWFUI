@@ -53,19 +53,14 @@ namespace ErikwnkWFUI.Controls
             public Metrics(int dpi)
             {
                 Dpi = dpi < 96 ? 96 : dpi;
-                BoxSize = ScaleBy(Dpi, BoxSize96);
-                BoxLeftMargin = ScaleBy(Dpi, BoxLeftMargin96);
-                GlyphColumnWidth = BoxLeftMargin + BoxSize + ScaleBy(Dpi, TextLeftPadding96);
-            }
-
-            private static int ScaleBy(int dpi, int value96)
-            {
-                return (int)System.Math.Round(value96 * dpi / 96.0);
+                BoxSize = Helpers.Dpi.Scale(BoxSize96, Dpi);
+                BoxLeftMargin = Helpers.Dpi.Scale(BoxLeftMargin96, Dpi);
+                GlyphColumnWidth = BoxLeftMargin + BoxSize + Helpers.Dpi.Scale(TextLeftPadding96, Dpi);
             }
 
             public int Scale(int value96)
             {
-                return ScaleBy(Dpi, value96);
+                return Helpers.Dpi.Scale(value96, Dpi);
             }
         }
 
