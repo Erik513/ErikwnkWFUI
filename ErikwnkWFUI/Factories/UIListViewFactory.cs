@@ -13,8 +13,7 @@ namespace ErikwnkWFUI.Factories
         {
             Controls.ListView listView = new Controls.ListView();
 
-            if (colors != null)
-                listView.FollowColors(() => colors);
+            listView.FollowColors(ColorSetSource.Of(colors));
 
             return listView;
         }

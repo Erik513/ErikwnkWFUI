@@ -164,6 +164,10 @@ namespace ErikwnkWFUI.Controls
         // hover color is the color of the look. Asked for again whenever the theme or the accent changes.
         internal void FollowColors(Func<UIColorSet> colors)
         {
+            // (No set handed over: the list keeps its own colors.)
+            if (colors == null)
+                return;
+
             _borderColor.SetDefault(() => colors().Hover);
             _selectionOverlayColor.SetDefault(() => UIColors.CreateSelectionOverlay(colors().Hover));
             _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
