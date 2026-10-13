@@ -121,6 +121,28 @@ public class ListBoxThemeSwitchTests : IDisposable
     }
 
     [Fact]
+    public void TheTitleBarColors_ComeBackToTheTheme_WhenSetToEmpty()
+    {
+        TitledListBox titled = Show(new TitledListBox(null, false, false, "Title"));
+        Color bar = titled.HeaderBackColor;
+        Color text = titled.HeaderForeColor;
+        titled.HeaderBackColor = Color.Navy;
+        titled.HeaderForeColor = Color.Gold;
+
+        titled.HeaderBackColor = Color.Empty;
+        titled.HeaderForeColor = Color.Empty;
+
+        Assert.Equal(bar, titled.HeaderBackColor);
+        Assert.Equal(text, titled.HeaderForeColor);
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        Assert.NotEqual(bar, titled.HeaderBackColor);
+        Assert.Equal(UIColors.BackgroundDark, titled.HeaderBackColor);
+    }
+
+    [Fact]
     public void ThePrimaryList_FollowsAChangeOfTheAccent_TheGrayOneAndTheOneOfASetDoNot()
     {
         WfuiListBox primary = Show(UIStyles.ListBoxes.CreatePrimary());

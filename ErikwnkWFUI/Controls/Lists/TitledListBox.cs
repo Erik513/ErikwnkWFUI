@@ -120,20 +120,23 @@ namespace ErikwnkWFUI.Controls
         }
 
         private bool _headerHeightWasSet;
-        private bool _headerBackColorWasSet;
-        private bool _headerForeColorWasSet;
+
+        // The colors of the title bar follow the theme until they are set.
+        private readonly ThemeColor _headerBackColor = new ThemeColor(() => UIColors.BackgroundDark);
+        private readonly ThemeColor _headerForeColor = new ThemeColor(() => UIColors.TextPrimary);
 
         // The theme or the accent changed while the control is shown: the title bar that was not colored by hand
         // follows (the list inside follows by itself).
         private void OnThemeChanged()
         {
-            if (!_headerBackColorWasSet)
-                _headerPanel.BackColor = UIColors.BackgroundDark;
-
-            if (!_headerForeColorWasSet)
-                _titleLabel.ForeColor = UIColors.TextPrimary;
-
+            ApplyHeaderColors();
             Invalidate(true);
+        }
+
+        private void ApplyHeaderColors()
+        {
+            _headerPanel.BackColor = _headerBackColor.Value;
+            _titleLabel.ForeColor = _headerForeColor.Value;
         }
 
         // A measure of 96 dpi in the pixels of this screen.
@@ -155,26 +158,34 @@ namespace ErikwnkWFUI.Controls
             _titleLabel.Padding = GetHeaderPadding(_titleLabel.TextAlign);
         }
 
-        /// <summary>Background of the title bar. The default is the theme's dark background and stays so whatever color set the list was made with: only setting it changes it.</summary>
+        /// <summary>Background of the title bar. The default is the theme's dark background and stays so whatever color set the list was made with: only setting it changes it. <see cref="Color.Empty"/> gives the default back.</summary>
         public Color HeaderBackColor
         {
-            get { return _headerPanel.BackColor; }
+            get { return _headerBackColor.Value; }
             set
             {
-                _headerBackColorWasSet = true;
-                _headerPanel.BackColor = value;
+                SetThemeColor(_headerBackColor, value);
+                ApplyHeaderColors();
             }
         }
 
-        /// <summary>Text color of the title. The default is the theme's primary text color; only setting it changes it.</summary>
+        /// <summary>Text color of the title. The default is the theme's primary text color; only setting it changes it. <see cref="Color.Empty"/> gives the default back.</summary>
         public Color HeaderForeColor
         {
-            get { return _titleLabel.ForeColor; }
+            get { return _headerForeColor.Value; }
             set
             {
-                _headerForeColorWasSet = true;
-                _titleLabel.ForeColor = value;
+                SetThemeColor(_headerForeColor, value);
+                ApplyHeaderColors();
             }
+        }
+
+        private static void SetThemeColor(ThemeColor color, Color value)
+        {
+            if (value.IsEmpty)
+                color.Reset();
+            else
+                color.Set(value);
         }
 
         /// <summary>Font of the title (the library's title font by default).</summary>
@@ -512,7 +523,7 @@ namespace ErikwnkWFUI.Controls
             {
                 Dock = DockStyle.Top,
                 Height = Px(DefaultHeaderHeight),
-                BackColor = UIColors.BackgroundDark,
+                BackColor = _headerBackColor.Value,
                 Visible = false,
                 Margin = new Padding(0),
                 Padding = new Padding(0)
@@ -526,7 +537,7 @@ namespace ErikwnkWFUI.Controls
                 Dock = DockStyle.Fill,
                 AutoSize = false,
                 Text = "",
-                ForeColor = UIColors.TextPrimary,
+                ForeColor = _headerForeColor.Value,
                 Font = UIFonts.Title,
                 TextAlign = textAlign,
                 Padding = GetHeaderPadding(textAlign),

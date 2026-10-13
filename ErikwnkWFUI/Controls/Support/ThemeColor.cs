@@ -36,6 +36,12 @@ namespace ErikwnkWFUI.Controls
             _defaultColor = defaultColor;
         }
 
+        // Back to the default.
+        public void Reset()
+        {
+            _isOverridden = false;
+        }
+
         public void Set(Color value)
         {
             _override = value;
