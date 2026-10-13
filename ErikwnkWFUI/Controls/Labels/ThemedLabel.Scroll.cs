@@ -29,6 +29,8 @@ namespace ErikwnkWFUI.Controls
         private const int WM_NEXT_PICTURE = WM_APP + 0x4C;
         private const int WM_SETTING_CHANGED = WM_APP + 0x4D;
 
+        private static readonly char[] LineBreaks = { '\r', '\n' };
+
         // ---- the state ----
 
         // The settings (see the properties below).
@@ -278,7 +280,7 @@ namespace ErikwnkWFUI.Controls
             _separatorWidth = 0;
             _pieceWidths = null;
 
-            if (_scrollMode == LabelScrollMode.None || !Enabled || !AnimationsEnabled() || (AutoSize && !MovesWhenAutoSized()) || string.IsNullOrWhiteSpace(Text) || Text.IndexOfAny(new[] { '\r', '\n' }) >= 0)
+            if (!CanMove())
                 return;
 
             int inner = ClientSize.Width - Padding.Horizontal;
@@ -326,6 +328,18 @@ namespace ErikwnkWFUI.Controls
             // One that fits (even just) stands still; only one that does not fit has a way to go.
             if (_textWidth + 2 * inset > inner && _textWidth <= MaxPictureWidth)
                 _maxOffset = _textWidth + 2 * inset - inner + EndRoom;
+        }
+
+        // Whether the text can move at all: it is asked for, the label is enabled, Windows lets windows animate, the label
+        // is not as big as its text (see MovesWhenAutoSized), and the text is one line that is not empty.
+        private bool CanMove()
+        {
+            return _scrollMode != LabelScrollMode.None
+                && Enabled
+                && AnimationsEnabled()
+                && (!AutoSize || MovesWhenAutoSized())
+                && !string.IsNullOrWhiteSpace(Text)
+                && Text.IndexOfAny(LineBreaks) < 0;
         }
 
         // A label with AutoSize is exactly as big as its text, so back and forth has nothing to show; the endless
