@@ -15,14 +15,7 @@ namespace ErikwnkWFUI.Factories
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft,
             UIColorSet colors = null)
         {
-            TitledListBox control = new TitledListBox(
-                displayMember,
-                allowReorder,
-                showEnumeration,
-                headerTitle,
-                headerTextAlign);
-
-            return Finish(control, colors == null ? (Func<UIColorSet>)null : () => colors);
+            return Create(headerTitle, displayMember, allowReorder, showEnumeration, headerTextAlign, colors == null ? (Func<UIColorSet>)null : () => colors);
         }
 
         // The Standard one with the accent: the selection and the drop line in the primary color set.
@@ -33,18 +26,19 @@ namespace ErikwnkWFUI.Factories
             bool showEnumeration = false,
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft)
         {
-            TitledListBox control = new TitledListBox(
-                displayMember,
-                allowReorder,
-                showEnumeration,
-                headerTitle,
-                headerTextAlign);
-
-            return Finish(control, () => UIColors.PrimarySet);
+            return Create(headerTitle, displayMember, allowReorder, showEnumeration, headerTextAlign, () => UIColors.PrimarySet);
         }
 
-        private static TitledListBox Finish(TitledListBox control, Func<UIColorSet> colors)
+        private static TitledListBox Create(
+            string headerTitle,
+            string displayMember,
+            bool allowReorder,
+            bool showEnumeration,
+            ContentAlignment headerTextAlign,
+            Func<UIColorSet> colors)
         {
+            TitledListBox control = new TitledListBox(displayMember, allowReorder, showEnumeration, headerTitle, headerTextAlign);
+
             UIListBoxFactory.ApplyColors(control.InnerListBox, colors);
 
             return control;
