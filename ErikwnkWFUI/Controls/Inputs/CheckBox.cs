@@ -84,6 +84,10 @@ namespace ErikwnkWFUI.Controls
                 ControlStyles.UserPaint,
                 true);
 
+            // The size is the caller's (the factory sets it for the text and font, see ComputePreferredSize): the native
+            // measuring knows only the system glyph, so the standard control's automatic size would be wrong here.
+            AutoSize = false;
+
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
         }
