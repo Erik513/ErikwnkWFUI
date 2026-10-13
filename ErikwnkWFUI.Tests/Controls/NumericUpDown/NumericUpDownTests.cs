@@ -468,7 +468,7 @@ public class NumericUpDownTests : IDisposable
         box.Hexadecimal = false;
         box.DecimalPlaces = 1;
         box.Suffix = " ms";
-        box.Text = "12,5 ms";
+        box.Text = 12.5m.ToString("N1") + " ms";
         box.InvokePrivate("ValidateEditText");
 
         Assert.Equal(12.5m, box.Value);
