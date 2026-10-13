@@ -127,12 +127,12 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
             {
                 // The background is already painted (the label's own, or the page's behind a
-                // transparent one); what is left is the text, as the standard label would lay it out.
+                // transparent one); what is left is the text, as the standard label would lay it out - inside the border, if it has one.
                 Rectangle textArea = new Rectangle(
                     Padding.Left,
                     Padding.Top,
-                    Width - Padding.Horizontal,
-                    Height - Padding.Vertical);
+                    ClientSize.Width - Padding.Horizontal,
+                    ClientSize.Height - Padding.Vertical);
 
                 TextRenderer.DrawText(e.Graphics, Text, Font, textArea, GetTextColor(), GetTextFormatFlags());
 

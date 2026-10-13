@@ -344,6 +344,30 @@ public class LabelBehaviorTests
         }
     }
 
+    [Fact]
+    public void ADisabledLabel_WithABorder_LaysItsTextOutInsideTheBorder_LikeAnEnabledOne()
+    {
+        foreach (ContentAlignment alignment in new[] { ContentAlignment.TopRight, ContentAlignment.BottomRight, ContentAlignment.MiddleCenter })
+        {
+            using Label enabled = UIStyles.Labels.CreateStandard("Where is the text");
+            using Label disabled = UIStyles.Labels.CreateStandard("Where is the text");
+            enabled.Size = disabled.Size = new Size(200, 60);
+            enabled.TextAlign = disabled.TextAlign = alignment;
+            enabled.BorderStyle = disabled.BorderStyle = BorderStyle.Fixed3D;
+            disabled.Enabled = false;
+
+            using Bitmap first = Paint(enabled, Color.Black);
+            using Bitmap second = Paint(disabled, Color.Black);
+
+            // (Inside the border itself, which both have.)
+            Rectangle inside = new Rectangle(3, 3, first.Width - 6, first.Height - 6);
+            using Bitmap firstInside = first.Clone(inside, first.PixelFormat);
+            using Bitmap secondInside = second.Clone(inside, second.PixelFormat);
+
+            Assert.Equal(InkBounds(firstInside), InkBounds(secondInside));
+        }
+    }
+
     // The smallest rectangle that holds every pixel that is not the page.
     private static Rectangle InkBounds(Bitmap bitmap)
     {
