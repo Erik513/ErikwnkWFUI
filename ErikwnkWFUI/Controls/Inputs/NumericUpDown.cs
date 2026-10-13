@@ -9,21 +9,32 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// The standard <see cref="System.Windows.Forms.NumericUpDown"/> with the two arrow fields drawn by the
-    /// library, in the colors of a <see cref="UIColorSet"/> - the standard control draws them in the system's
-    /// look, a light block next to a dark field. Everything else is the standard control: the text field, the
-    /// value, the limits, the keyboard, the mouse wheel and the repeat while an arrow is held.
+    /// The standard <see cref="System.Windows.Forms.NumericUpDown"/> with the two arrow fields drawn by the library, in
+    /// the colors of a <see cref="UIColorSet"/> (the standard control draws them in the system's look, a light block
+    /// next to a dark field), a frame of the library around the field, and a prefix and a suffix for the number.
+    /// Everything else is the standard control: the text field, the value, the limits, the keyboard, the mouse wheel and
+    /// the repeat while an arrow is held.
     /// </summary>
     /// <remarks>
-    /// Followed live: a change of the theme or the accent repaints the arrows (the set of
-    /// <c>UIStyles.NumericUpDowns.CreatePrimary</c> follows the accent). The colors of the field itself are the
-    /// standard control's <c>BackColor</c> and <c>ForeColor</c>; the factory sets them from the theme.
     /// <para>
-    /// Left to the standard control: the border of <c>BorderStyle.FixedSingle</c>/<c>Fixed3D</c> (drawn by Windows in
-    /// its own colors - the factory makes the control borderless), the text of a disabled field (Windows draws it in
-    /// its gray) and right-to-left layouts (not supported by the library). Everything else the standard control
-    /// offers - <c>ReadOnly</c>, <c>UpDownAlign</c>, <c>Hexadecimal</c>, <c>DecimalPlaces</c>,
-    /// <c>ThousandsSeparator</c>, <c>InterceptArrowKeys</c>, <c>Accelerations</c>, <c>TextAlign</c> - works as before.
+    /// <b>Look.</b> The two arrow fields take their fill and arrow from <see cref="Colors"/> for rest, hovered, pressed
+    /// and disabled; a field whose fill is close to the color of the field gets a quiet outline. With the focus the fields
+    /// are framed in two pixels in the color of the set. The frame around the whole control is the border of
+    /// <c>BorderStyle.FixedSingle</c> painted over in the library's colors (see <see cref="InputField"/>): a quiet outline,
+    /// with the focus the color of the set. The number is moved to the middle of the box vertically. Everything is read
+    /// while painting, so a change of the theme or the accent is followed live.
+    /// </para>
+    /// <para>
+    /// <b>Colors of the field.</b> The field's own colors are the standard control's <c>BackColor</c> and
+    /// <c>ForeColor</c>; the factories set them from the theme (the one background of all input fields, dimmed when
+    /// disabled) and a color set by hand stays.
+    /// </para>
+    /// <para>
+    /// <b>Left to the standard control:</b> the text of a disabled field (Windows draws it in its gray), the thick border
+    /// of <c>BorderStyle.Fixed3D</c> (only its outer pixel gets the library's frame), and right-to-left layouts (not
+    /// supported by the library). Everything else the standard control offers - <c>ReadOnly</c>, <c>UpDownAlign</c>,
+    /// <c>Hexadecimal</c>, <c>DecimalPlaces</c>, <c>ThousandsSeparator</c>, <c>InterceptArrowKeys</c>,
+    /// <c>Accelerations</c>, <c>TextAlign</c> - works as before.
     /// </para>
     /// </remarks>
     public class NumericUpDown : System.Windows.Forms.NumericUpDown
@@ -41,14 +52,27 @@ namespace ErikwnkWFUI.Controls
         private const int WM_LBUTTONDOWN = 0x0201;
         private const int WM_LBUTTONUP = 0x0202;
 
+        // The two children of the standard control: the arrow buttons (UpDownButtons, not public) and the text field.
         private readonly Control _buttons;
         private readonly Control _edit;
-        private bool _centering;
         private readonly ArrowFields _arrowFields;
+
         private UIColorSet _colors;
         private Func<UIColorSet> _colorsSource;
+
+        // The arrow field under the mouse and the one that is pressed: 0 = upper, 1 = lower, -1 = none.
         private int _hotField = -1;
         private int _pressedField = -1;
+
+        // Moving the text field to the middle (see CenterNumber).
+        private bool _centering;
+        private int _shiftedTop = int.MinValue;
+        private int _appliedShift;
+
+        // Reading the number back with a prefix and a suffix (see ValidateEditText).
+        private bool _validating;
+        private string _prefix = "";
+        private string _suffix = "";
 
         public NumericUpDown()
         {
@@ -56,6 +80,8 @@ namespace ErikwnkWFUI.Controls
             _arrowFields = new ArrowFields(this);
             _edit = FindEdit();
 
+            // The standard control places the text field again whenever the size or the font changes: the move that puts
+            // the number in the middle is made again each time (see CenterNumber).
             if (_edit != null)
             {
                 _edit.LocationChanged += (sender, e) => CenterNumber();
@@ -64,15 +90,17 @@ namespace ErikwnkWFUI.Controls
 
             if (_buttons != null)
             {
+                // The window of the buttons is made again with every new window of the control.
                 _buttons.HandleCreated += (sender, e) => _arrowFields.AssignHandle(_buttons.Handle);
                 _buttons.HandleDestroyed += (sender, e) => _arrowFields.ReleaseHandle();
+
                 if (_buttons.IsHandleCreated)
                     _arrowFields.AssignHandle(_buttons.Handle);
             }
 
             // The border of BorderStyle.FixedSingle (the factory's) is part of the window outside its client area, in the
-            // system's color: the library paints its own frame over it - a quiet outline, with the focus the color of
-            // the set.
+            // system's gray: the library paints its own frame over it - a quiet outline, with the focus the color of the
+            // set.
             InputField.AttachFrame(this, () => BorderStyle == BorderStyle.FixedSingle, () => InputField.GetFrameColor(this, Colors, ContainsFocus));
 
             // The colors are read while painting: a change of the theme only needs a repaint.
@@ -127,12 +155,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-
-
         // ---- prefix and suffix ----
-
-        private string _prefix = "";
-        private string _suffix = "";
 
         /// <summary>Text shown before the number in the field (for example "$ "); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
         public string Prefix
@@ -179,12 +202,10 @@ namespace ErikwnkWFUI.Controls
         // What the user typed may still carry the prefix and the suffix (or have lost a space of them): they are taken
         // off before the number is read (the standard control reads it when the field is left and before an arrow
         // steps), and put back afterwards.
-        private bool _validating;
-
         protected override void ValidateEditText()
         {
-            // Putting the bare number into the field validates again (the standard control does that for a text set by code);
-            // the inner round reads it, the outer one must not take off a second suffix.
+            // Putting the bare number into the field validates again (the standard control does that for a text set by
+            // code): the inner round reads it, the outer one must not take off a second suffix.
             if (_validating)
             {
                 base.ValidateEditText();
@@ -265,7 +286,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The standard control draws a ring around its text field (black when it is disabled); what lies outside the two
-        // children is painted in the field's color over it.
+        // children is painted over in the field's color.
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -317,10 +338,7 @@ namespace ErikwnkWFUI.Controls
         // so the number sits above the middle of the box with a small font and below it with a large one (measured
         // for 8 to 24 points: one pixel too high up to a line height of 16, centered from 18 to 25, then more and more
         // too low). The field is moved by that much. The standard control places it again whenever the size or the
-        // font changes, which is why this follows the field's own location.
-        private int _shiftedTop = int.MinValue;
-        private int _appliedShift;
-
+        // font changes, which is why this follows the field's own location (and remembers what it moved it by).
         private void CenterNumber()
         {
             if (_centering || _edit == null)
@@ -408,15 +426,16 @@ namespace ErikwnkWFUI.Controls
             _buttons?.Invalidate();
         }
 
-        // Paints the whole button area: the field's own color behind, a field per arrow with the arrow on it.
+        // Paints the whole button area: the field's own color behind, a field per arrow with the arrow on it. Drawn into
+        // the window of the buttons by ArrowFields.
         internal void PaintArrows(Graphics g, Size size)
         {
             using (SolidBrush back = new SolidBrush(BackColor))
                 g.FillRectangle(back, new Rectangle(Point.Empty, size));
 
+            // A field per arrow, one pixel from the edge and from the other field.
             UIColorSet colors = Colors ?? UIStyles.Colors.Sets.Gray;
             int gap = Math.Max(1, Px(1));
-
             int cellHeight = (size.Height - 3 * gap) / 2;
             Rectangle up = new Rectangle(gap, gap, size.Width - 2 * gap, cellHeight);
             Rectangle down = new Rectangle(gap, size.Height - gap - cellHeight, size.Width - 2 * gap, cellHeight);

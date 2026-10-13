@@ -15,7 +15,9 @@ namespace ErikwnkWFUI
         /// <summary>
         /// A themed <see cref="System.Windows.Forms.NumericUpDown"/>: <see cref="CreateStandard"/> (neutral gray
         /// arrow fields, or those of a color set) and <see cref="CreatePrimary"/> (in the accent). The field takes
-        /// the colors of the theme; the two arrow fields are drawn by the library.
+        /// the background of the theme (the same as the text box and the combo box, dimmed when disabled) and a frame;
+        /// the two arrow fields are drawn by the library. The control also has a <c>Prefix</c> and a <c>Suffix</c> for
+        /// a unit in the field: cast the result to <c>ErikwnkWFUI.Controls.NumericUpDown</c>.
         /// </summary>
         public static class NumericUpDowns
         {

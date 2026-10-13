@@ -9,7 +9,11 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// What the three input fields of the library (text box, combo box, numeric up/down) have in common: the one
-    /// background color, the dimmed one when disabled, and the color of the frame around the field.
+    /// background color, the dimmed one when disabled, and the color of the frame around the field. The frame of a field
+    /// whose border is part of its window (the text box and the numeric up/down with a border) is painted over the
+    /// system's in <see cref="AttachFrame"/>; a text box also gets its line moved to the middle there (the system puts it at
+    /// the top edge), by making the client area start lower and painting that strip in the color of the field.
+    /// The combo box draws its own frame and only takes the background from here.
     /// </summary>
     internal static class InputField
     {
@@ -248,6 +252,8 @@ namespace ErikwnkWFUI.Controls
                 {
                     if (inset > 0)
                     {
+                        // One row more than the inset: the system draws a line of its own at the lower edge of the area it
+                        // thinks is its border, which would show as a second line under the frame.
                         using (SolidBrush back = new SolidBrush(_control.BackColor))
                             g.FillRectangle(back, border, border, width - 2 * border, inset + 1);
                     }

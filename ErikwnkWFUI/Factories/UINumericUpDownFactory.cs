@@ -33,6 +33,9 @@ namespace ErikwnkWFUI.Factories
             return numericUpDown;
         }
 
+        // The border is the standard control's FixedSingle one, which the control paints over in the library's frame
+        // (see Controls.NumericUpDown); the colors of the field are the one background of the input fields (dimmed when
+        // disabled) and the text color, both followed live.
         private static Controls.NumericUpDown Create(decimal minimum, decimal maximum, decimal increment, decimal value)
         {
             Controls.NumericUpDown numericUpDown = new Controls.NumericUpDown
