@@ -207,7 +207,9 @@ namespace ErikwnkWFUI.Controls
         /// what is locked. On by default. The room for the padlock is only
         /// reserved while the control's own <c>ImageList</c> is not in use;
         /// with one of yours, the padlock sits at the right end of the tab
-        /// instead.
+        /// instead. Assign your own <c>ImageList</c> before locking tabs: tabs that
+        /// were locked first have taken an image index of the control's own list,
+        /// which would then point into yours.
         /// </summary>
         public bool ShowLockIcon
         {
