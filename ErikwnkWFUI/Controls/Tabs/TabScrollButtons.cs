@@ -276,7 +276,7 @@ namespace ErikwnkWFUI.Controls
             Rectangle bounds = GetBounds();
             bool canScroll = _hotPart == Part.First ? canGoBack : canGoForward;
 
-            _owner.OnScrollButtonHover(_hotPart, IsHorizontal(), canScroll, new Point(bounds.Left, bounds.Bottom + 4));
+            _owner.OnScrollButtonHover(_hotPart, IsHorizontal(), canScroll, new Point(bounds.Left, bounds.Bottom + _owner.Px(4)));
         }
 
         private void PaintWindow()
@@ -368,9 +368,9 @@ namespace ErikwnkWFUI.Controls
             DrawArrow(graphics, bounds, arrow, direction);
         }
 
-        private static void DrawArrow(Graphics graphics, Rectangle bounds, Color color, ArrowDirection direction)
+        private void DrawArrow(Graphics graphics, Rectangle bounds, Color color, ArrowDirection direction)
         {
-            const int Size = 3;
+            int Size = _owner.Px(3);
 
             float centerX = bounds.Left + bounds.Width / 2f;
             float centerY = bounds.Top + bounds.Height / 2f;

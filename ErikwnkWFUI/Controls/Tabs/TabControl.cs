@@ -51,14 +51,14 @@ namespace ErikwnkWFUI.Controls
         private int _renameIndex = -1;
         private OutsideClickFilter _renameClickFilter;
 
-        private const int MinimumRenameWidth = 60;
+        private const int MinimumRenameWidth96 = 60;
         private const int DefaultMaxTabNameLength = 40;
 
         private int _maxTabNameLength = DefaultMaxTabNameLength;
 
-        private const int LockSlotWidth = 7;
-        private const int LockSlotHeight = 14;
-        private const int LockContentShift = 6;
+        private const int LockSlotWidth96 = 7;
+        private const int LockSlotHeight96 = 14;
+        private const int LockContentShift96 = 6;
         private bool _showLockIcon = true;
 
         // Room for the lock in front of a locked tab's name. The width of a

@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             Rectangle tab = GetTabRect(index);
-            int width = Math.Max(MinimumRenameWidth, tab.Width - 8);
+            int width = Math.Max(Px(MinimumRenameWidth96), tab.Width - Px(8));
 
             TextBox box = new TextBox
             {
@@ -45,10 +45,10 @@ namespace ErikwnkWFUI.Controls
             // A tab with an image (or the lock's slot) keeps it in front of
             // the name.
             Image tabImage = GetTabImage(TabPages[index]);
-            int imageOffset = tabImage == null ? 0 : tabImage.Width + ImageTextGap;
+            int imageOffset = tabImage == null ? 0 : tabImage.Width + Px(ImageTextGap96);
 
-            box.Location = new Point(tab.Left + 4 + imageOffset, tab.Top + Math.Max(0, (tab.Height - box.PreferredHeight) / 2));
-            box.Width = Math.Max(MinimumRenameWidth, width - imageOffset);
+            box.Location = new Point(tab.Left + Px(4) + imageOffset, tab.Top + Math.Max(0, (tab.Height - box.PreferredHeight) / 2));
+            box.Width = Math.Max(Px(MinimumRenameWidth96), width - imageOffset);
 
             box.KeyDown += OnRenameBoxKeyDown;
             box.LostFocus += (sender, e) => EndRename(commit: true);

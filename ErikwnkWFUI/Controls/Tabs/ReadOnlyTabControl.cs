@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -32,10 +33,21 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public partial class ReadOnlyTabControl : System.Windows.Forms.TabControl
     {
-        private const int AccentThickness = 2;
+        // The measures at 96 dpi: the ones the library draws itself are scaled with the screen (see Px).
+        private const int AccentThickness96 = 2;
 
         // The room between the image of a tab and its name.
-        internal const int ImageTextGap = 4;
+        internal const int ImageTextGap96 = 4;
+        internal const int FocusInset96 = 3;
+
+        // A measure of 96 dpi in the pixels of this screen.
+        internal int Px(int value96)
+        {
+            return Dpi.Scale(this, value96, DpiOverride);
+        }
+
+        // A seam for the tests: pretends another screen (0 is the real one).
+        internal int DpiOverride;
 
         // Width of the native border band around the page contents, which
         // DisplayRectangle already excludes.

@@ -42,9 +42,10 @@ namespace ErikwnkWFUI.Controls
             {
                 if (_lockSlots == null)
                 {
-                    _lockSlots = new ImageList { ImageSize = new Size(LockSlotWidth, LockSlotHeight), ColorDepth = ColorDepth.Depth32Bit };
+                    Size slotSize = new Size(Px(LockSlotWidth96), Px(LockSlotHeight96));
+                    _lockSlots = new ImageList { ImageSize = slotSize, ColorDepth = ColorDepth.Depth32Bit };
 
-                    using (Bitmap slot = new Bitmap(LockSlotWidth, LockSlotHeight))
+                    using (Bitmap slot = new Bitmap(slotSize.Width, slotSize.Height))
                     {
                         _lockSlots.Images.Add(slot);
                         _ = _lockSlots.Handle;
@@ -79,6 +80,20 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // On a screen with another scaling the slot has another size: the list of slots is made anew.
+        protected override void OnDpiChangedAfterParent(EventArgs e)
+        {
+            base.OnDpiChangedAfterParent(e);
+
+            if (_lockSlots != null && ImageList == _lockSlots)
+            {
+                ImageList = null;
+                _lockSlots.Dispose();
+                _lockSlots = null;
+                SyncLockSlots();
+            }
+        }
+
         protected override void DrawTabImage(Graphics graphics, int index, Image image, Rectangle bounds, Color foreColor)
         {
             // The slot image is transparent - the padlock goes in its place.
@@ -96,7 +111,7 @@ namespace ErikwnkWFUI.Controls
         // the center, which closes up the gap on the left.
         protected override int GetTabContentOffset(int index)
         {
-            return ImageList == _lockSlots && _lockSlots != null && IsSlotImage(index) ? -LockContentShift : 0;
+            return ImageList == _lockSlots && _lockSlots != null && IsSlotImage(index) ? -Px(LockContentShift96) : 0;
         }
 
         private bool IsSlotImage(int index)
@@ -114,24 +129,28 @@ namespace ErikwnkWFUI.Controls
             if (ImageList == null || ImageList == _lockSlots)
                 return;
 
-            Rectangle slot = new Rectangle(bounds.Right - LockSlotWidth - 4, bounds.Top + (bounds.Height - LockSlotHeight) / 2, LockSlotWidth, LockSlotHeight);
+            int width = Px(LockSlotWidth96);
+            int height = Px(LockSlotHeight96);
+            Rectangle slot = new Rectangle(bounds.Right - width - Px(4), bounds.Top + (bounds.Height - height) / 2, width, height);
             DrawPadlock(graphics, slot, foreColor);
         }
 
-        // A small padlock: a body with a shackle on top, drawn in the tab's
-        // own text color, a little dimmed so it stays a hint. It sits at the
-        // left end of its slot (a pixel into the tab's padding) rather than
-        // centered, which leaves a slightly wider gap to the name.
+        // A small padlock: a body with a shackle on top, drawn in the tab's own text color, a little dimmed so it stays a
+        // hint. It sits at the left end of its slot (a pixel into the tab's padding) rather than centered, which leaves a
+        // slightly wider gap to the name. Drawn in the measures of 96 dpi and scaled to the height of the slot.
         private static void DrawPadlock(Graphics graphics, Rectangle slot, Color color)
         {
             Color dimmed = Color.FromArgb(190, color);
             System.Drawing.Drawing2D.SmoothingMode previous = graphics.SmoothingMode;
+            System.Drawing.Drawing2D.GraphicsState state = graphics.Save();
             graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            graphics.TranslateTransform(slot.Left, slot.Top);
+            graphics.ScaleTransform(slot.Height / (float)LockSlotHeight96, slot.Height / (float)LockSlotHeight96);
 
             int bodyWidth = 7;
             int bodyHeight = 5;
-            int left = slot.Left - 1;
-            int bodyTop = slot.Top + slot.Height - bodyHeight - 3;
+            int left = -1;
+            int bodyTop = LockSlotHeight96 - bodyHeight - 3;
 
             using (SolidBrush brush = new SolidBrush(dimmed))
             {
@@ -145,6 +164,7 @@ namespace ErikwnkWFUI.Controls
                 graphics.DrawLine(pen, left + bodyWidth - 1.25f, bodyTop - 1.5f, left + bodyWidth - 1.25f, bodyTop);
             }
 
+            graphics.Restore(state);
             graphics.SmoothingMode = previous;
         }
 

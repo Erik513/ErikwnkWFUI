@@ -196,7 +196,7 @@ namespace ErikwnkWFUI.Controls
 
             if (selected && Focused && ShowFocusCues)
             {
-                Rectangle focus = Rectangle.Inflate(bounds, -3, -3);
+                Rectangle focus = Rectangle.Inflate(bounds, -Px(FocusInset96), -Px(FocusInset96));
                 ControlPaint.DrawFocusRectangle(graphics, focus, GetTabForeColor(true, true), GetTabBackColor(true, false));
             }
         }
@@ -358,24 +358,25 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawAccent(Graphics graphics, Rectangle bounds)
         {
+            int thickness = Px(AccentThickness96);
             Rectangle bar;
 
             switch (Alignment)
             {
                 case TabAlignment.Bottom:
-                    bar = new Rectangle(bounds.Left, bounds.Bottom - AccentThickness, bounds.Width, AccentThickness);
+                    bar = new Rectangle(bounds.Left, bounds.Bottom - thickness, bounds.Width, thickness);
                     break;
 
                 case TabAlignment.Left:
-                    bar = new Rectangle(bounds.Left, bounds.Top, AccentThickness, bounds.Height);
+                    bar = new Rectangle(bounds.Left, bounds.Top, thickness, bounds.Height);
                     break;
 
                 case TabAlignment.Right:
-                    bar = new Rectangle(bounds.Right - AccentThickness, bounds.Top, AccentThickness, bounds.Height);
+                    bar = new Rectangle(bounds.Right - thickness, bounds.Top, thickness, bounds.Height);
                     break;
 
                 default:
-                    bar = new Rectangle(bounds.Left, bounds.Top, bounds.Width, AccentThickness);
+                    bar = new Rectangle(bounds.Left, bounds.Top, bounds.Width, thickness);
                     break;
             }
 
@@ -449,7 +450,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            int imageWidth = image.Width + (text.Length > 0 ? ImageTextGap : 0);
+            int imageWidth = image.Width + (text.Length > 0 ? Px(ImageTextGap96) : 0);
             int textWidth = MeasureTextWidth(graphics, text);
             int contentWidth = Math.Min(bounds.Width, imageWidth + textWidth);
             int x = bounds.Left + (bounds.Width - contentWidth) / 2 + GetTabContentOffset(index);
@@ -464,7 +465,7 @@ namespace ErikwnkWFUI.Controls
         {
             // Left tabs read bottom-to-top, right tabs top-to-bottom.
             bool bottomToTop = Alignment == TabAlignment.Left;
-            int imageHeight = image == null ? 0 : image.Height + (text.Length > 0 ? ImageTextGap : 0);
+            int imageHeight = image == null ? 0 : image.Height + (text.Length > 0 ? Px(ImageTextGap96) : 0);
             int contentHeight = image == null
                 ? bounds.Height
                 : Math.Min(bounds.Height, imageHeight + MeasureTextWidth(graphics, text));
