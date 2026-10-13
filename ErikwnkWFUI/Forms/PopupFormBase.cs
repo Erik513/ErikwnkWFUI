@@ -86,9 +86,13 @@ namespace ErikwnkWFUI.Forms
             {
                 DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref preference, sizeof(int));
             }
-            catch
+            catch (EntryPointNotFoundException)
             {
                 // before Windows 11: no rounded corners
+            }
+            catch (DllNotFoundException)
+            {
+                // no desktop window manager: no rounded corners
             }
         }
 
