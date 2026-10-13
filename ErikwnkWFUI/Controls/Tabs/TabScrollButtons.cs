@@ -26,7 +26,6 @@ namespace ErikwnkWFUI.Controls
 
         private const string ClassName = "msctls_updown32";
 
-        private const int GWL_STYLE = -16;
         private const int UDS_HORZ = 0x0040;
         private const int UDM_GETRANGE32 = 0x0470;
         private const int UDM_GETPOS32 = 0x0472;

@@ -44,6 +44,33 @@ namespace ErikwnkWFUI.Native
         // Messages of the application itself start here.
         public const int WM_APP = 0x8000;
 
+        // ---- list view and its header ----
+        public const int LVM_FIRST = 0x1000;
+        public const int LVM_APPROXIMATEVIEWRECT = LVM_FIRST + 64;
+        public const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
+        public const int LVM_GETHEADER = LVM_FIRST + 31;
+        public const int LVM_DELETEITEM = LVM_FIRST + 8;
+        public const int LVM_DELETEALLITEMS = LVM_FIRST + 9;
+        public const int LVM_DELETECOLUMN = LVM_FIRST + 28;
+        public const int LVM_INSERTITEMW = LVM_FIRST + 77;
+        public const int LVM_SETCOLUMNW = LVM_FIRST + 96;
+        public const int LVM_INSERTCOLUMNW = LVM_FIRST + 97;
+        public const int LVS_EX_DOUBLEBUFFER = 0x00010000;
+        public const int HDM_FIRST = 0x1200;
+        public const int HDM_HITTEST = HDM_FIRST + 6;
+        public const int HDM_GETITEMRECT = HDM_FIRST + 7;
+        public const int HDS_NOSIZING = 0x0800;
+
+        // The parts of a header that HDM_HITTEST answers with: on the divider between two columns, or on the divider of
+        // a column of width 0.
+        public const uint HHT_ONDIVIDER = 0x0004;
+        public const uint HHT_ONDIVOPEN = 0x0008;
+
+        // ---- window styles ----
+        public const int GWL_STYLE = -16;
+        public const int WS_HSCROLL = 0x00100000;
+        public const int WS_VSCROLL = 0x00200000;
+
         // ---- SetWindowPos, RedrawWindow and WM_PRINT flags ----
         public const int SWP_NOSIZE = 0x0001;
         public const int SWP_NOMOVE = 0x0002;

@@ -577,13 +577,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // Turns on the native ListView's own double buffering - without it,
-        // scrolling can leave stray gray streaks, since owner-drawn content
-        // doesn't go through .NET's own OnPaint/DoubleBuffered at all.
-        private const int LVM_FIRST = 0x1000;
-        private const int LVM_SETEXTENDEDLISTVIEWSTYLE = LVM_FIRST + 54;
-        private const int LVS_EX_DOUBLEBUFFER = 0x00010000;
-
         private bool TryGetHeaderBounds(int columnIndex, out Rectangle bounds)
         {
             bounds = Rectangle.Empty;
@@ -594,7 +587,6 @@ namespace ErikwnkWFUI.Controls
 
             var header = HeaderInputSubclass.GetHeaderHandle(Handle);
             var rectangle = new NativeRect();
-            const int HDM_GETITEMRECT = 0x1207;
             if (header == System.IntPtr.Zero ||
                 SendMessage(header, HDM_GETITEMRECT, (System.IntPtr)columnIndex, ref rectangle) == System.IntPtr.Zero)
             {
@@ -610,9 +602,9 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnHandleCreated(e);
 
-            // Re-applied on every handle (re)creation - this extended style
-            // lives on the native control, not anything .NET persists
-            // across a recreate.
+            // The native list's own double buffering - without it, scrolling can leave stray gray streaks, since
+            // owner-drawn content does not go through .NET's OnPaint/DoubleBuffered at all. Applied on every handle
+            // (re)creation: this style lives on the native control, not anything .NET persists across a recreate.
             SendMessage(Handle, LVM_SETEXTENDEDLISTVIEWSTYLE, (System.IntPtr)LVS_EX_DOUBLEBUFFER, (System.IntPtr)LVS_EX_DOUBLEBUFFER);
 
             // The header is a separate native child window ("SysHeader32"),
@@ -651,9 +643,6 @@ namespace ErikwnkWFUI.Controls
             if (header == System.IntPtr.Zero)
                 return;
 
-            const int GWL_STYLE = -16;
-            const int HDS_NOSIZING = 0x0800;
-
             int style = GetWindowLong(header, GWL_STYLE);
             int wanted = AllowColumnResizing ? style & ~HDS_NOSIZING : style | HDS_NOSIZING;
 
@@ -668,14 +657,6 @@ namespace ErikwnkWFUI.Controls
 
             base.OnHandleDestroyed(e);
         }
-
-        // Scrolling can leave a stray gray edge behind for a frame (native
-        // partial-repaint artifact on an owner-drawn control) - forcing a
-        // full repaint on every scroll message gets rid of it.
-
-        private const int GWL_STYLE = -16;
-        private const int WS_HSCROLL = 0x00100000;
-        private const int WS_VSCROLL = 0x00200000;
 
         // Where both scroll bars meet, the system leaves a light square even with dark bars.
         // Painted over in the color of the bars' track.
@@ -714,6 +695,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Scrolling can leave a stray gray edge behind for a frame (native partial-repaint artifact on an owner-drawn
+        // control) - forcing a full repaint on every scroll message gets rid of it.
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)
@@ -1912,9 +1895,6 @@ namespace ErikwnkWFUI.Controls
         // deltas for live resizing; other drags retain column reordering.
         private sealed class HeaderInputSubclass : NativeWindow
         {
-            private const int LVM_FIRST = 0x1000;
-            private const int LVM_GETHEADER = LVM_FIRST + 31;
-
             private readonly ListView _owner;
             private int _pendingColumnIndex = -1;
             private int _pendingStartX;
@@ -2062,8 +2042,7 @@ namespace ErikwnkWFUI.Controls
                     X = GetX(coordinates),
                     Y = unchecked((short)((long)coordinates >> 16))
                 };
-                const int HDM_HITTEST = 0x1206;
-                const uint DividerFlags = 0x0004 | 0x0008;
+                const uint DividerFlags = HHT_ONDIVIDER | HHT_ONDIVOPEN;
                 SendMessage(Handle, HDM_HITTEST, System.IntPtr.Zero, ref hit);
                 if ((hit.Flags & DividerFlags) == 0 || hit.Item < 0 || hit.Item >= _owner.Columns.Count)
                 {

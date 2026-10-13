@@ -9,18 +9,6 @@ namespace ErikwnkWFUI.Controls
     // or as many as there are items (AutoSizeToContent).
     public partial class ListView
     {
-        // The messages that change what the list is made of (a column or an item added, taken out or changed): the
-        // size follows them.
-        private const int LVM_DELETEITEM = 0x1008;
-        private const int LVM_DELETEALLITEMS = 0x1009;
-        private const int LVM_DELETECOLUMN = 0x101C;
-        private const int LVM_INSERTITEMW = 0x104D;
-        private const int LVM_SETCOLUMNW = 0x1060;
-        private const int LVM_INSERTCOLUMNW = 0x1061;
-
-        // The native estimate of the room for a number of rows.
-        private const int LVM_APPROXIMATEVIEWRECT = 0x1040;
-
         private int _fixedRowCount;
         private bool _autoSizeToContent;
         private bool _allowSelection = true;
