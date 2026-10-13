@@ -46,6 +46,20 @@ namespace ErikwnkWFUI.Controls
         // The frame of the focus must differ at least this much from the fill it surrounds.
         private const double FocusFrameAgainstFill = 1.5;
 
+        // The least contrast (against the field) of the frame of the focus, of an arrow against its fill, and of the text
+        // color used as the frame where the set's color is too close to its fill.
+        private const double FocusFrameContrast = 3.0;
+        private const double ArrowContrast = 3.0;
+        private const double FocusTextContrast = 4.5;
+
+        // A disabled field is its rest fill drawn this far toward the color of the field.
+        private const double DisabledFillBlend = 0.65;
+
+        // The fill at rest, hovered and pressed of the neutral set on a light theme: pale grays with a dark arrow.
+        private static readonly Color LightNeutralBasic = Color.FromArgb(228, 228, 228);
+        private static readonly Color LightNeutralHover = Color.FromArgb(212, 212, 212);
+        private static readonly Color LightNeutralPressed = Color.FromArgb(190, 190, 190);
+
         // The two children of the standard control: the arrow buttons (UpDownButtons, not public) and the text field.
         private readonly Control _buttons;
         private readonly Control _edit;
@@ -309,12 +323,12 @@ namespace ErikwnkWFUI.Controls
         // surrounds; the neutral gray set is too close to its own fill for that, so it gets the text color.
         private Color GetFocusColor(UIColorSet colors, Color fill)
         {
-            Color frame = UIColors.EnsureContrast(colors.Hover, BackColor, 3.0);
+            Color frame = UIColors.EnsureContrast(colors.Hover, BackColor, FocusFrameContrast);
 
             if (UIColors.GetContrastRatio(frame, fill) >= FocusFrameAgainstFill)
                 return frame;
 
-            return UIColors.EnsureContrast(ForeColor, BackColor, 4.5);
+            return UIColors.EnsureContrast(ForeColor, BackColor, FocusTextContrast);
         }
 
         // The look of the control without a set: neutral gray fields. On a dark theme the gray set of the library; on a
@@ -326,7 +340,7 @@ namespace ErikwnkWFUI.Controls
             if (!UIColors.IsLight(UIColors.BackgroundMedium))
                 return UIStyles.Colors.Sets.Gray;
 
-            return _lightNeutralSet ?? (_lightNeutralSet = UIColors.CreateSet(Color.FromArgb(228, 228, 228), Color.FromArgb(212, 212, 212), Color.FromArgb(190, 190, 190)));
+            return _lightNeutralSet ?? (_lightNeutralSet = UIColors.CreateSet(LightNeutralBasic, LightNeutralHover, LightNeutralPressed));
         }
 
         // The fill and the arrow of a field in a state (0 rest, 1 hovered, 2 pressed, 3 disabled). A disabled field is the
@@ -342,7 +356,7 @@ namespace ErikwnkWFUI.Controls
                     return (colors.Pressed, GetArrowColor(colors.PressedText, colors.Pressed));
 
                 case 3:
-                    Color fill = UIColors.BlendToward(colors.Basic, field, 0.65);
+                    Color fill = UIColors.BlendToward(colors.Basic, field, DisabledFillBlend);
                     return (fill, UIColors.GetDisabledText(fill));
 
                 default:
@@ -354,7 +368,7 @@ namespace ErikwnkWFUI.Controls
         // fill of the green set), the better of black and white is taken, so the arrow is always seen.
         internal static Color GetArrowColor(Color arrow, Color fill)
         {
-            return UIColors.GetContrastRatio(arrow, fill) >= 3.0 ? arrow : UIColors.GetBestTextColor(fill);
+            return UIColors.GetContrastRatio(arrow, fill) >= ArrowContrast ? arrow : UIColors.GetBestTextColor(fill);
         }
 
         private void PaintField(Graphics g, Rectangle cell, UIColorSet colors, int field, bool pointsUp)
