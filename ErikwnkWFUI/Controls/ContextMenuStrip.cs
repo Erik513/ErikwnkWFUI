@@ -87,7 +87,11 @@ namespace ErikwnkWFUI.Controls
         public Color SelectionBackColor
         {
             get => _selectionBackColor.Value;
-            set => _selectionBackColor.Set(value);
+            set
+            {
+                _selectionBackColor.Set(value);
+                Invalidate();
+            }
         }
 
         /// <summary>
@@ -98,7 +102,11 @@ namespace ErikwnkWFUI.Controls
         public Color BorderColor
         {
             get => _borderColor.Value;
-            set => _borderColor.Set(value);
+            set
+            {
+                _borderColor.Set(value);
+                Invalidate();
+            }
         }
 
         // A submenu is a drop-down of its own that takes the renderer of its owner but not the
