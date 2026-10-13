@@ -66,6 +66,17 @@ namespace ErikwnkWFUI.Native
         public const uint HHT_ONDIVIDER = 0x0004;
         public const uint HHT_ONDIVOPEN = 0x0008;
 
+        // ---- tab control, its scroll arrows (up-down control) and mouse tracking ----
+        public const int TCS_BUTTONS = 0x0100;
+        public const int TCS_FLATBUTTONS = 0x0008;
+        public const int TCM_ADJUSTRECT = 0x1328;
+        public const int UDS_HORZ = 0x0040;
+        public const int UDM_SETPOS = 0x0467;
+        public const int UDM_GETRANGE32 = 0x0470;
+        public const int UDM_SETPOS32 = 0x0471;
+        public const int UDM_GETPOS32 = 0x0472;
+        public const int TME_LEAVE = 0x0002;
+
         // ---- window styles ----
         public const int GWL_STYLE = -16;
         public const int WS_HSCROLL = 0x00100000;

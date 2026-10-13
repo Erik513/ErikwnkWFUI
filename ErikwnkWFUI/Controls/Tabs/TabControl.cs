@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
+using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -59,8 +60,6 @@ namespace ErikwnkWFUI.Controls
         private const int LockSlotWidth = 7;
         private const int LockSlotHeight = 14;
         private const int LockContentShift = 6;
-        private const int ImageTextGap = 4;
-
         private bool _showLockIcon = true;
 
         // Room for the lock in front of a locked tab's name. The width of a
@@ -368,8 +367,8 @@ namespace ErikwnkWFUI.Controls
 
         protected override void WndProc(ref Message m)
         {
-            // The strip scrolling (WM_HSCROLL / WM_VSCROLL) moves every tab.
-            if ((m.Msg == 0x0114 || m.Msg == 0x0115) && _renameBox != null)
+            // The strip scrolling moves every tab.
+            if ((m.Msg == WM_HSCROLL || m.Msg == WM_VSCROLL) && _renameBox != null)
             {
                 EndRename(commit: true);
             }

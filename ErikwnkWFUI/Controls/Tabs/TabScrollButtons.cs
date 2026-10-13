@@ -26,15 +26,6 @@ namespace ErikwnkWFUI.Controls
 
         private const string ClassName = "msctls_updown32";
 
-        private const int UDS_HORZ = 0x0040;
-        private const int UDM_GETRANGE32 = 0x0470;
-        private const int UDM_GETPOS32 = 0x0472;
-        private const int UDM_SETPOS = 0x0467;
-        private const int UDM_SETPOS32 = 0x0471;
-        private const int TCM_ADJUSTRECT = 0x1328;
-
-        private const int TME_LEAVE = 0x0002;
-
         private readonly ReadOnlyTabControl _owner;
 
         private Part _hotPart;

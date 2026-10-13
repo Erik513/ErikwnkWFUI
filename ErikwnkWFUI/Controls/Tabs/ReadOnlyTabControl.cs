@@ -34,7 +34,9 @@ namespace ErikwnkWFUI.Controls
     public partial class ReadOnlyTabControl : System.Windows.Forms.TabControl
     {
         private const int AccentThickness = 2;
-        private const int ImageTextGap = 4;
+
+        // The room between the image of a tab and its name.
+        internal const int ImageTextGap = 4;
 
         // Width of the native border band around the page contents, which
         // DisplayRectangle already excludes.
@@ -237,13 +239,8 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The native styles that switch a tab control to button tabs. The
-        // base class's own Appearance can still be reached through a
-        // reference typed as the standard TabControl, so they are stripped
-        // from the window itself as well.
-        private const int TCS_BUTTONS = 0x0100;
-        private const int TCS_FLATBUTTONS = 0x0008;
-
+        // The styles that make button tabs are taken from the window itself too: the Appearance of the base class can still
+        // be reached through a reference typed as the standard TabControl.
         protected override CreateParams CreateParams
         {
             get
