@@ -32,8 +32,10 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public partial class TabControl : ReadOnlyTabControl
     {
-        internal void FollowContextMenuColors(Func<UIColorSet> colors)
+        // The right-click menu takes the color of the set as well.
+        internal override void FollowColors(Func<UIColorSet> colors)
         {
+            base.FollowColors(colors);
             _contextMenuSelectionColor.SetDefault(() => colors().Hover);
         }
 

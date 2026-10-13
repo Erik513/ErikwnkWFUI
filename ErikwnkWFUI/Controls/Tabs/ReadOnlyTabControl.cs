@@ -310,7 +310,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The colors of a color set, asked for again each time (the primary set follows the accent).
-        internal void FollowColors(Func<UIColorSet> colors)
+        internal virtual void FollowColors(Func<UIColorSet> colors)
         {
             _accentColor.SetDefault(() => colors().Pressed);
             Repaint();

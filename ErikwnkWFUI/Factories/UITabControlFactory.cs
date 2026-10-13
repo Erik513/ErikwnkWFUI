@@ -46,11 +46,6 @@ namespace ErikwnkWFUI.Factories
                 return;
 
             tabs.FollowColors(colors);
-
-            TabControl editable = tabs as TabControl;
-
-            if (editable != null)
-                editable.FollowContextMenuColors(colors);
         }
 
         // The Standard ones in the current accent - the primary color set.
