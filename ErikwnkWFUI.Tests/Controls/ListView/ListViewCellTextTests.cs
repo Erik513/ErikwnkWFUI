@@ -17,7 +17,7 @@ public class ListViewCellTextTests
     [Fact]
     public void TheTextOfACell_StartsSixPixelsFromTheLeft_AndEndsThreeBeforeTheRight()
     {
-        using WfuiListView list = new WfuiListView();
+        using WfuiListView list = new WfuiListView { DpiOverride = 96 };
 
         Rectangle text = TextRectangle(list, new Rectangle(10, 4, 100, 20), 1);
 
@@ -25,9 +25,19 @@ public class ListViewCellTextTests
     }
 
     [Fact]
+    public void TheRoomAroundTheText_GrowsWithTheScreen()
+    {
+        using WfuiListView list = new WfuiListView { DpiOverride = 192 };
+
+        Rectangle text = TextRectangle(list, new Rectangle(10, 4, 100, 20), 1);
+
+        Assert.Equal(new Rectangle(22, 4, 100 - 12 - 6, 20), text);
+    }
+
+    [Fact]
     public void TheTextOfTheFirstCell_OfAListWithCheckBoxes_StartsBehindTheBox()
     {
-        using WfuiListView list = new WfuiListView { CheckBoxes = true };
+        using WfuiListView list = new WfuiListView { CheckBoxes = true, DpiOverride = 96 };
         Rectangle cell = new Rectangle(0, 0, 100, 20);
 
         Rectangle first = TextRectangle(list, cell, 0);

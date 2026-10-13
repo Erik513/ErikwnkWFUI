@@ -56,6 +56,27 @@ namespace ErikwnkWFUI.Controls
     {
         private const int DefaultMinimumColumnWidth = 40;
 
+        // The measures at 96 dpi: they are scaled with the screen (see Px).
+        private const int HeaderTextLeft96 = 7;
+        private const int HeaderTextRight96 = 3;
+        private const int CellTextLeft96 = 6;
+        private const int CellTextRight96 = 3;
+        private const int CheckBoxSize96 = 16;
+        private const int CheckBoxLeft96 = 2;
+        private const int CheckBoxGap96 = 6;
+        private const int ResizeGripWidth96 = 5;
+        private const int ToolTipOffsetX96 = 12;
+        private const int ToolTipOffsetY96 = 18;
+
+        // A measure of 96 dpi in the pixels of this screen.
+        private int Px(int value96)
+        {
+            return Dpi.Scale(this, value96, DpiOverride);
+        }
+
+        // A seam for the tests: pretends another screen (0 is the real one).
+        internal int DpiOverride;
+
         private int _headerHeight = 24;
         private int _pendingToggleDeselectItemIndex = -1;
         private readonly Timer _toggleDeselectSettleTimer;
@@ -857,9 +878,8 @@ namespace ErikwnkWFUI.Controls
                 new Size(int.MaxValue, int.MaxValue),
                 TextFormatFlags.Left | TextFormatFlags.NoPadding);
 
-            // Matches the 7px left / 3px right padding OnDrawColumnHeader
-            // draws the caption with.
-            return textSize.Width + 10;
+            // Matches the padding OnDrawColumnHeader draws the caption with.
+            return textSize.Width + Px(HeaderTextLeft96 + HeaderTextRight96);
         }
 
         private List<ColumnHeader> GetColumnsInDisplayOrder()
@@ -961,7 +981,7 @@ namespace ErikwnkWFUI.Controls
                     e.Graphics,
                     e.Header.Text,
                     font,
-                    new Rectangle(e.Bounds.X + 7, e.Bounds.Y, Math.Max(0, e.Bounds.Width - 10), e.Bounds.Height),
+                    new Rectangle(e.Bounds.X + Px(HeaderTextLeft96), e.Bounds.Y, Math.Max(0, e.Bounds.Width - Px(HeaderTextLeft96 + HeaderTextRight96)), e.Bounds.Height),
                     GetEffectiveColor(HeaderForeColor),
                     TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
             }
@@ -1179,20 +1199,20 @@ namespace ErikwnkWFUI.Controls
 
         private Rectangle GetCheckBoxRectangle(Rectangle cell)
         {
-            int side = (int)Math.Round(16 * DeviceDpi / 96.0);
+            int side = Px(CheckBoxSize96);
 
-            return new Rectangle(cell.X + (int)Math.Round(2 * DeviceDpi / 96.0), cell.Y + (cell.Height - side) / 2, side, side);
+            return new Rectangle(cell.X + Px(CheckBoxLeft96), cell.Y + (cell.Height - side) / 2, side, side);
         }
 
-        // Where the text of a cell goes: from 6 px behind its left edge (behind the box, in the first cell of a list with
-        // CheckBoxes) to 3 px before its right edge. What is drawn there and what the tooltip measures are the same.
+        // Where the text of a cell goes: from a little behind its left edge (behind the box, in the first cell of a list with
+        // CheckBoxes) to a little before its right edge. What is drawn there and what the tooltip measures are the same.
         private Rectangle GetCellTextRectangle(Rectangle cell, int columnIndex)
         {
             int left = HasCheckBox(columnIndex)
-                ? GetCheckBoxRectangle(cell).Right + (int)Math.Round(6 * DeviceDpi / 96.0)
-                : cell.X + 6;
+                ? GetCheckBoxRectangle(cell).Right + Px(CheckBoxGap96)
+                : cell.X + Px(CellTextLeft96);
 
-            return new Rectangle(left, cell.Y, Math.Max(0, cell.Right - 3 - left), cell.Height);
+            return new Rectangle(left, cell.Y, Math.Max(0, cell.Right - Px(CellTextRight96) - left), cell.Height);
         }
 
         // Flat gray when disabled, same as ReadOnlyDataGridView.ApplyStyles -
@@ -1303,14 +1323,13 @@ namespace ErikwnkWFUI.Controls
             column.DisplayIndex = targetDisplayIndex.Value;
         }
 
-        private const int ResizeGripWidth = 5;
 
         // The resize grip stays native - only clicks clearly inside a
         // column's body start our own reorder drag, so resizing isn't
         // accidentally hijacked into a reorder attempt.
         private bool IsNearColumnBorder(int x)
         {
-            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out _);
+            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, Px(ResizeGripWidth96), out _);
         }
 
         // comctl32 always shows the resize cursor near a column boundary,
@@ -1321,7 +1340,7 @@ namespace ErikwnkWFUI.Controls
         // resizability governs this specific boundary.
         private bool IsNearNonResizableColumnBorder(int x)
         {
-            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, ResizeGripWidth, out ColumnHeader column) &&
+            return ColumnLayoutMath.TryGetColumnAtBorder(GetColumnsInDisplayOrder(), c => c.Width, x, Px(ResizeGripWidth96), out ColumnHeader column) &&
                 !IsColumnResizable(column.Index);
         }
 
@@ -1645,7 +1664,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            _cellToolTip.Show(text, this, e.Location.X + 12, e.Location.Y + 18, 8000);
+            _cellToolTip.Show(text, this, e.Location.X + Px(ToolTipOffsetX96), e.Location.Y + Px(ToolTipOffsetY96), 8000);
         }
 
         private void OnListViewMouseLeave(object sender, EventArgs e)
