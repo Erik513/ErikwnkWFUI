@@ -8,58 +8,16 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UILabelFactory
     {
+        private const AnchorStyles AllSides = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
         public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(() => UIColors.TextPrimary, Wrap(colors))
-            {
-                Text = text ?? "",
-                Font = UIFonts.Title,
-                BackColor = Color.Transparent,
-                TextAlign = ContentAlignment.MiddleCenter,
-                AutoEllipsis = true,
-                AutoSize = false,
-                UseMnemonic = false,
-                // The text is drawn with GDI, as in every other control of the library - the
-                // disabled and the moving text are drawn that way too - whatever the application chose.
-                UseCompatibleTextRendering = false
-            };
-
-            label.Scroll = scroll;
-
-            return label;
+            return Create(text, () => UIColors.TextPrimary, Wrap(colors), UIFonts.Title, ContentAlignment.MiddleCenter, AnchorStyles.Top | AnchorStyles.Left, false, scroll);
         }
 
         public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
             return Standard(text, Wrap(colors), scroll);
-        }
-
-        private static Func<UIColorSet> Wrap(UIColorSet colors)
-        {
-            return colors == null ? (Func<UIColorSet>)null : () => colors;
-        }
-
-        private static ThemedLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)
-        {
-            ThemedLabel label = new ThemedLabel(() => UIColors.TextSecondary, colors)
-            {
-                Text = text ?? "",
-                Font = UIFonts.Normal,
-                BackColor = Color.Transparent,
-                TextAlign = ContentAlignment.MiddleLeft,
-                AutoEllipsis = true,
-                AutoSize = false,
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                UseMnemonic = false,
-                // The text is drawn with GDI, as in every other control of the library - the
-                // disabled and the moving text are drawn that way too - whatever the application chose.
-                UseCompatibleTextRendering = false
-            };
-
-            // Last: the movement needs the text, the font and the size to be there.
-            label.Scroll = scroll;
-
-            return label;
         }
 
         // The Standard one in the current accent - the primary color set.
@@ -70,21 +28,47 @@ namespace ErikwnkWFUI.Factories
 
         public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            ThemedLabel label = new ThemedLabel(() => UIColors.TextMuted, Wrap(colors), muted: true)
+            return Create(text, () => UIColors.TextMuted, Wrap(colors), UIFonts.Small, ContentAlignment.MiddleLeft, AllSides, true, scroll);
+        }
+
+        private static Func<UIColorSet> Wrap(UIColorSet colors)
+        {
+            return colors == null ? (Func<UIColorSet>)null : () => colors;
+        }
+
+        private static ThemedLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)
+        {
+            return Create(text, () => UIColors.TextSecondary, colors, UIFonts.Normal, ContentAlignment.MiddleLeft, AllSides, false, scroll);
+        }
+
+        // What the kinds have in common; they differ in the color of their kind, the font, the alignment, the anchor
+        // and whether they are the muted kind.
+        private static ThemedLabel Create(
+            string text,
+            Func<Color> enabledForeColor,
+            Func<UIColorSet> colors,
+            Font font,
+            ContentAlignment textAlign,
+            AnchorStyles anchor,
+            bool muted,
+            LabelScroll scroll)
+        {
+            ThemedLabel label = new ThemedLabel(enabledForeColor, colors, muted)
             {
                 Text = text ?? "",
-                Font = UIFonts.Small,
+                Font = font,
                 BackColor = Color.Transparent,
-                TextAlign = ContentAlignment.MiddleLeft,
+                TextAlign = textAlign,
                 AutoEllipsis = true,
                 AutoSize = false,
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Anchor = anchor,
                 UseMnemonic = false,
                 // The text is drawn with GDI, as in every other control of the library - the
                 // disabled and the moving text are drawn that way too - whatever the application chose.
                 UseCompatibleTextRendering = false
             };
 
+            // Last: the movement needs the text, the font and the size to be there.
             label.Scroll = scroll;
 
             return label;
