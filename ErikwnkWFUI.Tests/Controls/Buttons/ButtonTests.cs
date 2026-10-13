@@ -405,7 +405,7 @@ public class ButtonTests
     }
 
     [Fact]
-    public void UpdateTooltip_ChangesTheText_AndIgnoresButtonsWithoutOne()
+    public void UpdateTooltip_ChangesTheText_AndGivesAButtonWithoutOneItsFirst()
     {
         using Button withTip = UIStyles.Buttons.CreateStandard("Go", "Old");
         using Button withoutTip = UIStyles.Buttons.CreateStandard("Go");
@@ -417,8 +417,16 @@ public class ButtonTests
         UIStyles.Buttons.UpdateTooltip(withTip, "Neu");
         Assert.Equal("Neu", ButtonToolTipReader.Text(withTip));
 
-        UIStyles.Buttons.UpdateTooltip(withoutTip, "Never shown");
+        // An empty text for a button that has none does nothing; a text gives it a tooltip.
+        UIStyles.Buttons.UpdateTooltip(withoutTip, "");
+        UIStyles.Buttons.UpdateTooltip(withoutTip, "  ");
         Assert.Equal("", ButtonToolTipReader.Text(withoutTip));
+
+        UIStyles.Buttons.UpdateTooltip(withoutTip, "Now shown");
+        Assert.Equal("Now shown", ButtonToolTipReader.Text(withoutTip));
+
+        UIStyles.Buttons.UpdateTooltip(withoutTip, "Changed");
+        Assert.Equal("Changed", ButtonToolTipReader.Text(withoutTip));
 
         UIStyles.Buttons.UpdateTooltip(null!, "Anything");
     }

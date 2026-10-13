@@ -211,8 +211,9 @@ namespace ErikwnkWFUI.Factories
 
         /// <summary>
         /// Changes an already-created button's tooltip text - e.g. to
-        /// re-translate it after a language switch. No-op if the button was
-        /// created without a tooltip in the first place.
+        /// re-translate it after a language switch. A button that was made
+        /// without a tooltip gets one with the first text that is not empty;
+        /// an empty text for a button without one does nothing.
         /// </summary>
         public static void UpdateTooltip(Button button, string tooltip)
         {
@@ -221,7 +222,18 @@ namespace ErikwnkWFUI.Factories
 
             ToolTip toolTip;
             if (!ToolTipsByButton.TryGetValue(button, out toolTip))
+            {
+                if (string.IsNullOrWhiteSpace(tooltip))
+                    return;
+
+                AddToolTip(button, tooltip);
+
+                // A button that shows only a symbol has no other name for a screen reader (see CreateButton).
+                if (button is SymbolButton && string.IsNullOrEmpty(button.AccessibleName))
+                    button.AccessibleName = tooltip;
+
                 return;
+            }
 
             // The accessible name is the tooltip for a symbol button: it follows.
             if (button.AccessibleName == toolTip.GetToolTip(button))

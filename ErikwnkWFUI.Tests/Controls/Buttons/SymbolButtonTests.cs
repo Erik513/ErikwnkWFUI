@@ -799,6 +799,26 @@ public class SymbolButtonTests
         // is named by that caption, not by its tooltip.
         Assert.True(string.IsNullOrEmpty(withoutTip.AccessibleName));
         Assert.True(string.IsNullOrEmpty(text.AccessibleName));
+
+        // A tooltip that comes later names the symbol button too - but not the one with a caption.
+        UIButtonFactory.UpdateTooltip(withoutTip, "Speichern");
+        UIButtonFactory.UpdateTooltip(text, "Speichert die Datei");
+        Assert.Equal("Speichern", withoutTip.AccessibleName);
+        Assert.True(string.IsNullOrEmpty(text.AccessibleName));
+    }
+
+    [Fact]
+    public void ATooltipThatComesLater_IsDisposedWithTheButton()
+    {
+        Button button = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Save);
+        UIButtonFactory.UpdateTooltip(button, "Save");
+        System.Windows.Forms.ToolTip toolTip = ButtonToolTipReader.Find(button)!;
+        bool disposed = false;
+        toolTip.Disposed += (sender, e) => disposed = true;
+
+        button.Dispose();
+
+        Assert.True(disposed);
     }
 
     [Fact]

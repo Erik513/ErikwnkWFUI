@@ -477,8 +477,8 @@ namespace ErikwnkWFUI
 
             /// <summary>
             /// Changes the tooltip text of a button made by this class, for example
-            /// after a language switch. Does nothing for a button created without a
-            /// tooltip.
+            /// after a language switch. A button created without a tooltip gets one with
+            /// the first text that is not empty.
             /// </summary>
             public static void UpdateTooltip(Button button, string tooltip)
             {
