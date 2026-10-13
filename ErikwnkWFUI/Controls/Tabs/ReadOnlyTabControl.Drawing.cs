@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {

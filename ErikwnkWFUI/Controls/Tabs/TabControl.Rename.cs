@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Drawing;
-using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls

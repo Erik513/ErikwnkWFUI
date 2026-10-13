@@ -1,8 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
-using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Styles;
+﻿using System.Windows.Forms;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
@@ -47,7 +43,6 @@ namespace ErikwnkWFUI.Controls
         // the tab control turns into a selection change itself.
         protected override bool ProcessKeyPreview(ref Message m)
         {
-
             if (!_allowSelectingDisabledTabs && m.Msg == WM_KEYDOWN && (ModifierKeys & Keys.Control) != 0)
             {
                 Keys key = (Keys)(int)m.WParam;
