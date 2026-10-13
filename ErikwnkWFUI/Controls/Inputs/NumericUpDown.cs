@@ -104,8 +104,8 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The colors of the arrow fields: their fill at rest, hovered, pressed and disabled, and the arrow on each.
-        /// Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
-        /// <c>UIStyles.NumericUpDowns.CreatePrimary</c> makes one in the accent color.
+        /// Left null, the neutral look of the theme: the gray set of the library on a dark theme, pale gray fields with a dark
+        /// arrow on a light one; <c>UIStyles.NumericUpDowns.CreatePrimary</c> makes one in the accent color.
         /// </summary>
         public UIColorSet Colors
         {
@@ -382,7 +382,10 @@ namespace ErikwnkWFUI.Controls
             if (ContainsFocus && Enabled)
             {
                 // Two pixels, drawn inside the field: the fields are small, a thin frame is hardly seen.
-                using (Pen pen = new Pen(GetFocusColor(colors, fill), Math.Max(2, Px(2))))
+                // (Without a set the frame has the color of the one around the whole control, so the two match.)
+                Color frame = Colors == null ? InputField.GetFrameColor(this, null, true) : GetFocusColor(colors, fill);
+
+                using (Pen pen = new Pen(frame, Math.Max(2, Px(2))))
                 {
                     pen.Alignment = PenAlignment.Inset;
                     g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);

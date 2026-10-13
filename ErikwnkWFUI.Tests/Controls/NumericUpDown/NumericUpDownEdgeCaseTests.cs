@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -176,8 +176,8 @@ public class NumericUpDownEdgeCaseTests : IDisposable
     [Fact]
     public void AHandlerThatDisposesTheControl_DoesNotThrow_AndTheListenersAreGone()
     {
-        int before = Listeners();
         WfuiNumericUpDown box = Show();
+        int whileShown = Listeners();
         Control parent = box.Parent!;
         box.ValueChanged += (sender, e) => box.Dispose();
 
@@ -187,7 +187,10 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         Assert.True(box.IsDisposed);
 
         parent.Dispose();
-        Assert.Equal(before, Listeners());
+
+        // Its listeners (the frame, the colors of the field, the arrows) are gone. (Compared with the count while it was
+        // shown, not with an absolute number: other tests may be showing controls at the same time.)
+        Assert.True(whileShown - Listeners() >= 3, $"{whileShown} while shown, {Listeners()} after");
     }
 
     [Fact]
@@ -328,6 +331,34 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         box.InvokePrivate("ValidateEditText");
 
         Assert.Equal(60, box.Value);
+    }
+
+    [Fact]
+    public void AnEmptyField_KeepsTheValue_AndShowsItWithTheAffixesAgain()
+    {
+        WfuiNumericUpDown box = Show();
+        box.Prefix = "~";
+        box.Suffix = " %";
+
+        box.Text = "";
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(50, box.Value);
+        Assert.Equal("~50 %", box.Text);
+    }
+
+    [Fact]
+    public void OnlyTheAffixesLeft_KeepsTheValue()
+    {
+        WfuiNumericUpDown box = Show();
+        box.Prefix = "~";
+        box.Suffix = " %";
+
+        box.Text = "~ %";
+        box.InvokePrivate("ValidateEditText");
+
+        Assert.Equal(50, box.Value);
+        Assert.Equal("~50 %", box.Text);
     }
 
     [Fact]

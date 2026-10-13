@@ -375,6 +375,35 @@ public class NumericUpDownTests : IDisposable
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void WithoutASet_TheFrameOfTheFieldsAndTheFrameAroundTheControl_AreTheSameColor(bool light)
+    {
+        UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
+
+        try
+        {
+            System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard());
+            box.Focus();
+            Application.DoEvents();
+
+            using Bitmap bitmap = new Bitmap(box.Width, box.Height);
+            box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
+            Control buttons = Buttons(box);
+            int border = (box.Width - box.ClientSize.Width) / 2;
+
+            Color around = bitmap.GetPixel(0, box.Height / 2);
+            Color inField = bitmap.GetPixel(border + buttons.Left + 1, border + buttons.Top + 4);
+
+            Assert.Equal(around.ToArgb(), inField.ToArgb());
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+    }
+
     // ---- prefix and suffix ----
 
     [Fact]
