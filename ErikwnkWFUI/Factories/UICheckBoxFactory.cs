@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 
@@ -11,10 +12,43 @@ namespace ErikwnkWFUI.Factories
             bool isChecked = true,
             UIColorSet colors = null)
         {
+            return Create(text, isChecked, colors);
+        }
+
+        // The Standard one in the current accent - the primary color set.
+        public static CheckBox CreatePrimary(
+            string text = "",
+            bool isChecked = true)
+        {
+            Controls.CheckBox checkBox = Create(text, isChecked, null);
+            checkBox.FollowColors(() => UIColors.PrimarySet);
+
+            return checkBox;
+        }
+
+        public static CheckBox CreateStandardCompact(
+            bool isChecked = true,
+            UIColorSet colors = null)
+        {
+            return CreateCompact(isChecked, colors);
+        }
+
+        // The compact one in the current accent - the primary color set.
+        public static CheckBox CreatePrimaryCompact(
+            bool isChecked = true)
+        {
+            Controls.CheckBox checkBox = CreateCompact(isChecked, null);
+            checkBox.FollowColors(() => UIColors.PrimarySet);
+
+            return checkBox;
+        }
+
+        private static Controls.CheckBox Create(string text, bool isChecked, UIColorSet colors)
+        {
             text = text ?? "";
             Font font = UIFonts.Normal;
 
-            CheckBox checkBox = new Controls.CheckBox
+            Controls.CheckBox checkBox = new Controls.CheckBox
             {
                 Text = text,
                 Checked = isChecked,
@@ -30,41 +64,15 @@ namespace ErikwnkWFUI.Factories
             return checkBox;
         }
 
-        // The Standard one in the current accent - the primary color set.
-        public static CheckBox CreatePrimary(
-            string text = "",
-            bool isChecked = true)
+        // A box without a label: a square of 25 pixels at 96 dpi.
+        private static Controls.CheckBox CreateCompact(bool isChecked, UIColorSet colors)
         {
-            CheckBox checkBox = CreateStandard(text, isChecked);
-            ((Controls.CheckBox)checkBox).FollowColors(() => UIColors.PrimarySet);
+            Controls.CheckBox checkBox = Create("", isChecked, colors);
 
-            return checkBox;
-        }
-
-        public static CheckBox CreateStandardCompact(
-            bool isChecked = true,
-            UIColorSet colors = null)
-        {
-            CheckBox checkBox = CreateStandard(
-                "",
-                isChecked,
-                colors);
-
-            int side = (int)System.Math.Round(25 * checkBox.DeviceDpi / 96.0);
+            int side = (int)Math.Round(25 * checkBox.DeviceDpi / 96.0);
             checkBox.Size = new Size(side, side);
 
             return checkBox;
         }
-
-        // The compact one in the current accent - the primary color set.
-        public static CheckBox CreatePrimaryCompact(
-            bool isChecked = true)
-        {
-            CheckBox checkBox = CreateStandardCompact(isChecked);
-            ((Controls.CheckBox)checkBox).FollowColors(() => UIColors.PrimarySet);
-
-            return checkBox;
-        }
-
     }
 }
