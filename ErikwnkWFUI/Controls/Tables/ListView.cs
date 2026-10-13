@@ -135,9 +135,6 @@ namespace ErikwnkWFUI.Controls
             if (!_rowForeColor.IsSet)
                 ForeColor = RowForeColor;
 
-            if (!_contextMenuSelectionColor.IsSet && ContextMenuStrip is ContextMenuStrip menu)
-                menu.SelectionBackColor = ContextMenuSelectionColor;
-
             Invalidate(true);
         }
 
@@ -149,9 +146,6 @@ namespace ErikwnkWFUI.Controls
             _selectionOverlayColor.SetDefault(() => UIColors.CreateSelectionOverlay(colors().Hover));
             _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
             _contextMenuSelectionColor.SetDefault(() => colors().Hover);
-
-            if (ContextMenuStrip is ContextMenuStrip menu)
-                menu.SelectionBackColor = ContextMenuSelectionColor;
 
             Invalidate();
         }
@@ -247,15 +241,7 @@ namespace ErikwnkWFUI.Controls
         public Color ContextMenuSelectionColor
         {
             get { return _contextMenuSelectionColor.Value; }
-            set
-            {
-                _contextMenuSelectionColor.Set(value);
-
-                if (ContextMenuStrip is ContextMenuStrip menu)
-                {
-                    menu.SelectionBackColor = value;
-                }
-            }
+            set { _contextMenuSelectionColor.Set(value); }
         }
 
         /// <summary>Background color of the column header row.</summary>
@@ -897,9 +883,10 @@ namespace ErikwnkWFUI.Controls
             // strip nothing ever used.
             var menu = new ContextMenuStrip
             {
-                ShowImageMargin = false,
-                SelectionBackColor = ContextMenuSelectionColor
+                ShowImageMargin = false
             };
+
+            menu.FollowSelectionBackColor(() => ContextMenuSelectionColor);
 
             _copySelectionItem = new ToolStripMenuItem(
                 UIStrings.Get("ListView.CopySelection"), null, (sender, e) => CopySelection());

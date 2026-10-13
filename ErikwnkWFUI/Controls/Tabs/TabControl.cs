@@ -276,15 +276,7 @@ namespace ErikwnkWFUI.Controls
         public Color ContextMenuSelectionColor
         {
             get => _contextMenuSelectionColor.Value;
-            set
-            {
-                _contextMenuSelectionColor.Set(value);
-
-                if (_builtInMenu != null)
-                {
-                    _builtInMenu.SelectionBackColor = value;
-                }
-            }
+            set { _contextMenuSelectionColor.Set(value); }
         }
 
         public TabControl()
@@ -433,9 +425,10 @@ namespace ErikwnkWFUI.Controls
         {
             ContextMenuStrip menu = new ContextMenuStrip
             {
-                ShowImageMargin = false,
-                SelectionBackColor = ContextMenuSelectionColor
+                ShowImageMargin = false
             };
+
+            menu.FollowSelectionBackColor(() => ContextMenuSelectionColor);
 
             _addTabItem = new ToolStripMenuItem(UIStrings.Get("TabControl.AddTab"), null, (sender, e) => AddTabFromMenu());
             _renameTabItem = new ToolStripMenuItem(UIStrings.Get("TabControl.RenameTab"), null, (sender, e) => RenameTabFromMenu());

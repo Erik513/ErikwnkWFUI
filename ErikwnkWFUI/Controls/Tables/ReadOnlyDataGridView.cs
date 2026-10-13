@@ -72,14 +72,8 @@ namespace ErikwnkWFUI.Controls
         private DataGridViewColumn _enumerationColumn;
         private readonly ToolTip _copyConfirmationToolTip = new ToolTip();
 
-        // Matches Controls.ContextMenuStrip's own CreateStandard default.
-        // BuildContextMenu reads this once, when it builds the menu
-        // in the constructor. The property setter also pushes a later
-        // change straight into whichever menu is currently assigned (found
-        // via the inherited ContextMenuStrip property) - needed because
-        // UIDataGridViewFactory.CreateReadOnlyPrimary sets this through an
-        // object initializer, which only runs after the constructor already
-        // built the menu - same pattern as ListView.ContextMenuSelectionColor.
+        // Matches Controls.ContextMenuStrip's own CreateStandard default. The menu that is built in the constructor takes
+        // its highlight from here each time it is painted (see BuildContextMenu), so a later change is seen by it.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
         // Same shape as ListView's own menu: "Copy selection" and "Copy all"
         // are submenu parents, each holding the plain action and "As table"
@@ -102,15 +96,7 @@ namespace ErikwnkWFUI.Controls
         public Color ContextMenuSelectionColor
         {
             get { return _contextMenuSelectionColor.Value; }
-            set
-            {
-                _contextMenuSelectionColor.Set(value);
-
-                if (ContextMenuStrip is ContextMenuStrip menu)
-                {
-                    menu.SelectionBackColor = value;
-                }
-            }
+            set { _contextMenuSelectionColor.Set(value); }
         }
 
         /// <summary>Background color of the column header row.</summary>
@@ -951,9 +937,10 @@ namespace ErikwnkWFUI.Controls
         {
             ContextMenuStrip menu = new ContextMenuStrip
             {
-                ShowImageMargin = false,
-                SelectionBackColor = ContextMenuSelectionColor
+                ShowImageMargin = false
             };
+
+            menu.FollowSelectionBackColor(() => ContextMenuSelectionColor);
 
             _contextMenuCopySelectionItem = new ToolStripMenuItem(
                 UIStrings.Get("DataGridView.ContextMenuCopySelection"), null,
@@ -1262,9 +1249,6 @@ namespace ErikwnkWFUI.Controls
 
             _followedGridColor = UIColors.BorderMedium;
 
-            if (!_contextMenuSelectionColor.IsSet && ContextMenuStrip is ContextMenuStrip menu)
-                menu.SelectionBackColor = ContextMenuSelectionColor;
-
             ApplyStyles();
 
             foreach (DataGridViewColumn column in Columns)
@@ -1281,9 +1265,6 @@ namespace ErikwnkWFUI.Controls
             _selectionBackColor.SetDefault(() => colors().Hover);
             _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
             _contextMenuSelectionColor.SetDefault(() => colors().Hover);
-
-            if (ContextMenuStrip is ContextMenuStrip menu)
-                menu.SelectionBackColor = ContextMenuSelectionColor;
 
             ApplyStyles();
         }

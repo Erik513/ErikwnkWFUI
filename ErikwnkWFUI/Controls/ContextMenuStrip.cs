@@ -94,6 +94,15 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The highlight follows a color that is asked for again each time (the owner control's own, which follows its set
+        // and the theme): a menu that is built into a list view, a grid or a tab control takes it from there instead of
+        // being handed a color at every change.
+        internal void FollowSelectionBackColor(Func<Color> source)
+        {
+            _selectionBackColor.SetDefault(source);
+            Invalidate();
+        }
+
         /// <summary>
         /// The frame of the menu and the border of a check mark's box. Defaults to the neutral
         /// outline (3:1 against the menu, as on the other controls), whatever <see cref="Colors"/>
