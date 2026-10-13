@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
@@ -695,23 +696,41 @@ namespace ErikwnkWFUI.Factories
                 if (Width <= 0 || Height <= 0)
                     return _inkShift;
 
-                using (Bitmap bitmap = new Bitmap(Width, Height))
-                using (Graphics g = Graphics.FromImage(bitmap))
+                using (Bitmap bitmap = new Bitmap(Width, Height, PixelFormat.Format32bppArgb))
                 {
-                    g.Clear(Color.Black);
-                    TextRenderer.DrawText(g, Text, Font, new Rectangle(0, 0, Width, Height), Color.White, SymbolFlags);
+                    using (Graphics g = Graphics.FromImage(bitmap))
+                    {
+                        g.Clear(Color.Black);
+                        TextRenderer.DrawText(g, Text, Font, new Rectangle(0, 0, Width, Height), Color.White, SymbolFlags);
+                    }
+
+                    // The pixels are read in one piece (GetPixel one by one is slow, and this runs again whenever the
+                    // text, the font or the size changes).
+                    BitmapData data = bitmap.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                    byte[] pixels = new byte[data.Stride * Height];
+
+                    try
+                    {
+                        System.Runtime.InteropServices.Marshal.Copy(data.Scan0, pixels, 0, pixels.Length);
+                    }
+                    finally
+                    {
+                        bitmap.UnlockBits(data);
+                    }
 
                     int minX = int.MaxValue, maxX = -1, minY = int.MaxValue, maxY = -1;
 
                     for (int y = 0; y < Height; y++)
                     {
+                        int row = y * data.Stride;
+
                         for (int x = 0; x < Width; x++)
                         {
-                            Color pixel = bitmap.GetPixel(x, y);
+                            int at = row + x * 4; // blue, green, red, alpha
 
                             // All three channels: ClearType colors the edges of a glyph
                             // differently per channel, one alone would tilt the result.
-                            if (pixel.R + pixel.G + pixel.B <= InkThreshold * 3)
+                            if (pixels[at] + pixels[at + 1] + pixels[at + 2] <= InkThreshold * 3)
                                 continue;
 
                             minX = System.Math.Min(minX, x);
