@@ -303,16 +303,21 @@ namespace ErikwnkWFUI.Controls
             get { return _rowHeightImageList?.ImageSize.Height ?? 0; }
             set
             {
+                ImageList previous = _rowHeightImageList;
+
                 if (value <= 0)
                 {
                     _rowHeightImageList = null;
                     SmallImageList = null;
-                    RequestFixedSize();
-                    return;
+                }
+                else
+                {
+                    _rowHeightImageList = new ImageList { ImageSize = new Size(1, value) };
+                    SmallImageList = _rowHeightImageList;
                 }
 
-                _rowHeightImageList = new ImageList { ImageSize = new Size(1, value) };
-                SmallImageList = _rowHeightImageList;
+                // (A list of images holds a native handle: the one that is replaced is given back.)
+                previous?.Dispose();
                 RequestFixedSize();
             }
         }
@@ -401,6 +406,8 @@ namespace ErikwnkWFUI.Controls
                 _rowRangeDragPollTimer.Stop();
                 _rowRangeDragPollTimer.Dispose();
                 _outsideClickDeselectFilter.Stop();
+                _rowHeightImageList?.Dispose();
+                _rowHeightImageList = null;
             }
 
             base.Dispose(disposing);
