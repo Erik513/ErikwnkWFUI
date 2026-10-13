@@ -1503,7 +1503,7 @@ namespace ErikwnkWFUI.Controls
             if ((MouseButtons & MouseButtons.Left) == 0)
             {
                 _isRowRangeDragging = false;
-                    _rowRangeDragPollTimer.Stop();
+                _rowRangeDragPollTimer.Stop();
                 return;
             }
 
