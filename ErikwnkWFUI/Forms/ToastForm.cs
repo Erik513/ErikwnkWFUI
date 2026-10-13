@@ -78,34 +78,22 @@ namespace ErikwnkWFUI.Forms
 
         private int _dpi = 96;
 
-
         /// <summary>How many toasts wait for one window that is not in front; the oldest are dropped.</summary>
         public const int MaxPendingToasts = 3;
-
 
         /// <summary>How long a toast waits for its window to come to the front before it is dropped. One minute by default.</summary>
         public static TimeSpan PendingLifetime { get; set; } = TimeSpan.FromSeconds(60);
 
-
         private static ToastForm _currentToast;
-
         private Form _ownerForm;
 
-
         private Timer _closeTimer;
-
         private Label _titleLabel;
-
         private Label _messageLabel;
-
         private Label _iconLabel;
-
         private Font _iconFont;
-
         private InfoPopupSection _content = new InfoPopupSection(null, null);
-
         private Panel _contentPanel;
-
 
         public ToastForm()
         {
@@ -114,7 +102,6 @@ namespace ErikwnkWFUI.Forms
             CreateTimer();
             ApplyDpi(DeviceDpi);
         }
-
 
         /// <summary>Shows a toast in <paramref name="owner"/>, at <paramref name="position"/>, closing itself after <paramref name="duration"/>. If <paramref name="owner"/> is not in front, the toast waits until it is.</summary>
         /// <param name="message">The text of the toast.</param>
@@ -139,7 +126,6 @@ namespace ErikwnkWFUI.Forms
         {
             ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay, icon, symbol, position);
         }
-
 
         /// <summary>Like the call with a message, but with a title above the message and, if wanted, own colors for each (<see cref="InfoPopupSection.HeaderColor"/> for the title, <see cref="InfoPopupSection.TextColor"/> for the message). A part left empty is not shown; with neither there is no toast.</summary>
         /// <param name="content">The title (<see cref="InfoPopupSection.Header"/>) and the message (<see cref="InfoPopupSection.Text"/>).</param>
@@ -191,7 +177,6 @@ namespace ErikwnkWFUI.Forms
             Present(request, owner);
         }
 
-
         /// <summary>
         /// The colors of the toast: its background is the set's basic color and the text white
         /// or black. Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
@@ -207,9 +192,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-
         private UIColorSet _colors;
-
 
         // The background (kept readable through the transparency) and the text on it.
         private void ApplyColors()
@@ -232,7 +215,6 @@ namespace ErikwnkWFUI.Forms
                 _messageLabel.ForeColor = _content.TextColor.IsEmpty ? text : _content.TextColor;
         }
 
-
         /// <summary>The symbol at the left of the toast; none by default, then the text has the whole width.</summary>
         public ToastIcon Symbol
         {
@@ -250,9 +232,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-
         private ToastIcon _symbol = ToastIcon.None;
-
 
         /// <summary>
         /// Any symbol instead of <see cref="Symbol"/>, one of <c>UIStyles.Symbols</c> (say
@@ -275,16 +255,13 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-
         private string _customSymbol;
-
 
         // What is drawn at the left: the symbol of one's own, or that of the kind of message.
         private string GetShownGlyph()
         {
             return string.IsNullOrWhiteSpace(_customSymbol) ? GetGlyph(_symbol) : _customSymbol;
         }
-
 
         private static string GetGlyph(ToastIcon icon)
         {
@@ -297,7 +274,6 @@ namespace ErikwnkWFUI.Forms
                 default: return "";
             }
         }
-
 
         // The glyph, in the font that has it (some symbols come from the Windows icon font).
         private void ApplyIcon()
@@ -324,7 +300,6 @@ namespace ErikwnkWFUI.Forms
                 previous.Dispose();
         }
 
-
         // The text starts after the symbol, or near the edge without one.
         private void ApplyTextPadding()
         {
@@ -333,7 +308,6 @@ namespace ErikwnkWFUI.Forms
             _messageLabel.Padding = new Padding(Scaled(left, _dpi), 0, Scaled(TextRightPadding96, _dpi), 0);
             _titleLabel.Padding = _messageLabel.Padding;
         }
-
 
         /// <summary>How long the toast stays before it closes itself.</summary>
         public PopupDuration Duration
@@ -348,16 +322,13 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-
         private PopupDuration _duration = PopupDuration.Medium;
-
 
         // The background is kept readable through the transparency.
         protected override void OnTransparencyChanged()
         {
             ApplyColors();
         }
-
 
         protected override void Dispose(bool disposing)
         {
@@ -384,7 +355,6 @@ namespace ErikwnkWFUI.Forms
             base.Dispose(disposing);
         }
 
-
         private void CreateControls()
         {
             _contentPanel = CreateContentPanel();
@@ -407,7 +377,6 @@ namespace ErikwnkWFUI.Forms
             ForEachControl(_contentPanel, control => control.Click += OnToastClick);
         }
 
-
         private static void ForEachControl(Control parent, Action<Control> action)
         {
             action(parent);
@@ -415,7 +384,6 @@ namespace ErikwnkWFUI.Forms
             foreach (Control child in parent.Controls)
                 ForEachControl(child, action);
         }
-
 
         private Panel CreateContentPanel()
         {
@@ -426,7 +394,6 @@ namespace ErikwnkWFUI.Forms
                 BackColor = Color.Transparent
             };
         }
-
 
         private Label CreateIconLabel()
         {
@@ -441,7 +408,6 @@ namespace ErikwnkWFUI.Forms
                 Visible = false
             };
         }
-
 
         private Label CreateTitleLabel()
         {
@@ -460,7 +426,6 @@ namespace ErikwnkWFUI.Forms
             };
         }
 
-
         private Label CreateMessageLabel()
         {
             return new Label
@@ -477,14 +442,12 @@ namespace ErikwnkWFUI.Forms
             };
         }
 
-
         private void CreateTimer()
         {
             _closeTimer = new Timer();
             _closeTimer.Interval = _duration.ToToastMilliseconds();
             _closeTimer.Tick += OnCloseTimerTick;
         }
-
 
         private void SetContent(InfoPopupSection content)
         {
@@ -497,7 +460,6 @@ namespace ErikwnkWFUI.Forms
             FitToMessage();
         }
 
-
         private static void CloseCurrentToast()
         {
             if (_currentToast == null || _currentToast.IsDisposed)
@@ -507,14 +469,11 @@ namespace ErikwnkWFUI.Forms
             _currentToast = null;
         }
 
-
         // How often a toast whose time is up looks whether the mouse has left it.
         private const int HoverCheckMilliseconds = 200;
 
-
         // Where the mouse is, in screen coordinates. Replaceable so a test can put it somewhere.
         internal static Func<Point> CursorPosition = () => Cursor.Position;
-
 
         // The time is up. A toast the mouse is on stays (so a long message can be read at ease)
         // and closes when the mouse has left it.
@@ -533,12 +492,10 @@ namespace ErikwnkWFUI.Forms
             Dismiss();
         }
 
-
         private void OnToastClick(object sender, EventArgs e)
         {
             Dismiss();
         }
-
 
         // Closed by its own time or by a click (not replaced by a newer toast): the next
         // waiting one is due.

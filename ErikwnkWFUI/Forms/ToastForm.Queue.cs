@@ -36,14 +36,11 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-
         private static readonly Dictionary<Form, List<ToastRequest>> _pending = new Dictionary<Form, List<ToastRequest>>();
-
 
         // The toasts that wait for their delay; one timer each, gone when it has fired. Nothing here reads the list: the
         // tests use it to reach those timers (to let one fire, or to see that none is left).
         private static readonly List<Timer> _scheduled = new List<Timer>();
-
 
         // Shows the toast, or lets it wait for its delay or for its window.
         private static void Present(ToastRequest request, Form owner)
@@ -60,7 +57,6 @@ namespace ErikwnkWFUI.Forms
 
             ShowOrWait(request, owner);
         }
-
 
         private static void Schedule(ToastRequest request, Form owner)
         {
@@ -80,7 +76,6 @@ namespace ErikwnkWFUI.Forms
             timer.Start();
         }
 
-
         // Whether the window is in front is looked at now, when the toast is due.
         private static void ShowOrWait(ToastRequest request, Form owner)
         {
@@ -89,7 +84,6 @@ namespace ErikwnkWFUI.Forms
             else
                 Enqueue(request, owner);
         }
-
 
         private static void ShowNow(ToastRequest request, Form owner)
         {
@@ -117,7 +111,6 @@ namespace ErikwnkWFUI.Forms
             toast.Follower.Attach(toast, owner);
         }
 
-
         // ---- toasts that wait for their window ----
 
         private static void Enqueue(ToastRequest request, Form owner)
@@ -143,7 +136,6 @@ namespace ErikwnkWFUI.Forms
                 queue.RemoveAt(0);
         }
 
-
         private static void Forget(Form owner)
         {
             if (!_pending.Remove(owner))
@@ -153,18 +145,15 @@ namespace ErikwnkWFUI.Forms
             owner.FormClosed -= OnOwnerClosed;
         }
 
-
         private static void OnOwnerActivated(object sender, EventArgs e)
         {
             ShowNextPending((Form)sender);
         }
 
-
         private static void OnOwnerClosed(object sender, FormClosedEventArgs e)
         {
             Forget((Form)sender);
         }
-
 
         // Shows the oldest toast that waits for <paramref name="owner"/> and is not out of date;
         // the next one follows when this one has closed.

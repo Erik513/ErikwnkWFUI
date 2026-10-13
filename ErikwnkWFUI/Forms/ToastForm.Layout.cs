@@ -14,7 +14,6 @@ namespace ErikwnkWFUI.Forms
         // The scaling of the screen a window is on. Replaceable so a test can give another one.
         internal static Func<Form, int> OwnerDpi = owner => owner.DeviceDpi;
 
-
         // The size of the toast and the places inside it follow the screen's scaling: a toast on a
         // screen at 150% is 1.5 times as large, so its text keeps its room. The window it is
         // shown for says which screen that is.
@@ -31,7 +30,6 @@ namespace ErikwnkWFUI.Forms
             ApplyTextPadding();
             FitToMessage();
         }
-
 
         // The toast is as wide as always and as high as its message needs, from one line (the
         // usual height) to a few lines; what is more than that ends in an ellipsis. The symbol
@@ -71,12 +69,10 @@ namespace ErikwnkWFUI.Forms
             _iconLabel.Location = new Point(Scaled(IconLeft96, _dpi), (height - _iconLabel.Height) / 2);
         }
 
-
         private static int Scaled(int value96, int dpi)
         {
             return (int)Math.Round(value96 * dpi / 96.0);
         }
-
 
         // The part of the window the toast is placed in: its inside (without the title bar and
         // the frame), as far as the screen shows it.
@@ -87,7 +83,6 @@ namespace ErikwnkWFUI.Forms
 
             return visible.IsEmpty ? client : visible;
         }
-
 
         // The top left of a toast of this size in the area. The edges and corners keep
         // <paramref name="edgeDistance"/> from the edge; BelowCenter and AboveCenter sit at three
