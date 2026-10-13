@@ -60,34 +60,59 @@ namespace ErikwnkWFUI.Forms
     /// supported.
     /// </para>
     /// </remarks>
+    // In three files: this one (the content, showing and placing), InfoPopupForm.Layout.cs (measuring and painting) and
+    // InfoPopupForm.Attach.cs (the popup as the tooltip of controls).
     public partial class InfoPopupForm : PopupFormBase
     {
         private const int MaxTextWidth96 = 260;
+
         private const int Padding96 = 20;
+
         private const int FixedPadding96 = 4;
+
         private const int BlockGap96 = 8;
+
         private const int HeaderGap96 = 3;
+
         private const int ScreenMargin = PopupSupport.ScreenMargin;
+
         private const int AnchorGap96 = 6;
+
         private const int MouseOffset96 = 12;
+
         private const int AnchorOffsetX = 8;
+
         private const int AnchorOffsetY = -10;
+
 
         private const TextFormatFlags MeasureFlags =
             TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding | TextFormatFlags.Left;
 
+
         private Control _lastAnchor;
+
         private Timer _showDelayTimer;
+
         private Control _pendingAnchor;
+
         private Point _pendingMouseScreenPosition;
+
         private Func<InfoPopupSection[]> _pendingContent;
+
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
+
         private UIColorSet _colors;
+
         private Func<UIColorSet> _colorsSource;
+
         private PopupDuration _duration = PopupDuration.Medium;
+
         private PopupDelay _delay = PopupDelay.Medium;
+
         private Timer _hideTimer;
+
         private Size _fixedSize = Size.Empty;
+
 
         public InfoPopupForm()
         {
@@ -113,6 +138,7 @@ namespace ErikwnkWFUI.Forms
             });
         }
 
+
         /// <summary>
         /// How long <see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/> waits before it shows the popup: not at all,
         /// 0.2, 0.4 (the default) or 0.8 seconds.
@@ -128,6 +154,7 @@ namespace ErikwnkWFUI.Forms
                     _showDelayTimer.Interval = value.ToMilliseconds();
             }
         }
+
 
         /// <summary>
         /// How long the popup stays after it was shown (or moved) before it hides itself: 3, 5
@@ -146,10 +173,12 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+
         protected override void OnTransparencyChanged()
         {
             BackColor = GetBackColor();
         }
+
 
         /// <summary>
         /// The colors of the popup: its background is the set's basic color. Left null, the
@@ -172,6 +201,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+
         // A set that is asked for again each time (the primary set, which follows the accent).
         internal void FollowColors(Func<UIColorSet> source)
         {
@@ -184,6 +214,7 @@ namespace ErikwnkWFUI.Forms
             BackColor = GetBackColor();
             Invalidate();
         }
+
 
         /// <summary>
         /// The client size the popup keeps whatever its content, with the content centered; for
@@ -199,6 +230,7 @@ namespace ErikwnkWFUI.Forms
                 UpdateSize();
             }
         }
+
 
         // ---- the content ----
 
@@ -217,11 +249,13 @@ namespace ErikwnkWFUI.Forms
             UpdateSize();
         }
 
+
         /// <summary>Sets a single text, without a header.</summary>
         public void SetContent(string text)
         {
             SetContent(new InfoPopupSection(null, text));
         }
+
 
         /// <summary>Sets a header with its text, each in its own color or, left empty, the automatic one.</summary>
         public void SetContent(string header, string text, Color headerColor = default(Color), Color textColor = default(Color))
@@ -229,10 +263,12 @@ namespace ErikwnkWFUI.Forms
             SetContent(new InfoPopupSection(header, text) { HeaderColor = headerColor, TextColor = textColor });
         }
 
+
         private bool HasContent
         {
             get { return _sections.Length > 0; }
         }
+
 
         // ---- showing it ----
 
@@ -245,6 +281,7 @@ namespace ErikwnkWFUI.Forms
             Place(anchor, GetLocationNextTo(anchor));
         }
 
+
         /// <summary>Shows (or moves) the popup near <paramref name="mouseScreenPosition"/> - typical use is a MouseMove handler.</summary>
         public void ShowAtMouse(Control anchor, Point mouseScreenPosition)
         {
@@ -253,6 +290,7 @@ namespace ErikwnkWFUI.Forms
 
             Place(anchor, GetLocationNearMouse(anchor, mouseScreenPosition));
         }
+
 
         /// <summary>
         /// Shows (or moves) the popup centered horizontally on <paramref name="anchorLocalX"/> (a pixel x
@@ -275,6 +313,7 @@ namespace ErikwnkWFUI.Forms
             Place(anchor, new Point(x, y));
         }
 
+
         /// <summary>
         /// Like <see cref="ShowAtMouse"/> with the given content, but after the <see cref="Delay"/>
         /// (at once for <see cref="PopupDelay.Instant"/>). For hover tooltips: passing the mouse
@@ -285,6 +324,7 @@ namespace ErikwnkWFUI.Forms
         {
             ShowAtMouseDelayed(anchor, mouseScreenPosition, () => sections);
         }
+
 
         // The content is asked for when the popup shows, not when the show is asked for.
         private void ShowAtMouseDelayed(Control anchor, Point mouseScreenPosition, Func<InfoPopupSection[]> content)
@@ -309,6 +349,7 @@ namespace ErikwnkWFUI.Forms
             _showDelayTimer.Start();
         }
 
+
         /// <summary>Cancels a show scheduled by <see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/> that has not happened yet - does not hide the popup if it is already showing.</summary>
         public void CancelPendingShow()
         {
@@ -318,6 +359,7 @@ namespace ErikwnkWFUI.Forms
             _pendingAnchor = null;
             _pendingContent = null;
         }
+
 
         private void OnShowDelayTimerTick(object sender, EventArgs e)
         {
@@ -332,6 +374,7 @@ namespace ErikwnkWFUI.Forms
             SetContent(content());
             ShowAtMouse(anchor, _pendingMouseScreenPosition);
         }
+
 
         // Nothing to show without an anchor or without content; a popup that is up goes away
         // when its content is taken.
@@ -349,6 +392,7 @@ namespace ErikwnkWFUI.Forms
 
             return true;
         }
+
 
         private void Place(Control anchor, Point location)
         {
@@ -379,6 +423,7 @@ namespace ErikwnkWFUI.Forms
             _hideTimer.Start();
         }
 
+
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -391,11 +436,13 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+
         private Point GetLocationNextTo(Control anchor)
         {
             return anchor.PointToScreen(
                 new Point(anchor.Width + AnchorOffsetX, -Height + anchor.Height + AnchorOffsetY));
         }
+
 
         // Right and below the mouse, on the other side of it where that does not fit.
         private Point GetLocationNearMouse(Control anchor, Point mouseScreenPosition)
@@ -413,6 +460,7 @@ namespace ErikwnkWFUI.Forms
             return result;
         }
 
+
         // ---- colors ----
 
         private UIColorSet GetColors()
@@ -420,181 +468,25 @@ namespace ErikwnkWFUI.Forms
             return Colors ?? UIStyles.Colors.Sets.Gray;
         }
 
+
         // The automatic text color and the background, worked out for both popups in PopupSupport.
         private Color GetForeColor()
         {
             return PopupSupport.GetTextColor(GetColors());
         }
 
+
         private Color GetBackColor()
         {
             return PopupSupport.GetBackground(GetColors(), Opacity);
         }
 
-        // ---- measuring and painting ----
-
-        private int Scale(int value96)
-        {
-            return (int)Math.Round(value96 * DeviceDpi / 96.0);
-        }
-
-        private bool IsFixed
-        {
-            get { return !_fixedSize.IsEmpty; }
-        }
-
-        // The width the text may take: the maximum width, or in the fixed size what is left.
-        private int GetTextWidth()
-        {
-            return IsFixed
-                ? Math.Max(1, _fixedSize.Width - 2 * Scale(FixedPadding96))
-                : Scale(MaxTextWidth96);
-        }
-
-        // The size of one block's header and text, wrapped at the text width.
-        private void MeasureBlock(InfoPopupSection section, int textWidth, out Size header, out Size text)
-        {
-            header = Size.Empty;
-            text = Size.Empty;
-
-            if (section.Header != null)
-                header = TextRenderer.MeasureText(section.Header, UIFonts.Title, new Size(textWidth, int.MaxValue), MeasureFlags);
-
-            if (section.Text != null)
-                text = TextRenderer.MeasureText(section.Text, UIFonts.Normal, new Size(textWidth, int.MaxValue), MeasureFlags);
-        }
-
-        // Where each block's header and text lie, relative to the content, and the size of all of it. Measured when the
-        // content, the size mode or the screen's scaling changes - not for every paint.
-        private struct BlockLayout
-        {
-            public Rectangle Header;
-            public Rectangle Text;
-        }
-
-        private BlockLayout[] _layout = new BlockLayout[0];
-        private Size _contentSize;
-        private int _layoutDpi;
-
-        private void MeasureLayout()
-        {
-            int textWidth = GetTextWidth();
-            BlockLayout[] blocks = new BlockLayout[_sections.Length];
-            int width = 0;
-            int y = 0;
-
-            for (int i = 0; i < _sections.Length; i++)
-            {
-                Size header;
-                Size text;
-                MeasureBlock(_sections[i], textWidth, out header, out text);
-
-                if (i > 0)
-                    y += Scale(BlockGap96);
-
-                if (header.Height > 0)
-                {
-                    blocks[i].Header = new Rectangle(0, y, textWidth, header.Height);
-                    y += header.Height;
-                }
-
-                if (header.Height > 0 && text.Height > 0)
-                    y += Scale(HeaderGap96);
-
-                if (text.Height > 0)
-                {
-                    blocks[i].Text = new Rectangle(0, y, textWidth, text.Height);
-                    y += text.Height;
-                }
-
-                width = Math.Max(width, Math.Max(header.Width, text.Width));
-            }
-
-            _layout = blocks;
-            _contentSize = new Size(width, y);
-            _layoutDpi = DeviceDpi;
-        }
-
-        // A borderless top-level form cannot go below the system's minimum tracking size
-        // (about 136x39) unless MinimumSize is set: it is locked to the wanted size.
-        private void UpdateSize()
-        {
-            // A form that is gone (disposed with its owner) cannot be resized any more.
-            if (IsDisposed)
-                return;
-
-            MeasureLayout();
-
-            Size client;
-
-            if (IsFixed)
-            {
-                client = _fixedSize;
-            }
-            else
-            {
-                int padding = Scale(Padding96);
-                client = new Size(_contentSize.Width + 2 * padding, _contentSize.Height + 2 * padding);
-            }
-
-            MinimumSize = Size.Empty;
-            MaximumSize = Size.Empty;
-            ClientSize = client;
-            MinimumSize = Size;
-            MaximumSize = Size;
-
-            // A popup that is up and changes size must still fit inside the window.
-            if (Visible && _lastAnchor != null && !_lastAnchor.IsDisposed)
-                Location = PopupSupport.KeepInside(Location, Size, PopupSupport.GetPlacementArea(_lastAnchor), Screen.FromControl(_lastAnchor).WorkingArea);
-
-            ApplyRoundedCorners();
-            Invalidate();
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-
-            if (!HasContent)
-                return;
-
-            // The window moved to a screen with another scaling: measured again.
-            if (_layoutDpi != DeviceDpi)
-                MeasureLayout();
-
-            int padding = IsFixed ? Scale(FixedPadding96) : Scale(Padding96);
-
-            // In the fixed size the content sits in the middle, otherwise at the padding.
-            int x = padding;
-            int y = IsFixed ? Math.Max(0, (ClientSize.Height - _contentSize.Height) / 2) : padding;
-
-            Color autoColor = GetForeColor();
-            TextFormatFlags align = IsFixed ? TextFormatFlags.HorizontalCenter : TextFormatFlags.Left;
-            TextFormatFlags flags = (MeasureFlags & ~TextFormatFlags.Left) | align;
-
-            for (int i = 0; i < _sections.Length; i++)
-            {
-                InfoPopupSection section = _sections[i];
-                BlockLayout block = _layout[i];
-
-                if (!block.Header.IsEmpty)
-                {
-                    Rectangle header = new Rectangle(block.Header.X + x, block.Header.Y + y, block.Header.Width, block.Header.Height);
-                    TextRenderer.DrawText(e.Graphics, section.Header, UIFonts.Title, header, section.HeaderColor.IsEmpty ? autoColor : section.HeaderColor, flags);
-                }
-
-                if (!block.Text.IsEmpty)
-                {
-                    Rectangle text = new Rectangle(block.Text.X + x, block.Text.Y + y, block.Text.Width, block.Text.Height);
-                    TextRenderer.DrawText(e.Graphics, section.Text, UIFonts.Normal, text, section.TextColor.IsEmpty ? autoColor : section.TextColor, flags);
-                }
-            }
-        }
 
         protected override int CornerPreference
         {
             get { return IsFixed ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND; }
         }
+
 
         protected override void Dispose(bool disposing)
         {
