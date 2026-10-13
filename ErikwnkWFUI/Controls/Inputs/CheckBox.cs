@@ -258,15 +258,17 @@ namespace ErikwnkWFUI.Controls
             // onto the control. The text does not: ClearType colors its pixels for the real
             // screen, and through an intermediate bitmap it came out soft and fringed. So
             // the label is drawn last, straight onto the control's own surface.
+            // The color of the page behind the box is looked for once, not for every part.
+            Color parentBackColor = GetParentBackColor();
             Bitmap buffer = GetBuffer();
 
             using (Graphics g = Graphics.FromImage(buffer))
-                PaintShapes(g);
+                PaintShapes(g, parentBackColor);
 
             e.Graphics.DrawImageUnscaled(buffer, 0, 0);
 
-            PaintText(e.Graphics);
-            PaintFocus(e.Graphics);
+            PaintText(e.Graphics, parentBackColor);
+            PaintFocus(e.Graphics, parentBackColor);
 
             // No base.OnPaint: the native drawing must not run (see the class comment).
         }
@@ -313,23 +315,25 @@ namespace ErikwnkWFUI.Controls
         // than the outline in the dark theme).
         internal Color BorderColor
         {
-            get
-            {
-                if (!Enabled)
-                    return UIColors.DisabledGray;
+            get { return GetBorderColor(GetParentBackColor()); }
+        }
 
-                bool isActive = _isHot || _isPressed;
+        private Color GetBorderColor(Color parentBackColor)
+        {
+            if (!Enabled)
+                return UIColors.DisabledGray;
 
-                if (!isActive || CheckState != CheckState.Unchecked)
-                    return OutlineColor;
+            bool isActive = _isHot || _isPressed;
 
-                UIColorSet colors = GetColors();
+            if (!isActive || CheckState != CheckState.Unchecked)
+                return UIColors.GetOutlineColor(parentBackColor);
 
-                return UIColors.EnsureContrast(
-                    _isPressed ? colors.Pressed : colors.Hover,
-                    GetParentBackColor(),
-                    _isPressed ? 6.0 : 4.5);
-            }
+            UIColorSet colors = GetColors();
+
+            return UIColors.EnsureContrast(
+                _isPressed ? colors.Pressed : colors.Hover,
+                parentBackColor,
+                _isPressed ? 6.0 : 4.5);
         }
 
         private Color GetParentBackColor()
@@ -343,9 +347,9 @@ namespace ErikwnkWFUI.Controls
             return UIColors.BackgroundMedium;
         }
 
-        private void PaintShapes(Graphics g)
+        private void PaintShapes(Graphics g, Color parentBackColor)
         {
-            using (SolidBrush eraseBrush = new SolidBrush(GetParentBackColor()))
+            using (SolidBrush eraseBrush = new SolidBrush(parentBackColor))
                 g.FillRectangle(eraseBrush, new Rectangle(0, 0, Width, Height));
 
             g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -392,7 +396,7 @@ namespace ErikwnkWFUI.Controls
                 markColor = colors.BasicText;
             }
 
-            Color borderColor = BorderColor;
+            Color borderColor = GetBorderColor(parentBackColor);
 
             using (GraphicsPath boxPath = CreateRoundedRectanglePath(boxRect, metrics.Scale(3)))
             {
@@ -431,7 +435,7 @@ namespace ErikwnkWFUI.Controls
             return flags;
         }
 
-        private void PaintText(Graphics g)
+        private void PaintText(Graphics g, Color parentBackColor)
         {
             if (string.IsNullOrEmpty(Text))
                 return;
@@ -442,7 +446,6 @@ namespace ErikwnkWFUI.Controls
             // Disabled text is the contrasting color blended toward the background, as on
             // buttons: the fixed DisabledGray of the box is too faint for text on the
             // light theme.
-            Color parentBackColor = GetParentBackColor();
             Color textColor = Enabled
                 ? UIColors.TextPrimary
                 : UIColors.BlendToward(UIColors.GetContrastingForeColor(parentBackColor), parentBackColor, 0.35);
@@ -458,7 +461,7 @@ namespace ErikwnkWFUI.Controls
 
         // The dotted frame of the keyboard focus, around the label and the box (or the
         // box alone when there is no label) - only once the keyboard has been used.
-        private void PaintFocus(Graphics g)
+        private void PaintFocus(Graphics g, Color parentBackColor)
         {
             if (!Focused || !ShowFocusCues)
                 return;
@@ -483,7 +486,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             area.Intersect(new Rectangle(0, 0, Width, Height));
-            ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, GetParentBackColor());
+            ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, parentBackColor);
         }
 
         /// <summary>
