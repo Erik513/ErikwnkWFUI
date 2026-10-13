@@ -503,14 +503,14 @@ namespace ErikwnkWFUI.Forms
                     _hideTimer.Dispose();
                     _hideTimer = null;
                 }
-            }
 
-            if (disposing && _showDelayTimer != null)
-            {
-                _showDelayTimer.Stop();
-                _showDelayTimer.Tick -= OnShowDelayTimerTick;
-                _showDelayTimer.Dispose();
-                _showDelayTimer = null;
+                if (_showDelayTimer != null)
+                {
+                    _showDelayTimer.Stop();
+                    _showDelayTimer.Tick -= OnShowDelayTimerTick;
+                    _showDelayTimer.Dispose();
+                    _showDelayTimer = null;
+                }
             }
 
             base.Dispose(disposing);
