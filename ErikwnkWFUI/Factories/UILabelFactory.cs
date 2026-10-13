@@ -12,12 +12,12 @@ namespace ErikwnkWFUI.Factories
 
         public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            return Create(text, () => UIColors.TextPrimary, Wrap(colors), UIFonts.Title, ContentAlignment.MiddleCenter, false, scroll);
+            return Create(text, () => UIColors.TextPrimary, ColorSetSource.Of(colors), UIFonts.Title, ContentAlignment.MiddleCenter, false, scroll);
         }
 
         public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            return Standard(text, Wrap(colors), scroll);
+            return Standard(text, ColorSetSource.Of(colors), scroll);
         }
 
         // The Standard one in the current accent - the primary color set.
@@ -28,12 +28,7 @@ namespace ErikwnkWFUI.Factories
 
         public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
-            return Create(text, () => UIColors.TextMuted, Wrap(colors), UIFonts.Small, ContentAlignment.MiddleLeft, true, scroll);
-        }
-
-        private static Func<UIColorSet> Wrap(UIColorSet colors)
-        {
-            return colors == null ? (Func<UIColorSet>)null : () => colors;
+            return Create(text, () => UIColors.TextMuted, ColorSetSource.Of(colors), UIFonts.Small, ContentAlignment.MiddleLeft, true, scroll);
         }
 
         private static ThemedLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)

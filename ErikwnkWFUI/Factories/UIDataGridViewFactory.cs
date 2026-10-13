@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource
             };
 
-            ApplyColors(grid, colors == null ? (Func<UIColorSet>)null : () => colors);
+            ApplyColors(grid, ColorSetSource.Of(colors));
 
             return grid;
         }
@@ -29,7 +29,7 @@ namespace ErikwnkWFUI.Factories
                 DataSource = dataSource
             };
 
-            ApplyColors(grid, colors == null ? (Func<UIColorSet>)null : () => colors);
+            ApplyColors(grid, ColorSetSource.Of(colors));
 
             return grid;
         }

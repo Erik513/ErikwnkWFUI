@@ -9,13 +9,13 @@ namespace ErikwnkWFUI.Factories
         // The editable variant: right-click a tab to add, rename or close tabs.
         public static TabControl CreateStandard(UIColorSet colors = null)
         {
-            return Standard(colors == null ? (Func<UIColorSet>)null : () => colors);
+            return Standard(ColorSetSource.Of(colors));
         }
 
         // The display-only variant: tabs can be switched, not edited.
         public static ReadOnlyTabControl CreateReadOnlyStandard(UIColorSet colors = null)
         {
-            return ReadOnlyStandard(colors == null ? (Func<UIColorSet>)null : () => colors);
+            return ReadOnlyStandard(ColorSetSource.Of(colors));
         }
 
         private static TabControl Standard(Func<UIColorSet> colors)

@@ -15,7 +15,7 @@ namespace ErikwnkWFUI.Factories
             ContentAlignment headerTextAlign = ContentAlignment.MiddleLeft,
             UIColorSet colors = null)
         {
-            return Create(headerTitle, displayMember, allowReorder, showEnumeration, headerTextAlign, colors == null ? (Func<UIColorSet>)null : () => colors);
+            return Create(headerTitle, displayMember, allowReorder, showEnumeration, headerTextAlign, ColorSetSource.Of(colors));
         }
 
         // The Standard one with the accent: the selection and the drop line in the primary color set.

@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Factories
             bool showEnumeration = false,
             UIColorSet colors = null)
         {
-            return Create(displayMember, allowReorder, showEnumeration, colors == null ? (Func<UIColorSet>)null : () => colors);
+            return Create(displayMember, allowReorder, showEnumeration, ColorSetSource.Of(colors));
         }
 
         // The Standard one with the accent: the selection and the drop line in the primary color set - which is read
