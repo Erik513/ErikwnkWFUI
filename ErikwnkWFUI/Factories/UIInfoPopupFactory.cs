@@ -28,7 +28,10 @@ namespace ErikwnkWFUI.Factories
             PopupDuration duration = PopupDuration.Medium,
             PopupDelay delay = PopupDelay.Medium)
         {
-            return CreateStandard(UIColors.PrimarySet, fixedSize, transparency, duration, delay);
+            InfoPopupForm popup = CreateStandard(null, fixedSize, transparency, duration, delay);
+            popup.FollowColors(() => UIColors.PrimarySet);
+
+            return popup;
         }
     }
 }

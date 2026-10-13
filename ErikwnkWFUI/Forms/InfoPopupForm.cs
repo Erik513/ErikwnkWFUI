@@ -1,4 +1,5 @@
-﻿using ErikwnkWFUI.Helpers;
+﻿using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using System;
 using System.Collections.Generic;
@@ -82,6 +83,7 @@ namespace ErikwnkWFUI.Forms
         private Func<InfoPopupSection[]> _pendingContent;
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
         private UIColorSet _colors;
+        private Func<UIColorSet> _colorsSource;
         private PopupDuration _duration = PopupDuration.Medium;
         private PopupDelay _delay = PopupDelay.Medium;
         private Timer _hideTimer;
@@ -101,6 +103,14 @@ namespace ErikwnkWFUI.Forms
                 _hideTimer.Stop();
                 Hide();
             };
+
+            // A popup is reused for a long time: a set that follows the accent (CreatePrimary) is looked at again when the
+            // accent changes while the popup has a window, and at every show (see Place).
+            ThemeWatcher.Attach(this, () =>
+            {
+                BackColor = GetBackColor();
+                Invalidate();
+            });
         }
 
         /// <summary>
@@ -148,10 +158,11 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colors; }
+            get { return _colorsSource?.Invoke() ?? _colors; }
             set
             {
                 _colors = value;
+                _colorsSource = null;
 
                 if (IsDisposed)
                     return;
@@ -159,6 +170,19 @@ namespace ErikwnkWFUI.Forms
                 BackColor = GetBackColor();
                 Invalidate();
             }
+        }
+
+        // A set that is asked for again each time (the primary set, which follows the accent).
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+
+            if (IsDisposed)
+                return;
+
+            BackColor = GetBackColor();
+            Invalidate();
         }
 
         /// <summary>
@@ -393,7 +417,7 @@ namespace ErikwnkWFUI.Forms
 
         private UIColorSet GetColors()
         {
-            return _colors ?? UIStyles.Colors.Sets.Gray;
+            return Colors ?? UIStyles.Colors.Sets.Gray;
         }
 
         // The automatic text color and the background, worked out for both popups in PopupSupport.

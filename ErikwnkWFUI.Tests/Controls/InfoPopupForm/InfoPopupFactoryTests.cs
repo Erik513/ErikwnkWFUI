@@ -109,6 +109,56 @@ public class InfoPopupFactoryTests
     }
 
     [Fact]
+    public void APrimaryPopup_FollowsAChangeOfTheAccent_AlsoAfterItWasMade()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            using InfoPopupForm popup = UIStyles.InfoPopups.CreatePrimary();
+            using InfoPopupForm gray = UIStyles.InfoPopups.CreateStandard();
+            using InfoPopupForm green = UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Green);
+            _ = popup.Handle;
+            Color before = popup.BackColor;
+
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            Assert.Equal(UIColors.PrimarySet.Basic, popup.Colors!.Basic);
+            Assert.NotEqual(before, popup.BackColor);
+            Assert.Equal(popup.InvokePrivate<Color>("GetBackColor"), popup.BackColor);
+            Assert.Equal(UIStyles.Colors.Sets.Gray.Basic, gray.BackColor);
+            Assert.Equal(UIStyles.Colors.Sets.Green.Basic, green.BackColor);
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
+    }
+
+    [Fact]
+    public void APrimaryPopup_ThatHasNoWindowYet_HasTheCurrentAccent_WhenItIsPlaced()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            using InfoPopupForm popup = UIStyles.InfoPopups.CreatePrimary();
+
+            UIColors.SetAccent(UIAccentColors.Purple);
+
+            // The color of a show is worked out when it is shown (Place), from the set as it is then.
+            Assert.Equal(UIColors.PrimarySet.Basic, popup.Colors!.Basic);
+            Assert.Equal(popup.InvokePrivate<Color>("GetBackColor"), PopupColor(popup));
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
+    }
+
+    private static Color PopupColor(InfoPopupForm popup) => ErikwnkWFUI.Helpers.PopupSupport.GetBackground(popup.Colors!, popup.Opacity);
+
+    [Fact]
     public void TheFixedSize_IsKept_AndTakesTheSameColors()
     {
         using InfoPopupForm standard = UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32));
