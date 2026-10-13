@@ -146,7 +146,7 @@ public class ToasterTests : ToastTestBase
             way.Value();
 
             Assert.True(Current() != null, way.Key + " showed no toast");
-            Assert.Equal(ToastIcon.Warning, Current()!.Symbol);
+            Assert.Equal(ToastIcon.Warning, Current()!.Icon);
             Assert.Equal(ErikwnkWFUI.UIStyles.Symbols.Copy, Part("_iconLabel").Text);
             Assert.True(Current()!.Left < client.Left + client.Width / 4 && Current()!.Top < client.Top + client.Height / 4, way.Key + " did not pass the position on: " + Current()!.Location);
         }

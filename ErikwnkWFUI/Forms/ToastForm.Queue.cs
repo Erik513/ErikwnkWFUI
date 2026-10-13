@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Forms
             public PopupDuration Duration;
             public PopupDelay Delay;
             public ToastIcon Icon;
-            public string Symbol;
+            public string CustomSymbol;
             public ToastPosition Position;
 
             // When it began to wait for its window.
@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Forms
             public bool IsSameAs(ToastRequest other)
             {
                 return Icon == other.Icon
-                    && Symbol == other.Symbol
+                    && CustomSymbol == other.CustomSymbol
                     && Position == other.Position
                     && InfoPopupSection.SameContent(new[] { Content }, new[] { other.Content });
             }
@@ -96,8 +96,8 @@ namespace ErikwnkWFUI.Forms
             toast.Transparency = request.Transparency;
             toast.Duration = request.Duration;
             toast.Colors = request.Colors;
-            toast.Symbol = request.Icon;
-            toast.CustomSymbol = request.Symbol;
+            toast.Icon = request.Icon;
+            toast.CustomSymbol = request.CustomSymbol;
 
             toast.SetContent(request.Content);
             toast.Location = PopupSupport.KeepInside(

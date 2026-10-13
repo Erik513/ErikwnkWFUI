@@ -59,7 +59,7 @@ public class ToastCustomSymbolTests : ToastTestBase
         toast.CustomSymbol = null;
         Assert.Equal(ErikwnkWFUI.UIStyles.Symbols.Check, IconLabel().Text);
 
-        toast.Symbol = ToastIcon.None;
+        toast.Icon = ToastIcon.None;
         Assert.False(IconLabel().Visible);
         Assert.Equal(0, toast.GetPrivateField<Label>("_messageLabel")!.Padding.Left);
     }

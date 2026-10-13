@@ -161,7 +161,7 @@ namespace ErikwnkWFUI.Forms
                 Duration = duration,
                 Delay = delay,
                 Icon = icon,
-                Symbol = symbol,
+                CustomSymbol = symbol,
                 Position = position
             };
 
@@ -216,12 +216,12 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>The symbol at the left of the toast; none by default, then the text has the whole width.</summary>
-        public ToastIcon Symbol
+        public ToastIcon Icon
         {
-            get { return _symbol; }
+            get { return _icon; }
             set
             {
-                _symbol = value;
+                _icon = value;
 
                 if (IsDisposed)
                     return;
@@ -232,12 +232,12 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        private ToastIcon _symbol = ToastIcon.None;
+        private ToastIcon _icon = ToastIcon.None;
 
         /// <summary>
-        /// Any symbol instead of <see cref="Symbol"/>, one of <c>UIStyles.Symbols</c> (say
+        /// Any symbol instead of <see cref="Icon"/>, one of <c>UIStyles.Symbols</c> (say
         /// <c>UIStyles.Symbols.Copy</c>) or a character of your own that the symbol font has.
-        /// Null or empty (the default) uses <see cref="Symbol"/>.
+        /// Null or empty (the default) uses <see cref="Icon"/>.
         /// </summary>
         public string CustomSymbol
         {
@@ -260,7 +260,7 @@ namespace ErikwnkWFUI.Forms
         // What is drawn at the left: the symbol of one's own, or that of the kind of message.
         private string GetShownGlyph()
         {
-            return string.IsNullOrWhiteSpace(_customSymbol) ? GetGlyph(_symbol) : _customSymbol;
+            return string.IsNullOrWhiteSpace(_customSymbol) ? GetGlyph(_icon) : _customSymbol;
         }
 
         private static string GetGlyph(ToastIcon icon)
