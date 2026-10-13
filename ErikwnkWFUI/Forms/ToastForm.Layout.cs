@@ -24,8 +24,10 @@ namespace ErikwnkWFUI.Forms
                 return;
 
             _dpi = dpi;
-            _contentPanel.Padding = new Padding(Scaled(15, dpi), Scaled(10, dpi), Scaled(15, dpi), Scaled(10, dpi));
-            _iconLabel.Size = new Size(Scaled(30, dpi), Scaled(30, dpi));
+            _contentPanel.Padding = new Padding(
+                Scaled(ContentPaddingHorizontal96, dpi), Scaled(ContentPaddingVertical96, dpi),
+                Scaled(ContentPaddingHorizontal96, dpi), Scaled(ContentPaddingVertical96, dpi));
+            _iconLabel.Size = new Size(Scaled(IconSize96, dpi), Scaled(IconSize96, dpi));
             ApplyTextPadding();
             FitToMessage();
         }
@@ -51,22 +53,22 @@ namespace ErikwnkWFUI.Forms
             if (_content.Header != null)
             {
                 titleHeight = TextRenderer.MeasureText("Ag", _titleLabel.Font, Size.Empty, TextFormatFlags.NoPadding).Height
-                    + Scaled(2, _dpi);
+                    + Scaled(TitleGap96, _dpi);
                 _titleLabel.Height = titleHeight;
             }
 
             int textHeight = titleHeight + Math.Min(measured.Height, lineHeight * MaxMessageLines);
-            int height = Math.Max(Scaled(ToastHeight96, _dpi), textHeight + 2 * Scaled(20, _dpi));
+            int height = Math.Max(Scaled(ToastHeight96, _dpi), textHeight + 2 * Scaled(MinVerticalMargin96, _dpi));
 
             Size = new Size(width, height);
 
             // The room above and below the text is what is left of the height, less a little
             // slack (the label's lines are a bit higher than the measure), so the message shows
             // no more lines than its limit.
-            int slack = string.IsNullOrEmpty(_messageLabel.Text) ? 0 : Scaled(6, _dpi);
+            int slack = string.IsNullOrEmpty(_messageLabel.Text) ? 0 : Scaled(LineSlack96, _dpi);
             int vertical = Math.Max(0, (height - textHeight - slack) / 2);
             _contentPanel.Padding = new Padding(_contentPanel.Padding.Left, vertical, _contentPanel.Padding.Right, vertical);
-            _iconLabel.Location = new Point(Scaled(10, _dpi), (height - _iconLabel.Height) / 2);
+            _iconLabel.Location = new Point(Scaled(IconLeft96, _dpi), (height - _iconLabel.Height) / 2);
         }
 
 

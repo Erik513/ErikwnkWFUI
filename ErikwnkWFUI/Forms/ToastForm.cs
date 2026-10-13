@@ -57,16 +57,24 @@ namespace ErikwnkWFUI.Forms
     {
         // The measures at 96 dpi; ApplyDpi scales them for the screen the window is on.
         private const int ToastWidth96 = 350;
-
         private const int ToastHeight96 = 80;
-
         private const int MaxMessageLines = 4;
-
         private const int EdgeDistance96 = 20;
 
-
-        // How far the text starts from the left when a symbol is shown (the symbol sits in front of that).
+        // The room inside the toast: around the content, in front of the text when a symbol is shown (the symbol sits in
+        // front of that), and to the right of it.
+        private const int ContentPaddingHorizontal96 = 15;
+        private const int ContentPaddingVertical96 = 10;
         private const int TextIndentWithSymbol96 = 30;
+        private const int TextRightPadding96 = 10;
+        private const int IconSize96 = 30;
+        private const int IconLeft96 = 10;
+
+        // The height: at least this much above and below the text, a little slack for the lines of the label (they are a
+        // bit higher than the measure), and the room between the title and the message.
+        private const int MinVerticalMargin96 = 20;
+        private const int LineSlack96 = 6;
+        private const int TitleGap96 = 2;
 
         private int _dpi = 96;
 
@@ -322,7 +330,7 @@ namespace ErikwnkWFUI.Forms
         {
             int left = GetShownGlyph().Length == 0 ? 0 : TextIndentWithSymbol96;
 
-            _messageLabel.Padding = new Padding(Scaled(left, _dpi), 0, Scaled(10, _dpi), 0);
+            _messageLabel.Padding = new Padding(Scaled(left, _dpi), 0, Scaled(TextRightPadding96, _dpi), 0);
             _titleLabel.Padding = _messageLabel.Padding;
         }
 
@@ -414,7 +422,7 @@ namespace ErikwnkWFUI.Forms
             return new Panel
             {
                 Dock = DockStyle.Fill,
-                Padding = new Padding(15, 10, 15, 10),
+                Padding = new Padding(ContentPaddingHorizontal96, ContentPaddingVertical96, ContentPaddingHorizontal96, ContentPaddingVertical96),
                 BackColor = Color.Transparent
             };
         }
@@ -426,8 +434,8 @@ namespace ErikwnkWFUI.Forms
             {
                 Text = "",
                 Font = UIFonts.Icon,
-                Size = new Size(30, 30),
-                Location = new Point(10, 25),
+                Size = new Size(IconSize96, IconSize96),
+                Location = new Point(IconLeft96, 25),
                 TextAlign = ContentAlignment.MiddleCenter,
                 BackColor = Color.Transparent,
                 Visible = false
@@ -445,7 +453,7 @@ namespace ErikwnkWFUI.Forms
                 BackColor = Color.Transparent,
                 AutoSize = false,
                 Dock = DockStyle.Top,
-                Padding = new Padding(0, 0, 10, 0),
+                Padding = new Padding(0, 0, TextRightPadding96, 0),
                 UseMnemonic = false,
                 AutoEllipsis = true,
                 Visible = false
@@ -463,7 +471,7 @@ namespace ErikwnkWFUI.Forms
                 BackColor = Color.Transparent,
                 AutoSize = false,
                 Dock = DockStyle.Fill,
-                Padding = new Padding(0, 0, 10, 0),
+                Padding = new Padding(0, 0, TextRightPadding96, 0),
                 UseMnemonic = false,
                 AutoEllipsis = true
             };
