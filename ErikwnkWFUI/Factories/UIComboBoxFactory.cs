@@ -13,15 +13,8 @@ namespace ErikwnkWFUI.Factories
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList,
             UIColorSet colors = null)
         {
-            Controls.ComboBox comboBox = new Controls.ComboBox
-            {
-                Font = UIFonts.Normal,
-                DropDownStyle = comboBoxStyle,
-                Colors = colors
-            };
-
-            Controls.InputField.FollowBackground(comboBox);
-            Controls.ThemeWatcher.FollowForeColor(comboBox, () => UIColors.TextPrimary);
+            Controls.ComboBox comboBox = Create(comboBoxStyle);
+            comboBox.Colors = colors;
 
             return comboBox;
         }
@@ -30,8 +23,22 @@ namespace ErikwnkWFUI.Factories
         public static ComboBox CreatePrimary(
             ComboBoxStyle comboBoxStyle = ComboBoxStyle.DropDownList)
         {
-            Controls.ComboBox comboBox = (Controls.ComboBox)CreateStandard(comboBoxStyle);
+            Controls.ComboBox comboBox = Create(comboBoxStyle);
             comboBox.FollowColors(() => UIColors.PrimarySet);
+
+            return comboBox;
+        }
+
+        private static Controls.ComboBox Create(ComboBoxStyle comboBoxStyle)
+        {
+            Controls.ComboBox comboBox = new Controls.ComboBox
+            {
+                Font = UIFonts.Normal,
+                DropDownStyle = comboBoxStyle
+            };
+
+            Controls.InputField.FollowBackground(comboBox);
+            Controls.ThemeWatcher.FollowForeColor(comboBox, () => UIColors.TextPrimary);
 
             return comboBox;
         }
