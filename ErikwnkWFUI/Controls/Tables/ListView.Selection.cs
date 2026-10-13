@@ -271,7 +271,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Whether a left-button press in the window counts as "somewhere else" for the selection. The list itself (client
-        // area, scroll bars) and its header, a window of its own, do not.
+        // area, scroll bars) and its header, a window of its own, do not; neither do the controls that give a command - a
+        // button, a tool bar, a menu bar or its menus - because a command like "Delete" works on the selection and would
+        // find it gone.
         private bool IsOutsideClickThatDeselects(System.IntPtr hwnd)
         {
             if (IsDisposed || !IsHandleCreated || SelectedItems.Count == 0)
@@ -297,8 +299,7 @@ namespace ErikwnkWFUI.Controls
                 return false;
             }
 
-            // A context menu is not outside either: the click on "Copy selection" would clear what it is about to copy.
-            return !(clickedControl is ToolStripDropDown);
+            return !(clickedControl is ButtonBase || clickedControl is ToolStrip);
         }
 
         private void DeselectAll()

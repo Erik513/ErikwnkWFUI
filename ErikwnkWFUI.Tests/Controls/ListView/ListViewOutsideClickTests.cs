@@ -78,4 +78,30 @@ public class ListViewOutsideClickTests : IDisposable
         _ = list.Handle;
         Assert.True(Watching(list));
     }
+
+    [Fact]
+    public void AClickOnABoxOrALabel_ClearsTheSelection_AClickOnACommand_DoesNot()
+    {
+        (Form form, WfuiListView list) = Show();
+        Button button = new Button { Dock = DockStyle.Bottom };
+        Panel panel = new Panel { Dock = DockStyle.Bottom };
+        ToolStrip toolBar = new ToolStrip { Dock = DockStyle.Bottom };
+        MenuStrip menuBar = new MenuStrip { Dock = DockStyle.Bottom };
+        System.Windows.Forms.ContextMenuStrip menu = new System.Windows.Forms.ContextMenuStrip();
+        form.Controls.AddRange(new Control[] { button, panel, toolBar, menuBar });
+        _ = menu.Handle;
+        list.Items[0].Selected = true;
+        Application.DoEvents();
+
+        bool Deselects(Control control) => list.InvokePrivate<bool>("IsOutsideClickThatDeselects", control.Handle);
+
+        Assert.True(Deselects(panel));
+        Assert.True(Deselects(form));
+        Assert.False(Deselects(button));
+        Assert.False(Deselects(toolBar));
+        Assert.False(Deselects(menuBar));
+        Assert.False(Deselects(menu));
+        Assert.False(Deselects(list));
+        menu.Dispose();
+    }
 }

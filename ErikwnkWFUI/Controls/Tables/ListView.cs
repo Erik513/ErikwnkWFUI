@@ -34,6 +34,8 @@ namespace ErikwnkWFUI.Controls
     /// <list type="bullet">
     /// <item>Hovering a cell whose text is wider than its column shows the full text in a tooltip.</item>
     /// </list>
+    /// A click somewhere else in the application clears the selection - except on a button, a tool bar or a menu, which
+    /// give commands that work on the selection.
     /// Ctrl+C copies every selected row as tab-separated columns; Ctrl+Shift+C
     /// does the same with a leading row of column names. Both also put an
     /// HTML table on the clipboard alongside the plain text, so apps that
