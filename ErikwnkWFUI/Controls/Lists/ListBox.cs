@@ -176,10 +176,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (value)
                 {
-                    // See the constructor's own remarks on why enabling
-                    // this is apartment-state gated - disabling it
-                    // (AllowDrop = false, the other branch below) doesn't
-                    // register anything, so it has no such risk.
+                    // (Only on an STA thread, see the constructor; switching it off registers nothing.)
                     DragDropSupport.EnableDropIfSta(this);
                 }
                 else
@@ -369,17 +366,9 @@ namespace ErikwnkWFUI.Controls
             Font = UIFonts.Normal;
             IntegralHeight = false;
 
-            // AllowDrop registers this control as an OLE drop target
-            // (needed here since TryStartDrag's own DoDragDrop below drops
-            // back onto this same control) - that registration needs an
-            // STA thread (true for any real WinForms UI thread), and was
-            // confirmed on DataGridView's/ListView's own identical fix to
-            // silently block for many seconds on an MTA one (e.g. a test
-            // harness thread with no message loop) instead of throwing.
-            // _allowReorder is always true here (nothing sets it to false
-            // before this line runs), so this always attempts to enable it,
-            // same as the plain assignment this replaced - just skipped
-            // entirely off STA, where the drag couldn't have worked anyway.
+            // AllowDrop registers the control as an OLE drop target (the drag of an item drops back onto this list). That
+            // needs an STA thread, as every real UI thread is; on another one it would block for seconds, so it is skipped
+            // there (DragDropSupport.EnableDropIfSta).
             if (_allowReorder)
             {
                 DragDropSupport.EnableDropIfSta(this);
@@ -471,20 +460,9 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseMove(e);
         }
 
-        // A native ListBox commits its own click-to-select synchronously as
-        // part of its native WM_LBUTTONDOWN handling - which happens
-        // BEFORE OnMouseDown/MouseDown ever fires, unlike ListView's own
-        // toggle-deselect (SysListView32 doesn't commit until mouse-up,
-        // which is why that one CAN check this from OnMouseDown/a MouseDown
-        // handler). Checking SelectedIndex from OnMouseDown here would
-        // always see the NEW selection already applied - confirmed live:
-        // every plain click toggled straight back off on release, not just
-        // a second click on an already-selected item, because by the time
-        // OnMouseDown ran, the item just clicked was already "the current
-        // selection" regardless of what it was before. Intercepting the
-        // raw message here, before base.WndProc forwards it to the native
-        // control, is the only point that still sees the pre-click state.
-
+        // The native list selects the item on WM_LBUTTONDOWN, before OnMouseDown runs: from there SelectedIndex is already
+        // the new one. The state before the click (is this the selected item? what is under the mouse?) is only to be
+        // seen in the message itself, so it is taken here, before the base class handles it.
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_LBUTTONDOWN)
