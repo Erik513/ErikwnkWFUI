@@ -100,6 +100,7 @@ namespace ErikwnkWFUI.Controls
         private int _dragColumnIndex = -1;
         private int _dragInsertBeforeDisplayIndex = -1;
         private Font _headerFontOverride;
+        private Font _defaultHeaderFont;
         private ImageList _rowHeightImageList;
         private HeaderInputSubclass _headerInputSubclass;
 
@@ -272,14 +273,13 @@ namespace ErikwnkWFUI.Controls
         /// size is also the way to make the native header band itself
         /// taller (there's no direct "header height" API on the underlying
         /// Win32 header control - it sizes itself from its own font
-        /// metrics, same as row height below).
+        /// metrics, same as row height below). The list holds the font it
+        /// returns: a font that was set stays the caller's to dispose, one the
+        /// list made goes with it - do not dispose what is read here.
         /// </summary>
         public Font HeaderFont
         {
-            // Returns a clone - OnDrawColumnHeader disposes the Font it
-            // gets each paint, which would kill a shared instance after
-            // the first use.
-            get { return _headerFontOverride != null ? (Font)_headerFontOverride.Clone() : new Font(Font, FontStyle.Bold); }
+            get { return _headerFontOverride ?? _defaultHeaderFont ?? (_defaultHeaderFont = new Font(Font, FontStyle.Bold)); }
             set
             {
                 _headerFontOverride = value;
@@ -408,6 +408,8 @@ namespace ErikwnkWFUI.Controls
                 _outsideClickDeselectFilter.Stop();
                 _rowHeightImageList?.Dispose();
                 _rowHeightImageList = null;
+                _defaultHeaderFont?.Dispose();
+                _defaultHeaderFont = null;
             }
 
             base.Dispose(disposing);
@@ -950,9 +952,10 @@ namespace ErikwnkWFUI.Controls
         {
             _headerHeight = e.Bounds.Height;
 
+            Font font = HeaderFont;
+
             using (var background = new SolidBrush(HeaderBackColor))
             using (var divider = new Pen(BorderColor))
-            using (var font = HeaderFont)
             {
                 e.Graphics.FillRectangle(background, e.Bounds);
                 e.Graphics.DrawRectangle(divider, e.Bounds.Left, e.Bounds.Top, e.Bounds.Width - 1, e.Bounds.Height - 1);

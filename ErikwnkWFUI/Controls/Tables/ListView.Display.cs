@@ -146,6 +146,10 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnFontChanged(EventArgs e)
         {
+            // The bold header font of the old font is not the one for the new.
+            _defaultHeaderFont?.Dispose();
+            _defaultHeaderFont = null;
+
             base.OnFontChanged(e);
             RequestFixedSize();
         }
@@ -217,8 +221,7 @@ namespace ErikwnkWFUI.Controls
 
             int row = (RowHeight > 0 ? RowHeight : Font.Height + 4) + 1;
 
-            using (Font header = HeaderFont)
-                return header.Height + 8 + rows * row;
+            return HeaderFont.Height + 8 + rows * row;
         }
 
         private int GetApproximateHeight(int rows)
