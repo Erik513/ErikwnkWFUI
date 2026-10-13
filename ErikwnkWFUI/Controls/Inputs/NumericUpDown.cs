@@ -107,7 +107,7 @@ namespace ErikwnkWFUI.Controls
             InputField.AttachFrame(this, () => BorderStyle == BorderStyle.FixedSingle, () => InputField.GetFrameColor(this, Colors, ContainsFocus));
 
             // The colors are read while painting: a change of the theme only needs a repaint.
-            ThemeWatcher.Attach(this, () => { RepaintArrows(); Invalidate(); });
+            ThemeWatcher.Attach(this, RepaintAll);
         }
 
         /// <summary>
@@ -145,15 +145,13 @@ namespace ErikwnkWFUI.Controls
         protected override void OnEnter(EventArgs e)
         {
             base.OnEnter(e);
-            RepaintArrows();
-            Invalidate();
+            RepaintAll();
         }
 
         protected override void OnLeave(EventArgs e)
         {
             base.OnLeave(e);
-            RepaintArrows();
-            Invalidate();
+            RepaintAll();
         }
 
         // The standard control draws a ring around its text field (black when it is disabled); what lies outside the two
@@ -178,8 +176,7 @@ namespace ErikwnkWFUI.Controls
 
             _hotField = -1;
             _pressedField = -1;
-            RepaintArrows();
-            Invalidate();
+            RepaintAll();
         }
 
         // The arrow buttons are a child control of the standard control (UpDownButtons, not public).
@@ -299,6 +296,13 @@ namespace ErikwnkWFUI.Controls
         private void RepaintArrows()
         {
             _buttons?.Invalidate();
+        }
+
+        // The arrow buttons are a window of their own: Invalidate() on the control does not reach them.
+        private void RepaintAll()
+        {
+            RepaintArrows();
+            Invalidate();
         }
 
         // Paints the whole button area: the field's own color behind, a field per arrow with the arrow on it. Drawn into
