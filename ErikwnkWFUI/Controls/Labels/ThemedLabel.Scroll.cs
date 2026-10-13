@@ -247,10 +247,9 @@ namespace ErikwnkWFUI.Controls
                 _watching = true;
                 LabelSettingsWatcher.Add(this);
             }
-            else if (!wantsSettings && _watching)
+            else if (!wantsSettings)
             {
-                _watching = false;
-                LabelSettingsWatcher.Remove(this);
+                StopWatching();
             }
 
             bool moves = (_maxOffset > 0 || _cycle > 0) && Visible && IsHandleCreated;
@@ -350,6 +349,15 @@ namespace ErikwnkWFUI.Controls
         {
             _animating = false;
             LabelAnimationClock.Remove(this);
+        }
+
+        private void StopWatching()
+        {
+            if (!_watching)
+                return;
+
+            _watching = false;
+            LabelSettingsWatcher.Remove(this);
         }
 
         // Called from the thread of the system events: tell the window that a setting of Windows has changed.
@@ -588,11 +596,7 @@ namespace ErikwnkWFUI.Controls
             if (_animating)
                 StopAnimating();
 
-            if (_watching)
-            {
-                _watching = false;
-                LabelSettingsWatcher.Remove(this);
-            }
+            StopWatching();
 
             base.OnHandleDestroyed(e);
         }
@@ -604,12 +608,7 @@ namespace ErikwnkWFUI.Controls
                 if (_animating)
                     StopAnimating();
 
-                if (_watching)
-                {
-                    _watching = false;
-                    LabelSettingsWatcher.Remove(this);
-                }
-
+                StopWatching();
                 DisposePicture();
             }
 
