@@ -59,6 +59,7 @@ namespace ErikwnkWFUI.Controls
             // The colors are read while painting: a change of the theme needs a repaint (the box colors the factory
             // gave follow, see UIComboBoxFactory).
             ThemeWatcher.Attach(this, Invalidate);
+
             // The list of a dark theme gets the system's dark style, which also gives it dark scroll bars (the plain,
             // unthemed list has light ones).
             NativeControlTheme.Track(this, GetListHandle, handle =>
