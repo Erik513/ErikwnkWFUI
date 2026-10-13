@@ -40,14 +40,10 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
-            /// Clears <paramref name="comboBox"/>'s items and repopulates it
-            /// from <paramref name="items"/> - e.g. because a language switch
-            /// changed the item text - restoring whatever was selected
-            /// before by its POSITION in the list (not by value/identity, so
-            /// this assumes the same N choices in the same order, just
-            /// possibly relabeled). Saves callers from having to remember
-            /// SelectedIndex and re-set it by hand every time they rebuild a
-            /// combo box's items.
+            /// Clears the items of <paramref name="comboBox"/> and fills it from <paramref name="items"/> - for example because
+            /// a language switch changed the texts - and selects again what was selected before, by its POSITION in the list
+            /// (so the same choices in the same order are assumed, only relabeled). <c>SelectedIndexChanged</c> can be raised
+            /// once by the clearing and once by the selecting.
             /// </summary>
             public static void ReplaceItems(
                 System.Windows.Forms.ComboBox comboBox,
