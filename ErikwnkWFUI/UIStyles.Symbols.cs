@@ -37,7 +37,7 @@ namespace ErikwnkWFUI
 
             // The emoji font: a symbol that ends with the emoji selector (U+FE0F) is drawn in it.
             private const string EmojiFontName = "Segoe UI Emoji";
-            private const char EmojiSelector = '️';
+            private const char EmojiSelector = '\uFE0F';
 
             private static readonly bool _isIconFontInstalled;
             private static readonly bool _isFluentFontInstalled;
@@ -185,7 +185,7 @@ namespace ErikwnkWFUI
             /// page that Windows shows for a document, where <see cref="File"/> is a plain
             /// filled page. The emoji font brings its own colors for the lines.
             /// </summary>
-            public const string Document = "📄️";
+            public const string Document = "\U0001F4C4\uFE0F";
             /// <summary>A closed folder.</summary>
             public const string Folder = "\U0001F4C1";
             /// <summary>An open folder.</summary>
