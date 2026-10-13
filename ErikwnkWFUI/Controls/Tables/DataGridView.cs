@@ -743,7 +743,7 @@ namespace ErikwnkWFUI.Controls
             //   ResetBindings ever shows the grid a "freshly added, still
             //   empty" row at all - sidesteps that whole lifecycle: the
             //   row only ever appears already complete.
-            ApplyBatchedDataSourceChange(list, () =>
+            ApplyBatchedDataSourceChange(() =>
             {
                 // Discards a pending-but-abandoned placeholder add before
                 // anything below reads list.Count - the placeholder is
@@ -1073,7 +1073,7 @@ namespace ErikwnkWFUI.Controls
         // every cell here is already a real, existing row.
         private void FillCellsWithValue(IList list, List<(int RowIndex, int ColumnIndex)> targetCells, string value, bool cancelPendingPlaceholder)
         {
-            ApplyBatchedDataSourceChange(list, () =>
+            ApplyBatchedDataSourceChange(() =>
             {
                 // Same reasoning as PasteFromClipboard's own placeholder
                 // cancellation - a pending add from merely including the
@@ -1322,7 +1322,7 @@ namespace ErikwnkWFUI.Controls
 
             int insertAtIndex = above ? rowIndex : rowIndex + 1;
 
-            ApplyBatchedDataSourceChange(list, () =>
+            ApplyBatchedDataSourceChange(() =>
             {
                 List<object> originalItems = SnapshotItems(list);
                 object newItem = bindingList.AddNew();
@@ -1411,7 +1411,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ApplyBatchedDataSourceChange(list, () => list.Remove(item));
+            ApplyBatchedDataSourceChange(() => list.Remove(item));
             ShowActionConfirmation(UIStrings.Get("DataGridView.RowDeleted"));
         }
 
@@ -1452,7 +1452,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ApplyBatchedDataSourceChange(list, () =>
+            ApplyBatchedDataSourceChange(() =>
             {
                 // Cancelled first, not folded into the rebuild loop below -
                 // the placeholder is always the LAST row, so discarding its

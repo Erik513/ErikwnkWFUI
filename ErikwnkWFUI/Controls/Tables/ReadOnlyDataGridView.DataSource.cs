@@ -111,7 +111,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            ApplyBatchedDataSourceChange(list, () =>
+            ApplyBatchedDataSourceChange(() =>
             {
                 list.Clear();
 
@@ -215,7 +215,7 @@ namespace ErikwnkWFUI.Controls
         // as the first row flashing "selected". Protected (not private)
         // so a subclass's own editing operations can share this exact
         // same batching, not just this class's own sorting.
-        protected void ApplyBatchedDataSourceChange(IList list, Action mutate)
+        protected void ApplyBatchedDataSourceChange(Action mutate)
         {
             OnApplyingBatchedDataSourceChange();
 

@@ -106,7 +106,7 @@ namespace ErikwnkWFUI.Controls
                         // as well, so the arrow is set after it (and for
                         // WM_SETCURSOR above, instead of it).
                         TrySuppressResizeCursor(GetX(m.LParam));
-                        OnMouseMove(GetX(m.LParam));
+                        OnMouseMove();
                         break;
 
                     case WM_LBUTTONUP:
@@ -262,7 +262,7 @@ namespace ErikwnkWFUI.Controls
                 _pendingStartX = Cursor.Position.X;
             }
 
-            private void OnMouseMove(int x)
+            private void OnMouseMove()
             {
                 if ((Control.MouseButtons & MouseButtons.Left) == 0)
                 {

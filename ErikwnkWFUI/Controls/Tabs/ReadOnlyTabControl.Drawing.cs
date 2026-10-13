@@ -439,7 +439,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            DrawVerticalContent(graphics, index, bounds, image, text, foreColor, flags);
+            DrawVerticalContent(graphics, index, bounds, image, text, foreColor);
         }
 
         private void DrawHorizontalContent(Graphics graphics, int index, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
@@ -461,7 +461,7 @@ namespace ErikwnkWFUI.Controls
             TextRenderer.DrawText(graphics, text, Font, textBounds, foreColor, flags);
         }
 
-        private void DrawVerticalContent(Graphics graphics, int index, Rectangle bounds, Image image, string text, Color foreColor, TextFormatFlags flags)
+        private void DrawVerticalContent(Graphics graphics, int index, Rectangle bounds, Image image, string text, Color foreColor)
         {
             // Left tabs read bottom-to-top, right tabs top-to-bottom.
             bool bottomToTop = Alignment == TabAlignment.Left;
