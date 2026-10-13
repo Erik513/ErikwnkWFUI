@@ -123,6 +123,85 @@ public class InputFieldTests : IDisposable
         Assert.True(UIColors.GetContrastRatio(disabled, enabled) < 2.0, "still the same kind of surface");
     }
 
+    // ---- the text in the middle ----
+
+    private static (int Above, int Below) DigitSpace(Control box)
+    {
+        using Bitmap bitmap = new Bitmap(box.Width, box.Height);
+        box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
+        int top = -1, bottom = -1;
+
+        for (int y = 2; y < box.Height - 2; y++)
+            for (int x = 6; x < box.Width - 6; x++)
+                if (bitmap.GetPixel(x, y).R > 150)
+                {
+                    if (top < 0)
+                        top = y;
+
+                    bottom = y;
+                }
+
+        return (top, box.Height - 1 - bottom);
+    }
+
+    [Theory]
+    [InlineData(8f)]
+    [InlineData(9f)]
+    [InlineData(10f)]
+    [InlineData(11f)]
+    [InlineData(12f)]
+    [InlineData(14f)]
+    [InlineData(18f)]
+    public void TheTextOfATextBox_IsInTheMiddle_ForEveryFontSize(float points)
+    {
+        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("8"));
+
+        using Font font = new Font("Segoe UI", points);
+        box.Font = font;
+        Application.DoEvents();
+        var space = DigitSpace(box);
+
+        Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{points} pt: {space.Above} above, {space.Below} below");
+    }
+
+    [Fact]
+    public void TheTextBox_StillShowsItsText_AndKeepsItsFullHeight()
+    {
+        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("Hello"));
+
+        Assert.Equal("Hello", box.Text);
+        Assert.True(box.Height >= box.Font.Height + 6);
+        Assert.True(box.ClientSize.Height >= box.Font.Height);
+    }
+
+    [Fact]
+    public void TheCenteringFollowsTheFont_AfterAChangeAndBack()
+    {
+        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("8"));
+
+        using (Font big = new Font("Segoe UI", 20))
+            box.Font = big;
+
+        Application.DoEvents();
+        using Font normal = new Font("Segoe UI", 9);
+        box.Font = normal;
+        Application.DoEvents();
+        var space = DigitSpace(box);
+
+        Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{space.Above} above, {space.Below} below");
+    }
+
+    [Fact]
+    public void AMultilineBox_AndABorderlessOne_KeepTheNativeTextPlace()
+    {
+        TextBox multiline = Show(UIStyles.TextBoxes.CreateStandard("a"));
+        multiline.Multiline = true;
+        TextBox borderless = Show(UIStyles.TextBoxes.CreateBorderstyleNone("a"));
+
+        Assert.Equal(0, InputField.GetTextTopInset(multiline));
+        Assert.Equal(0, InputField.GetTextTopInset(borderless));
+    }
+
     // ---- the frame ----
 
     private static Color Edge(Control control)

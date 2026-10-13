@@ -88,16 +88,33 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public static void FrameTextBox(TextBox textBox)
         {
-            AttachFrame(textBox, () => textBox.BorderStyle == BorderStyle.FixedSingle, () => GetFrameColor(textBox, null, textBox.Focused));
+            AttachFrame(textBox, () => textBox.BorderStyle == BorderStyle.FixedSingle, () => GetFrameColor(textBox, null, textBox.Focused), () => GetTextTopInset(textBox));
+        }
+
+        /// <summary>
+        /// How far the single line of a text box is moved down to stand in the middle of the box. The system puts the line
+        /// at the top edge, so with the usual small fonts it sits two pixels too high (measured for 8 to 24 points: 2 up to
+        /// a line height of 16, 1 up to 22, then none; with very large fonts the line is slightly too low, which an inset
+        /// cannot correct).
+        /// </summary>
+        public static int GetTextTopInset(TextBox textBox)
+        {
+            // (Without a border the box is as high as its line: nothing to center in.)
+            if (textBox.Multiline || textBox.BorderStyle == BorderStyle.None)
+                return 0;
+
+            int lineHeight = textBox.Font.Height;
+
+            return lineHeight <= 16 ? 2 : lineHeight <= 22 ? 1 : 0;
         }
 
         /// <summary>
         /// The same for any control whose border is part of its window: <paramref name="hasBorder"/> says whether it has
         /// one now, <paramref name="color"/> gives the color of the frame in the current state.
         /// </summary>
-        public static void AttachFrame(Control control, Func<bool> hasBorder, Func<Color> color)
+        public static void AttachFrame(Control control, Func<bool> hasBorder, Func<Color> color, Func<int> topInset = null)
         {
-            FrameWindow frame = new FrameWindow(control, hasBorder, color);
+            FrameWindow frame = new FrameWindow(control, hasBorder, color, topInset ?? (() => 0));
 
             control.HandleCreated += (sender, e) => frame.AssignHandle(control.Handle);
             control.HandleDestroyed += (sender, e) => frame.ReleaseHandle();
@@ -108,6 +125,7 @@ namespace ErikwnkWFUI.Controls
             control.EnabledChanged += (sender, e) => frame.Redraw();
             control.BackColorChanged += (sender, e) => frame.Redraw();
             control.ParentChanged += (sender, e) => frame.Redraw();
+            control.FontChanged += (sender, e) => frame.Recalculate();
             ThemeWatcher.Attach(control, frame.Redraw);
 
             if (control.IsHandleCreated)
@@ -116,21 +134,38 @@ namespace ErikwnkWFUI.Controls
 
         private sealed class FrameWindow : NativeWindow
         {
+            private const int WM_NCCALCSIZE = 0x0083;
             private const int WM_NCPAINT = 0x0085;
             private const int WM_PRINT = 0x0317;
             private const int PRF_NONCLIENT = 0x0002;
             private const uint RDW_INVALIDATE = 0x0001;
             private const uint RDW_FRAME = 0x0400;
+            private const int SWP_NOSIZE = 0x0001;
+            private const int SWP_NOMOVE = 0x0002;
+            private const int SWP_NOZORDER = 0x0004;
+            private const int SWP_NOACTIVATE = 0x0010;
+            private const int SWP_FRAMECHANGED = 0x0020;
 
             private readonly Control _control;
             private readonly Func<bool> _hasBorder;
             private readonly Func<Color> _color;
+            private readonly Func<int> _topInset;
 
-            public FrameWindow(Control control, Func<bool> hasBorder, Func<Color> color)
+            public FrameWindow(Control control, Func<bool> hasBorder, Func<Color> color, Func<int> topInset)
             {
                 _control = control;
                 _hasBorder = hasBorder;
                 _color = color;
+                _topInset = topInset;
+            }
+
+            protected override void OnHandleChange()
+            {
+                base.OnHandleChange();
+
+                // The window was made before this took it over: its client area is measured again with the inset.
+                if (Handle != IntPtr.Zero)
+                    Recalculate();
             }
 
             public void Redraw()
@@ -139,14 +174,22 @@ namespace ErikwnkWFUI.Controls
                     RedrawWindow(Handle, IntPtr.Zero, IntPtr.Zero, RDW_FRAME | RDW_INVALIDATE);
             }
 
+            // The client area is measured anew (the inset depends on the font).
+            public void Recalculate()
+            {
+                if (Handle != IntPtr.Zero)
+                    SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+            }
+
             protected override void WndProc(ref Message m)
             {
                 base.WndProc(ref m);
 
-                if (!_hasBorder())
-                    return;
-
-                if (m.Msg == WM_NCPAINT)
+                if (m.Msg == WM_NCCALCSIZE)
+                {
+                    Inset(m);
+                }
+                else if (m.Msg == WM_NCPAINT)
                 {
                     IntPtr hdc = GetWindowDC(Handle);
 
@@ -155,7 +198,7 @@ namespace ErikwnkWFUI.Controls
 
                     try
                     {
-                        PaintFrame(hdc);
+                        PaintNonClient(hdc);
                     }
                     finally
                     {
@@ -164,23 +207,57 @@ namespace ErikwnkWFUI.Controls
                 }
                 else if (m.Msg == WM_PRINT && ((long)m.LParam & PRF_NONCLIENT) != 0)
                 {
-                    PaintFrame(m.WParam);
+                    PaintNonClient(m.WParam);
                 }
             }
 
-            private void PaintFrame(IntPtr hdc)
+            // The client area the system worked out (the first rectangle of the parameters, or the only one) starts lower.
+            private void Inset(Message m)
+            {
+                int inset = _topInset();
+
+                if (inset <= 0 || m.LParam == IntPtr.Zero)
+                    return;
+
+                NativeRect client = (NativeRect)System.Runtime.InteropServices.Marshal.PtrToStructure(m.LParam, typeof(NativeRect));
+
+                if (client.Bottom - client.Top <= inset + 4)
+                    return;
+
+                client.Top += inset;
+                System.Runtime.InteropServices.Marshal.StructureToPtr(client, m.LParam, false);
+            }
+
+            // What the system leaves to the window around its client area: the strip made by the inset in the color of the
+            // field, and the frame.
+            private void PaintNonClient(IntPtr hdc)
             {
                 NativeRect window;
+                NativeRect client;
 
-                if (!GetWindowRect(Handle, out window))
+                if (!GetWindowRect(Handle, out window) || !GetClientRect(Handle, out client))
                     return;
 
                 int width = window.Right - window.Left;
                 int height = window.Bottom - window.Top;
+                int inset = _topInset();
+                bool hasBorder = _hasBorder();
+                int border = hasBorder ? Math.Max(0, (width - (client.Right - client.Left)) / 2) : 0;
 
                 using (Graphics g = Graphics.FromHdc(hdc))
-                using (Pen pen = new Pen(_color()))
-                    g.DrawRectangle(pen, 0, 0, width - 1, height - 1);
+                {
+                    if (inset > 0)
+                    {
+                        using (SolidBrush back = new SolidBrush(_control.BackColor))
+                            g.FillRectangle(back, border, border, width - 2 * border, inset + 1);
+                    }
+
+                    if (hasBorder)
+                    {
+                        using (Pen pen = new Pen(_color()))
+                            g.DrawRectangle(pen, 0, 0, width - 1, height - 1);
+                    }
+                }
             }
         }
     }
