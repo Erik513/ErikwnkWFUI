@@ -10,7 +10,7 @@ namespace ErikwnkWFUI.Forms
     /// <summary>
     /// A small, rounded, self-dismissing toast: an optional symbol, an optional title and a
     /// message. Call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/>
-    /// (or <c>UIStyles.Toasts</c>) rather than constructing this directly. Only one toast shows
+    /// (or <c>UIStyles.Toasts</c>); a toast cannot be constructed directly. Only one toast shows
     /// at a time; a new one closes the one that is up.
     /// </summary>
     /// <remarks>
@@ -95,7 +95,7 @@ namespace ErikwnkWFUI.Forms
         private InfoPopupSection _content = new InfoPopupSection(null, null);
         private Panel _contentPanel;
 
-        public ToastForm()
+        internal ToastForm()
         {
             AutoScaleMode = AutoScaleMode.None;
             CreateControls();
