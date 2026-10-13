@@ -342,7 +342,8 @@ namespace ErikwnkWFUI.Forms
             ApplyColors();
         }
 
-        // The toasts that wait for their delay; one timer each, gone when it has fired.
+        // The toasts that wait for their delay; one timer each, gone when it has fired. Nothing here reads the list: the
+        // tests use it to reach those timers (to let one fire, or to see that none is left).
         private static readonly List<Timer> _scheduled = new List<Timer>();
 
         // Shows the toast, or lets it wait for its delay or for its window.
