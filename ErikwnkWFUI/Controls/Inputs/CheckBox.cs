@@ -27,12 +27,14 @@ namespace ErikwnkWFUI.Controls
     /// standard box. The size is not automatic: the factory sets
     /// it for the text and font it is given, so after changing <c>Text</c> or <c>Font</c> set
     /// the <c>Size</c> too.
+    /// <para>
+    /// Why the library draws the box itself instead of recoloring the native one: <c>ForeColor</c> drives the native
+    /// checkmark as well as the label, the native glyph does not dim when disabled, and drawing over it from a Paint
+    /// event still let <c>ButtonBase</c> draw its own glyph and text underneath (a label showed up doubled in a
+    /// PropertyTable cell). A subclass that draws in <c>OnPaint</c> and never calls <c>base.OnPaint</c> stops the native
+    /// drawing completely.
+    /// </para>
     /// </remarks>
-    // Why not recolor the native control: ForeColor drives the native checkmark as
-    // well as the label, the native glyph does not dim when disabled, and drawing over it
-    // from a Paint event still let ButtonBase draw its own glyph and text underneath (a
-    // label showed up doubled in a PropertyTable cell). A subclass that draws in OnPaint
-    // and never calls base.OnPaint stops the native drawing completely.
     public class CheckBox : System.Windows.Forms.CheckBox
     {
         // The measures of the box and its label at 96 dpi; they grow with the screen's
