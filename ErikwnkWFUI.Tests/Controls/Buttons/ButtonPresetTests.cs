@@ -339,4 +339,28 @@ public class ButtonPresetTests
         Assert.Equal("", new UIButtonPreset(null!).Symbol);
         Assert.Throws<ArgumentNullException>(() => UIStyles.Buttons.CreateSymbol((UIButtonPreset)null!));
     }
+
+    [Fact]
+    public void PresetsInTheSameColor_ShareTheirColorSet_WorkedOutOnce()
+    {
+        Assert.Same(UIStyles.Buttons.Presets.Add.Colors, UIStyles.Buttons.Presets.Save.Colors);
+        Assert.Same(UIStyles.Buttons.Presets.Add.Colors, UIStyles.Buttons.Presets.Check.Colors);
+        Assert.Same(UIStyles.Buttons.Presets.Delete.Colors, UIStyles.Buttons.Presets.Close.Colors);
+        Assert.Same(UIStyles.Buttons.Presets.Browse.Colors, UIStyles.Buttons.Presets.OpenFile.Colors);
+        Assert.Same(UIStyles.Buttons.Presets.Search.Colors, UIStyles.Buttons.Presets.Settings.Colors);
+        Assert.NotSame(UIStyles.Buttons.Presets.Add.Colors, UIStyles.Buttons.Presets.Delete.Colors);
+    }
+
+    [Fact]
+    public void TheSharedSets_HaveTheWhiteSymbolOfThePresets_OnAFillItCanBeSeenOn()
+    {
+        foreach (UIButtonPreset preset in new[] { UIStyles.Buttons.Presets.Add, UIStyles.Buttons.Presets.Delete, UIStyles.Buttons.Presets.Edit, UIStyles.Buttons.Presets.Search, UIStyles.Buttons.Presets.Warning, UIStyles.Buttons.Presets.Heart })
+        {
+            Assert.Equal(UIColors.White, preset.Colors!.BasicText);
+            Assert.True(ColorContrastHelper.GetContrastRatio(preset.Colors.BasicText, preset.Colors.Basic) >= 3.0);
+        }
+
+        // The yellow keeps its bright fill.
+        Assert.Equal(UIColors.White, UIStyles.Buttons.Presets.Browse.Colors!.BasicText);
+    }
 }

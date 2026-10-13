@@ -219,11 +219,26 @@ namespace ErikwnkWFUI
                 // The symbol of a preset is white in every state. The fills are those of
                 // the set, only a fill too bright for a white symbol (3:1) is darkened a
                 // little. The yellow keeps its bright fills: white on yellow is its look.
+                //
+                // Worked out once per set: the presets of one color share the result (there are a few
+                // sets and about eighty presets, and every one of them is made when the first is used).
+                private static readonly System.Collections.Generic.Dictionary<UIColorSet, UIColorSet> WhiteOnSets =
+                    new System.Collections.Generic.Dictionary<UIColorSet, UIColorSet>();
+
                 private static UIColorSet WhiteOn(UIColorSet set)
                 {
-                    return ReferenceEquals(set, Colors.Sets.Yellow)
-                        ? UIColors.WithText(set, UIColors.White)
-                        : UIColors.WithText(set, UIColors.White, 3.0);
+                    UIColorSet result;
+
+                    if (!WhiteOnSets.TryGetValue(set, out result))
+                    {
+                        result = ReferenceEquals(set, Colors.Sets.Yellow)
+                            ? UIColors.WithText(set, UIColors.White)
+                            : UIColors.WithText(set, UIColors.White, 3.0);
+
+                        WhiteOnSets.Add(set, result);
+                    }
+
+                    return result;
                 }
 
                 /// <summary>Adding an entry: a plus on green.</summary>
