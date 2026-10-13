@@ -10,8 +10,6 @@ namespace ErikwnkWFUI.Controls
     {
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
-
             DrawHeaderBackground(e.Graphics);
 
             DrawPageArea(e.Graphics);
@@ -38,6 +36,9 @@ namespace ErikwnkWFUI.Controls
             e.Graphics.ResetClip();
 
             CoverOutsideVisibleStrip(e.Graphics);
+
+            // Last, so that what a handler of Paint draws lies on top of the tabs, not under them.
+            base.OnPaint(e);
         }
 
         // The page contents plus the border band around them - what the tab

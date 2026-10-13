@@ -55,6 +55,22 @@ public class TabControlTests
     }
 
     [Fact]
+    public void WhatAPaintHandlerDraws_LiesOnTopOfTheTabs()
+    {
+        using WfuiTabControl tabs = CreateTabs();
+        Rectangle marker = new Rectangle(tabs.GetTabRect(0).Left + 4, tabs.GetTabRect(0).Top + 4, 6, 6);
+        tabs.Paint += (sender, e) =>
+        {
+            using SolidBrush brush = new SolidBrush(Color.Magenta);
+            e.Graphics.FillRectangle(brush, marker);
+        };
+
+        using Bitmap rendered = Render(tabs);
+
+        Assert.Equal(Color.FromArgb(255, 0, 255), Pixel(rendered, marker.Left + 2, marker.Top + 2));
+    }
+
+    [Fact]
     public void Defaults_FollowTheCurrentTheme()
     {
         using WfuiTabControl tabs = new WfuiTabControl();
