@@ -13,7 +13,6 @@ namespace ErikwnkWFUI.Controls
             InvalidateDragIndicator();
 
             _dragInsertPosition = -1;
-            InvalidateDragIndicator();
 
             base.OnDragLeave(e);
         }
