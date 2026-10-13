@@ -236,6 +236,8 @@ namespace ErikwnkWFUI.Controls
                 : UIColors.Darken(ItemBackColor, 5);
         }
 
+        // The text color of an item in a state, on the first row (the painting asks GetTextColorOn with the background it
+        // really has; the tests ask here).
         private Color GetTextColor(bool isSelected, bool isDisabled)
         {
             return GetTextColorOn(isSelected, isDisabled, isSelected ? GetSelectedBackColor(0) : ItemBackColor);
