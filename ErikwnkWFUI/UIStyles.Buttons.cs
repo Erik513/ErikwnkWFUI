@@ -27,7 +27,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
+            /// <param name="isIcon">A special case: the button keeps the text you give it but is drawn in the symbol font and without inner padding, for a glyph that is part of a normal button. For a button that only shows a symbol use <c>CreateSymbol</c> instead - it centers the symbol exactly, grows it with the height of the button and has ready-made designs.</param>
             /// <param name="colors">
             /// A color set to use instead of the neutral look, for a button in a color of
             /// your own: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c>,
@@ -62,7 +62,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
+            /// <param name="isIcon">A special case: the button keeps the text you give it but is drawn in the symbol font and without inner padding, for a glyph that is part of a normal button. For a button that only shows a symbol use <c>CreateSymbol</c> instead - it centers the symbol exactly, grows it with the height of the button and has ready-made designs.</param>
             public static Button CreatePrimary(
                 string text = "",
                 string tooltip = "",
@@ -80,7 +80,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
+            /// <param name="isIcon">A special case: the button keeps the text you give it but is drawn in the symbol font and without inner padding, for a glyph that is part of a normal button. For a button that only shows a symbol use <c>CreateSymbol</c> instead - it centers the symbol exactly, grows it with the height of the button and has ready-made designs.</param>
             public static Button CreateGreen(
                 string text = "",
                 string tooltip = "",
@@ -98,7 +98,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The caption.</param>
             /// <param name="tooltip">Tooltip text; empty for none.</param>
             /// <param name="size">The size; 30 x 30 when left out.</param>
-            /// <param name="isIcon">True to use the symbol font without inner padding, for a glyph instead of text. For a symbol, <c>CreateSymbol</c> is the better choice: it centers the glyph exactly.</param>
+            /// <param name="isIcon">A special case: the button keeps the text you give it but is drawn in the symbol font and without inner padding, for a glyph that is part of a normal button. For a button that only shows a symbol use <c>CreateSymbol</c> instead - it centers the symbol exactly, grows it with the height of the button and has ready-made designs.</param>
             public static Button CreateRed(
                 string text = "",
                 string tooltip = "",
