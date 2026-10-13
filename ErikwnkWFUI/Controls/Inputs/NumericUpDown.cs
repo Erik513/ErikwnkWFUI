@@ -37,7 +37,7 @@ namespace ErikwnkWFUI.Controls
     /// <c>Accelerations</c>, <c>TextAlign</c> - works as before.
     /// </para>
     /// </remarks>
-    public class NumericUpDown : System.Windows.Forms.NumericUpDown
+    public partial class NumericUpDown : System.Windows.Forms.NumericUpDown
     {
         // A field whose fill differs less than this from the field's color (contrast ratio) gets an outline.
         private const double OutlineBelowContrast = 2.0;
@@ -68,11 +68,6 @@ namespace ErikwnkWFUI.Controls
         private bool _centering;
         private int _shiftedTop = int.MinValue;
         private int _appliedShift;
-
-        // Reading the number back with a prefix and a suffix (see ValidateEditText).
-        private bool _validating;
-        private string _prefix = "";
-        private string _suffix = "";
 
         public NumericUpDown()
         {
@@ -155,136 +150,6 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // ---- prefix and suffix ----
-
-        /// <summary>Text shown before the number in the field (for example "$ "); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
-        public string Prefix
-        {
-            get { return _prefix; }
-            set
-            {
-                _prefix = value ?? "";
-                UpdateEditText();
-            }
-        }
-
-        /// <summary>Text shown after the number in the field (for example " %" or " px"); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
-        public string Suffix
-        {
-            get { return _suffix; }
-            set
-            {
-                _suffix = value ?? "";
-                UpdateEditText();
-            }
-        }
-
-        protected override void UpdateEditText()
-        {
-            base.UpdateEditText();
-
-            if (_prefix.Length == 0 && _suffix.Length == 0)
-                return;
-
-            // Not a change by the user (that would make the standard control read the text as an edit).
-            ChangingText = true;
-
-            try
-            {
-                Text = _prefix + Text + _suffix;
-            }
-            finally
-            {
-                ChangingText = false;
-            }
-        }
-
-        // What the user typed may still carry the prefix and the suffix (or have lost a space of them): they are taken
-        // off before the number is read (the standard control reads it when the field is left and before an arrow
-        // steps), and put back afterwards.
-        protected override void ValidateEditText()
-        {
-            // Putting the bare number into the field validates again (the standard control does that for a text set by
-            // code): the inner round reads it, the outer one must not take off a second suffix.
-            if (_validating)
-            {
-                base.ValidateEditText();
-                return;
-            }
-
-            _validating = true;
-
-            try
-            {
-                TakeOffAffixes();
-                base.ValidateEditText();
-                PutOnAffixes();
-            }
-            finally
-            {
-                _validating = false;
-            }
-        }
-
-        public override void UpButton()
-        {
-            TakeOffAffixes();
-            base.UpButton();
-            PutOnAffixes();
-        }
-
-        public override void DownButton()
-        {
-            TakeOffAffixes();
-            base.DownButton();
-            PutOnAffixes();
-        }
-
-        private void TakeOffAffixes()
-        {
-            if (_prefix.Length == 0 && _suffix.Length == 0)
-                return;
-
-            string bare = RemoveAffixes(Text);
-
-            if (bare != Text)
-                Text = bare;
-        }
-
-        private void PutOnAffixes()
-        {
-            if (_prefix.Length > 0 || _suffix.Length > 0)
-                UpdateEditText();
-        }
-
-        private string RemoveAffixes(string text)
-        {
-            text = text.Trim();
-            text = RemoveAffix(text, _prefix, atStart: true);
-
-            return RemoveAffix(text, _suffix, atStart: false);
-        }
-
-        private static string RemoveAffix(string text, string affix, bool atStart)
-        {
-            if (affix.Length == 0)
-                return text;
-
-            foreach (string candidate in new[] { affix, affix.Trim() })
-            {
-                if (candidate.Length == 0)
-                    continue;
-
-                if (atStart && text.StartsWith(candidate, StringComparison.Ordinal))
-                    return text.Substring(candidate.Length).TrimStart();
-
-                if (!atStart && text.EndsWith(candidate, StringComparison.Ordinal))
-                    return text.Substring(0, text.Length - candidate.Length).TrimEnd();
-            }
-
-            return text;
-        }
-
         // The standard control draws a ring around its text field (black when it is disabled); what lies outside the two
         // children is painted over in the field's color.
         protected override void OnPaint(PaintEventArgs e)
@@ -352,6 +217,10 @@ namespace ErikwnkWFUI.Controls
                 int baseTop = _edit.Top == _shiftedTop ? _edit.Top - _appliedShift : _edit.Top;
                 int lineHeight = Font.Height;
                 int shift = lineHeight <= 16 ? 1 : lineHeight >= 30 ? -(int)Math.Round((lineHeight - 26) / 7.0) : 0;
+
+                // The measures above are those of the factory's FixedSingle; the standard control places the field one
+                // pixel higher without a border and one lower with the 3D one.
+                shift += BorderStyle == BorderStyle.None ? 1 : BorderStyle == BorderStyle.Fixed3D ? -1 : 0;
 
                 _appliedShift = shift;
                 _shiftedTop = baseTop + shift;

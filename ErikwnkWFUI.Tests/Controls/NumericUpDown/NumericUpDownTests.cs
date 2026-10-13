@@ -244,25 +244,7 @@ public class NumericUpDownTests : IDisposable
     // ---- the number in the middle ----
 
     // The space above and below the digits in the box.
-    private static (int Above, int Below) DigitSpace(System.Windows.Forms.NumericUpDown box)
-    {
-        using Bitmap bitmap = new Bitmap(box.Width, box.Height);
-        box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
-        int top = -1, bottom = -1;
-        Color text = box.ForeColor;
-
-        for (int y = 2; y < box.Height - 2; y++)
-            for (int x = 6; x < box.Width - 24; x++)
-                if (bitmap.GetPixel(x, y).R > 150)
-                {
-                    if (top < 0)
-                        top = y;
-
-                    bottom = y;
-                }
-
-        return (top, box.Height - 1 - bottom);
-    }
+    private static (int Above, int Below) DigitSpace(Control box) => InkMeasure.SpaceAboveAndBelow(box, 24);
 
     [Theory]
     [InlineData(8f)]
@@ -282,6 +264,24 @@ public class NumericUpDownTests : IDisposable
         var space = DigitSpace(box);
 
         Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{points} pt: {space.Above} above, {space.Below} below");
+    }
+
+    [Theory]
+    [InlineData(BorderStyle.None)]
+    [InlineData(BorderStyle.FixedSingle)]
+    [InlineData(BorderStyle.Fixed3D)]
+    public void TheNumber_IsInTheMiddle_WithEveryBorderStyle_AlsoAfterChangingIt(BorderStyle style)
+    {
+        System.Windows.Forms.NumericUpDown box = Show(UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 8));
+
+        // Through the other styles and back, as an application might switch it.
+        box.BorderStyle = BorderStyle.Fixed3D;
+        box.BorderStyle = BorderStyle.None;
+        box.BorderStyle = style;
+        Application.DoEvents();
+        var space = DigitSpace(box);
+
+        Assert.True(Math.Abs(space.Above - space.Below) <= 1, $"{style}: {space.Above} above, {space.Below} below");
     }
 
     [Fact]

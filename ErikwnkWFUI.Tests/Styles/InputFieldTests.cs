@@ -125,24 +125,7 @@ public class InputFieldTests : IDisposable
 
     // ---- the text in the middle ----
 
-    private static (int Above, int Below) DigitSpace(Control box)
-    {
-        using Bitmap bitmap = new Bitmap(box.Width, box.Height);
-        box.DrawToBitmap(bitmap, new Rectangle(Point.Empty, box.Size));
-        int top = -1, bottom = -1;
-
-        for (int y = 2; y < box.Height - 2; y++)
-            for (int x = 6; x < box.Width - 6; x++)
-                if (bitmap.GetPixel(x, y).R > 150)
-                {
-                    if (top < 0)
-                        top = y;
-
-                    bottom = y;
-                }
-
-        return (top, box.Height - 1 - bottom);
-    }
+    private static (int Above, int Below) DigitSpace(Control box) => InkMeasure.SpaceAboveAndBelow(box, 6);
 
     [Theory]
     [InlineData(8f)]
