@@ -850,18 +850,16 @@ namespace ErikwnkWFUI.Controls
                 return 0;
             }
 
-            using (var font = new Font(Font, FontStyle.Bold))
-            {
-                var textSize = TextRenderer.MeasureText(
-                    Columns[columnIndex].Text,
-                    font,
-                    new Size(int.MaxValue, int.MaxValue),
-                    TextFormatFlags.Left | TextFormatFlags.NoPadding);
+            // (The font the caption is drawn in: HeaderFont.)
+            var textSize = TextRenderer.MeasureText(
+                Columns[columnIndex].Text,
+                HeaderFont,
+                new Size(int.MaxValue, int.MaxValue),
+                TextFormatFlags.Left | TextFormatFlags.NoPadding);
 
-                // Matches the 7px left / 3px right padding OnDrawColumnHeader
-                // draws the caption with.
-                return textSize.Width + 10;
-            }
+            // Matches the 7px left / 3px right padding OnDrawColumnHeader
+            // draws the caption with.
+            return textSize.Width + 10;
         }
 
         private List<ColumnHeader> GetColumnsInDisplayOrder()

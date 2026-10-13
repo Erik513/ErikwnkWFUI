@@ -57,4 +57,18 @@ public class ListViewHeaderFontTests
 
         Assert.Throws<ArgumentException>(() => _ = made.Height);
     }
+
+    [Fact]
+    public void TheLeastWidthOfAColumn_IsMeasuredInTheHeaderFont_NotInABoldVersionOfTheListsFont()
+    {
+        using Font big = new Font("Segoe UI", 20f, FontStyle.Bold);
+        using WfuiListView list = new WfuiListView();
+        list.Columns.Add("A heading that needs room", 50);
+        int before = list.InvokePrivate<int>("MeasureHeaderTextWidth", 0);
+
+        list.HeaderFont = big;
+        int after = list.InvokePrivate<int>("MeasureHeaderTextWidth", 0);
+
+        Assert.True(after > before * 3 / 2, "the width did not follow the font: " + before + " -> " + after);
+    }
 }
