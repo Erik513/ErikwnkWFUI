@@ -39,7 +39,7 @@ public class NumericUpDownColorContrastTests : IDisposable
         box.Location = new Point(10, 10);
         box.Width = 110;
         box.TabStop = false;
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(140, 60), BackColor = UIColors.BackgroundMedium };
+        Form form = OffscreenForm.Create(new Size(140, 60), UIColors.BackgroundMedium);
         form.Controls.Add(box);
         form.Show();
         Application.DoEvents();

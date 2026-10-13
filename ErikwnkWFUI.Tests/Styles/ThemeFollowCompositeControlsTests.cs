@@ -32,7 +32,7 @@ public class ThemeFollowCompositeControlsTests : IDisposable
     {
         control.Bounds = new Rectangle(5, 5, 240, 120);
         control.TabStop = false;
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(260, 140), BackColor = Color.FromArgb(40, 90, 140) };
+        Form form = OffscreenForm.Create(new Size(260, 140), Color.FromArgb(40, 90, 140));
         form.Controls.Add(control);
         form.Show();
         Application.DoEvents();

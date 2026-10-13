@@ -27,7 +27,7 @@ public class NativeControlThemeTests : IDisposable
     private Panel Show(Action<IntPtr>? apply = null, Func<IntPtr>? find = null)
     {
         Panel panel = new Panel { Bounds = new Rectangle(5, 5, 100, 100) };
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(120, 120) };
+        Form form = OffscreenForm.Create(new Size(120, 120));
         form.Controls.Add(panel);
 
         if (apply != null)
@@ -59,25 +59,17 @@ public class NativeControlThemeTests : IDisposable
     [Fact]
     public void ATextBoxFromTheFactory_IsTracked_AMultilineOneToo()
     {
-        int before = Listeners();
+        int before = ThemeListeners.Count();
         TextBox box = UIStyles.TextBoxes.CreateStandard("x");
         box.Multiline = true;
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(120, 120) };
+        Form form = OffscreenForm.Create(new Size(120, 120));
         form.Controls.Add(box);
         form.Show();
         Application.DoEvents();
         _forms.Add(form);
 
         // The follow of its colors, and the style of its scroll bars: four listeners while it has a window (fill, text, native parts, frame).
-        Assert.Equal(before + 4, Listeners());
-    }
-
-    private static int Listeners()
-    {
-        System.Reflection.FieldInfo field = typeof(UIColors).GetField("ThemeChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
-        Delegate? handlers = (Delegate?)field.GetValue(null);
-
-        return handlers == null ? 0 : handlers.GetInvocationList().Length;
+        Assert.Equal(before + 4, ThemeListeners.Count());
     }
 
     [Fact]

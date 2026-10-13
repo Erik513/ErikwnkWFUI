@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.TabControl;
 
@@ -25,7 +26,7 @@ public class TabControlMultilineBorderTests : IDisposable
         for (int i = 0; i < 9; i++)
             tabs.TabPages.Add(new TabPage("Tab number " + i));
 
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(330, 220) };
+        Form form = OffscreenForm.Create(new Size(330, 220));
         form.Controls.Add(tabs);
         form.Show();
         Application.DoEvents();

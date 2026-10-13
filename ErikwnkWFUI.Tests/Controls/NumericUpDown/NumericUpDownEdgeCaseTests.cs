@@ -47,7 +47,7 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         box.Location = new Point(10, 10);
         box.Width = 110;
         box.TabStop = false;
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(140, 60), BackColor = UIColors.BackgroundMedium };
+        Form form = OffscreenForm.Create(new Size(140, 60), UIColors.BackgroundMedium);
         form.Controls.Add(box);
         form.Show();
         Application.DoEvents();
@@ -177,7 +177,7 @@ public class NumericUpDownEdgeCaseTests : IDisposable
     public void AHandlerThatDisposesTheControl_DoesNotThrow_AndTheListenersAreGone()
     {
         WfuiNumericUpDown box = Show();
-        int whileShown = Listeners();
+        int whileShown = ThemeListeners.Count();
         Control parent = box.Parent!;
         box.ValueChanged += (sender, e) => box.Dispose();
 
@@ -190,7 +190,7 @@ public class NumericUpDownEdgeCaseTests : IDisposable
 
         // Its listeners (the frame, the colors of the field, the arrows) are gone. (Compared with the count while it was
         // shown, not with an absolute number: other tests may be showing controls at the same time.)
-        Assert.True(whileShown - Listeners() >= 3, $"{whileShown} while shown, {Listeners()} after");
+        Assert.True(whileShown - ThemeListeners.Count() >= 3, $"{whileShown} while shown, {ThemeListeners.Count()} after");
     }
 
     [Fact]
@@ -208,20 +208,12 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         Assert.Null(error);
     }
 
-    private static int Listeners()
-    {
-        FieldInfo field = typeof(UIColors).GetField("ThemeChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
-        Delegate? handlers = (Delegate?)field.GetValue(null);
-
-        return handlers == null ? 0 : handlers.GetInvocationList().Length;
-    }
-
     // ---- no window ----
 
     [Fact]
     public void WithoutAWindow_NothingNeedsOne_AndNothingListens()
     {
-        int before = Listeners();
+        int before = ThemeListeners.Count();
 
         using WfuiNumericUpDown box = (WfuiNumericUpDown)UIStyles.NumericUpDowns.CreatePrimary(0, 10, 1, 5);
         box.Colors = UIStyles.Colors.Sets.Green;
@@ -231,7 +223,7 @@ public class NumericUpDownEdgeCaseTests : IDisposable
         box.Font = new Font("Segoe UI", 14);
 
         Assert.Equal("~5 %", box.Text);
-        Assert.Equal(before, Listeners());
+        Assert.Equal(before, ThemeListeners.Count());
     }
 
     // ---- limits ----

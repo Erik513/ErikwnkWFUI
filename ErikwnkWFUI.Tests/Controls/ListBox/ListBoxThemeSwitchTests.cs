@@ -31,7 +31,7 @@ public class ListBoxThemeSwitchTests : IDisposable
     private T Show<T>(T control) where T : Control
     {
         control.Bounds = new Rectangle(5, 5, 220, 150);
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(240, 170) };
+        Form form = OffscreenForm.Create(new Size(240, 170));
         form.Controls.Add(control);
         form.Show();
         Application.DoEvents();
@@ -142,31 +142,23 @@ public class ListBoxThemeSwitchTests : IDisposable
         Assert.Equal(greenBefore, green.SelectedBackColor);
     }
 
-    private static int Listeners()
-    {
-        FieldInfo field = typeof(UIColors).GetField("ThemeChanged", BindingFlags.NonPublic | BindingFlags.Static)!;
-        Delegate? handlers = (Delegate?)field.GetValue(null);
-
-        return handlers == null ? 0 : handlers.GetInvocationList().Length;
-    }
-
     [Fact]
     public void AListListensOnlyWhileItHasAWindow()
     {
-        int before = Listeners();
+        int before = ThemeListeners.Count();
 
         WfuiListBox shown = Show(UIStyles.ListBoxes.CreateStandard());
         TitledListBox titled = Show(UIStyles.TitledListBoxes.CreateStandard("Title"));
-        Assert.Equal(before + 5, Listeners()); // each list: itself and its scroll bars; the titled one: itself
+        Assert.Equal(before + 5, ThemeListeners.Count()); // each list: itself and its scroll bars; the titled one: itself
 
         foreach (Form form in _forms)
             form.Dispose();
 
-        Assert.Equal(before, Listeners());
+        Assert.Equal(before, ThemeListeners.Count());
 
         // A list that never had a window listens to nothing.
         using WfuiListBox unshown = UIStyles.ListBoxes.CreateStandard();
-        Assert.Equal(before, Listeners());
+        Assert.Equal(before, ThemeListeners.Count());
     }
 
     [Fact]

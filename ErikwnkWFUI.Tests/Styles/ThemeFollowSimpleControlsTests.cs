@@ -33,7 +33,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             control.Bounds = new Rectangle(5, 5, 120, 40);
 
         control.TabStop = false; // the form that is shown last is the active one: no focus cue on only one of two
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(140, 60), BackColor = Color.FromArgb(40, 90, 140) };
+        Form form = OffscreenForm.Create(new Size(140, 60), Color.FromArgb(40, 90, 140));
         form.Controls.Add(control);
         form.Show();
         Application.DoEvents();

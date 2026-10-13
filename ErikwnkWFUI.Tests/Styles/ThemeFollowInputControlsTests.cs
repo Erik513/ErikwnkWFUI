@@ -29,7 +29,7 @@ public class ThemeFollowInputControlsTests : IDisposable
     {
         control.Location = new Point(5, 5);
         control.TabStop = false;
-        Form form = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-3000, 0), FormBorderStyle = FormBorderStyle.None, ClientSize = new Size(260, 80), BackColor = Color.FromArgb(40, 90, 140) };
+        Form form = OffscreenForm.Create(new Size(260, 80), Color.FromArgb(40, 90, 140));
         form.Controls.Add(control);
         form.Show();
         Application.DoEvents();
