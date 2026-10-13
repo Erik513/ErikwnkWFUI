@@ -557,6 +557,10 @@ namespace ErikwnkWFUI.Controls
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
+
+            // A disabled control gets no MouseLeave: whether the mouse is over the box is looked at again
+            // when it is enabled, so it does not look hovered with the mouse somewhere else.
+            _isHot = Enabled && IsMouseOver();
             Invalidate();
         }
 
