@@ -1889,10 +1889,6 @@ namespace ErikwnkWFUI.Controls
             private int _resizeStartScreenX;
             private int _resizeStartWidth;
 
-            private const uint RDW_INVALIDATE = 0x0001;
-            private const uint RDW_ERASE = 0x0004;
-            private const uint RDW_UPDATENOW = 0x0100;
-
             public HeaderInputSubclass(ListView owner)
             {
                 _owner = owner;

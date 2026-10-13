@@ -44,6 +44,19 @@ namespace ErikwnkWFUI.Native
         // Messages of the application itself start here.
         public const int WM_APP = 0x8000;
 
+        // ---- SetWindowPos, RedrawWindow and WM_PRINT flags ----
+        public const int SWP_NOSIZE = 0x0001;
+        public const int SWP_NOMOVE = 0x0002;
+        public const int SWP_NOZORDER = 0x0004;
+        public const int SWP_NOACTIVATE = 0x0010;
+        public const int SWP_FRAMECHANGED = 0x0020;
+        public const uint RDW_INVALIDATE = 0x0001;
+        public const uint RDW_ERASE = 0x0004;
+        public const uint RDW_UPDATENOW = 0x0100;
+        public const uint RDW_FRAME = 0x0400;
+        public const int PRF_NONCLIENT = 0x0002;
+        public const int PRF_CLIENT = 0x0004;
+
         // ---- window corners (Windows 11) ----
         public const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
         public const int DWMWCP_ROUND = 2;

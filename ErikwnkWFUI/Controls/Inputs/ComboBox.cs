@@ -38,7 +38,6 @@ namespace ErikwnkWFUI.Controls
     // of the list, the closed box) and ComboBox.Native.cs (the windows of the system behind the box).
     public partial class ComboBox : System.Windows.Forms.ComboBox
     {
-        private const int PRF_CLIENT = 0x00000004;
 
         // The width of the arrow part at 96 dpi, and the padding of the text.
         private const int ArrowWidth96 = 22;
