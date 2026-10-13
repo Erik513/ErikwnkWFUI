@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Native;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -124,9 +125,7 @@ namespace ErikwnkWFUI.Controls
 
         private int Px(int value96)
         {
-            int dpi = DpiOverride > 0 ? DpiOverride : DeviceDpi;
-
-            return (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
+            return Dpi.Scale(this, value96, DpiOverride);
         }
 
         protected override void OnEnter(EventArgs e)

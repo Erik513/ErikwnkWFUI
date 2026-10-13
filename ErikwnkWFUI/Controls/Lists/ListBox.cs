@@ -457,9 +457,7 @@ namespace ErikwnkWFUI.Controls
         // A measure of 96 dpi in the pixels of this screen.
         private int Px(int value96)
         {
-            int dpi = DpiOverride > 0 ? DpiOverride : DeviceDpi;
-
-            return (int)Math.Round(value96 * dpi / 96.0, MidpointRounding.AwayFromZero);
+            return Dpi.Scale(this, value96, DpiOverride);
         }
 
         // A seam for the tests: pretends another screen (0 is the real one).
