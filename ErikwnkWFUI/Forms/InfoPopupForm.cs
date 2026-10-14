@@ -482,9 +482,9 @@ namespace ErikwnkWFUI.Forms
         }
 
 
-        protected override int CornerPreference
+        protected override int CornerRadius96
         {
-            get { return IsFixed ? DWMWCP_ROUNDSMALL : DWMWCP_ROUND; }
+            get { return IsFixed ? 4 : 8; }
         }
 
 

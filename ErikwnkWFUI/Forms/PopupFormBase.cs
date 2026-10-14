@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -8,7 +10,7 @@ namespace ErikwnkWFUI.Forms
     /// <summary>
     /// What <see cref="InfoPopupForm"/> and <see cref="ToastForm"/> have in common: a borderless
     /// window that is never in the taskbar, never takes the activation, has rounded corners
-    /// (Windows 11), is see-through by a <see cref="PopupTransparency"/> and moves with the
+    /// (cut with a region, so without the shadow Windows 11 gives a rounded window), is see-through by a <see cref="PopupTransparency"/> and moves with the
     /// window it belongs to.
     /// </summary>
     public abstract class PopupFormBase : Form
@@ -47,10 +49,10 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Called when the opacity has changed: the colors that depend on it are to be set again.</summary>
         protected abstract void OnTransparencyChanged();
 
-        /// <summary>The corner of the window as DWM knows it: <c>DWMWCP_ROUND</c> or <c>DWMWCP_ROUNDSMALL</c>.</summary>
-        protected virtual int CornerPreference
+        /// <summary>The radius of the rounded corners at 96 dpi (scaled with the screen).</summary>
+        protected virtual int CornerRadius96
         {
-            get { return DWMWCP_ROUND; }
+            get { return 8; }
         }
 
         // A popup must never take the activation away from the window it is shown for (the window
@@ -72,15 +74,31 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        // Win11 rounds window corners itself via DWM (anti-aliased, all four identical): just
-        // ask for the radius. A window Region fights this and leaves one corner square; before
-        // Windows 11 the call does nothing and the popup is a plain rectangle.
+        // The corners are cut with a window region, the same on every Windows. Windows 11 would round them itself
+        // (anti-aliased), but gives a rounded window a shadow, which follows a popup that moves with the mouse late and at
+        // the wrong place - so its own rounding is switched off.
         protected void ApplyRoundedCorners()
         {
-            if (!IsHandleCreated)
+            if (!IsHandleCreated || Width <= 0 || Height <= 0)
                 return;
 
-            int preference = CornerPreference;
+            SwitchOffSystemRounding();
+
+            int radius = Math.Min(Dpi.Scale(this, CornerRadius96), Math.Min(Width, Height) / 2);
+
+            using (GraphicsPath path = RoundedRectangle.CreatePath(new Rectangle(0, 0, Width, Height), radius))
+            {
+                Region previous = Region;
+                Region = new Region(path);
+
+                if (previous != null)
+                    previous.Dispose();
+            }
+        }
+
+        private void SwitchOffSystemRounding()
+        {
+            int preference = DWMWCP_DONOTROUND;
 
             try
             {
@@ -88,11 +106,11 @@ namespace ErikwnkWFUI.Forms
             }
             catch (EntryPointNotFoundException)
             {
-                // before Windows 11: no rounded corners
+                // before Windows 11 there is nothing to switch off
             }
             catch (DllNotFoundException)
             {
-                // no desktop window manager: no rounded corners
+                // no desktop window manager
             }
         }
 

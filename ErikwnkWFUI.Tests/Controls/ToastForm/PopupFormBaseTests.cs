@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Helpers;
 
@@ -21,6 +23,51 @@ public class PopupFormBaseTests
                 Assert.Equal(FormStartPosition.Manual, popup.StartPosition);
                 Assert.Equal(PopupTransparency.Medium, popup.Transparency);
                 Assert.Equal(PopupTransparency.Medium.ToOpacity(), popup.Opacity);
+            }
+        }
+    }
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmGetWindowAttribute(IntPtr handle, int attribute, out int value, int size);
+
+    [Fact]
+    public void BothPopups_HaveRoundedCorners_CutWithARegion_AndNoShadowOfTheSystem()
+    {
+        foreach (PopupFormBase popup in Both())
+        {
+            using (popup)
+            {
+                popup.Size = new Size(200, 60);
+                _ = popup.Handle;
+
+                Assert.NotNull(popup.Region);
+                Assert.False(popup.Region!.IsVisible(new Point(0, 0)), "the corner is part of the window");
+                Assert.False(popup.Region.IsVisible(new Point(199, 59)), "the corner is part of the window");
+                Assert.True(popup.Region.IsVisible(new Point(100, 30)));
+                Assert.True(popup.Region.IsVisible(new Point(20, 0)));
+
+                // Windows 11 shades a window it rounds itself: it must not round this one (a missing attribute, before
+                // Windows 11, is as good).
+                if (DwmGetWindowAttribute(popup.Handle, 33, out int preference, sizeof(int)) == 0)
+                    Assert.Equal(1, preference);
+            }
+        }
+    }
+
+    [Fact]
+    public void TheRegion_FollowsTheSizeOfThePopup()
+    {
+        foreach (PopupFormBase popup in Both())
+        {
+            using (popup)
+            {
+                popup.Size = new Size(200, 60);
+                _ = popup.Handle;
+                popup.Size = new Size(300, 90);
+
+                Assert.False(popup.Region!.IsVisible(new Point(299, 89)));
+                Assert.True(popup.Region.IsVisible(new Point(250, 45)));
+                Assert.True(popup.Region.IsVisible(new Point(250, 85)));
             }
         }
     }
