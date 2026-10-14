@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Forms
@@ -52,7 +53,21 @@ namespace ErikwnkWFUI.Forms
         /// <summary>The radius of the rounded corners at 96 dpi (scaled with the screen).</summary>
         protected virtual int CornerRadius96
         {
-            get { return 8; }
+            get { return 12; }
+        }
+
+        /// <summary>The thin line around the popup: the text color of its background, faded most of the way into it.</summary>
+        protected virtual Color BorderColor
+        {
+            get { return UIColors.BlendToward(UIColors.GetBestTextColor(BackColor), BackColor, BorderFade); }
+        }
+
+        // How far the line around the popup is faded into the background (it is a quiet outline, not a frame).
+        private const double BorderFade = 0.7;
+
+        private int GetCornerRadius()
+        {
+            return Math.Min(Dpi.Scale(this, CornerRadius96), Math.Min(Width, Height) / 2);
         }
 
         // A popup must never take the activation away from the window it is shown for (the window
@@ -84,9 +99,7 @@ namespace ErikwnkWFUI.Forms
 
             SwitchOffSystemRounding();
 
-            int radius = Math.Min(Dpi.Scale(this, CornerRadius96), Math.Min(Width, Height) / 2);
-
-            using (GraphicsPath path = RoundedRectangle.CreatePath(new Rectangle(0, 0, Width, Height), radius))
+            using (GraphicsPath path = RoundedRectangle.CreatePath(new Rectangle(0, 0, Width, Height), GetCornerRadius()))
             {
                 Region previous = Region;
                 Region = new Region(path);
@@ -124,6 +137,27 @@ namespace ErikwnkWFUI.Forms
         {
             base.OnSizeChanged(e);
             ApplyRoundedCorners();
+            Invalidate();
+        }
+
+        // The line around the popup - drawn smoothed along the corners, which also softens the edge of the region there
+        // (the edge of a window region has no smoothing of its own).
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            int thickness = Math.Max(1, Dpi.Scale(this, 1));
+            SmoothingMode previous = e.Graphics.SmoothingMode;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+
+            using (GraphicsPath path = RoundedRectangle.CreatePath(new Rectangle(0, 0, ClientSize.Width - 1, ClientSize.Height - 1), GetCornerRadius()))
+            using (Pen pen = new Pen(BorderColor, thickness))
+            {
+                pen.Alignment = PenAlignment.Inset;
+                e.Graphics.DrawPath(pen, path);
+            }
+
+            e.Graphics.SmoothingMode = previous;
         }
 
         protected override void Dispose(bool disposing)

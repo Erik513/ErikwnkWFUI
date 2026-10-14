@@ -484,7 +484,7 @@ namespace ErikwnkWFUI.Forms
 
         protected override int CornerRadius96
         {
-            get { return IsFixed ? 4 : 8; }
+            get { return IsFixed ? 6 : 12; }
         }
 
 

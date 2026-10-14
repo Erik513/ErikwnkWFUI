@@ -55,6 +55,29 @@ public class PopupFormBaseTests
     }
 
     [Fact]
+    public void BothPopups_HaveAThinLineAroundThem_InAColorOtherThanTheirBackground()
+    {
+        foreach (PopupFormBase popup in Both())
+        {
+            using (popup)
+            {
+                popup.Transparency = PopupTransparency.Opaque;
+                popup.Size = new Size(200, 60);
+                _ = popup.Handle;
+
+                using Bitmap bitmap = new Bitmap(popup.Width, popup.Height);
+                popup.DrawToBitmap(bitmap, new Rectangle(Point.Empty, popup.Size));
+
+                Color edge = bitmap.GetPixel(100, 0);
+                Color inside = bitmap.GetPixel(100, 30);
+
+                Assert.NotEqual(inside.ToArgb(), edge.ToArgb());
+                Assert.NotEqual(Color.Transparent.ToArgb(), edge.ToArgb());
+            }
+        }
+    }
+
+    [Fact]
     public void TheRegion_FollowsTheSizeOfThePopup()
     {
         foreach (PopupFormBase popup in Both())
