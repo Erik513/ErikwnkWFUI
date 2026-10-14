@@ -409,11 +409,11 @@ namespace ErikwnkWFUI.Forms
             BackColor = GetBackColor();
             Location = PopupSupport.KeepInside(location, Size, PopupSupport.GetPlacementArea(anchor), Screen.FromControl(anchor).WorkingArea);
 
+            // Not BringToFront(): an owned window lies above its owner anyway, and BringToFront moves the window without
+            // SWP_NOACTIVATE - the popup then became the window in front, and with its hiding Windows chose the next one,
+            // which could be another program.
             if (!Visible)
-            {
                 Show(ownerForm);
-                BringToFront();
-            }
 
             Follower.Attach(this, ownerForm);
             _lastAnchor = anchor;
