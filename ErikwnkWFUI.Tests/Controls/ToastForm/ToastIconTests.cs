@@ -15,6 +15,32 @@ public class ToastIconTests : ToastTestBase
 
     private static Label MessageLabel() => Current()!.GetPrivateField<Label>("_messageLabel")!;
 
+    [Theory]
+    [InlineData(ToastIcon.Success)]
+    [InlineData(ToastIcon.Info)]
+    [InlineData(ToastIcon.Warning)]
+    [InlineData(ToastIcon.Error)]
+    public void TheFontOfTheSymbol_IsOneThatCanStillBeUsed_ForEveryIcon(ToastIcon icon)
+    {
+        ToastForm.ShowToast("Message", Host(), icon: icon);
+
+        // A font that was given back throws when it is used - and the label paints a red cross instead of the symbol.
+        Assert.Null(Record.Exception(() => IconLabel().Font.Height));
+    }
+
+    [Fact]
+    public void TheSameSymbolFontTwice_IsOneFont_NotAnEqualOneThatTheLabelWouldNotTake()
+    {
+        ToastForm.ShowToast("Message", Host(), icon: ToastIcon.Info);
+        ToastForm toast = Current()!;
+        Font first = toast.GetPrivateField<Font>("_iconFont")!;
+
+        toast.CustomSymbol = ErikwnkWFUI.UIStyles.Symbols.Info;
+
+        Assert.Same(first, toast.GetPrivateField<Font>("_iconFont"));
+        Assert.Null(Record.Exception(() => IconLabel().Font.Height));
+    }
+
     [Fact]
     public void WithoutAnIcon_NoSymbolIsShown_AndTheTextUsesTheWidth()
     {

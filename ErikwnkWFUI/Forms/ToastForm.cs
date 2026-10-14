@@ -285,7 +285,14 @@ namespace ErikwnkWFUI.Forms
 
             if (glyph.Length > 0)
             {
-                _iconFont = new Font(UIStyles.Symbols.GetFontName(glyph), UIFonts.Icon.Size);
+                string fontName = UIStyles.Symbols.GetFontName(glyph);
+
+                // The same font as the one the label has: nothing to change. (A second, equal font would not be taken - the
+                // setter of Font compares fonts by value - and the label would keep the old one, which is given back below.)
+                if (previous != null && previous.Name == fontName && previous.Size == UIFonts.Icon.Size)
+                    return;
+
+                _iconFont = new Font(fontName, UIFonts.Icon.Size);
                 _iconLabel.Font = _iconFont;
             }
             else
