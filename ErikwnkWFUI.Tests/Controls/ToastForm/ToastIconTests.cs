@@ -13,6 +13,8 @@ public class ToastIconTests : ToastTestBase
 {
     private static Label IconLabel() => Current()!.GetPrivateField<Label>("_iconLabel")!;
 
+    private static Panel ContentPanel() => Current()!.GetPrivateField<Panel>("_contentPanel")!;
+
     private static Label MessageLabel() => Current()!.GetPrivateField<Label>("_messageLabel")!;
 
     [Theory]
@@ -42,6 +44,34 @@ public class ToastIconTests : ToastTestBase
     }
 
     [Fact]
+    public void TheSymbol_IsInThePictureOfTheWindow()
+    {
+        ToastForm.ShowToast("Message", Host(), icon: ToastIcon.Info);
+        ToastForm toast = Current()!;
+        toast.Transparency = PopupTransparency.Opaque;
+        Rectangle area = IconLabel().Bounds;
+        area.Offset(ContentPanel().Left, ContentPanel().Top);
+
+        using Bitmap picture = toast.RenderLayer();
+        Color background = picture.GetPixel(area.Left - 2, area.Top + area.Height / 2);
+        int light = 0;
+
+        for (int y = area.Top; y < area.Bottom; y++)
+        {
+            for (int x = area.Left; x < area.Right; x++)
+            {
+                Color pixel = picture.GetPixel(x, y);
+
+                if (pixel.R > background.R + 100 && pixel.G > background.G + 100 && pixel.B > background.B + 100)
+                    light++;
+            }
+        }
+
+        // (Controls that lie over one another are printed in an order that can wipe out the one below: this is what it was.)
+        Assert.True(light >= 10, "the symbol is not in the picture of the window: " + light);
+    }
+
+    [Fact]
     public void WithoutAnIcon_NoSymbolIsShown_AndTheTextUsesTheWidth()
     {
         ToastForm.ShowToast("Plain", Host());
@@ -49,7 +79,7 @@ public class ToastIconTests : ToastTestBase
         Assert.Equal(ToastIcon.None, Current()!.MessageIcon);
         Assert.False(IconLabel().Visible);
         Assert.Equal("", IconLabel().Text);
-        Assert.Equal(0, MessageLabel().Padding.Left);
+        Assert.True(ContentPanel().Padding.Left < 45, "room for a symbol that is not there");
     }
 
     [Theory]
@@ -64,8 +94,8 @@ public class ToastIconTests : ToastTestBase
         Assert.Equal(icon, Current()!.MessageIcon);
         Assert.True(IconLabel().Visible);
         Assert.False(string.IsNullOrEmpty(IconLabel().Text));
-        Assert.True(MessageLabel().Padding.Left > 0);
-        Assert.True(IconLabel().Right <= MessageLabel().Left + MessageLabel().Padding.Left, "the symbol overlaps the text");
+        Assert.True(ContentPanel().Padding.Left >= 45, "no room for the symbol");
+        Assert.True(IconLabel().Right <= MessageLabel().Left, "the symbol overlaps the text");
     }
 
     [Fact]
@@ -114,7 +144,7 @@ public class ToastIconTests : ToastTestBase
 
         toast.MessageIcon = ToastIcon.None;
         Assert.False(IconLabel().Visible);
-        Assert.Equal(0, MessageLabel().Padding.Left);
+        Assert.True(ContentPanel().Padding.Left < 45, "room for a symbol that is not there");
     }
 
     [Fact]

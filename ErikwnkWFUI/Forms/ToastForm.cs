@@ -309,9 +309,14 @@ namespace ErikwnkWFUI.Forms
         // The text starts after the symbol, or near the edge without one.
         private void ApplyTextPadding()
         {
-            int left = GetShownGlyph().Length == 0 ? 0 : TextIndentWithSymbol96;
+            // The room for the symbol is in the padding of the panel, not of the labels: the symbol lies in that room, so no
+            // control covers another one (a label that did would paint over the symbol when the picture of the window is
+            // made, see PopupFormBase.RenderLayer).
+            int indent = GetShownGlyph().Length == 0 ? 0 : TextIndentWithSymbol96;
+            Padding panel = _contentPanel.Padding;
 
-            _messageLabel.Padding = new Padding(Dpi.Scale(left, _dpi), 0, Dpi.Scale(TextRightPadding96, _dpi), 0);
+            _contentPanel.Padding = new Padding(Dpi.Scale(ContentPaddingHorizontal96 + indent, _dpi), panel.Top, panel.Right, panel.Bottom);
+            _messageLabel.Padding = new Padding(0, 0, Dpi.Scale(TextRightPadding96, _dpi), 0);
             _titleLabel.Padding = _messageLabel.Padding;
         }
 

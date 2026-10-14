@@ -20,7 +20,7 @@ public class ToastCustomSymbolTests : ToastTestBase
 
         Assert.True(IconLabel().Visible);
         Assert.Equal(ErikwnkWFUI.UIStyles.Symbols.Copy, IconLabel().Text);
-        Assert.True(Current()!.GetPrivateField<Label>("_messageLabel")!.Padding.Left > 0);
+        Assert.True(Current()!.GetPrivateField<Panel>("_contentPanel")!.Padding.Left >= 45, "no room for the symbol");
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class ToastCustomSymbolTests : ToastTestBase
 
         toast.MessageIcon = ToastIcon.None;
         Assert.False(IconLabel().Visible);
-        Assert.Equal(0, toast.GetPrivateField<Label>("_messageLabel")!.Padding.Left);
+        Assert.True(toast.GetPrivateField<Panel>("_contentPanel")!.Padding.Left < 45, "room for a symbol that is not there");
     }
 
     [Fact]

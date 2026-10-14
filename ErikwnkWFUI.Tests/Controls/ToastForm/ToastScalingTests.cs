@@ -33,7 +33,7 @@ public class ToastScalingTests : ToastTestBase
         Assert.Equal(new Size(width, height), toast.Size);
         Assert.Equal(new Size(Scaled(30, dpi), Scaled(30, dpi)), Part(toast, "_iconLabel").Size);
         Assert.Equal(new Point(Scaled(10, dpi), (height - Scaled(30, dpi)) / 2), Part(toast, "_iconLabel").Location);
-        Assert.Equal(Scaled(30, dpi), Part(toast, "_messageLabel").Padding.Left);
+        Assert.Equal(Scaled(15 + 30, dpi), toast.GetPrivateField<Panel>("_contentPanel")!.Padding.Left);
     }
 
     [Fact]

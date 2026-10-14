@@ -65,6 +65,9 @@ namespace ErikwnkWFUI.Forms
             int vertical = Math.Max(0, (height - textHeight - slack) / 2);
             _contentPanel.Padding = new Padding(_contentPanel.Padding.Left, vertical, _contentPanel.Padding.Right, vertical);
             _iconLabel.Location = new Point(Dpi.Scale(IconLeft96, _dpi), (height - _iconLabel.Height) / 2);
+
+            // The picture of the window is made again (the controls in it are not the window itself, see PopupFormBase).
+            Invalidate();
         }
 
         // The part of the window the toast is placed in: its inside (without the title bar and

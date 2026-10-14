@@ -30,26 +30,47 @@ public class PopupFormBaseTests
     [DllImport("dwmapi.dll")]
     private static extern int DwmGetWindowAttribute(IntPtr handle, int attribute, out int value, int size);
 
+    [DllImport("user32.dll")]
+    private static extern int GetWindowLong(IntPtr handle, int index);
+
+    private static Bitmap Layer(PopupFormBase popup, int width, int height)
+    {
+        popup.Transparency = PopupTransparency.Opaque;
+        popup.Size = new Size(width, height);
+        _ = popup.Handle;
+
+        return popup.RenderLayer();
+    }
+
     [Fact]
-    public void BothPopups_HaveRoundedCorners_CutWithARegion_AndNoShadowOfTheSystem()
+    public void BothPopups_HaveSmoothlyRoundedCorners_InTheirPicture()
     {
         foreach (PopupFormBase popup in Both())
         {
             using (popup)
+            using (Bitmap layer = Layer(popup, 200, 60))
             {
-                popup.Size = new Size(200, 60);
-                _ = popup.Handle;
+                Assert.Equal(new Size(200, 60), layer.Size);
+                Assert.Equal(0, layer.GetPixel(0, 0).A);
+                Assert.Equal(0, layer.GetPixel(199, 59).A);
+                Assert.Equal(255, layer.GetPixel(100, 30).A);
+                Assert.Equal(255, layer.GetPixel(100, 0).A);
 
-                Assert.NotNull(popup.Region);
-                Assert.False(popup.Region!.IsVisible(new Point(0, 0)), "the corner is part of the window");
-                Assert.False(popup.Region.IsVisible(new Point(199, 59)), "the corner is part of the window");
-                Assert.True(popup.Region.IsVisible(new Point(100, 30)));
-                Assert.True(popup.Region.IsVisible(new Point(20, 0)));
+                // Along the curve of a corner there are pixels that are partly there: the edge is smoothed.
+                int partly = 0;
 
-                // Windows 11 shades a window it rounds itself: it must not round this one (a missing attribute, before
-                // Windows 11, is as good).
-                if (DwmGetWindowAttribute(popup.Handle, 33, out int preference, sizeof(int)) == 0)
-                    Assert.Equal(1, preference);
+                for (int y = 0; y < 14; y++)
+                {
+                    for (int x = 0; x < 14; x++)
+                    {
+                        int alpha = layer.GetPixel(x, y).A;
+
+                        if (alpha > 8 && alpha < 247)
+                            partly++;
+                    }
+                }
+
+                Assert.True(partly >= 6, "the corner has no smoothed pixels: " + partly);
             }
         }
     }
@@ -60,37 +81,59 @@ public class PopupFormBaseTests
         foreach (PopupFormBase popup in Both())
         {
             using (popup)
+            using (Bitmap layer = Layer(popup, 200, 60))
             {
-                popup.Transparency = PopupTransparency.Opaque;
-                popup.Size = new Size(200, 60);
-                _ = popup.Handle;
-
-                using Bitmap bitmap = new Bitmap(popup.Width, popup.Height);
-                popup.DrawToBitmap(bitmap, new Rectangle(Point.Empty, popup.Size));
-
-                Color edge = bitmap.GetPixel(100, 0);
-                Color inside = bitmap.GetPixel(100, 30);
+                Color edge = layer.GetPixel(100, 0);
+                Color inside = layer.GetPixel(100, 30);
 
                 Assert.NotEqual(inside.ToArgb(), edge.ToArgb());
-                Assert.NotEqual(Color.Transparent.ToArgb(), edge.ToArgb());
+                Assert.Equal(inside.ToArgb(), layer.GetPixel(100, 8).ToArgb());
             }
         }
     }
 
     [Fact]
-    public void TheRegion_FollowsTheSizeOfThePopup()
+    public void ThePicture_FollowsTheSizeOfThePopup()
     {
         foreach (PopupFormBase popup in Both())
         {
             using (popup)
             {
-                popup.Size = new Size(200, 60);
-                _ = popup.Handle;
+                using (Layer(popup, 200, 60))
+                {
+                }
+
                 popup.Size = new Size(300, 90);
 
-                Assert.False(popup.Region!.IsVisible(new Point(299, 89)));
-                Assert.True(popup.Region.IsVisible(new Point(250, 45)));
-                Assert.True(popup.Region.IsVisible(new Point(250, 85)));
+                using Bitmap layer = popup.RenderLayer();
+
+                Assert.Equal(new Size(300, 90), layer.Size);
+                Assert.Equal(0, layer.GetPixel(299, 89).A);
+                Assert.Equal(255, layer.GetPixel(250, 85).A);
+            }
+        }
+    }
+
+    [Fact]
+    public void BothPopups_AreLayeredWindows_WhoseOwnOpacityIsNotUsed_AndWindowsDoesNotRoundThem()
+    {
+        foreach (PopupFormBase popup in Both())
+        {
+            using (popup)
+            {
+                popup.Transparency = PopupTransparency.High;
+                popup.Size = new Size(200, 60);
+                _ = popup.Handle;
+
+                // Layered, and the opacity of the form itself (which could not be used together with the picture) untouched.
+                Assert.NotEqual(0, GetWindowLong(popup.Handle, -20) & 0x00080000);
+                Assert.Equal(1.0, ((Form)popup).Opacity);
+                Assert.Equal(PopupTransparency.High.ToOpacity(), popup.Opacity);
+
+                // Windows 11 shades a window it rounds itself: it must not round this one (a missing attribute, before
+                // Windows 11, is as good).
+                if (DwmGetWindowAttribute(popup.Handle, 33, out int preference, sizeof(int)) == 0)
+                    Assert.Equal(1, preference);
             }
         }
     }

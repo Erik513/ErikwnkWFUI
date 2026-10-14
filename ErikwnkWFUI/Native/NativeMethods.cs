@@ -185,6 +185,32 @@ namespace ErikwnkWFUI.Native
         [DllImport("user32.dll")]
         public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetDC(IntPtr hWnd);
+
+        // ---- layered windows: a bitmap with an alpha value for every pixel ----
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool UpdateLayeredWindow(
+            IntPtr hWnd, IntPtr hdcDst, IntPtr pptDst, ref NativeSize pSize, IntPtr hdcSrc, ref NativePoint pptSrc,
+            int crKey, ref NativeBlendFunction pBlend, int flags);
+
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        public static extern IntPtr SelectObject(IntPtr hdc, IntPtr obj);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteDC(IntPtr hdc);
+
+        [DllImport("gdi32.dll")]
+        public static extern bool DeleteObject(IntPtr obj);
+
+        public const int WS_EX_LAYERED = 0x00080000;
+        public const int ULW_ALPHA = 0x00000002;
+        public const byte AC_SRC_OVER = 0x00;
+        public const byte AC_SRC_ALPHA = 0x01;
+
         // ---- user32: mouse ----
         [DllImport("user32.dll")]
         public static extern IntPtr SetCapture(IntPtr window);
@@ -219,6 +245,24 @@ namespace ErikwnkWFUI.Native
     internal struct NativeRect
     {
         public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativePoint
+    {
+        public int X, Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct NativeSize
+    {
+        public int Width, Height;
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal struct NativeBlendFunction
+    {
+        public byte BlendOp, BlendFlags, SourceConstantAlpha, AlphaFormat;
     }
 
     [StructLayout(LayoutKind.Sequential)]

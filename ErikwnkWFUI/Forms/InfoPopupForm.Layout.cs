@@ -135,7 +135,6 @@ namespace ErikwnkWFUI.Forms
             if (Visible && _lastAnchor != null && !_lastAnchor.IsDisposed)
                 Location = PopupSupport.KeepInside(Location, Size, PopupSupport.GetPlacementArea(_lastAnchor), Screen.FromControl(_lastAnchor).WorkingArea);
 
-            ApplyRoundedCorners();
             Invalidate();
         }
 
