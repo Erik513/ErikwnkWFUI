@@ -31,6 +31,17 @@ namespace ErikwnkWFUI
                 return UIPanelFactory.CreateStandard();
             }
 
+            /// <summary>
+            /// A card: a panel in the elevated background with smoothly rounded corners and a thin line around it, for a group of
+            /// controls on a page; it shows what is behind it in its corners. It does not dock. Cast the result to
+            /// <c>ErikwnkWFUI.Controls.ThemedCardPanel</c> for <c>CornerRadius</c>, <c>ShowBorder</c> and <c>BorderColor</c>; the card keeps
+            /// the controls inside away from the corners with a padding of its own.
+            /// </summary>
+            public static Panel CreateCard()
+            {
+                return UIPanelFactory.CreateCard();
+            }
+
             /// <summary>A panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the page behind the other surfaces). Fills its parent; follows a change of the theme.</summary>
             public static Panel CreateDark()
             {

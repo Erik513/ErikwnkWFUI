@@ -14,6 +14,20 @@ namespace ErikwnkWFUI.Factories
             return CreateMedium();
         }
 
+        // A card: the elevated surface, rounded, with a thin line; it does not dock (it is placed where it is wanted).
+        public static Panel CreateCard()
+        {
+            Panel card = new ThemedCardPanel
+            {
+                Dock = DockStyle.None,
+                Margin = new Padding(0)
+            };
+
+            ThemeWatcher.FollowBackColor(card, () => UIColors.BackgroundMediumElevated);
+
+            return card;
+        }
+
         public static Panel CreateDark()
         {
             return CreatePanel(
