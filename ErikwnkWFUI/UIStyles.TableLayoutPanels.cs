@@ -15,7 +15,8 @@ namespace ErikwnkWFUI
         /// <summary>
         /// Themed <see cref="TableLayoutPanel"/>s, pre-sized to the given column/row count. Otherwise the standard control
         /// (<c>ColumnStyles</c>, <c>RowStyles</c>, <c>GrowStyle</c>, <c>AutoScroll</c> with scroll bars in the style of the theme ...);
-        /// <c>ShowBorder</c> (a thin frame in the color of the theme), <c>BorderColor</c>, <c>CellBorderStyle</c>, <c>CellBorderColor</c> and
+        /// <c>ShowBorder</c> (a thin frame in the color of the theme), <c>BorderColor</c>, <c>CellBorderStyle</c>, <c>CellBorderColor</c> (also
+        /// <c>InnerCellBorderColor</c> and <c>OuterCellBorderColor</c> for the lines between the cells and the ones around the table) and
         /// <c>CellBorderLines</c> (all lines, only the ones around the table or only the ones between the cells) are on <c>ErikwnkWFUI.Controls.ThemedTableLayoutPanel</c>: cast the result. There is no frame and there
         /// are no lines by default. They do not dock (<c>Dock</c> is left to the caller). Right-to-left layouts are not supported.
         /// </summary>

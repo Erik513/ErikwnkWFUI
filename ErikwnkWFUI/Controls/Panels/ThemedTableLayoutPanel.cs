@@ -47,6 +47,8 @@ namespace ErikwnkWFUI.Controls
         }
 
         private readonly ThemeColor _cellBorderColor = new ThemeColor(() => UIColors.BorderMedium);
+        private readonly ThemeColor _innerCellBorderColor;
+        private readonly ThemeColor _outerCellBorderColor;
         private readonly List<Rectangle> _cells = new List<Rectangle>();
 
         /// <summary>
@@ -63,6 +65,42 @@ namespace ErikwnkWFUI.Controls
                     _cellBorderColor.Reset();
                 else
                     _cellBorderColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The color of the lines between the cells. Left empty (the default) it is the <see cref="CellBorderColor"/>, also when
+        /// that changes; <see cref="Color.Empty"/> gives that back.
+        /// </summary>
+        public Color InnerCellBorderColor
+        {
+            get { return _innerCellBorderColor.Value; }
+            set
+            {
+                if (value.IsEmpty)
+                    _innerCellBorderColor.Reset();
+                else
+                    _innerCellBorderColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The color of the lines around the whole table (the outer edge of the cells; not the frame of <see cref="ShowBorder"/>). Left
+        /// empty (the default) it is the <see cref="CellBorderColor"/>, also when that changes; <see cref="Color.Empty"/> gives that back.
+        /// </summary>
+        public Color OuterCellBorderColor
+        {
+            get { return _outerCellBorderColor.Value; }
+            set
+            {
+                if (value.IsEmpty)
+                    _outerCellBorderColor.Reset();
+                else
+                    _outerCellBorderColor.Set(value);
 
                 Invalidate();
             }
@@ -96,6 +134,8 @@ namespace ErikwnkWFUI.Controls
         public ThemedTableLayoutPanel()
         {
             _frame = new PanelFrame(this);
+            _innerCellBorderColor = new ThemeColor(() => CellBorderColor);
+            _outerCellBorderColor = new ThemeColor(() => CellBorderColor);
             DoubleBuffered = true;
             NativeControlTheme.Track(this);
             ThemeWatcher.Attach(this, Invalidate);
@@ -123,20 +163,28 @@ namespace ErikwnkWFUI.Controls
             if (CellBorderStyle != TableLayoutPanelCellBorderStyle.Single || _cells.Count == 0)
                 return;
 
-            // The lines lie around the bounds of a cell, one pixel outside them.
-            using (Pen pen = new Pen(CellBorderColor))
-            {
-                foreach (Rectangle cell in _cells)
-                    e.Graphics.DrawRectangle(pen, cell.X - 1, cell.Y - 1, cell.Width + 1, cell.Height + 1);
-            }
+            // The system has drawn all the lines in its own color: the ones that are not wanted are painted over with what is
+            // behind them, the others in their color. Neighbors share a line, so the lines are the distinct edges of the cells.
+            GetLines(out List<Rectangle> outer, out List<Rectangle> inner);
+            bool showOuter = _cellBorderLines != CellBorderLines.InnerOnly;
+            bool showInner = _cellBorderLines != CellBorderLines.OuterOnly;
 
-            if (_cellBorderLines != CellBorderLines.All)
-                HideLines(e.Graphics);
+            if (!showOuter)
+                Hide(e.Graphics, outer);
+
+            if (!showInner)
+                Hide(e.Graphics, inner);
+
+            if (showOuter)
+                Fill(e.Graphics, outer, OuterCellBorderColor);
+
+            if (showInner)
+                Fill(e.Graphics, inner, InnerCellBorderColor);
         }
 
-        // The lines that are not wanted are painted over with what is behind them. Neighbors share a line, so the lines are
-        // the distinct edges of the cells: the outer ones are the first and the last of each direction.
-        private void HideLines(Graphics graphics)
+        // The lines lie around the bounds of a cell, one pixel outside them. The outer ones are the first and the last of each
+        // direction (with their corners); the inner ones lie between the outer ones (their crossings belong to them).
+        private void GetLines(out List<Rectangle> outer, out List<Rectangle> inner)
         {
             int left = int.MaxValue, top = int.MaxValue, right = int.MinValue, bottom = int.MinValue;
             SortedSet<int> columns = new SortedSet<int>();
@@ -154,35 +202,45 @@ namespace ErikwnkWFUI.Controls
                 bottom = Math.Max(bottom, cell.Bottom);
             }
 
-            List<Rectangle> hidden = new List<Rectangle>();
-
-            if (_cellBorderLines == CellBorderLines.InnerOnly)
+            outer = new List<Rectangle>
             {
-                hidden.Add(new Rectangle(left, top, 1, bottom - top + 1));
-                hidden.Add(new Rectangle(right, top, 1, bottom - top + 1));
-                hidden.Add(new Rectangle(left, top, right - left + 1, 1));
-                hidden.Add(new Rectangle(left, bottom, right - left + 1, 1));
-            }
-            else
-            {
-                // The crossings of the inner lines belong to them; where an inner line meets an outer one, the outer one stays.
-                foreach (int x in columns.Where(x => x != left && x != right))
-                    hidden.Add(new Rectangle(x, top + 1, 1, bottom - top - 1));
+                new Rectangle(left, top, 1, bottom - top + 1),
+                new Rectangle(right, top, 1, bottom - top + 1),
+                new Rectangle(left, top, right - left + 1, 1),
+                new Rectangle(left, bottom, right - left + 1, 1)
+            };
 
-                foreach (int y in rows.Where(y => y != top && y != bottom))
-                    hidden.Add(new Rectangle(left + 1, y, right - left - 1, 1));
-            }
+            inner = new List<Rectangle>();
 
-            // (With one column or row there may be nothing to hide, and drawing no rectangles at all is an error.)
-            hidden.RemoveAll(strip => strip.Width <= 0 || strip.Height <= 0);
+            foreach (int x in columns.Where(x => x != left && x != right))
+                inner.Add(new Rectangle(x, top + 1, 1, bottom - top - 1));
 
-            if (hidden.Count == 0)
+            foreach (int y in rows.Where(y => y != top && y != bottom))
+                inner.Add(new Rectangle(left + 1, y, right - left - 1, 1));
+
+            // (With one column or row there may be nothing of a kind, and drawing no rectangles at all is an error.)
+            outer.RemoveAll(line => line.Width <= 0 || line.Height <= 0);
+            inner.RemoveAll(line => line.Width <= 0 || line.Height <= 0);
+        }
+
+        private static void Fill(Graphics graphics, List<Rectangle> lines, Color color)
+        {
+            if (lines.Count == 0)
+                return;
+
+            using (SolidBrush brush = new SolidBrush(color))
+                graphics.FillRectangles(brush, lines.ToArray());
+        }
+
+        // Paints over lines: in the background of the table, or - when it is transparent - in what lies behind it.
+        private void Hide(Graphics graphics, List<Rectangle> lines)
+        {
+            if (lines.Count == 0)
                 return;
 
             if (BackColor.A == 255)
             {
-                using (SolidBrush brush = new SolidBrush(BackColor))
-                    graphics.FillRectangles(brush, hidden.ToArray());
+                Fill(graphics, lines, BackColor);
 
                 return;
             }
@@ -193,8 +251,8 @@ namespace ErikwnkWFUI.Controls
             {
                 using (Region region = new Region(Rectangle.Empty))
                 {
-                    foreach (Rectangle strip in hidden)
-                        region.Union(strip);
+                    foreach (Rectangle line in lines)
+                        region.Union(line);
 
                     graphics.SetClip(region, CombineMode.Replace);
                 }

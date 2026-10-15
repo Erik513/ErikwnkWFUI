@@ -330,6 +330,89 @@ public class PanelBorderTests : IDisposable
         }
     }
 
+    private static List<int> ColumnsOf(Bitmap picture, Color color, int y = 8) => Enumerable.Range(0, picture.Width).Where(x => Opaque(picture.GetPixel(x, y)).ToArgb() == color.ToArgb()).ToList();
+
+    private static List<int> RowsOf(Bitmap picture, Color color, int x = 8) => Enumerable.Range(0, picture.Height).Where(y => Opaque(picture.GetPixel(x, y)).ToArgb() == color.ToArgb()).ToList();
+
+    [Fact]
+    public void TheInnerAndTheOuterLines_CanHaveTheirOwnColors_TheCornersBelongToTheOuterOnes()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        using Bitmap all = Draw(table);
+        List<int> columns = RedColumns(all);
+        List<int> rows = RedRows(all);
+
+        table.InnerCellBorderColor = Color.Blue;
+        table.OuterCellBorderColor = Color.Green;
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(new[] { columns[0], columns[3] }, ColumnsOf(picture, Color.Green));
+        Assert.Equal(new[] { columns[1], columns[2] }, ColumnsOf(picture, Color.Blue));
+        Assert.Equal(new[] { rows[0], rows[3] }, RowsOf(picture, Color.Green));
+        Assert.Equal(new[] { rows[1], rows[2] }, RowsOf(picture, Color.Blue));
+        Assert.Empty(RedColumns(picture));
+
+        Assert.Equal(Color.Green.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[0])).ToArgb());
+        Assert.Equal(Color.Green.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[0])).ToArgb());
+        Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[1])).ToArgb());
+        Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[3] - 1)).ToArgb());
+    }
+
+    [Fact]
+    public void WithoutTheirOwnColor_TheInnerAndTheOuterLinesFollowTheCellBorderColor_AlsoWhenItChanges()
+    {
+        ThemedTableLayoutPanel table = Grid(2, 2, Color.White);
+
+        Assert.Equal(Color.Red, table.InnerCellBorderColor);
+        Assert.Equal(Color.Red, table.OuterCellBorderColor);
+
+        table.CellBorderColor = Color.Orange;
+        table.InnerCellBorderColor = Color.Blue;
+
+        Assert.Equal(Color.Blue, table.InnerCellBorderColor);
+        Assert.Equal(Color.Orange, table.OuterCellBorderColor);
+
+        table.InnerCellBorderColor = Color.Empty;
+        Assert.Equal(Color.Orange, table.InnerCellBorderColor);
+
+        table.CellBorderColor = Color.Empty;
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(UIColors.BorderMedium, table.InnerCellBorderColor);
+        Assert.Equal(UIColors.BorderMedium, table.OuterCellBorderColor);
+        Assert.Equal(3, ColumnsOf(picture, UIColors.BorderMedium).Count);
+    }
+
+    [Fact]
+    public void ALineThatIsNotShown_HasNoColor_TheOtherOnesKeepTheirs()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        table.InnerCellBorderColor = Color.Blue;
+        table.OuterCellBorderColor = Color.Green;
+
+        table.CellBorderLines = CellBorderLines.InnerOnly;
+        Application.DoEvents();
+
+        using (Bitmap picture = Draw(table))
+        {
+            Assert.Empty(ColumnsOf(picture, Color.Green));
+            Assert.Empty(RowsOf(picture, Color.Green));
+            Assert.Equal(2, ColumnsOf(picture, Color.Blue).Count);
+        }
+
+        table.CellBorderLines = CellBorderLines.OuterOnly;
+        Application.DoEvents();
+
+        using (Bitmap picture = Draw(table))
+        {
+            Assert.Empty(ColumnsOf(picture, Color.Blue));
+            Assert.Equal(2, ColumnsOf(picture, Color.Green).Count);
+        }
+    }
+
     [Fact]
     public void CellBorderLines_WithOneColumnOrRow_HasNoInnerLinesInThatDirection()
     {

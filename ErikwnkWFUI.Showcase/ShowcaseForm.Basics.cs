@@ -498,13 +498,15 @@ namespace ErikwnkWFUI.Showcase
             ConfigureCellsDemo(inner);
             inner.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             inner.CellBorderLines = CellBorderLines.InnerOnly;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: InnerOnly)", 80, inner);
+            inner.InnerCellBorderColor = UIColors.PrimaryLight;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: InnerOnly, InnerCellBorderColor)", 80, inner);
 
             ThemedTableLayoutPanel outer = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(outer);
             outer.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             outer.CellBorderLines = CellBorderLines.OuterOnly;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly)", 80, outer);
+            outer.OuterCellBorderColor = UIColors.PrimaryLight;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 80, outer);
 
             table.AddSection("Flow layout panels");
 
