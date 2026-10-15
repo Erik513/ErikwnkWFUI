@@ -463,6 +463,10 @@ namespace ErikwnkWFUI.Showcase
             scrolling.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
             table.AddRow("CreateMedium (AutoScroll)", 110, scrolling);
 
+            table.AddSection("Multi panels");
+
+            AddMultiPanelsSection(table);
+
             table.AddSection("Table layout panels");
 
             // A table with the lines in the library's color.
