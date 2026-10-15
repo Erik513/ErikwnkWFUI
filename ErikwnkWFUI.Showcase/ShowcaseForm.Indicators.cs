@@ -38,14 +38,14 @@ namespace ErikwnkWFUI.Showcase
             primaryDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreatePrimary", primaryBar, primaryDisabled);
 
-            ProgressBar greyTransparentBar = UIStyles.ProgressBars.CreateStandardTransparent();
-            greyTransparentBar.BackColor = UIColors.BackgroundLight;
-            AnimateProgressBar(v => greyTransparentBar.Value = v);
-            ProgressBar greyTransparentDisabled = UIStyles.ProgressBars.CreateStandardTransparent();
-            greyTransparentDisabled.Value = 40;
-            greyTransparentDisabled.BackColor = UIColors.BackgroundLight;
-            greyTransparentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandardTransparent", greyTransparentBar, greyTransparentDisabled);
+            ProgressBar grayBorderlessBar = UIStyles.ProgressBars.CreateStandardBorderless();
+            grayBorderlessBar.BackColor = UIColors.BackgroundLight;
+            AnimateProgressBar(v => grayBorderlessBar.Value = v);
+            ProgressBar grayBorderlessDisabled = UIStyles.ProgressBars.CreateStandardBorderless();
+            grayBorderlessDisabled.Value = 40;
+            grayBorderlessDisabled.BackColor = UIColors.BackgroundLight;
+            grayBorderlessDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandardBorderless", grayBorderlessBar, grayBorderlessDisabled);
 
             ProgressBar standardBar = UIStyles.ProgressBars.CreateGreen();
             AnimateProgressBar(v => standardBar.Value = v);
@@ -54,23 +54,23 @@ namespace ErikwnkWFUI.Showcase
             disabledBar.Enabled = false;
             AddTwoColumnRow(table, "CreateGreen", standardBar, disabledBar);
 
-            ProgressBar transparentBar = UIStyles.ProgressBars.CreateGreenTransparent();
-            transparentBar.BackColor = UIColors.BackgroundLight;
-            AnimateProgressBar(v => transparentBar.Value = v);
-            ProgressBar transparentDisabled = UIStyles.ProgressBars.CreateGreenTransparent();
-            transparentDisabled.Value = 40;
-            transparentDisabled.BackColor = UIColors.BackgroundLight;
-            transparentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateGreenTransparent", transparentBar, transparentDisabled);
+            ProgressBar greenBorderlessBar = UIStyles.ProgressBars.CreateGreenBorderless();
+            greenBorderlessBar.BackColor = UIColors.BackgroundLight;
+            AnimateProgressBar(v => greenBorderlessBar.Value = v);
+            ProgressBar greenBorderlessDisabled = UIStyles.ProgressBars.CreateGreenBorderless();
+            greenBorderlessDisabled.Value = 40;
+            greenBorderlessDisabled.BackColor = UIColors.BackgroundLight;
+            greenBorderlessDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateGreenBorderless", greenBorderlessBar, greenBorderlessDisabled);
 
-            ProgressBar primaryTransparentBar = UIStyles.ProgressBars.CreatePrimaryTransparent();
-            primaryTransparentBar.BackColor = UIColors.BackgroundLight;
-            AnimateProgressBar(v => primaryTransparentBar.Value = v);
-            ProgressBar primaryTransparentDisabled = UIStyles.ProgressBars.CreatePrimaryTransparent();
-            primaryTransparentDisabled.Value = 40;
-            primaryTransparentDisabled.BackColor = UIColors.BackgroundLight;
-            primaryTransparentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimaryTransparent", primaryTransparentBar, primaryTransparentDisabled);
+            ProgressBar primaryBorderlessBar = UIStyles.ProgressBars.CreatePrimaryBorderless();
+            primaryBorderlessBar.BackColor = UIColors.BackgroundLight;
+            AnimateProgressBar(v => primaryBorderlessBar.Value = v);
+            ProgressBar primaryBorderlessDisabled = UIStyles.ProgressBars.CreatePrimaryBorderless();
+            primaryBorderlessDisabled.Value = 40;
+            primaryBorderlessDisabled.BackColor = UIColors.BackgroundLight;
+            primaryBorderlessDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimaryBorderless", primaryBorderlessBar, primaryBorderlessDisabled);
 
             ProgressBar statusBar = UIStyles.ProgressBars.CreateStatus();
             AnimateProgressBar(v => statusBar.Value = v);
@@ -79,14 +79,14 @@ namespace ErikwnkWFUI.Showcase
             statusDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStatus", statusBar, statusDisabled);
 
-            ProgressBar statusTransparentBar = UIStyles.ProgressBars.CreateStatusTransparent();
-            statusTransparentBar.BackColor = UIColors.BackgroundLight;
-            AnimateProgressBar(v => statusTransparentBar.Value = v);
-            ProgressBar statusTransparentDisabled = UIStyles.ProgressBars.CreateStatusTransparent();
-            statusTransparentDisabled.Value = 40;
-            statusTransparentDisabled.BackColor = UIColors.BackgroundLight;
-            statusTransparentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStatusTransparent", statusTransparentBar, statusTransparentDisabled);
+            ProgressBar statusBorderlessBar = UIStyles.ProgressBars.CreateStatusBorderless();
+            statusBorderlessBar.BackColor = UIColors.BackgroundLight;
+            AnimateProgressBar(v => statusBorderlessBar.Value = v);
+            ProgressBar statusBorderlessDisabled = UIStyles.ProgressBars.CreateStatusBorderless();
+            statusBorderlessDisabled.Value = 40;
+            statusBorderlessDisabled.BackColor = UIColors.BackgroundLight;
+            statusBorderlessDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStatusBorderless", statusBorderlessBar, statusBorderlessDisabled);
         }
 
         private void AddSlimProgressBarsSection(PropertyTable table)

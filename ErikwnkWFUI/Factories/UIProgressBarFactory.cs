@@ -20,9 +20,9 @@ namespace ErikwnkWFUI.Factories
             return Create(() => UIColors.DisabledGray, drawBorder: true);
         }
 
-        // CreateStandard's grey fill with CreateGreenTransparent's
+        // CreateStandard's grey fill with CreateGreenBorderless's
         // no-border/blend-in look.
-        public static ProgressBar CreateStandardTransparent()
+        public static ProgressBar CreateStandardBorderless()
         {
             return Create(() => UIColors.DisabledGray, drawBorder: false);
         }
@@ -40,7 +40,7 @@ namespace ErikwnkWFUI.Factories
         // progressBar.BackColor = UIStyles.Colors.BackgroundLight to match a
         // BackgroundLight panel. CreateGreen's opinionated, always-visible
         // track/border stays the default; this is the explicit opt-out.
-        public static ProgressBar CreateGreenTransparent()
+        public static ProgressBar CreateGreenBorderless()
         {
             return Create(() => UIColors.Green, drawBorder: false);
         }
@@ -54,9 +54,9 @@ namespace ErikwnkWFUI.Factories
             return Create(() => UIColors.Primary, drawBorder: true);
         }
 
-        // CreatePrimary's accent-following fill, with CreateGreenTransparent's
+        // CreatePrimary's accent-following fill, with CreateGreenBorderless's
         // no-border/blend-in look.
-        public static ProgressBar CreatePrimaryTransparent()
+        public static ProgressBar CreatePrimaryBorderless()
         {
             return Create(() => UIColors.Primary, drawBorder: false);
         }
@@ -74,9 +74,9 @@ namespace ErikwnkWFUI.Factories
             return CreateStatusBar(drawBorder: true);
         }
 
-        // CreateStatus's Value-driven fill, with CreateGreenTransparent's
+        // CreateStatus's Value-driven fill, with CreateGreenBorderless's
         // no-border/blend-in look.
-        public static ProgressBar CreateStatusTransparent()
+        public static ProgressBar CreateStatusBorderless()
         {
             return CreateStatusBar(drawBorder: false);
         }

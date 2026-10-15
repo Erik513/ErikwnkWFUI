@@ -15,9 +15,9 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but without the border, and BackColor left for you to match your own panel.</summary>
-            public static ProgressBar CreateStandardTransparent()
+            public static ProgressBar CreateStandardBorderless()
             {
-                return UIProgressBarFactory.CreateStandardTransparent();
+                return UIProgressBarFactory.CreateStandardBorderless();
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but a fixed green fill.</summary>
@@ -27,9 +27,9 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>Like <see cref="CreateGreen"/> but without the border, and BackColor left for you to match your own panel - the closest a ProgressBar can get to a transparent background.</summary>
-            public static ProgressBar CreateGreenTransparent()
+            public static ProgressBar CreateGreenBorderless()
             {
-                return UIProgressBarFactory.CreateGreenTransparent();
+                return UIProgressBarFactory.CreateGreenBorderless();
             }
 
             /// <summary>Like <see cref="CreateGreen"/> but the fill follows the app-wide accent instead of the fixed green.</summary>
@@ -38,10 +38,10 @@ namespace ErikwnkWFUI
                 return UIProgressBarFactory.CreatePrimary();
             }
 
-            /// <summary>Like <see cref="CreatePrimary"/> but without the border, and BackColor left for you to match your own panel - the accent-following equivalent of <see cref="CreateGreenTransparent"/>.</summary>
-            public static ProgressBar CreatePrimaryTransparent()
+            /// <summary>Like <see cref="CreatePrimary"/> but without the border, and BackColor left for you to match your own panel - the accent-following equivalent of <see cref="CreateGreenBorderless"/>.</summary>
+            public static ProgressBar CreatePrimaryBorderless()
             {
-                return UIProgressBarFactory.CreatePrimaryTransparent();
+                return UIProgressBarFactory.CreatePrimaryBorderless();
             }
 
             /// <summary>Fill color follows Value instead of being fixed - red at Minimum, yellow at the midpoint, green at Maximum, blending smoothly between them. For a "status/health" bar where color communicates good/bad.</summary>
@@ -50,10 +50,10 @@ namespace ErikwnkWFUI
                 return UIProgressBarFactory.CreateStatus();
             }
 
-            /// <summary>Like <see cref="CreateStatus"/> but without the border, and BackColor left for you to match your own panel - the status-gradient equivalent of <see cref="CreateGreenTransparent"/>.</summary>
-            public static ProgressBar CreateStatusTransparent()
+            /// <summary>Like <see cref="CreateStatus"/> but without the border, and BackColor left for you to match your own panel - the status-gradient equivalent of <see cref="CreateGreenBorderless"/>.</summary>
+            public static ProgressBar CreateStatusBorderless()
             {
-                return UIProgressBarFactory.CreateStatusTransparent();
+                return UIProgressBarFactory.CreateStatusBorderless();
             }
         }
     }
