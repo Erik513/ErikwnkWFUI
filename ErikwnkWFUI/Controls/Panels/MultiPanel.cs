@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
@@ -62,11 +63,12 @@ namespace ErikwnkWFUI.Controls
         {
         }
 
-        // The arrows are symbol buttons in the colors of the multi panel (a color set), or in the neutral look without one.
-        internal MultiPanel(UIColorSet arrowColors)
+        // The arrows are symbol buttons in the colors of the multi panel (a color set, asked for again each time), or in the
+        // neutral look without one.
+        internal MultiPanel(Func<UIColorSet> arrowColors)
         {
-            _previousButton = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.ChevronLeft, UIStrings.Get("MultiPanel.PreviousPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
-            _nextButton = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.ChevronRight, UIStrings.Get("MultiPanel.NextPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
+            _previousButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronLeft, UIStrings.Get("MultiPanel.PreviousPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
+            _nextButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronRight, UIStrings.Get("MultiPanel.NextPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
             _previousButton.Click += (sender, e) => Previous();
             _nextButton.Click += (sender, e) => Next();
             _previousButton.Dock = DockStyle.None;

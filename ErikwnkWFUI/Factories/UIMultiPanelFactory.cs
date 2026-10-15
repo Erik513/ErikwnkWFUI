@@ -17,13 +17,13 @@ namespace ErikwnkWFUI.Factories
 
             Func<UIColorSet> source = ColorSetSource.Of(colors);
 
-            return Create(false, DockStyle.Fill, () => source().Basic, null, colors);
+            return Create(false, DockStyle.Fill, () => source().Basic, null, source);
         }
 
         // The flat panel in the very dark accent of Panels.CreatePrimary.
         public static MultiPanel CreatePrimary()
         {
-            return Create(false, DockStyle.Fill, () => UIColors.PrimaryDarkDark, null, UIStyles.Colors.Sets.Primary);
+            return Create(false, DockStyle.Fill, () => UIColors.PrimaryDarkDark, null, () => UIColors.PrimarySet);
         }
 
         // The card: the elevated surface, rounded, with a thin line - or, with a color set, in its basic color and the hover color as the line.
@@ -34,15 +34,15 @@ namespace ErikwnkWFUI.Factories
 
             Func<UIColorSet> source = ColorSetSource.Of(colors);
 
-            return Create(true, DockStyle.None, () => source().Basic, () => source().Hover, colors);
+            return Create(true, DockStyle.None, () => source().Basic, () => source().Hover, source);
         }
 
         public static MultiPanel CreateCardPrimary()
         {
-            return Create(true, DockStyle.None, () => UIColors.PrimaryDarkDark, () => UIColors.PrimaryDark, UIStyles.Colors.Sets.Primary);
+            return Create(true, DockStyle.None, () => UIColors.PrimaryDarkDark, () => UIColors.PrimaryDark, () => UIColors.PrimarySet);
         }
 
-        private static MultiPanel Create(bool card, DockStyle dock, Func<Color> backColor, Func<Color> borderColor, UIColorSet arrowColors)
+        private static MultiPanel Create(bool card, DockStyle dock, Func<Color> backColor, Func<Color> borderColor, Func<UIColorSet> arrowColors)
         {
             MultiPanel panel = new MultiPanel(arrowColors)
             {

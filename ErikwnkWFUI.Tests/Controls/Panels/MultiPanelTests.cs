@@ -379,6 +379,32 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void TheArrowsOfThePrimaryOnes_FollowTheAccent_TheOthersTheirColorSet()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            MultiPanel primary = Shown(UIStyles.MultiPanels.CreatePrimary(), 2);
+            MultiPanel cardPrimary = Shown(UIStyles.MultiPanels.CreateCardPrimary(), 2);
+            MultiPanel green = Shown(UIStyles.MultiPanels.CreateStandard(UIStyles.Colors.Sets.Green), 2);
+            MultiPanel standard = Shown(UIStyles.MultiPanels.CreateStandard(), 2);
+
+            UIColors.SetAccent(Color.OrangeRed);
+            Application.DoEvents();
+
+            Assert.Equal(UIColors.PrimarySet.Basic, Arrows(primary)[1].BackColor);
+            Assert.Equal(UIColors.PrimarySet.Basic, Arrows(cardPrimary)[1].BackColor);
+            Assert.Equal(UIStyles.Colors.Sets.Green.Basic, Arrows(green)[1].BackColor);
+            Assert.Equal(UIColors.BackgroundMedium, Arrows(standard)[1].BackColor);
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
+    }
+
+    [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
         MultiPanel dark = Shown(UIStyles.MultiPanels.CreatePrimary(), 1);

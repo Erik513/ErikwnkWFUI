@@ -48,12 +48,18 @@ namespace ErikwnkWFUI.Factories
         //   that font instead of the usual one (UIStyles.Symbols.GetFontName decides).
         public static Button CreateSymbol(string symbol, string tooltip, Size? size, UIColorSet colors)
         {
+            return CreateSymbol(symbol, tooltip, size, colors == null ? (Func<UIColorSet>)null : () => colors);
+        }
+
+        // The same with a color set that is asked for again each time (the primary set follows the accent).
+        public static Button CreateSymbol(string symbol, string tooltip, Size? size, Func<UIColorSet> colors)
+        {
             Size buttonSize = size ?? DefaultButtonSize;
 
             // Its own kind of button: it draws the symbol itself, centered on
             // what is actually visible of it (see SymbolButton).
             Button button = colors != null
-                ? CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetColoredLook(() => colors, 1))
+                ? CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetColoredLook(colors, 1))
                 : CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetStandardLook);
 
             float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
