@@ -163,6 +163,16 @@ namespace ErikwnkWFUI.Showcase
         private static Button CreateThemeButton(string text, UIColorTheme theme, bool selected)
         {
             Button button = UIStyles.Buttons.CreateStandard(text);
+            ApplyThemeButtonLook(button, theme, selected);
+
+            return button;
+        }
+
+        // The button shows the colors of the theme it switches to. They are set again after every change: the library
+        // replaces a color that equals its old default, and these are exactly the defaults of the Dark theme (so the Dark
+        // button would end up with the fill of the Light theme and the hover of the Dark one).
+        private static void ApplyThemeButtonLook(Button button, UIColorTheme theme, bool selected)
+        {
             Color hover = UIColors.IsLight(theme.BackgroundMedium)
                 ? UIColors.Darken(theme.BackgroundMedium, 12)
                 : UIColors.Lighten(theme.BackgroundMedium, 15);
@@ -173,8 +183,6 @@ namespace ErikwnkWFUI.Showcase
             button.FlatAppearance.MouseDownBackColor = hover;
             button.FlatAppearance.BorderSize = selected ? 2 : 1;
             button.FlatAppearance.BorderColor = selected ? UIColors.PrimaryLight : theme.BorderMedium;
-
-            return button;
         }
 
         // Theme and accent change live: every control follows by itself, nothing is rebuilt. Only the marker on the
@@ -188,8 +196,7 @@ namespace ErikwnkWFUI.Showcase
                 UIColorTheme theme = (UIColorTheme)button.Tag;
                 bool selected = (theme == UIThemes.Light) == _isLightTheme;
 
-                button.FlatAppearance.BorderSize = selected ? 2 : 1;
-                button.FlatAppearance.BorderColor = selected ? UIColors.PrimaryLight : theme.BorderMedium;
+                ApplyThemeButtonLook(button, theme, selected);
             }
         }
 
