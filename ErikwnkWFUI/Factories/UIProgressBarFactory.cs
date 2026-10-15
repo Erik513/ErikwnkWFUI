@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Factories
         // Named by color, matching UIButtonFactory's CreateStandard/
         // CreatePrimary/CreateGreen/CreateRed convention - "Transparent" is
         // a uniform suffix for the no-border/blend-in variant of each color.
-        // CreateStandard is a neutral grey (adjust via ForeColor), the same
+        // CreateStandard is a neutral gray (adjust via ForeColor), the same
         // meaning "Standard" has for buttons and sliders; CreateGreen/
         // CreatePrimary just preset a specific fill instead.
         public static ProgressBar CreateStandard()
@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Factories
             return Create(() => UIColors.DisabledGray, drawBorder: true);
         }
 
-        // CreateStandard's grey fill with CreateGreenBorderless's
+        // CreateStandard's gray fill with CreateGreenBorderless's
         // no-border/blend-in look.
         public static ProgressBar CreateStandardBorderless()
         {

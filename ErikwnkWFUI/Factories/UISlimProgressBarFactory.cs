@@ -7,9 +7,9 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UISlimProgressBarFactory
     {
-        // Neutral grey fill by default; reassign ForeColor for any other
-        // colour (CreateGreen/CreatePrimary just preset one). Matches the
-        // CreateStandard = neutral grey convention used for buttons and sliders.
+        // Neutral gray fill by default; reassign ForeColor for any other
+        // color (CreateGreen/CreatePrimary just preset one). Matches the
+        // CreateStandard = neutral gray convention used for buttons and sliders.
         public static SlimProgressBar CreateStandard()
         {
             return Create(() => UIColors.DisabledGray);

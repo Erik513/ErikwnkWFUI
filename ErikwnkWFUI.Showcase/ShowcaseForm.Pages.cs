@@ -76,7 +76,7 @@ namespace ErikwnkWFUI.Showcase
                  AddPanelsSection),
 
                 ("ProgressBars",
-                 "Progress bars in grey, green, primary (accent color) and status (the color shifts from red over yellow to green with the value). The Borderless ones have no border (set their BackColor to the one of the panel to let them blend in). All enabled bars run on one shared animation, the disabled ones stay at a fixed value.",
+                 "Progress bars in gray, green, primary (accent color) and status (the color shifts from red over yellow to green with the value). The Borderless ones have no border (set their BackColor to the one of the panel to let them blend in). All enabled bars run on one shared animation, the disabled ones stay at a fixed value.",
                  AddProgressBarsSection),
 
                 ("SliderBar",

@@ -14,7 +14,7 @@ namespace ErikwnkWFUI
         /// </summary>
         public static class SlimProgressBars
         {
-            /// <summary>Neutral grey fill by default; set <see cref="Control.ForeColor"/> for any other colour.</summary>
+            /// <summary>Neutral gray fill by default; set <see cref="Control.ForeColor"/> for any other color.</summary>
             public static SlimProgressBar CreateStandard()
             {
                 return UISlimProgressBarFactory.CreateStandard();

@@ -8,7 +8,7 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="ProgressBar"/> (continuous style, not the native blocky one).</summary>
         public static class ProgressBars
         {
-            /// <summary>Neutral grey fill by default; set <see cref="Control.ForeColor"/> for any other colour.</summary>
+            /// <summary>Neutral gray fill by default; set <see cref="Control.ForeColor"/> for any other color.</summary>
             public static ProgressBar CreateStandard()
             {
                 return UIProgressBarFactory.CreateStandard();

@@ -24,12 +24,12 @@ namespace ErikwnkWFUI.Showcase
             // left out of the animation and kept at one fixed value - the
             // point of that column is to show the disabled look clearly,
             // which a constantly-changing bar would undercut.
-            ProgressBar greyBar = UIStyles.ProgressBars.CreateStandard();
-            AnimateProgressBar(v => greyBar.Value = v);
-            ProgressBar greyDisabled = UIStyles.ProgressBars.CreateStandard();
-            greyDisabled.Value = 65;
-            greyDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", greyBar, greyDisabled);
+            ProgressBar grayBar = UIStyles.ProgressBars.CreateStandard();
+            AnimateProgressBar(v => grayBar.Value = v);
+            ProgressBar grayDisabled = UIStyles.ProgressBars.CreateStandard();
+            grayDisabled.Value = 65;
+            grayDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard", grayBar, grayDisabled);
 
             ProgressBar primaryBar = UIStyles.ProgressBars.CreatePrimary();
             AnimateProgressBar(v => primaryBar.Value = v);
@@ -91,12 +91,12 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddSlimProgressBarsSection(PropertyTable table)
         {
-            SlimProgressBar slimGreyBar = UIStyles.SlimProgressBars.CreateStandard();
-            AnimateProgressBar(v => slimGreyBar.Value = v);
-            SlimProgressBar slimGreyDisabled = UIStyles.SlimProgressBars.CreateStandard();
-            slimGreyDisabled.Value = 65;
-            slimGreyDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", slimGreyBar, slimGreyDisabled);
+            SlimProgressBar slimGrayBar = UIStyles.SlimProgressBars.CreateStandard();
+            AnimateProgressBar(v => slimGrayBar.Value = v);
+            SlimProgressBar slimGrayDisabled = UIStyles.SlimProgressBars.CreateStandard();
+            slimGrayDisabled.Value = 65;
+            slimGrayDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard", slimGrayBar, slimGrayDisabled);
 
             SlimProgressBar slimPrimaryBar = UIStyles.SlimProgressBars.CreatePrimary();
             AnimateProgressBar(v => slimPrimaryBar.Value = v);
