@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -14,11 +15,14 @@ namespace ErikwnkWFUI.Controls
     internal sealed class PanelFrame
     {
         private readonly Panel _panel;
-        private readonly ThemeColor _color = new ThemeColor(() => UIColors.BorderMedium);
+        private readonly ThemeColor _color;
 
         public PanelFrame(Panel panel)
         {
             _panel = panel;
+
+            // The theme's line color - or one that is seen on the color of this panel.
+            _color = new ThemeColor(() => UIColors.GetLineColor(SurfaceColor.Of(panel)));
             InputField.AttachFrame(panel, () => panel.BorderStyle != BorderStyle.None, () => _color.Value);
         }
 

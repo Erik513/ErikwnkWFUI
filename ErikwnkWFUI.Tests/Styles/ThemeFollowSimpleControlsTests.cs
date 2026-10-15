@@ -83,6 +83,14 @@ public class ThemeFollowSimpleControlsTests : IDisposable
         "VersionPanels.Standard(colors)"
     };
 
+    // A flow panel is as big as its content: with nothing in it it has no size to look at.
+    private static Control WithContent(System.Windows.Forms.FlowLayoutPanel panel)
+    {
+        panel.Controls.Add(new Label { Text = "Text", AutoSize = false, Size = new Size(60, 20) });
+
+        return panel;
+    }
+
     // A multi panel with its first page shown (and a title, so that the header has a text).
     private static Control WithPages(ErikwnkWFUI.Controls.MultiPanel panel)
     {
@@ -115,10 +123,10 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("TableLayoutPanels.Primary", () => UIStyles.TableLayoutPanels.CreatePrimary(1, 1), true),
             ("TableLayoutPanels.Transparent", () => UIStyles.TableLayoutPanels.CreateTransparent(1, 1), true),
             ("TableLayoutPanels.Standard(colors)", () => UIStyles.TableLayoutPanels.CreateStandard(1, 1, UIStyles.Colors.Sets.Green), true),
-            ("FlowLayoutPanels.Standard", () => UIStyles.FlowLayoutPanels.CreateStandard(), true),
-            ("FlowLayoutPanels.Primary", () => UIStyles.FlowLayoutPanels.CreatePrimary(), true),
+            ("FlowLayoutPanels.Standard", () => WithContent(UIStyles.FlowLayoutPanels.CreateStandard()), true),
+            ("FlowLayoutPanels.Primary", () => WithContent(UIStyles.FlowLayoutPanels.CreatePrimary()), true),
             ("FlowLayoutPanels.Transparent", () => UIStyles.FlowLayoutPanels.CreateTransparent(), true),
-            ("FlowLayoutPanels.Standard(colors)", () => UIStyles.FlowLayoutPanels.CreateStandard(UIStyles.Colors.Sets.Green), true),
+            ("FlowLayoutPanels.Standard(colors)", () => WithContent(UIStyles.FlowLayoutPanels.CreateStandard(UIStyles.Colors.Sets.Green)), true),
             ("MultiPanels.Standard", () => WithPages(UIStyles.MultiPanels.CreateStandard()), true),
             ("MultiPanels.Primary", () => WithPages(UIStyles.MultiPanels.CreatePrimary()), true),
             ("MultiPanels.Standard(colors)", () => WithPages(UIStyles.MultiPanels.CreateStandard(UIStyles.Colors.Sets.Green)), true),

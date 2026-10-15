@@ -91,6 +91,15 @@ public class PanelRobustnessTests : IDisposable
         return table;
     }
 
+    // A flow panel is as big as its content: with nothing in it it has no size to look at.
+    private static FlowLayoutPanel FlowWithContent()
+    {
+        FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+        flow.Controls.Add(new Label { Text = "Text", AutoSize = false, Size = new Size(60, 20) });
+
+        return flow;
+    }
+
     private static MultiPanel Pages(MultiPanel panel)
     {
         panel.AddPage("A long title for the narrow header");
@@ -116,7 +125,7 @@ public class PanelRobustnessTests : IDisposable
             ("Table, one cell, all lines", () => OneCell(CellBorderLines.All)),
             ("Table, one cell, inner lines", () => OneCell(CellBorderLines.InnerOnly)),
             ("Table, one cell, outer lines", () => OneCell(CellBorderLines.OuterOnly)),
-            ("Flow", () => UIStyles.FlowLayoutPanels.CreateStandard()),
+            ("Flow", () => FlowWithContent()),
             ("MultiPanel", () => Pages(UIStyles.MultiPanels.CreateStandard())),
             ("MultiPanel, card", () => Pages(UIStyles.MultiPanels.CreateCardPrimary())),
             ("MultiPanel, without pages", () => UIStyles.MultiPanels.CreateStandard()),
@@ -190,7 +199,7 @@ public class PanelRobustnessTests : IDisposable
         yield return new object[] { "Panel", (Func<Control>)(() => UIStyles.Panels.CreateElevated()) };
         yield return new object[] { "Card", (Func<Control>)(() => UIStyles.Panels.CreateCardStandard()) };
         yield return new object[] { "Table", (Func<Control>)(() => UIStyles.TableLayoutPanels.CreateStandard(1, 1)) };
-        yield return new object[] { "Flow", (Func<Control>)(() => UIStyles.FlowLayoutPanels.CreateStandard()) };
+        yield return new object[] { "Flow", (Func<Control>)(() => FlowWithContent()) };
         yield return new object[] { "MultiPanel", (Func<Control>)(() => Pages(UIStyles.MultiPanels.CreateStandard())) };
         yield return new object[] { "VersionPanel", (Func<Control>)(() => UIStyles.VersionPanels.CreateStandard()) };
     }

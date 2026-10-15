@@ -256,4 +256,38 @@ public class PanelFactoryTests
         card.BorderColor = Color.Red;
         Assert.Equal(Color.Red, card.BorderColor);
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void TheFlowPanelsWithABackground_AreExactlyAsBigAsTheirContent_NotAtLeastTheSizeOfAPanel(int which)
+    {
+        FlowLayoutPanel flow = which == 0 ? UIStyles.FlowLayoutPanels.CreateStandard()
+            : which == 1 ? UIStyles.FlowLayoutPanels.CreatePrimary()
+            : UIStyles.FlowLayoutPanels.CreateStandard(UIStyles.Colors.Sets.Green);
+        flow.Controls.Add(new Label { AutoSize = false, Size = new Size(70, 28), Margin = new Padding(0) });
+        flow.Controls.Add(new Label { AutoSize = false, Size = new Size(70, 28), Margin = new Padding(0, 0, 10, 0) });
+
+        using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(400, 200) };
+        host.Controls.Add(flow);
+        host.Show();
+        Application.DoEvents();
+
+        Assert.Equal(new Size(150, 28), flow.Size);
+    }
+
+    [Fact]
+    public void TheTransparentFlowPanel_KeepsTheSizeItHasAlwaysHad_AtLeastThatOfAPanel()
+    {
+        FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
+        flow.Controls.Add(new Label { AutoSize = false, Size = new Size(70, 28), Margin = new Padding(0) });
+
+        using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(400, 200) };
+        host.Controls.Add(flow);
+        host.Show();
+        Application.DoEvents();
+
+        Assert.Equal(new Size(200, 100), flow.Size);
+    }
 }

@@ -26,7 +26,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The color of the frame when <see cref="Panel.BorderStyle"/> is <c>FixedSingle</c> (the system draws it in its own
-        /// color, which is painted over; of <c>Fixed3D</c> only the outer line). Follows the theme until it is set;
+        /// color, which is painted over; of <c>Fixed3D</c> only the outer line). Follows the theme (and, on a color, is moved until it is seen against it) until it is set;
         /// <see cref="Color.Empty"/> gives that back. There is no frame by default.
         /// </summary>
         public Color BorderColor
@@ -49,7 +49,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        private readonly ThemeColor _cellBorderColor = new ThemeColor(() => UIColors.BorderMedium);
+        private readonly ThemeColor _cellBorderColor;
         private readonly ThemeColor _innerCellBorderColor;
         private readonly ThemeColor _outerCellBorderColor;
         private readonly List<Rectangle> _cells = new List<Rectangle>();
@@ -57,7 +57,8 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// The color of the lines around and between the cells when <see cref="TableLayoutPanel.CellBorderStyle"/> is <c>Single</c>
         /// (the system draws them in its own color, which is painted over; the other styles are left to the system). Follows the
-        /// theme until it is set; <see cref="Color.Empty"/> gives that back. <see cref="InnerCellBorderColor"/> and
+        /// theme (and, on a color, is moved until it is seen against it) until it is set; <see cref="Color.Empty"/> gives that back.
+        /// <see cref="InnerCellBorderColor"/> and
         /// <see cref="OuterCellBorderColor"/> take other colors for one kind of line. There are no lines by default.
         /// </summary>
         public Color CellBorderColor
@@ -138,6 +139,7 @@ namespace ErikwnkWFUI.Controls
         public ThemedTableLayoutPanel()
         {
             _frame = new PanelFrame(this);
+            _cellBorderColor = new ThemeColor(() => UIColors.GetLineColor(SurfaceColor.Of(this)));
             _innerCellBorderColor = new ThemeColor(() => CellBorderColor);
             _outerCellBorderColor = new ThemeColor(() => CellBorderColor);
             DoubleBuffered = true;

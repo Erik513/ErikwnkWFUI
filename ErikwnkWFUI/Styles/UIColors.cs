@@ -428,6 +428,18 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
+        /// The quiet line of a panel (frame, lines of a table or a card) on <paramref name="surface"/>: the theme's
+        /// <see cref="BorderMedium"/>, moved only as far as needed to keep a ratio of 1.5:1 against the surface - on a color (green,
+        /// accent) the gray of the theme can be as dark as the surface itself.
+        /// </summary>
+        internal static Color GetLineColor(Color surface)
+        {
+            return EnsureContrast(BorderMedium, surface, QuietLineContrast);
+        }
+
+        private const double QuietLineContrast = 1.5;
+
+        /// <summary>
         /// <paramref name="color"/> moved lighter (on a dark page) or darker (on a light one), in
         /// small steps, until it has at least <paramref name="minimum"/> contrast against the page.
         /// </summary>

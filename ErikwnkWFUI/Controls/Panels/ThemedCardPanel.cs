@@ -22,7 +22,7 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultCornerRadius96 = 8;
         private const int DefaultPadding96 = 8;
 
-        private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.BorderMedium);
+        private readonly ThemeColor _borderColor;
         private int _cornerRadius = DefaultCornerRadius96;
         private bool _showBorder = true;
 
@@ -36,6 +36,7 @@ namespace ErikwnkWFUI.Controls
                 ControlStyles.SupportsTransparentBackColor,
                 true);
 
+            _borderColor = new ThemeColor(() => UIColors.GetLineColor(SurfaceColor.Of(this)));
             Padding = new Padding(Dpi.Scale(this, DefaultPadding96));
             ThemeWatcher.Attach(this, Invalidate);
         }
@@ -69,7 +70,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>The color of the thin line around the card; follows the theme until it is set, <see cref="Color.Empty"/> gives that back.</summary>
+        /// <summary>The color of the thin line around the card; follows the theme (and, on a color, is moved until it is seen against it) until it is set, <see cref="Color.Empty"/> gives that back.</summary>
         public Color BorderColor
         {
             get { return _borderColor.Value; }
