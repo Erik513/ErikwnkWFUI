@@ -15,6 +15,7 @@ namespace ErikwnkWFUI
         /// <summary>A plain, transparent <see cref="FlowLayoutPanel"/> with no padding/margin - a layout helper, not itself themed.</summary>
         public static class FlowLayoutPanels
         {
+            /// <summary>A transparent flow layout panel that is as big as its content and does not wrap, without margin and padding.</summary>
             public static FlowLayoutPanel CreateStandard()
             {
                 return UIFlowLayoutPanelFactory.CreateStandard();

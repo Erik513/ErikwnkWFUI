@@ -15,6 +15,9 @@ namespace ErikwnkWFUI
         /// <summary>Themed <see cref="TableLayoutPanel"/>s, pre-sized to the given column/row count.</summary>
         public static class TableLayoutPanels
         {
+            /// <summary>A table layout panel in the elevated background of the theme (<c>UIColors.BackgroundMediumElevated</c>, the same as <see cref="Panels.CreateElevated"/>), without margin and padding. Follows a change of the theme.</summary>
+            /// <param name="columnCount">The number of columns.</param>
+            /// <param name="rowCount">The number of rows.</param>
             public static TableLayoutPanel CreateStandard(
                 int columnCount,
                 int rowCount)
@@ -24,6 +27,9 @@ namespace ErikwnkWFUI
                     rowCount);
             }
 
+            /// <summary>A table layout panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the same as <see cref="Panels.CreateDark"/>), without margin and padding. Follows a change of the theme.</summary>
+            /// <param name="columnCount">The number of columns.</param>
+            /// <param name="rowCount">The number of rows.</param>
             public static TableLayoutPanel CreateDark(
                 int columnCount,
                 int rowCount)
