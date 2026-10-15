@@ -288,7 +288,7 @@ namespace ErikwnkWFUI.Showcase
                 () => UIStyles.ComboBoxes.CreatePrimary(),
                 () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
 
-            AddInputFieldsRow(grid, "colors: Green", true,
+            AddInputFieldsRow(grid, "CreateStandard(colors)", true,
                 () => UIStyles.TextBoxes.CreateStandard("Text", ""),
                 () => UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green),
                 () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));

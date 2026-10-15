@@ -70,7 +70,7 @@ namespace ErikwnkWFUI.Showcase
             // Any other color: pass a color set.
             var purpleListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Purple);
             PopulateListViewDemo(purpleListView);
-            table.AddRow("colors: Purple", 260, UIColumn.Absolute(purpleListView, demoWidth));
+            table.AddRow("CreateStandard(colors)", 260, UIColumn.Absolute(purpleListView, demoWidth));
             PinToDemoWidth(purpleListView, demoWidth);
 
             // A list as big as its columns and its rows (here 5), no scroll bars.
@@ -191,21 +191,8 @@ namespace ErikwnkWFUI.Showcase
             AddEditableDataGridRow(table, "CreateStandard", data => UIStyles.DataGridViews.CreateStandard(data));
             AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
-            // Any other color: pass a color set (here two of the ready-made
-            // ones) - border, selection, drag line and menu follow it.
-            var tealGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
-            tealGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(tealGrid);
-
-            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
-            orangeGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(orangeGrid);
-
-            table.AddRow(
-                "colors: Teal | Orange",
-                180,
-                UIColumn.Percent(tealGrid, 50),
-                UIColumn.Percent(orangeGrid, 50));
+            // Any other color: pass a color set (here a ready-made one) - border, selection, drag line and menu follow it.
+            AddEditableDataGridRow(table, "CreateStandard(colors)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Teal));
 
             // The lighter of the two variants above - column-header sorting
             // still works, but no adding/deleting/cutting/pasting rows, so
@@ -241,6 +228,21 @@ namespace ErikwnkWFUI.Showcase
                 180,
                 UIColumn.Percent(readOnlyPrimaryGrid, 50),
                 UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
+
+            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
+            orangeGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(orangeGrid);
+
+            var disabledOrangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
+            disabledOrangeGrid.Dock = DockStyle.Fill;
+            disabledOrangeGrid.Enabled = false;
+            NarrowLengthColumn(disabledOrangeGrid);
+
+            table.AddRow(
+                "CreateReadOnlyStandard(colors)",
+                180,
+                UIColumn.Percent(orangeGrid, 50),
+                UIColumn.Percent(disabledOrangeGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the
