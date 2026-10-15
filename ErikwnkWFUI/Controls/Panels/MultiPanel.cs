@@ -16,7 +16,8 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     public class MultiPanelPage : ThemedPanel
     {
-        public MultiPanelPage(string title)
+        // Made by the multi panel (AddPage): a page that is not on one cannot be added to it.
+        internal MultiPanelPage(string title)
         {
             Text = title ?? string.Empty;
             Dock = DockStyle.Fill;
@@ -176,9 +177,7 @@ namespace ErikwnkWFUI.Controls
             page.Disposed += OnPageDisposed;
             page.ParentChanged += OnPageParentChanged;
 
-            _building = true;
-            Controls.Add(page);
-            _building = false;
+            AddToControls(page);
             _pages.Add(page);
 
             if (_selectedIndex < 0)
@@ -203,13 +202,40 @@ namespace ErikwnkWFUI.Controls
             if (index < 0)
                 return false;
 
-            _building = true;
-            Controls.Remove(page);
-            _building = false;
+            RemoveFromControls(page);
             page.Visible = true;
             Forget(page);
 
             return true;
+        }
+
+        // The controls of the multi panel are not for anyone to add (see OnControlAdded): the pages and the arrows are put in and taken out here.
+        private void AddToControls(Control control)
+        {
+            _building = true;
+
+            try
+            {
+                Controls.Add(control);
+            }
+            finally
+            {
+                _building = false;
+            }
+        }
+
+        private void RemoveFromControls(Control control)
+        {
+            _building = true;
+
+            try
+            {
+                Controls.Remove(control);
+            }
+            finally
+            {
+                _building = false;
+            }
         }
 
         // The names the arrows have for a screen reader follow a switch of the language (the tooltips are the titles of the pages).

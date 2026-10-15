@@ -708,4 +708,10 @@ public class MultiPanelTests : IDisposable
 
         return best;
     }
+
+    [Fact]
+    public void APageCannotBeMadeOutsideTheMultiPanel_ItComesFromAddPage()
+    {
+        Assert.Empty(typeof(MultiPanelPage).GetConstructors(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
+    }
 }
