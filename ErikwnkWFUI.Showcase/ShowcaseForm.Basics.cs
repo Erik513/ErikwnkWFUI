@@ -508,6 +508,14 @@ namespace ErikwnkWFUI.Showcase
             outer.OuterCellBorderColor = UIColors.PrimaryLight;
             table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 80, outer);
 
+            // Both kinds of lines in their own color: the ones around the table in the accent, the ones between the cells in green.
+            ThemedTableLayoutPanel twoColors = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(twoColors);
+            twoColors.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            twoColors.OuterCellBorderColor = UIColors.Primary;
+            twoColors.InnerCellBorderColor = UIStyles.Colors.Sets.Green.Basic;
+            table.AddRow("TableLayoutPanels.CreateStandard (OuterCellBorderColor, InnerCellBorderColor)", 80, twoColors);
+
             table.AddSection("Flow layout panels");
 
             table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
