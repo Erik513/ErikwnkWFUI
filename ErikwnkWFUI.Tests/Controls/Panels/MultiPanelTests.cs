@@ -229,6 +229,27 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void APageThatIsPutOnAnotherControl_LeavesTheMultiPanel_AndIsShownThere()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+        using Panel other = new Panel();
+        MultiPanelPage shown = panel.Pages[0];
+        MultiPanelPage hidden = panel.Pages[2];
+
+        other.Controls.Add(hidden);
+
+        Assert.Equal(2, panel.PageCount);
+        Assert.Equal(0, panel.SelectedIndex);
+        Assert.True(hidden.Visible);
+
+        other.Controls.Add(shown);
+
+        Assert.Equal(1, panel.PageCount);
+        Assert.Equal("Page 2", panel.SelectedPage.Title);
+        Assert.True(panel.SelectedPage.Visible);
+    }
+
+    [Fact]
     public void DisposingTheMultiPanel_DoesNotRaiseTheEvent_AndDoesNotThrow()
     {
         MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
