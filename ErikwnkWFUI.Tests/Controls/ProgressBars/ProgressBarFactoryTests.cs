@@ -18,13 +18,9 @@ public class ProgressBarFactoryTests : IDisposable
     public static IEnumerable<object[]> Bars()
     {
         yield return new object[] { "CreateStandard", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateStandard()) };
-        yield return new object[] { "CreateStandardBorderless", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateStandardBorderless()) };
         yield return new object[] { "CreateGreen", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateGreen()) };
-        yield return new object[] { "CreateGreenBorderless", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateGreenBorderless()) };
         yield return new object[] { "CreatePrimary", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreatePrimary()) };
-        yield return new object[] { "CreatePrimaryBorderless", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreatePrimaryBorderless()) };
         yield return new object[] { "CreateStatus", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateStatus()) };
-        yield return new object[] { "CreateStatusBorderless", (Func<ProgressBar>)(() => UIStyles.ProgressBars.CreateStatusBorderless()) };
     }
 
     [Theory]
@@ -42,11 +38,9 @@ public class ProgressBarFactoryTests : IDisposable
     public void WithoutAColorSet_TheFillIsTheNeutralGray_AsItWas()
     {
         using ProgressBar standard = UIStyles.ProgressBars.CreateStandard();
-        using ProgressBar borderless = UIStyles.ProgressBars.CreateStandardBorderless();
         using SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStandard();
 
         Assert.Equal(UIColors.DisabledGray, standard.ForeColor);
-        Assert.Equal(UIColors.DisabledGray, borderless.ForeColor);
         Assert.Equal(UIColors.DisabledGray, slim.ForeColor);
     }
 
@@ -56,11 +50,9 @@ public class ProgressBarFactoryTests : IDisposable
         UIColorSet teal = UIStyles.Colors.Sets.Teal;
 
         using ProgressBar standard = UIStyles.ProgressBars.CreateStandard(teal);
-        using ProgressBar borderless = UIStyles.ProgressBars.CreateStandardBorderless(teal);
         using SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStandard(teal);
 
         Assert.Equal(teal.Hover, standard.ForeColor);
-        Assert.Equal(teal.Hover, borderless.ForeColor);
         Assert.Equal(teal.Hover, slim.ForeColor);
 
         // A plain color is a set too: the bar has that color.
@@ -85,20 +77,16 @@ public class ProgressBarFactoryTests : IDisposable
     public void Green_IsTheStandardBarInTheGreenSet_AndPrimaryIsTheOneInTheAccentSet()
     {
         using ProgressBar green = UIStyles.ProgressBars.CreateGreen();
-        using ProgressBar greenBorderless = UIStyles.ProgressBars.CreateGreenBorderless();
         using ProgressBar primary = UIStyles.ProgressBars.CreatePrimary();
-        using ProgressBar primaryBorderless = UIStyles.ProgressBars.CreatePrimaryBorderless();
         using SlimProgressBar slimGreen = UIStyles.SlimProgressBars.CreateGreen();
         using SlimProgressBar slimPrimary = UIStyles.SlimProgressBars.CreatePrimary();
 
         Assert.Equal(UIColors.Green, green.ForeColor);
         Assert.Equal(UIStyles.Colors.Sets.Green.Hover, green.ForeColor);
-        Assert.Equal(green.ForeColor, greenBorderless.ForeColor);
         Assert.Equal(green.ForeColor, slimGreen.ForeColor);
 
         Assert.Equal(UIColors.Primary, primary.ForeColor);
         Assert.Equal(UIStyles.Colors.Sets.Primary.Hover, primary.ForeColor);
-        Assert.Equal(primary.ForeColor, primaryBorderless.ForeColor);
         Assert.Equal(primary.ForeColor, slimPrimary.ForeColor);
     }
 
@@ -113,5 +101,134 @@ public class ProgressBarFactoryTests : IDisposable
 
         bar.Enabled = true;
         Assert.Equal(teal.Hover, bar.ForeColor);
+    }
+
+    [Theory]
+    [MemberData(nameof(Bars))]
+    public void TheBorderIsOnByDefault_AndTheEdgeIsTheBorderColor_OrTheTrackWithoutIt(string name, Func<ProgressBar> make)
+    {
+        ThemedProgressBar bar = (ThemedProgressBar)make();
+        bar.BackColor = Color.Purple;
+
+        Assert.True(bar.ShowBorder);
+        Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
+
+        bar.ShowBorder = false;
+
+        Assert.False(bar.ShowBorder);
+        Assert.Equal(Color.Purple, bar.EdgeColor);
+
+        bar.Dispose();
+    }
+
+    [Fact]
+    public void ChangingTheBorder_PaintsTheBarAgain_ButNotWhenItStaysAsItWas()
+    {
+        using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false };
+        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        host.Controls.Add(bar);
+        host.Show();
+        Application.DoEvents();
+        int invalidated = 0;
+        bar.Invalidated += (sender, e) => invalidated++;
+
+        bar.ShowBorder = true;
+        Assert.Equal(0, invalidated);
+
+        bar.ShowBorder = false;
+        Assert.True(invalidated > 0);
+    }
+
+    [Fact]
+    public void TheBorderAndTheTrackAreTwoThings_TheBorderDoesNotChangeTheTrack()
+    {
+        using Panel panel = new Panel { BackColor = Color.Purple };
+        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        panel.Controls.Add(bar);
+
+        Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
+
+        bar.ShowBorder = false;
+        Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
+        Assert.Equal(UIColors.BackgroundMedium, bar.EdgeColor);
+
+        bar.ShowBorder = true;
+        Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
+    }
+
+    [Fact]
+    public void ATransparentTrack_IsTheColorOfThePanel_WithOrWithoutABorder_AlsoWhenThePanelChanges()
+    {
+        using Panel panel = new Panel { BackColor = Color.Purple };
+        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        panel.Controls.Add(bar);
+
+        bar.BackColor = Color.Transparent;
+        Assert.Equal(Color.Purple, bar.BackColor);
+        Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
+
+        bar.ShowBorder = false;
+        Assert.Equal(Color.Purple, bar.BackColor);
+        Assert.Equal(Color.Purple, bar.EdgeColor);
+
+        panel.BackColor = Color.Orange;
+        Assert.Equal(Color.Orange, bar.BackColor);
+
+        bar.BackColor = Color.Empty;
+        Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
+    }
+
+    [Fact]
+    public void ATransparentTrack_FollowsThePanelThroughAChangeOfTheTheme_TheOtherOneTheTheme()
+    {
+        using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(200, 100) };
+        Panel panel = UIStyles.Panels.CreateElevated();
+        ThemedProgressBar transparent = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        transparent.BackColor = Color.Transparent;
+        panel.Controls.Add(transparent);
+
+        // (On a panel whose color does not change with the theme: only the theme itself can tell the bar.)
+        ThemedProgressBar recessed = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        Panel fixedPanel = new Panel { BackColor = Color.Purple, Top = 50 };
+        fixedPanel.Controls.Add(recessed);
+        host.Controls.Add(panel);
+        host.Controls.Add(fixedPanel);
+        host.Show();
+        Application.DoEvents();
+
+        Assert.Equal(panel.BackColor, transparent.BackColor);
+        Color darkTrack = recessed.BackColor;
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        Assert.Equal(UIColors.BackgroundMediumElevated, panel.BackColor);
+        Assert.Equal(panel.BackColor, transparent.BackColor);
+        Assert.Equal(UIColors.BackgroundMedium, recessed.BackColor);
+        Assert.NotEqual(darkTrack, recessed.BackColor);
+    }
+
+    [Fact]
+    public void ATrackColorSetByHand_Stays_AlsoWhenTheBorderChanges()
+    {
+        using Panel panel = new Panel { BackColor = Color.Purple };
+        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        panel.Controls.Add(bar);
+
+        bar.BackColor = Color.Teal;
+        bar.ShowBorder = false;
+        Assert.Equal(Color.Teal, bar.BackColor);
+
+        bar.ShowBorder = true;
+        Assert.Equal(Color.Teal, bar.BackColor);
+    }
+
+    [Fact]
+    public void ABarWithoutAPanel_CanBeSetToTransparentWithoutAnError_AndLooksRecessed()
+    {
+        using ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+
+        Assert.Null(Record.Exception(() => bar.BackColor = Color.Transparent));
+        Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
     }
 }

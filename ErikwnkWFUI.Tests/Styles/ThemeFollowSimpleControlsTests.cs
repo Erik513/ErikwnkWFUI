@@ -147,7 +147,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("ProgressBars.Primary", () => { var b = UIStyles.ProgressBars.CreatePrimary(); b.Value = 40; return b; }, false),
             ("ProgressBars.Status", () => { var b = UIStyles.ProgressBars.CreateStatus(); b.Value = 40; return b; }, false),
             ("ProgressBars.Standard(colors)", () => { var b = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal); b.Value = 40; return b; }, false),
-            ("ProgressBars.StandardBorderless(colors)", () => { var b = UIStyles.ProgressBars.CreateStandardBorderless(UIStyles.Colors.Sets.Teal); b.Value = 40; return b; }, false),
+            ("ProgressBars.Standard(ShowBorder off)", () => { var b = (ErikwnkWFUI.Controls.ThemedProgressBar)UIStyles.ProgressBars.CreateStandard(); b.ShowBorder = false; b.Value = 40; return b; }, false),
             ("Spinners.Standard", () => UIStyles.Spinners.CreateStandard(), false),
             ("Spinners.Primary", () => UIStyles.Spinners.CreatePrimary(), false),
             ("SliderBars.Standard", () => UIStyles.SliderBars.CreateStandard(0.4), true),

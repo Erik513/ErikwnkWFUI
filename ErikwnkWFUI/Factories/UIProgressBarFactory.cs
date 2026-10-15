@@ -10,23 +10,15 @@ namespace ErikwnkWFUI.Factories
     internal static class UIProgressBarFactory
     {
         // Named by color, matching UIButtonFactory's CreateStandard/
-        // CreatePrimary/CreateGreen/CreateRed convention - "Borderless" is
-        // a uniform suffix for the no-border/blend-in variant of each color
-        // (not "Transparent": a ProgressBar cannot be transparent).
+        // CreatePrimary/CreateGreen/CreateRed convention. The border is a
+        // property of the bar (ThemedProgressBar.ShowBorder), not a variant.
         // CreateStandard is a neutral gray (adjust via ForeColor), the same
         // meaning "Standard" has for buttons and sliders; with a color set the
         // bar is filled in the main color of the set (see FillOf). CreateGreen/
         // CreatePrimary are CreateStandard with the green and the accent set.
         public static ProgressBar CreateStandard(UIColorSet colors = null)
         {
-            return Create(FillOf(ColorSetSource.Of(colors)), drawBorder: true);
-        }
-
-        // CreateStandard's fill with CreateGreenBorderless's
-        // no-border/blend-in look.
-        public static ProgressBar CreateStandardBorderless(UIColorSet colors = null)
-        {
-            return Create(FillOf(ColorSetSource.Of(colors)), drawBorder: false);
+            return Create(FillOf(ColorSetSource.Of(colors)));
         }
 
         // The fill of a bar for a color set: its Hover color. The sets of the library keep their main color there (Green is
@@ -46,33 +38,13 @@ namespace ErikwnkWFUI.Factories
             return CreateStandard(UIStyles.Colors.Sets.Green);
         }
 
-        // No border, and BackColor deliberately left as whatever the caller
-        // sets - ProgressBar.BackColor throws on Color.Transparent (there is
-        // no real transparency for this control), so the only way to get the
-        // "blends into its container" look some callers actually want is to
-        // match BackColor to the surrounding panel by hand, e.g.
-        // progressBar.BackColor = UIStyles.Colors.BackgroundLight to match a
-        // BackgroundLight panel. CreateGreen's opinionated, always-visible
-        // track/border stays the default; this is the explicit opt-out.
-        public static ProgressBar CreateGreenBorderless()
-        {
-            return CreateStandardBorderless(UIStyles.Colors.Sets.Green);
-        }
-
         // Same as CreateGreen, but the fill follows the app-wide accent
         // (UIColors.Primary, the same color CreatePrimary buttons use)
         // instead of the fixed green - for progress bars that should read
         // as "this app's own accent", not "success/in-progress" specifically.
         public static ProgressBar CreatePrimary()
         {
-            return Create(FillOf(() => UIColors.PrimarySet), drawBorder: true);
-        }
-
-        // CreatePrimary's accent-following fill, with CreateGreenBorderless's
-        // no-border/blend-in look.
-        public static ProgressBar CreatePrimaryBorderless()
-        {
-            return Create(FillOf(() => UIColors.PrimarySet), drawBorder: false);
+            return Create(FillOf(() => UIColors.PrimarySet));
         }
 
         // Fill color follows Value instead of being fixed: red at Minimum,
@@ -85,19 +57,12 @@ namespace ErikwnkWFUI.Factories
         // save and restore.
         public static ProgressBar CreateStatus()
         {
-            return CreateStatusBar(drawBorder: true);
+            return CreateStatusBar();
         }
 
-        // CreateStatus's Value-driven fill, with CreateGreenBorderless's
-        // no-border/blend-in look.
-        public static ProgressBar CreateStatusBorderless()
+        private static ProgressBar CreateStatusBar()
         {
-            return CreateStatusBar(drawBorder: false);
-        }
-
-        private static ProgressBar CreateStatusBar(bool drawBorder)
-        {
-            ProgressBar progressBar = new ThemedProgressBar(drawBorder, useStatusGradient: true)
+            ProgressBar progressBar = new ThemedProgressBar(useStatusGradient: true)
             {
                 Minimum = 0,
                 Maximum = 100,
@@ -105,15 +70,14 @@ namespace ErikwnkWFUI.Factories
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(progressBar, () => UIColors.BackgroundMedium);
             ThemeWatcher.Attach(progressBar, progressBar.Invalidate); // the border and the status color are read while painting
 
             return progressBar;
         }
 
-        private static ProgressBar Create(Func<Color> foreColor, bool drawBorder)
+        private static ProgressBar Create(Func<Color> foreColor)
         {
-            ProgressBar progressBar = new ThemedProgressBar(drawBorder)
+            ProgressBar progressBar = new ThemedProgressBar()
             {
                 Minimum = 0,
                 Style = ProgressBarStyle.Continuous,
@@ -127,14 +91,15 @@ namespace ErikwnkWFUI.Factories
                 // of the library's dark grays; BackgroundMedium is still
                 // reliably a shade below the common panel roles
                 // (Light/Lighter/Elevated) without going that dark, and the
-                // border (when drawBorder is true) covers the remaining
+                // border (while ShowBorder is on) covers the remaining
                 // edge case where a panel is BackgroundMedium too. Callers
-                // wanting the borderless/blend-in look reassign this
-                // themselves - see CreateGreenBorderless' own comment.
+                // wanting the borderless/blend-in look turn ShowBorder off and
+                // set BackColor to Color.Transparent: the track then takes the
+                // color of the panel (ThemedProgressBar does that; a native
+                // ProgressBar cannot be transparent).
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(progressBar, () => UIColors.BackgroundMedium);
             SetEnabledStyle(progressBar, foreColor);
 
             return progressBar;
