@@ -73,6 +73,9 @@ namespace ErikwnkWFUI.Controls
         {
             _previousButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronLeft, UIStrings.Get("MultiPanel.PreviousPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
             _nextButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronRight, UIStrings.Get("MultiPanel.NextPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
+            // The arrows do not take the focus: it stays in the page, and the keyboard turns the pages with Ctrl+PageUp/PageDown.
+            ((SymbolButton)_previousButton).TakeNoFocus();
+            ((SymbolButton)_nextButton).TakeNoFocus();
             _previousButton.Click += (sender, e) => Previous();
             _nextButton.Click += (sender, e) => Next();
             _previousButton.Dock = DockStyle.None;

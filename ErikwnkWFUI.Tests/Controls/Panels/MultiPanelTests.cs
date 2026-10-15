@@ -44,6 +44,12 @@ public class MultiPanelTests : IDisposable
         return panel.Controls.OfType<Button>().OrderBy(button => button.Left).ToArray();
     }
 
+    // PerformClick only works on buttons that can take the focus, which the arrows cannot (they are clicked with the mouse).
+    private static void Click(Button button)
+    {
+        typeof(Button).GetMethod("OnClick", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(button, new object[] { EventArgs.Empty });
+    }
+
     private static Bitmap Render(Control control)
     {
         Bitmap bitmap = new Bitmap(control.Width, control.Height);
@@ -135,15 +141,15 @@ public class MultiPanelTests : IDisposable
         Assert.False(arrows[0].Enabled);
         Assert.True(arrows[1].Enabled);
 
-        arrows[1].PerformClick();
+        Click(arrows[1]);
         Assert.Equal(1, panel.SelectedIndex);
         Assert.True(arrows[0].Enabled);
         Assert.True(arrows[1].Enabled);
 
-        arrows[1].PerformClick();
+        Click(arrows[1]);
         Assert.False(arrows[1].Enabled);
 
-        arrows[0].PerformClick();
+        Click(arrows[0]);
         Assert.Equal(1, panel.SelectedIndex);
     }
 
@@ -498,11 +504,8 @@ public class MultiPanelTests : IDisposable
 
         Assert.Same(other, host.ActiveControl);
 
-        // Focus on the arrow (the usual way to switch) stays where it is.
-        Button previous = Arrows(panel)[0];
-        previous.Focus();
-        panel.Next();
-        Assert.Same(previous, host.ActiveControl);
+        // The arrows do not take the focus, so the focus is not moved by them either.
+        Assert.All(Arrows(panel), arrow => Assert.False(arrow.CanSelect));
     }
 
     [Theory]
@@ -606,6 +609,25 @@ public class MultiPanelTests : IDisposable
         Assert.Equal(UIColors.BorderMedium, standard.BorderColor);
         Assert.Equal(UIColors.PrimaryDark, primary.BorderColor);
         Assert.Equal(green.Hover, inGreen.BorderColor);
+    }
+
+    [Fact]
+    public void TheArrows_DoNotTakeTheFocus_SoItDoesNotJumpToAPageWhenAnArrowIsDisabled()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+
+        // A click with the mouse focuses a button that can be selected - and when that one is disabled by the click (the next arrow on
+        // the last page), the focus jumped on to the first control of the page. So the arrows cannot be selected.
+        Button[] arrows = Arrows(panel);
+        Assert.All(arrows, arrow => Assert.False(arrow.CanSelect));
+        Assert.All(arrows, arrow => Assert.False(arrow.TabStop));
+
+        Click(arrows[1]);
+        Click(arrows[1]);
+
+        Assert.Equal(2, panel.SelectedIndex);
+        Assert.False(arrows[1].Enabled);
+        Assert.NotSame(arrows[0], panel.FindForm().ActiveControl);
     }
 
     [Fact]

@@ -36,6 +36,15 @@ namespace ErikwnkWFUI.Factories
                 true);
         }
 
+        // A button like on a tool bar: a click does not take the focus (and the tab key skips it). For buttons that
+        // work on something else, so that the focus stays where the user was - and does not jump on when the button
+        // is disabled by its own click.
+        internal void TakeNoFocus()
+        {
+            SetStyle(ControlStyles.Selectable, false);
+            TabStop = false;
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
