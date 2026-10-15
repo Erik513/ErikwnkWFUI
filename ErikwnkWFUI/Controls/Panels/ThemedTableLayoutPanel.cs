@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -14,6 +17,8 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     public class ThemedTableLayoutPanel : TableLayoutPanel
     {
+        private CellBorderLines _cellBorderLines = CellBorderLines.All;
+
         private readonly PanelFrame _frame;
 
         /// <summary>
@@ -63,6 +68,22 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>
+        /// Which of the lines of <see cref="TableLayoutPanel.CellBorderStyle"/> <c>Single</c> are shown: all of them (the default), only
+        /// the ones around the whole table, or only the ones between the cells. The lines that are not shown leave an empty
+        /// pixel in their place (the layout does not change), painted in the background of the table or - with a transparent
+        /// table - of what lies behind it. A background image is not repainted there.
+        /// </summary>
+        public CellBorderLines CellBorderLines
+        {
+            get { return _cellBorderLines; }
+            set
+            {
+                _cellBorderLines = value;
+                Invalidate();
+            }
+        }
+
         // Where both scroll bars meet, the system leaves a light square even with dark bars.
         protected override void WndProc(ref Message m)
         {
@@ -99,7 +120,7 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnPaint(e);
 
-            if (CellBorderStyle != TableLayoutPanelCellBorderStyle.Single)
+            if (CellBorderStyle != TableLayoutPanelCellBorderStyle.Single || _cells.Count == 0)
                 return;
 
             // The lines lie around the bounds of a cell, one pixel outside them.
@@ -107,6 +128,83 @@ namespace ErikwnkWFUI.Controls
             {
                 foreach (Rectangle cell in _cells)
                     e.Graphics.DrawRectangle(pen, cell.X - 1, cell.Y - 1, cell.Width + 1, cell.Height + 1);
+            }
+
+            if (_cellBorderLines != CellBorderLines.All)
+                HideLines(e.Graphics);
+        }
+
+        // The lines that are not wanted are painted over with what is behind them. Neighbors share a line, so the lines are
+        // the distinct edges of the cells: the outer ones are the first and the last of each direction.
+        private void HideLines(Graphics graphics)
+        {
+            int left = int.MaxValue, top = int.MaxValue, right = int.MinValue, bottom = int.MinValue;
+            SortedSet<int> columns = new SortedSet<int>();
+            SortedSet<int> rows = new SortedSet<int>();
+
+            foreach (Rectangle cell in _cells)
+            {
+                columns.Add(cell.X - 1);
+                columns.Add(cell.Right);
+                rows.Add(cell.Y - 1);
+                rows.Add(cell.Bottom);
+                left = Math.Min(left, cell.X - 1);
+                top = Math.Min(top, cell.Y - 1);
+                right = Math.Max(right, cell.Right);
+                bottom = Math.Max(bottom, cell.Bottom);
+            }
+
+            List<Rectangle> hidden = new List<Rectangle>();
+
+            if (_cellBorderLines == CellBorderLines.InnerOnly)
+            {
+                hidden.Add(new Rectangle(left, top, 1, bottom - top + 1));
+                hidden.Add(new Rectangle(right, top, 1, bottom - top + 1));
+                hidden.Add(new Rectangle(left, top, right - left + 1, 1));
+                hidden.Add(new Rectangle(left, bottom, right - left + 1, 1));
+            }
+            else
+            {
+                // The crossings of the inner lines belong to them; where an inner line meets an outer one, the outer one stays.
+                foreach (int x in columns.Where(x => x != left && x != right))
+                    hidden.Add(new Rectangle(x, top + 1, 1, bottom - top - 1));
+
+                foreach (int y in rows.Where(y => y != top && y != bottom))
+                    hidden.Add(new Rectangle(left + 1, y, right - left - 1, 1));
+            }
+
+            // (With one column or row there may be nothing to hide, and drawing no rectangles at all is an error.)
+            hidden.RemoveAll(strip => strip.Width <= 0 || strip.Height <= 0);
+
+            if (hidden.Count == 0)
+                return;
+
+            if (BackColor.A == 255)
+            {
+                using (SolidBrush brush = new SolidBrush(BackColor))
+                    graphics.FillRectangles(brush, hidden.ToArray());
+
+                return;
+            }
+
+            GraphicsState state = graphics.Save();
+
+            try
+            {
+                using (Region region = new Region(Rectangle.Empty))
+                {
+                    foreach (Rectangle strip in hidden)
+                        region.Union(strip);
+
+                    graphics.SetClip(region, CombineMode.Replace);
+                }
+
+                if (Parent != null)
+                    ParentBackground.Paint(this, graphics, args => InvokePaintBackground(Parent, args));
+            }
+            finally
+            {
+                graphics.Restore(state);
             }
         }
     }

@@ -493,6 +493,19 @@ namespace ErikwnkWFUI.Showcase
             lined.BorderColor = UIColors.Primary;
             table.AddRow("TableLayoutPanels.CreateStandard (CellBorderStyle, CellBorderColor, BorderColor)", 80, lined);
 
+            // Which lines are shown (CellBorderLines): only the ones between the cells, or only the ones around the table.
+            ThemedTableLayoutPanel inner = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(inner);
+            inner.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            inner.CellBorderLines = CellBorderLines.InnerOnly;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: InnerOnly)", 80, inner);
+
+            ThemedTableLayoutPanel outer = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(outer);
+            outer.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            outer.CellBorderLines = CellBorderLines.OuterOnly;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly)", 80, outer);
+
             table.AddSection("Flow layout panels");
 
             table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));

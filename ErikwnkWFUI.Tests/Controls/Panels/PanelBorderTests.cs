@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
@@ -198,5 +199,202 @@ public class PanelBorderTests : IDisposable
         using Bitmap picture = Draw(table);
 
         Assert.DoesNotContain(Enumerable.Range(0, 60).Select(y => Opaque(picture.GetPixel(49, y)).ToArgb()), argb => argb == Color.Red.ToArgb());
+    }
+
+    private ThemedTableLayoutPanel Grid(int columns, int rows, Color back)
+    {
+        ThemedTableLayoutPanel table = new ThemedTableLayoutPanel
+        {
+            ColumnCount = columns,
+            RowCount = rows,
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+            CellBorderColor = Color.Red,
+            Size = new Size(120, 90),
+            BackColor = back
+        };
+
+        for (int i = 0; i < columns; i++)
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / columns));
+
+        for (int i = 0; i < rows; i++)
+            table.RowStyles.Add(new RowStyle(SizeType.Percent, 100f / rows));
+
+        return Show(table);
+    }
+
+    // Where the red lines are, read along a row / a column that does not meet a crossing.
+    private static List<int> RedColumns(Bitmap picture) => Enumerable.Range(0, picture.Width).Where(x => Opaque(picture.GetPixel(x, 8)).ToArgb() == Color.Red.ToArgb()).ToList();
+
+    private static List<int> RedRows(Bitmap picture) => Enumerable.Range(0, picture.Height).Where(y => Opaque(picture.GetPixel(8, y)).ToArgb() == Color.Red.ToArgb()).ToList();
+
+    [Fact]
+    public void CellBorderLines_AllIsTheDefault_AndShowsTheLinesAroundAndBetween()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+
+        Assert.Equal(CellBorderLines.All, table.CellBorderLines);
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(4, RedColumns(picture).Count);
+        Assert.Equal(4, RedRows(picture).Count);
+        Assert.Equal(0, RedColumns(picture)[0]);
+        Assert.Equal(table.Width - 1, RedColumns(picture)[3]);
+    }
+
+    [Fact]
+    public void CellBorderLines_OuterOnly_ShowsTheLinesAroundTheTable_NoneBetweenTheCells_NotEvenTheCrossings()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        using Bitmap all = Draw(table);
+        List<int> columns = RedColumns(all);
+        List<int> rows = RedRows(all);
+
+        table.CellBorderLines = CellBorderLines.OuterOnly;
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(new[] { columns[0], columns[3] }, RedColumns(picture));
+        Assert.Equal(new[] { rows[0], rows[3] }, RedRows(picture));
+
+        // The crossings of the inner lines are gone, the corners of the outer line are there.
+        Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[1])).ToArgb());
+        Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(columns[2], rows[1])).ToArgb());
+        Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[0])).ToArgb());
+        Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(columns[3], rows[3])).ToArgb());
+
+        // The line along the edge is whole where an inner line meets it.
+        Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[0])).ToArgb());
+        Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[2])).ToArgb());
+    }
+
+    [Fact]
+    public void CellBorderLines_InnerOnly_ShowsTheLinesBetweenTheCells_NoneAroundTheTable()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        using Bitmap all = Draw(table);
+        List<int> columns = RedColumns(all);
+        List<int> rows = RedRows(all);
+
+        table.CellBorderLines = CellBorderLines.InnerOnly;
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(new[] { columns[1], columns[2] }, RedColumns(picture));
+        Assert.Equal(new[] { rows[1], rows[2] }, RedRows(picture));
+
+        // Where they cross, and nothing on the outer lines.
+        Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[1])).ToArgb());
+        Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[0])).ToArgb());
+        Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[0])).ToArgb());
+        Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(columns[3], rows[2])).ToArgb());
+    }
+
+    [Theory]
+    [InlineData(1, 1, CellBorderLines.OuterOnly)]
+    [InlineData(1, 1, CellBorderLines.InnerOnly)]
+    [InlineData(1, 3, CellBorderLines.OuterOnly)]
+    [InlineData(3, 1, CellBorderLines.OuterOnly)]
+    [InlineData(1, 3, CellBorderLines.InnerOnly)]
+    [InlineData(2, 2, CellBorderLines.OuterOnly)]
+    public void CellBorderLines_OnAnyGridSize_AreDrawnWithoutAnError_EvenWhereThereIsNothingToHide(int columns, int rows, CellBorderLines lines)
+    {
+        ThemedTableLayoutPanel table = Grid(columns, rows, Color.White);
+        table.CellBorderLines = lines;
+
+        // (A control swallows an error while it paints and shows a red cross, so the painting is called directly.)
+        Application.DoEvents();
+        Assert.Null(Record.Exception(() => PaintDirectly(table)));
+
+        // Also with a transparent table (a different way of painting).
+        table.BackColor = Color.Transparent;
+        Application.DoEvents();
+        Assert.Null(Record.Exception(() => PaintDirectly(table)));
+    }
+
+    private static void PaintDirectly(ThemedTableLayoutPanel table)
+    {
+        using Bitmap picture = new Bitmap(table.Width, table.Height);
+        using Graphics graphics = Graphics.FromImage(picture);
+        PaintEventArgs args = new PaintEventArgs(graphics, new Rectangle(Point.Empty, table.Size));
+        BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
+
+        // The cells are noted while the background is painted.
+        typeof(ThemedTableLayoutPanel).GetMethod("OnPaintBackground", flags)!.Invoke(table, new object[] { args });
+        try
+        {
+            typeof(ThemedTableLayoutPanel).GetMethod("OnPaint", flags)!.Invoke(table, new object[] { args });
+        }
+        catch (TargetInvocationException exception)
+        {
+            throw exception.InnerException!;
+        }
+    }
+
+    [Fact]
+    public void CellBorderLines_WithOneColumnOrRow_HasNoInnerLinesInThatDirection()
+    {
+        ThemedTableLayoutPanel table = Grid(1, 3, Color.White);
+        table.CellBorderLines = CellBorderLines.InnerOnly;
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Empty(RedColumns(picture));
+        Assert.Equal(2, RedRows(picture).Count);
+    }
+
+    [Fact]
+    public void CellBorderLines_OnATransparentTable_ShowWhatLiesBehindInPlaceOfTheHiddenLines()
+    {
+        ThemedTableLayoutPanel table = new ThemedTableLayoutPanel
+        {
+            ColumnCount = 2,
+            RowCount = 2,
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+            CellBorderColor = Color.Red,
+            Size = new Size(100, 60),
+            BackColor = Color.Transparent,
+            CellBorderLines = CellBorderLines.InnerOnly
+        };
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        table.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        table.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+        Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(300, 200), BackColor = Color.Blue };
+        table.Location = new Point(20, 20);
+        host.Controls.Add(table);
+        host.Show();
+        Application.DoEvents();
+        _forms.Add(host);
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
+        Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(50, 0)).ToArgb());
+        Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(99, 59)).ToArgb());
+        Assert.Equal(1, RedColumns(picture).Count);
+    }
+
+    [Theory]
+    [InlineData(CellBorderLines.OuterOnly)]
+    [InlineData(CellBorderLines.InnerOnly)]
+    public void CellBorderLines_StayHidden_AfterAChangeOfTheTheme_AndWithoutTheSingleStyle_NothingIsTouched(CellBorderLines lines)
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        table.CellBorderColor = Color.Empty;
+        table.CellBorderLines = lines;
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        using (Bitmap picture = Draw(table))
+        {
+            Color line = UIColors.BorderMedium;
+            bool outerAt0 = Opaque(picture.GetPixel(0, 40)).ToArgb() == line.ToArgb();
+            Assert.Equal(lines == CellBorderLines.OuterOnly, outerAt0);
+        }
+
+        table.CellBorderStyle = TableLayoutPanelCellBorderStyle.None;
+        Application.DoEvents();
+
+        using (Bitmap picture = Draw(table))
+            Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(0, 40)).ToArgb());
     }
 }
