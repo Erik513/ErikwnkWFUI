@@ -31,6 +31,13 @@ namespace ErikwnkWFUI.Showcase
             greyDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", greyBar, greyDisabled);
 
+            ProgressBar primaryBar = UIStyles.ProgressBars.CreatePrimary();
+            AnimateProgressBar(v => primaryBar.Value = v);
+            ProgressBar primaryDisabled = UIStyles.ProgressBars.CreatePrimary();
+            primaryDisabled.Value = 65;
+            primaryDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreatePrimary", primaryBar, primaryDisabled);
+
             ProgressBar greyTransparentBar = UIStyles.ProgressBars.CreateStandardTransparent();
             greyTransparentBar.BackColor = UIColors.BackgroundLight;
             AnimateProgressBar(v => greyTransparentBar.Value = v);
@@ -55,13 +62,6 @@ namespace ErikwnkWFUI.Showcase
             transparentDisabled.BackColor = UIColors.BackgroundLight;
             transparentDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateGreenTransparent", transparentBar, transparentDisabled);
-
-            ProgressBar primaryBar = UIStyles.ProgressBars.CreatePrimary();
-            AnimateProgressBar(v => primaryBar.Value = v);
-            ProgressBar primaryDisabled = UIStyles.ProgressBars.CreatePrimary();
-            primaryDisabled.Value = 65;
-            primaryDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", primaryBar, primaryDisabled);
 
             ProgressBar primaryTransparentBar = UIStyles.ProgressBars.CreatePrimaryTransparent();
             primaryTransparentBar.BackColor = UIColors.BackgroundLight;
@@ -98,19 +98,19 @@ namespace ErikwnkWFUI.Showcase
             slimGreyDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", slimGreyBar, slimGreyDisabled);
 
-            SlimProgressBar slimGreenBar = UIStyles.SlimProgressBars.CreateGreen();
-            AnimateProgressBar(v => slimGreenBar.Value = v);
-            SlimProgressBar slimGreenDisabled = UIStyles.SlimProgressBars.CreateGreen();
-            slimGreenDisabled.Value = 65;
-            slimGreenDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateGreen", slimGreenBar, slimGreenDisabled);
-
             SlimProgressBar slimPrimaryBar = UIStyles.SlimProgressBars.CreatePrimary();
             AnimateProgressBar(v => slimPrimaryBar.Value = v);
             SlimProgressBar slimPrimaryDisabled = UIStyles.SlimProgressBars.CreatePrimary();
             slimPrimaryDisabled.Value = 40;
             slimPrimaryDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreatePrimary", slimPrimaryBar, slimPrimaryDisabled);
+
+            SlimProgressBar slimGreenBar = UIStyles.SlimProgressBars.CreateGreen();
+            AnimateProgressBar(v => slimGreenBar.Value = v);
+            SlimProgressBar slimGreenDisabled = UIStyles.SlimProgressBars.CreateGreen();
+            slimGreenDisabled.Value = 65;
+            slimGreenDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateGreen", slimGreenBar, slimGreenDisabled);
 
             SlimProgressBar slimStatusBar = UIStyles.SlimProgressBars.CreateStatus();
             AnimateProgressBar(v => slimStatusBar.Value = v);
@@ -149,13 +149,13 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreateStandard(),
                 UIStyles.Spinners.CreateStandard(40, 5));
 
-            AddSpinnerRow(table, "CreateGreen",
-                UIStyles.Spinners.CreateGreen(),
-                UIStyles.Spinners.CreateGreen(40, 5));
-
             AddSpinnerRow(table, "CreatePrimary",
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
+
+            AddSpinnerRow(table, "CreateGreen",
+                UIStyles.Spinners.CreateGreen(),
+                UIStyles.Spinners.CreateGreen(40, 5));
 
             AddAnimatedSpinnerRow(table, "CreateProgressStandard",
                 UIStyles.Spinners.CreateProgressStandard(40, 4));

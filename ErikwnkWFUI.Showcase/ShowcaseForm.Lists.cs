@@ -191,6 +191,22 @@ namespace ErikwnkWFUI.Showcase
             AddEditableDataGridRow(table, "CreateStandard", data => UIStyles.DataGridViews.CreateStandard(data));
             AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
+            // Any other color: pass a color set (here two of the ready-made
+            // ones) - border, selection, drag line and menu follow it.
+            var tealGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
+            tealGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(tealGrid);
+
+            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
+            orangeGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(orangeGrid);
+
+            table.AddRow(
+                "colors: Teal | Orange",
+                180,
+                UIColumn.Percent(tealGrid, 50),
+                UIColumn.Percent(orangeGrid, 50));
+
             // The lighter of the two variants above - column-header sorting
             // still works, but no adding/deleting/cutting/pasting rows, so
             // neither the delete-row column nor the "type here to add a
@@ -225,22 +241,6 @@ namespace ErikwnkWFUI.Showcase
                 180,
                 UIColumn.Percent(readOnlyPrimaryGrid, 50),
                 UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
-
-            // Any other color: pass a color set (here two of the ready-made
-            // ones) - border, selection, drag line and menu follow it.
-            var tealGrid = UIStyles.DataGridViews.CreateStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
-            tealGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(tealGrid);
-
-            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
-            orangeGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(orangeGrid);
-
-            table.AddRow(
-                "colors: Teal | Orange",
-                180,
-                UIColumn.Percent(tealGrid, 50),
-                UIColumn.Percent(orangeGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the

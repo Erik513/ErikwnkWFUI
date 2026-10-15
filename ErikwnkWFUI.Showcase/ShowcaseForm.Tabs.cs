@@ -17,23 +17,6 @@ namespace ErikwnkWFUI.Showcase
     {
         private void AddTabControlSection(PropertyTable table)
         {
-            // The display-only variants: tabs can be switched, not edited.
-            table.AddRow(
-                "CreateReadOnlyStandard",
-                140,
-                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyStandard(), 3));
-
-            // Two ways to handle more tabs than fit in a row: scroll arrows
-            // at the right end of the strip (left), or wrapping onto
-            // several rows (right).
-            System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreateReadOnlyPrimary();
-            multiline.Multiline = true;
-            table.AddRow(
-                "CreateReadOnlyPrimary",
-                160,
-                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyPrimary(), 7, "TabControl with overflow arrows"),
-                CreateTabControlDemo(multiline, 7, "TabControl with Multiline"));
-
             // The editable variants: right-click a tab to add a new one
             // behind it or close it (the last tab always stays).
             table.AddRow(
@@ -53,6 +36,23 @@ namespace ErikwnkWFUI.Showcase
                 "CreateStandard(colors)",
                 140,
                 CreateTabControlDemo(UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Green), 3, "Green set"));
+
+            // The display-only variants: tabs can be switched, not edited.
+            table.AddRow(
+                "CreateReadOnlyStandard",
+                140,
+                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyStandard(), 3));
+
+            // Two ways to handle more tabs than fit in a row: scroll arrows
+            // at the right end of the strip (left), or wrapping onto
+            // several rows (right).
+            System.Windows.Forms.TabControl multiline = UIStyles.TabControls.CreateReadOnlyPrimary();
+            multiline.Multiline = true;
+            table.AddRow(
+                "CreateReadOnlyPrimary",
+                160,
+                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyPrimary(), 7, "TabControl with overflow arrows"),
+                CreateTabControlDemo(multiline, 7, "TabControl with Multiline"));
 
             // Everything the tab controls can do, in one tab control: each
             // page of this read-only one shows a group of variants.
