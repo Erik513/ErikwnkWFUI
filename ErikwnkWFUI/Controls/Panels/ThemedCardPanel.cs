@@ -13,8 +13,11 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     /// <remarks>
     /// The controls inside are not cut to the rounded shape: <see cref="Padding"/> keeps them from the corners (the card has
-    /// one of its own by default). <c>AutoScroll</c> is not meant for a card (its scroll bars are rectangular and would stick
-    /// out of the corners). A <c>BackgroundImage</c> is not drawn (the card paints its own shape), and a <c>BorderStyle</c> of the
+    /// one of its own by default). <c>AutoScroll</c> is not meant for a card: the scroll bars of a window are always at its
+    /// outer edge, rectangular, over the rounded corners and the line. To scroll, put a panel with <c>AutoScroll</c> in the
+    /// card (for example <c>UIStyles.Panels.CreateTransparent()</c> with <c>Dock = DockStyle.Fill</c>): its scroll bars lie
+    /// inside the padding of the card, in the style of the theme, and the shape of the card stays whole. The pages of a
+    /// <see cref="MultiPanel"/> are such panels. A <c>BackgroundImage</c> is not drawn (the card paints its own shape), and a <c>BorderStyle</c> of the
     /// standard panel is not meant for it: the line is <see cref="ShowBorder"/> and <see cref="BorderColor"/>.
     /// <see cref="MultiPanel"/> is a card with pages (flat, with a <see cref="CornerRadius"/> of 0 and no line, or rounded).
     /// </remarks>

@@ -444,6 +444,19 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
             table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
 
+            // A card does not scroll itself (its scroll bars would lie over the rounded corners): a panel with AutoScroll is put in it.
+            Panel scrollingCard = UIStyles.Panels.CreateCardStandard();
+            scrollingCard.Size = new Size(260, 100);
+            scrollingCard.MinimumSize = scrollingCard.Size;
+            scrollingCard.MaximumSize = scrollingCard.Size;
+            Panel scrollInside = UIStyles.Panels.CreateTransparent();
+            scrollInside.Dock = DockStyle.Fill;
+            scrollInside.AutoScroll = true;
+            scrollInside.Controls.Add(new Label { Text = "A panel with AutoScroll in the card", AutoSize = true, Location = new Point(0, 0), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
+            scrollInside.Controls.Add(new Panel { Location = new Point(0, 24), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
+            scrollingCard.Controls.Add(scrollInside);
+            table.AddRow("CreateCardStandard (scrolling panel inside)", 120, scrollingCard);
+
             // The options of a panel in one: a frame (ShowBorder) in the library's color (BorderColor) and AutoScroll
             // (the scroll bars follow the theme, also the square where they meet).
             ThemedPanel options = (ThemedPanel)UIStyles.Panels.CreateMedium();
