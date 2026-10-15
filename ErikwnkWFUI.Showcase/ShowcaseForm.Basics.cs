@@ -195,7 +195,7 @@ namespace ErikwnkWFUI.Showcase
             System.Windows.Forms.CheckBox greenUnchecked = UIStyles.CheckBoxes.CreateStandard("Unchecked", false, UIStyles.Colors.Sets.Green);
             System.Windows.Forms.CheckBox greenDisabled = UIStyles.CheckBoxes.CreateStandard("Disabled", true, UIStyles.Colors.Sets.Green);
             greenDisabled.Enabled = false;
-            AddUniformRow(table, "CreateStandard(colors)", greenChecked, greenUnchecked, greenDisabled);
+            AddUniformRow(table, "CreateStandard(colors: Green)", greenChecked, greenUnchecked, greenDisabled);
 
             System.Windows.Forms.CheckBox compactChecked = UIStyles.CheckBoxes.CreateStandardCompact(true);
             System.Windows.Forms.CheckBox compactUnchecked = UIStyles.CheckBoxes.CreateStandardCompact(false);
@@ -264,83 +264,6 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateBorderstyleNone", borderless, borderlessDisabled);
         }
 
-        // The three input fields next to each other, to compare their backgrounds, frames, focus and disabled look:
-        // text box, combo box and numeric up/down per row. Not in a PropertyTable: its cells draw a frame of their own
-        // around every editor, which would hide the frames of the fields themselves.
-        private Control CreateInputFieldsBody()
-        {
-            TableLayoutPanel grid = UIStyles.TableLayoutPanels.CreateStandard(4, 0);
-            grid.Dock = DockStyle.Top;
-            grid.AutoSize = true;
-            grid.Padding = new Padding(16, 12, 16, 12);
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 230));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
-
-            AddInputFieldsRow(grid, "CreateStandard", true,
-                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
-                () => UIStyles.ComboBoxes.CreateStandard(),
-                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
-
-            AddInputFieldsRow(grid, "CreatePrimary", true,
-                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
-                () => UIStyles.ComboBoxes.CreatePrimary(),
-                () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
-
-            AddInputFieldsRow(grid, "CreateStandard(colors)", true,
-                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
-                () => UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green),
-                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
-
-            AddInputFieldsRow(grid, "CreateStandard (disabled)", false,
-                () => UIStyles.TextBoxes.CreateStandard("Text", ""),
-                () => UIStyles.ComboBoxes.CreateStandard(),
-                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
-
-            AddInputFieldsRow(grid, "Borderless text box", true,
-                () => UIStyles.TextBoxes.CreateBorderstyleNone("Text", ""),
-                () => UIStyles.ComboBoxes.CreateStandard(),
-                () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
-
-            return grid;
-        }
-
-        private void AddInputFieldsRow(
-            TableLayoutPanel grid,
-            string label,
-            bool enabled,
-            Func<TextBox> createText,
-            Func<System.Windows.Forms.ComboBox> createCombo,
-            Func<System.Windows.Forms.NumericUpDown> createNumeric)
-        {
-            TextBox text = createText();
-            System.Windows.Forms.ComboBox combo = createCombo();
-            combo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            combo.SelectedIndex = 0;
-            System.Windows.Forms.NumericUpDown numeric = createNumeric();
-
-            Label caption = UIStyles.Labels.CreateStandard(label);
-            caption.Anchor = AnchorStyles.Left;
-            caption.AutoSize = true;
-            caption.Margin = new Padding(0, 0, 8, 0);
-
-            int row = grid.RowCount++;
-            grid.RowStyles.Add(new RowStyle(SizeType.AutoSize));
-            grid.Controls.Add(caption, 0, row);
-
-            int column = 1;
-
-            foreach (Control field in new Control[] { text, combo, numeric })
-            {
-                field.Enabled = enabled;
-                field.Width = column == 3 ? 130 : 210;
-                field.Anchor = AnchorStyles.Left;
-                field.Margin = new Padding(0, 8, 16, 8);
-                grid.Controls.Add(field, column++, row);
-            }
-        }
-
         private void AddComboBoxesSection(PropertyTable table)
         {
             System.Windows.Forms.ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
@@ -368,7 +291,7 @@ namespace ErikwnkWFUI.Showcase
             greenComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
             greenComboDisabled.SelectedIndex = 0;
             greenComboDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard(colors)", greenCombo, greenComboDisabled);
+            AddTwoColumnRow(table, "CreateStandard(colors: Green)", greenCombo, greenComboDisabled);
         }
 
         private void AddContextMenusSection(PropertyTable table)
@@ -384,7 +307,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("CreateStandard", standardButton);
             table.AddRow("CreatePrimary", primaryButton);
-            table.AddRow("CreateStandard(colors)", colorsButton);
+            table.AddRow("CreateStandard(colors: Green)", colorsButton);
         }
 
         // Exercises every native ToolStripMenuItem feature (icon, checkmark,
@@ -416,7 +339,7 @@ namespace ErikwnkWFUI.Showcase
         {
             AddNumericUpDownRow(table, "CreateStandard", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42));
             AddNumericUpDownRow(table, "CreatePrimary", () => UIStyles.NumericUpDowns.CreatePrimary(0, 100, 1, 42));
-            AddNumericUpDownRow(table, "CreateStandard(colors)", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
+            AddNumericUpDownRow(table, "CreateStandard(colors: Green)", () => UIStyles.NumericUpDowns.CreateStandard(0, 100, 1, 42, UIStyles.Colors.Sets.Green));
             AddNumericUpDownRow(table, "Suffix", () =>
             {
                 ErikwnkWFUI.Controls.NumericUpDown box = (ErikwnkWFUI.Controls.NumericUpDown)UIStyles.NumericUpDowns.CreatePrimary(0, 100, 5, 40);
@@ -439,11 +362,11 @@ namespace ErikwnkWFUI.Showcase
         {
             AddLabelRow(table, "CreateStandard", "Standard body text", text => UIStyles.Labels.CreateStandard(text));
             AddLabelRow(table, "CreatePrimary", "Body text in the accent color", text => UIStyles.Labels.CreatePrimary(text));
-            AddLabelRow(table, "CreateStandard(colors)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
+            AddLabelRow(table, "CreateStandard(colors: Green)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
             AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
-            AddLabelRow(table, "CreateTitle(colors)", "Title label in a color set", text => UIStyles.Labels.CreateTitle(text, UIStyles.Colors.Sets.Green));
+            AddLabelRow(table, "CreateTitle(colors: Green)", "Title label in a color set", text => UIStyles.Labels.CreateTitle(text, UIStyles.Colors.Sets.Green));
             AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));
-            AddLabelRow(table, "CreateMuted(colors)", "Muted text in a color set (dimmed)", text => UIStyles.Labels.CreateMuted(text, UIStyles.Colors.Sets.Green));
+            AddLabelRow(table, "CreateMuted(colors: Green)", "Muted text in a color set (dimmed)", text => UIStyles.Labels.CreateMuted(text, UIStyles.Colors.Sets.Green));
 
             // A text that is too long for its label moves instead of ending in an ellipsis: back and forth with a
             // rest at both ends, or endlessly in one direction, coming again behind a gap and a separator.
@@ -485,7 +408,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 ("CreateStandard", UIStyles.Panels.CreateStandard()),
                 ("CreatePrimary", UIStyles.Panels.CreatePrimary()),
-                ("CreateStandard(colors)", UIStyles.Panels.CreateStandard(green)),
+                ("CreateStandard(colors: Green)", UIStyles.Panels.CreateStandard(green)),
                 ("CreateDark", UIStyles.Panels.CreateDark()),
                 ("CreateMedium", UIStyles.Panels.CreateMedium()),
                 ("CreateElevated", UIStyles.Panels.CreateElevated())
@@ -509,7 +432,7 @@ namespace ErikwnkWFUI.Showcase
 
             // A card: rounded corners that show the page behind them and a thin line.
             table.AddRow("CreateCardStandard", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(), "A card"));
-            table.AddRow("CreateCardStandard(colors)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
+            table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
             table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
 
             // The frame of a panel in the library's color (the system draws it in its own otherwise).
@@ -546,7 +469,7 @@ namespace ErikwnkWFUI.Showcase
 
             TableLayoutPanel cellsInColor = UIStyles.TableLayoutPanels.CreateStandard(3, 2, green);
             ConfigureCellsDemo(cellsInColor);
-            table.AddRow("TableLayoutPanels.CreateStandard(colors)", 80, cellsInColor);
+            table.AddRow("TableLayoutPanels.CreateStandard(colors: Green)", 80, cellsInColor);
 
             TableLayoutPanel cellsTransparent = UIStyles.TableLayoutPanels.CreateTransparent(3, 2);
             ConfigureCellsDemo(cellsTransparent);
@@ -560,7 +483,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
             table.AddRow("FlowLayoutPanels.CreatePrimary", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreatePrimary()));
-            table.AddRow("FlowLayoutPanels.CreateStandard(colors)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
+            table.AddRow("FlowLayoutPanels.CreateStandard(colors: Green)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
             table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
         }
 

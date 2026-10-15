@@ -33,7 +33,7 @@ namespace ErikwnkWFUI.Showcase
 
             // CreateStandard with a color set.
             table.AddRow(
-                "CreateStandard(colors)",
+                "CreateStandard(colors: Green)",
                 140,
                 CreateTabControlDemo(UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Green), 3, "Green set"));
 

@@ -38,7 +38,7 @@ namespace ErikwnkWFUI.Showcase
 
             ErikwnkWFUI.Controls.ListBox green = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
             FillListBoxDemo(green);
-            table.AddRow("ListBoxes.CreateStandard(colors)", 220, green);
+            table.AddRow("ListBoxes.CreateStandard(colors: Green)", 220, green);
 
             TitledListBox titled = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true);
             FillListBoxDemo(titled.InnerListBox);
@@ -50,7 +50,7 @@ namespace ErikwnkWFUI.Showcase
 
             TitledListBox titledGreen = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
             FillListBoxDemo(titledGreen.InnerListBox);
-            table.AddRow("TitledListBoxes.CreateStandard(colors)", 260, titledGreen);
+            table.AddRow("TitledListBoxes.CreateStandard(colors: Green)", 260, titledGreen);
         }
 
         private void AddListViewSection(PropertyTable table)
@@ -70,7 +70,7 @@ namespace ErikwnkWFUI.Showcase
             // Any other color: pass a color set.
             var purpleListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Purple);
             PopulateListViewDemo(purpleListView);
-            table.AddRow("CreateStandard(colors)", 260, UIColumn.Absolute(purpleListView, demoWidth));
+            table.AddRow("CreateStandard(colors: Purple)", 260, UIColumn.Absolute(purpleListView, demoWidth));
             PinToDemoWidth(purpleListView, demoWidth);
 
             // A list as big as its columns and its rows (here 5), no scroll bars.
@@ -192,7 +192,7 @@ namespace ErikwnkWFUI.Showcase
             AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
             // Any other color: pass a color set (here a ready-made one) - border, selection, drag line and menu follow it.
-            AddEditableDataGridRow(table, "CreateStandard(colors)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Teal));
+            AddEditableDataGridRow(table, "CreateStandard(colors: Teal)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Teal));
 
             // The lighter of the two variants above - column-header sorting
             // still works, but no adding/deleting/cutting/pasting rows, so
@@ -239,7 +239,7 @@ namespace ErikwnkWFUI.Showcase
             NarrowLengthColumn(disabledOrangeGrid);
 
             table.AddRow(
-                "CreateReadOnlyStandard(colors)",
+                "CreateReadOnlyStandard(colors: Orange)",
                 180,
                 UIColumn.Percent(orangeGrid, 50),
                 UIColumn.Percent(disabledOrangeGrid, 50));
