@@ -40,7 +40,9 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     /// <remarks>
     /// Add the pages with <see cref="AddPage"/> and put the controls on the page that comes back. Controls cannot be added to the
-    /// multi panel itself. The arrows are disabled on the first and the last page.
+    /// multi panel itself. The arrows are disabled on the first and the last page. With the focus inside the multi panel,
+    /// Ctrl+PageDown or Ctrl+Tab shows the next page and Ctrl+PageUp or Ctrl+Shift+Tab the previous one (on the first and the
+    /// last page the key goes on to the parent, so that a tab control around it can use it).
     /// </remarks>
     public class MultiPanel : ThemedCardPanel
     {
@@ -293,6 +295,22 @@ namespace ErikwnkWFUI.Controls
             Controls.Remove(e.Control);
 
             throw new InvalidOperationException("Controls are put on the pages of a MultiPanel (AddPage), not on the multi panel itself.");
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            bool forward = keyData == (Keys.Control | Keys.PageDown) || keyData == (Keys.Control | Keys.Tab);
+            bool backward = keyData == (Keys.Control | Keys.PageUp) || keyData == (Keys.Control | Keys.Shift | Keys.Tab);
+            int target = _selectedIndex + (forward ? 1 : -1);
+
+            if ((forward || backward) && target >= 0 && target < _pages.Count)
+            {
+                SelectedIndex = target;
+
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         protected override void OnFontChanged(EventArgs e)

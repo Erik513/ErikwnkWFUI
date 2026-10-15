@@ -527,6 +527,37 @@ public class MultiPanelTests : IDisposable
             Assert.True(Darkest(panel) < 128);
     }
 
+    private static bool PressKey(MultiPanel panel, Keys keys)
+    {
+        object[] arguments = { new Message(), keys };
+
+        return (bool)typeof(Control).GetMethod("ProcessCmdKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(panel, arguments)!;
+    }
+
+    [Fact]
+    public void CtrlPageDownAndCtrlPageUp_SwitchThePages_AndLeaveTheKeyToTheParentAtTheEnds()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+
+        Assert.False(PressKey(panel, Keys.Control | Keys.PageUp));
+        Assert.Equal(0, panel.SelectedIndex);
+
+        Assert.True(PressKey(panel, Keys.Control | Keys.PageDown));
+        Assert.True(PressKey(panel, Keys.Control | Keys.Tab));
+        Assert.Equal(2, panel.SelectedIndex);
+        Assert.False(PressKey(panel, Keys.Control | Keys.PageDown));
+        Assert.False(PressKey(panel, Keys.Control | Keys.Tab));
+
+        Assert.True(PressKey(panel, Keys.Control | Keys.PageUp));
+        Assert.True(PressKey(panel, Keys.Control | Keys.Shift | Keys.Tab));
+        Assert.Equal(0, panel.SelectedIndex);
+
+        // Other keys are not taken.
+        Assert.False(PressKey(panel, Keys.PageDown));
+        Assert.False(PressKey(panel, Keys.Tab));
+        Assert.Equal(0, panel.SelectedIndex);
+    }
+
     [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
