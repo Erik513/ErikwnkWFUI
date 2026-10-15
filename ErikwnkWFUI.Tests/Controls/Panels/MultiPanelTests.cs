@@ -5,7 +5,9 @@ using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Infrastructure;
 using Xunit;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;
@@ -628,6 +630,46 @@ public class MultiPanelTests : IDisposable
         Assert.Equal(2, panel.SelectedIndex);
         Assert.False(arrows[1].Enabled);
         Assert.NotSame(arrows[0], panel.FindForm().ActiveControl);
+    }
+
+    [Fact]
+    public void TheTooltipOfAnArrow_IsTheTitleOfThePageItLeadsTo_AndNothingWithoutOne()
+    {
+        MultiPanel panel = UIStyles.MultiPanels.CreateStandard();
+        Button[] arrows = Arrows(panel);
+
+        panel.AddPage("First");
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[0]));
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[1]));
+
+        panel.AddPage("Second");
+        panel.AddPage("");
+        panel.AddPage("Fourth");
+
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[0]));
+        Assert.Equal("Second", ButtonToolTipReader.Text(arrows[1]));
+
+        panel.Next();
+        Assert.Equal("First", ButtonToolTipReader.Text(arrows[0]));
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[1]));
+
+        panel.Next();
+        Assert.Equal("Second", ButtonToolTipReader.Text(arrows[0]));
+        Assert.Equal("Fourth", ButtonToolTipReader.Text(arrows[1]));
+
+        panel.Next();
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[0]));
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[1]));
+
+        // A title that is changed or removed later.
+        panel.SelectedIndex = 0;
+        panel.Pages[1].Title = "Renamed";
+        Assert.Equal("Renamed", ButtonToolTipReader.Text(arrows[1]));
+        panel.Pages[1].Title = "";
+        Assert.Equal("", ButtonToolTipReader.Text(arrows[1]));
+
+        Assert.Equal(UIStrings.Get("MultiPanel.NextPage"), arrows[1].AccessibleName);
+        Assert.Equal(UIStrings.Get("MultiPanel.PreviousPage"), arrows[0].AccessibleName);
     }
 
     [Fact]

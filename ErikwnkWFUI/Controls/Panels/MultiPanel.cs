@@ -71,8 +71,12 @@ namespace ErikwnkWFUI.Controls
         // neutral look without one.
         internal MultiPanel(Func<UIColorSet> arrowColors)
         {
-            _previousButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronLeft, UIStrings.Get("MultiPanel.PreviousPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
-            _nextButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronRight, UIStrings.Get("MultiPanel.NextPage"), new Size(ButtonSize96, ButtonSize96), arrowColors);
+            _previousButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronLeft, "", new Size(ButtonSize96, ButtonSize96), arrowColors);
+            _nextButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronRight, "", new Size(ButtonSize96, ButtonSize96), arrowColors);
+            // The tooltip of an arrow is the title of the page it leads to (see UpdateToolTips), so the name for a screen reader is its own.
+            _previousButton.AccessibleName = UIStrings.Get("MultiPanel.PreviousPage");
+            _nextButton.AccessibleName = UIStrings.Get("MultiPanel.NextPage");
+
             // The arrows do not take the focus: it stays in the page, and the keyboard turns the pages with Ctrl+PageUp/PageDown.
             ((SymbolButton)_previousButton).TakeNoFocus();
             ((SymbolButton)_nextButton).TakeNoFocus();
@@ -206,6 +210,7 @@ namespace ErikwnkWFUI.Controls
 
         private void OnPageTextChanged(object sender, EventArgs e)
         {
+            UpdateToolTips();
             InvalidateHeader();
         }
 
@@ -451,6 +456,14 @@ namespace ErikwnkWFUI.Controls
         {
             _previousButton.Enabled = _selectedIndex > 0;
             _nextButton.Enabled = _selectedIndex >= 0 && _selectedIndex < _pages.Count - 1;
+            UpdateToolTips();
+        }
+
+        // Each arrow shows the title of the page it leads to - and nothing where there is no such page or it has no title.
+        private void UpdateToolTips()
+        {
+            UIButtonFactory.UpdateTooltip(_previousButton, _selectedIndex > 0 ? _pages[_selectedIndex - 1].Title : "");
+            UIButtonFactory.UpdateTooltip(_nextButton, _selectedIndex >= 0 && _selectedIndex < _pages.Count - 1 ? _pages[_selectedIndex + 1].Title : "");
         }
 
         private void InvalidateHeader()
