@@ -22,10 +22,9 @@ namespace ErikwnkWFUI.Showcase
             // Every enabled bar below is driven by the shared animation
             // timer (see _progressBarAnimationSetters) instead of a fixed
             // demo value, so this section doubles as a preview of what an
-            // actual, moving load looks like. Disabled bars are deliberately
-            // left out of the animation and kept at one fixed value - the
-            // point of that column is to show the disabled look clearly,
-            // which a constantly-changing bar would undercut.
+            // actual, moving load looks like. The disabled look is shown
+            // once, in the first row, at one fixed value - a constantly
+            // changing bar would undercut it, and it is the same in every row.
             ProgressBar grayBar = UIStyles.ProgressBars.CreateStandard();
             AnimateProgressBar(v => grayBar.Value = v);
             ProgressBar grayDisabled = UIStyles.ProgressBars.CreateStandard();
@@ -33,49 +32,37 @@ namespace ErikwnkWFUI.Showcase
             grayDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", grayBar, grayDisabled);
 
-            ProgressBar primaryBar = UIStyles.ProgressBars.CreatePrimary();
-            AnimateProgressBar(v => primaryBar.Value = v);
-            ProgressBar primaryDisabled = UIStyles.ProgressBars.CreatePrimary();
-            primaryDisabled.Value = 65;
-            primaryDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", primaryBar, primaryDisabled);
-
-            ProgressBar tealBar = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
-            AnimateProgressBar(v => tealBar.Value = v);
-            ProgressBar tealDisabled = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
-            tealDisabled.Value = 65;
-            tealDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard(colors: Teal)", tealBar, tealDisabled);
-
-            ProgressBar standardBar = UIStyles.ProgressBars.CreateGreen();
-            AnimateProgressBar(v => standardBar.Value = v);
-            ProgressBar disabledBar = UIStyles.ProgressBars.CreateGreen();
-            disabledBar.Value = 65;
-            disabledBar.Enabled = false;
-            AddTwoColumnRow(table, "CreateGreen", standardBar, disabledBar);
-
-            ProgressBar statusBar = UIStyles.ProgressBars.CreateStatus();
-            AnimateProgressBar(v => statusBar.Value = v);
-            ProgressBar statusDisabled = UIStyles.ProgressBars.CreateStatus();
-            statusDisabled.Value = 65;
-            statusDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStatus", statusBar, statusDisabled);
+            AddBarRow(table, "CreatePrimary", UIStyles.ProgressBars.CreatePrimary());
+            AddBarRow(table, "CreateStandard(colors: Teal)", UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal));
+            AddBarRow(table, "CreateGreen", UIStyles.ProgressBars.CreateGreen());
+            AddBarRow(table, "CreateStatus", UIStyles.ProgressBars.CreateStatus());
 
             // Two properties, independent of each other: the border (ShowBorder) and the track (BackColor; Transparent takes the color of the
-            // panel the bar lies on, in both themes).
+            // panel the bar lies on, in both themes). First the border alone, then both.
             ThemedProgressBar withoutBorder = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
             withoutBorder.ShowBorder = false;
-            withoutBorder.BackColor = Color.Transparent;
-            AnimateProgressBar(v => withoutBorder.Value = v);
-            ThemedProgressBar withoutBorderDisabled = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
-            withoutBorderDisabled.ShowBorder = false;
-            withoutBorderDisabled.BackColor = Color.Transparent;
-            withoutBorderDisabled.Value = 40;
-            withoutBorderDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard (ShowBorder = false, BackColor = Transparent)", withoutBorder, withoutBorderDisabled);
+            AddBarRow(table, "CreateStandard (ShowBorder = false)", withoutBorder);
+
+            ThemedProgressBar withoutBorderTransparent = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+            withoutBorderTransparent.ShowBorder = false;
+            withoutBorderTransparent.BackColor = Color.Transparent;
+            AddBarRow(table, "CreateStandard (ShowBorder = false, BackColor = Transparent)", withoutBorderTransparent);
 
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);
+        }
+
+        // One animated bar in the column of the enabled ones (the width of the left column of a two column row).
+        private void AddBarRow(PropertyTable table, string name, ProgressBar bar)
+        {
+            AnimateProgressBar(v => bar.Value = v);
+            table.AddRow(name, UIColumn.Percent(bar, TwoColumnPercent));
+        }
+
+        private void AddSlimBarRow(PropertyTable table, string name, SlimProgressBar bar)
+        {
+            AnimateProgressBar(v => bar.Value = v);
+            table.AddRow(name, UIColumn.Percent(bar, TwoColumnPercent));
         }
 
         private void AddSlimProgressBarsSection(PropertyTable table)
@@ -87,33 +74,10 @@ namespace ErikwnkWFUI.Showcase
             slimGrayDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", slimGrayBar, slimGrayDisabled);
 
-            SlimProgressBar slimPrimaryBar = UIStyles.SlimProgressBars.CreatePrimary();
-            AnimateProgressBar(v => slimPrimaryBar.Value = v);
-            SlimProgressBar slimPrimaryDisabled = UIStyles.SlimProgressBars.CreatePrimary();
-            slimPrimaryDisabled.Value = 40;
-            slimPrimaryDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", slimPrimaryBar, slimPrimaryDisabled);
-
-            SlimProgressBar slimTealBar = UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
-            AnimateProgressBar(v => slimTealBar.Value = v);
-            SlimProgressBar slimTealDisabled = UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
-            slimTealDisabled.Value = 40;
-            slimTealDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard(colors: Teal)", slimTealBar, slimTealDisabled);
-
-            SlimProgressBar slimGreenBar = UIStyles.SlimProgressBars.CreateGreen();
-            AnimateProgressBar(v => slimGreenBar.Value = v);
-            SlimProgressBar slimGreenDisabled = UIStyles.SlimProgressBars.CreateGreen();
-            slimGreenDisabled.Value = 65;
-            slimGreenDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateGreen", slimGreenBar, slimGreenDisabled);
-
-            SlimProgressBar slimStatusBar = UIStyles.SlimProgressBars.CreateStatus();
-            AnimateProgressBar(v => slimStatusBar.Value = v);
-            SlimProgressBar slimStatusDisabled = UIStyles.SlimProgressBars.CreateStatus();
-            slimStatusDisabled.Value = 40;
-            slimStatusDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStatus", slimStatusBar, slimStatusDisabled);
+            AddSlimBarRow(table, "CreatePrimary", UIStyles.SlimProgressBars.CreatePrimary());
+            AddSlimBarRow(table, "CreateStandard(colors: Teal)", UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal));
+            AddSlimBarRow(table, "CreateGreen", UIStyles.SlimProgressBars.CreateGreen());
+            AddSlimBarRow(table, "CreateStatus", UIStyles.SlimProgressBars.CreateStatus());
         }
 
         // Value/Enabled are set directly rather than via AnimateProgressBar -
