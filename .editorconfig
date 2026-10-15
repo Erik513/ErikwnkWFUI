@@ -17,3 +17,7 @@ trim_trailing_whitespace = false
 
 [*.ps1]
 charset = utf-8-bom
+
+[ErikwnkWFUI.Tests/**.cs]
+# A theory takes a name only to label its case in the list of tests; not using it is no mistake.
+dotnet_diagnostic.xUnit1026.severity = none

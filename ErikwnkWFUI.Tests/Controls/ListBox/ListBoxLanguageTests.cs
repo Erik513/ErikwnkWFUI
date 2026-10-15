@@ -111,7 +111,7 @@ public class ListBoxLanguageTests : IDisposable
         list.Items.Add("Fish & Chips");
 
         Assert.Equal("Q&A", list.Title);
-        Assert.False(list.GetPrivateField<Label>("_titleLabel").UseMnemonic);
+        Assert.False(list.GetPrivateField<Label>("_titleLabel")!.UseMnemonic);
     }
 
     [Fact]

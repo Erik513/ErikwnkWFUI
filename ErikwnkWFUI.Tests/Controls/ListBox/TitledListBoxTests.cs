@@ -33,7 +33,7 @@ public class TitledListBoxTests : IDisposable
 
         foreach (System.Reflection.PropertyInfo property in typeof(ErikwnkWFUI.Controls.ListBox).GetProperties(flags))
         {
-            System.Reflection.PropertyInfo mirrored = typeof(WfuiTitledListBox).GetProperty(property.Name);
+            System.Reflection.PropertyInfo? mirrored = typeof(WfuiTitledListBox).GetProperty(property.Name);
 
             if (mirrored == null || mirrored.PropertyType != property.PropertyType)
                 missing.Add("property " + property.Name);

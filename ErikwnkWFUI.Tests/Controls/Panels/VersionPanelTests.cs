@@ -213,7 +213,7 @@ public class VersionPanelTests : IDisposable
     // Like in a program: the answer comes back to the thread of the window (the message loop is pumped by hand).
     private static bool Check(VersionPanel panel, AppUpdater updater, Version current)
     {
-        SynchronizationContext previous = SynchronizationContext.Current;
+        SynchronizationContext? previous = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
 
         try

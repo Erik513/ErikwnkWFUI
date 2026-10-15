@@ -498,7 +498,7 @@ public class MultiPanelTests : IDisposable
         panel.Pages[0].Controls.Add(first);
         panel.Pages[1].Controls.Add(second);
         panel.Pages[1].Controls.Add(other);
-        Form host = (Form)panel.FindForm();
+        Form host = panel.FindForm()!;
         first.Focus();
         Assert.Same(first, host.ActiveControl);
 
@@ -629,7 +629,7 @@ public class MultiPanelTests : IDisposable
 
         Assert.Equal(2, panel.SelectedIndex);
         Assert.False(arrows[1].Enabled);
-        Assert.NotSame(arrows[0], panel.FindForm().ActiveControl);
+        Assert.NotSame(arrows[0], panel.FindForm()!.ActiveControl);
     }
 
     [Fact]

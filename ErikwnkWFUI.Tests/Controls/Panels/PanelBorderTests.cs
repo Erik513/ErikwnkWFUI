@@ -453,7 +453,7 @@ public class PanelBorderTests : IDisposable
         Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
         Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(50, 0)).ToArgb());
         Assert.Equal(Color.Blue.ToArgb(), Opaque(picture.GetPixel(99, 59)).ToArgb());
-        Assert.Equal(1, RedColumns(picture).Count);
+        Assert.Single(RedColumns(picture));
     }
 
     [Theory]

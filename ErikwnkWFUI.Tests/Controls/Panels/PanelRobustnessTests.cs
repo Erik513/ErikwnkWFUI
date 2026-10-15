@@ -273,7 +273,7 @@ public class PanelRobustnessTests : IDisposable
     }
 
     [Fact]
-    public void AVersionPanel_ThatIsDisposedWhileItChecksForAnUpdate_GetsNoButton_AndNoError()
+    public async Task AVersionPanel_ThatIsDisposedWhileItChecksForAnUpdate_GetsNoButton_AndNoError()
     {
         SlowGitHub github = new SlowGitHub();
         using HttpClient client = new HttpClient(github);
@@ -299,7 +299,7 @@ public class PanelRobustnessTests : IDisposable
             }
 
             Assert.True(check.IsCompleted);
-            Assert.False(check.GetAwaiter().GetResult());
+            Assert.False(await check);
             Assert.False(panel.UpdateAvailable);
         }
         finally

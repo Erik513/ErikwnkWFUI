@@ -74,7 +74,7 @@ public class InfoPopupLayoutTests
         using InfoPopupForm popup = UIStyles.InfoPopups.CreateStandard(fixedSize: new Size(70, 32));
         popup.SetContent("9%");
 
-        Assert.Equal(1, ((Array)Layout(popup)).Length);
+        Assert.Single((Array)Layout(popup));
         Assert.Equal(new Size(70, 32), popup.ClientSize);
     }
 }
