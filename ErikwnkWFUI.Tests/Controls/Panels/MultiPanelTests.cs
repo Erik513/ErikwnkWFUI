@@ -249,6 +249,32 @@ public class MultiPanelTests : IDisposable
         Assert.True(panel.SelectedPage.Visible);
     }
 
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    private static (WeakReference Panel, MultiPanelPage Page) MakeAndRemove()
+    {
+        MultiPanel panel = UIStyles.MultiPanels.CreateStandard();
+        MultiPanelPage page = panel.AddPage("A");
+        panel.AddPage("B");
+        panel.RemovePage(page);
+        panel.Dispose();
+
+        return (new WeakReference(panel), page);
+    }
+
+    [Fact]
+    public void ARemovedPage_DoesNotKeepTheMultiPanelAlive()
+    {
+        (WeakReference panel, MultiPanelPage page) = MakeAndRemove();
+
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+
+        Assert.False(panel.IsAlive);
+        GC.KeepAlive(page);
+        page.Dispose();
+    }
+
     [Fact]
     public void DisposingTheMultiPanel_DoesNotRaiseTheEvent_AndDoesNotThrow()
     {

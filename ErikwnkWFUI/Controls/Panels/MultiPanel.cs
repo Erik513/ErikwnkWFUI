@@ -143,7 +143,7 @@ namespace ErikwnkWFUI.Controls
         public MultiPanelPage AddPage(string title = "")
         {
             MultiPanelPage page = new MultiPanelPage(title) { Visible = false };
-            page.TextChanged += (sender, e) => InvalidateHeader();
+            page.TextChanged += OnPageTextChanged;
             page.Disposed += OnPageDisposed;
             page.ParentChanged += OnPageParentChanged;
 
@@ -183,6 +183,11 @@ namespace ErikwnkWFUI.Controls
             return true;
         }
 
+        private void OnPageTextChanged(object sender, EventArgs e)
+        {
+            InvalidateHeader();
+        }
+
         // A page that is disposed by its owner leaves the multi panel with it.
         private void OnPageDisposed(object sender, EventArgs e)
         {
@@ -208,6 +213,7 @@ namespace ErikwnkWFUI.Controls
         {
             page.Disposed -= OnPageDisposed;
             page.ParentChanged -= OnPageParentChanged;
+            page.TextChanged -= OnPageTextChanged;
             int index = _pages.IndexOf(page);
 
             // (While the multi panel itself is disposed, its pages go with it.)
