@@ -484,15 +484,13 @@ namespace ErikwnkWFUI.Showcase
             ConfigureCellsDemo(cellsDark);
             table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
 
-            // The options in one: the lines between the cells (CellBorderStyle) in the library's color, and a frame around the table
-            // (ShowBorder and BorderColor). Without them - as in the rows above - the table has no lines at all.
+            // The lines around and between the cells (CellBorderStyle) in one color of the library; without them - as in the rows
+            // above - the table has no lines at all.
             ThemedTableLayoutPanel lined = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(lined);
             lined.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             lined.CellBorderColor = UIColors.PrimaryLight;
-            lined.ShowBorder = true;
-            lined.BorderColor = UIColors.Primary;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderStyle, CellBorderColor, BorderColor)", 80, lined);
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderStyle, CellBorderColor)", 80, lined);
 
             // Which lines are shown (CellBorderLines): only the ones between the cells, or only the ones around the table.
             ThemedTableLayoutPanel inner = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
@@ -509,11 +507,11 @@ namespace ErikwnkWFUI.Showcase
             outer.OuterCellBorderColor = UIColors.PrimaryLight;
             table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 80, outer);
 
-            // Both kinds of lines in their own color: the ones around the table in the accent, the ones between the cells in green.
+            // Both kinds of lines in their own color: the ones around the table in red, the ones between the cells in green.
             ThemedTableLayoutPanel twoColors = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(twoColors);
             twoColors.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-            twoColors.OuterCellBorderColor = UIColors.Primary;
+            twoColors.OuterCellBorderColor = UIStyles.Colors.Sets.Red.Basic;
             twoColors.InnerCellBorderColor = UIStyles.Colors.Sets.Green.Basic;
             table.AddRow("TableLayoutPanels.CreateStandard (OuterCellBorderColor, InnerCellBorderColor)", 80, twoColors);
 
