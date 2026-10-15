@@ -12,7 +12,13 @@ namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
-        /// <summary>Plain <see cref="Panel"/>s pre-filled with one of the theme's background shades - handy as containers/cards.</summary>
+        /// <summary>
+        /// Plain <see cref="Panel"/>s pre-filled with one of the theme's background shades - handy as containers/cards. They are
+        /// the standard panel in every other way (<c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> and so
+        /// on): the scroll bars take the style of the theme, a color set by hand stays when the theme changes. Left to the
+        /// system: the frame of <c>BorderStyle.FixedSingle</c> and <c>Fixed3D</c> (drawn in the system's colors; the panels have
+        /// none by default). Right-to-left layouts are not supported.
+        /// </summary>
         public static class Panels
         {
             /// <summary>

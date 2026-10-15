@@ -12,7 +12,12 @@ namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
-        /// <summary>A plain, transparent <see cref="FlowLayoutPanel"/> with no padding/margin - a layout helper, not itself themed.</summary>
+        /// <summary>
+        /// A plain, transparent <see cref="FlowLayoutPanel"/> with no padding/margin - a layout helper, not itself themed. It differs
+        /// from the standard one in two settings: it is as big as its content (<c>AutoSize</c>) and does not wrap (<c>WrapContents</c> is
+        /// off); both can be set again. <c>FlowDirection</c> and <c>AutoScroll</c> (scroll bars in the style of the theme) work as in the
+        /// standard control. Right-to-left layouts are not supported.
+        /// </summary>
         public static class FlowLayoutPanels
         {
             /// <summary>A transparent flow layout panel that is as big as its content and does not wrap, without margin and padding.</summary>

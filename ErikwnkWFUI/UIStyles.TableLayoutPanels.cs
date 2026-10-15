@@ -12,7 +12,12 @@ namespace ErikwnkWFUI
 {
     public static partial class UIStyles
     {
-        /// <summary>Themed <see cref="TableLayoutPanel"/>s, pre-sized to the given column/row count.</summary>
+        /// <summary>
+        /// Themed <see cref="TableLayoutPanel"/>s, pre-sized to the given column/row count. Otherwise the standard control
+        /// (<c>ColumnStyles</c>, <c>RowStyles</c>, <c>GrowStyle</c>, <c>AutoScroll</c> with scroll bars in the style of the theme ...);
+        /// the lines of <c>CellBorderStyle</c> are drawn by the system in its own color. They do not dock (<c>Dock</c> is
+        /// left to the caller). Right-to-left layouts are not supported.
+        /// </summary>
         public static class TableLayoutPanels
         {
             /// <summary>A table layout panel in the elevated background of the theme (<c>UIColors.BackgroundMediumElevated</c>, the same as <see cref="Panels.CreateElevated"/>), without margin and padding. Follows a change of the theme.</summary>
