@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
-using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -54,7 +53,7 @@ namespace ErikwnkWFUI.Factories
             Func<Color> backColor,
             DockStyle dock)
         {
-            Panel panel = new Panel
+            Panel panel = new ThemedPanel
             {
                 Dock = dock,
                 BorderStyle = BorderStyle.None,
@@ -63,9 +62,6 @@ namespace ErikwnkWFUI.Factories
             };
 
             ThemeWatcher.FollowBackColor(panel, backColor);
-
-            // (The scroll bars of a panel with AutoScroll are the system's own.)
-            NativeControlTheme.Track(panel);
 
             return panel;
         }

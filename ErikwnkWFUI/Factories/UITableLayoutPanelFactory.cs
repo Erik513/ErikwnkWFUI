@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
-using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -34,7 +33,7 @@ namespace ErikwnkWFUI.Factories
             int rowCount,
             Func<Color> backColor)
         {
-            TableLayoutPanel panel = new TableLayoutPanel
+            TableLayoutPanel panel = new ThemedTableLayoutPanel
             {
                 ColumnCount = Math.Max(0, columnCount),
                 RowCount = Math.Max(0, rowCount),
@@ -43,9 +42,6 @@ namespace ErikwnkWFUI.Factories
             };
 
             ThemeWatcher.FollowBackColor(panel, backColor);
-
-            // (The scroll bars of a panel with AutoScroll are the system's own.)
-            NativeControlTheme.Track(panel);
 
             return panel;
         }

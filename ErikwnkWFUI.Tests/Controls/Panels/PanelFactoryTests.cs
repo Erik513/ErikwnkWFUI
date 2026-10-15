@@ -141,4 +141,21 @@ public class PanelFactoryTests
             panel.Dispose();
         }
     }
+
+    [Theory]
+    [MemberData(nameof(ScrollingPanels))]
+    public void ThePanels_AreTheThemedClasses_AndAreDrawnWithoutFlicker(string name, Func<Control> make)
+    {
+        using Control control = make();
+
+        Type expected = control switch
+        {
+            TableLayoutPanel => typeof(ErikwnkWFUI.Controls.ThemedTableLayoutPanel),
+            FlowLayoutPanel => typeof(ErikwnkWFUI.Controls.ThemedFlowLayoutPanel),
+            _ => typeof(ErikwnkWFUI.Controls.ThemedPanel)
+        };
+
+        Assert.IsType(expected, control);
+        Assert.True((bool)typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(control)!);
+    }
 }
