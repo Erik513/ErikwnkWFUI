@@ -80,7 +80,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
         "Panels.Standard(colors)",
         "FlowLayoutPanels.Transparent",
         "FlowLayoutPanels.Standard(colors)",
-        "SettingsPanels.Standard(colors)"
+        "VersionPanels.Standard(colors)"
     };
 
     // A multi panel with its first page shown (and a title, so that the header has a text).
@@ -124,9 +124,9 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("MultiPanels.Standard(colors)", () => WithPages(UIStyles.MultiPanels.CreateStandard(UIStyles.Colors.Sets.Green)), true),
             ("MultiPanels.CardStandard", () => WithPages(UIStyles.MultiPanels.CreateCardStandard()), true),
             ("MultiPanels.CardPrimary", () => WithPages(UIStyles.MultiPanels.CreateCardPrimary()), true),
-            ("SettingsPanels.Standard", () => UIStyles.SettingsPanels.CreateStandard(), true),
-            ("SettingsPanels.Primary", () => UIStyles.SettingsPanels.CreatePrimary(), true),
-            ("SettingsPanels.Standard(colors)", () => UIStyles.SettingsPanels.CreateStandard(UIStyles.Colors.Sets.Green), true),
+            ("VersionPanels.Standard", () => UIStyles.VersionPanels.CreateStandard(), true),
+            ("VersionPanels.Primary", () => UIStyles.VersionPanels.CreatePrimary(), true),
+            ("VersionPanels.Standard(colors)", () => UIStyles.VersionPanels.CreateStandard(UIStyles.Colors.Sets.Green), true),
             ("Labels.Standard", () => UIStyles.Labels.CreateStandard("Text"), true),
             ("Labels.Primary", () => UIStyles.Labels.CreatePrimary("Text"), true),
             ("Labels.Title", () => UIStyles.Labels.CreateTitle("Text"), true),

@@ -6,10 +6,10 @@ using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
 {
-    internal static class UISettingsPanelFactory
+    internal static class UIVersionPanelFactory
     {
         // The strip as it has always been in a settings window: the darkest background of the theme - or, with a color set, its basic color.
-        public static SettingsPanel CreateStandard(UIColorSet colors = null)
+        public static VersionPanel CreateStandard(UIColorSet colors = null)
         {
             if (colors == null)
                 return Create(() => UIColors.BackgroundBlack);
@@ -19,14 +19,14 @@ namespace ErikwnkWFUI.Factories
             return Create(() => source().Basic);
         }
 
-        public static SettingsPanel CreatePrimary()
+        public static VersionPanel CreatePrimary()
         {
             return Create(() => UIColors.PrimaryDarkDark);
         }
 
-        private static SettingsPanel Create(Func<Color> backColor)
+        private static VersionPanel Create(Func<Color> backColor)
         {
-            SettingsPanel panel = new SettingsPanel { Dock = DockStyle.Bottom };
+            VersionPanel panel = new VersionPanel { Dock = DockStyle.Bottom };
             ThemeWatcher.FollowBackColor(panel, backColor);
 
             return panel;

@@ -13,9 +13,9 @@ using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;
 
-/// <summary>The settings panel: the version of the program and, while an update is known, the button that leads to it.</summary>
+/// <summary>The version panel: the version of the program and, while an update is known, the button that leads to it.</summary>
 [Collection(AccentColorTestCollection.Name)]
-public class SettingsPanelTests : IDisposable
+public class VersionPanelTests : IDisposable
 {
     private readonly List<Form> _forms = new List<Form>();
     private readonly HttpClient _client = new HttpClient(new FakeGitHub("{\"tag_name\":\"v99.0.0\",\"html_url\":\"https://example.com/r\",\"assets\":[]}"));
@@ -53,7 +53,7 @@ public class SettingsPanelTests : IDisposable
 
     private static UpdateCheckResult Result() => new UpdateCheckResult(new Version(99, 0, 0), "", null);
 
-    private SettingsPanel Shown(SettingsPanel panel, int width = 300)
+    private VersionPanel Shown(VersionPanel panel, int width = 300)
     {
         panel.Dock = DockStyle.None;
         panel.Size = new Size(width, panel.Height);
@@ -102,7 +102,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void TheVersionIsThatOfTheProgram_ByDefault_AndTheTextCanBeSet()
     {
-        using SettingsPanel panel = UIStyles.SettingsPanels.CreateStandard();
+        using VersionPanel panel = UIStyles.VersionPanels.CreateStandard();
 
         Assert.Matches(new Regex(@"^v\d+\.\d+\.\d+$"), panel.VersionText);
 
@@ -116,7 +116,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void TheVersionStandsAtTheRightEnd_WithTheInsetOfTheVersionStripOfASettingsWindow_AndAnEmptyTextShowsNone()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
         panel.VersionText = "v1.2.3";
         Application.DoEvents();
 
@@ -139,7 +139,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void ThereIsNoUpdateButton_UntilAnUpdateIsKnown()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
 
         Assert.False(panel.UpdateAvailable);
         Assert.Empty(panel.Controls.OfType<Button>());
@@ -148,7 +148,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void ShowUpdate_PutsTheGreenButtonLeftOfTheVersion_WithTheTooltip_AndHideUpdateTakesItAway()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
         panel.VersionText = "v1.2.3";
 
         panel.ShowUpdate(Updater(), Result(), new Version(1, 0, 0));
@@ -177,7 +177,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void WithoutAVersionText_TheButtonSitsAtTheRightInset_AndATextThatChangesMovesIt()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
         panel.ShowUpdate(Updater(), Result());
         Button button = panel.Controls.OfType<Button>().Single();
 
@@ -197,7 +197,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void ShowUpdateAgain_ReplacesTheButton_AndAMissingUpdaterOrResultIsRefused()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
         AppUpdater updater = Updater();
         panel.ShowUpdate(updater, Result());
         Button first = panel.Controls.OfType<Button>().Single();
@@ -211,7 +211,7 @@ public class SettingsPanelTests : IDisposable
     }
 
     // Like in a program: the answer comes back to the thread of the window (the message loop is pumped by hand).
-    private static bool Check(SettingsPanel panel, AppUpdater updater, Version current)
+    private static bool Check(VersionPanel panel, AppUpdater updater, Version current)
     {
         SynchronizationContext previous = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(new WindowsFormsSynchronizationContext());
@@ -238,7 +238,7 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void CheckForUpdateAsync_ShowsTheButtonWhenThereIsANewerVersion_AndOtherwiseLeavesTheStripAlone()
     {
-        SettingsPanel panel = Shown(UIStyles.SettingsPanels.CreateStandard());
+        VersionPanel panel = Shown(UIStyles.VersionPanels.CreateStandard());
 
         Assert.True(Check(panel, Updater(), new Version(1, 0, 0)));
         Assert.True(panel.UpdateAvailable);
@@ -259,7 +259,7 @@ public class SettingsPanelTests : IDisposable
     public void TheClickAsksTheWindowThePanelIsInAtTheTime_AndNotTheOneItWasMadeIn()
     {
         // The panel is made before it is put in a window: the button must not have fixed an owner by then.
-        using SettingsPanel panel = UIStyles.SettingsPanels.CreateStandard();
+        using VersionPanel panel = UIStyles.VersionPanels.CreateStandard();
         panel.ShowUpdate(Updater(), Result());
 
         Assert.Null(panel.FindForm());
@@ -274,9 +274,9 @@ public class SettingsPanelTests : IDisposable
 
         try
         {
-            using SettingsPanel standard = UIStyles.SettingsPanels.CreateStandard();
-            using SettingsPanel inGreen = UIStyles.SettingsPanels.CreateStandard(green);
-            using SettingsPanel primary = UIStyles.SettingsPanels.CreatePrimary();
+            using VersionPanel standard = UIStyles.VersionPanels.CreateStandard();
+            using VersionPanel inGreen = UIStyles.VersionPanels.CreateStandard(green);
+            using VersionPanel primary = UIStyles.VersionPanels.CreatePrimary();
 
             Assert.Equal(UIColors.BackgroundBlack, standard.BackColor);
             Assert.Equal(green.Basic, inGreen.BackColor);
@@ -285,7 +285,7 @@ public class SettingsPanelTests : IDisposable
 
             UIColors.SetAccent(Color.OrangeRed);
             Application.DoEvents();
-            SettingsPanel shown = Shown(UIStyles.SettingsPanels.CreatePrimary());
+            VersionPanel shown = Shown(UIStyles.VersionPanels.CreatePrimary());
             Assert.Equal(UIColors.PrimaryDarkDark, shown.BackColor);
         }
         finally
@@ -297,8 +297,8 @@ public class SettingsPanelTests : IDisposable
     [Fact]
     public void TheVersionText_IsReadableOnADarkAndOnALightSurface()
     {
-        SettingsPanel dark = Shown(UIStyles.SettingsPanels.CreatePrimary());
-        SettingsPanel light = Shown(UIStyles.SettingsPanels.CreateStandard(Color.FromArgb(240, 240, 240)));
+        VersionPanel dark = Shown(UIStyles.VersionPanels.CreatePrimary());
+        VersionPanel light = Shown(UIStyles.VersionPanels.CreateStandard(Color.FromArgb(240, 240, 240)));
         dark.VersionText = "v1.2.3";
         light.VersionText = "v1.2.3";
         Application.DoEvents();

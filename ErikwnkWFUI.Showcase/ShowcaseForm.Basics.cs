@@ -528,26 +528,26 @@ namespace ErikwnkWFUI.Showcase
             framedFlow.BorderColor = UIColors.Primary;
             table.AddRow("FlowLayoutPanels.CreateStandard (BorderColor)", CreateFlowDemo(framedFlow));
 
-            table.AddSection("Settings panels");
+            table.AddSection("Version panels");
 
-            table.AddRow("CreateStandard", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard()));
-            table.AddRow("CreatePrimary", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreatePrimary()));
-            table.AddRow("CreateStandard(colors: Green)", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard(green)));
+            table.AddRow("CreateStandard", CreateVersionPanelDemo(UIStyles.VersionPanels.CreateStandard()));
+            table.AddRow("CreatePrimary", CreateVersionPanelDemo(UIStyles.VersionPanels.CreatePrimary()));
+            table.AddRow("CreateStandard(colors: Green)", CreateVersionPanelDemo(UIStyles.VersionPanels.CreateStandard(green)));
 
             // An update is known: the green button appears next to the version (a click shows the prompt of the AppUpdater).
-            SettingsPanel updateAvailable = CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard());
+            VersionPanel updateAvailable = CreateVersionPanelDemo(UIStyles.VersionPanels.CreateStandard());
             updateAvailable.ShowUpdate(
-                new AppUpdater("owner", "repo", SettingsPanelDemoClient, SettingsPanelDemoClient),
+                new AppUpdater("owner", "repo", VersionPanelDemoClient, VersionPanelDemoClient),
                 new UpdateCheckResult(new Version(9, 9, 9), "", null),
                 new Version(1, 0, 0));
             table.AddRow("CreateStandard (ShowUpdate)", updateAvailable);
         }
 
         // Not asked at all: the demo update is made up (no download address, no release page).
-        private static readonly System.Net.Http.HttpClient SettingsPanelDemoClient = new System.Net.Http.HttpClient();
+        private static readonly System.Net.Http.HttpClient VersionPanelDemoClient = new System.Net.Http.HttpClient();
 
         // The strip does not dock here, so it gets a width of its own.
-        private static SettingsPanel CreateSettingsPanelDemo(SettingsPanel panel)
+        private static VersionPanel CreateVersionPanelDemo(VersionPanel panel)
         {
             panel.Dock = DockStyle.None;
             panel.Width = 380;

@@ -120,7 +120,7 @@ public class PanelRobustnessTests : IDisposable
             ("MultiPanel", () => Pages(UIStyles.MultiPanels.CreateStandard())),
             ("MultiPanel, card", () => Pages(UIStyles.MultiPanels.CreateCardPrimary())),
             ("MultiPanel, without pages", () => UIStyles.MultiPanels.CreateStandard()),
-            ("SettingsPanel", () => UIStyles.SettingsPanels.CreateStandard())
+            ("VersionPanel", () => UIStyles.VersionPanels.CreateStandard())
         })
             yield return new object[] { entry.Item1, entry.Item2 };
     }
@@ -192,7 +192,7 @@ public class PanelRobustnessTests : IDisposable
         yield return new object[] { "Table", (Func<Control>)(() => UIStyles.TableLayoutPanels.CreateStandard(1, 1)) };
         yield return new object[] { "Flow", (Func<Control>)(() => UIStyles.FlowLayoutPanels.CreateStandard()) };
         yield return new object[] { "MultiPanel", (Func<Control>)(() => Pages(UIStyles.MultiPanels.CreateStandard())) };
-        yield return new object[] { "SettingsPanel", (Func<Control>)(() => UIStyles.SettingsPanels.CreateStandard()) };
+        yield return new object[] { "VersionPanel", (Func<Control>)(() => UIStyles.VersionPanels.CreateStandard()) };
     }
 
     private static string Look(Control control)
@@ -264,12 +264,12 @@ public class PanelRobustnessTests : IDisposable
     }
 
     [Fact]
-    public void ASettingsPanel_ThatIsDisposedWhileItChecksForAnUpdate_GetsNoButton_AndNoError()
+    public void AVersionPanel_ThatIsDisposedWhileItChecksForAnUpdate_GetsNoButton_AndNoError()
     {
         SlowGitHub github = new SlowGitHub();
         using HttpClient client = new HttpClient(github);
         AppUpdater updater = new AppUpdater("owner", "repo", client, client);
-        SettingsPanel panel = UIStyles.SettingsPanels.CreateStandard();
+        VersionPanel panel = UIStyles.VersionPanels.CreateStandard();
         Host(panel, new Size(200, 24));
 
         SynchronizationContext? previous = SynchronizationContext.Current;

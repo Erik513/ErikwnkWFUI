@@ -14,19 +14,19 @@ namespace ErikwnkWFUI
         /// <c>AppUpdater</c> over the window the strip is in. Docks at the bottom (<c>Dock</c> can be changed); follows a change of the
         /// theme and of the accent.
         /// </summary>
-        public static class SettingsPanels
+        public static class VersionPanels
         {
             /// <summary>The strip in the darkest background of the theme (the same as the version strip of a settings window), or with a color set in its basic color.</summary>
             /// <param name="colors">A color set for the background: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>; null (the default) is the darkest background.</param>
-            public static SettingsPanel CreateStandard(UIColorSet colors = null)
+            public static VersionPanel CreateStandard(UIColorSet colors = null)
             {
-                return UISettingsPanelFactory.CreateStandard(colors);
+                return UIVersionPanelFactory.CreateStandard(colors);
             }
 
             /// <summary>The strip in a very dark shade of the accent, the same as <see cref="Panels.CreatePrimary"/>.</summary>
-            public static SettingsPanel CreatePrimary()
+            public static VersionPanel CreatePrimary()
             {
-                return UISettingsPanelFactory.CreatePrimary();
+                return UIVersionPanelFactory.CreatePrimary();
             }
         }
     }
