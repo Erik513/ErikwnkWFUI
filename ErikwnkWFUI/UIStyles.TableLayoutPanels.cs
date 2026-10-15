@@ -47,6 +47,18 @@ namespace ErikwnkWFUI
                     rowCount);
             }
 
+            /// <summary>A table layout panel in a very dark shade of the accent (<c>UIColors.PrimaryDarkDark</c>, the same as <see cref="Panels.CreatePrimary"/>), without margin and padding. Follows a change of the theme and of the accent.</summary>
+            /// <param name="columnCount">The number of columns.</param>
+            /// <param name="rowCount">The number of rows.</param>
+            public static TableLayoutPanel CreatePrimary(
+                int columnCount,
+                int rowCount)
+            {
+                return UITableLayoutPanelFactory.CreatePrimary(
+                    columnCount,
+                    rowCount);
+            }
+
             /// <summary>A table layout panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the same as <see cref="Panels.CreateDark"/>), without margin and padding. Follows a change of the theme.</summary>
             /// <param name="columnCount">The number of columns.</param>
             /// <param name="rowCount">The number of rows.</param>

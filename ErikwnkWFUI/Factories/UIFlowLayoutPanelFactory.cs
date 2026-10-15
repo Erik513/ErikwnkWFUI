@@ -15,6 +15,11 @@ namespace ErikwnkWFUI.Factories
                 colors == null ? (Func<Color>)(() => UIColors.BackgroundMediumElevated) : () => colors.Basic);
         }
 
+        public static FlowLayoutPanel CreatePrimary()
+        {
+            return CreateFlowLayoutPanel(() => UIColors.PrimaryDarkDark);
+        }
+
         public static FlowLayoutPanel CreateTransparent()
         {
             return CreateFlowLayoutPanel(() => Color.Transparent);

@@ -27,6 +27,12 @@ namespace ErikwnkWFUI
                 return UIFlowLayoutPanelFactory.CreateStandard(colors);
             }
 
+            /// <summary>A flow layout panel in a very dark shade of the accent (<c>UIColors.PrimaryDarkDark</c>, the same as <see cref="Panels.CreatePrimary"/>), otherwise like <see cref="CreateStandard"/>. Follows a change of the theme and of the accent.</summary>
+            public static FlowLayoutPanel CreatePrimary()
+            {
+                return UIFlowLayoutPanelFactory.CreatePrimary();
+            }
+
             /// <summary>A flow layout panel without a background of its own (what lies behind it shows through), otherwise like <see cref="CreateStandard"/>.</summary>
             public static FlowLayoutPanel CreateTransparent()
             {

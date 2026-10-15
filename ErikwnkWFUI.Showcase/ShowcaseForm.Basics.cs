@@ -496,7 +496,7 @@ namespace ErikwnkWFUI.Showcase
                 // (The table does not stretch a control to the height of its row.)
                 panel.MinimumSize = new Size(100, swatchHeight - 8);
                 panel.Height = swatchHeight - 8;
-                panel.Controls.Add(CreatePanelCaption(name));
+                panel.Controls.Add(CreatePanelCaption(name, panel));
                 table.AddRow(name, panel);
             }
 
@@ -504,7 +504,7 @@ namespace ErikwnkWFUI.Showcase
             Panel transparent = UIStyles.Panels.CreateTransparent();
             transparent.Size = new Size(200, 24);
             transparent.MinimumSize = transparent.Size;
-            transparent.Controls.Add(CreatePanelCaption("What is behind it shows"));
+            transparent.Controls.Add(CreatePanelCaption("What is behind it shows", transparent));
             table.AddRow("CreateTransparent", transparent);
 
             // A card: rounded corners that show the page behind them and a thin line.
@@ -518,7 +518,7 @@ namespace ErikwnkWFUI.Showcase
             framed.BorderColor = UIColors.Primary;
             framed.MinimumSize = new Size(100, swatchHeight - 8);
             framed.Height = swatchHeight - 8;
-            framed.Controls.Add(CreatePanelCaption("BorderStyle.FixedSingle, BorderColor"));
+            framed.Controls.Add(CreatePanelCaption("BorderStyle.FixedSingle, BorderColor", framed));
             table.AddRow("CreateElevated (BorderColor)", swatchHeight, framed);
 
             // A panel with AutoScroll: the scroll bars follow the theme, also the square where they meet.
@@ -548,6 +548,10 @@ namespace ErikwnkWFUI.Showcase
             ConfigureCellsDemo(cellsTransparent);
             table.AddRow("TableLayoutPanels.CreateTransparent", 80, cellsTransparent);
 
+            TableLayoutPanel cellsPrimary = UIStyles.TableLayoutPanels.CreatePrimary(3, 2);
+            ConfigureCellsDemo(cellsPrimary);
+            table.AddRow("TableLayoutPanels.CreatePrimary", 80, cellsPrimary);
+
             TableLayoutPanel cellsDark = UIStyles.TableLayoutPanels.CreateDark(3, 2);
             ConfigureCellsDemo(cellsDark);
             table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
@@ -556,6 +560,7 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
             table.AddRow("FlowLayoutPanels.CreateStandard(colors)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
+            table.AddRow("FlowLayoutPanels.CreatePrimary", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreatePrimary()));
             table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
         }
 
@@ -568,14 +573,36 @@ namespace ErikwnkWFUI.Showcase
             return flow;
         }
 
-        private static Label CreatePanelCaption(string text)
+        private static Label CreatePanelCaption(string text, Control surface)
         {
             Label caption = UIStyles.Labels.CreateStandard(text);
             caption.AutoSize = true;
             caption.Location = new Point(6, 6);
             caption.BackColor = Color.Transparent;
+            FollowSurface(caption, surface);
 
             return caption;
+        }
+
+        // The text of a label is the best one for the surface it stands on (the theme's text color would be dark on the dark
+        // accent in the light theme); a transparent surface leaves the text as it is.
+        private static void FollowSurface(Label label, Control surface)
+        {
+            void Update()
+            {
+                label.ForeColor = surface.BackColor.A == 0 ? UIColors.TextPrimary : (surface.BackColor.GetBrightness() > 0.5f ? Color.Black : Color.White);
+            }
+
+            // Later than the surface itself, which changes its color on the same event.
+            EventHandler changed = (sender, e) =>
+            {
+                if (label.IsHandleCreated && !label.IsDisposed)
+                    label.BeginInvoke((Action)Update);
+            };
+
+            Update();
+            UIStyles.Colors.ThemeChanged += changed;
+            label.Disposed += (sender, e) => UIStyles.Colors.ThemeChanged -= changed;
         }
 
         // A card with a line of text in it; it does not dock, so it gets its size here.
@@ -587,6 +614,7 @@ namespace ErikwnkWFUI.Showcase
             Label caption = UIStyles.Labels.CreateStandard(text);
             caption.Dock = DockStyle.Fill;
             caption.BackColor = Color.Transparent;
+            FollowSurface(caption, card);
             card.Controls.Add(caption);
 
             return card;
@@ -610,6 +638,7 @@ namespace ErikwnkWFUI.Showcase
                 Label cell = UIStyles.Labels.CreateStandard("Cell " + (i + 1));
                 cell.Dock = DockStyle.Fill;
                 cell.BackColor = Color.Transparent;
+                FollowSurface(cell, cells);
                 cells.Controls.Add(cell);
             }
         }

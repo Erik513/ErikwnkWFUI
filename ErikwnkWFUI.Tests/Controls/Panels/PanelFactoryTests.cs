@@ -198,6 +198,29 @@ public class PanelFactoryTests
     }
 
     [Fact]
+    public void ThePrimaryTableAndFlowPanels_AreInTheAccentOfTheMoment()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            UIColors.SetAccent(Color.OrangeRed);
+            using TableLayoutPanel table = UIStyles.TableLayoutPanels.CreatePrimary(2, 3);
+            using FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreatePrimary();
+
+            Assert.Equal(UIColors.PrimaryDarkDark, table.BackColor);
+            Assert.Equal(UIColors.PrimaryDarkDark, flow.BackColor);
+            Assert.Equal(2, table.ColumnCount);
+            Assert.Equal(3, table.RowCount);
+            Assert.True(flow.AutoSize);
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
+    }
+
+    [Fact]
     public void ThePrimaryCard_IsInTheAccentOfTheMoment_WithALineOneStepLighter()
     {
         Color accent = UIColors.Primary;

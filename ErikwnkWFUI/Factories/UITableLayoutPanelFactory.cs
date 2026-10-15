@@ -30,6 +30,16 @@ namespace ErikwnkWFUI.Factories
                 () => Color.Transparent);
         }
 
+        public static TableLayoutPanel CreatePrimary(
+            int columnCount,
+            int rowCount)
+        {
+            return CreateTableLayoutPanel(
+                columnCount,
+                rowCount,
+                () => UIColors.PrimaryDarkDark);
+        }
+
         public static TableLayoutPanel CreateDark(
             int columnCount,
             int rowCount)
