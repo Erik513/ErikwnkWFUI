@@ -58,6 +58,7 @@ namespace ErikwnkWFUI.Controls
         private readonly Button _nextButton;
         private int _selectedIndex = -1;
         private bool _showPageCount;
+        private bool _showHeaderLine;
         private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
         private bool _building = true;
 
@@ -126,6 +127,21 @@ namespace ErikwnkWFUI.Controls
             {
                 _showPageCount = value;
                 InvalidateHeader();
+            }
+        }
+
+        /// <summary>
+        /// Whether a thin line separates the header from the page (off by default). It has the <see cref="ThemedCardPanel.BorderColor"/> of
+        /// the multi panel, and the page area starts a little lower to leave room for it.
+        /// </summary>
+        public bool ShowHeaderLine
+        {
+            get { return _showHeaderLine; }
+            set
+            {
+                _showHeaderLine = value;
+                PerformLayout();
+                Invalidate();
             }
         }
 
@@ -279,7 +295,7 @@ namespace ErikwnkWFUI.Controls
             get
             {
                 Rectangle area = base.DisplayRectangle;
-                int header = HeaderHeight;
+                int header = HeaderHeight + (_showHeaderLine ? Dpi.Scale(this, Gap96) : 0);
 
                 return new Rectangle(area.X, area.Y + header, area.Width, Math.Max(0, area.Height - header));
             }
@@ -350,6 +366,14 @@ namespace ErikwnkWFUI.Controls
 
             if (!Enabled)
                 text = UIColors.BlendToward(text, surface, DisabledBlend);
+
+            if (_showHeaderLine)
+            {
+                int thickness = Math.Max(1, Dpi.Scale(this, 1));
+
+                using (SolidBrush line = new SolidBrush(BorderColor))
+                    e.Graphics.FillRectangle(line, header.Left, header.Bottom + Dpi.Scale(this, Gap96) / 2 - thickness / 2, header.Width, thickness);
+            }
 
             const TextFormatFlags common = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
 

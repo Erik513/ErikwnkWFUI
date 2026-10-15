@@ -9,6 +9,7 @@ namespace ErikwnkWFUI.Factories
     internal static class UIMultiPanelFactory
     {
         // The arrow buttons are in the style of the panel: neutral on the standard surfaces, in the accent on the primary ones, in the color set on a set.
+        // (The flat ones have no line around them, but the same line colors as the cards for the line under the header.)
         // The flat panel in the usual surface - or, with a color set, in its basic color.
         public static MultiPanel CreateStandard(UIColorSet colors = null)
         {
@@ -17,13 +18,13 @@ namespace ErikwnkWFUI.Factories
 
             Func<UIColorSet> source = ColorSetSource.Of(colors);
 
-            return Create(false, DockStyle.Fill, () => source().Basic, null, source);
+            return Create(false, DockStyle.Fill, () => source().Basic, () => source().Hover, source);
         }
 
         // The flat panel in the very dark accent of Panels.CreatePrimary.
         public static MultiPanel CreatePrimary()
         {
-            return Create(false, DockStyle.Fill, () => UIColors.PrimaryDarkDark, null, () => UIColors.PrimarySet);
+            return Create(false, DockStyle.Fill, () => UIColors.PrimaryDarkDark, () => UIColors.PrimaryDark, () => UIColors.PrimarySet);
         }
 
         // The card: the elevated surface, rounded, with a thin line - or, with a color set, in its basic color and the hover color as the line.

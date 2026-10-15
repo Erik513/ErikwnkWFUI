@@ -559,6 +559,56 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void TheHeaderLine_IsOffByDefault_AndSeparatesTheHeaderFromThePageInTheBorderColor()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateCardStandard(), 2);
+        Assert.False(panel.ShowHeaderLine);
+        int pagesTop = panel.DisplayRectangle.Top;
+
+        using Bitmap without = Render(panel);
+
+        panel.ShowHeaderLine = true;
+        Application.DoEvents();
+
+        Assert.True(panel.DisplayRectangle.Top > pagesTop);
+        Assert.Equal(panel.DisplayRectangle, panel.Pages[0].Bounds);
+
+        // The line runs between the end of the header and the start of the page.
+        int x = panel.Width / 2;
+        int found = -1;
+
+        using (Bitmap with = Render(panel))
+        {
+            for (int y = pagesTop - 4; y < panel.DisplayRectangle.Top; y++)
+            {
+                if (with.GetPixel(x, y).ToArgb() == Color.FromArgb(255, panel.BorderColor).ToArgb())
+                    found = y;
+
+                Assert.NotEqual(Color.FromArgb(255, panel.BorderColor).ToArgb(), without.GetPixel(x, y).ToArgb());
+            }
+        }
+
+        Assert.True(found >= 0, "no line in the border color");
+
+        panel.ShowHeaderLine = false;
+        Assert.Equal(pagesTop, panel.DisplayRectangle.Top);
+    }
+
+    [Fact]
+    public void TheHeaderLineOfTheFlatOnes_HasTheLineColorOfTheirVariant()
+    {
+        UIColorSet green = UIStyles.Colors.Sets.Green;
+
+        using MultiPanel standard = UIStyles.MultiPanels.CreateStandard();
+        using MultiPanel primary = UIStyles.MultiPanels.CreatePrimary();
+        using MultiPanel inGreen = UIStyles.MultiPanels.CreateStandard(green);
+
+        Assert.Equal(UIColors.BorderMedium, standard.BorderColor);
+        Assert.Equal(UIColors.PrimaryDark, primary.BorderColor);
+        Assert.Equal(green.Hover, inGreen.BorderColor);
+    }
+
+    [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
         MultiPanel dark = Shown(UIStyles.MultiPanels.CreatePrimary(), 1);

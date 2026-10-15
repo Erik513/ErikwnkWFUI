@@ -28,6 +28,10 @@ namespace ErikwnkWFUI.Showcase
             centered.TitleAlignment = HorizontalAlignment.Center;
             table.AddRow("TitleAlignment (Center)", MultiPanelRowHeight, centered);
 
+            MultiPanel lined = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
+            lined.ShowHeaderLine = true;
+            table.AddRow("ShowHeaderLine", MultiPanelRowHeight, lined);
+
             MultiPanel right = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
             right.ShowPageCount = true;
             right.TitleAlignment = HorizontalAlignment.Right;
