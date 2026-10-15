@@ -26,6 +26,20 @@ namespace ErikwnkWFUI.Controls
             set { _frame.Color = value; }
         }
 
+        /// <summary>
+        /// Whether the panel has a frame in <see cref="BorderColor"/> - a shortcut for <see cref="Panel.BorderStyle"/>
+        /// <c>FixedSingle</c> (on) and <c>None</c> (off, the default). The frame takes one pixel from each side of the area inside.
+        /// </summary>
+        public bool ShowBorder
+        {
+            get { return BorderStyle != BorderStyle.None; }
+            set
+            {
+                if (value != ShowBorder)
+                    BorderStyle = value ? BorderStyle.FixedSingle : BorderStyle.None;
+            }
+        }
+
         // Where both scroll bars meet, the system leaves a light square even with dark bars.
         protected override void WndProc(ref Message m)
         {

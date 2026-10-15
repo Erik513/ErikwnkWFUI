@@ -27,6 +27,20 @@ namespace ErikwnkWFUI.Controls
             set { _frame.Color = value; }
         }
 
+        /// <summary>
+        /// Whether the panel has a frame in <see cref="BorderColor"/> - a shortcut for <see cref="Panel.BorderStyle"/>
+        /// <c>FixedSingle</c> (on) and <c>None</c> (off, the default). The frame takes one pixel from each side of the area inside.
+        /// </summary>
+        public bool ShowBorder
+        {
+            get { return BorderStyle != BorderStyle.None; }
+            set
+            {
+                if (value != ShowBorder)
+                    BorderStyle = value ? BorderStyle.FixedSingle : BorderStyle.None;
+            }
+        }
+
         private readonly ThemeColor _cellBorderColor = new ThemeColor(() => UIColors.BorderMedium);
         private readonly List<Rectangle> _cells = new List<Rectangle>();
 

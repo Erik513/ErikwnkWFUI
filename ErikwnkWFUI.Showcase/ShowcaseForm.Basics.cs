@@ -443,10 +443,10 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
             table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
 
-            // The options of a panel in one: the frame in the library's color (the system draws it in its own otherwise) and AutoScroll
+            // The options of a panel in one: a frame (ShowBorder) in the library's color (BorderColor) and AutoScroll
             // (the scroll bars follow the theme, also the square where they meet).
             ThemedPanel options = (ThemedPanel)UIStyles.Panels.CreateMedium();
-            options.BorderStyle = BorderStyle.FixedSingle;
+            options.ShowBorder = true;
             options.BorderColor = UIColors.Primary;
             options.AutoScroll = true;
             options.Size = new Size(260, 90);
@@ -483,11 +483,15 @@ namespace ErikwnkWFUI.Showcase
             ConfigureCellsDemo(cellsDark);
             table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
 
-            // The lines of the cells in the library's color.
-            TableLayoutPanel cellsColored = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
-            ConfigureCellsDemo(cellsColored);
-            ((ThemedTableLayoutPanel)cellsColored).CellBorderColor = UIColors.Primary;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderColor)", 80, cellsColored);
+            // The options in one: the lines between the cells (CellBorderStyle) in the library's color, and a frame around the table
+            // (ShowBorder and BorderColor). Without them - as in the rows above - the table has no lines at all.
+            ThemedTableLayoutPanel lined = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(lined);
+            lined.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            lined.CellBorderColor = UIColors.PrimaryLight;
+            lined.ShowBorder = true;
+            lined.BorderColor = UIColors.Primary;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderStyle, CellBorderColor, BorderColor)", 80, lined);
 
             table.AddSection("Flow layout panels");
 
@@ -495,6 +499,12 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("FlowLayoutPanels.CreatePrimary", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreatePrimary()));
             table.AddRow("FlowLayoutPanels.CreateStandard(colors: Green)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
             table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
+
+            // A frame around the panel (ShowBorder) in the library's color.
+            ThemedFlowLayoutPanel framedFlow = (ThemedFlowLayoutPanel)UIStyles.FlowLayoutPanels.CreateStandard();
+            framedFlow.ShowBorder = true;
+            framedFlow.BorderColor = UIColors.Primary;
+            table.AddRow("FlowLayoutPanels.CreateStandard (BorderColor)", CreateFlowDemo(framedFlow));
         }
 
         // Two buttons in a flow panel, to see the background around them.
@@ -553,10 +563,9 @@ namespace ErikwnkWFUI.Showcase
             return card;
         }
 
-        // Six cells with the lines between them (CellBorderStyle.Single), in the color of the theme or one that is set.
+        // Six cells (no lines by default; CellBorderStyle.Single draws them in the color of the theme or one that is set).
         private static void ConfigureCellsDemo(TableLayoutPanel cells)
         {
-            cells.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             cells.Size = new Size(260, 66);
             cells.MinimumSize = cells.Size;
 

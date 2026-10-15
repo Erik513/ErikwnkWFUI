@@ -42,6 +42,63 @@ public class PanelBorderTests : IDisposable
 
     private static Color Opaque(Color color) => Color.FromArgb(color.R, color.G, color.B);
 
+    public static IEnumerable<object[]> ThreePanels()
+    {
+        yield return new object[] { (Func<Control>)(() => new ThemedPanel()) };
+        yield return new object[] { (Func<Control>)(() => new ThemedFlowLayoutPanel { AutoSize = false }) };
+        yield return new object[] { (Func<Control>)(() => new ThemedTableLayoutPanel()) };
+    }
+
+    private static bool GetShowBorder(Control panel) => (bool)panel.GetType().GetProperty("ShowBorder")!.GetValue(panel)!;
+
+    private static void SetShowBorder(Control panel, bool value) => panel.GetType().GetProperty("ShowBorder")!.SetValue(panel, value);
+
+    private static BorderStyle GetBorderStyle(Control panel) => (BorderStyle)panel.GetType().GetProperty("BorderStyle")!.GetValue(panel)!;
+
+    [Theory]
+    [MemberData(nameof(ThreePanels))]
+    public void ShowBorder_IsOffByDefault_AndSwitchesTheFrameOfTheTheme(Func<Control> make)
+    {
+        Control panel = make();
+        Assert.False(GetShowBorder(panel));
+        Assert.Equal(BorderStyle.None, GetBorderStyle(panel));
+
+        panel.Size = new Size(100, 60);
+        panel.BackColor = Color.Black;
+        Show(panel);
+
+        using (Bitmap picture = Draw(panel))
+            Assert.Equal(Color.Black.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
+
+        SetShowBorder(panel, true);
+        Application.DoEvents();
+
+        Assert.True(GetShowBorder(panel));
+        Assert.Equal(BorderStyle.FixedSingle, GetBorderStyle(panel));
+
+        using (Bitmap picture = Draw(panel))
+            Assert.Equal(UIColors.BorderMedium, Opaque(picture.GetPixel(0, 30)));
+
+        SetShowBorder(panel, false);
+        Application.DoEvents();
+
+        Assert.Equal(BorderStyle.None, GetBorderStyle(panel));
+
+        using (Bitmap picture = Draw(panel))
+            Assert.Equal(Color.Black.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
+    }
+
+    [Fact]
+    public void ShowBorder_LeavesAFrameThatWasSetByHandAlone()
+    {
+        ThemedPanel panel = new ThemedPanel { BorderStyle = BorderStyle.Fixed3D };
+        Assert.True(panel.ShowBorder);
+
+        panel.ShowBorder = true;
+
+        Assert.Equal(BorderStyle.Fixed3D, panel.BorderStyle);
+    }
+
     [Fact]
     public void ThePanelFrame_IsInTheColorOfTheTheme_UntilOneIsSet_AndFollowsTheTheme()
     {
