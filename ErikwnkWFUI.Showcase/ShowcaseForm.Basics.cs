@@ -475,27 +475,124 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddPanelsSection(PropertyTable table)
         {
+            UIColorSet green = UIStyles.Colors.Sets.Green;
+            const int swatchHeight = 42;
+
+            // The panels in each background of the theme, one row per factory method.
             (string Name, Panel Panel)[] swatches =
             {
-                ("Dark", UIStyles.Panels.CreateDark()),
-                ("Medium", UIStyles.Panels.CreateMedium()),
-                ("Elevated", UIStyles.Panels.CreateElevated()),
-                ("Primary", UIStyles.Panels.CreatePrimary())
+                ("CreateStandard", UIStyles.Panels.CreateStandard()),
+                ("CreateStandard(colors)", UIStyles.Panels.CreateStandard(green)),
+                ("CreateDark", UIStyles.Panels.CreateDark()),
+                ("CreateMedium", UIStyles.Panels.CreateMedium()),
+                ("CreateElevated", UIStyles.Panels.CreateElevated()),
+                ("CreatePrimary", UIStyles.Panels.CreatePrimary())
             };
 
             foreach ((string name, Panel panel) in swatches)
             {
-                Label caption = UIStyles.Labels.CreateStandard(name);
-                caption.AutoSize = true;
-                caption.Location = new Point(6, 6);
-                caption.BackColor = Color.Transparent;
-                panel.Controls.Add(caption);
+                // (The table does not stretch a control to the height of its row.)
+                panel.MinimumSize = new Size(100, swatchHeight - 8);
+                panel.Height = swatchHeight - 8;
+                panel.Controls.Add(CreatePanelCaption(name));
+                table.AddRow(name, panel);
             }
 
-            table.AddRow("CreateDark", swatches[0].Panel);
-            table.AddRow("CreateMedium", swatches[1].Panel);
-            table.AddRow("CreateElevated", swatches[2].Panel);
-            table.AddRow("CreatePrimary", swatches[3].Panel);
+            // No background of its own: the page shows through (here, with a line of text on it).
+            Panel transparent = UIStyles.Panels.CreateTransparent();
+            transparent.Size = new Size(200, 24);
+            transparent.MinimumSize = transparent.Size;
+            transparent.Controls.Add(CreatePanelCaption("What is behind it shows"));
+            table.AddRow("CreateTransparent", transparent);
+
+            // A card: rounded corners that show the page behind them and a thin line.
+            table.AddRow("CreateCard", 92, CreateCardDemo(UIStyles.Panels.CreateCard(), "A card"));
+            table.AddRow("CreateCard(colors)", 92, CreateCardDemo(UIStyles.Panels.CreateCard(green), "A card in a color set"));
+
+            // The frame of a panel in the library's color (the system draws it in its own otherwise).
+            ThemedPanel framed = (ThemedPanel)UIStyles.Panels.CreateElevated();
+            framed.BorderStyle = BorderStyle.FixedSingle;
+            framed.BorderColor = UIColors.Primary;
+            framed.MinimumSize = new Size(100, swatchHeight - 8);
+            framed.Height = swatchHeight - 8;
+            framed.Controls.Add(CreatePanelCaption("BorderStyle.FixedSingle, BorderColor"));
+            table.AddRow("CreateElevated (BorderColor)", swatchHeight, framed);
+
+            // A panel with AutoScroll: the scroll bars follow the theme, also the square where they meet.
+            Panel scrolling = UIStyles.Panels.CreateMedium();
+            scrolling.AutoScroll = true;
+            scrolling.Size = new Size(260, 90);
+            scrolling.MinimumSize = scrolling.Size;
+            scrolling.Dock = DockStyle.None;
+            scrolling.Controls.Add(new Label { Text = "Scroll in both directions", AutoSize = true, Location = new Point(6, 6), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
+            scrolling.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
+            table.AddRow("CreateMedium (AutoScroll)", 110, scrolling);
+
+            // A table with the lines in the library's color.
+            TableLayoutPanel cells = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(cells);
+            ((ThemedTableLayoutPanel)cells).CellBorderColor = UIColors.Primary;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderColor)", 80, cells);
+
+            TableLayoutPanel cellsInColor = UIStyles.TableLayoutPanels.CreateStandard(3, 2, green);
+            ConfigureCellsDemo(cellsInColor);
+            table.AddRow("TableLayoutPanels.CreateStandard(colors)", 80, cellsInColor);
+
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            flow.Controls.Add(UIStyles.Buttons.CreateStandard("One", size: new Size(70, 28)));
+            flow.Controls.Add(UIStyles.Buttons.CreateStandard("Two", size: new Size(70, 28)));
+            table.AddRow("FlowLayoutPanels.CreateStandard", flow);
+
+            FlowLayoutPanel flowInColor = UIStyles.FlowLayoutPanels.CreateStandard(green);
+            flowInColor.Controls.Add(UIStyles.Buttons.CreateStandard("One", size: new Size(70, 28)));
+            flowInColor.Controls.Add(UIStyles.Buttons.CreateStandard("Two", size: new Size(70, 28)));
+            table.AddRow("FlowLayoutPanels.CreateStandard(colors)", flowInColor);
+        }
+
+        private static Label CreatePanelCaption(string text)
+        {
+            Label caption = UIStyles.Labels.CreateStandard(text);
+            caption.AutoSize = true;
+            caption.Location = new Point(6, 6);
+            caption.BackColor = Color.Transparent;
+
+            return caption;
+        }
+
+        // A card with a line of text in it; it does not dock, so it gets its size here.
+        private static Panel CreateCardDemo(Panel card, string text)
+        {
+            card.Size = new Size(240, 70);
+            card.MinimumSize = card.Size;
+
+            Label caption = UIStyles.Labels.CreateStandard(text);
+            caption.Dock = DockStyle.Fill;
+            caption.BackColor = Color.Transparent;
+            card.Controls.Add(caption);
+
+            return card;
+        }
+
+        // Six cells with the lines between them (CellBorderStyle.Single), in the color of the theme or one that is set.
+        private static void ConfigureCellsDemo(TableLayoutPanel cells)
+        {
+            cells.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            cells.Size = new Size(260, 66);
+            cells.MinimumSize = cells.Size;
+
+            for (int i = 0; i < 3; i++)
+                cells.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / 3));
+
+            for (int i = 0; i < 2; i++)
+                cells.RowStyles.Add(new RowStyle(SizeType.Percent, 50));
+
+            for (int i = 0; i < 6; i++)
+            {
+                Label cell = UIStyles.Labels.CreateStandard("Cell " + (i + 1));
+                cell.Dock = DockStyle.Fill;
+                cell.BackColor = Color.Transparent;
+                cells.Controls.Add(cell);
+            }
         }
     }
 }

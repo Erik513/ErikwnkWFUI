@@ -78,7 +78,7 @@ namespace ErikwnkWFUI.Showcase
                  AddNumericUpDownsSection),
 
                 ("Panels",
-                 "The background shades the layout is built from: Dark, Medium, Elevated and Primary (the accent color).",
+                 "The background shades the layout is built from: Standard (the medium one, also in a color set), Dark, Medium, Elevated, Transparent and Primary (a very dark shade of the accent color). A card has rounded corners that show the page behind them and a thin line. The frame (BorderColor) and the lines of a table (CellBorderColor) can be colored, the scroll bars of a scrolling panel follow the theme (also the square where they meet), and the table and the flow panel can take a color set too.",
                  AddPanelsSection),
 
                 ("ProgressBars",
