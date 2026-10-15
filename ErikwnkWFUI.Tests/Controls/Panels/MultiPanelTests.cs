@@ -423,6 +423,37 @@ public class MultiPanelTests : IDisposable
         Assert.True(next.Bottom <= large.Padding.Top + largeHeader);
     }
 
+    [Theory]
+    [InlineData(40)]
+    [InlineData(60)]
+    [InlineData(90)]
+    public void ANarrowMultiPanel_KeepsTheArrowsInside_AndTheTextAwayFromThem(int width)
+    {
+        MultiPanel panel = UIStyles.MultiPanels.CreateStandard();
+        panel.AddPage("A very long title that cannot fit");
+        panel.AddPage("B");
+        panel.ShowPageCount = true;
+        panel.Dock = DockStyle.None;
+        panel.Size = new Size(width, 100);
+        Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(200, 120) };
+        host.Controls.Add(panel);
+        host.Show();
+        Application.DoEvents();
+        _forms.Add(host);
+
+        Button[] arrows = Arrows(panel);
+        Assert.True(arrows[0].Left >= panel.Padding.Left, $"{arrows[0].Left}");
+
+        // Between the text and the arrows nothing is painted (only the background).
+        using Bitmap bitmap = Render(panel);
+        Color back = bitmap.GetPixel(panel.Width / 2, panel.Height - 12);
+        int gap = 6;
+
+        for (int x = Math.Max(0, arrows[0].Left - gap); x < arrows[0].Left; x++)
+            for (int y = 8; y < 28; y++)
+                Assert.Equal(back.ToArgb(), bitmap.GetPixel(x, y).ToArgb());
+    }
+
     [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {

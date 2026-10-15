@@ -309,8 +309,10 @@ namespace ErikwnkWFUI.Controls
             int gap = Dpi.Scale(this, Gap96) / 2;
             int top = header.Y + (header.Height - size) / 2;
 
-            _nextButton.SetBounds(header.Right - size, top, size, size);
-            _previousButton.SetBounds(_nextButton.Left - gap - size, top, size, size);
+            // Too narrow for both arrows: they stay at the left edge (and reach over the right one) instead of leaving the panel.
+            int nextLeft = Math.Max(header.Left + size + gap, header.Right - size);
+            _nextButton.SetBounds(nextLeft, top, size, size);
+            _previousButton.SetBounds(nextLeft - gap - size, top, size, size);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -325,24 +327,29 @@ namespace ErikwnkWFUI.Controls
                 text = UIColors.BlendToward(text, BackColor, DisabledBlend);
 
             const TextFormatFlags common = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
+
+            // Count and title only get the room before the arrows (DrawText cuts the text at its rectangle).
+            int limit = _previousButton.Left - gap;
             int titleLeft = header.Left;
 
             if (_showPageCount && _pages.Count > 0)
             {
                 string widest = _pages.Count + "/" + _pages.Count;
                 int width = TextRenderer.MeasureText(e.Graphics, widest, Font, Size.Empty, common).Width;
-                Rectangle counter = new Rectangle(header.Left, header.Y, width, header.Height);
-                TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, UIColors.BlendToward(text, BackColor, CounterBlend), common | TextFormatFlags.Left);
-                titleLeft = counter.Right + gap;
+                Rectangle counter = new Rectangle(header.Left, header.Y, Math.Min(width, limit - header.Left), header.Height);
+
+                if (counter.Width > 0)
+                    TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, UIColors.BlendToward(text, BackColor, CounterBlend), common | TextFormatFlags.Left);
+
+                titleLeft = header.Left + width + gap;
             }
 
             MultiPanelPage page = SelectedPage;
+            Rectangle titleArea = new Rectangle(titleLeft, header.Y, limit - titleLeft, header.Height);
 
-            if (page == null || page.Title.Length == 0)
+            if (page == null || page.Title.Length == 0 || titleArea.Width <= 0)
                 return;
 
-            int titleRight = _previousButton.Left - gap;
-            Rectangle titleArea = new Rectangle(titleLeft, header.Y, Math.Max(0, titleRight - titleLeft), header.Height);
             TextFormatFlags align = _titleAlignment == HorizontalAlignment.Center ? TextFormatFlags.HorizontalCenter
                 : _titleAlignment == HorizontalAlignment.Right ? TextFormatFlags.Right
                 : TextFormatFlags.Left;
