@@ -9,7 +9,7 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// A card: a panel with smoothly rounded corners and a thin line around it, for a group of controls on a page
-    /// (<c>UIStyles.Panels.CreateCard</c>). It paints what is behind it in its corners, so it works on any page color.
+    /// (<c>UIStyles.Panels.CreateCardStandard</c>). It paints what is behind it in its corners, so it works on any page color.
     /// </summary>
     /// <remarks>
     /// The controls inside are not cut to the rounded shape: <see cref="Padding"/> keeps them from the corners (the card has
@@ -39,10 +39,10 @@ namespace ErikwnkWFUI.Controls
             ThemeWatcher.Attach(this, Invalidate);
         }
 
-        // The line of the card takes the hover color of a color set (asked for again each time).
-        internal void FollowColors(Func<UIColorSet> colors)
+        // The line of the card takes this color until BorderColor is set (asked for again each time).
+        internal void FollowBorderColor(Func<Color> color)
         {
-            _borderColor.SetDefault(() => colors().Hover);
+            _borderColor.SetDefault(color);
             Invalidate();
         }
 

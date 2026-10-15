@@ -62,7 +62,7 @@ namespace ErikwnkWFUI.Showcase
 
         private static Control CreateSymbolGrid(string[] names, Dictionary<string, string> all)
         {
-            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
 

@@ -22,7 +22,7 @@ public class PanelCardTests : IDisposable
 
     private ThemedCardPanel Card()
     {
-        ThemedCardPanel card = (ThemedCardPanel)UIStyles.Panels.CreateCard();
+        ThemedCardPanel card = (ThemedCardPanel)UIStyles.Panels.CreateCardStandard();
         card.Size = new Size(100, 60);
         card.BackColor = Color.Black;
         card.Location = new Point(20, 20);
@@ -47,7 +47,7 @@ public class PanelCardTests : IDisposable
     [Fact]
     public void TheCard_HasTheElevatedBackground_NoDock_AndAPaddingOfItsOwn()
     {
-        using Control card = UIStyles.Panels.CreateCard();
+        using Control card = UIStyles.Panels.CreateCardStandard();
 
         Assert.IsType<ThemedCardPanel>(card);
         Assert.Equal(UIColors.BackgroundMediumElevated, card.BackColor);

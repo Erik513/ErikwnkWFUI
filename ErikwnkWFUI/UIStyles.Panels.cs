@@ -40,9 +40,15 @@ namespace ErikwnkWFUI
             /// <c>ErikwnkWFUI.Controls.ThemedCardPanel</c> for <c>CornerRadius</c>, <c>ShowBorder</c> and <c>BorderColor</c>; the card keeps
             /// the controls inside away from the corners with a padding of its own.
             /// </summary>
-            public static Panel CreateCard(UIColorSet colors = null)
+            public static Panel CreateCardStandard(UIColorSet colors = null)
             {
-                return UIPanelFactory.CreateCard(colors);
+                return UIPanelFactory.CreateCardStandard(colors);
+            }
+
+            /// <summary>The card (see <see cref="CreateCardStandard"/>) in the very dark shade of the accent of <see cref="CreatePrimary"/>, with a line one step lighter (<c>UIColors.PrimaryDark</c>). Follows a change of the theme and of the accent.</summary>
+            public static Panel CreateCardPrimary()
+            {
+                return UIPanelFactory.CreateCardPrimary();
             }
 
             /// <summary>A panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the page behind the other surfaces). Fills its parent; follows a change of the theme.</summary>

@@ -19,7 +19,23 @@ namespace ErikwnkWFUI.Factories
 
         // A card: the elevated surface, rounded, with a thin line; it does not dock (it is placed where it is wanted).
         // With a color set the card is in its basic color and has the hover color of the set as its line.
-        public static Panel CreateCard(UIColorSet colors = null)
+        public static Panel CreateCardStandard(UIColorSet colors = null)
+        {
+            if (colors == null)
+                return CreateCard(() => UIColors.BackgroundMediumElevated, null);
+
+            Func<UIColorSet> source = ColorSetSource.Of(colors);
+
+            return CreateCard(() => source().Basic, () => source().Hover);
+        }
+
+        // The card in the very dark accent of CreatePrimary, with a line one step lighter.
+        public static Panel CreateCardPrimary()
+        {
+            return CreateCard(() => UIColors.PrimaryDarkDark, () => UIColors.PrimaryDark);
+        }
+
+        private static Panel CreateCard(Func<Color> backColor, Func<Color> borderColor)
         {
             ThemedCardPanel card = new ThemedCardPanel
             {
@@ -27,15 +43,10 @@ namespace ErikwnkWFUI.Factories
                 Margin = new Padding(0)
             };
 
-            if (colors == null)
-            {
-                ThemeWatcher.FollowBackColor(card, () => UIColors.BackgroundMediumElevated);
-            }
-            else
-            {
-                ThemeWatcher.FollowBackColor(card, () => colors.Basic);
-                card.FollowColors(ColorSetSource.Of(colors));
-            }
+            ThemeWatcher.FollowBackColor(card, backColor);
+
+            if (borderColor != null)
+                card.FollowBorderColor(borderColor);
 
             return card;
         }

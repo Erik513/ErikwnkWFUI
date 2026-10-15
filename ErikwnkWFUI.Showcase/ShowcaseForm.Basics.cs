@@ -145,7 +145,7 @@ namespace ErikwnkWFUI.Showcase
 
         private static Control CreatePresetButtons((string Name, UIButtonPreset Preset)[] presets)
         {
-            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
 
@@ -161,7 +161,7 @@ namespace ErikwnkWFUI.Showcase
 
         private static Control CreateSetButtons((string Name, UIColorSet Set)[] sets, bool enabled)
         {
-            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
 
@@ -478,6 +478,8 @@ namespace ErikwnkWFUI.Showcase
             UIColorSet green = UIStyles.Colors.Sets.Green;
             const int swatchHeight = 42;
 
+            table.AddSection("Panels");
+
             // The panels in each background of the theme, one row per factory method.
             (string Name, Panel Panel)[] swatches =
             {
@@ -506,8 +508,9 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateTransparent", transparent);
 
             // A card: rounded corners that show the page behind them and a thin line.
-            table.AddRow("CreateCard", 92, CreateCardDemo(UIStyles.Panels.CreateCard(), "A card"));
-            table.AddRow("CreateCard(colors)", 92, CreateCardDemo(UIStyles.Panels.CreateCard(green), "A card in a color set"));
+            table.AddRow("CreateCardStandard", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(), "A card"));
+            table.AddRow("CreateCardStandard(colors)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
+            table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
 
             // The frame of a panel in the library's color (the system draws it in its own otherwise).
             ThemedPanel framed = (ThemedPanel)UIStyles.Panels.CreateElevated();
@@ -523,10 +526,13 @@ namespace ErikwnkWFUI.Showcase
             scrolling.AutoScroll = true;
             scrolling.Size = new Size(260, 90);
             scrolling.MinimumSize = scrolling.Size;
+            scrolling.MaximumSize = scrolling.Size;
             scrolling.Dock = DockStyle.None;
             scrolling.Controls.Add(new Label { Text = "Scroll in both directions", AutoSize = true, Location = new Point(6, 6), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
             scrolling.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
             table.AddRow("CreateMedium (AutoScroll)", 110, scrolling);
+
+            table.AddSection("Table layout panels");
 
             // A table with the lines in the library's color.
             TableLayoutPanel cells = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
@@ -538,15 +544,28 @@ namespace ErikwnkWFUI.Showcase
             ConfigureCellsDemo(cellsInColor);
             table.AddRow("TableLayoutPanels.CreateStandard(colors)", 80, cellsInColor);
 
-            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            TableLayoutPanel cellsTransparent = UIStyles.TableLayoutPanels.CreateTransparent(3, 2);
+            ConfigureCellsDemo(cellsTransparent);
+            table.AddRow("TableLayoutPanels.CreateTransparent", 80, cellsTransparent);
+
+            TableLayoutPanel cellsDark = UIStyles.TableLayoutPanels.CreateDark(3, 2);
+            ConfigureCellsDemo(cellsDark);
+            table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
+
+            table.AddSection("Flow layout panels");
+
+            table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
+            table.AddRow("FlowLayoutPanels.CreateStandard(colors)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
+            table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
+        }
+
+        // Two buttons in a flow panel, to see the background around them.
+        private static FlowLayoutPanel CreateFlowDemo(FlowLayoutPanel flow)
+        {
             flow.Controls.Add(UIStyles.Buttons.CreateStandard("One", size: new Size(70, 28)));
             flow.Controls.Add(UIStyles.Buttons.CreateStandard("Two", size: new Size(70, 28)));
-            table.AddRow("FlowLayoutPanels.CreateStandard", flow);
 
-            FlowLayoutPanel flowInColor = UIStyles.FlowLayoutPanels.CreateStandard(green);
-            flowInColor.Controls.Add(UIStyles.Buttons.CreateStandard("One", size: new Size(70, 28)));
-            flowInColor.Controls.Add(UIStyles.Buttons.CreateStandard("Two", size: new Size(70, 28)));
-            table.AddRow("FlowLayoutPanels.CreateStandard(colors)", flowInColor);
+            return flow;
         }
 
         private static Label CreatePanelCaption(string text)

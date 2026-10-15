@@ -35,6 +35,18 @@ namespace ErikwnkWFUI
                     colors);
             }
 
+            /// <summary>A table layout panel without a background of its own (what lies behind it shows through), otherwise like <see cref="CreateStandard"/>.</summary>
+            /// <param name="columnCount">The number of columns.</param>
+            /// <param name="rowCount">The number of rows.</param>
+            public static TableLayoutPanel CreateTransparent(
+                int columnCount,
+                int rowCount)
+            {
+                return UITableLayoutPanelFactory.CreateTransparent(
+                    columnCount,
+                    rowCount);
+            }
+
             /// <summary>A table layout panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the same as <see cref="Panels.CreateDark"/>), without margin and padding. Follows a change of the theme.</summary>
             /// <param name="columnCount">The number of columns.</param>
             /// <param name="rowCount">The number of rows.</param>

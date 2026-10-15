@@ -202,7 +202,7 @@ namespace ErikwnkWFUI.Showcase
             toolbar.Height = 56;
             toolbar.Padding = new Padding(16, 0, 16, 0);
 
-            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.Dock = DockStyle.Fill;
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = false;

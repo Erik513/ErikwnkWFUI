@@ -20,6 +20,16 @@ namespace ErikwnkWFUI.Factories
                 colors == null ? (Func<Color>)(() => UIColors.BackgroundMediumElevated) : () => colors.Basic);
         }
 
+        public static TableLayoutPanel CreateTransparent(
+            int columnCount,
+            int rowCount)
+        {
+            return CreateTableLayoutPanel(
+                columnCount,
+                rowCount,
+                () => Color.Transparent);
+        }
+
         public static TableLayoutPanel CreateDark(
             int columnCount,
             int rowCount)

@@ -67,11 +67,11 @@ public class PanelFactoryTests
     }
 
     [Fact]
-    public void TheFlowPanel_IsTransparent_AsBigAsItsContent_AndDoesNotWrap()
+    public void TheFlowPanel_IsElevated_AsBigAsItsContent_AndDoesNotWrap()
     {
         using FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateStandard();
 
-        Assert.Equal(Color.Transparent, flow.BackColor);
+        Assert.Equal(UIColors.BackgroundMediumElevated, flow.BackColor);
         Assert.True(flow.AutoSize);
         Assert.False(flow.WrapContents);
         Assert.Equal(Padding.Empty, flow.Padding);
@@ -177,7 +177,44 @@ public class PanelFactoryTests
         Assert.Equal(DockStyle.Fill, standard.Dock);
         Assert.Equal(UIColors.BackgroundMedium, plainStandard.BackColor);
         Assert.Equal(UIColors.BackgroundMediumElevated, plainTable.BackColor);
-        Assert.Equal(Color.Transparent, plainFlow.BackColor);
+        Assert.Equal(UIColors.BackgroundMediumElevated, plainFlow.BackColor);
+    }
+
+    [Fact]
+    public void TheTransparentFlowAndTablePanels_HaveNoBackground_AndOtherwiseTheSettingsOfTheStandardOnes()
+    {
+        using FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
+        using TableLayoutPanel table = UIStyles.TableLayoutPanels.CreateTransparent(3, 2);
+
+        Assert.Equal(Color.Transparent, flow.BackColor);
+        Assert.True(flow.AutoSize);
+        Assert.False(flow.WrapContents);
+        Assert.Equal(Padding.Empty, flow.Margin);
+        Assert.Equal(Color.Transparent, table.BackColor);
+        Assert.Equal(3, table.ColumnCount);
+        Assert.Equal(2, table.RowCount);
+        Assert.IsType<ErikwnkWFUI.Controls.ThemedFlowLayoutPanel>(flow);
+        Assert.IsType<ErikwnkWFUI.Controls.ThemedTableLayoutPanel>(table);
+    }
+
+    [Fact]
+    public void ThePrimaryCard_IsInTheAccentOfTheMoment_WithALineOneStepLighter()
+    {
+        Color accent = UIColors.Primary;
+
+        try
+        {
+            UIColors.SetAccent(Color.OrangeRed);
+            using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardPrimary();
+
+            Assert.Equal(UIColors.PrimaryDarkDark, card.BackColor);
+            Assert.Equal(UIColors.PrimaryDark, card.BorderColor);
+            Assert.Equal(DockStyle.None, card.Dock);
+        }
+        finally
+        {
+            UIColors.SetAccent(accent);
+        }
     }
 
     [Fact]
@@ -185,8 +222,8 @@ public class PanelFactoryTests
     {
         UIColorSet green = UIStyles.Colors.Sets.Green;
 
-        using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCard(green);
-        using ErikwnkWFUI.Controls.ThemedCardPanel plain = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCard();
+        using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardStandard(green);
+        using ErikwnkWFUI.Controls.ThemedCardPanel plain = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardStandard();
 
         Assert.Equal(green.Basic, card.BackColor);
         Assert.Equal(green.Hover, card.BorderColor);
