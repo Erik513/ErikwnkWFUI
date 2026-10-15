@@ -577,6 +577,25 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
+        /// Quiet text on <paramref name="surface"/> (a count, a version): the best text color blended toward the surface by
+        /// <paramref name="amount"/> (0-1) - but never so far that it falls below <paramref name="minimumContrast"/>, so it stays
+        /// readable on every surface (a fixed blend is too faint on a light one or on a color).
+        /// </summary>
+        internal static Color GetMutedText(Color surface, double amount, double minimumContrast = 4.5)
+        {
+            Color text = GetBestTextColor(surface);
+            Color muted = BlendToward(text, surface, amount);
+
+            for (double reduced = amount; reduced > 0 && GetContrastRatio(muted, surface) < minimumContrast; )
+            {
+                reduced = Math.Max(0, reduced - 0.05);
+                muted = BlendToward(text, surface, reduced);
+            }
+
+            return muted;
+        }
+
+        /// <summary>
         /// The color a given share (0-1) of the way from <paramref name="color"/>
         /// to <paramref name="target"/> - for muting a text toward its
         /// background.

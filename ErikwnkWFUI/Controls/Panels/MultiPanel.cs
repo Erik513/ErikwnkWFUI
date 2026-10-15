@@ -54,7 +54,7 @@ namespace ErikwnkWFUI.Controls
         private const int Gap96 = 6;
         private const int HeaderTextMargin96 = 12;
         private const double CounterBlend = 0.35;
-        private const double DisabledBlend = 0.5;
+        private const double DisabledFade = 0.5;
 
         private readonly List<MultiPanelPage> _pages = new List<MultiPanelPage>();
         private readonly Button _previousButton;
@@ -374,10 +374,7 @@ namespace ErikwnkWFUI.Controls
             Rectangle header = HeaderBounds;
             int gap = Dpi.Scale(this, Gap96);
             Color surface = SurfaceColor.Of(this);
-            Color text = UIColors.GetBestTextColor(surface);
-
-            if (!Enabled)
-                text = UIColors.BlendToward(text, surface, DisabledBlend);
+            Color text = Enabled ? UIColors.GetBestTextColor(surface) : UIColors.GetDisabledText(surface);
 
             if (_showHeaderLine)
             {
@@ -400,7 +397,7 @@ namespace ErikwnkWFUI.Controls
                 Rectangle counter = new Rectangle(header.Left, header.Y, Math.Min(width, limit - header.Left), header.Height);
 
                 if (counter.Width > 0)
-                    TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, UIColors.BlendToward(text, surface, CounterBlend), common | TextFormatFlags.Left);
+                    TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, Enabled ? UIColors.GetMutedText(surface, CounterBlend) : UIColors.BlendToward(UIColors.GetMutedText(surface, CounterBlend), surface, DisabledFade), common | TextFormatFlags.Left);
 
                 titleLeft = header.Left + width + gap;
             }

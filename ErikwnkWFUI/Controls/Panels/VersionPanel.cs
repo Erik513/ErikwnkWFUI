@@ -27,6 +27,7 @@ namespace ErikwnkWFUI.Controls
         private const int ButtonWidth96 = 22;
         private const int ButtonHeight96 = 20;
         private const double TextBlend = 0.45;
+        private const double DisabledFade = 0.5;
 
         private string _versionText = EntryAssemblyVersion.GetText() ?? string.Empty;
         private Button _updateButton;
@@ -143,10 +144,11 @@ namespace ErikwnkWFUI.Controls
                 return;
 
             Color surface = SurfaceColor.Of(this);
-            Color text = UIColors.BlendToward(UIColors.GetBestTextColor(surface), surface, TextBlend);
+            Color text = UIColors.GetMutedText(surface, TextBlend);
 
+            // A disabled strip is quieter still (than the muted version, not than the full text).
             if (!Enabled)
-                text = UIColors.BlendToward(text, surface, TextBlend);
+                text = UIColors.BlendToward(text, surface, DisabledFade);
 
             Size size = MeasureText();
             Rectangle area = new Rectangle(ClientSize.Width - Dpi.Scale(this, RightInset96) - size.Width, 0, size.Width, ClientSize.Height);
