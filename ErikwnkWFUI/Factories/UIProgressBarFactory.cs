@@ -10,8 +10,9 @@ namespace ErikwnkWFUI.Factories
     internal static class UIProgressBarFactory
     {
         // Named by color, matching UIButtonFactory's CreateStandard/
-        // CreatePrimary/CreateGreen/CreateRed convention - "Transparent" is
-        // a uniform suffix for the no-border/blend-in variant of each color.
+        // CreatePrimary/CreateGreen/CreateRed convention - "Borderless" is
+        // a uniform suffix for the no-border/blend-in variant of each color
+        // (not "Transparent": a ProgressBar cannot be transparent).
         // CreateStandard is a neutral gray (adjust via ForeColor), the same
         // meaning "Standard" has for buttons and sliders; CreateGreen/
         // CreatePrimary just preset a specific fill instead.
@@ -116,7 +117,7 @@ namespace ErikwnkWFUI.Factories
                 // border (when drawBorder is true) covers the remaining
                 // edge case where a panel is BackgroundMedium too. Callers
                 // wanting the borderless/blend-in look reassign this
-                // themselves - see CreateTransparent's own comment.
+                // themselves - see CreateGreenBorderless' own comment.
                 Margin = new Padding(0)
             };
 

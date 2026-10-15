@@ -89,7 +89,7 @@ namespace ErikwnkWFUI.Controls
             // there were two concentric rings in different colors,
             // which is likely the "line" the user spotted. Drawing the
             // final, correct color (the border color for a bordered
-            // variant, or just BackColor for a *Transparent one)
+            // variant, or just BackColor for a Borderless one)
             // directly on the window dc in one single pass avoids that
             // entirely - there's no separate erase step to leave a
             // mismatched trace behind.
