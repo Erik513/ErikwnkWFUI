@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using static ErikwnkWFUI.Native.NativeMethods;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -46,6 +47,15 @@ namespace ErikwnkWFUI.Controls
 
                 Invalidate();
             }
+        }
+
+        // Where both scroll bars meet, the system leaves a light square even with dark bars.
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+
+            if (m.Msg == WM_NCPAINT)
+                NativeControlTheme.PaintScrollBarCorner(this);
         }
 
         public ThemedTableLayoutPanel()

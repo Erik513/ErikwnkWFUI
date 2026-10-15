@@ -316,7 +316,7 @@ namespace ErikwnkWFUI.Controls
             NoteMessageForSize(m.Msg);
 
             if (m.Msg == WM_NCPAINT)
-                PaintScrollBarCorner();
+                NativeControlTheme.PaintScrollBarCorner(this);
 
             if (m.Msg == WM_PAINT)
             {

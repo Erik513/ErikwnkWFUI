@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Native;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -60,6 +61,64 @@ namespace ErikwnkWFUI.Helpers
 
             if (control.IsHandleCreated)
                 refresh(false);
+        }
+
+        // The color of the track of the dark scroll bars (the system's own).
+        private static readonly System.Drawing.Color DarkScrollBarTrack = System.Drawing.Color.FromArgb(23, 23, 23);
+
+        /// <summary>
+        /// Where both scroll bars of a window meet and the system leaves a light square even with dark bars (in window
+        /// coordinates, as the non-client area is painted); false when the theme is light or the window does not show both bars.
+        /// </summary>
+        public static bool TryGetScrollBarCorner(Control control, out System.Drawing.Rectangle corner)
+        {
+            corner = System.Drawing.Rectangle.Empty;
+
+            if (!IsDark || !control.IsHandleCreated)
+                return false;
+
+            int style = GetWindowLong(control.Handle, GWL_STYLE);
+
+            if ((style & WS_HSCROLL) == 0 || (style & WS_VSCROLL) == 0)
+                return false;
+
+            NativeRect window;
+            NativeRect client;
+
+            if (!GetWindowRect(control.Handle, out window) || !GetClientRect(control.Handle, out client))
+                return false;
+
+            int barWidth = SystemInformation.VerticalScrollBarWidth * control.DeviceDpi / 96;
+            int barHeight = SystemInformation.HorizontalScrollBarHeight * control.DeviceDpi / 96;
+            int border = Math.Max(0, (window.Right - window.Left - client.Right - barWidth) / 2);
+            corner = new System.Drawing.Rectangle(border + client.Right, border + client.Bottom, barWidth, barHeight);
+
+            return true;
+        }
+
+        /// <summary>Paints that square in the color of the track of the bars. Called after the system has painted the frame (WM_NCPAINT).</summary>
+        public static void PaintScrollBarCorner(Control control)
+        {
+            System.Drawing.Rectangle corner;
+
+            if (!TryGetScrollBarCorner(control, out corner))
+                return;
+
+            IntPtr hdc = GetWindowDC(control.Handle);
+
+            if (hdc == IntPtr.Zero)
+                return;
+
+            try
+            {
+                using (System.Drawing.Graphics g = System.Drawing.Graphics.FromHdc(hdc))
+                using (System.Drawing.SolidBrush brush = new System.Drawing.SolidBrush(DarkScrollBarTrack))
+                    g.FillRectangle(brush, corner);
+            }
+            finally
+            {
+                ReleaseDC(control.Handle, hdc);
+            }
         }
 
         // What sets the style of a window (a seam for the tests, which have no visual styles to look at).

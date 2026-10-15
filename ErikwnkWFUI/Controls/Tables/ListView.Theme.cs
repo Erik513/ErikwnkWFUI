@@ -179,46 +179,6 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The color of the track of the dark scroll bars (the system's own, see NativeControlTheme).
-        private static readonly Color DarkScrollBarTrack = Color.FromArgb(23, 23, 23);
-
-        // Where both scroll bars meet, the system leaves a light square even with dark bars.
-        // Painted over in the color of the bars' track.
-        private void PaintScrollBarCorner()
-        {
-            int style = GetWindowLong(Handle, GWL_STYLE);
-
-            if (!NativeControlTheme.IsDark || (style & WS_HSCROLL) == 0 || (style & WS_VSCROLL) == 0)
-                return;
-
-            NativeRect window;
-            NativeRect client;
-
-            if (!GetWindowRect(Handle, out window) || !GetClientRect(Handle, out client))
-                return;
-
-            int barWidth = SystemInformation.VerticalScrollBarWidth * DeviceDpi / 96;
-            int barHeight = SystemInformation.HorizontalScrollBarHeight * DeviceDpi / 96;
-            int border = Math.Max(0, (window.Right - window.Left - client.Right - barWidth) / 2);
-            Rectangle corner = new Rectangle(border + client.Right, border + client.Bottom, barWidth, barHeight);
-
-            IntPtr hdc = GetWindowDC(Handle);
-
-            if (hdc == IntPtr.Zero)
-                return;
-
-            try
-            {
-                using (Graphics g = Graphics.FromHdc(hdc))
-                using (SolidBrush brush = new SolidBrush(DarkScrollBarTrack))
-                    g.FillRectangle(brush, corner);
-            }
-            finally
-            {
-                ReleaseDC(Handle, hdc);
-            }
-        }
-
         // The room right of the last column, below the header, gets no DrawSubItem call: it would show the plain BackColor
         // and make a seam under the header's own trailing fill. It is filled with the HeaderBackColor, so that header and
         // rows read as one band.
