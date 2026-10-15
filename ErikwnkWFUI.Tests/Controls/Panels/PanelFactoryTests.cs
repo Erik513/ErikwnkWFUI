@@ -158,4 +158,42 @@ public class PanelFactoryTests
         Assert.IsType(expected, control);
         Assert.True((bool)typeof(Control).GetProperty("DoubleBuffered", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(control)!);
     }
+
+    [Fact]
+    public void WithAColorSet_APanelIsInTheBasicColorOfTheSet_AndWithoutOneNothingChanges()
+    {
+        UIColorSet green = UIStyles.Colors.Sets.Green;
+
+        using Control standard = UIStyles.Panels.CreateStandard(green);
+        using Control table = UIStyles.TableLayoutPanels.CreateStandard(2, 2, green);
+        using Control flow = UIStyles.FlowLayoutPanels.CreateStandard(green);
+        using Control plainStandard = UIStyles.Panels.CreateStandard();
+        using Control plainTable = UIStyles.TableLayoutPanels.CreateStandard(2, 2);
+        using Control plainFlow = UIStyles.FlowLayoutPanels.CreateStandard();
+
+        Assert.Equal(green.Basic, standard.BackColor);
+        Assert.Equal(green.Basic, table.BackColor);
+        Assert.Equal(green.Basic, flow.BackColor);
+        Assert.Equal(DockStyle.Fill, standard.Dock);
+        Assert.Equal(UIColors.BackgroundMedium, plainStandard.BackColor);
+        Assert.Equal(UIColors.BackgroundMediumElevated, plainTable.BackColor);
+        Assert.Equal(Color.Transparent, plainFlow.BackColor);
+    }
+
+    [Fact]
+    public void ACardWithAColorSet_IsInItsBasicColor_AndHasTheHoverColorAsItsLine()
+    {
+        UIColorSet green = UIStyles.Colors.Sets.Green;
+
+        using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCard(green);
+        using ErikwnkWFUI.Controls.ThemedCardPanel plain = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCard();
+
+        Assert.Equal(green.Basic, card.BackColor);
+        Assert.Equal(green.Hover, card.BorderColor);
+        Assert.Equal(UIColors.BackgroundMediumElevated, plain.BackColor);
+        Assert.Equal(UIColors.BorderMedium, plain.BorderColor);
+
+        card.BorderColor = Color.Red;
+        Assert.Equal(Color.Red, card.BorderColor);
+    }
 }

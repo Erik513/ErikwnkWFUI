@@ -8,14 +8,16 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UITableLayoutPanelFactory
     {
+        // The elevated surface - or, with a color set, the basic color of the set.
         public static TableLayoutPanel CreateStandard(
             int columnCount,
-            int rowCount)
+            int rowCount,
+            UIColorSet colors = null)
         {
             return CreateTableLayoutPanel(
                 columnCount,
                 rowCount,
-                () => UIColors.BackgroundMediumElevated);
+                colors == null ? (Func<Color>)(() => UIColors.BackgroundMediumElevated) : () => colors.Basic);
         }
 
         public static TableLayoutPanel CreateDark(

@@ -21,9 +21,10 @@ namespace ErikwnkWFUI
         public static class FlowLayoutPanels
         {
             /// <summary>A transparent flow layout panel that is as big as its content and does not wrap, without margin and padding.</summary>
-            public static FlowLayoutPanel CreateStandard()
+            /// <param name="colors">A color set for the background (its basic color) instead of none: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>.</param>
+            public static FlowLayoutPanel CreateStandard(UIColorSet colors = null)
             {
-                return UIFlowLayoutPanelFactory.CreateStandard();
+                return UIFlowLayoutPanelFactory.CreateStandard(colors);
             }
         }
     }

@@ -22,24 +22,27 @@ namespace ErikwnkWFUI
         public static class Panels
         {
             /// <summary>
-            /// The usual panel: the medium background of the theme, the same as <see cref="CreateMedium"/>. There is no color set for a
-            /// panel (it has no states that a set could color); set <see cref="Control.BackColor"/> for another color, it stays when
-            /// the theme changes.
+            /// The usual panel: the medium background of the theme, the same as <see cref="CreateMedium"/>. With a color set the panel is in
+            /// the basic color of the set (a panel has no states that a set could color further); set <see cref="Control.BackColor"/> for
+            /// another color, it stays when the theme changes. <see cref="CreatePrimary"/> is not the accent set but a very dark
+            /// shade of the accent.
             /// </summary>
-            public static Panel CreateStandard()
+            /// <param name="colors">A color set for the background: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>; null (the default) is the medium background.</param>
+            public static Panel CreateStandard(UIColorSet colors = null)
             {
-                return UIPanelFactory.CreateStandard();
+                return UIPanelFactory.CreateStandard(colors);
             }
 
             /// <summary>
             /// A card: a panel in the elevated background with smoothly rounded corners and a thin line around it, for a group of
-            /// controls on a page; it shows what is behind it in its corners. It does not dock. Cast the result to
+            /// controls on a page; it shows what is behind it in its corners. With a color set it is in the basic color of the set and
+            /// its line has the hover color of the set. It does not dock. Cast the result to
             /// <c>ErikwnkWFUI.Controls.ThemedCardPanel</c> for <c>CornerRadius</c>, <c>ShowBorder</c> and <c>BorderColor</c>; the card keeps
             /// the controls inside away from the corners with a padding of its own.
             /// </summary>
-            public static Panel CreateCard()
+            public static Panel CreateCard(UIColorSet colors = null)
             {
-                return UIPanelFactory.CreateCard();
+                return UIPanelFactory.CreateCard(colors);
             }
 
             /// <summary>A panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the page behind the other surfaces). Fills its parent; follows a change of the theme.</summary>

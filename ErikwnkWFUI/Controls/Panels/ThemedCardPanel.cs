@@ -39,6 +39,13 @@ namespace ErikwnkWFUI.Controls
             ThemeWatcher.Attach(this, Invalidate);
         }
 
+        // The line of the card takes the hover color of a color set (asked for again each time).
+        internal void FollowColors(Func<UIColorSet> colors)
+        {
+            _borderColor.SetDefault(() => colors().Hover);
+            Invalidate();
+        }
+
         /// <summary>The radius of the rounded corners at 96 dpi (scaled with the screen); 8 by default, 0 gives square corners.</summary>
         public int CornerRadius
         {

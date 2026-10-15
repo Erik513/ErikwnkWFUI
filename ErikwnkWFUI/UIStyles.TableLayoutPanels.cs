@@ -23,13 +23,16 @@ namespace ErikwnkWFUI
             /// <summary>A table layout panel in the elevated background of the theme (<c>UIColors.BackgroundMediumElevated</c>, the same as <see cref="Panels.CreateElevated"/>), without margin and padding. Follows a change of the theme.</summary>
             /// <param name="columnCount">The number of columns.</param>
             /// <param name="rowCount">The number of rows.</param>
+            /// <param name="colors">A color set for the background (its basic color) instead of the elevated one: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>.</param>
             public static TableLayoutPanel CreateStandard(
                 int columnCount,
-                int rowCount)
+                int rowCount,
+                UIColorSet colors = null)
             {
                 return UITableLayoutPanelFactory.CreateStandard(
                     columnCount,
-                    rowCount);
+                    rowCount,
+                    colors);
             }
 
             /// <summary>A table layout panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the same as <see cref="Panels.CreateDark"/>), without margin and padding. Follows a change of the theme.</summary>

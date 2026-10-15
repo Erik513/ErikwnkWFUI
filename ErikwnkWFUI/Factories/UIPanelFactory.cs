@@ -8,22 +8,34 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIPanelFactory
     {
-        // The normal surface: the medium one.
-        public static Panel CreateStandard()
+        // The normal surface: the medium one - or, with a color set, the basic color of the set.
+        public static Panel CreateStandard(UIColorSet colors = null)
         {
-            return CreateMedium();
+            if (colors == null)
+                return CreateMedium();
+
+            return CreatePanel(() => colors.Basic, DockStyle.Fill);
         }
 
         // A card: the elevated surface, rounded, with a thin line; it does not dock (it is placed where it is wanted).
-        public static Panel CreateCard()
+        // With a color set the card is in its basic color and has the hover color of the set as its line.
+        public static Panel CreateCard(UIColorSet colors = null)
         {
-            Panel card = new ThemedCardPanel
+            ThemedCardPanel card = new ThemedCardPanel
             {
                 Dock = DockStyle.None,
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(card, () => UIColors.BackgroundMediumElevated);
+            if (colors == null)
+            {
+                ThemeWatcher.FollowBackColor(card, () => UIColors.BackgroundMediumElevated);
+            }
+            else
+            {
+                ThemeWatcher.FollowBackColor(card, () => colors.Basic);
+                card.FollowColors(ColorSetSource.Of(colors));
+            }
 
             return card;
         }
