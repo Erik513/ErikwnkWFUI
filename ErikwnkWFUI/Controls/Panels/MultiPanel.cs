@@ -321,10 +321,11 @@ namespace ErikwnkWFUI.Controls
 
             Rectangle header = HeaderBounds;
             int gap = Dpi.Scale(this, Gap96);
-            Color text = UIColors.GetBestTextColor(BackColor);
+            Color surface = GetSurfaceColor();
+            Color text = UIColors.GetBestTextColor(surface);
 
             if (!Enabled)
-                text = UIColors.BlendToward(text, BackColor, DisabledBlend);
+                text = UIColors.BlendToward(text, surface, DisabledBlend);
 
             const TextFormatFlags common = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
 
@@ -339,7 +340,7 @@ namespace ErikwnkWFUI.Controls
                 Rectangle counter = new Rectangle(header.Left, header.Y, Math.Min(width, limit - header.Left), header.Height);
 
                 if (counter.Width > 0)
-                    TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, UIColors.BlendToward(text, BackColor, CounterBlend), common | TextFormatFlags.Left);
+                    TextRenderer.DrawText(e.Graphics, (_selectedIndex + 1) + "/" + _pages.Count, Font, counter, UIColors.BlendToward(text, surface, CounterBlend), common | TextFormatFlags.Left);
 
                 titleLeft = header.Left + width + gap;
             }
@@ -356,6 +357,18 @@ namespace ErikwnkWFUI.Controls
 
             using (Font bold = new Font(Font, FontStyle.Bold))
                 TextRenderer.DrawText(e.Graphics, page.Title, bold, titleArea, text, common | align | TextFormatFlags.EndEllipsis);
+        }
+
+        // What the header text stands on: the own background, or - when that is transparent - the first one behind it.
+        private Color GetSurfaceColor()
+        {
+            for (Control control = this; control != null; control = control.Parent)
+            {
+                if (control.BackColor.A == 255)
+                    return control.BackColor;
+            }
+
+            return UIColors.BackgroundMedium;
         }
 
         private void Select(int index, bool raise)

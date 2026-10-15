@@ -479,6 +479,28 @@ public class MultiPanelTests : IDisposable
         Assert.Same(previous, host.ActiveControl);
     }
 
+    [Theory]
+    [InlineData(255, 255, 255)]
+    [InlineData(0, 0, 0)]
+    public void OnATransparentMultiPanel_TheHeaderTextIsReadableOnTheBackgroundBehindIt(int r, int g, int b)
+    {
+        MultiPanel panel = UIStyles.MultiPanels.CreateStandard();
+        panel.BackColor = Color.Transparent;
+        panel.AddPage("Title");
+        panel.Dock = DockStyle.None;
+        panel.Size = new Size(400, 200);
+        Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(420, 220), BackColor = Color.FromArgb(r, g, b) };
+        host.Controls.Add(panel);
+        host.Show();
+        Application.DoEvents();
+        _forms.Add(host);
+
+        if (r == 0)
+            Assert.True(Brightest(panel) > 128);
+        else
+            Assert.True(Darkest(panel) < 128);
+    }
+
     [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
