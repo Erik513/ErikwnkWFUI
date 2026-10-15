@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI
 {
@@ -8,19 +9,21 @@ namespace ErikwnkWFUI
         /// <summary>A themed <see cref="ProgressBar"/> (continuous style, not the native blocky one).</summary>
         public static class ProgressBars
         {
-            /// <summary>Neutral gray fill by default; set <see cref="Control.ForeColor"/> for any other color.</summary>
-            public static ProgressBar CreateStandard()
+            /// <summary>Neutral gray fill by default, or the color of a color set; set <see cref="Control.ForeColor"/> for any other color.</summary>
+            /// <param name="colors">A color set for the fill: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>. The bar is filled in the main color of the set (its <c>Hover</c> color: Green is the usual green, Primary the accent, a set made of a color has that color); null (the default) is the neutral gray.</param>
+            public static ProgressBar CreateStandard(UIColorSet colors = null)
             {
-                return UIProgressBarFactory.CreateStandard();
+                return UIProgressBarFactory.CreateStandard(colors);
             }
 
             /// <summary>Like <see cref="CreateStandard"/> but without the border, and BackColor left for you to match your own panel.</summary>
-            public static ProgressBar CreateStandardBorderless()
+            /// <param name="colors">A color set for the fill: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>. The bar is filled in the main color of the set (its <c>Hover</c> color: Green is the usual green, Primary the accent, a set made of a color has that color); null (the default) is the neutral gray.</param>
+            public static ProgressBar CreateStandardBorderless(UIColorSet colors = null)
             {
-                return UIProgressBarFactory.CreateStandardBorderless();
+                return UIProgressBarFactory.CreateStandardBorderless(colors);
             }
 
-            /// <summary>Like <see cref="CreateStandard"/> but a fixed green fill.</summary>
+            /// <summary>The same as <c>CreateStandard(UIStyles.Colors.Sets.Green)</c>: a fixed green fill.</summary>
             public static ProgressBar CreateGreen()
             {
                 return UIProgressBarFactory.CreateGreen();
@@ -32,7 +35,7 @@ namespace ErikwnkWFUI
                 return UIProgressBarFactory.CreateGreenBorderless();
             }
 
-            /// <summary>Like <see cref="CreateGreen"/> but the fill follows the app-wide accent instead of the fixed green.</summary>
+            /// <summary>The same as <c>CreateStandard(UIStyles.Colors.Sets.Primary)</c>: the fill follows the app-wide accent.</summary>
             public static ProgressBar CreatePrimary()
             {
                 return UIProgressBarFactory.CreatePrimary();

@@ -38,6 +38,13 @@ namespace ErikwnkWFUI.Showcase
             primaryDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreatePrimary", primaryBar, primaryDisabled);
 
+            ProgressBar tealBar = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
+            AnimateProgressBar(v => tealBar.Value = v);
+            ProgressBar tealDisabled = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
+            tealDisabled.Value = 65;
+            tealDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard(colors: Teal)", tealBar, tealDisabled);
+
             ProgressBar grayBorderlessBar = UIStyles.ProgressBars.CreateStandardBorderless();
             grayBorderlessBar.BackColor = UIColors.BackgroundLight;
             AnimateProgressBar(v => grayBorderlessBar.Value = v);
@@ -104,6 +111,13 @@ namespace ErikwnkWFUI.Showcase
             slimPrimaryDisabled.Value = 40;
             slimPrimaryDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreatePrimary", slimPrimaryBar, slimPrimaryDisabled);
+
+            SlimProgressBar slimTealBar = UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
+            AnimateProgressBar(v => slimTealBar.Value = v);
+            SlimProgressBar slimTealDisabled = UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal);
+            slimTealDisabled.Value = 40;
+            slimTealDisabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard(colors: Teal)", slimTealBar, slimTealDisabled);
 
             SlimProgressBar slimGreenBar = UIStyles.SlimProgressBars.CreateGreen();
             AnimateProgressBar(v => slimGreenBar.Value = v);

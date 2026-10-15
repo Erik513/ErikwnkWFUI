@@ -14,23 +14,36 @@ namespace ErikwnkWFUI.Factories
         // a uniform suffix for the no-border/blend-in variant of each color
         // (not "Transparent": a ProgressBar cannot be transparent).
         // CreateStandard is a neutral gray (adjust via ForeColor), the same
-        // meaning "Standard" has for buttons and sliders; CreateGreen/
-        // CreatePrimary just preset a specific fill instead.
-        public static ProgressBar CreateStandard()
+        // meaning "Standard" has for buttons and sliders; with a color set the
+        // bar is filled in the main color of the set (see FillOf). CreateGreen/
+        // CreatePrimary are CreateStandard with the green and the accent set.
+        public static ProgressBar CreateStandard(UIColorSet colors = null)
         {
-            return Create(() => UIColors.DisabledGray, drawBorder: true);
+            return Create(FillOf(ColorSetSource.Of(colors)), drawBorder: true);
         }
 
-        // CreateStandard's gray fill with CreateGreenBorderless's
+        // CreateStandard's fill with CreateGreenBorderless's
         // no-border/blend-in look.
-        public static ProgressBar CreateStandardBorderless()
+        public static ProgressBar CreateStandardBorderless(UIColorSet colors = null)
         {
-            return Create(() => UIColors.DisabledGray, drawBorder: false);
+            return Create(FillOf(ColorSetSource.Of(colors)), drawBorder: false);
+        }
+
+        // The fill of a bar for a color set: its Hover color. The sets of the library keep their main color there (Green is
+        // UIColors.Green, Primary is the accent, a set made of a color has that color) - Basic is the darker shade made for
+        // the text on a button, and would nearly vanish on the dark track. No set (null) is the neutral gray.
+        // The set is asked for again each time: the primary set follows the accent.
+        internal static Func<Color> FillOf(Func<UIColorSet> colors)
+        {
+            if (colors == null)
+                return () => UIColors.DisabledGray;
+
+            return () => colors().Hover;
         }
 
         public static ProgressBar CreateGreen()
         {
-            return Create(() => UIColors.Green, drawBorder: true);
+            return CreateStandard(UIStyles.Colors.Sets.Green);
         }
 
         // No border, and BackColor deliberately left as whatever the caller
@@ -43,7 +56,7 @@ namespace ErikwnkWFUI.Factories
         // track/border stays the default; this is the explicit opt-out.
         public static ProgressBar CreateGreenBorderless()
         {
-            return Create(() => UIColors.Green, drawBorder: false);
+            return CreateStandardBorderless(UIStyles.Colors.Sets.Green);
         }
 
         // Same as CreateGreen, but the fill follows the app-wide accent
@@ -52,14 +65,14 @@ namespace ErikwnkWFUI.Factories
         // as "this app's own accent", not "success/in-progress" specifically.
         public static ProgressBar CreatePrimary()
         {
-            return Create(() => UIColors.Primary, drawBorder: true);
+            return Create(FillOf(() => UIColors.PrimarySet), drawBorder: true);
         }
 
         // CreatePrimary's accent-following fill, with CreateGreenBorderless's
         // no-border/blend-in look.
         public static ProgressBar CreatePrimaryBorderless()
         {
-            return Create(() => UIColors.Primary, drawBorder: false);
+            return Create(FillOf(() => UIColors.PrimarySet), drawBorder: false);
         }
 
         // Fill color follows Value instead of being fixed: red at Minimum,
