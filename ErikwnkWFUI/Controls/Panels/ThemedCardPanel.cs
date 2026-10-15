@@ -18,7 +18,7 @@ namespace ErikwnkWFUI.Controls
     /// card (for example <c>UIStyles.Panels.CreateTransparent()</c> with <c>Dock = DockStyle.Fill</c>): its scroll bars lie
     /// inside the padding of the card, in the style of the theme, and the shape of the card stays whole. The pages of a
     /// <see cref="MultiPanel"/> are such panels. A <c>BackgroundImage</c> is not drawn (the card paints its own shape), and a <c>BorderStyle</c> of the
-    /// standard panel is not meant for it: the line is <see cref="ShowBorder"/> and <see cref="BorderColor"/>.
+    /// standard panel is not meant for it (see <see cref="BorderStyle"/>): the line is <see cref="BorderStyle"/> and <see cref="BorderColor"/>.
     /// <see cref="MultiPanel"/> is a card with pages (flat, with a <see cref="CornerRadius"/> of 0 and no line, or rounded).
     /// </remarks>
     public class ThemedCardPanel : Panel
@@ -28,7 +28,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly ThemeColor _borderColor;
         private int _cornerRadius = DefaultCornerRadius96;
-        private bool _showBorder = true;
+        private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
         public ThemedCardPanel()
         {
@@ -63,13 +63,18 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Whether the thin line around the card is drawn (on by default).</summary>
-        public bool ShowBorder
+        /// <summary>
+        /// Whether the thin line around the card is drawn: <see cref="BorderStyle.FixedSingle"/> (the default; <see cref="BorderStyle.Fixed3D"/>
+        /// looks the same) or <see cref="BorderStyle.None"/>. It hides the <see cref="Panel.BorderStyle"/> of the standard panel, which would
+        /// have the system draw a rectangular frame over the rounded corners (the panel's own is always none; do not set it through
+        /// a <see cref="Panel"/> variable).
+        /// </summary>
+        public new BorderStyle BorderStyle
         {
-            get { return _showBorder; }
+            get { return _borderStyle; }
             set
             {
-                _showBorder = value;
+                _borderStyle = value;
                 Invalidate();
             }
         }
@@ -110,7 +115,7 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnPaint(e);
 
-            if (!_showBorder)
+            if (_borderStyle == BorderStyle.None)
                 return;
 
             float thickness = Math.Max(1, Dpi.Scale(this, 1));

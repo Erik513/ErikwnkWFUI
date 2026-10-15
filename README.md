@@ -107,7 +107,7 @@ background), `CreatePrimary` (a very dark shade of the accent), `CreateStandard(
 `UIStyles.TableLayoutPanels` and `UIStyles.FlowLayoutPanels` have the same surfaces for
 tables and rows of controls (a flow panel with a background is as big as its content).
 
-A panel has no frame by default; `ShowBorder` (a thin frame, `BorderColor` for another
+A panel has no frame by default; `BorderStyle = FixedSingle` (a thin frame, `BorderColor` for another
 color) is the same on the panel, the table and the flow panel. A table can also have lines
 around and between its cells (`CellBorderStyle`), of which only the ones between the cells
 or only the ones around the table can be shown (`CellBorderLines`) and which can be

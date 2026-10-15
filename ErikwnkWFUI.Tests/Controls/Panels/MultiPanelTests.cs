@@ -383,10 +383,10 @@ public class MultiPanelTests : IDisposable
         using MultiPanel card = UIStyles.MultiPanels.CreateCardStandard();
 
         Assert.Equal(0, flat.CornerRadius);
-        Assert.False(flat.ShowBorder);
+        Assert.Equal(BorderStyle.None, flat.BorderStyle);
         Assert.Equal(DockStyle.Fill, flat.Dock);
         Assert.True(card.CornerRadius > 0);
-        Assert.True(card.ShowBorder);
+        Assert.Equal(BorderStyle.FixedSingle, card.BorderStyle);
         Assert.Equal(DockStyle.None, card.Dock);
     }
 

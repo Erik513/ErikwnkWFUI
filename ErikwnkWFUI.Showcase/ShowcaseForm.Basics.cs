@@ -457,10 +457,10 @@ namespace ErikwnkWFUI.Showcase
             scrollingCard.Controls.Add(scrollInside);
             table.AddRow("CreateCardStandard (scrolling panel inside)", 120, scrollingCard);
 
-            // The options of a panel in one: a frame (ShowBorder) in the library's color (BorderColor) and AutoScroll
+            // The options of a panel in one: a frame (BorderStyle) in the library's color (BorderColor) and AutoScroll
             // (the scroll bars follow the theme, also the square where they meet).
             ThemedPanel options = (ThemedPanel)UIStyles.Panels.CreateMedium();
-            options.ShowBorder = true;
+            options.BorderStyle = BorderStyle.FixedSingle;
             options.BorderColor = UIColors.Primary;
             options.AutoScroll = true;
             options.Size = new Size(260, 90);
@@ -535,9 +535,9 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("FlowLayoutPanels.CreateStandard(colors: Green)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
             table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
 
-            // A frame around the panel (ShowBorder) in the library's color.
+            // A frame around the panel (BorderStyle) in the library's color.
             ThemedFlowLayoutPanel framedFlow = (ThemedFlowLayoutPanel)UIStyles.FlowLayoutPanels.CreateStandard();
-            framedFlow.ShowBorder = true;
+            framedFlow.BorderStyle = BorderStyle.FixedSingle;
             framedFlow.BorderColor = UIColors.Primary;
             table.AddRow("FlowLayoutPanels.CreateStandard (BorderColor)", CreateFlowDemo(framedFlow));
 

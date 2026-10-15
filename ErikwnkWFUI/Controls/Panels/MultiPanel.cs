@@ -45,7 +45,7 @@ namespace ErikwnkWFUI.Controls
     /// the title of the page they lead to as their tooltip. With the focus inside the multi panel, Ctrl+PageDown or Ctrl+Tab
     /// shows the next page and Ctrl+PageUp or Ctrl+Shift+Tab the previous one (on the first and the last page the key goes on to
     /// the parent, so that a tab control around it can use it). <see cref="ShowHeaderLine"/> adds a thin line under the header.
-    /// A card in every other way (<see cref="ThemedCardPanel"/>): <c>CornerRadius</c>, <c>ShowBorder</c>, <c>BorderColor</c> and
+    /// A card in every other way (<see cref="ThemedCardPanel"/>): <c>CornerRadius</c>, <c>BorderStyle</c>, <c>BorderColor</c> and
     /// <c>Padding</c> work as there. Right-to-left layouts are not supported.
     /// </remarks>
     public class MultiPanel : ThemedCardPanel

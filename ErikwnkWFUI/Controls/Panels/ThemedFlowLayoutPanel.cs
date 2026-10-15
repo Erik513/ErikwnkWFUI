@@ -7,7 +7,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// The flow layout panel of <c>UIStyles.FlowLayoutPanels</c>: the standard <see cref="FlowLayoutPanel"/>, drawn without
     /// flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color
-    /// (<see cref="ShowBorder"/>, <see cref="BorderColor"/>). Everything else is the standard control. Named
+    /// (<see cref="Panel.BorderStyle"/>, <see cref="BorderColor"/>). Everything else is the standard control. Named
     /// <c>ThemedFlowLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
     /// </summary>
     public class ThemedFlowLayoutPanel : FlowLayoutPanel
@@ -23,16 +23,6 @@ namespace ErikwnkWFUI.Controls
         {
             get { return _frame.Color; }
             set { _frame.Color = value; }
-        }
-
-        /// <summary>
-        /// Whether the panel has a frame in <see cref="BorderColor"/> - a shortcut for <see cref="Panel.BorderStyle"/>
-        /// <c>FixedSingle</c> (on) and <c>None</c> (off, the default). The frame takes one pixel from each side of the area inside.
-        /// </summary>
-        public bool ShowBorder
-        {
-            get { return _frame.ShowBorder; }
-            set { _frame.ShowBorder = value; }
         }
 
         protected override void WndProc(ref Message m)

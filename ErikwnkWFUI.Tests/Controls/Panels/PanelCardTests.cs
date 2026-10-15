@@ -94,10 +94,10 @@ public class PanelCardTests : IDisposable
     {
         ThemedCardPanel card = Card();
 
-        card.ShowBorder = false;
+        card.BorderStyle = BorderStyle.None;
         Assert.Equal(Color.Black.ToArgb(), Pixel(card, 50, 0).ToArgb());
 
-        card.ShowBorder = true;
+        card.BorderStyle = BorderStyle.FixedSingle;
         card.BorderColor = Color.Red;
         Assert.Equal(Color.Red.ToArgb(), Pixel(card, 50, 0).ToArgb());
 

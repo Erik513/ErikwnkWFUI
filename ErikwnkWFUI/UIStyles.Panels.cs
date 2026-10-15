@@ -9,8 +9,8 @@ namespace ErikwnkWFUI
         /// <summary>
         /// Plain <see cref="Panel"/>s pre-filled with one of the theme's background shades - handy as containers/cards. They are
         /// the standard panel in every other way (<c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> and so
-        /// on): the scroll bars take the style of the theme, a color set by hand stays when the theme changes. They have no frame; cast
-        /// the result to <c>ErikwnkWFUI.Controls.ThemedPanel</c> for <c>ShowBorder</c> (a thin frame in the color of the theme) and
+        /// on): the scroll bars take the style of the theme, a color set by hand stays when the theme changes. They have no frame; set
+        /// <c>BorderStyle = FixedSingle</c> (a thin frame in the color of the theme) and cast the result to <c>ErikwnkWFUI.Controls.ThemedPanel</c> for
         /// <c>BorderColor</c> (another color). Right-to-left layouts are not supported.
         /// </summary>
         public static class Panels
@@ -31,7 +31,7 @@ namespace ErikwnkWFUI
             /// A card: a panel in the elevated background with smoothly rounded corners and a thin line around it, for a group of
             /// controls on a page; it shows what is behind it in its corners. With a color set it is in the basic color of the set and
             /// its line has the hover color of the set. It does not dock. Cast the result to
-            /// <c>ErikwnkWFUI.Controls.ThemedCardPanel</c> for <c>CornerRadius</c>, <c>ShowBorder</c> and <c>BorderColor</c>; the card keeps
+            /// <c>ErikwnkWFUI.Controls.ThemedCardPanel</c> for <c>CornerRadius</c>, <c>BorderStyle</c> (None or FixedSingle) and <c>BorderColor</c>; the card keeps
             /// the controls inside away from the corners with a padding of its own.
             /// </summary>
             public static Panel CreateCardStandard(UIColorSet colors = null)

@@ -57,7 +57,7 @@ namespace ErikwnkWFUI.Factories
             if (!card)
             {
                 panel.CornerRadius = 0;
-                panel.ShowBorder = false;
+                panel.BorderStyle = BorderStyle.None;
             }
 
             ThemeWatcher.FollowBackColor(panel, backColor);

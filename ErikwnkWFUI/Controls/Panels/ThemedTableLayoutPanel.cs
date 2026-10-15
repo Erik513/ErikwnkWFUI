@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// The table layout panel of <c>UIStyles.TableLayoutPanels</c>: the standard <see cref="TableLayoutPanel"/>, drawn without
     /// flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color
-    /// (<see cref="ShowBorder"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
+    /// (<see cref="Panel.BorderStyle"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
     /// library (<see cref="CellBorderColor"/>, <see cref="InnerCellBorderColor"/>, <see cref="OuterCellBorderColor"/>) of which the
     /// ones to show can be chosen (<see cref="CellBorderLines"/>). Everything else is the standard control. Named
     /// <c>ThemedTableLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
@@ -32,16 +32,6 @@ namespace ErikwnkWFUI.Controls
         {
             get { return _frame.Color; }
             set { _frame.Color = value; }
-        }
-
-        /// <summary>
-        /// Whether the panel has a frame in <see cref="BorderColor"/> - a shortcut for <see cref="Panel.BorderStyle"/>
-        /// <c>FixedSingle</c> (on) and <c>None</c> (off, the default). The frame takes one pixel from each side of the area inside.
-        /// </summary>
-        public bool ShowBorder
-        {
-            get { return _frame.ShowBorder; }
-            set { _frame.ShowBorder = value; }
         }
 
         private readonly ThemeColor _cellBorderColor;
@@ -89,7 +79,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// The color of the lines around the whole table (the outer edge of the cells; not the frame of <see cref="ShowBorder"/>). Left
+        /// The color of the lines around the whole table (the outer edge of the cells; not the frame of <see cref="Panel.BorderStyle"/>). Left
         /// empty (the default) it is the <see cref="CellBorderColor"/>, also when that changes; <see cref="Color.Empty"/> gives that back.
         /// </summary>
         public Color OuterCellBorderColor

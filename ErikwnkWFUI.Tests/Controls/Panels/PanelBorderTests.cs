@@ -50,18 +50,15 @@ public class PanelBorderTests : IDisposable
         yield return new object[] { (Func<Control>)(() => new ThemedTableLayoutPanel()) };
     }
 
-    private static bool GetShowBorder(Control panel) => (bool)panel.GetType().GetProperty("ShowBorder")!.GetValue(panel)!;
-
-    private static void SetShowBorder(Control panel, bool value) => panel.GetType().GetProperty("ShowBorder")!.SetValue(panel, value);
+    private static void SetBorderStyle(Control panel, BorderStyle value) => panel.GetType().GetProperty("BorderStyle")!.SetValue(panel, value);
 
     private static BorderStyle GetBorderStyle(Control panel) => (BorderStyle)panel.GetType().GetProperty("BorderStyle")!.GetValue(panel)!;
 
     [Theory]
     [MemberData(nameof(ThreePanels))]
-    public void ShowBorder_IsOffByDefault_AndSwitchesTheFrameOfTheTheme(Func<Control> make)
+    public void BorderStyle_IsNoneByDefault_AndSwitchesTheFrameOfTheTheme(Func<Control> make)
     {
         Control panel = make();
-        Assert.False(GetShowBorder(panel));
         Assert.Equal(BorderStyle.None, GetBorderStyle(panel));
 
         panel.Size = new Size(100, 60);
@@ -71,33 +68,21 @@ public class PanelBorderTests : IDisposable
         using (Bitmap picture = Draw(panel))
             Assert.Equal(Color.Black.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
 
-        SetShowBorder(panel, true);
+        SetBorderStyle(panel, BorderStyle.FixedSingle);
         Application.DoEvents();
 
-        Assert.True(GetShowBorder(panel));
         Assert.Equal(BorderStyle.FixedSingle, GetBorderStyle(panel));
 
         using (Bitmap picture = Draw(panel))
             Assert.Equal(UIColors.BorderMedium, Opaque(picture.GetPixel(0, 30)));
 
-        SetShowBorder(panel, false);
+        SetBorderStyle(panel, BorderStyle.None);
         Application.DoEvents();
 
         Assert.Equal(BorderStyle.None, GetBorderStyle(panel));
 
         using (Bitmap picture = Draw(panel))
             Assert.Equal(Color.Black.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
-    }
-
-    [Fact]
-    public void ShowBorder_LeavesAFrameThatWasSetByHandAlone()
-    {
-        ThemedPanel panel = new ThemedPanel { BorderStyle = BorderStyle.Fixed3D };
-        Assert.True(panel.ShowBorder);
-
-        panel.ShowBorder = true;
-
-        Assert.Equal(BorderStyle.Fixed3D, panel.BorderStyle);
     }
 
     [Fact]

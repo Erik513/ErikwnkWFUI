@@ -242,7 +242,7 @@ public class PanelColorTests : IDisposable
 
         foreach (Color surface in new[] { UIStyles.Colors.Sets.Green.Basic, UIStyles.Colors.Sets.Yellow.Basic, UIColors.PrimaryDarkDark, Color.Gray })
         {
-            ThemedPanel panel = new ThemedPanel { BackColor = surface, ShowBorder = true, Size = new Size(80, 40) };
+            ThemedPanel panel = new ThemedPanel { BackColor = surface, BorderStyle = BorderStyle.FixedSingle, Size = new Size(80, 40) };
             ThemedTableLayoutPanel table = new ThemedTableLayoutPanel { BackColor = surface, CellBorderStyle = TableLayoutPanelCellBorderStyle.Single, ColumnCount = 2, RowCount = 1, Size = new Size(80, 40) };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));

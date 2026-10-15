@@ -10,8 +10,8 @@ namespace ErikwnkWFUI
         /// A <see cref="FlowLayoutPanel"/> with no padding/margin, in the elevated background of the theme or transparent. It differs
         /// from the standard one in two settings: it is as big as its content (<c>AutoSize</c>; the transparent one is never smaller than a
         /// standard panel, 200 x 100, as it has always been) and does not wrap (<c>WrapContents</c> is off); both can be set again. <c>FlowDirection</c> and <c>AutoScroll</c> (scroll bars in the style of the theme) work as in the
-        /// standard control. There is no frame; cast the result to <c>ErikwnkWFUI.Controls.ThemedFlowLayoutPanel</c> for <c>ShowBorder</c> (a
-        /// thin frame in the color of the theme) and <c>BorderColor</c> (another color). Right-to-left layouts are not supported.
+        /// standard control. There is no frame; set <c>BorderStyle = FixedSingle</c> (a
+        /// thin frame in the color of the theme) and cast the result to <c>ErikwnkWFUI.Controls.ThemedFlowLayoutPanel</c> for <c>BorderColor</c> (another color). Right-to-left layouts are not supported.
         /// </summary>
         public static class FlowLayoutPanels
         {
