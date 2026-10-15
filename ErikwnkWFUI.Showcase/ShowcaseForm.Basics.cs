@@ -432,31 +432,6 @@ namespace ErikwnkWFUI.Showcase
                 table.AddRow(name, panel);
             }
 
-            // No background of its own: the page shows through (here, with a line of text on it).
-            Panel transparent = UIStyles.Panels.CreateTransparent();
-            transparent.Size = new Size(200, 24);
-            transparent.MinimumSize = transparent.Size;
-            transparent.Controls.Add(CreatePanelCaption("What is behind it shows", transparent));
-            table.AddRow("CreateTransparent", transparent);
-
-            // A card: rounded corners that show the page behind them and a thin line.
-            table.AddRow("CreateCardStandard", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(), "A card"));
-            table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
-            table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
-
-            // A card does not scroll itself (its scroll bars would lie over the rounded corners): a panel with AutoScroll is put in it.
-            Panel scrollingCard = UIStyles.Panels.CreateCardStandard();
-            scrollingCard.Size = new Size(260, 100);
-            scrollingCard.MinimumSize = scrollingCard.Size;
-            scrollingCard.MaximumSize = scrollingCard.Size;
-            Panel scrollInside = UIStyles.Panels.CreateTransparent();
-            scrollInside.Dock = DockStyle.Fill;
-            scrollInside.AutoScroll = true;
-            scrollInside.Controls.Add(new Label { Text = "A panel with AutoScroll in the card", AutoSize = true, Location = new Point(0, 0), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
-            scrollInside.Controls.Add(new Panel { Location = new Point(0, 24), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
-            scrollingCard.Controls.Add(scrollInside);
-            table.AddRow("CreateCardStandard (scrolling panel inside)", 120, scrollingCard);
-
             // BorderStyle alone: the frame in the color of the theme (BorderColor not set).
             Panel framed = UIStyles.Panels.CreateMedium();
             framed.BorderStyle = BorderStyle.FixedSingle;
@@ -481,6 +456,33 @@ namespace ErikwnkWFUI.Showcase
             options.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
             table.AddRow("CreateMedium (BorderStyle, BorderColor, AutoScroll)", 110, options);
 
+            // No background of its own: the page shows through (here, with a line of text on it).
+            Panel transparent = UIStyles.Panels.CreateTransparent();
+            transparent.Size = new Size(200, 24);
+            transparent.MinimumSize = transparent.Size;
+            transparent.Controls.Add(CreatePanelCaption("What is behind it shows", transparent));
+            table.AddRow("CreateTransparent", transparent);
+
+            table.AddSection("Cards");
+
+            // A card: rounded corners that show the page behind them and a thin line.
+            table.AddRow("CreateCardStandard", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(), "A card"));
+            table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
+            table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
+
+            // A card does not scroll itself (its scroll bars would lie over the rounded corners): a panel with AutoScroll is put in it.
+            Panel scrollingCard = UIStyles.Panels.CreateCardStandard();
+            scrollingCard.Size = new Size(260, 100);
+            scrollingCard.MinimumSize = scrollingCard.Size;
+            scrollingCard.MaximumSize = scrollingCard.Size;
+            Panel scrollInside = UIStyles.Panels.CreateTransparent();
+            scrollInside.Dock = DockStyle.Fill;
+            scrollInside.AutoScroll = true;
+            scrollInside.Controls.Add(new Label { Text = "A panel with AutoScroll in the card", AutoSize = true, Location = new Point(0, 0), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
+            scrollInside.Controls.Add(new Panel { Location = new Point(0, 24), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
+            scrollingCard.Controls.Add(scrollInside);
+            table.AddRow("CreateCardStandard (scrolling panel inside)", 120, scrollingCard);
+
             table.AddSection("Multi panels");
 
             AddMultiPanelsSection(table);
@@ -489,52 +491,45 @@ namespace ErikwnkWFUI.Showcase
 
             TableLayoutPanel cells = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(cells);
-            table.AddRow("TableLayoutPanels.CreateStandard", 80, cells);
+            table.AddRow("CreateStandard", 72, cells);
 
             TableLayoutPanel cellsPrimary = UIStyles.TableLayoutPanels.CreatePrimary(3, 2);
             ConfigureCellsDemo(cellsPrimary);
-            table.AddRow("TableLayoutPanels.CreatePrimary", 80, cellsPrimary);
+            table.AddRow("CreatePrimary", 72, cellsPrimary);
 
             TableLayoutPanel cellsInColor = UIStyles.TableLayoutPanels.CreateStandard(3, 2, green);
             ConfigureCellsDemo(cellsInColor);
-            table.AddRow("TableLayoutPanels.CreateStandard(colors: Green)", 80, cellsInColor);
-
-            TableLayoutPanel cellsTransparent = UIStyles.TableLayoutPanels.CreateTransparent(3, 2);
-            ConfigureCellsDemo(cellsTransparent);
-            table.AddRow("TableLayoutPanels.CreateTransparent", 80, cellsTransparent);
+            table.AddRow("CreateStandard(colors: Green)", 72, cellsInColor);
 
             TableLayoutPanel cellsDark = UIStyles.TableLayoutPanels.CreateDark(3, 2);
             ConfigureCellsDemo(cellsDark);
-            table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
+            table.AddRow("CreateDark", 72, cellsDark);
+
+            TableLayoutPanel cellsTransparent = UIStyles.TableLayoutPanels.CreateTransparent(3, 2);
+            ConfigureCellsDemo(cellsTransparent);
+            table.AddRow("CreateTransparent", 72, cellsTransparent);
 
             // BorderStyle alone: the frame around the table in the color of the theme (BorderColor not set).
             TableLayoutPanel cellsFramed = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(cellsFramed);
             cellsFramed.BorderStyle = BorderStyle.FixedSingle;
-            table.AddRow("TableLayoutPanels.CreateStandard (BorderStyle = FixedSingle)", 80, cellsFramed);
+            table.AddRow("CreateStandard (BorderStyle = FixedSingle)", 72, cellsFramed);
 
-            // The lines around and between the cells (CellBorderStyle) in one color of the library; without them - as in the rows
-            // above - the table has no lines at all.
-            ThemedTableLayoutPanel lined = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
-            ConfigureCellsDemo(lined);
-            lined.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
-            lined.CellBorderColor = UIColors.PrimaryLight;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderStyle, CellBorderColor)", 80, lined);
-
-            // Which lines are shown (CellBorderLines): only the ones between the cells, or only the ones around the table.
+            // The lines between the cells (CellBorderStyle) are off by default. CellBorderLines selects which are shown: only the
+            // ones between the cells, or only the ones around the table.
             ThemedTableLayoutPanel inner = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(inner);
             inner.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             inner.CellBorderLines = CellBorderLines.InnerOnly;
             inner.InnerCellBorderColor = UIColors.PrimaryLight;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: InnerOnly, InnerCellBorderColor)", 80, inner);
+            table.AddRow("CreateStandard (CellBorderLines: InnerOnly, InnerCellBorderColor)", 72, inner);
 
             ThemedTableLayoutPanel outer = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(outer);
             outer.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             outer.CellBorderLines = CellBorderLines.OuterOnly;
             outer.OuterCellBorderColor = UIColors.PrimaryLight;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 80, outer);
+            table.AddRow("CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 72, outer);
 
             // Both kinds of lines in their own color: the ones around the table in red, the ones between the cells in green.
             ThemedTableLayoutPanel twoColors = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
@@ -542,25 +537,25 @@ namespace ErikwnkWFUI.Showcase
             twoColors.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             twoColors.OuterCellBorderColor = UIStyles.Colors.Sets.Red.Basic;
             twoColors.InnerCellBorderColor = UIStyles.Colors.Sets.Green.Basic;
-            table.AddRow("TableLayoutPanels.CreateStandard (OuterCellBorderColor, InnerCellBorderColor)", 80, twoColors);
+            table.AddRow("CreateStandard (OuterCellBorderColor, InnerCellBorderColor)", 72, twoColors);
 
             table.AddSection("Flow layout panels");
 
-            table.AddRow("FlowLayoutPanels.CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
-            table.AddRow("FlowLayoutPanels.CreatePrimary", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreatePrimary()));
-            table.AddRow("FlowLayoutPanels.CreateStandard(colors: Green)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
-            table.AddRow("FlowLayoutPanels.CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
+            table.AddRow("CreateStandard", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard()));
+            table.AddRow("CreatePrimary", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreatePrimary()));
+            table.AddRow("CreateStandard(colors: Green)", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateStandard(green)));
+            table.AddRow("CreateTransparent", CreateFlowDemo(UIStyles.FlowLayoutPanels.CreateTransparent()));
 
             // BorderStyle alone: the frame in the color of the theme (BorderColor not set).
             FlowLayoutPanel framedDefault = UIStyles.FlowLayoutPanels.CreateStandard();
             framedDefault.BorderStyle = BorderStyle.FixedSingle;
-            table.AddRow("FlowLayoutPanels.CreateStandard (BorderStyle = FixedSingle)", CreateFlowDemo(framedDefault));
+            table.AddRow("CreateStandard (BorderStyle = FixedSingle)", CreateFlowDemo(framedDefault));
 
             // A frame around the panel (BorderStyle) in the library's color.
             ThemedFlowLayoutPanel framedFlow = (ThemedFlowLayoutPanel)UIStyles.FlowLayoutPanels.CreateStandard();
             framedFlow.BorderStyle = BorderStyle.FixedSingle;
             framedFlow.BorderColor = UIColors.Primary;
-            table.AddRow("FlowLayoutPanels.CreateStandard (BorderStyle, BorderColor)", CreateFlowDemo(framedFlow));
+            table.AddRow("CreateStandard (BorderStyle, BorderColor)", CreateFlowDemo(framedFlow));
 
             table.AddSection("Version panels");
 
@@ -650,7 +645,7 @@ namespace ErikwnkWFUI.Showcase
         // Six cells (no lines by default; CellBorderStyle.Single draws them in the color of the theme or one that is set).
         private static void ConfigureCellsDemo(TableLayoutPanel cells)
         {
-            cells.Size = new Size(260, 66);
+            cells.Size = new Size(260, 60);
             cells.MinimumSize = cells.Size;
 
             for (int i = 0; i < 3; i++)
