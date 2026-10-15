@@ -78,6 +78,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
     {
         foreach (var entry in new (string, Func<Control>, bool)[]
         {
+            ("Panels.Standard", () => UIStyles.Panels.CreateStandard(), true),
             ("Panels.Dark", () => UIStyles.Panels.CreateDark(), true),
             ("Panels.Medium", () => UIStyles.Panels.CreateMedium(), true),
             ("Panels.Elevated", () => UIStyles.Panels.CreateElevated(), true),

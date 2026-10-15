@@ -8,6 +8,12 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIPanelFactory
     {
+        // The normal surface: the medium one.
+        public static Panel CreateStandard()
+        {
+            return CreateMedium();
+        }
+
         public static Panel CreateDark()
         {
             return CreatePanel(

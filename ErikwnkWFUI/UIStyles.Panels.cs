@@ -15,6 +15,16 @@ namespace ErikwnkWFUI
         /// <summary>Plain <see cref="Panel"/>s pre-filled with one of the theme's background shades - handy as containers/cards.</summary>
         public static class Panels
         {
+            /// <summary>
+            /// The usual panel: the medium background of the theme, the same as <see cref="CreateMedium"/>. There is no color set for a
+            /// panel (it has no states that a set could color); set <see cref="Control.BackColor"/> for another color, it stays when
+            /// the theme changes.
+            /// </summary>
+            public static Panel CreateStandard()
+            {
+                return UIPanelFactory.CreateStandard();
+            }
+
             /// <summary>A panel in the darkest background of the theme (<c>UIColors.BackgroundDark</c>, the page behind the other surfaces). Fills its parent; follows a change of the theme.</summary>
             public static Panel CreateDark()
             {
