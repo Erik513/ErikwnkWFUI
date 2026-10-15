@@ -76,16 +76,12 @@ namespace ErikwnkWFUI.Showcase
                  AddPanelsSection),
 
                 ("ProgressBars",
-                 "Progress bars: Standard (gray, or any color of a color set), Primary (accent color), Green and Status (the color shifts from red over yellow to green with the value). The Borderless ones have no border (set their BackColor to the one of the panel to let them blend in). All enabled bars run on one shared animation, the disabled ones stay at a fixed value.",
+                 "Progress bars: Standard (gray, or any color of a color set), Primary (accent color), Green and Status (the color shifts from red over yellow to green with the value). The Borderless ones have no border (set their BackColor to the one of the panel to let them blend in). All enabled bars run on one shared animation, the disabled ones stay at a fixed value. The slim progress bar is a thin strip for tight places (a status line under a text): the same Standard (gray, or any color of a color set), Primary, Green and Status, without the Borderless ones. Left animated, right disabled.",
                  AddProgressBarsSection),
 
                 ("SliderBar",
                  "A slider for a value between 0 and 1. Standard is neutral, Primary follows the accent color. Left enabled, right disabled.",
                  AddSliderBarSection),
-
-                ("SlimProgressBars",
-                 "A thin progress bar for tight places: Standard (gray, or any color of a color set), Primary, Green and Status (the color follows the value). Left animated, right disabled.",
-                 AddSlimProgressBarsSection),
 
                 ("Spinner",
                  "Loading circles. Standard, Green and Primary spin endlessly, in the default size and in a larger, heavier one. The Progress variants show a percentage instead; Progress Status shifts from red to green.",

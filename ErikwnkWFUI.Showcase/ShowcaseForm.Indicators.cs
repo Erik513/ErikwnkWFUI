@@ -17,6 +17,8 @@ namespace ErikwnkWFUI.Showcase
     {
         private void AddProgressBarsSection(PropertyTable table)
         {
+            table.AddSection("Progress bars");
+
             // Every enabled bar below is driven by the shared animation
             // timer (see _progressBarAnimationSetters) instead of a fixed
             // demo value, so this section doubles as a preview of what an
@@ -94,6 +96,9 @@ namespace ErikwnkWFUI.Showcase
             statusBorderlessDisabled.BackColor = UIColors.BackgroundLight;
             statusBorderlessDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStatusBorderless", statusBorderlessBar, statusBorderlessDisabled);
+
+            table.AddSection("Slim progress bars");
+            AddSlimProgressBarsSection(table);
         }
 
         private void AddSlimProgressBarsSection(PropertyTable table)
