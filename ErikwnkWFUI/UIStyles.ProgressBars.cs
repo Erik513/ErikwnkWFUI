@@ -8,7 +8,7 @@ namespace ErikwnkWFUI
     {
         /// <summary>
         /// A themed <see cref="ProgressBar"/> (continuous style, not the native blocky one). Cast the result to
-        /// <c>ErikwnkWFUI.Controls.ThemedProgressBar</c> for <c>ShowBorder</c> (the thin border around the bar, on by default) and for a
+        /// <c>ErikwnkWFUI.Controls.ThemedProgressBar</c> for <c>BorderStyle</c> (the thin border around the bar, on by default) and for a
         /// <c>BackColor</c> of <see cref="System.Drawing.Color.Transparent"/>: the track then takes the color of the panel the bar lies on
         /// (also when it changes, and in both themes), so the bar looks transparent. The two are independent.
         /// </summary>

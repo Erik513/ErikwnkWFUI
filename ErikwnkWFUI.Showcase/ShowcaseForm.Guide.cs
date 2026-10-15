@@ -47,7 +47,7 @@ namespace ErikwnkWFUI.Showcase
                 "Use Primary for the main thing on a screen and Standard for the rest."));
             blocks.Add(Paragraph(
                 "Some controls have more variants where they make sense: buttons also come in Green (confirm) and Red (delete), progress bars in " +
-                "Green and Status (the color follows the value) and with or without a border (ShowBorder), panels in several background shades, as cards with rounded " +
+                "Green and Status (the color follows the value) and with or without a border (BorderStyle), panels in several background shades, as cards with rounded " +
                 "corners, with pages like a book (MultiPanel) and as a strip with the version of the program (VersionPanel)."));
 
             blocks.Add(Heading("Read-only and editable"));

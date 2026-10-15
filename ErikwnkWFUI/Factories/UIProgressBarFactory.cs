@@ -11,7 +11,7 @@ namespace ErikwnkWFUI.Factories
     {
         // Named by color, matching UIButtonFactory's CreateStandard/
         // CreatePrimary/CreateGreen/CreateRed convention. The border is a
-        // property of the bar (ThemedProgressBar.ShowBorder), not a variant.
+        // property of the bar (ThemedProgressBar.BorderStyle), not a variant.
         // CreateStandard is a neutral gray (adjust via ForeColor), the same
         // meaning "Standard" has for buttons and sliders; with a color set the
         // bar is filled in the main color of the set (see FillOf). CreateGreen/
@@ -91,9 +91,9 @@ namespace ErikwnkWFUI.Factories
                 // of the library's dark grays; BackgroundMedium is still
                 // reliably a shade below the common panel roles
                 // (Light/Lighter/Elevated) without going that dark, and the
-                // border (while ShowBorder is on) covers the remaining
+                // border (while BorderStyle is not None) covers the remaining
                 // edge case where a panel is BackgroundMedium too. Callers
-                // wanting the borderless/blend-in look turn ShowBorder off and
+                // wanting the borderless/blend-in look set BorderStyle to None and
                 // set BackColor to Color.Transparent: the track then takes the
                 // color of the panel (ThemedProgressBar does that; a native
                 // ProgressBar cannot be transparent).

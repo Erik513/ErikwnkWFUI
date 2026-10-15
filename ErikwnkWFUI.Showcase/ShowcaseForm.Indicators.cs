@@ -37,16 +37,16 @@ namespace ErikwnkWFUI.Showcase
             AddBarRow(table, "CreateGreen", UIStyles.ProgressBars.CreateGreen());
             AddBarRow(table, "CreateStatus", UIStyles.ProgressBars.CreateStatus());
 
-            // Two properties, independent of each other: the border (ShowBorder) and the track (BackColor; Transparent takes the color of the
+            // Two properties, independent of each other: the border (BorderStyle) and the track (BackColor; Transparent takes the color of the
             // panel the bar lies on, in both themes). First the border alone, then both.
             ThemedProgressBar withoutBorder = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
-            withoutBorder.ShowBorder = false;
-            AddBarRow(table, "CreateStandard (ShowBorder = false)", withoutBorder);
+            withoutBorder.BorderStyle = BorderStyle.None;
+            AddBarRow(table, "CreateStandard (BorderStyle = None)", withoutBorder);
 
             ThemedProgressBar withoutBorderTransparent = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
-            withoutBorderTransparent.ShowBorder = false;
+            withoutBorderTransparent.BorderStyle = BorderStyle.None;
             withoutBorderTransparent.BackColor = Color.Transparent;
-            AddBarRow(table, "CreateStandard (ShowBorder = false, BackColor = Transparent)", withoutBorderTransparent);
+            AddBarRow(table, "CreateStandard (BorderStyle = None, BackColor = Transparent)", withoutBorderTransparent);
 
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);

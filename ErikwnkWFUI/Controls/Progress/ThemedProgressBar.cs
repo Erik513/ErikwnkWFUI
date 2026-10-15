@@ -22,12 +22,12 @@ namespace ErikwnkWFUI.Controls
         // ProgressBar is natively drawn (WM_PAINT bypasses .NET's owner-draw
         // pipeline, so Paint never fires for it - confirmed by testing),
         // hence painting straight onto the HWND after the base paint instead
-        // of overriding OnPaint. ShowBorder off skips the border for callers
+        // of overriding OnPaint. BorderStyle None skips the border for callers
         // who want the bar to blend into its container.
 
         private readonly bool _useStatusGradient;
         private readonly ThemeColor _trackColor;
-        private bool _showBorder = true;
+        private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
         internal ThemedProgressBar(bool useStatusGradient = false)
         {
@@ -54,7 +54,7 @@ namespace ErikwnkWFUI.Controls
         /// The color of the track. By default the recessed surface of the theme (it follows a change of the theme). Set a color for another
         /// one. <see cref="Color.Transparent"/> - which a <see cref="ProgressBar"/> cannot have itself - makes the bar look transparent: the
         /// track takes the color of the panel it lies on, also when that changes (and in both themes). <see cref="Color.Empty"/> gives the
-        /// default back. Independent of <see cref="ShowBorder"/>.
+        /// default back. Independent of <see cref="BorderStyle"/>.
         /// </summary>
         public override Color BackColor
         {
@@ -108,18 +108,19 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether a thin border is drawn around the bar (on by default). Without it the bar has no frame of its own: its edge is the track.
+        /// The thin border around the bar: <see cref="BorderStyle.FixedSingle"/> (the default; <see cref="BorderStyle.Fixed3D"/> looks the
+        /// same) or <see cref="BorderStyle.None"/>, where the bar has no frame of its own and its edge is the track.
         /// Only the border: the color of the track is <see cref="BackColor"/>, which can be transparent.
         /// </summary>
-        public bool ShowBorder
+        public BorderStyle BorderStyle
         {
-            get { return _showBorder; }
+            get { return _borderStyle; }
             set
             {
-                if (value == _showBorder)
+                if (value == _borderStyle)
                     return;
 
-                _showBorder = value;
+                _borderStyle = value;
                 Invalidate();
             }
         }
@@ -127,7 +128,7 @@ namespace ErikwnkWFUI.Controls
         // The color of the 1 px edge around the bar: the border, or - without one - the track itself (what is seen, when it is transparent).
         internal Color EdgeColor
         {
-            get { return _showBorder ? UIColors.BorderMedium : BackColor; }
+            get { return _borderStyle != BorderStyle.None ? UIColors.BorderMedium : BackColor; }
         }
 
         protected override void WndProc(ref Message m)

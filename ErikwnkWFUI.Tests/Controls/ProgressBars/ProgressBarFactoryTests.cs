@@ -110,13 +110,17 @@ public class ProgressBarFactoryTests : IDisposable
         ThemedProgressBar bar = (ThemedProgressBar)make();
         bar.BackColor = Color.Purple;
 
-        Assert.True(bar.ShowBorder);
+        Assert.Equal(BorderStyle.FixedSingle, bar.BorderStyle);
         Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
 
-        bar.ShowBorder = false;
+        bar.BorderStyle = BorderStyle.None;
 
-        Assert.False(bar.ShowBorder);
+        Assert.Equal(BorderStyle.None, bar.BorderStyle);
         Assert.Equal(Color.Purple, bar.EdgeColor);
+
+        bar.BorderStyle = BorderStyle.Fixed3D;
+
+        Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
 
         bar.Dispose();
     }
@@ -132,10 +136,10 @@ public class ProgressBarFactoryTests : IDisposable
         int invalidated = 0;
         bar.Invalidated += (sender, e) => invalidated++;
 
-        bar.ShowBorder = true;
+        bar.BorderStyle = BorderStyle.FixedSingle;
         Assert.Equal(0, invalidated);
 
-        bar.ShowBorder = false;
+        bar.BorderStyle = BorderStyle.None;
         Assert.True(invalidated > 0);
     }
 
@@ -148,11 +152,11 @@ public class ProgressBarFactoryTests : IDisposable
 
         Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
 
-        bar.ShowBorder = false;
+        bar.BorderStyle = BorderStyle.None;
         Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
         Assert.Equal(UIColors.BackgroundMedium, bar.EdgeColor);
 
-        bar.ShowBorder = true;
+        bar.BorderStyle = BorderStyle.FixedSingle;
         Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
     }
 
@@ -167,7 +171,7 @@ public class ProgressBarFactoryTests : IDisposable
         Assert.Equal(Color.Purple, bar.BackColor);
         Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
 
-        bar.ShowBorder = false;
+        bar.BorderStyle = BorderStyle.None;
         Assert.Equal(Color.Purple, bar.BackColor);
         Assert.Equal(Color.Purple, bar.EdgeColor);
 
@@ -216,10 +220,10 @@ public class ProgressBarFactoryTests : IDisposable
         panel.Controls.Add(bar);
 
         bar.BackColor = Color.Teal;
-        bar.ShowBorder = false;
+        bar.BorderStyle = BorderStyle.None;
         Assert.Equal(Color.Teal, bar.BackColor);
 
-        bar.ShowBorder = true;
+        bar.BorderStyle = BorderStyle.FixedSingle;
         Assert.Equal(Color.Teal, bar.BackColor);
     }
 
