@@ -72,6 +72,28 @@ public class ThemeFollowSimpleControlsTests : IDisposable
         return look + " " + Convert.ToBase64String(sha.ComputeHash(bytes));
     }
 
+    // The ones with no background of their own and the ones in a color set (a set is the same in every theme): they look the
+    // same whatever the theme, and are not told to paint again.
+    private static readonly HashSet<string> LooksTheSameInEveryTheme = new HashSet<string>
+    {
+        "Panels.Transparent",
+        "Panels.Standard(colors)",
+        "FlowLayoutPanels.Transparent",
+        "FlowLayoutPanels.Standard(colors)",
+        "SettingsPanels.Standard(colors)"
+    };
+
+    // A multi panel with its first page shown (and a title, so that the header has a text).
+    private static Control WithPages(ErikwnkWFUI.Controls.MultiPanel panel)
+    {
+        panel.AddPage("First");
+        panel.AddPage("Second");
+        panel.ShowPageCount = true;
+        panel.ShowHeaderLine = true;
+
+        return panel;
+    }
+
     // name, how it is made, whether its picture can be compared (the system's own progress bar and the turning
     // spinner cannot).
     public static IEnumerable<object[]> Controls()
@@ -85,6 +107,26 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("Panels.Primary", () => UIStyles.Panels.CreatePrimary(), true),
             ("TableLayoutPanels.Standard", () => UIStyles.TableLayoutPanels.CreateStandard(1, 1), true),
             ("TableLayoutPanels.Dark", () => UIStyles.TableLayoutPanels.CreateDark(1, 1), true),
+            ("Panels.Transparent", () => UIStyles.Panels.CreateTransparent(), true),
+            ("Panels.Standard(colors)", () => UIStyles.Panels.CreateStandard(UIStyles.Colors.Sets.Green), true),
+            ("Panels.CardStandard", () => UIStyles.Panels.CreateCardStandard(), true),
+            ("Panels.CardPrimary", () => UIStyles.Panels.CreateCardPrimary(), true),
+            ("Panels.CardStandard(colors)", () => UIStyles.Panels.CreateCardStandard(UIStyles.Colors.Sets.Green), true),
+            ("TableLayoutPanels.Primary", () => UIStyles.TableLayoutPanels.CreatePrimary(1, 1), true),
+            ("TableLayoutPanels.Transparent", () => UIStyles.TableLayoutPanels.CreateTransparent(1, 1), true),
+            ("TableLayoutPanels.Standard(colors)", () => UIStyles.TableLayoutPanels.CreateStandard(1, 1, UIStyles.Colors.Sets.Green), true),
+            ("FlowLayoutPanels.Standard", () => UIStyles.FlowLayoutPanels.CreateStandard(), true),
+            ("FlowLayoutPanels.Primary", () => UIStyles.FlowLayoutPanels.CreatePrimary(), true),
+            ("FlowLayoutPanels.Transparent", () => UIStyles.FlowLayoutPanels.CreateTransparent(), true),
+            ("FlowLayoutPanels.Standard(colors)", () => UIStyles.FlowLayoutPanels.CreateStandard(UIStyles.Colors.Sets.Green), true),
+            ("MultiPanels.Standard", () => WithPages(UIStyles.MultiPanels.CreateStandard()), true),
+            ("MultiPanels.Primary", () => WithPages(UIStyles.MultiPanels.CreatePrimary()), true),
+            ("MultiPanels.Standard(colors)", () => WithPages(UIStyles.MultiPanels.CreateStandard(UIStyles.Colors.Sets.Green)), true),
+            ("MultiPanels.CardStandard", () => WithPages(UIStyles.MultiPanels.CreateCardStandard()), true),
+            ("MultiPanels.CardPrimary", () => WithPages(UIStyles.MultiPanels.CreateCardPrimary()), true),
+            ("SettingsPanels.Standard", () => UIStyles.SettingsPanels.CreateStandard(), true),
+            ("SettingsPanels.Primary", () => UIStyles.SettingsPanels.CreatePrimary(), true),
+            ("SettingsPanels.Standard(colors)", () => UIStyles.SettingsPanels.CreateStandard(UIStyles.Colors.Sets.Green), true),
             ("Labels.Standard", () => UIStyles.Labels.CreateStandard("Text"), true),
             ("Labels.Primary", () => UIStyles.Labels.CreatePrimary("Text"), true),
             ("Labels.Title", () => UIStyles.Labels.CreateTitle("Text"), true),
@@ -148,6 +190,9 @@ public class ThemeFollowSimpleControlsTests : IDisposable
     {
         if (!picture)
             return; // the system's progress bar paints natively, and the spinner turns anyway
+
+        if (LooksTheSameInEveryTheme.Contains(name))
+            return; // nothing that is painted depends on the theme, so there is nothing to paint again
 
         Control shown = Show(make());
         int paints = 0;
