@@ -77,8 +77,8 @@ namespace ErikwnkWFUI.Controls
             _previousButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronLeft, "", new Size(ButtonSize96, ButtonSize96), arrowColors);
             _nextButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.ChevronRight, "", new Size(ButtonSize96, ButtonSize96), arrowColors);
             // The tooltip of an arrow is the title of the page it leads to (see UpdateToolTips), so the name for a screen reader is its own.
-            _previousButton.AccessibleName = UIStrings.Get("MultiPanel.PreviousPage");
-            _nextButton.AccessibleName = UIStrings.Get("MultiPanel.NextPage");
+            UpdateAccessibleNames();
+            UIStrings.LanguageChanged += OnLanguageChanged;
 
             // The arrows do not take the focus: it stays in the page, and the keyboard turns the pages with Ctrl+PageUp/PageDown.
             ((SymbolButton)_previousButton).TakeNoFocus();
@@ -210,6 +210,26 @@ namespace ErikwnkWFUI.Controls
             Forget(page);
 
             return true;
+        }
+
+        // The names the arrows have for a screen reader follow a switch of the language (the tooltips are the titles of the pages).
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            UpdateAccessibleNames();
+        }
+
+        private void UpdateAccessibleNames()
+        {
+            _previousButton.AccessibleName = UIStrings.Get("MultiPanel.PreviousPage");
+            _nextButton.AccessibleName = UIStrings.Get("MultiPanel.NextPage");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                UIStrings.LanguageChanged -= OnLanguageChanged;
+
+            base.Dispose(disposing);
         }
 
         private void OnPageTextChanged(object sender, EventArgs e)
