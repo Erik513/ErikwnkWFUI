@@ -360,13 +360,21 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddLabelsSection(PropertyTable table)
         {
+            table.AddSection("Normal");
+
             AddLabelRow(table, "CreateStandard", "Standard body text", text => UIStyles.Labels.CreateStandard(text));
             AddLabelRow(table, "CreatePrimary", "Body text in the accent color", text => UIStyles.Labels.CreatePrimary(text));
             AddLabelRow(table, "CreateStandard(colors: Green)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
+            table.AddSection("Title");
+
             AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
             AddLabelRow(table, "CreateTitle(colors: Green)", "Title label in a color set", text => UIStyles.Labels.CreateTitle(text, UIStyles.Colors.Sets.Green));
+            table.AddSection("Muted");
+
             AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));
             AddLabelRow(table, "CreateMuted(colors: Green)", "Muted text in a color set (dimmed)", text => UIStyles.Labels.CreateMuted(text, UIStyles.Colors.Sets.Green));
+
+            table.AddSection("Animated");
 
             // A text that is too long for its label moves instead of ending in an ellipsis: back and forth with a
             // rest at both ends, or endlessly in one direction, coming again behind a gap and a separator.
