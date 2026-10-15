@@ -1,7 +1,4 @@
-﻿using System.Drawing;
-using System.Reflection;
-using System.Windows.Forms;
-using ErikwnkWFUI.Controls;
+﻿using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 

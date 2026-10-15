@@ -1,12 +1,5 @@
-﻿using System;
-using System.Drawing;
-using System.Reflection;
-using System.Windows.Forms;
-using ErikwnkCore;
-using ErikwnkWFUI.Controls;
+﻿using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
-using ErikwnkWFUI.Styles;
-using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI
 {

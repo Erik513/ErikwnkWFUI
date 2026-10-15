@@ -45,7 +45,7 @@ namespace ErikwnkWFUI.Forms
         /// available" button instead of an unprompted popup, use the silent
         /// <see cref="CheckForUpdateAsync(Version, TimeSpan)"/> overload together
         /// with <see cref="ShowUpdatePromptAsync"/> and
-        /// <see cref="CreateUpdateAvailableButton"/> instead.
+        /// <see cref="CreateUpdateAvailableButton(UpdateCheckResult, Version, Form)"/> instead.
         /// </summary>
         public async Task CheckForUpdateAsync(Version currentVersion, TimeSpan checkTimeout, Form owner)
         {

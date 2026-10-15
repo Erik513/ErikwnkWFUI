@@ -1,6 +1,4 @@
-﻿using System;
-using System.Drawing;
-using System.Reflection;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Factories;
@@ -41,7 +39,7 @@ namespace ErikwnkWFUI.Forms
         /// <see cref="StyledFormOptions.VersionText"/>). Flows right-to-left,
         /// so <c>VersionStrip.Controls.Add(someControl)</c> places it
         /// directly to the left of the version text - e.g. an
-        /// <see cref="AppUpdater.CreateUpdateAvailableButton"/> button.
+        /// <see cref="AppUpdater.CreateUpdateAvailableButton(ErikwnkCore.Updater.UpdateCheckResult, System.Version, Form)"/> button.
         /// </summary>
         public FlowLayoutPanel VersionStrip
         {

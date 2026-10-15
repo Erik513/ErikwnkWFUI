@@ -44,20 +44,25 @@ one-line summary of what it's for.
   directly. Everything below is effectively an implementation detail behind
   it.
 - **`Controls/`** - the actual custom controls (`ListBox`,
-  `ListView`, `ToggleSwitch`, `TitleBarControl`, ...), for when you
+  `ListView`, `ToggleSwitch`, `MultiPanel`, `TitleBarControl`, ...), for when you
   need to reach past what a factory method gives you (e.g. subscribing to
-  an event, or a property `UIStyles` doesn't proxy).
+  an event, or a property `UIStyles` doesn't proxy). In sub folders by kind:
+  `Inputs`, `Labels`, `Lists`, `Panels`, `Progress`, `PropertyTable`, `Tables`,
+  `Tabs`, `Support`.
 - **`Forms/`** - `StyledForm` (the base every ErikwnkWFUI window builds on),
   plus ready-made dialogs and popups (`MessageBoxForm`, `ToastForm`,
   `InfoPopupForm`, `UpdateAvailableForm`, `StyledOptionsForm`).
 - **`Factories/`** - internal. `UIStyles` is the only supported public
   entry point to these; if you're referencing anything under
   `ErikwnkWFUI.Factories` directly, use the equivalent `UIStyles.*` instead.
-- **`Styles/`** - the color/font/string tables `UIStyles` reads from
-  (`UIColors`, `UIFonts`, `UIThemes`, `UIAccentColors`, `UIStrings`).
+- **`Styles/`** - the color and font tables `UIStyles` reads from
+  (`UIColors`, `UIFonts`, `UIThemes`, `UIAccentColors`).
+- **`Localization/`** - the texts the library shows itself in German and
+  English (`UIStrings`) and `AppCurrency`.
 - **`Helpers/`** - low-level plumbing (borderless resize hit-testing,
-  window dragging, sleep prevention) used internally by the controls above;
-  not something you'd normally use directly.
+  window dragging, rounded shapes, scroll bars in the style of the theme, DPI
+  scaling) used internally by the controls above; not something you'd normally
+  use directly.
 
 ## Color sets
 
@@ -92,6 +97,48 @@ var banner = UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[]
 The text moves smoothly on the beat of the display, back and forth stands still when the text fits (endless keeps going, a short text
 keeps the room of the label), and not at
 all where Windows has the animations switched off.
+
+## Panels
+
+`UIStyles.Panels` are the surfaces a layout is built from: `CreateStandard` (the usual
+background), `CreatePrimary` (a very dark shade of the accent), `CreateStandard(colors)`,
+`CreateDark`, `CreateMedium`, `CreateElevated`, `CreateTransparent`, and cards
+(`CreateCardStandard`, `CreateCardPrimary`) with rounded corners and a thin line.
+`UIStyles.TableLayoutPanels` and `UIStyles.FlowLayoutPanels` have the same surfaces for
+tables and rows of controls (a flow panel with a background is as big as its content).
+
+A panel has no frame by default; `ShowBorder` (a thin frame, `BorderColor` for another
+color) is the same on the panel, the table and the flow panel. A table can also have lines
+around and between its cells (`CellBorderStyle`), of which only the ones between the cells
+or only the ones around the table can be shown (`CellBorderLines`) and which can be
+colored (`CellBorderColor`, `InnerCellBorderColor`, `OuterCellBorderColor`). The panels
+are the standard controls in every other way; the scroll bars take the style of the
+theme. A card does not scroll itself - put a panel with `AutoScroll` in it.
+
+```csharp
+var surface = UIStyles.Panels.CreateElevated();
+var card = UIStyles.Panels.CreateCardStandard();
+var table = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+table.CellBorderLines = CellBorderLines.InnerOnly;
+```
+
+`UIStyles.MultiPanels` has several pages of which one is shown at a time, like a book
+(flat or as a card): a header with the page count (`ShowPageCount`), the title of the
+page and two arrows, and `AddPage(title)` gives each page for its controls.
+`UIStyles.VersionPanels` is a narrow strip with the version of the program and, while an
+update is known, a small update button (`ShowUpdate` or `CheckForUpdateAsync`).
+
+```csharp
+var book = UIStyles.MultiPanels.CreateCardStandard();
+book.ShowPageCount = true;
+var first = book.AddPage("Profile");
+first.Controls.Add(UIStyles.Labels.CreateStandard("Name"));
+book.AddPage("Settings");
+
+var version = UIStyles.VersionPanels.CreateStandard();
+await version.CheckForUpdateAsync(appUpdater, TimeSpan.FromSeconds(5));
+```
 
 ## Popups
 
@@ -204,10 +251,10 @@ project.) Pass the result to `StyledFormOptions.Icon` or
 
 ## Known limitations
 
-- `UIStyles.NumericUpDowns.CreateStandard` only themes part of the control -
-  the spinner buttons are native Windows chrome and stay system-colored
-  regardless of the active theme/accent. A `ComboBox` is themed except for the
-  text field of its editable style (selection color) and the `Simple` style,
-  which keeps the system's drawing.
-- Theme, accent, and language changes only affect controls built *after*
-  the change - nothing here live-updates already-open windows.
+- A `ComboBox` is themed except for the text field of its editable style
+  (selection color) and the `Simple` style, which keeps the system's drawing.
+- Theme, accent and language changes reach the windows that are open: the
+  controls read their colors and texts again (see `ThemeChanged` above). What the
+  application draws or colors itself has to follow by hand, and a color that was
+  set on a control by hand stays as it was set.
+- Right-to-left layouts are not supported.
