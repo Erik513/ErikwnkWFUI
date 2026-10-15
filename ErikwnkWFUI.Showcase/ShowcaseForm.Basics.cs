@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
+using ErikwnkCore.Updater;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
@@ -528,6 +529,34 @@ namespace ErikwnkWFUI.Showcase
             framedFlow.ShowBorder = true;
             framedFlow.BorderColor = UIColors.Primary;
             table.AddRow("FlowLayoutPanels.CreateStandard (BorderColor)", CreateFlowDemo(framedFlow));
+
+            table.AddSection("Settings panels");
+
+            table.AddRow("CreateStandard", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard()));
+            table.AddRow("CreatePrimary", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreatePrimary()));
+            table.AddRow("CreateStandard(colors: Green)", CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard(green)));
+
+            // An update is known: the green button appears next to the version (a click shows the prompt of the AppUpdater).
+            SettingsPanel updateAvailable = CreateSettingsPanelDemo(UIStyles.SettingsPanels.CreateStandard());
+            updateAvailable.ShowUpdate(
+                new AppUpdater("owner", "repo", SettingsPanelDemoClient, SettingsPanelDemoClient),
+                new UpdateCheckResult(new Version(9, 9, 9), "", null),
+                new Version(1, 0, 0));
+            table.AddRow("CreateStandard (ShowUpdate)", updateAvailable);
+        }
+
+        // Not asked at all: the demo update is made up (no download address, no release page).
+        private static readonly System.Net.Http.HttpClient SettingsPanelDemoClient = new System.Net.Http.HttpClient();
+
+        // The strip does not dock here, so it gets a width of its own.
+        private static SettingsPanel CreateSettingsPanelDemo(SettingsPanel panel)
+        {
+            panel.Dock = DockStyle.None;
+            panel.Width = 380;
+            panel.MinimumSize = panel.Size;
+            panel.MaximumSize = panel.Size;
+
+            return panel;
         }
 
         // Two buttons in a flow panel, to see the background around them.

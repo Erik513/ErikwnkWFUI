@@ -369,7 +369,7 @@ namespace ErikwnkWFUI.Controls
 
             Rectangle header = HeaderBounds;
             int gap = Dpi.Scale(this, Gap96);
-            Color surface = GetSurfaceColor();
+            Color surface = SurfaceColor.Of(this);
             Color text = UIColors.GetBestTextColor(surface);
 
             if (!Enabled)
@@ -413,18 +413,6 @@ namespace ErikwnkWFUI.Controls
 
             using (Font bold = new Font(Font, FontStyle.Bold))
                 TextRenderer.DrawText(e.Graphics, page.Title, bold, titleArea, text, common | align | TextFormatFlags.EndEllipsis);
-        }
-
-        // What the header text stands on: the own background, or - when that is transparent - the first one behind it.
-        private Color GetSurfaceColor()
-        {
-            for (Control control = this; control != null; control = control.Parent)
-            {
-                if (control.BackColor.A == 255)
-                    return control.BackColor;
-            }
-
-            return UIColors.BackgroundMedium;
         }
 
         private void Select(int index, bool raise)

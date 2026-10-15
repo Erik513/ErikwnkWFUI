@@ -207,16 +207,9 @@ namespace ErikwnkWFUI.Forms
                 _resizeHandler.TryHandleMessage(ref m);
         }
 
-        // Entry assembly, not the executing one - the executing assembly
-        // here would be ErikwnkWFUI.dll itself, never the consuming app.
-        // Falls back to the executing assembly only for the unusual hosts
-        // (e.g. some test runners) where GetEntryAssembly() returns null.
         private static string GetEntryAssemblyVersionText()
         {
-            Assembly assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-            Version version = assembly.GetName().Version;
-
-            return version != null ? "v" + version.ToString(3) : null;
+            return EntryAssemblyVersion.GetText();
         }
     }
 

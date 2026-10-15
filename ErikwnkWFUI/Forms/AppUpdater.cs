@@ -128,6 +128,15 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public Button CreateUpdateAvailableButton(UpdateCheckResult result, Version currentVersion, Form owner)
         {
+            return CreateUpdateAvailableButton(result, currentVersion, () => owner);
+        }
+
+        /// <summary>
+        /// The same button, for when the window it belongs to is not known yet or may change: the owner of the prompt is asked for
+        /// when the button is clicked.
+        /// </summary>
+        public Button CreateUpdateAvailableButton(UpdateCheckResult result, Version currentVersion, Func<Form> getOwner)
+        {
             // A symbol button, green with a white symbol like the other confirm buttons.
             Button button = UIStyles.Buttons.CreateSymbol(
                 UIStyles.Symbols.Update,
@@ -146,7 +155,7 @@ namespace ErikwnkWFUI.Forms
             UIStrings.LanguageChanged += relocalize;
             button.Disposed += (s, e) => UIStrings.LanguageChanged -= relocalize;
 
-            button.Click += async (sender, e) => await ShowUpdatePromptAsync(result, currentVersion, owner);
+            button.Click += async (sender, e) => await ShowUpdatePromptAsync(result, currentVersion, getOwner());
 
             return button;
         }
