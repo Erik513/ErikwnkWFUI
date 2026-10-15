@@ -20,31 +20,31 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateCardPrimary", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardPrimary()));
             table.AddRow("CreateCardStandard(colors: Green)", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(green)));
 
-            MultiPanel counted = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
-            counted.ShowPageCount = true;
-            table.AddRow("ShowPageCount", MultiPanelRowHeight, counted);
-
-            MultiPanel centered = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
+            // The options in one row: the page count and the line under the header, and the title in the center and on the right.
+            MultiPanel centered = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(), PairedWidth);
+            centered.ShowPageCount = true;
+            centered.ShowHeaderLine = true;
             centered.TitleAlignment = HorizontalAlignment.Center;
-            table.AddRow("TitleAlignment (Center)", MultiPanelRowHeight, centered);
 
-            MultiPanel lined = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
-            lined.ShowHeaderLine = true;
-            table.AddRow("ShowHeaderLine", MultiPanelRowHeight, lined);
-
-            MultiPanel right = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard());
-            right.ShowPageCount = true;
+            MultiPanel right = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(), PairedWidth);
             right.TitleAlignment = HorizontalAlignment.Right;
-            table.AddRow("TitleAlignment (Right), ShowPageCount", MultiPanelRowHeight, right);
+
+            table.AddRow(
+                "CreateCardStandard (ShowPageCount, ShowHeaderLine, TitleAlignment)",
+                MultiPanelRowHeight,
+                UIColumn.Percent(centered, TwoColumnPercent),
+                UIColumn.Percent(right, TwoColumnPercent));
         }
+
+        private const int PairedWidth = 250;
 
         private const int MultiPanelRowHeight = 150;
 
         // Three pages, each with a line of text and a button: the controls of a page are put on the page AddPage gives back.
-        private static MultiPanel CreateMultiPanelDemo(MultiPanel panel)
+        private static MultiPanel CreateMultiPanelDemo(MultiPanel panel, int width = 380)
         {
             panel.Dock = DockStyle.None;
-            panel.Size = new Size(380, 130);
+            panel.Size = new Size(width, 130);
             panel.MinimumSize = panel.Size;
             panel.MaximumSize = panel.Size;
 

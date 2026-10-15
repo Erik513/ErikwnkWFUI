@@ -443,25 +443,19 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateCardStandard(colors: Green)", 92, CreateCardDemo(UIStyles.Panels.CreateCardStandard(green), "A card in a color set"));
             table.AddRow("CreateCardPrimary", 92, CreateCardDemo(UIStyles.Panels.CreateCardPrimary(), "A card in the accent"));
 
-            // The frame of a panel in the library's color (the system draws it in its own otherwise).
-            ThemedPanel framed = (ThemedPanel)UIStyles.Panels.CreateElevated();
-            framed.BorderStyle = BorderStyle.FixedSingle;
-            framed.BorderColor = UIColors.Primary;
-            framed.MinimumSize = new Size(100, swatchHeight - 8);
-            framed.Height = swatchHeight - 8;
-            framed.Controls.Add(CreatePanelCaption("BorderStyle.FixedSingle, BorderColor", framed));
-            table.AddRow("CreateElevated (BorderColor)", swatchHeight, framed);
-
-            // A panel with AutoScroll: the scroll bars follow the theme, also the square where they meet.
-            Panel scrolling = UIStyles.Panels.CreateMedium();
-            scrolling.AutoScroll = true;
-            scrolling.Size = new Size(260, 90);
-            scrolling.MinimumSize = scrolling.Size;
-            scrolling.MaximumSize = scrolling.Size;
-            scrolling.Dock = DockStyle.None;
-            scrolling.Controls.Add(new Label { Text = "Scroll in both directions", AutoSize = true, Location = new Point(6, 6), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
-            scrolling.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
-            table.AddRow("CreateMedium (AutoScroll)", 110, scrolling);
+            // The options of a panel in one: the frame in the library's color (the system draws it in its own otherwise) and AutoScroll
+            // (the scroll bars follow the theme, also the square where they meet).
+            ThemedPanel options = (ThemedPanel)UIStyles.Panels.CreateMedium();
+            options.BorderStyle = BorderStyle.FixedSingle;
+            options.BorderColor = UIColors.Primary;
+            options.AutoScroll = true;
+            options.Size = new Size(260, 90);
+            options.MinimumSize = options.Size;
+            options.MaximumSize = options.Size;
+            options.Dock = DockStyle.None;
+            options.Controls.Add(new Label { Text = "BorderColor, AutoScroll: scroll in both directions", AutoSize = true, Location = new Point(6, 6), ForeColor = UIColors.TextPrimary, BackColor = Color.Transparent });
+            options.Controls.Add(new Panel { Location = new Point(6, 30), Size = new Size(520, 160), BackColor = UIColors.PrimaryDark });
+            table.AddRow("CreateMedium (BorderColor, AutoScroll)", 110, options);
 
             table.AddSection("Multi panels");
 
@@ -469,11 +463,9 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("Table layout panels");
 
-            // A table with the lines in the library's color.
             TableLayoutPanel cells = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(cells);
-            ((ThemedTableLayoutPanel)cells).CellBorderColor = UIColors.Primary;
-            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderColor)", 80, cells);
+            table.AddRow("TableLayoutPanels.CreateStandard", 80, cells);
 
             TableLayoutPanel cellsPrimary = UIStyles.TableLayoutPanels.CreatePrimary(3, 2);
             ConfigureCellsDemo(cellsPrimary);
@@ -490,6 +482,12 @@ namespace ErikwnkWFUI.Showcase
             TableLayoutPanel cellsDark = UIStyles.TableLayoutPanels.CreateDark(3, 2);
             ConfigureCellsDemo(cellsDark);
             table.AddRow("TableLayoutPanels.CreateDark", 80, cellsDark);
+
+            // The lines of the cells in the library's color.
+            TableLayoutPanel cellsColored = UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ConfigureCellsDemo(cellsColored);
+            ((ThemedTableLayoutPanel)cellsColored).CellBorderColor = UIColors.Primary;
+            table.AddRow("TableLayoutPanels.CreateStandard (CellBorderColor)", 80, cellsColored);
 
             table.AddSection("Flow layout panels");
 
