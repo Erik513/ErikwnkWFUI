@@ -205,6 +205,42 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void APageThatIsDisposedByItsOwner_LeavesTheMultiPanel_AndTheNextOneIsShown()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+        int raised = 0;
+        panel.SelectedIndexChanged += (sender, e) => raised++;
+        MultiPanelPage first = panel.Pages[0];
+        MultiPanelPage second = panel.Pages[1];
+
+        first.Dispose();
+
+        Assert.Equal(2, panel.PageCount);
+        Assert.Same(second, panel.SelectedPage);
+        Assert.True(second.Visible);
+        Assert.Equal(1, raised);
+
+        // A page that is not shown: nothing else changes.
+        panel.Pages[1].Dispose();
+        panel.Pages[0].Dispose();
+        Assert.Equal(0, panel.PageCount);
+        Assert.Equal(-1, panel.SelectedIndex);
+        Assert.All(Arrows(panel), button => Assert.False(button.Enabled));
+    }
+
+    [Fact]
+    public void DisposingTheMultiPanel_DoesNotRaiseTheEvent_AndDoesNotThrow()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+        int raised = 0;
+        panel.SelectedIndexChanged += (sender, e) => raised++;
+
+        panel.Dispose();
+
+        Assert.Equal(0, raised);
+    }
+
+    [Fact]
     public void AControlAddedDirectlyToTheMultiPanel_IsRefused()
     {
         using MultiPanel panel = UIStyles.MultiPanels.CreateStandard();
