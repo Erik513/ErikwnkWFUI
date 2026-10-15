@@ -270,7 +270,7 @@ namespace ErikwnkWFUI.Controls
                     return;
                 }
 
-                if (_pendingColumnIndex < 0 || _owner._isDraggingColumn)
+                if (_pendingColumnIndex < 0 || _owner._columnDrag.IsDragging)
                 {
                     return;
                 }

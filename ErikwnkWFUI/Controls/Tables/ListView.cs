@@ -107,9 +107,7 @@ namespace ErikwnkWFUI.Controls
         // The default of Controls.ContextMenuStrip. The menu built in the constructor takes its highlight from here each
         // time it is painted (see BuildContextMenu), so a later change is seen by it.
         private readonly ThemeColor _contextMenuSelectionColor = new ThemeColor(() => UIColors.BorderLight);
-        private bool _isDraggingColumn;
-        private int _dragColumnIndex = -1;
-        private int _dragInsertBeforeDisplayIndex = -1;
+        private readonly ColumnDragState _columnDrag = new ColumnDragState();
         private Font _headerFontOverride;
         private Font _defaultHeaderFont;
         private ImageList _rowHeightImageList;

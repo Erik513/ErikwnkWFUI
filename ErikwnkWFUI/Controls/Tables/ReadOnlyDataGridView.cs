@@ -54,11 +54,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly ThemeColor _columnReorderIndicatorColor = new ThemeColor(() => UIColors.BorderLight);
 
-        private bool _isDraggingColumn;
-
-        private int _dragColumnIndex = -1;
-
-        private int _dragInsertBeforeDisplayIndex = -1;
+        private readonly ColumnDragState _columnDrag = new ColumnDragState();
 
         private int _pendingReorderColumnIndex = -1;
 

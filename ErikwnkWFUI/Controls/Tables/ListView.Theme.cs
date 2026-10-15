@@ -277,13 +277,13 @@ namespace ErikwnkWFUI.Controls
         // Drawn with the header cell, not as an overlay (see ColumnReorderIndicatorColor).
         private void DrawColumnDragInsertionLine(DrawListViewColumnHeaderEventArgs e)
         {
-            if (!_isDraggingColumn)
+            if (!_columnDrag.IsDragging)
             {
                 return;
             }
 
             ColumnHeaderPainting.DrawColumnDragInsertionLine(
-                e.Graphics, e.Bounds, e.Header.DisplayIndex, Columns.Count, _dragInsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
+                e.Graphics, e.Bounds, e.Header.DisplayIndex, Columns.Count, _columnDrag.InsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
         }
 
         private static void OnDrawItem(object sender, DrawListViewItemEventArgs e)

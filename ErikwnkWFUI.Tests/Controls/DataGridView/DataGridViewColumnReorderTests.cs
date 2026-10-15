@@ -24,6 +24,12 @@ namespace ErikwnkWFUI.Tests.Controls.DataGridView;
 /// </summary>
 public class DataGridViewColumnReorderTests
 {
+    // Where the drag of a column title stands (the grid keeps it in one object).
+    private static ErikwnkWFUI.Controls.ColumnDragState Drag(WfuiReadOnlyDataGridView grid)
+    {
+        return grid.GetPrivateField<ErikwnkWFUI.Controls.ColumnDragState>("_columnDrag")!;
+    }
+
     [Fact]
     public void MoveColumnToDisplayIndex_MovesColumnToTheEnd()
     {
@@ -100,8 +106,8 @@ public class DataGridViewColumnReorderTests
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.SetPrivateField("_isDraggingColumn", true);
-        grid.SetPrivateField("_dragColumnIndex", 1);
+        Drag(grid).IsDragging = true;
+        Drag(grid).ColumnIndex = 1;
 
         // x=0 always resolves to "insert before display index 0", the same
         // width-independent extreme ReadOnlyDataGridViewEnumerationTests'
@@ -113,7 +119,7 @@ public class DataGridViewColumnReorderTests
         grid.InvokePrivate("OnDragOver", args);
 
         Assert.Equal(DragDropEffects.Move, args.Effect);
-        Assert.Equal(0, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+        Assert.Equal(0, Drag(grid).InsertBeforeDisplayIndex);
     }
 
     [Fact]
@@ -121,8 +127,8 @@ public class DataGridViewColumnReorderTests
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.SetPrivateField("_isDraggingColumn", true);
-        grid.SetPrivateField("_dragColumnIndex", 0);
+        Drag(grid).IsDragging = true;
+        Drag(grid).ColumnIndex = 0;
 
         Point screenPoint = grid.PointToScreen(new Point(100_000, 5));
         DragEventArgs args = new DragEventArgs(
@@ -130,7 +136,7 @@ public class DataGridViewColumnReorderTests
 
         grid.InvokePrivate("OnDragOver", args);
 
-        Assert.Equal(2, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+        Assert.Equal(2, Drag(grid).InsertBeforeDisplayIndex);
     }
 
     [Fact]
@@ -147,7 +153,7 @@ public class DataGridViewColumnReorderTests
         grid.InvokePrivate("OnDragOver", args);
 
         Assert.Equal(DragDropEffects.None, args.Effect);
-        Assert.Equal(-1, grid.GetPrivateField<int>("_dragInsertBeforeDisplayIndex"));
+        Assert.Equal(-1, Drag(grid).InsertBeforeDisplayIndex);
     }
 
     [Fact]
@@ -155,8 +161,8 @@ public class DataGridViewColumnReorderTests
     {
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.SetPrivateField("_dragColumnIndex", 0); // "Name"
-        grid.SetPrivateField("_dragInsertBeforeDisplayIndex", 2); // past "Value"
+        Drag(grid).ColumnIndex = 0; // "Name"
+        Drag(grid).InsertBeforeDisplayIndex = 2; // past "Value"
 
         DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
 
@@ -169,13 +175,13 @@ public class DataGridViewColumnReorderTests
     [Fact]
     public void OnDragDrop_WithoutAPriorDragOver_DoesNotMoveAnyColumn()
     {
-        // _dragInsertBeforeDisplayIndex only ever becomes >= 0 via
+        // InsertBeforeDisplayIndex only ever becomes >= 0 via
         // OnDragOver - a drop that never crossed this control's own
         // OnDragOver first (its own DragEnter path handles nothing else)
         // must not move anything.
         BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
         using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
-        grid.SetPrivateField("_dragColumnIndex", 0);
+        Drag(grid).ColumnIndex = 0;
 
         DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
 

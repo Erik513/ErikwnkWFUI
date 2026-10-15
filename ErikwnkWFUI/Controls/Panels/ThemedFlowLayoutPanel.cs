@@ -1,7 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
-using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -32,21 +31,14 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public bool ShowBorder
         {
-            get { return BorderStyle != BorderStyle.None; }
-            set
-            {
-                if (value != ShowBorder)
-                    BorderStyle = value ? BorderStyle.FixedSingle : BorderStyle.None;
-            }
+            get { return _frame.ShowBorder; }
+            set { _frame.ShowBorder = value; }
         }
 
-        // Where both scroll bars meet, the system leaves a light square even with dark bars.
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
-
-            if (m.Msg == WM_NCPAINT)
-                NativeControlTheme.PaintScrollBarCorner(this);
+            _frame.AfterWindowMessage(ref m);
         }
 
         public ThemedFlowLayoutPanel()

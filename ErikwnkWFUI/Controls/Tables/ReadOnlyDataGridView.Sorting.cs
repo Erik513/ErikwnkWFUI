@@ -30,19 +30,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public void SetSortComparer(DataGridViewColumn column, IComparer comparer)
         {
-            if (column == null)
-            {
-                throw new ArgumentNullException(nameof(column));
-            }
-
-            if (comparer == null)
-            {
-                _columnSortComparers.Remove(column);
-            }
-            else
-            {
-                _columnSortComparers[column] = comparer;
-            }
+            SortComparerRegistry.Set(_columnSortComparers, column, comparer);
         }
 
 

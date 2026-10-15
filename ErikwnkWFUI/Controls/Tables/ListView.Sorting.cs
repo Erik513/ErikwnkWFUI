@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -56,19 +55,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public void SetSortComparer(ColumnHeader column, IComparer comparer)
         {
-            if (column == null)
-            {
-                throw new ArgumentNullException(nameof(column));
-            }
-
-            if (comparer == null)
-            {
-                _columnSortComparers.Remove(column);
-            }
-            else
-            {
-                _columnSortComparers[column] = comparer;
-            }
+            SortComparerRegistry.Set(_columnSortComparers, column, comparer);
         }
 
         protected override void OnColumnClick(ColumnClickEventArgs e)

@@ -203,26 +203,11 @@ namespace ErikwnkWFUI.Controls
         // do the rest (as for the items of the ListBox).
         private void BeginColumnDragDrop(int columnIndex)
         {
-            _dragColumnIndex = columnIndex;
-            _isDraggingColumn = true;
-            _dragInsertBeforeDisplayIndex = -1;
-
             // The drag ends with a mouse-up on a header, which would count as a click and sort: that click is ignored.
             _suppressNextColumnClickSort = true;
 
-            try
-            {
-                DoDragDrop(columnIndex, DragDropEffects.Move);
-            }
-            finally
-            {
-                // Every way the drag can end, a cancel (Escape) and a drop without OnDragDrop too; OnDragDrop only moves.
-                _isDraggingColumn = false;
-                _dragColumnIndex = -1;
-                _dragInsertBeforeDisplayIndex = -1;
-
-                InvalidateHeader();
-            }
+            // Every way the drag can end is taken care of by Run, a cancel (Escape) and a drop without OnDragDrop too; OnDragDrop only moves.
+            _columnDrag.Run(columnIndex, () => DoDragDrop(columnIndex, DragDropEffects.Move), InvalidateHeader);
         }
 
         // Invalidate() reaches the client area only; the header is a window of its own and has to be told too.
@@ -239,20 +224,17 @@ namespace ErikwnkWFUI.Controls
 
             drgevent.Effect = DragDropEffects.Move;
 
-            if (insertBefore != _dragInsertBeforeDisplayIndex)
-            {
-                _dragInsertBeforeDisplayIndex = insertBefore;
+            if (_columnDrag.MoveInsertTo(insertBefore))
                 InvalidateHeader();
-            }
 
             base.OnDragOver(drgevent);
         }
 
         protected override void OnDragDrop(DragEventArgs drgevent)
         {
-            if (_dragColumnIndex >= 0 && _dragInsertBeforeDisplayIndex >= 0)
+            if (_columnDrag.HasTarget)
             {
-                MoveColumnToDisplayIndex(_dragColumnIndex, _dragInsertBeforeDisplayIndex);
+                MoveColumnToDisplayIndex(_columnDrag.ColumnIndex, _columnDrag.InsertBeforeDisplayIndex);
             }
 
             base.OnDragDrop(drgevent);

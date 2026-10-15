@@ -214,7 +214,7 @@ namespace ErikwnkWFUI.Controls
 
             int controlX = PointToClient(Cursor.Position).X;
 
-            if (_pendingReorderColumnIndex >= 0 && !_isDraggingColumn &&
+            if (_pendingReorderColumnIndex >= 0 && !_columnDrag.IsDragging &&
                 Math.Abs(controlX - _pendingReorderStartX) >= SystemInformation.DragSize.Width)
             {
                 int columnIndex = _pendingReorderColumnIndex;
@@ -395,36 +395,17 @@ namespace ErikwnkWFUI.Controls
         // item-reorder drag before that.
         private void BeginColumnDragDrop(int columnIndex)
         {
-            _dragColumnIndex = columnIndex;
-            _isDraggingColumn = true;
-            _dragInsertBeforeDisplayIndex = -1;
-
-            try
-            {
-                DoDragDrop(columnIndex, DragDropEffects.Move);
-            }
-            finally
-            {
-                // Covers every way the drag can end, including a cancelled
-                // drag (Escape, or dropped somewhere OnDragDrop never
-                // fires) - OnDragDrop itself only needs to perform the
-                // actual move, not reset this shared state.
-                _isDraggingColumn = false;
-                _dragColumnIndex = -1;
-                _dragInsertBeforeDisplayIndex = -1;
-
-                // Unlike ListView, the header here isn't a separate native
-                // child window - it's painted by this control's own
-                // OnCellPainting, so a plain Invalidate() is enough to
-                // make the insertion line disappear.
-                Invalidate();
-            }
+            // Run takes care of every way the drag can end, including a cancelled drag (Escape, or dropped somewhere OnDragDrop never
+            // fires) - OnDragDrop itself only needs to perform the actual move. Unlike ListView, the header here isn't a separate
+            // native child window - it's painted by this control's own OnCellPainting, so a plain Invalidate() is enough to make
+            // the insertion line disappear.
+            _columnDrag.Run(columnIndex, () => DoDragDrop(columnIndex, DragDropEffects.Move), Invalidate);
         }
 
 
         protected override void OnDragOver(DragEventArgs drgevent)
         {
-            if (!_isDraggingColumn)
+            if (!_columnDrag.IsDragging)
             {
                 base.OnDragOver(drgevent);
                 return;
@@ -435,11 +416,8 @@ namespace ErikwnkWFUI.Controls
 
             drgevent.Effect = DragDropEffects.Move;
 
-            if (insertBefore != _dragInsertBeforeDisplayIndex)
-            {
-                _dragInsertBeforeDisplayIndex = insertBefore;
+            if (_columnDrag.MoveInsertTo(insertBefore))
                 Invalidate();
-            }
 
             base.OnDragOver(drgevent);
         }
@@ -447,9 +425,9 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnDragDrop(DragEventArgs drgevent)
         {
-            if (_dragColumnIndex >= 0 && _dragInsertBeforeDisplayIndex >= 0)
+            if (_columnDrag.HasTarget)
             {
-                MoveColumnToDisplayIndex(_dragColumnIndex, _dragInsertBeforeDisplayIndex);
+                MoveColumnToDisplayIndex(_columnDrag.ColumnIndex, _columnDrag.InsertBeforeDisplayIndex);
             }
 
             base.OnDragDrop(drgevent);
@@ -458,7 +436,7 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
         {
-            if (_isDraggingColumn)
+            if (_columnDrag.IsDragging)
             {
                 gfbevent.UseDefaultCursors = false;
                 Cursor.Current = Cursors.SizeWE;
@@ -586,14 +564,14 @@ namespace ErikwnkWFUI.Controls
         // Mirrors ListView's own DrawColumnDragInsertionLine.
         private void DrawColumnDragInsertionLine(DataGridViewCellPaintingEventArgs e)
         {
-            if (!_isDraggingColumn || e.ColumnIndex < 0)
+            if (!_columnDrag.IsDragging || e.ColumnIndex < 0)
             {
                 return;
             }
 
             DataGridViewColumn column = Columns[e.ColumnIndex];
             ColumnHeaderPainting.DrawColumnDragInsertionLine(
-                e.Graphics, e.CellBounds, column.DisplayIndex, Columns.Count, _dragInsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
+                e.Graphics, e.CellBounds, column.DisplayIndex, Columns.Count, _columnDrag.InsertBeforeDisplayIndex, ColumnReorderIndicatorColor);
         }
     }
 }
