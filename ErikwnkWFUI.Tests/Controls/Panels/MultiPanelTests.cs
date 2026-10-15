@@ -455,6 +455,31 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void FocusInTheLeftPage_GoesOnToTheFirstControlOfTheNewPage()
+    {
+        MultiPanel panel = Shown(UIStyles.MultiPanels.CreateStandard(), 3);
+        TextBox first = new TextBox();
+        TextBox second = new TextBox { TabIndex = 1 };
+        TextBox other = new TextBox { TabIndex = 0 };
+        panel.Pages[0].Controls.Add(first);
+        panel.Pages[1].Controls.Add(second);
+        panel.Pages[1].Controls.Add(other);
+        Form host = (Form)panel.FindForm();
+        first.Focus();
+        Assert.Same(first, host.ActiveControl);
+
+        panel.Next();
+
+        Assert.Same(other, host.ActiveControl);
+
+        // Focus on the arrow (the usual way to switch) stays where it is.
+        Button previous = Arrows(panel)[0];
+        previous.Focus();
+        panel.Next();
+        Assert.Same(previous, host.ActiveControl);
+    }
+
+    [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
         MultiPanel dark = Shown(UIStyles.MultiPanels.CreatePrimary(), 1);

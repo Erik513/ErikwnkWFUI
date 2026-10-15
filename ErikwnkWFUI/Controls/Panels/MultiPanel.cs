@@ -363,10 +363,18 @@ namespace ErikwnkWFUI.Controls
             if (index == _selectedIndex)
                 return;
 
+            // Focus in the page that is left (a text box, say) would be lost with it: it goes on to the new page.
+            MultiPanelPage old = SelectedPage;
+            Control active = FindForm()?.ActiveControl;
+            bool focusMoves = old != null && active != null && old.Contains(active);
+
             _selectedIndex = index;
 
             for (int i = 0; i < _pages.Count; i++)
                 _pages[i].Visible = i == index;
+
+            if (focusMoves && index >= 0)
+                _pages[index].SelectNextControl(null, true, true, true, false);
 
             UpdateNavigation();
             InvalidateHeader();
