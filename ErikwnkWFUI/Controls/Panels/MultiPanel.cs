@@ -40,9 +40,12 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     /// <remarks>
     /// Add the pages with <see cref="AddPage"/> and put the controls on the page that comes back. Controls cannot be added to the
-    /// multi panel itself. The arrows are disabled on the first and the last page. With the focus inside the multi panel,
-    /// Ctrl+PageDown or Ctrl+Tab shows the next page and Ctrl+PageUp or Ctrl+Shift+Tab the previous one (on the first and the
-    /// last page the key goes on to the parent, so that a tab control around it can use it).
+    /// multi panel itself. The arrows are disabled on the first and the last page, take no focus (it stays in the page) and show
+    /// the title of the page they lead to as their tooltip. With the focus inside the multi panel, Ctrl+PageDown or Ctrl+Tab
+    /// shows the next page and Ctrl+PageUp or Ctrl+Shift+Tab the previous one (on the first and the last page the key goes on to
+    /// the parent, so that a tab control around it can use it). <see cref="ShowHeaderLine"/> adds a thin line under the header.
+    /// A card in every other way (<see cref="ThemedCardPanel"/>): <c>CornerRadius</c>, <c>ShowBorder</c>, <c>BorderColor</c> and
+    /// <c>Padding</c> work as there. Right-to-left layouts are not supported.
     /// </remarks>
     public class MultiPanel : ThemedCardPanel
     {
@@ -108,6 +111,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The index of the page that is shown; -1 while there is no page. The first page added is shown at once.</summary>
+        /// <exception cref="ArgumentOutOfRangeException">The index is not that of a page (-1 only while there is none).</exception>
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -297,7 +301,7 @@ namespace ErikwnkWFUI.Controls
             get { return Math.Max(Dpi.Scale(this, HeaderHeight96), Font.Height + Dpi.Scale(this, HeaderTextMargin96)); }
         }
 
-        /// <summary>The area for the pages: inside the padding and below the header.</summary>
+        /// <summary>The area for the pages: inside the padding and below the header (and the line of <see cref="ShowHeaderLine"/>).</summary>
         public override Rectangle DisplayRectangle
         {
             get

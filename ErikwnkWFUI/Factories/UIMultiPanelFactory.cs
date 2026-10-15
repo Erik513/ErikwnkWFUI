@@ -8,8 +8,10 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIMultiPanelFactory
     {
-        // The arrow buttons are in the style of the panel: neutral on the standard surfaces, in the accent on the primary ones, in the color set on a set.
-        // (The flat ones have no line around them, but the same line colors as the cards for the line under the header.)
+        // The arrow buttons are in the style of the panel: neutral on the standard surfaces, in the accent on the primary ones, in the
+        // color set on a set. The flat ones have no line around them, but the same line colors as the cards (for the line under the
+        // header).
+
         // The flat panel in the usual surface - or, with a color set, in its basic color.
         public static MultiPanel CreateStandard(UIColorSet colors = null)
         {

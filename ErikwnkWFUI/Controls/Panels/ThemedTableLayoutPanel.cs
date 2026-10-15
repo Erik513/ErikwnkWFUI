@@ -12,7 +12,10 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// The table layout panel of <c>UIStyles.TableLayoutPanels</c>: the standard <see cref="TableLayoutPanel"/>, drawn without
-    /// flicker and with the scroll bars in the style of the theme. Everything else is the standard control. Named
+    /// flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color
+    /// (<see cref="ShowBorder"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
+    /// library (<see cref="CellBorderColor"/>, <see cref="InnerCellBorderColor"/>, <see cref="OuterCellBorderColor"/>) of which the
+    /// ones to show can be chosen (<see cref="CellBorderLines"/>). Everything else is the standard control. Named
     /// <c>ThemedTableLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
     /// </summary>
     public class ThemedTableLayoutPanel : TableLayoutPanel
@@ -52,9 +55,10 @@ namespace ErikwnkWFUI.Controls
         private readonly List<Rectangle> _cells = new List<Rectangle>();
 
         /// <summary>
-        /// The color of the lines between the cells when <see cref="TableLayoutPanel.CellBorderStyle"/> is <c>Single</c> (the system
-        /// draws them in its own color, which is painted over; the other styles are left to the system). Follows the theme until
-        /// it is set; <see cref="Color.Empty"/> gives that back. There are no lines by default.
+        /// The color of the lines around and between the cells when <see cref="TableLayoutPanel.CellBorderStyle"/> is <c>Single</c>
+        /// (the system draws them in its own color, which is painted over; the other styles are left to the system). Follows the
+        /// theme until it is set; <see cref="Color.Empty"/> gives that back. <see cref="InnerCellBorderColor"/> and
+        /// <see cref="OuterCellBorderColor"/> take other colors for one kind of line. There are no lines by default.
         /// </summary>
         public Color CellBorderColor
         {

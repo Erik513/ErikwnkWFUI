@@ -63,7 +63,7 @@ namespace ErikwnkWFUI
                 return UIPanelFactory.CreateMedium();
             }
 
-            /// <summary>A panel one step lighter than the medium one (<c>UIColors.BackgroundMediumElevated</c>, a card on a medium surface). Fills its parent; follows a change of the theme.</summary>
+            /// <summary>A panel one step lighter than the medium one (<c>UIColors.BackgroundMediumElevated</c>, raised against a medium surface). Fills its parent; follows a change of the theme.</summary>
             public static Panel CreateElevated()
             {
                 return UIPanelFactory.CreateElevated();

@@ -14,7 +14,8 @@ namespace ErikwnkWFUI.Controls
     /// <remarks>
     /// The controls inside are not cut to the rounded shape: <see cref="Padding"/> keeps them from the corners (the card has
     /// one of its own by default). <c>AutoScroll</c> is not meant for a card (its scroll bars are rectangular and would stick
-    /// out of the corners).
+    /// out of the corners). <see cref="MultiPanel"/> is a card with pages (flat, with a <see cref="CornerRadius"/> of 0 and no
+    /// line, or rounded).
     /// </remarks>
     public class ThemedCardPanel : Panel
     {

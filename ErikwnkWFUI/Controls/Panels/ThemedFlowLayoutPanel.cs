@@ -7,7 +7,8 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// The flow layout panel of <c>UIStyles.FlowLayoutPanels</c>: the standard <see cref="FlowLayoutPanel"/>, drawn without
-    /// flicker and with the scroll bars in the style of the theme. Everything else is the standard control. Named
+    /// flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color
+    /// (<see cref="ShowBorder"/>, <see cref="BorderColor"/>). Everything else is the standard control. Named
     /// <c>ThemedFlowLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
     /// </summary>
     public class ThemedFlowLayoutPanel : FlowLayoutPanel

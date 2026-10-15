@@ -6,9 +6,9 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// The panel of <c>UIStyles.Panels</c>: the standard <see cref="Panel"/>, drawn without flicker and with the scroll bars in
-    /// the style of the theme. Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is
-    /// the standard control. Named <c>ThemedPanel</c> (not <c>Panel</c>) so that it does not clash with the standard class in
+    /// The panel of <c>UIStyles.Panels</c>: the standard <see cref="Panel"/>, drawn without flicker, with the scroll bars in the
+    /// style of the theme and with an optional frame in the library's color (<see cref="ShowBorder"/>, <see cref="BorderColor"/>).
+    /// Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is the standard control. Named <c>ThemedPanel</c> (not <c>Panel</c>) so that it does not clash with the standard class in
     /// the files that use both namespaces; the factories hand it back as a <see cref="Panel"/>.
     /// </summary>
     public class ThemedPanel : Panel
