@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -164,10 +164,15 @@ namespace ErikwnkWFUI.Controls
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
+            // The lines belong to the background: what a Paint handler of the application draws comes over them, not under.
+            if (CellBorderStyle == TableLayoutPanelCellBorderStyle.Single && _cells.Count > 0)
+                PaintLines(e.Graphics);
 
-            if (CellBorderStyle != TableLayoutPanelCellBorderStyle.Single || _cells.Count == 0)
-                return;
+            base.OnPaint(e);
+        }
+
+        private void PaintLines(Graphics graphics)
+        {
 
             // The system has drawn all the lines in its own color: the ones that are not wanted are painted over with what is
             // behind them, the others in their color. Neighbors share a line, so the lines are the distinct edges of the cells.
@@ -176,16 +181,16 @@ namespace ErikwnkWFUI.Controls
             bool showInner = _cellBorderLines != CellBorderLines.OuterOnly;
 
             if (!showOuter)
-                Hide(e.Graphics, outer);
+                Hide(graphics, outer);
 
             if (!showInner)
-                Hide(e.Graphics, inner);
+                Hide(graphics, inner);
 
             if (showOuter)
-                Fill(e.Graphics, outer, OuterCellBorderColor);
+                Fill(graphics, outer, OuterCellBorderColor);
 
             if (showInner)
-                Fill(e.Graphics, inner, InnerCellBorderColor);
+                Fill(graphics, inner, InnerCellBorderColor);
         }
 
         // The lines lie around the bounds of a cell, one pixel outside them. The outer ones are the first and the last of each

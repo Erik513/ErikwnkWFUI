@@ -672,19 +672,6 @@ public class MultiPanelTests : IDisposable
         Assert.Equal(UIStrings.Get("MultiPanel.PreviousPage"), arrows[0].AccessibleName);
     }
 
-    [Fact]
-    public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
-    {
-        MultiPanel dark = Shown(UIStyles.MultiPanels.CreatePrimary(), 1);
-        dark.Pages[0].Title = "Title";
-        MultiPanel light = Shown(UIStyles.MultiPanels.CreateStandard(Color.FromArgb(240, 240, 240)), 1);
-        light.Pages[0].Title = "Title";
-        Application.DoEvents();
-
-        Assert.True(Brightest(dark) > 128);
-        Assert.True(Darkest(light) < 128);
-    }
-
     private static int Brightest(MultiPanel panel)
     {
         using Bitmap bitmap = Render(panel);

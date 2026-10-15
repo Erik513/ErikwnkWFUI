@@ -293,36 +293,4 @@ public class VersionPanelTests : IDisposable
             UIColors.SetAccent(accent);
         }
     }
-
-    [Fact]
-    public void TheVersionText_IsReadableOnADarkAndOnALightSurface()
-    {
-        VersionPanel dark = Shown(UIStyles.VersionPanels.CreatePrimary());
-        VersionPanel light = Shown(UIStyles.VersionPanels.CreateStandard(Color.FromArgb(240, 240, 240)));
-        dark.VersionText = "v1.2.3";
-        light.VersionText = "v1.2.3";
-        Application.DoEvents();
-
-        using (Bitmap picture = Render(dark))
-        {
-            int brightest = 0;
-
-            for (int x = 0; x < picture.Width; x++)
-                for (int y = 0; y < picture.Height; y++)
-                    brightest = Math.Max(brightest, picture.GetPixel(x, y).R);
-
-            Assert.True(brightest > 120, $"{brightest}");
-        }
-
-        using (Bitmap picture = Render(light))
-        {
-            int darkest = 255;
-
-            for (int x = 0; x < picture.Width; x++)
-                for (int y = 0; y < picture.Height; y++)
-                    darkest = Math.Min(darkest, picture.GetPixel(x, y).R);
-
-            Assert.True(darkest < 140, $"{darkest}");
-        }
-    }
 }

@@ -480,4 +480,27 @@ public class PanelBorderTests : IDisposable
         using (Bitmap picture = Draw(table))
             Assert.Equal(Color.White.ToArgb(), Opaque(picture.GetPixel(0, 40)).ToArgb());
     }
+
+    [Fact]
+    public void WhatAPaintHandlerDraws_ComesOverTheLines_AlsoOverALineThatIsHidden()
+    {
+        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        using Bitmap all = Draw(table);
+        List<int> columns = RedColumns(all);
+        List<int> rows = RedRows(all);
+
+        table.CellBorderLines = CellBorderLines.InnerOnly;
+        table.Paint += (sender, e) =>
+        {
+            // On the outer line (hidden), and on an inner one (shown).
+            e.Graphics.FillRectangle(Brushes.Magenta, columns[0], rows[1] + 3, 1, 1);
+            e.Graphics.FillRectangle(Brushes.Magenta, columns[1], rows[1] + 3, 1, 1);
+        };
+        table.Invalidate();
+        Application.DoEvents();
+
+        using Bitmap picture = Draw(table);
+        Assert.Equal(Color.Magenta.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[1] + 3)).ToArgb());
+        Assert.Equal(Color.Magenta.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[1] + 3)).ToArgb());
+    }
 }

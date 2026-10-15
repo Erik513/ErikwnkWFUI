@@ -1,5 +1,4 @@
-using System.Windows.Forms;
-using ErikwnkWFUI.Controls;
+﻿using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 
