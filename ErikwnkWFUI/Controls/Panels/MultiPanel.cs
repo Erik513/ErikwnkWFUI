@@ -47,6 +47,7 @@ namespace ErikwnkWFUI.Controls
         private const int HeaderHeight96 = 36;
         private const int ButtonSize96 = 26;
         private const int Gap96 = 6;
+        private const int HeaderTextMargin96 = 12;
         private const double CounterBlend = 0.35;
         private const double DisabledBlend = 0.5;
 
@@ -254,8 +255,14 @@ namespace ErikwnkWFUI.Controls
             {
                 Rectangle area = base.DisplayRectangle;
 
-                return new Rectangle(area.X, area.Y, area.Width, Dpi.Scale(this, HeaderHeight96));
+                return new Rectangle(area.X, area.Y, area.Width, HeaderHeight);
             }
+        }
+
+        // The usual height, or more for a large font: the title and the count must fit.
+        private int HeaderHeight
+        {
+            get { return Math.Max(Dpi.Scale(this, HeaderHeight96), Font.Height + Dpi.Scale(this, HeaderTextMargin96)); }
         }
 
         /// <summary>The area for the pages: inside the padding and below the header.</summary>
@@ -264,7 +271,7 @@ namespace ErikwnkWFUI.Controls
             get
             {
                 Rectangle area = base.DisplayRectangle;
-                int header = Dpi.Scale(this, HeaderHeight96);
+                int header = HeaderHeight;
 
                 return new Rectangle(area.X, area.Y + header, area.Width, Math.Max(0, area.Height - header));
             }
@@ -280,6 +287,13 @@ namespace ErikwnkWFUI.Controls
             Controls.Remove(e.Control);
 
             throw new InvalidOperationException("Controls are put on the pages of a MultiPanel (AddPage), not on the multi panel itself.");
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+            PerformLayout();
+            Invalidate();
         }
 
         protected override void OnLayout(LayoutEventArgs levent)

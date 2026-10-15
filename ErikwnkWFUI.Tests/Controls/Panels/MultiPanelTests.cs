@@ -405,6 +405,25 @@ public class MultiPanelTests : IDisposable
     }
 
     [Fact]
+    public void ALargeFont_MakesTheHeaderHigher_SoThatTheTitleFits_AndThePagesStayBelowIt()
+    {
+        MultiPanel normal = Shown(UIStyles.MultiPanels.CreateStandard(), 1);
+        int normalHeader = normal.DisplayRectangle.Top - normal.Padding.Top;
+
+        MultiPanel large = Shown(UIStyles.MultiPanels.CreateStandard(), 1);
+        large.Font = new Font("Segoe UI", 28f);
+        Application.DoEvents();
+        int largeHeader = large.DisplayRectangle.Top - large.Padding.Top;
+
+        Assert.True(largeHeader >= large.Font.Height, $"{largeHeader} >= {large.Font.Height}");
+        Assert.True(largeHeader > normalHeader);
+        Assert.Equal(large.DisplayRectangle, large.Pages[0].Bounds);
+
+        Button next = Arrows(large)[1];
+        Assert.True(next.Bottom <= large.Padding.Top + largeHeader);
+    }
+
+    [Fact]
     public void TheHeaderText_IsReadableOnADarkAndOnALightSurface()
     {
         MultiPanel dark = Shown(UIStyles.MultiPanels.CreatePrimary(), 1);
