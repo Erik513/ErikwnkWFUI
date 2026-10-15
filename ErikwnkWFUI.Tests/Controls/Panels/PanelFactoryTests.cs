@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 
@@ -93,6 +94,51 @@ public class PanelFactoryTests
         finally
         {
             UIColors.SetAccent(accent);
+        }
+    }
+
+    public static IEnumerable<object[]> ScrollingPanels()
+    {
+        yield return new object[] { "Panel", (Func<Control>)(() => UIStyles.Panels.CreateStandard()) };
+        yield return new object[] { "Transparent", (Func<Control>)(() => UIStyles.Panels.CreateTransparent()) };
+        yield return new object[] { "Table", (Func<Control>)(() => UIStyles.TableLayoutPanels.CreateStandard(1, 1)) };
+        yield return new object[] { "Flow", (Func<Control>)(() => UIStyles.FlowLayoutPanels.CreateStandard()) };
+    }
+
+    // The test process has no visual styles to look at, so what is asked of the system is recorded.
+    [Theory]
+    [MemberData(nameof(ScrollingPanels))]
+    public void TheScrollBarsOfAPanel_TakeTheStyleOfTheTheme_AndFollowItsChange(string name, Func<Control> make)
+    {
+        var log = new System.Collections.Concurrent.ConcurrentQueue<(IntPtr Handle, string Style)>();
+        Action<IntPtr, string> original = NativeControlTheme.SetStyle;
+        NativeControlTheme.SetStyle = (handle, style) =>
+        {
+            log.Enqueue((handle, style));
+            original(handle, style);
+        };
+
+        Control panel = make();
+
+        try
+        {
+            using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(200, 100) };
+            host.Controls.Add(panel);
+            host.Show();
+            Application.DoEvents();
+
+            Assert.Equal("DarkMode_Explorer", log.Last(entry => entry.Handle == panel.Handle).Style);
+
+            UIColors.ApplyTheme(UIThemes.Light);
+            Application.DoEvents();
+
+            Assert.Equal("Explorer", log.Last(entry => entry.Handle == panel.Handle).Style);
+        }
+        finally
+        {
+            NativeControlTheme.SetStyle = original;
+            UIColors.ApplyTheme(UIThemes.Dark);
+            panel.Dispose();
         }
     }
 }

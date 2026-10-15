@@ -62,11 +62,14 @@ namespace ErikwnkWFUI.Helpers
                 refresh(false);
         }
 
+        // What sets the style of a window (a seam for the tests, which have no visual styles to look at).
+        internal static Action<IntPtr, string> SetStyle = (handle, name) => SetWindowTheme(handle, name, null);
+
         /// <summary>Scroll bars of a window (or of a scroll bar control).</summary>
         public static void ApplyToScrollBars(IntPtr handle)
         {
             if (handle != IntPtr.Zero)
-                SetWindowTheme(handle, IsDark ? "DarkMode_Explorer" : "Explorer", null);
+                SetStyle(handle, IsDark ? "DarkMode_Explorer" : "Explorer");
         }
 
         /// <summary>
@@ -76,7 +79,7 @@ namespace ErikwnkWFUI.Helpers
         public static void ApplyToItemsView(IntPtr handle)
         {
             if (handle != IntPtr.Zero)
-                SetWindowTheme(handle, IsDark ? "DarkMode_ItemsView" : "ItemsView", null);
+                SetStyle(handle, IsDark ? "DarkMode_ItemsView" : "ItemsView");
         }
     }
 }

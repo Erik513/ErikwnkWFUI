@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -7,7 +8,7 @@ namespace ErikwnkWFUI.Factories
     {
         public static FlowLayoutPanel CreateStandard()
         {
-            return new FlowLayoutPanel
+            FlowLayoutPanel panel = new FlowLayoutPanel
             {
                 AutoSize = true,
                 WrapContents = false,
@@ -15,6 +16,11 @@ namespace ErikwnkWFUI.Factories
                 Padding = new Padding(0),
                 Margin = new Padding(0)
             };
+
+            // (The scroll bars of a panel with AutoScroll are the system's own.)
+            NativeControlTheme.Track(panel);
+
+            return panel;
         }
     }
 }
