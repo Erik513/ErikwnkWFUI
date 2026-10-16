@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -29,14 +30,6 @@ public class ProgressBarScrollTests : IDisposable
         Application.DoEvents();
 
         return host;
-    }
-
-    private static Bitmap Draw(Control bar)
-    {
-        Bitmap picture = new Bitmap(bar.Width, bar.Height);
-        bar.DrawToBitmap(picture, new Rectangle(Point.Empty, bar.Size));
-
-        return picture;
     }
 
     private static ProgressTextScroller Scroller(Control bar) => bar.GetPrivateField<ProgressTextScroller>("_textScroller")!;
@@ -67,16 +60,6 @@ public class ProgressBarScrollTests : IDisposable
         Pair pair = Bars(scroll, text);
 
         return which == "ProgressBar" ? pair.Thick : pair.Slim;
-    }
-
-    private static bool Same(Bitmap a, Bitmap b, Rectangle region)
-    {
-        for (int y = region.Top; y < region.Bottom; y++)
-            for (int x = region.Left; x < region.Right; x++)
-                if (a.GetPixel(x, y).ToArgb() != b.GetPixel(x, y).ToArgb())
-                    return false;
-
-        return true;
     }
 
     // --- The setting ---
@@ -228,7 +211,7 @@ public class ProgressBarScrollTests : IDisposable
         using Bitmap moved = Draw(bar);
 
         Assert.True(scroller.Offset > 0);
-        Assert.False(Same(atStart, moved, new Rectangle(0, 0, 300, bar.Height)), "the picture did not change");
+        Assert.False(SamePicture(atStart, moved, new Rectangle(0, 0, 300, bar.Height)), "the picture did not change");
     }
 
     // --- Endless ---
@@ -313,8 +296,8 @@ public class ProgressBarScrollTests : IDisposable
             Assert.True(scroller.Offset > 0);
 
             // The last 30 pixels (before the border and the room) show the percentage: the same before and after.
-            Assert.True(Same(atStart, moved, new Rectangle(262, 4, 24, 15)), "the percentage moved: " + text + "/" + percentage);
-            Assert.False(Same(atStart, moved, new Rectangle(8, 4, 120, 15)), "the text did not move: " + text + "/" + percentage);
+            Assert.True(SamePicture(atStart, moved, new Rectangle(262, 4, 24, 15)), "the percentage moved: " + text + "/" + percentage);
+            Assert.False(SamePicture(atStart, moved, new Rectangle(8, 4, 120, 15)), "the text did not move: " + text + "/" + percentage);
         }
     }
 
@@ -364,8 +347,8 @@ public class ProgressBarScrollTests : IDisposable
             percentageRoom = new Rectangle(Math.Max(0, stripStart - 8 - 30), 0, 30, 26);
         }
 
-        Assert.True(Same(atStart, moved, percentageRoom), "the percentage moved: " + position);
-        Assert.False(Same(atStart, moved, new Rectangle(0, 0, 150, 26)), "the text did not move: " + position);
+        Assert.True(SamePicture(atStart, moved, percentageRoom), "the percentage moved: " + position);
+        Assert.False(SamePicture(atStart, moved, new Rectangle(0, 0, 150, 26)), "the text did not move: " + position);
     }
 
     // --- The mouse ---

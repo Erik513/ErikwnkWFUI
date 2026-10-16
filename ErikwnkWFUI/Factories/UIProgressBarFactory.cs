@@ -76,8 +76,6 @@ namespace ErikwnkWFUI.Factories
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.Attach(progressBar, progressBar.Invalidate); // the border and the status color are read while painting
-
             return progressBar;
         }
 

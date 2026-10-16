@@ -5,6 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -73,24 +74,6 @@ public class ProgressBarLanguageTests
         return host;
     }
 
-    private static Bitmap Draw(Control bar)
-    {
-        Bitmap picture = new Bitmap(bar.Width, bar.Height);
-        bar.DrawToBitmap(picture, new Rectangle(Point.Empty, bar.Size));
-
-        return picture;
-    }
-
-    private static bool Same(Bitmap a, Bitmap b)
-    {
-        for (int y = 0; y < a.Height; y++)
-            for (int x = 0; x < a.Width; x++)
-                if (a.GetPixel(x, y).ToArgb() != b.GetPixel(x, y).ToArgb())
-                    return false;
-
-        return true;
-    }
-
     [Fact]
     public void AShownBar_WritesThePercentageAgain_WhenTheLanguageIsSwitched()
     {
@@ -131,13 +114,13 @@ public class ProgressBarLanguageTests
 
                 using Bitmap german = Draw(bar);
 
-                Assert.False(Same(english, german), (thick ? "the bar" : "the slim bar") + " did not write the percentage again");
+                Assert.False(SamePicture(english, german), (thick ? "the bar" : "the slim bar") + " did not write the percentage again");
 
                 UIStrings.Language = UILanguage.English;
                 Application.DoEvents();
                 using Bitmap back = Draw(bar);
 
-                Assert.True(Same(english, back), (thick ? "the bar" : "the slim bar") + " is not the same in English again");
+                Assert.True(SamePicture(english, back), (thick ? "the bar" : "the slim bar") + " is not the same in English again");
             });
         }
     }

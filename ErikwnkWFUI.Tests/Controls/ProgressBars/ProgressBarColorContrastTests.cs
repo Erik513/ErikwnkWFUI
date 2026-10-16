@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -52,14 +53,6 @@ public class ProgressBarColorContrastTests
         }
 
         Assert.True(shortfalls.Count == 0, string.Join(Environment.NewLine, shortfalls));
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     private static Form Host(Control bar, int width, int height)

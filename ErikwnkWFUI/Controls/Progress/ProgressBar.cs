@@ -30,7 +30,6 @@ namespace ErikwnkWFUI.Controls
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
         private readonly FullTextToolTip _fullTextToolTip;
-        private bool _showFullTextToolTip = true;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
         private bool _showPercentage;
         private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
@@ -83,6 +82,12 @@ namespace ErikwnkWFUI.Controls
 
                 ApplyTrack();
             }
+        }
+
+        // The designer writes BackColor only where it was set (the default is followed, not stored); Reset is the one of Control.
+        private bool ShouldSerializeBackColor()
+        {
+            return _trackColor != null && _trackColor.IsSet;
         }
 
         // What the bar lies on: the first color that is not see-through behind it.
@@ -222,17 +227,10 @@ namespace ErikwnkWFUI.Controls
         [DefaultValue(true)]
         public bool ShowFullTextToolTip
         {
-            get { return _showFullTextToolTip; }
+            get { return _fullTextToolTip.Enabled; }
             set
             {
-                if (value == _showFullTextToolTip)
-                    return;
-
-                _showFullTextToolTip = value;
-
-                if (!value)
-                    _fullTextToolTip.Set("");
-
+                _fullTextToolTip.Enabled = value;
                 Invalidate();
             }
         }
@@ -309,7 +307,7 @@ namespace ErikwnkWFUI.Controls
                 covered,
                 _textScroller);
 
-            _fullTextToolTip.Set(_showFullTextToolTip && cut ? Text : "");
+            _fullTextToolTip.Update(Text, cut);
         }
 
         // The percentage is written the way of the language ("42%", "42 %"): the bar is painted again when the language changes.
@@ -354,12 +352,18 @@ namespace ErikwnkWFUI.Controls
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
+
+            // (A bar that is hidden gets no MouseLeave either.)
+            _textScroller.SetHovered(false);
             _marquee.Update();
         }
 
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
+
+            // (A bar that is disabled gets no MouseLeave: the mouse is not "on" it any more.)
+            _textScroller.SetHovered(false);
             Invalidate();
         }
 

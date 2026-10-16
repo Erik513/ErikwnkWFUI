@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
@@ -27,14 +28,6 @@ public class ProgressBarBehaviorTests : IDisposable
         return host;
     }
 
-    private static Bitmap Draw(Control bar)
-    {
-        Bitmap picture = new Bitmap(bar.Width, bar.Height);
-        bar.DrawToBitmap(picture, new Rectangle(Point.Empty, bar.Size));
-
-        return picture;
-    }
-
     private static Color Pixel(Control bar, int x)
     {
         using Bitmap picture = Draw(bar);
@@ -43,17 +36,6 @@ public class ProgressBarBehaviorTests : IDisposable
     }
 
     private static MarqueeAnimator Marquee(Control bar) => bar.GetPrivateField<MarqueeAnimator>("_marquee")!;
-
-    private static void Pump(int milliseconds)
-    {
-        DateTime end = DateTime.UtcNow.AddMilliseconds(milliseconds);
-
-        while (DateTime.UtcNow < end)
-        {
-            Application.DoEvents();
-            Thread.Sleep(10);
-        }
-    }
 
     // --- Step, PerformStep, Increment ---
 

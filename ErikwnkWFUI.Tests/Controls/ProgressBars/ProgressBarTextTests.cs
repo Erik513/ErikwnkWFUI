@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
@@ -25,14 +26,6 @@ public class ProgressBarTextTests : IDisposable
         Application.DoEvents();
 
         return host;
-    }
-
-    private static Bitmap Draw(Control bar)
-    {
-        Bitmap picture = new Bitmap(bar.Width, bar.Height);
-        bar.DrawToBitmap(picture, new Rectangle(Point.Empty, bar.Size));
-
-        return picture;
     }
 
     // The pixels that are none of the colors of the bar: the letters.
@@ -156,16 +149,6 @@ public class ProgressBarTextTests : IDisposable
         Application.DoEvents();
         using Bitmap off = Draw(bar);
         Assert.True(SamePicture(without, off), "the percentage is still there");
-    }
-
-    private static bool SamePicture(Bitmap a, Bitmap b)
-    {
-        for (int y = 0; y < a.Height; y++)
-            for (int x = 0; x < a.Width; x++)
-                if (a.GetPixel(x, y).ToArgb() != b.GetPixel(x, y).ToArgb())
-                    return false;
-
-        return true;
     }
 
     [Fact]

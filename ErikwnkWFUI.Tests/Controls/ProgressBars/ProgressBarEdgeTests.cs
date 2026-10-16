@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
@@ -37,14 +38,6 @@ public class ProgressBarEdgeTests : IDisposable
         return host;
     }
 
-    private static Bitmap Draw(Control bar)
-    {
-        Bitmap picture = new Bitmap(bar.Width, bar.Height);
-        bar.DrawToBitmap(picture, new Rectangle(Point.Empty, bar.Size));
-
-        return picture;
-    }
-
     private static void Set(Control bar, string property, object value)
     {
         bar.GetType().GetProperty(property)!.SetValue(bar, value);
@@ -53,17 +46,6 @@ public class ProgressBarEdgeTests : IDisposable
     private static T Get<T>(Control bar, string property) => (T)bar.GetType().GetProperty(property)!.GetValue(bar)!;
 
     private static MarqueeAnimator Marquee(Control bar) => bar.GetPrivateField<MarqueeAnimator>("_marquee")!;
-
-    private static void Pump(int milliseconds)
-    {
-        DateTime end = DateTime.UtcNow.AddMilliseconds(milliseconds);
-
-        while (DateTime.UtcNow < end)
-        {
-            Application.DoEvents();
-            Thread.Sleep(10);
-        }
-    }
 
     // How many pixels in the row in the middle have the fill color.
     private static int FillPixels(Control bar)

@@ -44,7 +44,6 @@ namespace ErikwnkWFUI.Controls
 
         // The tooltip with the whole text, while the text moves because it does not fit (see ShowFullTextToolTip).
         private readonly FullTextToolTip _fullTextToolTip;
-        private bool _showFullTextToolTip = true;
 
         // The movement. How wide the text is; back and forth: how far the text can go to show its end; endless: how long
         // one round is (the text, a gap, the separator, a gap). Of the last two, at most one is more than 0,
@@ -139,10 +138,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public bool ShowFullTextToolTip
         {
-            get { return _showFullTextToolTip; }
+            get { return _fullTextToolTip.Enabled; }
             set
             {
-                _showFullTextToolTip = value;
+                _fullTextToolTip.Enabled = value;
                 UpdateFullTextToolTip();
             }
         }
@@ -294,7 +293,7 @@ namespace ErikwnkWFUI.Controls
             bool moves = (_maxOffset > 0 || _cycle > 0) && Visible && IsHandleCreated;
             bool exceeds = _maxOffset > 0 || (_cycle > 0 && _textWidth + 2 * _textInset > ClientSize.Width - Padding.Horizontal);
 
-            _fullTextToolTip.Set(_showFullTextToolTip && moves && exceeds ? Text : "");
+            _fullTextToolTip.Update(Text, moves && exceeds);
         }
 
         // How the text has to move: back and forth needs to know how far to go to show its end, the endless

@@ -16,6 +16,9 @@ namespace ErikwnkWFUI.Controls
         // The moving text goes a little further than its end, so that the last sign is clear of the edge.
         private const int EndRoom = 2;
 
+        // Whether Windows lets windows animate is asked again after this long (not on every picture of the moving text).
+        private const int AnimationSettingMilliseconds = 500;
+
         private readonly Control _owner;
         private readonly Timer _timer = new Timer { Interval = 15 };
         private readonly Stopwatch _clock = new Stopwatch();
@@ -36,6 +39,10 @@ namespace ErikwnkWFUI.Controls
         private double _elapsed;
         private long _lastTick;
         private int _offset;
+
+        // The last answer about the animations of Windows, and when it was asked.
+        private bool _animationsAllowed = true;
+        private long _animationsAsked = long.MinValue;
 
         public ProgressTextScroller(Control owner)
         {
@@ -109,7 +116,7 @@ namespace ErikwnkWFUI.Controls
             bool active = _scroll.Mode != LabelScrollMode.None
                 && textWidth > roomWidth
                 && roomWidth > 0
-                && ThemedLabel.AnimationsEnabled()
+                && AnimationsAllowed()
                 && _owner.Enabled
                 && _owner.Visible
                 && _owner.IsHandleCreated;
@@ -143,6 +150,19 @@ namespace ErikwnkWFUI.Controls
                 Restart(active);
             else if (active && !_timer.Enabled)
                 StartClock();
+        }
+
+        private bool AnimationsAllowed()
+        {
+            long now = Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
+
+            if (_animationsAsked == long.MinValue || now - _animationsAsked >= AnimationSettingMilliseconds)
+            {
+                _animationsAllowed = ThemedLabel.AnimationsEnabled();
+                _animationsAsked = now;
+            }
+
+            return _animationsAllowed;
         }
 
         // Back to the start, with the answer of the last Configure kept or reset.

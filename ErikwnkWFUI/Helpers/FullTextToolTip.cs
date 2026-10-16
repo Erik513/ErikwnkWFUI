@@ -18,11 +18,37 @@ namespace ErikwnkWFUI.Helpers
 
         private readonly Control _owner;
         private ToolTip _toolTip;
+        private bool _enabled = true;
         private string _text = "";
 
         public FullTextToolTip(Control owner)
         {
             _owner = owner;
+        }
+
+        /// <summary>Whether the tooltip is used at all (on by default); off, it shows nothing whatever the control tells it.</summary>
+        public bool Enabled
+        {
+            get { return _enabled; }
+            set
+            {
+                if (value == _enabled)
+                    return;
+
+                _enabled = value;
+
+                if (!value)
+                    Set("");
+            }
+        }
+
+        /// <summary>
+        /// Tells the tooltip what the control shows: the tooltip has the whole <paramref name="text"/> when the control could not
+        /// show it whole (<paramref name="cut"/>: it is cut or it moves) and is <see cref="Enabled"/>, and none otherwise.
+        /// </summary>
+        public void Update(string text, bool cut)
+        {
+            Set(_enabled && cut ? text : "");
         }
 
         /// <summary>The text the tooltip shows now; empty while there is none.</summary>

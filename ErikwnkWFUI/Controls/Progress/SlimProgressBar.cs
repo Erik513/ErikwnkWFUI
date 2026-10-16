@@ -54,7 +54,6 @@ namespace ErikwnkWFUI.Controls
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
         private readonly FullTextToolTip _fullTextToolTip;
-        private bool _showFullTextToolTip = true;
 
         private int _minimum;
         private int _maximum = 100;
@@ -153,6 +152,17 @@ namespace ErikwnkWFUI.Controls
 
                 Invalidate();
             }
+        }
+
+        // The designer writes the colors only where they were set (the defaults are followed, not stored); Reset is the one of Control.
+        private bool ShouldSerializeBackColor()
+        {
+            return _trackColor != null && _trackColor.IsSet;
+        }
+
+        private bool ShouldSerializeForeColor()
+        {
+            return _fillColor != null && _fillColor.IsSet;
         }
 
         // The color the factory gives the fill; followed live (the theme, the accent) until a color is set by hand.
@@ -409,17 +419,10 @@ namespace ErikwnkWFUI.Controls
         [DefaultValue(true)]
         public bool ShowFullTextToolTip
         {
-            get { return _showFullTextToolTip; }
+            get { return _fullTextToolTip.Enabled; }
             set
             {
-                if (value == _showFullTextToolTip)
-                    return;
-
-                _showFullTextToolTip = value;
-
-                if (!value)
-                    _fullTextToolTip.Set("");
-
+                _fullTextToolTip.Enabled = value;
                 Invalidate();
             }
         }
@@ -452,6 +455,8 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnEnabledChanged(e);
 
+            // (A bar that is disabled gets no MouseLeave: the mouse is not "on" it any more.)
+            _textScroller.SetHovered(false);
             Invalidate();
         }
 
@@ -488,6 +493,9 @@ namespace ErikwnkWFUI.Controls
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
+
+            // (A bar that is hidden gets no MouseLeave either.)
+            _textScroller.SetHovered(false);
             _marquee.Update();
         }
 
@@ -622,7 +630,7 @@ namespace ErikwnkWFUI.Controls
             else
                 _textScroller.Configure(0, 0, Font);
 
-            _fullTextToolTip.Set(_showFullTextToolTip && cut ? Text : "");
+            _fullTextToolTip.Update(Text, cut);
         }
 
         private bool PaintText(Graphics g, Rectangle textArea)
