@@ -11,14 +11,14 @@ namespace ErikwnkWFUI.Showcase
     {
         private void AddMultiPanelsSection(PropertyTable table)
         {
-            UIColorSet green = UIStyles.Colors.Sets.Green;
+            UIColorSet yellow = UIStyles.Colors.Sets.Yellow;
 
             table.AddRow("CreateStandard", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateStandard()));
             table.AddRow("CreatePrimary", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreatePrimary()));
-            table.AddRow("CreateStandard(colors: Green)", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateStandard(green)));
+            table.AddRow("CreateStandard(colors: Yellow)", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateStandard(yellow)));
             table.AddRow("CreateCardStandard", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard()));
             table.AddRow("CreateCardPrimary", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardPrimary()));
-            table.AddRow("CreateCardStandard(colors: Green)", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(green)));
+            table.AddRow("CreateCardStandard(colors: Yellow)", MultiPanelRowHeight, CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(yellow)));
 
             // The options in one row: the page count and the line under the header, and the title in the center and on the right.
             MultiPanel centered = CreateMultiPanelDemo(UIStyles.MultiPanels.CreateCardStandard(), PairedWidth);

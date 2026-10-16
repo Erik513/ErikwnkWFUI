@@ -33,7 +33,7 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateStandard", grayBar, grayDisabled);
 
             AddBarRow(table, "CreatePrimary", UIStyles.ProgressBars.CreatePrimary());
-            AddBarRow(table, "CreateStandard(colors: Teal)", UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal));
+            AddBarRow(table, "CreateStandard(colors: Yellow)", UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow));
             AddBarRow(table, "CreateGreen", UIStyles.ProgressBars.CreateGreen());
             AddBarRow(table, "CreateStatus", UIStyles.ProgressBars.CreateStatus());
 
@@ -75,7 +75,7 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreateStandard", slimGrayBar, slimGrayDisabled);
 
             AddSlimBarRow(table, "CreatePrimary", UIStyles.SlimProgressBars.CreatePrimary());
-            AddSlimBarRow(table, "CreateStandard(colors: Teal)", UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal));
+            AddSlimBarRow(table, "CreateStandard(colors: Yellow)", UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow));
             AddSlimBarRow(table, "CreateGreen", UIStyles.SlimProgressBars.CreateGreen());
             AddSlimBarRow(table, "CreateStatus", UIStyles.SlimProgressBars.CreateStatus());
         }

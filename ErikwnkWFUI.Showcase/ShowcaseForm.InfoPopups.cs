@@ -28,7 +28,7 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreatePrimary", CreateClickButton(UIStyles.InfoPopups.CreatePrimary(), "Show popup", 160,
                 popup => popup.SetContent(SampleBlocks)));
 
-            table.AddRow("CreateStandard(colors: Green)", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Green), "Show popup", 160,
+            table.AddRow("CreateStandard(colors: Yellow)", CreateClickButton(UIStyles.InfoPopups.CreateStandard(UIStyles.Colors.Sets.Yellow), "Show popup", 160,
                 popup => popup.SetContent(SampleBlocks)));
 
             table.AddSection("Transparency");

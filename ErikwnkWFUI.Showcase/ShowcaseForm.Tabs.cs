@@ -33,9 +33,9 @@ namespace ErikwnkWFUI.Showcase
 
             // CreateStandard with a color set.
             table.AddRow(
-                "CreateStandard(colors: Green)",
+                "CreateStandard(colors: Yellow)",
                 140,
-                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Green), 3, "Green set"));
+                CreateTabControlDemo(UIStyles.TabControls.CreateStandard(UIStyles.Colors.Sets.Yellow), 3, "Yellow set"));
 
             // The display-only variants: tabs can be switched, not edited.
             table.AddRow(
@@ -55,9 +55,9 @@ namespace ErikwnkWFUI.Showcase
                 CreateTabControlDemo(multiline, 7, "TabControl with Multiline"));
 
             table.AddRow(
-                "CreateReadOnlyStandard(colors: Green)",
+                "CreateReadOnlyStandard(colors: Yellow)",
                 140,
-                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyStandard(UIStyles.Colors.Sets.Green), 3));
+                CreateTabControlDemo(UIStyles.TabControls.CreateReadOnlyStandard(UIStyles.Colors.Sets.Yellow), 3));
         }
 
         private static System.Windows.Forms.Label CreateTabPageLabel(string text)

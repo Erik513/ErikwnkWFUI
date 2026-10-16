@@ -20,15 +20,15 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddRow("ShowStandard", CreateToastButton(() => UIStyles.Toasts.ShowStandard(SampleToastMessage, this, icon: ToastIcon.Success)));
             table.AddRow("ShowPrimary", CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, icon: ToastIcon.Success)));
-            table.AddRow("ShowStandard(colors: Green)", CreateToastButton(() => UIStyles.Toasts.ShowStandard(SampleToastMessage, this, UIStyles.Colors.Sets.Green, icon: ToastIcon.Success)));
+            table.AddRow("ShowStandard(colors: Yellow)", CreateToastButton(() => UIStyles.Toasts.ShowStandard(SampleToastMessage, this, UIStyles.Colors.Sets.Yellow, icon: ToastIcon.Success)));
 
             table.AddSection("CreateStandard / CreatePrimary - the settings as properties");
 
             Toaster primary = UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Success);
             table.AddRow("CreatePrimary", CreateToastButton(() => primary.Show(SampleToastMessage, this)));
 
-            Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Green, PopupTransparency.Low, PopupDuration.Long, icon: ToastIcon.Success);
-            table.AddRow("CreateStandard(colors: Green)", CreateToastButton(() => standard.Show(SampleToastMessage, this)));
+            Toaster standard = UIStyles.Toasts.CreateStandard(UIStyles.Colors.Sets.Yellow, PopupTransparency.Low, PopupDuration.Long, icon: ToastIcon.Success);
+            table.AddRow("CreateStandard(colors: Yellow)", CreateToastButton(() => standard.Show(SampleToastMessage, this)));
 
             Toaster changing = UIStyles.Toasts.CreatePrimary(icon: ToastIcon.Info);
             table.AddRow("Duration changed after each click", CreateToastButton(() =>

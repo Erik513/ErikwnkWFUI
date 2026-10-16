@@ -38,9 +38,9 @@ namespace ErikwnkWFUI.Showcase
             FillListBoxDemo(primary);
             table.AddRow("CreatePrimary", 200, primary);
 
-            ErikwnkWFUI.Controls.ListBox green = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
-            FillListBoxDemo(green);
-            table.AddRow("CreateStandard(colors: Green)", 200, green);
+            ErikwnkWFUI.Controls.ListBox yellow = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Yellow);
+            FillListBoxDemo(yellow);
+            table.AddRow("CreateStandard(colors: Yellow)", 200, yellow);
 
             table.AddSection("List boxes with a title");
 
@@ -52,9 +52,9 @@ namespace ErikwnkWFUI.Showcase
             FillListBoxDemo(titledPrimary.InnerListBox);
             table.AddRow("CreatePrimary", 240, titledPrimary);
 
-            TitledListBox titledGreen = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
-            FillListBoxDemo(titledGreen.InnerListBox);
-            table.AddRow("CreateStandard(colors: Green)", 240, titledGreen);
+            TitledListBox titledYellow = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Yellow);
+            FillListBoxDemo(titledYellow.InnerListBox);
+            table.AddRow("CreateStandard(colors: Yellow)", 240, titledYellow);
         }
 
         private void AddListViewSection(PropertyTable table)
@@ -72,10 +72,10 @@ namespace ErikwnkWFUI.Showcase
             PinToDemoWidth(primaryListView, demoWidth);
 
             // Any other color: pass a color set.
-            var purpleListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Purple);
-            PopulateListViewDemo(purpleListView);
-            table.AddRow("CreateStandard(colors: Purple)", 260, UIColumn.Absolute(purpleListView, demoWidth));
-            PinToDemoWidth(purpleListView, demoWidth);
+            var yellowListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Yellow);
+            PopulateListViewDemo(yellowListView);
+            table.AddRow("CreateStandard(colors: Yellow)", 260, UIColumn.Absolute(yellowListView, demoWidth));
+            PinToDemoWidth(yellowListView, demoWidth);
 
             table.AddSection("Size");
 
@@ -200,7 +200,7 @@ namespace ErikwnkWFUI.Showcase
             AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
             // Any other color: pass a color set (here a ready-made one) - border, selection, drag line and menu follow it.
-            AddEditableDataGridRow(table, "CreateStandard(colors: Teal)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Teal));
+            AddEditableDataGridRow(table, "CreateStandard(colors: Yellow)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Yellow));
 
             table.AddSection("Read-only");
 
@@ -239,20 +239,20 @@ namespace ErikwnkWFUI.Showcase
                 UIColumn.Percent(readOnlyPrimaryGrid, 50),
                 UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
 
-            var tealGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
-            tealGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(tealGrid);
+            var yellowGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Yellow);
+            yellowGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(yellowGrid);
 
-            var disabledTealGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
-            disabledTealGrid.Dock = DockStyle.Fill;
-            disabledTealGrid.Enabled = false;
-            NarrowLengthColumn(disabledTealGrid);
+            var disabledYellowGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Yellow);
+            disabledYellowGrid.Dock = DockStyle.Fill;
+            disabledYellowGrid.Enabled = false;
+            NarrowLengthColumn(disabledYellowGrid);
 
             table.AddRow(
-                "CreateReadOnlyStandard(colors: Teal)",
+                "CreateReadOnlyStandard(colors: Yellow)",
                 180,
-                UIColumn.Percent(tealGrid, 50),
-                UIColumn.Percent(disabledTealGrid, 50));
+                UIColumn.Percent(yellowGrid, 50),
+                UIColumn.Percent(disabledYellowGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the
