@@ -70,7 +70,7 @@ public class ProgressBarToolTipTests : IDisposable
     {
         ToolTip? toolTip = Tip(bar).GetPrivateField<ToolTip>("_toolTip");
 
-        return toolTip == null ? "" : toolTip.GetToolTip(bar);
+        return toolTip == null ? "" : toolTip.GetToolTip(bar) ?? "";
     }
 
     private static void SetShow(Control bar, bool value)

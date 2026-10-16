@@ -57,7 +57,7 @@ public class LabelFullTextToolTipTests : IDisposable
     {
         ToolTip? toolTip = label.GetPrivateField<FullTextToolTip>("_fullTextToolTip")!.GetPrivateField<ToolTip>("_toolTip");
 
-        return toolTip == null ? "" : toolTip.GetToolTip(label);
+        return toolTip == null ? "" : toolTip.GetToolTip(label) ?? "";
     }
 
     [Fact]
