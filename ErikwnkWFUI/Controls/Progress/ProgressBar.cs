@@ -253,10 +253,11 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // The color of the 1 px edge around the bar: the border, or - without one - the track itself (what is seen, when it is transparent).
+        // The color of the 1 px edge around the bar: the border - the quiet line of the library, as of a panel, moved only as far as the
+        // panel the bar lies on needs to keep it seen (1.5:1) - or, without one, the track itself (what is seen when it is transparent).
         internal Color EdgeColor
         {
-            get { return _borderStyle != BorderStyle.None ? UIColors.BorderMedium : BackColor; }
+            get { return _borderStyle != BorderStyle.None ? UIColors.GetLineColor(GetParentSurface()) : BackColor; }
         }
 
         // The bar draws itself: the native control paints in WM_PAINT without the Paint event, ignores the colors while visual styles are

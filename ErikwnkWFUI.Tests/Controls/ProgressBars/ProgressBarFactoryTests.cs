@@ -172,7 +172,7 @@ public class ProgressBarFactoryTests : IDisposable
 
         bar.BackColor = Color.Transparent;
         Assert.Equal(Color.Purple, bar.BackColor);
-        Assert.Equal(UIColors.BorderMedium, bar.EdgeColor);
+        Assert.Equal(UIColors.GetLineColor(Color.Purple), bar.EdgeColor);
 
         bar.BorderStyle = BorderStyle.None;
         Assert.Equal(Color.Purple, bar.BackColor);

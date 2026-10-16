@@ -197,6 +197,39 @@ public class ProgressBarColorContrastTests
 
     [Theory]
     [MemberData(nameof(Themes))]
+    public void TheBorder_IsSeenOnEveryPanel_AndOnTheColorsOfTheSets(bool light)
+    {
+        Run(light, shortfalls =>
+        {
+            List<(string Name, Color Surface)> panels = new List<(string, Color)>
+            {
+                ("Dark", UIColors.BackgroundDark), ("Medium", UIColors.BackgroundMedium), ("Elevated", UIColors.BackgroundMediumElevated),
+                ("Light", UIColors.BackgroundLight), ("Lighter", UIColors.BackgroundLighter)
+            };
+
+            foreach ((string name, UIColorSet? set) in AllSets().Where(s => s.Set != null))
+                panels.Add((name + " set", set!.Basic));
+
+            foreach ((string name, Color surface) in panels)
+            {
+                System.Windows.Forms.Panel panel = new System.Windows.Forms.Panel { BackColor = surface, Size = new Size(200, 33) };
+                ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
+                bar.Value = 50;
+                bar.SetBounds(0, 5, 200, 23);
+                panel.Controls.Add(bar);
+                using Form host = OffscreenForm.Create(new Size(200, 33), surface);
+                host.Controls.Add(panel);
+                host.Show();
+                Application.DoEvents();
+                using Bitmap picture = Draw(panel);
+
+                Check(shortfalls, "border on " + name, picture.GetPixel(0, 16), surface, 1.5);
+            }
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
     public void ADisabledBar_StaysVisible_AgainstItsTrack(bool light)
     {
         Run(light, shortfalls =>
