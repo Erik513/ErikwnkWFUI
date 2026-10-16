@@ -61,8 +61,8 @@ namespace ErikwnkWFUI.Factories
         }
 
         // The plain tooltip a control shows for itself on hover: standard
-        // look, short delay, and kept working after the window loses and
-        // regains focus.
+        // look, short delay, kept working after the window loses and
+        // regains focus, and lines no wider than ToolTipWidth.MaxWidthAt96Dpi.
         public static ToolTip CreateHoverToolTip(Control owner)
         {
             ToolTip toolTip = new ToolTip
@@ -73,6 +73,8 @@ namespace ErikwnkWFUI.Factories
             };
 
             toolTip.ReviveOnFormActivate(owner);
+            ToolTipWidth.Limit(toolTip, owner);
+
             return toolTip;
         }
     }

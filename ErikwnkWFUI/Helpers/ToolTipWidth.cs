@@ -15,7 +15,10 @@ namespace ErikwnkWFUI.Helpers
     /// </summary>
     internal static class ToolTipWidth
     {
-        private sealed class Limit
+        /// <summary>The widest a line of a tooltip of the library is, in pixels at 96 dpi; a longer text is wrapped.</summary>
+        internal const int MaxWidthAt96Dpi = 400;
+
+        private sealed class WidthLimit
         {
             public int Width;
         }
@@ -23,18 +26,18 @@ namespace ErikwnkWFUI.Helpers
         // The window of a ToolTip is not public: the property is found once, by name (it exists in .NET Framework and in .NET).
         private static readonly PropertyInfo HandleProperty = typeof(ToolTip).GetProperty("Handle", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-        private static readonly ConditionalWeakTable<ToolTip, Limit> Limits = new ConditionalWeakTable<ToolTip, Limit>();
+        private static readonly ConditionalWeakTable<ToolTip, WidthLimit> Limits = new ConditionalWeakTable<ToolTip, WidthLimit>();
 
         /// <summary>Limits the lines of the tooltip to this many pixels; another call changes the limit.</summary>
         public static void Set(ToolTip toolTip, int width)
         {
-            if (Limits.TryGetValue(toolTip, out Limit limit))
+            if (Limits.TryGetValue(toolTip, out WidthLimit limit))
             {
                 limit.Width = width;
             }
             else
             {
-                Limits.Add(toolTip, new Limit { Width = width });
+                Limits.Add(toolTip, new WidthLimit { Width = width });
 
                 // Before each tooltip is shown (the first one may have been sized already: see Apply, called at once).
                 toolTip.Popup += (sender, e) => Apply(toolTip);
@@ -43,10 +46,16 @@ namespace ErikwnkWFUI.Helpers
             Apply(toolTip);
         }
 
+        /// <summary>Limits the lines of the tooltip to <see cref="MaxWidthAt96Dpi"/> pixels, scaled to the screen of its owner.</summary>
+        public static void Limit(ToolTip toolTip, Control owner)
+        {
+            Set(toolTip, (int)Math.Round(MaxWidthAt96Dpi * owner.DeviceDpi / 96.0));
+        }
+
         /// <summary>Sets the limit in the window of the tooltip, if it has a limit; makes the window if it does not exist yet.</summary>
         public static void Apply(ToolTip toolTip)
         {
-            if (!Limits.TryGetValue(toolTip, out Limit limit))
+            if (!Limits.TryGetValue(toolTip, out WidthLimit limit))
                 return;
 
             if (!(HandleProperty?.GetValue(toolTip) is IntPtr window) || window == IntPtr.Zero)

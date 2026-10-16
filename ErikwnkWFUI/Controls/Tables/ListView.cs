@@ -164,6 +164,9 @@ namespace ErikwnkWFUI.Controls
             // the group headers light and leave the scroll bars light, so only the header gets it.
             NativeControlTheme.Track(this);
             NativeControlTheme.Track(this, () => HeaderInputSubclass.GetHeaderHandle(Handle), NativeControlTheme.ApplyToItemsView);
+
+            // The tooltip with the full text of a cell: a long cell must not give a tooltip as wide as the screen.
+            ToolTipWidth.Limit(_cellToolTip, this);
             View = View.Details;
             FullRowSelect = true;
             HideSelection = true;

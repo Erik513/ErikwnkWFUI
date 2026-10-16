@@ -159,7 +159,7 @@ public class ProgressBarToolTipTests : IDisposable
         int width = (int)ErikwnkWFUI.Native.NativeMethods.SendMessage(window, ErikwnkWFUI.Native.NativeMethods.TTM_GETMAXTIPWIDTH, IntPtr.Zero, IntPtr.Zero);
         toolTip.Hide(bar);
 
-        Assert.Equal((int)Math.Round(FullTextToolTip.MaxWidthAt96Dpi * bar.DeviceDpi / 96.0), width);
+        Assert.Equal((int)Math.Round(ToolTipWidth.MaxWidthAt96Dpi * bar.DeviceDpi / 96.0), width);
     }
 
     [Theory]

@@ -142,7 +142,7 @@ public class LabelFullTextToolTipTests : IDisposable
         ThemedLabel label = Create(veryLong, LabelScroll.BackAndForth());
         ToolTip toolTip = label.GetPrivateField<FullTextToolTip>("_fullTextToolTip")!.GetPrivateField<ToolTip>("_toolTip")!;
         System.Reflection.PropertyInfo handleProperty = typeof(ToolTip).GetProperty("Handle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!;
-        int expected = (int)Math.Round(FullTextToolTip.MaxWidthAt96Dpi * label.DeviceDpi / 96.0);
+        int expected = (int)Math.Round(ToolTipWidth.MaxWidthAt96Dpi * label.DeviceDpi / 96.0);
 
         for (int round = 0; round < 2; round++)
         {
@@ -214,7 +214,7 @@ public class LabelFullTextToolTipTests : IDisposable
         System.Drawing.Rectangle bounds = GetWindowBounds((IntPtr)handleProperty.GetValue(toolTip)!);
         toolTip.Hide(label);
 
-        Assert.True(bounds.Width <= (int)Math.Round(FullTextToolTip.MaxWidthAt96Dpi * label.DeviceDpi / 96.0) + 20, "the window is " + bounds.Width + " px wide");
+        Assert.True(bounds.Width <= (int)Math.Round(ToolTipWidth.MaxWidthAt96Dpi * label.DeviceDpi / 96.0) + 20, "the window is " + bounds.Width + " px wide");
     }
 
     [Fact]
