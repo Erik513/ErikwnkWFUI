@@ -5,6 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
+using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -17,44 +18,6 @@ namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 [Collection(AccentColorTestCollection.Name)]
 public class ProgressBarColorContrastTests
 {
-    public static IEnumerable<object[]> Themes()
-    {
-        yield return new object[] { false };
-        yield return new object[] { true };
-    }
-
-    private static IEnumerable<(string Name, UIColorSet? Set)> AllSets()
-    {
-        yield return ("default gray", null);
-
-        foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
-        {
-            // The dark set is the fill of the theme itself: it is not a color for a bar.
-            if (property.Name == "Dark")
-                continue;
-
-            yield return (property.Name, (UIColorSet)property.GetValue(null)!);
-        }
-    }
-
-    private static void Run(bool lightTheme, Action<List<string>> collect)
-    {
-        List<string> shortfalls = new List<string>();
-
-        try
-        {
-            UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
-            collect(shortfalls);
-        }
-        finally
-        {
-            UIColors.ApplyTheme(UIThemes.Dark);
-            UIColors.SetAccent(UIAccentColors.Blue);
-        }
-
-        Assert.True(shortfalls.Count == 0, string.Join(Environment.NewLine, shortfalls));
-    }
-
     private static Form Host(Control bar, int width, int height)
     {
         Form host = OffscreenForm.Create(new Size(width, height + 10), UIColors.BackgroundLight);
@@ -66,16 +29,8 @@ public class ProgressBarColorContrastTests
         return host;
     }
 
-    private static void Check(List<string> shortfalls, string what, Color first, Color second, double minimum)
-    {
-        double ratio = ColorContrastHelper.GetContrastRatio(first, second);
-
-        if (ratio < minimum)
-            shortfalls.Add(what + ": " + ratio.ToString("0.00") + ":1, needs " + minimum.ToString("0.0"));
-    }
-
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheFill_StandsOutFromTheTrack_ForEverySet_InBothBars(bool light)
     {
         Run(light, shortfalls =>
@@ -98,7 +53,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void ThePrimaryFill_StandsOutFromTheTrack_ForEveryAccent(bool light)
     {
         Run(light, shortfalls =>
@@ -118,7 +73,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheStatusFill_StandsOutFromTheTrack_AtEveryValue_InBothBars(bool light)
     {
         Run(light, shortfalls =>
@@ -144,7 +99,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheText_CanBeReadOnTheFillAndOnTheTrack_ForEverySet(bool light)
     {
         Run(light, shortfalls =>
@@ -175,7 +130,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheSlimText_CanBeReadOnThePanel_AndTheDisabledOne(bool light)
     {
         Run(light, shortfalls =>
@@ -189,7 +144,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheBorder_IsSeenOnEveryPanel_AndOnTheColorsOfTheSets(bool light)
     {
         Run(light, shortfalls =>
@@ -249,7 +204,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheSlimTrack_IsSeenOnEveryPanel_AndTheFillStandsOutFromIt(bool light)
     {
         Run(light, shortfalls =>
@@ -277,7 +232,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheSlimTrackAndFill_FollowThePanelAndTheTheme_AndAColorSetByHandStays(bool light)
     {
         Run(light, shortfalls =>
@@ -322,7 +277,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void ADisabledSlimBar_StaysVisible_AgainstItsTrackOnEveryPanel(bool light)
     {
         Run(light, shortfalls =>
@@ -342,7 +297,7 @@ public class ProgressBarColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void ADisabledBar_StaysVisible_AgainstItsTrack(bool light)
     {
         Run(light, shortfalls =>

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.ComboBox;
 
@@ -15,28 +16,6 @@ namespace ErikwnkWFUI.Tests.Controls.ComboBox;
 [Collection(AccentColorTestCollection.Name)]
 public class ComboBoxColorContrastTests
 {
-    public static IEnumerable<object[]> Themes()
-    {
-        yield return new object[] { false };
-        yield return new object[] { true };
-    }
-
-    private static IEnumerable<(string Name, UIColorSet? Set)> AllSets()
-    {
-        yield return ("default gray", null);
-
-        foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
-            yield return (property.Name, (UIColorSet)property.GetValue(null)!);
-    }
-
-    private static void Check(List<string> shortfalls, string what, Color foreground, Color background, double minimum)
-    {
-        double ratio = ColorContrastHelper.GetContrastRatio(foreground, background);
-
-        if (ratio < minimum)
-            shortfalls.Add(what + " " + ratio.ToString("0.0") + ":1 (needs " + minimum.ToString("0.0") + ")");
-    }
-
     private static Bitmap DrawRow(System.Windows.Forms.ComboBox box, DrawItemState state)
     {
         Bitmap bitmap = new Bitmap(120, 24);
@@ -71,7 +50,7 @@ public class ComboBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheTexts_AreReadable_ForEverySet_InBothThemes(bool lightTheme)
     {
         List<string> shortfalls = new List<string>();
@@ -80,7 +59,7 @@ public class ComboBoxColorContrastTests
         {
             UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
 
-            foreach ((string name, UIColorSet? set) in AllSets())
+            foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
                 using ErikwnkWFUI.Controls.ComboBox box = (ErikwnkWFUI.Controls.ComboBox)UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, set);
                 box.Items.Add("Item");
@@ -120,7 +99,7 @@ public class ComboBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheDisabledLook_AndTheListFrame_StayVisible_InBothThemes(bool lightTheme)
     {
         List<string> shortfalls = new List<string>();
@@ -129,7 +108,7 @@ public class ComboBoxColorContrastTests
         {
             UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
 
-            foreach ((string name, UIColorSet? set) in AllSets())
+            foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
                 using ErikwnkWFUI.Controls.ComboBox box = (ErikwnkWFUI.Controls.ComboBox)UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, set);
                 box.Items.Add("Item");

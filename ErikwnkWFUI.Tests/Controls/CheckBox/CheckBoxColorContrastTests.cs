@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
+using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
 
 namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 
@@ -18,26 +19,6 @@ namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 [Collection(AccentColorTestCollection.Name)]
 public class CheckBoxColorContrastTests
 {
-    public static IEnumerable<object[]> Themes()
-    {
-        yield return new object[] { false };
-        yield return new object[] { true };
-    }
-
-    private static IEnumerable<(string Name, UIColorSet? Set)> AllSets()
-    {
-        yield return ("default gray", null);
-
-        foreach (PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(BindingFlags.Public | BindingFlags.Static))
-        {
-            // The dark set is the theme's own fill: it is not a color for a box.
-            if (property.Name == "Dark")
-                continue;
-
-            yield return (property.Name, (UIColorSet)property.GetValue(null)!);
-        }
-    }
-
     private static (Color Fill, Color Mark) Probe(Control box)
     {
         using Bitmap bitmap = Draw(box);
@@ -46,34 +27,8 @@ public class CheckBoxColorContrastTests
         return (bitmap.GetPixel(5, top + 13), bitmap.GetPixel(10, top + 8));
     }
 
-    private static void Run(bool lightTheme, Action<List<string>> collect)
-    {
-        List<string> shortfalls = new List<string>();
-
-        try
-        {
-            UIColors.ApplyTheme(lightTheme ? UIThemes.Light : UIThemes.Dark);
-            collect(shortfalls);
-        }
-        finally
-        {
-            UIColors.ApplyTheme(UIThemes.Dark);
-            UIColors.SetAccent(UIAccentColors.Blue);
-        }
-
-        Assert.True(shortfalls.Count == 0, (lightTheme ? "Light" : "Dark") + " theme:\n" + string.Join("\n", shortfalls));
-    }
-
-    private static void Check(List<string> shortfalls, string what, Color foreground, Color background, double minimum)
-    {
-        double ratio = ColorContrastHelper.GetContrastRatio(foreground, background);
-
-        if (ratio < minimum)
-            shortfalls.Add($"{what}: {ratio:F2}:1, needs {minimum:F1}:1 (front {foreground}, back {background})");
-    }
-
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheMark_IsReadable_OnTheFill_InEveryStateAndSet(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>
@@ -107,7 +62,7 @@ public class CheckBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void ThePrimaryBox_IsReadable_WithEveryAccent_InEveryState(bool lightTheme)
     {
         Color[] accents = typeof(UIAccentColors)
@@ -141,7 +96,7 @@ public class CheckBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheLabel_IsReadable_AndTheDisabledBoxAndLabelAreStillVisible(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>
@@ -165,7 +120,7 @@ public class CheckBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void TheOutline_StandsOutFromThePage_EmptyAndFilled(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>
@@ -184,7 +139,7 @@ public class CheckBoxColorContrastTests
     }
 
     [Theory]
-    [MemberData(nameof(Themes))]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void AnEmptyBox_GetsAStrongerOutline_WhenHoveredAndPressed_WithAnySet(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>
