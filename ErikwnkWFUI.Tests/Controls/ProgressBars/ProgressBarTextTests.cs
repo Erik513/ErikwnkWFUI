@@ -589,4 +589,77 @@ public class ProgressBarTextTests : IDisposable
 
         Assert.True(SamePicture(before, after));
     }
+
+    // --- A text that is longer than the control ---
+
+    private const string LongText = "A text that is much too long to fit on such a short bar, whatever its alignment or position";
+
+    [Theory]
+    [InlineData(HorizontalAlignment.Left, HorizontalAlignment.Left)]
+    [InlineData(HorizontalAlignment.Center, HorizontalAlignment.Center)]
+    [InlineData(HorizontalAlignment.Right, HorizontalAlignment.Right)]
+    [InlineData(HorizontalAlignment.Left, HorizontalAlignment.Right)]
+    public void ALongText_IsCutOnTheBar_AndStaysInsideTheRoomToTheBorder(HorizontalAlignment text, HorizontalAlignment percentage)
+    {
+        ErikwnkWFUI.Controls.ProgressBar bar = Aligned(text, percentage);
+        bar.Text = LongText;
+        int padding = bar.GetTextPadding();
+
+        List<Point> ink = BarInk(bar);
+
+        Assert.NotEmpty(ink);
+        Assert.All(ink, point => Assert.InRange(point.X, 1 + padding - 1, 298 - padding + 1));
+    }
+
+    [Theory]
+    [InlineData(SlimProgressBarTextPosition.Above)]
+    [InlineData(SlimProgressBarTextPosition.Below)]
+    [InlineData(SlimProgressBarTextPosition.Left)]
+    [InlineData(SlimProgressBarTextPosition.Right)]
+    public void ALongSlimText_IsCut_TheStripKeepsItsRoom_AndNothingIsDrawnOutsideTheControl(SlimProgressBarTextPosition position)
+    {
+        SlimProgressBar slim = Slim(LongText, position, percentage: true);
+        using Form host = Host(slim, 200, 26);
+        using Bitmap picture = Draw(slim);
+
+        // The strip is still there, at least 40 px long (the middle row of the strip is track or fill all along).
+        int stripLength = 0;
+
+        for (int y = 0; y < picture.Height; y++)
+        {
+            int run = 0;
+
+            for (int x = 0; x < picture.Width; x++)
+            {
+                int pixel = picture.GetPixel(x, y).ToArgb();
+                run = pixel == slim.BackColor.ToArgb() || pixel == slim.ForeColor.ToArgb() ? run + 1 : 0;
+                stripLength = Math.Max(stripLength, run);
+            }
+        }
+
+        Assert.True(stripLength >= 40, "the longest piece of the strip is " + stripLength);
+        Assert.NotEmpty(Ink(picture, slim, UIColors.GetBestTextColor(Color.Black)));
+    }
+
+    [Theory]
+    [InlineData(SlimProgressBarTextPosition.Above)]
+    [InlineData(SlimProgressBarTextPosition.Left)]
+    [InlineData(SlimProgressBarTextPosition.Right)]
+    public void AVeryNarrowControl_WithATextAndAPercentage_DoesNotFailAndKeepsToItsSize(SlimProgressBarTextPosition position)
+    {
+        SlimProgressBar slim = Slim(LongText, position, percentage: true);
+        ErikwnkWFUI.Controls.ProgressBar bar = Aligned(HorizontalAlignment.Left, HorizontalAlignment.Right);
+        bar.Text = LongText;
+        using Form host = Host(slim, 20, 26);
+        bar.SetBounds(0, 40, 12, 23);
+        host.Controls.Add(bar);
+        host.Size = new Size(60, 120);
+        Application.DoEvents();
+
+        Assert.Null(Record.Exception(() =>
+        {
+            using Bitmap picture = Draw(slim);
+            using Bitmap barPicture = Draw(bar);
+        }));
+    }
 }
