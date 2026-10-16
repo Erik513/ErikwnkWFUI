@@ -38,53 +38,68 @@ namespace ErikwnkWFUI.Showcase
             AddBarRow(table, "CreateGreen", UIStyles.ProgressBars.CreateGreen());
             AddBarRow(table, "CreateStatus", UIStyles.ProgressBars.CreateStatus());
 
+            table.AddSection("Progress bars: border and track");
+
             // Two properties, independent of each other: the border (BorderStyle) and the track (BackColor; Transparent takes the color of the
             // panel the bar lies on, in both themes). First the border alone, then both.
             ErikwnkWFUI.Controls.ProgressBar withoutBorder = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
             withoutBorder.BorderStyle = BorderStyle.None;
-            AddBarRow(table, "CreateStandard (BorderStyle = None)", withoutBorder);
+            AddBarRow(table, "BorderStyle = None", withoutBorder);
 
             ErikwnkWFUI.Controls.ProgressBar withoutBorderTransparent = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
             withoutBorderTransparent.BorderStyle = BorderStyle.None;
             withoutBorderTransparent.BackColor = Color.Transparent;
-            AddBarRow(table, "CreateStandard (BorderStyle = None, BackColor = Transparent)", withoutBorderTransparent);
+            AddBarRow(table, "Border None, Transparent track", withoutBorderTransparent);
+
+            table.AddSection("Progress bars: style");
 
             // The other styles of the standard control: blocks, and the marquee - a block that runs through the bar, for an action of
             // unknown duration (no value; MarqueeAnimationSpeed is the time between two steps).
             ProgressBar blocks = UIStyles.ProgressBars.CreatePrimary();
             blocks.Style = ProgressBarStyle.Blocks;
-            AddBarRow(table, "CreatePrimary (Style = Blocks)", blocks);
+            AddBarRow(table, "Style = Blocks", blocks);
 
             ProgressBar marquee = UIStyles.ProgressBars.CreatePrimary();
             marquee.Style = ProgressBarStyle.Marquee;
             marquee.MarqueeAnimationSpeed = 30;
-            table.AddRow("CreatePrimary (Style = Marquee)", UIColumn.Percent(marquee, TwoColumnPercent));
+            table.AddRow("Style = Marquee", UIColumn.Percent(marquee, TwoColumnPercent));
 
-            // The value as a percentage on the bar (off by default), and a text for a message about the state; together they are one text.
+            table.AddSection("Progress bars: text and percentage");
+
+            // Both are off by default. Each alone stands at its own place (the text left, the percentage right) ...
+            ErikwnkWFUI.Controls.ProgressBar textOnly = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            textOnly.Text = "Uploading";
+            AddBarRow(table, "Text", textOnly);
+
             ErikwnkWFUI.Controls.ProgressBar percentage = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
             percentage.ShowPercentage = true;
-            AddBarRow(table, "CreatePrimary (ShowPercentage)", percentage);
+            AddBarRow(table, "ShowPercentage", percentage);
 
-            ErikwnkWFUI.Controls.ProgressBar labeled = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow);
-            labeled.Text = "Uploading";
-            labeled.ShowPercentage = true;
-            AddBarRow(table, "CreateStandard(colors: Yellow) (Text, ShowPercentage)", labeled);
+            // ... together they are apart as well, and the letters stay readable on the fill and on the track, also on a light fill.
+            ErikwnkWFUI.Controls.ProgressBar both = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            both.Text = "Uploading";
+            both.ShowPercentage = true;
+            AddBarRow(table, "Text + ShowPercentage", both);
 
-            // Where the text and the percentage stand: the text on the left and the percentage on the right (as in the row above);
-            // at the same place they are one text.
+            ErikwnkWFUI.Controls.ProgressBar light = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow);
+            light.Text = "Uploading";
+            light.ShowPercentage = true;
+            AddBarRow(table, "colors: Yellow, Text + ShowPercentage", light);
+
+            // TextAlign and PercentageAlign move the two (Left, Center or Right each); at the same place - "Both aligned" - they are one text.
             ErikwnkWFUI.Controls.ProgressBar centered = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
             centered.Text = "Uploading";
             centered.ShowPercentage = true;
             centered.TextAlign = HorizontalAlignment.Center;
             centered.PercentageAlign = HorizontalAlignment.Center;
-            AddBarRow(table, "CreatePrimary (TextAlign = Center, PercentageAlign = Center)", centered);
+            AddBarRow(table, "Both aligned Center", centered);
 
             ErikwnkWFUI.Controls.ProgressBar right = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
             right.Text = "Uploading";
             right.ShowPercentage = true;
             right.TextAlign = HorizontalAlignment.Right;
             right.PercentageAlign = HorizontalAlignment.Right;
-            AddBarRow(table, "CreatePrimary (TextAlign = Right, PercentageAlign = Right)", right);
+            AddBarRow(table, "Both aligned Right", right);
 
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);
@@ -117,11 +132,33 @@ namespace ErikwnkWFUI.Showcase
             AddSlimBarRow(table, "CreateGreen", UIStyles.SlimProgressBars.CreateGreen());
             AddSlimBarRow(table, "CreateStatus", UIStyles.SlimProgressBars.CreateStatus());
 
+            table.AddSection("Slim progress bars: style");
+
             SlimProgressBar slimBlocks = UIStyles.SlimProgressBars.CreatePrimary();
             slimBlocks.Style = ProgressBarStyle.Blocks;
-            AddSlimBarRow(table, "CreatePrimary (Style = Blocks)", slimBlocks);
+            AddSlimBarRow(table, "Style = Blocks", slimBlocks);
 
-            // A text (a message about the state) and the percentage next to the strip: above it by default, or below, left or right.
+            SlimProgressBar slimMarquee = UIStyles.SlimProgressBars.CreatePrimary();
+            slimMarquee.Style = ProgressBarStyle.Marquee;
+            slimMarquee.MarqueeAnimationSpeed = 30;
+            table.AddRow("Style = Marquee", UIColumn.Percent(slimMarquee, TwoColumnPercent));
+
+            table.AddSection("Slim progress bars: text and percentage");
+
+            // Both are off by default; without them the bar is only the strip. Each alone stands above the strip (the text left, the
+            // percentage right), the strip keeps its thickness and the control grows by the line (AutoSize).
+            SlimProgressBar slimTextOnly = UIStyles.SlimProgressBars.CreatePrimary();
+            slimTextOnly.Text = "Uploading";
+            slimTextOnly.AutoSize = true;
+            AddSlimBarRow(table, "Text", slimTextOnly);
+
+            SlimProgressBar slimPercentage = UIStyles.SlimProgressBars.CreatePrimary();
+            slimPercentage.ShowPercentage = true;
+            slimPercentage.AutoSize = true;
+            AddSlimBarRow(table, "ShowPercentage", slimPercentage);
+
+            // Both together (Text + ShowPercentage) next to the strip: above it by default (the text left, the percentage right), or
+            // below, left or right of it (at the sides they are one text).
             foreach (SlimProgressBarTextPosition position in new[]
             {
                 SlimProgressBarTextPosition.Above,
@@ -135,22 +172,17 @@ namespace ErikwnkWFUI.Showcase
                 labeled.ShowPercentage = true;
                 labeled.TextPosition = position;
                 labeled.AutoSize = true;
-                AddSlimBarRow(table, "CreatePrimary (Text, ShowPercentage, TextPosition = " + position + ")", labeled);
+                AddSlimBarRow(table, "TextPosition = " + position + (position == SlimProgressBarTextPosition.Above ? " (default)" : ""), labeled);
             }
 
-            // Above or below, the text is on the left and the percentage on the right; each can be put elsewhere (one place: one text).
+            // Above or below, TextAlign and PercentageAlign move the two (Left, Center or Right each; at the same place they are one text).
             SlimProgressBar slimCentered = UIStyles.SlimProgressBars.CreatePrimary();
             slimCentered.Text = "Uploading";
             slimCentered.ShowPercentage = true;
             slimCentered.TextAlign = HorizontalAlignment.Center;
             slimCentered.PercentageAlign = HorizontalAlignment.Center;
             slimCentered.AutoSize = true;
-            AddSlimBarRow(table, "CreatePrimary (TextAlign = Center, PercentageAlign = Center)", slimCentered);
-
-            SlimProgressBar slimMarquee = UIStyles.SlimProgressBars.CreatePrimary();
-            slimMarquee.Style = ProgressBarStyle.Marquee;
-            slimMarquee.MarqueeAnimationSpeed = 30;
-            table.AddRow("CreatePrimary (Style = Marquee)", UIColumn.Percent(slimMarquee, TwoColumnPercent));
+            AddSlimBarRow(table, "Both aligned Center", slimCentered);
         }
 
         // Value/Enabled are set directly rather than via AnimateProgressBar -
