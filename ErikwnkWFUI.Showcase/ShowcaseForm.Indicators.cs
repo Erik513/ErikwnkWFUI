@@ -54,6 +54,21 @@ namespace ErikwnkWFUI.Showcase
 
             AddBarPair(table, "BorderStyle None | + Transparent track", withoutBorder, withoutBorderTransparent);
 
+            // Every color on its own: the border (BorderColor), and - on the right - the fill, the track, the border and the text together.
+            ErikwnkWFUI.Controls.ProgressBar borderColor = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
+            borderColor.BorderColor = UIColors.Primary;
+
+            ErikwnkWFUI.Controls.ProgressBar byHand = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
+            byHand.ForeColor = Color.FromArgb(230, 120, 30);
+            byHand.BackColor = Color.FromArgb(70, 40, 20);
+            byHand.BorderColor = Color.FromArgb(230, 120, 30);
+            byHand.Text = "By hand";
+            byHand.ShowPercentage = true;
+            byHand.TextColor = Color.FromArgb(255, 220, 180);
+            byHand.TextOnFillColor = Color.Black;
+
+            AddBarPair(table, "BorderColor | all by hand", borderColor, byHand);
+
             // The other styles of the standard control: blocks, and the marquee - a block that runs through the bar, for an action of
             // unknown duration (no value; MarqueeAnimationSpeed is the time between two steps).
             ProgressBar blocks = UIStyles.ProgressBars.CreatePrimary();
@@ -91,6 +106,16 @@ namespace ErikwnkWFUI.Showcase
             right.PercentageAlign = HorizontalAlignment.Right;
 
             AddBarPair(table, "Both aligned: Center | Right", centered, right);
+
+            // The color of the text on the track (TextColor) and on the fill (TextOnFillColor); automatic where they are not set.
+            ErikwnkWFUI.Controls.ProgressBar textColor = CreateTextBar(text: true, percentage: true);
+            textColor.TextColor = Color.FromArgb(120, 200, 255);
+
+            ErikwnkWFUI.Controls.ProgressBar textOnFill = CreateTextBar(text: true, percentage: true);
+            textOnFill.TextColor = Color.FromArgb(120, 200, 255);
+            textOnFill.TextOnFillColor = Color.Black;
+
+            AddBarPair(table, "TextColor | + TextOnFillColor", textColor, textOnFill);
 
             // A text that is longer than the bar is cut with an ellipsis (the percentage stays whole), or moves with TextScroll
             // (the same values as for a label; the percentage stays where it is).
@@ -248,6 +273,17 @@ namespace ErikwnkWFUI.Showcase
             slimRight.PercentageAlign = HorizontalAlignment.Right;
 
             AddSlimBarPair(table, "Both aligned: Center | Right", slimCentered, slimRight);
+
+            // The color of the text next to the strip (TextColor), and all three colors by hand: fill, track and text.
+            SlimProgressBar slimTextColor = CreateSlimTextBar(text: true, percentage: true);
+            slimTextColor.TextColor = Color.FromArgb(120, 200, 255);
+
+            SlimProgressBar slimByHand = CreateSlimTextBar(text: true, percentage: true);
+            slimByHand.ForeColor = Color.FromArgb(230, 120, 30);
+            slimByHand.BackColor = Color.FromArgb(120, 70, 30);
+            slimByHand.TextColor = Color.FromArgb(255, 200, 150);
+
+            AddSlimBarPair(table, "TextColor | all by hand", slimTextColor, slimByHand);
 
             // A text that is longer than the control is cut with an ellipsis (the percentage stays whole; at the sides the strip keeps its
             // room), or moves with TextScroll (the same values as for a label).

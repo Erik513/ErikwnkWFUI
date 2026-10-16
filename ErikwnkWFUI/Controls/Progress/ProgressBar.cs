@@ -13,7 +13,9 @@ namespace ErikwnkWFUI.Controls
     /// The progress bar of <c>UIStyles.ProgressBars</c>. It is the standard <see cref="ProgressBar"/> (<c>Minimum</c>, <c>Maximum</c>,
     /// <c>Value</c>, <c>Step</c>, <c>PerformStep</c>, <c>Increment</c> and the <c>Style</c>s Blocks, Continuous and Marquee with its
     /// <c>MarqueeAnimationSpeed</c>), drawn by the library in its colors (the native control ignores them while visual styles are on),
-    /// with a thin border (<see cref="BorderStyle"/>) and a track color of its own (<see cref="BackColor"/>, which may be transparent).
+    /// with a thin border (<see cref="BorderStyle"/>, <see cref="BorderColor"/>) and a track color of its own (<see cref="BackColor"/>, which
+    /// may be transparent). Every color can be chosen on its own: the fill (<see cref="Control.ForeColor"/>), the track, the border and the
+    /// text on the track and on the fill (<see cref="TextColor"/>, <see cref="TextOnFillColor"/>).
     /// The status variants fill in a color that follows the value from red over yellow to green. A <see cref="Text"/> and the
     /// percentage (<see cref="ShowPercentage"/>) can be written on the bar, each left, centered or right (<see cref="TextAlign"/>,
     /// <see cref="PercentageAlign"/>); a text that is too long is cut with an ellipsis or moves (<see cref="TextScroll"/>), and a
@@ -27,6 +29,9 @@ namespace ErikwnkWFUI.Controls
 
         private readonly bool _useStatusGradient;
         private readonly ThemeColor _trackColor;
+        private readonly ThemeColor _borderColor;
+        private Color _textColor = Color.Empty;
+        private Color _textOnFillColor = Color.Empty;
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
         private readonly FullTextToolTip _fullTextToolTip;
@@ -46,6 +51,9 @@ namespace ErikwnkWFUI.Controls
             UIStrings.LanguageChanged += OnLanguageChanged;
             _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => Style == ProgressBarStyle.Marquee, () => MarqueeAnimationSpeed);
+
+            // The border: the quiet line of the library for the panel the bar lies on (until BorderColor is set).
+            _borderColor = new ThemeColor(() => UIColors.GetLineColor(GetParentSurface()));
 
             // The track: the recessed surface of the theme (until BackColor is set).
             _trackColor = new ThemeColor(() => UIColors.BackgroundMedium);
@@ -253,11 +261,70 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // The color of the 1 px edge around the bar: the border - the quiet line of the library, as of a panel, moved only as far as the
-        // panel the bar lies on needs to keep it seen (1.5:1) - or, without one, the track itself (what is seen when it is transparent).
+        /// <summary>
+        /// The color of the border (see <see cref="BorderStyle"/>). By default the quiet line of the library for the panel the bar lies on
+        /// (as the frame of a panel): the gray of the theme, moved only as far as the panel needs to keep it seen (1.5:1); it follows the
+        /// panel and the theme. Set a color for another one, <see cref="Color.Empty"/> gives the default back.
+        /// </summary>
+        public Color BorderColor
+        {
+            get { return _borderColor.Value; }
+            set
+            {
+                if (value.IsEmpty)
+                    _borderColor.Reset();
+                else
+                    _borderColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            BorderColor = Color.Empty;
+        }
+
+        /// <summary>
+        /// The color of the <see cref="Text"/> and the percentage where they stand on the track. <see cref="Color.Empty"/> (the default)
+        /// is the one that reads best on the track (4.5:1); a disabled bar has the quiet text color of the library in any case.
+        /// </summary>
+        [DefaultValue(typeof(Color), "")]
+        public Color TextColor
+        {
+            get { return _textColor; }
+            set
+            {
+                _textColor = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The color of the <see cref="Text"/> and the percentage where they stand on the fill. <see cref="Color.Empty"/> (the default) is
+        /// the one that reads best on the fill (4.5:1). The text is drawn in both colors, each where it is, so that it can be read
+        /// at any fill level: choose the two to read on the track and on the fill.
+        /// </summary>
+        [DefaultValue(typeof(Color), "")]
+        public Color TextOnFillColor
+        {
+            get { return _textOnFillColor; }
+            set
+            {
+                _textOnFillColor = value;
+                Invalidate();
+            }
+        }
+
+        // The color of the 1 px edge around the bar: the border, or - without one - the track itself (what is seen when it is transparent).
         internal Color EdgeColor
         {
-            get { return _borderStyle != BorderStyle.None ? UIColors.GetLineColor(GetParentSurface()) : BackColor; }
+            get { return _borderStyle != BorderStyle.None ? _borderColor.Value : BackColor; }
         }
 
         // The bar draws itself: the native control paints in WM_PAINT without the Paint event, ignores the colors while visual styles are
@@ -302,8 +369,8 @@ namespace ErikwnkWFUI.Controls
                 _textAlign,
                 _percentageAlign,
                 Font,
-                Enabled ? ProgressBarPainting.GetTextColorOn(BackColor) : UIColors.GetDisabledText(BackColor),
-                ProgressBarPainting.GetTextColorOn(fill),
+                !Enabled ? UIColors.GetDisabledText(BackColor) : _textColor.IsEmpty ? ProgressBarPainting.GetTextColorOn(BackColor) : _textColor,
+                Enabled && !_textOnFillColor.IsEmpty ? _textOnFillColor : ProgressBarPainting.GetTextColorOn(fill),
                 covered,
                 _textScroller);
 

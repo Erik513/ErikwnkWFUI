@@ -27,7 +27,8 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// A thin, fully custom-drawn progress bar for slim status-strip-style indicators (a background task's progress as a thin
     /// strip under a status label), see <c>UIStyles.SlimProgressBars</c>; <c>UIStyles.ProgressBars</c> is the prominent, full-size one.
-    /// It is a plain control, with no native progress bar underneath.
+    /// It is a plain control, with no native progress bar underneath. Every color can be chosen on its own: the fill
+    /// (<see cref="ForeColor"/>), the track (<see cref="BackColor"/>) and the text (<see cref="TextColor"/>).
     /// It offers what the standard <see cref="ProgressBar"/> does: <see cref="Minimum"/>, <see cref="Maximum"/>, <see cref="Value"/>,
     /// <see cref="Step"/>, <see cref="PerformStep"/>, <see cref="Increment"/> and the <see cref="Style"/>s Blocks, Continuous (the default)
     /// and Marquee with its <see cref="MarqueeAnimationSpeed"/>. One difference: a <see cref="Value"/> outside the range is limited to
@@ -50,6 +51,7 @@ namespace ErikwnkWFUI.Controls
         // The track follows the panel the bar lies on (see BackColor), the fill the factory's color (see ForeColor) until one is set.
         private readonly ThemeColor _trackColor;
         private readonly ThemeColor _fillColor;
+        private Color _textColor = Color.Empty;
 
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
@@ -150,6 +152,21 @@ namespace ErikwnkWFUI.Controls
                 else
                     _fillColor.Set(value);
 
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The color of the <see cref="Text"/> and the percentage, which stand on the panel next to the strip. <see cref="Color.Empty"/>
+        /// (the default) is the one that reads best on that panel (4.5:1); a disabled bar has the quiet text color of the library in any case.
+        /// </summary>
+        [DefaultValue(typeof(Color), "")]
+        public Color TextColor
+        {
+            get { return _textColor; }
+            set
+            {
+                _textColor = value;
                 Invalidate();
             }
         }
@@ -636,7 +653,7 @@ namespace ErikwnkWFUI.Controls
         private bool PaintText(Graphics g, Rectangle textArea)
         {
             Color surface = GetSurface();
-            Color textColor = Enabled ? ProgressBarPainting.GetTextColorOn(surface) : UIColors.GetDisabledText(surface);
+            Color textColor = !Enabled ? UIColors.GetDisabledText(surface) : _textColor.IsEmpty ? ProgressBarPainting.GetTextColorOn(surface) : _textColor;
             string percent = ProgressBarPainting.GetPercentText(_minimum, _maximum, _value);
 
             if (IsSide)
@@ -673,6 +690,40 @@ namespace ErikwnkWFUI.Controls
                 textColor,
                 Rectangle.Empty,
                 _textScroller);
+        }
+
+        // A screen reader asks for the value of a progress bar: the percentage ("42%"), and the text as its name unless a name was set.
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new SlimProgressBarAccessibleObject(this);
+        }
+
+        private sealed class SlimProgressBarAccessibleObject : ControlAccessibleObject
+        {
+            private readonly SlimProgressBar _bar;
+
+            public SlimProgressBarAccessibleObject(SlimProgressBar bar)
+                : base(bar)
+            {
+                _bar = bar;
+            }
+
+            public override AccessibleRole Role
+            {
+                get { return AccessibleRole.ProgressBar; }
+            }
+
+            public override string Name
+            {
+                get { return base.Name ?? (string.IsNullOrEmpty(_bar.Text) ? null : _bar.Text); }
+                set { base.Name = value; }
+            }
+
+            public override string Value
+            {
+                get { return _bar._style == ProgressBarStyle.Marquee ? null : ProgressBarPainting.GetPercentText(_bar._minimum, _bar._maximum, _bar._value); }
+                set { }
+            }
         }
 
         protected override void Dispose(bool disposing)

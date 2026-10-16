@@ -12,7 +12,8 @@ namespace ErikwnkWFUI
         /// around the bar, on by default), a <c>BackColor</c> of <see cref="System.Drawing.Color.Transparent"/> (the track then takes the
         /// color of the panel the bar lies on, also when it changes, and in both themes; independent of the border), <c>Text</c> and
         /// <c>ShowPercentage</c> written on the bar (<c>TextAlign</c> and <c>PercentageAlign</c> place them), <c>TextScroll</c> for a text that
-        /// is too long and <c>ShowFullTextToolTip</c>.
+        /// is too long, <c>ShowFullTextToolTip</c>, and the colors of the border and of the text (<c>BorderColor</c>, <c>TextColor</c>,
+        /// <c>TextOnFillColor</c>; the fill and the track are <c>ForeColor</c> and <c>BackColor</c>).
         /// </summary>
         public static class ProgressBars
         {
