@@ -7,10 +7,12 @@ namespace ErikwnkWFUI
     public static partial class UIStyles
     {
         /// <summary>
-        /// A themed <see cref="ProgressBar"/> (continuous style, not the native blocky one). Cast the result to
-        /// <c>ErikwnkWFUI.Controls.ProgressBar</c> for <c>BorderStyle</c> (the thin border around the bar, on by default) and for a
-        /// <c>BackColor</c> of <see cref="System.Drawing.Color.Transparent"/>: the track then takes the color of the panel the bar lies on
-        /// (also when it changes, and in both themes), so the bar looks transparent. The two are independent.
+        /// Progress bars in the colors of the theme (continuous by default, not blocky like the standard control; Blocks and Marquee can be set). Cast the
+        /// result to <c>ErikwnkWFUI.Controls.ProgressBar</c> for what the standard control does not have: <c>BorderStyle</c> (the thin border
+        /// around the bar, on by default), a <c>BackColor</c> of <see cref="System.Drawing.Color.Transparent"/> (the track then takes the
+        /// color of the panel the bar lies on, also when it changes, and in both themes; independent of the border), <c>Text</c> and
+        /// <c>ShowPercentage</c> written on the bar (<c>TextAlign</c> and <c>PercentageAlign</c> place them), <c>TextScroll</c> for a text that
+        /// is too long and <c>ShowFullTextToolTip</c>.
         /// </summary>
         public static class ProgressBars
         {

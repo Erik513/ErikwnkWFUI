@@ -8,10 +8,9 @@ namespace ErikwnkWFUI
     public static partial class UIStyles
     {
         /// <summary>
-        /// A thin, fully custom-drawn <see cref="SlimProgressBar"/> - no
-        /// native Win32 control underneath (unlike <see cref="ProgressBars"/>),
-        /// so no border/theming quirks to work around. For slim status-strip-
-        /// style progress indicators rather than a prominent, full-size bar.
+        /// A thin, fully custom-drawn <see cref="SlimProgressBar"/> for slim status-strip-style indicators rather than a prominent,
+        /// full-size bar (see <see cref="ProgressBars"/>). It is a plain control, with a <c>Text</c>, <c>ShowPercentage</c> and
+        /// <c>TextPosition</c> for a message next to the strip, and <c>TextScroll</c> for a text that is too long.
         /// </summary>
         public static class SlimProgressBars
         {

@@ -9,17 +9,20 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// The progress bar of <c>UIStyles.ProgressBars</c>: the standard <see cref="ProgressBar"/> (<c>Minimum</c>, <c>Maximum</c>,
+    /// The progress bar of <c>UIStyles.ProgressBars</c>. It is the standard <see cref="ProgressBar"/> (<c>Minimum</c>, <c>Maximum</c>,
     /// <c>Value</c>, <c>Step</c>, <c>PerformStep</c>, <c>Increment</c> and the <c>Style</c>s Blocks, Continuous and Marquee with its
-    /// <c>MarqueeAnimationSpeed</c>), drawn by the library in its colors (the native control ignores them while visual styles are
-    /// on), with a thin border or without one, and - for the status variants - a fill that follows the value from red over yellow
-    /// to green. Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored). The factories hand it back as a
-    /// <see cref="ProgressBar"/>.
+    /// <c>MarqueeAnimationSpeed</c>), drawn by the library in its colors (the native control ignores them while visual styles are on),
+    /// with a thin border (<see cref="BorderStyle"/>) and a track color of its own (<see cref="BackColor"/>, which may be transparent).
+    /// The status variants fill in a color that follows the value from red over yellow to green. A <see cref="Text"/> and the
+    /// percentage (<see cref="ShowPercentage"/>) can be written on the bar, each left, centered or right (<see cref="TextAlign"/>,
+    /// <see cref="PercentageAlign"/>); a text that is too long is cut with an ellipsis or moves (<see cref="TextScroll"/>), and a
+    /// tooltip shows it whole (<see cref="ShowFullTextToolTip"/>). Right-to-left layouts are not supported (<c>RightToLeft</c> is
+    /// ignored). The factories hand it back as a <see cref="ProgressBar"/>.
     /// </summary>
     public class ProgressBar : System.Windows.Forms.ProgressBar
     {
-        // The 1 px border keeps the extent of the bar legible even when the panel it lies on is BackgroundMedium too (BackColor
-        // alone does not guarantee a contrast); BorderStyle None skips it for callers who want the bar to blend into its container.
+        // The 1 px border keeps the extent of the bar legible even when the panel it lies on has the shade of the track (BackColor
+        // alone does not guarantee a contrast); BorderStyle None leaves it out for a bar that is to blend into its panel.
 
         private readonly bool _useStatusGradient;
         private readonly ThemeColor _trackColor;
@@ -198,10 +201,11 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// How a <see cref="Text"/> that is too long for its place moves instead of ending in an ellipsis: <see cref="LabelScroll.None"/>
         /// (the default: it is cut with "..."), <c>LabelScroll.BackAndForth()</c> (to its end, a rest, back) or
-        /// <c>LabelScroll.Endless()</c>, the same values as for a label (speed, pause, direction, separator, pause while the mouse is on
+        /// <c>LabelScroll.Endless()</c> - the same values as for a label (speed, pause, direction, separator, pause while the mouse is on
         /// the bar). The percentage does not move: it stays where it is, and a text that stood together with it stands apart from it
-        /// while it moves, the percentage at the right end. The text moves only while it does not fit, while the bar is shown and enabled, and while Windows lets windows
-        /// animate (Settings, Accessibility); several texts (<see cref="LabelScroll.Texts"/>) are not supported here, use <see cref="Text"/>.
+        /// while it moves, the percentage at the right end. The text moves only while it does not fit, the bar is shown and enabled,
+        /// and Windows lets windows animate (Settings, Accessibility). Several texts (<see cref="LabelScroll.Texts"/>) are not
+        /// supported here: use <see cref="Text"/>.
         /// </summary>
         public LabelScroll TextScroll
         {
@@ -255,9 +259,9 @@ namespace ErikwnkWFUI.Controls
             get { return _borderStyle != BorderStyle.None ? UIColors.BorderMedium : BackColor; }
         }
 
-        // The bar draws itself: the native control paints in WM_PAINT without the Paint event, and with visual styles off it shows
-        // nothing at all for the marquee style. UserPaint makes WM_PAINT reach OnPaint (the native control still tells us when the
-        // value changes: Value, Step, PerformStep and Increment need nothing here).
+        // The bar draws itself: the native control paints in WM_PAINT without the Paint event, ignores the colors while visual styles are
+        // on, and shows nothing for the marquee style with them off. UserPaint makes WM_PAINT reach OnPaint (the native control still
+        // asks for a repaint when the value changes: Value, Step, PerformStep and Increment need nothing here).
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -347,9 +351,11 @@ namespace ErikwnkWFUI.Controls
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 _marquee.Dispose();
                 _textScroller.Dispose();
                 _fullTextToolTip.Dispose();
+            }
 
             base.Dispose(disposing);
         }

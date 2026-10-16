@@ -48,14 +48,9 @@ namespace ErikwnkWFUI.Factories
             return Create(FillOf(() => UIColors.PrimarySet));
         }
 
-        // Fill color follows Value instead of being fixed: red at Minimum,
-        // yellow at the midpoint, green at Maximum, blending smoothly
-        // between them rather than snapping - for a "status/health" bar
-        // where the color itself communicates good/bad, not just the fill
-        // amount. Doesn't take SetEnabledStyle's restore-color path since
-        // the color is recomputed fresh on every paint anyway (from Value
-        // when enabled, DisabledGray when not) - there's no fixed color to
-        // save and restore.
+        // The fill follows Value: red at Minimum, yellow at the midpoint, green at Maximum, blended in between (a "status/health" bar,
+        // where the color says good or bad). The bar works the color out at every paint (from Value when enabled, DisabledGray when
+        // not), so there is no fixed fill color to save and restore as in SetEnabledStyle.
         public static ProgressBar CreateStatus()
         {
             return CreateStatusBar();
@@ -82,22 +77,9 @@ namespace ErikwnkWFUI.Factories
             {
                 Minimum = 0,
                 Style = ProgressBarStyle.Continuous,
-                // BackgroundMedium rather than BackgroundLight - a progress
-                // bar's track needs to read as a recessed surface, not
-                // whatever shade the caller's panel happens to use (several
-                // consumers set their panel BackColor to BackgroundLight too,
-                // which made the track invisible - the fill looked like it
-                // was floating on transparent background). BackgroundDark
-                // fixed that but read as near-black, harsher than the rest
-                // of the library's dark grays; BackgroundMedium is still
-                // reliably a shade below the common panel roles
-                // (Light/Lighter/Elevated) without going that dark, and the
-                // border (while BorderStyle is not None) covers the remaining
-                // edge case where a panel is BackgroundMedium too. Callers
-                // wanting the borderless/blend-in look set BorderStyle to None and
-                // set BackColor to Color.Transparent: the track then takes the
-                // color of the panel (ProgressBar does that; a native
-                // ProgressBar cannot be transparent).
+                // The track is BackgroundMedium (the default of ProgressBar.BackColor): a recessed surface that stays visible on the
+                // usual panel shades, and the border covers a panel of the same shade. BorderStyle and BackColor change that; a
+                // BackColor of Transparent takes the color of the panel.
                 Margin = new Padding(0)
             };
 
@@ -106,24 +88,10 @@ namespace ErikwnkWFUI.Factories
             return progressBar;
         }
 
-        // Like UIButtonFactory/UICheckBoxFactory's SetEnabledStyle - restores
-        // whatever ForeColor was live right before Enabled went false, so a
-        // caller's manual fill-color override survives the round-trip.
-        // Previously ProgressBar had no disabled-state handling at all
-        // (confirmed identical pixels enabled vs. disabled via screenshot).
-        //
-        // Disabled fill uses UIColors.DisabledGray - a plain darkened
-        // version of whatever the current fill color happened to be
-        // (accent green, or a caller's own override) still read as "that
-        // same color, just dimmer", not "disabled/inactive", inconsistent
-        // with every other disabled control in the library (buttons,
-        // CheckBox, ToggleSwitch, Labels all resolve to this same fixed
-        // gray). Disabled progress bars are a rare case in practice, but
-        // when one does show up it should read as gray like everything
-        // else, not a dark shade of its own accent.
-        //
-        // The fill color follows the theme as long as it is still the one the factory gave (or, while disabled,
-        // the one it would restore): a color set by hand stays.
+        // Like UIButtonFactory/UICheckBoxFactory's SetEnabledStyle: a disabled bar is filled in the one gray of the library
+        // (DisabledGray), as every disabled control is, and the fill color that was live before comes back when it is enabled again,
+        // so a color set by hand survives. The fill follows the theme as long as it is the one the factory gave (or, while disabled,
+        // the one it would restore).
         private static void SetEnabledStyle(ProgressBar progressBar, Func<Color> foreColor)
         {
             Color given = foreColor();
