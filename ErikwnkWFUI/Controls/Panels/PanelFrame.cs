@@ -14,10 +14,10 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     internal sealed class PanelFrame
     {
-        private readonly Panel _panel;
+        private readonly System.Windows.Forms.Panel _panel;
         private readonly ThemeColor _color;
 
-        public PanelFrame(Panel panel)
+        public PanelFrame(System.Windows.Forms.Panel panel)
         {
             _panel = panel;
 

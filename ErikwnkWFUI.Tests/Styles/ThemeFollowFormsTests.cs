@@ -4,6 +4,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Tests.Styles;
 

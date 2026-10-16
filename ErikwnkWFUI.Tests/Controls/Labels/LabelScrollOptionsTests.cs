@@ -5,6 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Native.NativeMethods;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 

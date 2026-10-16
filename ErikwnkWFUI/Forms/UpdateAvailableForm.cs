@@ -6,6 +6,10 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
+using ProgressBar = System.Windows.Forms.ProgressBar;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Forms
 {

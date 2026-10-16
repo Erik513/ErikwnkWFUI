@@ -26,7 +26,7 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultHeaderHeight = 30;
         private const int HeaderSidePadding = 10;
 
-        private readonly Panel _headerPanel;
+        private readonly System.Windows.Forms.Panel _headerPanel;
         private readonly Label _titleLabel;
         private readonly ListBox _listBox;
 
@@ -204,9 +204,9 @@ namespace ErikwnkWFUI.Controls
             Padding = new Padding(0);
         }
 
-        private Panel CreateHeaderPanel()
+        private System.Windows.Forms.Panel CreateHeaderPanel()
         {
-            return new Panel
+            return new System.Windows.Forms.Panel
             {
                 Dock = DockStyle.Top,
                 Height = Px(DefaultHeaderHeight),

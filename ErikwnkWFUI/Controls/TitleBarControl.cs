@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Controls
     /// building a custom top-level window from scratch instead of deriving
     /// from StyledForm.
     /// </summary>
-    public class TitleBarControl : Panel
+    public class TitleBarControl : System.Windows.Forms.Panel
     {
         private const int TitleBarHeight = 30;
         private const int IconSize = TitleBarHeight;

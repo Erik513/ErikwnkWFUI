@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -30,7 +31,7 @@ namespace ErikwnkWFUI.Factories
 
         private static FlowLayoutPanel CreateFlowLayoutPanel(Func<Color> backColor, bool hugContent)
         {
-            FlowLayoutPanel panel = new ThemedFlowLayoutPanel
+            FlowLayoutPanel panel = new Controls.FlowLayoutPanel
             {
                 AutoSize = true,
                 // With a background the panel is as big as its content (the standard mode only grows: it would stay 200 x 100).

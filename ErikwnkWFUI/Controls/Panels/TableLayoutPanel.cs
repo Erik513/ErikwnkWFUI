@@ -12,19 +12,19 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// The table layout panel of <c>UIStyles.TableLayoutPanels</c>: the standard <see cref="TableLayoutPanel"/>, drawn without
     /// flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color
-    /// (<see cref="Panel.BorderStyle"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
+    /// (<see cref="System.Windows.Forms.Panel.BorderStyle"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
     /// library (<see cref="CellBorderColor"/>, <see cref="InnerCellBorderColor"/>, <see cref="OuterCellBorderColor"/>) of which the
     /// ones to show can be chosen (<see cref="CellBorderLines"/>). Everything else is the standard control. Named
-    /// <c>ThemedTableLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
+    /// <c>TableLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
     /// </summary>
-    public class ThemedTableLayoutPanel : TableLayoutPanel
+    public class TableLayoutPanel : System.Windows.Forms.TableLayoutPanel
     {
         private CellBorderLines _cellBorderLines = CellBorderLines.All;
 
         private readonly PanelFrame _frame;
 
         /// <summary>
-        /// The color of the frame when <see cref="Panel.BorderStyle"/> is <c>FixedSingle</c> (the system draws it in its own
+        /// The color of the frame when <see cref="System.Windows.Forms.Panel.BorderStyle"/> is <c>FixedSingle</c> (the system draws it in its own
         /// color, which is painted over; of <c>Fixed3D</c> only the outer line). Follows the theme (and, on a color, is moved until it is seen against it) until it is set;
         /// <see cref="Color.Empty"/> gives that back. There is no frame by default.
         /// </summary>
@@ -40,7 +40,7 @@ namespace ErikwnkWFUI.Controls
         private readonly List<Rectangle> _cells = new List<Rectangle>();
 
         /// <summary>
-        /// The color of the lines around and between the cells when <see cref="TableLayoutPanel.CellBorderStyle"/> is <c>Single</c>
+        /// The color of the lines around and between the cells when <see cref="System.Windows.Forms.TableLayoutPanel.CellBorderStyle"/> is <c>Single</c>
         /// (the system draws them in its own color, which is painted over; the other styles are left to the system). Follows the
         /// theme (and, on a color, is moved until it is seen against it) until it is set; <see cref="Color.Empty"/> gives that back.
         /// <see cref="InnerCellBorderColor"/> and
@@ -79,7 +79,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// The color of the lines around the whole table (the outer edge of the cells; not the frame of <see cref="Panel.BorderStyle"/>). Left
+        /// The color of the lines around the whole table (the outer edge of the cells; not the frame of <see cref="System.Windows.Forms.Panel.BorderStyle"/>). Left
         /// empty (the default) it is the <see cref="CellBorderColor"/>, also when that changes; <see cref="Color.Empty"/> gives that back.
         /// </summary>
         public Color OuterCellBorderColor
@@ -97,7 +97,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Which of the lines of <see cref="TableLayoutPanel.CellBorderStyle"/> <c>Single</c> are shown: all of them (the default), only
+        /// Which of the lines of <see cref="System.Windows.Forms.TableLayoutPanel.CellBorderStyle"/> <c>Single</c> are shown: all of them (the default), only
         /// the ones around the whole table, or only the ones between the cells. The lines that are not shown leave an empty
         /// pixel in their place (the layout does not change), painted in the background of the table or - with a transparent
         /// table - of what lies behind it. A background image is not repainted there.
@@ -118,7 +118,7 @@ namespace ErikwnkWFUI.Controls
             _frame.AfterWindowMessage(ref m);
         }
 
-        public ThemedTableLayoutPanel()
+        public TableLayoutPanel()
         {
             _frame = new PanelFrame(this);
             _cellBorderColor = new ThemeColor(() => UIColors.GetLineColor(SurfaceColor.Of(this)));

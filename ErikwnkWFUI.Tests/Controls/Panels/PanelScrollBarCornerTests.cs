@@ -4,6 +4,8 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using Panel = System.Windows.Forms.Panel;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;
 
@@ -23,9 +25,9 @@ public class PanelScrollBarCornerTests : IDisposable
 
     public static IEnumerable<object[]> Panels()
     {
-        yield return new object[] { "Panel", (Func<ScrollableControl>)(() => new ThemedPanel()) };
-        yield return new object[] { "Table", (Func<ScrollableControl>)(() => new ThemedTableLayoutPanel()) };
-        yield return new object[] { "Flow", (Func<ScrollableControl>)(() => new ThemedFlowLayoutPanel { AutoSize = false, WrapContents = false }) };
+        yield return new object[] { "Panel", (Func<ScrollableControl>)(() => new ErikwnkWFUI.Controls.Panel()) };
+        yield return new object[] { "Table", (Func<ScrollableControl>)(() => new ErikwnkWFUI.Controls.TableLayoutPanel()) };
+        yield return new object[] { "Flow", (Func<ScrollableControl>)(() => new ErikwnkWFUI.Controls.FlowLayoutPanel { AutoSize = false, WrapContents = false }) };
     }
 
     private ScrollableControl Show(Func<ScrollableControl> make, Size content)

@@ -6,16 +6,16 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// The panel of <c>UIStyles.Panels</c>: the standard <see cref="Panel"/>, drawn without flicker, with the scroll bars in the
-    /// style of the theme and with an optional frame in the library's color (<see cref="Panel.BorderStyle"/>, <see cref="BorderColor"/>).
-    /// Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is the standard control. Named <c>ThemedPanel</c> (not <c>Panel</c>) so that it does not clash with the standard class in
+    /// style of the theme and with an optional frame in the library's color (<see cref="System.Windows.Forms.Panel.BorderStyle"/>, <see cref="BorderColor"/>).
+    /// Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is the standard control. Named <c>Panel</c> (not <c>Panel</c>) so that it does not clash with the standard class in
     /// the files that use both namespaces; the factories hand it back as a <see cref="Panel"/>.
     /// </summary>
-    public class ThemedPanel : Panel
+    public class Panel : System.Windows.Forms.Panel
     {
         private readonly PanelFrame _frame;
 
         /// <summary>
-        /// The color of the frame when <see cref="Panel.BorderStyle"/> is <c>FixedSingle</c> (the system draws it in its own
+        /// The color of the frame when <see cref="System.Windows.Forms.Panel.BorderStyle"/> is <c>FixedSingle</c> (the system draws it in its own
         /// color, which is painted over; of <c>Fixed3D</c> only the outer line). Follows the theme (and, on a color, is moved until it is seen against it) until it is set;
         /// <see cref="Color.Empty"/> gives that back. There is no frame by default.
         /// </summary>
@@ -31,7 +31,7 @@ namespace ErikwnkWFUI.Controls
             _frame.AfterWindowMessage(ref m);
         }
 
-        public ThemedPanel()
+        public Panel()
         {
             _frame = new PanelFrame(this);
             // The panel is repainted as a whole instead of in strips while it is resized (the standard panel flickers).

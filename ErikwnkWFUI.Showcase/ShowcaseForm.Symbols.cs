@@ -5,6 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Showcase
 {

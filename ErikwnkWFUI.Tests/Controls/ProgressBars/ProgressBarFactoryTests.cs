@@ -3,6 +3,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using ProgressBar = System.Windows.Forms.ProgressBar;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -29,7 +31,7 @@ public class ProgressBarFactoryTests : IDisposable
     {
         using ProgressBar bar = make();
 
-        Assert.IsType<ThemedProgressBar>(bar);
+        Assert.IsType<ErikwnkWFUI.Controls.ProgressBar>(bar);
         Assert.Equal(ProgressBarStyle.Continuous, bar.Style);
         Assert.Equal(0, bar.Minimum);
     }
@@ -107,7 +109,7 @@ public class ProgressBarFactoryTests : IDisposable
     [MemberData(nameof(Bars))]
     public void TheBorderIsOnByDefault_AndTheEdgeIsTheBorderColor_OrTheTrackWithoutIt(string name, Func<ProgressBar> make)
     {
-        ThemedProgressBar bar = (ThemedProgressBar)make();
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)make();
         bar.BackColor = Color.Purple;
 
         Assert.Equal(BorderStyle.FixedSingle, bar.BorderStyle);
@@ -129,7 +131,7 @@ public class ProgressBarFactoryTests : IDisposable
     public void ChangingTheBorder_PaintsTheBarAgain_ButNotWhenItStaysAsItWas()
     {
         using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false };
-        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         host.Controls.Add(bar);
         host.Show();
         Application.DoEvents();
@@ -147,7 +149,7 @@ public class ProgressBarFactoryTests : IDisposable
     public void TheBorderAndTheTrackAreTwoThings_TheBorderDoesNotChangeTheTrack()
     {
         using Panel panel = new Panel { BackColor = Color.Purple };
-        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         panel.Controls.Add(bar);
 
         Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);
@@ -164,7 +166,7 @@ public class ProgressBarFactoryTests : IDisposable
     public void ATransparentTrack_IsTheColorOfThePanel_WithOrWithoutABorder_AlsoWhenThePanelChanges()
     {
         using Panel panel = new Panel { BackColor = Color.Purple };
-        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         panel.Controls.Add(bar);
 
         bar.BackColor = Color.Transparent;
@@ -187,12 +189,12 @@ public class ProgressBarFactoryTests : IDisposable
     {
         using Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(200, 100) };
         Panel panel = UIStyles.Panels.CreateElevated();
-        ThemedProgressBar transparent = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar transparent = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         transparent.BackColor = Color.Transparent;
         panel.Controls.Add(transparent);
 
         // (On a panel whose color does not change with the theme: only the theme itself can tell the bar.)
-        ThemedProgressBar recessed = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar recessed = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         Panel fixedPanel = new Panel { BackColor = Color.Purple, Top = 50 };
         fixedPanel.Controls.Add(recessed);
         host.Controls.Add(panel);
@@ -216,7 +218,7 @@ public class ProgressBarFactoryTests : IDisposable
     public void ATrackColorSetByHand_Stays_AlsoWhenTheBorderChanges()
     {
         using Panel panel = new Panel { BackColor = Color.Purple };
-        ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
         panel.Controls.Add(bar);
 
         bar.BackColor = Color.Teal;
@@ -230,7 +232,7 @@ public class ProgressBarFactoryTests : IDisposable
     [Fact]
     public void ABarWithoutAPanel_CanBeSetToTransparentWithoutAnError_AndLooksRecessed()
     {
-        using ThemedProgressBar bar = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+        using ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
 
         Assert.Null(Record.Exception(() => bar.BackColor = Color.Transparent));
         Assert.Equal(UIColors.BackgroundMedium, bar.BackColor);

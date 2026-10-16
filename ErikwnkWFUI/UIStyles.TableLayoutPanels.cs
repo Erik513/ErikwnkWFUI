@@ -11,7 +11,7 @@ namespace ErikwnkWFUI
         /// (<c>ColumnStyles</c>, <c>RowStyles</c>, <c>GrowStyle</c>, <c>AutoScroll</c> with scroll bars in the style of the theme ...).
         /// There is no frame and there are no lines between the cells by default. Set <c>BorderStyle = FixedSingle</c>
         /// for a thin frame in the color of the theme; cast the result to
-        /// <c>ErikwnkWFUI.Controls.ThemedTableLayoutPanel</c> for <c>BorderColor</c>, and for the lines of <c>CellBorderStyle = Single</c>: <c>CellBorderColor</c> (also
+        /// <c>ErikwnkWFUI.Controls.TableLayoutPanel</c> for <c>BorderColor</c>, and for the lines of <c>CellBorderStyle = Single</c>: <c>CellBorderColor</c> (also
         /// <c>InnerCellBorderColor</c> and <c>OuterCellBorderColor</c> for the lines between the cells and the ones around the
         /// table) and <c>CellBorderLines</c> (all lines, only the ones around the table or only the ones between the cells). The tables
         /// do not dock (<c>Dock</c> is left to the caller). Right-to-left layouts are not supported.

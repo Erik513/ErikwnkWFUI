@@ -118,7 +118,7 @@ theme. A card does not scroll itself - put a panel with `AutoScroll` in it.
 ```csharp
 var surface = UIStyles.Panels.CreateElevated();
 var card = UIStyles.Panels.CreateCardStandard();
-var table = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+var table = (TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
 table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
 table.CellBorderLines = CellBorderLines.InnerOnly;
 ```

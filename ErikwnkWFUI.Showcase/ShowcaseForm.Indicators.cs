@@ -9,6 +9,7 @@ using ErikwnkWFUI.Styles;
 using MessageBox = ErikwnkWFUI.Forms.MessageBox;
 using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
 using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
+using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Showcase
 {
@@ -39,11 +40,11 @@ namespace ErikwnkWFUI.Showcase
 
             // Two properties, independent of each other: the border (BorderStyle) and the track (BackColor; Transparent takes the color of the
             // panel the bar lies on, in both themes). First the border alone, then both.
-            ThemedProgressBar withoutBorder = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+            ErikwnkWFUI.Controls.ProgressBar withoutBorder = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
             withoutBorder.BorderStyle = BorderStyle.None;
             AddBarRow(table, "CreateStandard (BorderStyle = None)", withoutBorder);
 
-            ThemedProgressBar withoutBorderTransparent = (ThemedProgressBar)UIStyles.ProgressBars.CreateStandard();
+            ErikwnkWFUI.Controls.ProgressBar withoutBorderTransparent = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard();
             withoutBorderTransparent.BorderStyle = BorderStyle.None;
             withoutBorderTransparent.BackColor = Color.Transparent;
             AddBarRow(table, "CreateStandard (BorderStyle = None, BackColor = Transparent)", withoutBorderTransparent);

@@ -5,6 +5,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Forms
 {

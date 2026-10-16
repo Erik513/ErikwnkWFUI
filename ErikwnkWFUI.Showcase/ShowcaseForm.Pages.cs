@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Showcase
 {

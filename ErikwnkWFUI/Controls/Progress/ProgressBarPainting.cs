@@ -5,7 +5,7 @@ using System.Windows.Forms;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// What the two progress bars (<see cref="ThemedProgressBar"/> and <see cref="SlimProgressBar"/>) have in common: how much of the
+    /// What the two progress bars (<see cref="ProgressBar"/> and <see cref="SlimProgressBar"/>) have in common: how much of the
     /// bar is filled, and how a fill in each <see cref="ProgressBarStyle"/> looks. One place, so the two cannot drift apart.
     /// </summary>
     internal static class ProgressBarPainting

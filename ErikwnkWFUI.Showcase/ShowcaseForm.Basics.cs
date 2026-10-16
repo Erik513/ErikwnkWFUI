@@ -12,6 +12,9 @@ using ErikwnkWFUI.Styles;
 using MessageBox = ErikwnkWFUI.Forms.MessageBox;
 using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
 using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Showcase
 {
@@ -460,7 +463,7 @@ namespace ErikwnkWFUI.Showcase
 
             // The options of a panel in one: a frame (BorderStyle) in the library's color (BorderColor) and AutoScroll
             // (the scroll bars follow the theme, also the square where they meet).
-            ThemedPanel options = (ThemedPanel)UIStyles.Panels.CreateMedium();
+            ErikwnkWFUI.Controls.Panel options = (ErikwnkWFUI.Controls.Panel)UIStyles.Panels.CreateMedium();
             options.BorderStyle = BorderStyle.FixedSingle;
             options.BorderColor = UIColors.Primary;
             options.AutoScroll = true;
@@ -533,14 +536,14 @@ namespace ErikwnkWFUI.Showcase
 
             // The lines between the cells (CellBorderStyle) are off by default. CellBorderLines selects which are shown: only the
             // ones between the cells, or only the ones around the table.
-            ThemedTableLayoutPanel inner = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ErikwnkWFUI.Controls.TableLayoutPanel inner = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(inner);
             inner.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             inner.CellBorderLines = CellBorderLines.InnerOnly;
             inner.InnerCellBorderColor = UIColors.PrimaryLight;
             table.AddRow("CreateStandard (CellBorderLines: InnerOnly, InnerCellBorderColor)", 72, inner);
 
-            ThemedTableLayoutPanel outer = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ErikwnkWFUI.Controls.TableLayoutPanel outer = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(outer);
             outer.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             outer.CellBorderLines = CellBorderLines.OuterOnly;
@@ -548,7 +551,7 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateStandard (CellBorderLines: OuterOnly, OuterCellBorderColor)", 72, outer);
 
             // Both kinds of lines in their own color: the ones around the table in red, the ones between the cells in green.
-            ThemedTableLayoutPanel twoColors = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+            ErikwnkWFUI.Controls.TableLayoutPanel twoColors = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
             ConfigureCellsDemo(twoColors);
             twoColors.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
             twoColors.OuterCellBorderColor = UIStyles.Colors.Sets.Red.Basic;
@@ -568,7 +571,7 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("CreateStandard (BorderStyle = FixedSingle)", CreateFlowDemo(framedDefault));
 
             // A frame around the panel (BorderStyle) in the library's color.
-            ThemedFlowLayoutPanel framedFlow = (ThemedFlowLayoutPanel)UIStyles.FlowLayoutPanels.CreateStandard();
+            ErikwnkWFUI.Controls.FlowLayoutPanel framedFlow = (ErikwnkWFUI.Controls.FlowLayoutPanel)UIStyles.FlowLayoutPanels.CreateStandard();
             framedFlow.BorderStyle = BorderStyle.FixedSingle;
             framedFlow.BorderColor = UIColors.Primary;
             table.AddRow("CreateStandard (BorderStyle, BorderColor)", CreateFlowDemo(framedFlow));

@@ -242,12 +242,12 @@ public class PanelColorTests : IDisposable
 
         foreach (Color surface in new[] { UIStyles.Colors.Sets.Green.Basic, UIStyles.Colors.Sets.Yellow.Basic, UIColors.PrimaryDarkDark, Color.Gray })
         {
-            ThemedPanel panel = new ThemedPanel { BackColor = surface, BorderStyle = BorderStyle.FixedSingle, Size = new Size(80, 40) };
-            ThemedTableLayoutPanel table = new ThemedTableLayoutPanel { BackColor = surface, CellBorderStyle = TableLayoutPanelCellBorderStyle.Single, ColumnCount = 2, RowCount = 1, Size = new Size(80, 40) };
+            ErikwnkWFUI.Controls.Panel panel = new ErikwnkWFUI.Controls.Panel { BackColor = surface, BorderStyle = BorderStyle.FixedSingle, Size = new Size(80, 40) };
+            ErikwnkWFUI.Controls.TableLayoutPanel table = new ErikwnkWFUI.Controls.TableLayoutPanel { BackColor = surface, CellBorderStyle = TableLayoutPanelCellBorderStyle.Single, ColumnCount = 2, RowCount = 1, Size = new Size(80, 40) };
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             table.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            ThemedCardPanel card = new ThemedCardPanel { BackColor = surface, Size = new Size(80, 40) };
+            ErikwnkWFUI.Controls.CardPanel card = new ErikwnkWFUI.Controls.CardPanel { BackColor = surface, Size = new Size(80, 40) };
 
             Assert.True(ColorContrastHelper.GetContrastRatio(panel.BorderColor, surface) >= 1.45, $"frame on {surface}");
             Assert.True(ColorContrastHelper.GetContrastRatio(table.CellBorderColor, surface) >= 1.45, $"lines on {surface}");

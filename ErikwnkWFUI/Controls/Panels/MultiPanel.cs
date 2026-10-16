@@ -14,7 +14,7 @@ namespace ErikwnkWFUI.Controls
     /// One page of a <see cref="MultiPanel"/>: a transparent panel that fills the page area. Put the controls of the page on it
     /// like on any panel; its <see cref="Title"/> is shown in the header of the <see cref="MultiPanel"/> while the page is shown.
     /// </summary>
-    public class MultiPanelPage : ThemedPanel
+    public class MultiPanelPage : Panel
     {
         // Made by the multi panel (AddPage): a page that is not on one cannot be added to it.
         internal MultiPanelPage(string title)
@@ -45,10 +45,10 @@ namespace ErikwnkWFUI.Controls
     /// the title of the page they lead to as their tooltip. With the focus inside the multi panel, Ctrl+PageDown or Ctrl+Tab
     /// shows the next page and Ctrl+PageUp or Ctrl+Shift+Tab the previous one (on the first and the last page the key goes on to
     /// the parent, so that a tab control around it can use it). <see cref="ShowHeaderLine"/> adds a thin line under the header.
-    /// A card in every other way (<see cref="ThemedCardPanel"/>): <c>CornerRadius</c>, <c>BorderStyle</c>, <c>BorderColor</c> and
+    /// A card in every other way (<see cref="CardPanel"/>): <c>CornerRadius</c>, <c>BorderStyle</c>, <c>BorderColor</c> and
     /// <c>Padding</c> work as there. Right-to-left layouts are not supported.
     /// </remarks>
-    public class MultiPanel : ThemedCardPanel
+    public class MultiPanel : CardPanel
     {
         private const int HeaderHeight96 = 36;
         private const int ButtonSize96 = 26;
@@ -143,7 +143,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether a thin line separates the header from the page (off by default). It has the <see cref="ThemedCardPanel.BorderColor"/> of
+        /// Whether a thin line separates the header from the page (off by default). It has the <see cref="CardPanel.BorderColor"/> of
         /// the multi panel, and the page area starts a little lower to leave room for it.
         /// </summary>
         public bool ShowHeaderLine

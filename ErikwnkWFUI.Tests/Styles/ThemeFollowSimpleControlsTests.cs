@@ -4,6 +4,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using Panel = System.Windows.Forms.Panel;
+using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Tests.Styles;
 
@@ -147,7 +149,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("ProgressBars.Primary", () => { var b = UIStyles.ProgressBars.CreatePrimary(); b.Value = 40; return b; }, false),
             ("ProgressBars.Status", () => { var b = UIStyles.ProgressBars.CreateStatus(); b.Value = 40; return b; }, false),
             ("ProgressBars.Standard(colors)", () => { var b = UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Teal); b.Value = 40; return b; }, false),
-            ("ProgressBars.Standard(BorderStyle None)", () => { var b = (ErikwnkWFUI.Controls.ThemedProgressBar)UIStyles.ProgressBars.CreateStandard(); b.BorderStyle = System.Windows.Forms.BorderStyle.None; b.Value = 40; return b; }, false),
+            ("ProgressBars.Standard(BorderStyle None)", () => { var b = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard(); b.BorderStyle = System.Windows.Forms.BorderStyle.None; b.Value = 40; return b; }, false),
             ("Spinners.Standard", () => UIStyles.Spinners.CreateStandard(), false),
             ("Spinners.Primary", () => UIStyles.Spinners.CreatePrimary(), false),
             ("SliderBars.Standard", () => UIStyles.SliderBars.CreateStandard(0.4), true),

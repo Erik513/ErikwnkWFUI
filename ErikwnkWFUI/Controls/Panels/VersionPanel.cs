@@ -19,7 +19,7 @@ namespace ErikwnkWFUI.Controls
     /// there until <see cref="ShowUpdate"/> or <see cref="CheckForUpdateAsync"/> says that there is an update; a click on it
     /// shows the update prompt of the <see cref="AppUpdater"/> over the window the strip is in.
     /// </remarks>
-    public class VersionPanel : ThemedPanel
+    public class VersionPanel : Panel
     {
         private const int Height96 = 24;
         private const int RightInset96 = 10;

@@ -4,6 +4,8 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Helpers;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Forms
 {

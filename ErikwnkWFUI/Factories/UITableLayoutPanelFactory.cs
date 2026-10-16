@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
+using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -55,7 +56,7 @@ namespace ErikwnkWFUI.Factories
             int rowCount,
             Func<Color> backColor)
         {
-            TableLayoutPanel panel = new ThemedTableLayoutPanel
+            TableLayoutPanel panel = new Controls.TableLayoutPanel
             {
                 ColumnCount = Math.Max(0, columnCount),
                 RowCount = Math.Max(0, rowCount),

@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
+using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -11,7 +12,7 @@ namespace ErikwnkWFUI.Factories
     {
         // Named by color, matching UIButtonFactory's CreateStandard/
         // CreatePrimary/CreateGreen/CreateRed convention. The border is a
-        // property of the bar (ThemedProgressBar.BorderStyle), not a variant.
+        // property of the bar (ProgressBar.BorderStyle), not a variant.
         // CreateStandard is a neutral gray (adjust via ForeColor), the same
         // meaning "Standard" has for buttons and sliders; with a color set the
         // bar is filled in the main color of the set (see FillOf). CreateGreen/
@@ -62,7 +63,7 @@ namespace ErikwnkWFUI.Factories
 
         private static ProgressBar CreateStatusBar()
         {
-            ProgressBar progressBar = new ThemedProgressBar(useStatusGradient: true)
+            ProgressBar progressBar = new Controls.ProgressBar(useStatusGradient: true)
             {
                 Minimum = 0,
                 Maximum = 100,
@@ -77,7 +78,7 @@ namespace ErikwnkWFUI.Factories
 
         private static ProgressBar Create(Func<Color> foreColor)
         {
-            ProgressBar progressBar = new ThemedProgressBar()
+            ProgressBar progressBar = new Controls.ProgressBar()
             {
                 Minimum = 0,
                 Style = ProgressBarStyle.Continuous,
@@ -95,7 +96,7 @@ namespace ErikwnkWFUI.Factories
                 // edge case where a panel is BackgroundMedium too. Callers
                 // wanting the borderless/blend-in look set BorderStyle to None and
                 // set BackColor to Color.Transparent: the track then takes the
-                // color of the panel (ThemedProgressBar does that; a native
+                // color of the panel (ProgressBar does that; a native
                 // ProgressBar cannot be transparent).
                 Margin = new Padding(0)
             };

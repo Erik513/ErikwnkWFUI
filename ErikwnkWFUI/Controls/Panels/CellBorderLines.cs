@@ -1,7 +1,7 @@
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// Which lines of a table with <c>CellBorderStyle.Single</c> are shown (<see cref="ThemedTableLayoutPanel.CellBorderLines"/>).
+    /// Which lines of a table with <c>CellBorderStyle.Single</c> are shown (<see cref="TableLayoutPanel.CellBorderLines"/>).
     /// </summary>
     public enum CellBorderLines
     {

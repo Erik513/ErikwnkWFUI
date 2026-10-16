@@ -45,9 +45,9 @@ public class PanelBorderTests : IDisposable
 
     public static IEnumerable<object[]> ThreePanels()
     {
-        yield return new object[] { (Func<Control>)(() => new ThemedPanel()) };
-        yield return new object[] { (Func<Control>)(() => new ThemedFlowLayoutPanel { AutoSize = false }) };
-        yield return new object[] { (Func<Control>)(() => new ThemedTableLayoutPanel()) };
+        yield return new object[] { (Func<Control>)(() => new ErikwnkWFUI.Controls.Panel()) };
+        yield return new object[] { (Func<Control>)(() => new ErikwnkWFUI.Controls.FlowLayoutPanel { AutoSize = false }) };
+        yield return new object[] { (Func<Control>)(() => new ErikwnkWFUI.Controls.TableLayoutPanel()) };
     }
 
     private static void SetBorderStyle(Control panel, BorderStyle value) => panel.GetType().GetProperty("BorderStyle")!.SetValue(panel, value);
@@ -88,7 +88,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void ThePanelFrame_IsInTheColorOfTheTheme_UntilOneIsSet_AndFollowsTheTheme()
     {
-        ThemedPanel panel = Show(new ThemedPanel { BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black });
+        ErikwnkWFUI.Controls.Panel panel = Show(new ErikwnkWFUI.Controls.Panel { BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black });
 
         using (Bitmap picture = Draw(panel))
             Assert.Equal(UIColors.BorderMedium, Opaque(picture.GetPixel(0, 30)));
@@ -113,9 +113,9 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void WithoutABorder_NothingIsPainted_AndTheOtherPanelsHaveTheFrameToo()
     {
-        ThemedPanel none = Show(new ThemedPanel { Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
-        ThemedFlowLayoutPanel flow = Show(new ThemedFlowLayoutPanel { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
-        ThemedTableLayoutPanel table = Show(new ThemedTableLayoutPanel { BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
+        ErikwnkWFUI.Controls.Panel none = Show(new ErikwnkWFUI.Controls.Panel { Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
+        ErikwnkWFUI.Controls.FlowLayoutPanel flow = Show(new ErikwnkWFUI.Controls.FlowLayoutPanel { AutoSize = false, BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Show(new ErikwnkWFUI.Controls.TableLayoutPanel { BorderStyle = BorderStyle.FixedSingle, Size = new Size(100, 60), BackColor = Color.Black, BorderColor = Color.Red });
 
         using (Bitmap picture = Draw(none))
             Assert.Equal(Color.Black.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
@@ -127,9 +127,9 @@ public class PanelBorderTests : IDisposable
             Assert.Equal(Color.Red.ToArgb(), Opaque(picture.GetPixel(0, 30)).ToArgb());
     }
 
-    private ThemedTableLayoutPanel Table()
+    private ErikwnkWFUI.Controls.TableLayoutPanel Table()
     {
-        ThemedTableLayoutPanel table = new ThemedTableLayoutPanel
+        ErikwnkWFUI.Controls.TableLayoutPanel table = new ErikwnkWFUI.Controls.TableLayoutPanel
         {
             ColumnCount = 2,
             RowCount = 2,
@@ -148,7 +148,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void TheLinesOfATable_AreInTheColorOfTheTheme_UntilOneIsSet_AndFollowTheTheme()
     {
-        ThemedTableLayoutPanel table = Table();
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Table();
 
         using (Bitmap picture = Draw(table))
         {
@@ -176,7 +176,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void WithoutLines_OrWithAnotherStyle_TheTableIsLeftAlone()
     {
-        ThemedTableLayoutPanel table = Table();
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Table();
         table.CellBorderColor = Color.Red;
         table.CellBorderStyle = TableLayoutPanelCellBorderStyle.None;
         Application.DoEvents();
@@ -186,9 +186,9 @@ public class PanelBorderTests : IDisposable
         Assert.DoesNotContain(Enumerable.Range(0, 60).Select(y => Opaque(picture.GetPixel(49, y)).ToArgb()), argb => argb == Color.Red.ToArgb());
     }
 
-    private ThemedTableLayoutPanel Grid(int columns, int rows, Color back)
+    private ErikwnkWFUI.Controls.TableLayoutPanel Grid(int columns, int rows, Color back)
     {
-        ThemedTableLayoutPanel table = new ThemedTableLayoutPanel
+        ErikwnkWFUI.Controls.TableLayoutPanel table = new ErikwnkWFUI.Controls.TableLayoutPanel
         {
             ColumnCount = columns,
             RowCount = rows,
@@ -215,7 +215,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void CellBorderLines_AllIsTheDefault_AndShowsTheLinesAroundAndBetween()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
 
         Assert.Equal(CellBorderLines.All, table.CellBorderLines);
 
@@ -229,7 +229,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void CellBorderLines_OuterOnly_ShowsTheLinesAroundTheTable_NoneBetweenTheCells_NotEvenTheCrossings()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         using Bitmap all = Draw(table);
         List<int> columns = RedColumns(all);
         List<int> rows = RedRows(all);
@@ -255,7 +255,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void CellBorderLines_InnerOnly_ShowsTheLinesBetweenTheCells_NoneAroundTheTable()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         using Bitmap all = Draw(table);
         List<int> columns = RedColumns(all);
         List<int> rows = RedRows(all);
@@ -283,7 +283,7 @@ public class PanelBorderTests : IDisposable
     [InlineData(2, 2, CellBorderLines.OuterOnly)]
     public void CellBorderLines_OnAnyGridSize_AreDrawnWithoutAnError_EvenWhereThereIsNothingToHide(int columns, int rows, CellBorderLines lines)
     {
-        ThemedTableLayoutPanel table = Grid(columns, rows, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(columns, rows, Color.White);
         table.CellBorderLines = lines;
 
         // (A control swallows an error while it paints and shows a red cross, so the painting is called directly.)
@@ -296,7 +296,7 @@ public class PanelBorderTests : IDisposable
         Assert.Null(Record.Exception(() => PaintDirectly(table)));
     }
 
-    private static void PaintDirectly(ThemedTableLayoutPanel table)
+    private static void PaintDirectly(ErikwnkWFUI.Controls.TableLayoutPanel table)
     {
         using Bitmap picture = new Bitmap(table.Width, table.Height);
         using Graphics graphics = Graphics.FromImage(picture);
@@ -304,10 +304,10 @@ public class PanelBorderTests : IDisposable
         BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance;
 
         // The cells are noted while the background is painted.
-        typeof(ThemedTableLayoutPanel).GetMethod("OnPaintBackground", flags)!.Invoke(table, new object[] { args });
+        typeof(ErikwnkWFUI.Controls.TableLayoutPanel).GetMethod("OnPaintBackground", flags)!.Invoke(table, new object[] { args });
         try
         {
-            typeof(ThemedTableLayoutPanel).GetMethod("OnPaint", flags)!.Invoke(table, new object[] { args });
+            typeof(ErikwnkWFUI.Controls.TableLayoutPanel).GetMethod("OnPaint", flags)!.Invoke(table, new object[] { args });
         }
         catch (TargetInvocationException exception)
         {
@@ -322,7 +322,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void TheInnerAndTheOuterLines_CanHaveTheirOwnColors_TheCornersBelongToTheOuterOnes()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         using Bitmap all = Draw(table);
         List<int> columns = RedColumns(all);
         List<int> rows = RedRows(all);
@@ -347,7 +347,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void WithoutTheirOwnColor_TheInnerAndTheOuterLinesFollowTheCellBorderColor_AlsoWhenItChanges()
     {
-        ThemedTableLayoutPanel table = Grid(2, 2, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(2, 2, Color.White);
 
         Assert.Equal(Color.Red, table.InnerCellBorderColor);
         Assert.Equal(Color.Red, table.OuterCellBorderColor);
@@ -374,7 +374,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void ALineThatIsNotShown_HasNoColor_TheOtherOnesKeepTheirs()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         table.InnerCellBorderColor = Color.Blue;
         table.OuterCellBorderColor = Color.Green;
 
@@ -401,7 +401,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void CellBorderLines_WithOneColumnOrRow_HasNoInnerLinesInThatDirection()
     {
-        ThemedTableLayoutPanel table = Grid(1, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(1, 3, Color.White);
         table.CellBorderLines = CellBorderLines.InnerOnly;
         Application.DoEvents();
 
@@ -413,7 +413,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void CellBorderLines_OnATransparentTable_ShowWhatLiesBehindInPlaceOfTheHiddenLines()
     {
-        ThemedTableLayoutPanel table = new ThemedTableLayoutPanel
+        ErikwnkWFUI.Controls.TableLayoutPanel table = new ErikwnkWFUI.Controls.TableLayoutPanel
         {
             ColumnCount = 2,
             RowCount = 2,
@@ -446,7 +446,7 @@ public class PanelBorderTests : IDisposable
     [InlineData(CellBorderLines.InnerOnly)]
     public void CellBorderLines_StayHidden_AfterAChangeOfTheTheme_AndWithoutTheSingleStyle_NothingIsTouched(CellBorderLines lines)
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         table.CellBorderColor = Color.Empty;
         table.CellBorderLines = lines;
         UIColors.ApplyTheme(UIThemes.Light);
@@ -469,7 +469,7 @@ public class PanelBorderTests : IDisposable
     [Fact]
     public void WhatAPaintHandlerDraws_ComesOverTheLines_AlsoOverALineThatIsHidden()
     {
-        ThemedTableLayoutPanel table = Grid(3, 3, Color.White);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = Grid(3, 3, Color.White);
         using Bitmap all = Draw(table);
         List<int> columns = RedColumns(all);
         List<int> rows = RedRows(all);

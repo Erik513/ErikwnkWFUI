@@ -15,7 +15,7 @@ namespace ErikwnkWFUI.Controls
     /// to green. Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored). The factories hand it back as a
     /// <see cref="ProgressBar"/>.
     /// </summary>
-    public class ThemedProgressBar : ProgressBar
+    public class ProgressBar : System.Windows.Forms.ProgressBar
     {
         // The 1 px border keeps the extent of the bar legible even when the panel it lies on is BackgroundMedium too (BackColor
         // alone does not guarantee a contrast); BorderStyle None skips it for callers who want the bar to blend into its container.
@@ -25,7 +25,7 @@ namespace ErikwnkWFUI.Controls
         private readonly MarqueeAnimator _marquee;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
-        internal ThemedProgressBar(bool useStatusGradient = false)
+        internal ProgressBar(bool useStatusGradient = false)
         {
             _useStatusGradient = useStatusGradient;
 

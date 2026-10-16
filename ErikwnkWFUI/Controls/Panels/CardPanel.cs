@@ -21,7 +21,7 @@ namespace ErikwnkWFUI.Controls
     /// standard panel is not meant for it (see <see cref="BorderStyle"/>): the line is <see cref="BorderStyle"/> and <see cref="BorderColor"/>.
     /// <see cref="MultiPanel"/> is a card with pages (flat, with a <see cref="CornerRadius"/> of 0 and no line, or rounded).
     /// </remarks>
-    public class ThemedCardPanel : Panel
+    public class CardPanel : System.Windows.Forms.Panel
     {
         private const int DefaultCornerRadius96 = 8;
         private const int DefaultPadding96 = 8;
@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Controls
         private int _cornerRadius = DefaultCornerRadius96;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
-        public ThemedCardPanel()
+        public CardPanel()
         {
             SetStyle(
                 ControlStyles.UserPaint |
@@ -65,7 +65,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Whether the thin line around the card is drawn: <see cref="BorderStyle.FixedSingle"/> (the default; <see cref="BorderStyle.Fixed3D"/>
-        /// looks the same) or <see cref="BorderStyle.None"/>. It hides the <see cref="Panel.BorderStyle"/> of the standard panel, which would
+        /// looks the same) or <see cref="BorderStyle.None"/>. It hides the <see cref="System.Windows.Forms.Panel.BorderStyle"/> of the standard panel, which would
         /// have the system draw a rectangular frame over the rounded corners (the panel's own is always none; do not set it through
         /// a <see cref="Panel"/> variable).
         /// </summary>

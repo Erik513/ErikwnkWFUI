@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -123,7 +124,7 @@ public class ProgressBarBehaviorTests : IDisposable
 
     public static IEnumerable<object[]> Bars()
     {
-        yield return new object[] { "ThemedProgressBar", (Func<Control>)(() => UIStyles.ProgressBars.CreatePrimary()) };
+        yield return new object[] { "ErikwnkWFUI.Controls.ProgressBar", (Func<Control>)(() => UIStyles.ProgressBars.CreatePrimary()) };
         yield return new object[] { "SlimProgressBar", (Func<Control>)(() => UIStyles.SlimProgressBars.CreatePrimary()) };
     }
 
@@ -137,7 +138,7 @@ public class ProgressBarBehaviorTests : IDisposable
         bar.GetType().GetProperty("Value")!.SetValue(bar, value);
     }
 
-    private static int InnerLeft(Control bar) => bar is ThemedProgressBar ? 1 : 0;
+    private static int InnerLeft(Control bar) => bar is ErikwnkWFUI.Controls.ProgressBar ? 1 : 0;
 
     [Theory]
     [MemberData(nameof(Bars))]

@@ -9,6 +9,8 @@ using ErikwnkWFUI.Styles;
 using MessageBox = ErikwnkWFUI.Forms.MessageBox;
 using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
 using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
+using Panel = System.Windows.Forms.Panel;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
 
 namespace ErikwnkWFUI.Showcase
 {

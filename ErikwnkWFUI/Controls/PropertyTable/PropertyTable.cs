@@ -18,7 +18,7 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultSectionHeight = 32;
         private const int LabelLeftPadding = 10;
 
-        private readonly TableLayoutPanel _layout;
+        private readonly System.Windows.Forms.TableLayoutPanel _layout;
 
         public PropertyTable()
         {
@@ -116,8 +116,8 @@ namespace ErikwnkWFUI.Controls
             int row = AddRowStyle(rowHeight);
 
             Label label = CreateRowLabel(labelText);
-            Panel editorArea = CreateEditorAreaPanel();
-            TableLayoutPanel editorLayout = CreateEditorLayout(columns);
+            System.Windows.Forms.Panel editorArea = CreateEditorAreaPanel();
+            System.Windows.Forms.TableLayoutPanel editorLayout = CreateEditorLayout(columns);
 
             editorArea.Controls.Add(editorLayout);
 
@@ -151,9 +151,9 @@ namespace ErikwnkWFUI.Controls
         // gets the same opaque color it would have resolved to anyway, so
         // there is no "ask parent" indirection left for anything to get
         // wrong.
-        private TableLayoutPanel CreateMainLayout()
+        private System.Windows.Forms.TableLayoutPanel CreateMainLayout()
         {
-            TableLayoutPanel layout = new TableLayoutPanel
+            System.Windows.Forms.TableLayoutPanel layout = new System.Windows.Forms.TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 AutoSize = true,
@@ -178,13 +178,13 @@ namespace ErikwnkWFUI.Controls
             return layout;
         }
 
-        private TableLayoutPanel CreateEditorLayout(UIColumn[] columns)
+        private System.Windows.Forms.TableLayoutPanel CreateEditorLayout(UIColumn[] columns)
         {
             int columnCount = columns == null || columns.Length == 0
                 ? 1
                 : columns.Length;
 
-            TableLayoutPanel layout = new TableLayoutPanel
+            System.Windows.Forms.TableLayoutPanel layout = new System.Windows.Forms.TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = columnCount,
@@ -209,7 +209,7 @@ namespace ErikwnkWFUI.Controls
                 layout.ColumnStyles.Add(
                     column.Style);
 
-                Panel cellPanel = CreateEditorCellPanel();
+                System.Windows.Forms.Panel cellPanel = CreateEditorCellPanel();
 
                 if (column.Control != null)
                 {
@@ -224,13 +224,13 @@ namespace ErikwnkWFUI.Controls
         }
 
         private void AddControlToCell(
-            Panel cellPanel,
+            System.Windows.Forms.Panel cellPanel,
             Control control)
         {
             if (cellPanel == null || control == null)
                 return;
 
-            TableLayoutPanel wrapper = new TableLayoutPanel
+            System.Windows.Forms.TableLayoutPanel wrapper = new System.Windows.Forms.TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
@@ -302,9 +302,9 @@ namespace ErikwnkWFUI.Controls
             return label;
         }
 
-        private Panel CreateEditorAreaPanel()
+        private System.Windows.Forms.Panel CreateEditorAreaPanel()
         {
-            Panel panel = new Panel
+            System.Windows.Forms.Panel panel = new System.Windows.Forms.Panel
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(0),
@@ -316,9 +316,9 @@ namespace ErikwnkWFUI.Controls
             return panel;
         }
 
-        private Panel CreateEditorCellPanel()
+        private System.Windows.Forms.Panel CreateEditorCellPanel()
         {
-            Panel panel = new Panel
+            System.Windows.Forms.Panel panel = new System.Windows.Forms.Panel
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(0),

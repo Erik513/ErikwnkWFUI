@@ -2,6 +2,7 @@
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 

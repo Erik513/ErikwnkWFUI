@@ -150,9 +150,9 @@ public class PanelFactoryTests
 
         Type expected = control switch
         {
-            TableLayoutPanel => typeof(ErikwnkWFUI.Controls.ThemedTableLayoutPanel),
-            FlowLayoutPanel => typeof(ErikwnkWFUI.Controls.ThemedFlowLayoutPanel),
-            _ => typeof(ErikwnkWFUI.Controls.ThemedPanel)
+            TableLayoutPanel => typeof(ErikwnkWFUI.Controls.TableLayoutPanel),
+            FlowLayoutPanel => typeof(ErikwnkWFUI.Controls.FlowLayoutPanel),
+            _ => typeof(ErikwnkWFUI.Controls.Panel)
         };
 
         Assert.IsType(expected, control);
@@ -193,8 +193,8 @@ public class PanelFactoryTests
         Assert.Equal(Color.Transparent, table.BackColor);
         Assert.Equal(3, table.ColumnCount);
         Assert.Equal(2, table.RowCount);
-        Assert.IsType<ErikwnkWFUI.Controls.ThemedFlowLayoutPanel>(flow);
-        Assert.IsType<ErikwnkWFUI.Controls.ThemedTableLayoutPanel>(table);
+        Assert.IsType<ErikwnkWFUI.Controls.FlowLayoutPanel>(flow);
+        Assert.IsType<ErikwnkWFUI.Controls.TableLayoutPanel>(table);
     }
 
     [Fact]
@@ -228,7 +228,7 @@ public class PanelFactoryTests
         try
         {
             UIColors.SetAccent(Color.OrangeRed);
-            using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardPrimary();
+            using ErikwnkWFUI.Controls.CardPanel card = (ErikwnkWFUI.Controls.CardPanel)UIStyles.Panels.CreateCardPrimary();
 
             Assert.Equal(UIColors.PrimaryDarkDark, card.BackColor);
             Assert.Equal(UIColors.PrimaryDark, card.BorderColor);
@@ -245,8 +245,8 @@ public class PanelFactoryTests
     {
         UIColorSet green = UIStyles.Colors.Sets.Green;
 
-        using ErikwnkWFUI.Controls.ThemedCardPanel card = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardStandard(green);
-        using ErikwnkWFUI.Controls.ThemedCardPanel plain = (ErikwnkWFUI.Controls.ThemedCardPanel)UIStyles.Panels.CreateCardStandard();
+        using ErikwnkWFUI.Controls.CardPanel card = (ErikwnkWFUI.Controls.CardPanel)UIStyles.Panels.CreateCardStandard(green);
+        using ErikwnkWFUI.Controls.CardPanel plain = (ErikwnkWFUI.Controls.CardPanel)UIStyles.Panels.CreateCardStandard();
 
         Assert.Equal(green.Basic, card.BackColor);
         Assert.Equal(green.Hover, card.BorderColor);

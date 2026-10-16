@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
+using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -37,7 +38,7 @@ namespace ErikwnkWFUI.Factories
 
         private static Panel CreateCard(Func<Color> backColor, Func<Color> borderColor)
         {
-            ThemedCardPanel card = new ThemedCardPanel
+            CardPanel card = new Controls.CardPanel
             {
                 Dock = DockStyle.None,
                 Margin = new Padding(0)
@@ -90,7 +91,7 @@ namespace ErikwnkWFUI.Factories
             Func<Color> backColor,
             DockStyle dock)
         {
-            Panel panel = new ThemedPanel
+            Panel panel = new Controls.Panel
             {
                 Dock = dock,
                 BorderStyle = BorderStyle.None,

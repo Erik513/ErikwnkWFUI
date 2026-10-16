@@ -465,7 +465,7 @@ namespace ErikwnkWFUI.Controls
             // ColumnHeadersDefaultCellStyle entirely and always render
             // with the OS's own visual-style theme instead - the
             // DataGridView equivalent of the SetWindowTheme("", "") dance
-            // ThemedProgressBar needs for the exact same reason.
+            // ProgressBar needs for the exact same reason.
             EnableHeadersVisualStyles = false;
 
             // A display-only grid by default - DataGridView (which adds

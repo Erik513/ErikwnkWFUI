@@ -20,9 +20,9 @@ public class PanelCardTests : IDisposable
         UIColors.ApplyTheme(UIThemes.Dark);
     }
 
-    private ThemedCardPanel Card()
+    private ErikwnkWFUI.Controls.CardPanel Card()
     {
-        ThemedCardPanel card = (ThemedCardPanel)UIStyles.Panels.CreateCardStandard();
+        ErikwnkWFUI.Controls.CardPanel card = (ErikwnkWFUI.Controls.CardPanel)UIStyles.Panels.CreateCardStandard();
         card.Size = new Size(100, 60);
         card.BackColor = Color.Black;
         card.Location = new Point(20, 20);
@@ -49,7 +49,7 @@ public class PanelCardTests : IDisposable
     {
         using Control card = UIStyles.Panels.CreateCardStandard();
 
-        Assert.IsType<ThemedCardPanel>(card);
+        Assert.IsType<ErikwnkWFUI.Controls.CardPanel>(card);
         Assert.Equal(UIColors.BackgroundMediumElevated, card.BackColor);
         Assert.Equal(DockStyle.None, card.Dock);
         Assert.True(card.Padding.All > 0);
@@ -59,7 +59,7 @@ public class PanelCardTests : IDisposable
     [Fact]
     public void TheCorners_ShowThePageBehind_TheMiddleTheCardColor_TheEdgeTheLine()
     {
-        ThemedCardPanel card = Card();
+        ErikwnkWFUI.Controls.CardPanel card = Card();
 
         Assert.Equal(Color.White.ToArgb(), Pixel(card, 0, 0).ToArgb());
         Assert.Equal(Color.White.ToArgb(), Pixel(card, 99, 59).ToArgb());
@@ -71,7 +71,7 @@ public class PanelCardTests : IDisposable
     [Fact]
     public void TheCornerIsSmooth_ThereAreInBetweenColors()
     {
-        ThemedCardPanel card = Card();
+        ErikwnkWFUI.Controls.CardPanel card = Card();
         card.BorderColor = Color.Black;
         int inBetween = 0;
 
@@ -92,7 +92,7 @@ public class PanelCardTests : IDisposable
     [Fact]
     public void WhatIsSet_IsUsed_AndTheLineColorFollowsTheThemeUntilThen()
     {
-        ThemedCardPanel card = Card();
+        ErikwnkWFUI.Controls.CardPanel card = Card();
 
         card.BorderStyle = BorderStyle.None;
         Assert.Equal(Color.Black.ToArgb(), Pixel(card, 50, 0).ToArgb());
@@ -113,7 +113,7 @@ public class PanelCardTests : IDisposable
     [Fact]
     public void ANegativeRadius_IsZero()
     {
-        using ThemedCardPanel card = new ThemedCardPanel { CornerRadius = -5 };
+        using ErikwnkWFUI.Controls.CardPanel card = new ErikwnkWFUI.Controls.CardPanel { CornerRadius = -5 };
 
         Assert.Equal(0, card.CornerRadius);
     }
