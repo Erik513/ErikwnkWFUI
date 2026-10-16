@@ -10,6 +10,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;
 
@@ -18,6 +19,7 @@ namespace ErikwnkWFUI.Tests.Controls.Panels;
 public class PanelRobustnessTests : IDisposable
 {
     private readonly List<Form> _forms = new List<Form>();
+    private readonly Color _accentAtStart = UIColors.Primary;
 
     public void Dispose()
     {
@@ -25,6 +27,7 @@ public class PanelRobustnessTests : IDisposable
             form.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
+        UIColors.SetAccent(_accentAtStart);
     }
 
     private Form Host(Control control, Size size)
@@ -63,9 +66,9 @@ public class PanelRobustnessTests : IDisposable
         }
     }
 
-    private static ThemedTableLayoutPanel Lines(CellBorderLines lines, bool transparent)
+    private static ErikwnkWFUI.Controls.TableLayoutPanel Lines(CellBorderLines lines, bool transparent)
     {
-        ThemedTableLayoutPanel table = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
         table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
         table.CellBorderLines = lines;
 
@@ -82,9 +85,9 @@ public class PanelRobustnessTests : IDisposable
     }
 
     // One cell only: there is nothing between the cells, or the lines around the table are the only ones.
-    private static ThemedTableLayoutPanel OneCell(CellBorderLines lines)
+    private static ErikwnkWFUI.Controls.TableLayoutPanel OneCell(CellBorderLines lines)
     {
-        ThemedTableLayoutPanel table = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(1, 1);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(1, 1);
         table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
         table.CellBorderLines = lines;
 
@@ -318,9 +321,9 @@ public class PanelRobustnessTests : IDisposable
             .ToList();
     }
 
-    private ThemedTableLayoutPanel AbsoluteTable(CellBorderLines lines, bool scrolling)
+    private ErikwnkWFUI.Controls.TableLayoutPanel AbsoluteTable(CellBorderLines lines, bool scrolling)
     {
-        ThemedTableLayoutPanel table = (ThemedTableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 3);
+        ErikwnkWFUI.Controls.TableLayoutPanel table = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 3);
         table.AutoScroll = scrolling;
         table.BackColor = Color.White;
         table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
@@ -343,7 +346,7 @@ public class PanelRobustnessTests : IDisposable
     public void ATableThatIsScrolled_HasItsLinesWhereTheCellsAre_AndOnlyTheOnesThatAreChosen(CellBorderLines lines)
     {
         // The whole table, not scrolled: where its vertical lines are.
-        ThemedTableLayoutPanel whole = AbsoluteTable(lines, false);
+        ErikwnkWFUI.Controls.TableLayoutPanel whole = AbsoluteTable(lines, false);
         Host(whole, new Size(300, 200));
         using Bitmap wholePicture = new Bitmap(whole.Width, whole.Height);
         whole.DrawToBitmap(wholePicture, new Rectangle(Point.Empty, whole.Size));
@@ -352,7 +355,7 @@ public class PanelRobustnessTests : IDisposable
         Assert.Equal(lines == CellBorderLines.All ? 4 : 2, wholeColumns.Count);
 
         // The same table in a window that shows only a part of it, scrolled to the right.
-        ThemedTableLayoutPanel part = AbsoluteTable(lines, true);
+        ErikwnkWFUI.Controls.TableLayoutPanel part = AbsoluteTable(lines, true);
         Host(part, new Size(120, 80));
         part.AutoScrollPosition = new Point(40, 0);
         Application.DoEvents();
