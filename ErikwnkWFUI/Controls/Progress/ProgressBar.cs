@@ -20,7 +20,8 @@ namespace ErikwnkWFUI.Controls
     /// percentage (<see cref="ShowPercentage"/>) can be written on the bar, each left, centered or right (<see cref="TextAlign"/>,
     /// <see cref="PercentageAlign"/>); a text that is too long is cut with an ellipsis or moves (<see cref="TextScroll"/>), and a
     /// tooltip shows it whole (<see cref="ShowFullTextToolTip"/>). Right-to-left layouts are not supported (<c>RightToLeft</c> is
-    /// ignored). The factories hand it back as a <see cref="ProgressBar"/>.
+    /// ignored; a <c>RightToLeftLayout</c> of the standard control mirrors the window, so the fill then starts on the right). The factories hand
+    /// it back as a <see cref="ProgressBar"/>.
     /// </summary>
     public class ProgressBar : System.Windows.Forms.ProgressBar
     {

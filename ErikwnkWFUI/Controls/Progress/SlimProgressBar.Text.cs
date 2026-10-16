@@ -193,6 +193,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <summary>The size the bar needs: only the strip without a text, with one the line of the text above or below it, or its width at the sides.</summary>
         public override Size GetPreferredSize(Size proposedSize)
         {
             if (!HasText)

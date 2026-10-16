@@ -91,6 +91,65 @@ public class ProgressBarLifecycleTests : IDisposable
         Assert.True(scroller.Offset > 0, "the text is still held by a mouse that is gone (hidden)");
     }
 
+    // --- A window that is resized ---
+
+    [Theory]
+    [MemberData(nameof(BothBars))]
+    public void AMovingText_KeepsItsPlace_WhenTheBarIsResized_AndBeginsAgainForAnotherText(string which)
+    {
+        // (Back and forth: how far the text has to go depends on the room. Endless: it does not, but the place stays all the same.)
+        foreach (LabelScroll scroll in new[]
+        {
+            LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short),
+            LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Dot, LabelScrollSpeed.Fast)
+        })
+        {
+            Control bar = Make(which, scroll);
+            using Form host = Host(bar);
+            ProgressTextScroller scroller = Scroller(bar);
+
+            scroller.Advance(2000);
+            Assert.True(scroller.Offset > 0, "the text did not move: " + scroll.Mode);
+
+            // The window grows by a few pixels (again and again while it is dragged): the text goes on from where it is.
+            bar.Width = 280;
+            using (Bitmap picture = Draw(bar)) { }
+            Assert.True(scroller.IsMoving);
+            Assert.True(scroller.Offset > 0, "the text jumped back to its start when the bar was resized: " + scroll.Mode);
+
+            // Another text begins again at the start.
+            bar.Text = LongText + " - and another one";
+            using (Bitmap picture = Draw(bar)) { }
+            Assert.Equal(0, scroller.Offset);
+        }
+    }
+
+    // --- Right to left ---
+
+    [Fact]
+    public void TheBar_IsMirroredByWindows_WithARightToLeftLayout_AndThePlainRightToLeftIsIgnored()
+    {
+        ErikwnkWFUI.Controls.ProgressBar bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+        bar.Value = 30;
+        using Form host = Host(bar);
+        Color fill = bar.ForeColor;
+
+        bar.RightToLeft = RightToLeft.Yes;
+        using (Bitmap plain = Draw(bar))
+        {
+            Assert.Equal(fill.ToArgb(), plain.GetPixel(5, 11).ToArgb());
+            Assert.NotEqual(fill.ToArgb(), plain.GetPixel(bar.Width - 5, 11).ToArgb());
+        }
+
+        bar.RightToLeftLayout = true;
+        Application.DoEvents();
+        using (Bitmap mirrored = Draw(bar))
+        {
+            Assert.Equal(fill.ToArgb(), mirrored.GetPixel(bar.Width - 5, 11).ToArgb());
+            Assert.NotEqual(fill.ToArgb(), mirrored.GetPixel(5, 11).ToArgb());
+        }
+    }
+
     // --- The designer ---
 
     [Fact]

@@ -138,7 +138,10 @@ namespace ErikwnkWFUI.Controls
                 cycle = Math.Max(textWidth + gap + separatorWidth + gap, roomWidth);
             }
 
-            bool changed = active != _active || distance != _distance || cycle != _cycle || textWidth != _textWidth;
+            // Another text, or the movement starting or stopping, begins it again; a room that grows or shrinks (a window that is
+            // resized) only changes how far it has to go: the text stays where it is in the movement.
+            bool begins = active != _active || textWidth != _textWidth;
+            bool measuresChanged = distance != _distance || cycle != _cycle;
 
             _distance = distance;
             _cycle = cycle;
@@ -146,10 +149,18 @@ namespace ErikwnkWFUI.Controls
             _gap = gap;
             _textWidth = textWidth;
 
-            if (changed)
+            if (begins)
+            {
                 Restart(active);
-            else if (active && !_timer.Enabled)
-                StartClock();
+            }
+            else if (active)
+            {
+                if (measuresChanged)
+                    _offset = ComputeOffset(_elapsed);
+
+                if (!_timer.Enabled)
+                    StartClock();
+            }
         }
 
         private bool AnimationsAllowed()
