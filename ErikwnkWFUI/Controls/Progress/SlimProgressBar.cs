@@ -34,7 +34,8 @@ namespace ErikwnkWFUI.Controls
     /// It offers what the standard <see cref="ProgressBar"/> does: <see cref="Minimum"/>, <see cref="Maximum"/>, <see cref="Value"/>,
     /// <see cref="Step"/>, <see cref="PerformStep"/>, <see cref="Increment"/> and the <see cref="Style"/>s Blocks, Continuous (the default)
     /// and Marquee with its <see cref="MarqueeAnimationSpeed"/>. One difference: a <see cref="Value"/> outside the range is limited to
-    /// it instead of throwing. Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
+    /// it instead of throwing, and a range may contain negative numbers (the standard control refuses a negative <see cref="Minimum"/>).
+    /// Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
     /// A <see cref="Text"/> (a message about the state) and the <see cref="ShowPercentage"/> are written next to the strip, at the
     /// <see cref="TextPosition"/>; the strip itself stays as thin as it is.
     /// </summary>
@@ -49,6 +50,7 @@ namespace ErikwnkWFUI.Controls
         private const int MinimumSideStripWidth = 40;
 
         private readonly MarqueeAnimator _marquee;
+        private readonly ProgressTextScroller _textScroller;
 
         private int _minimum;
         private int _maximum = 100;
@@ -77,6 +79,7 @@ namespace ErikwnkWFUI.Controls
             // A screen reader announces it as a progress bar (the value itself is not reported).
             AccessibleRole = AccessibleRole.ProgressBar;
 
+            _textScroller = new ProgressTextScroller(this);
             _marquee = new MarqueeAnimator(this, () => _style == ProgressBarStyle.Marquee, () => _marqueeAnimationSpeed);
 
             // The disabled gray and the status colors are read while painting.
@@ -145,7 +148,8 @@ namespace ErikwnkWFUI.Controls
             if (_style == ProgressBarStyle.Marquee)
                 throw new InvalidOperationException("The value of a progress bar in the Marquee style cannot be changed by steps.");
 
-            Value = _value + value;
+            // (In a long: a step of int.MaxValue must reach the maximum, not wrap around to a negative number.)
+            Value = (int)Math.Max(int.MinValue, Math.Min(int.MaxValue, (long)_value + value));
         }
 
         /// <summary>
@@ -285,6 +289,32 @@ namespace ErikwnkWFUI.Controls
         {
             get { return base.Text; }
             set { base.Text = value; }
+        }
+
+        /// <summary>
+        /// How a <see cref="Text"/> that is too long for its place moves instead of ending in an ellipsis: <see cref="LabelScroll.None"/>
+        /// (the default: it is cut with "..."), <c>LabelScroll.BackAndForth()</c> (to its end, a rest, back) or
+        /// <c>LabelScroll.Endless()</c>, the same values as for a label (speed, pause, direction, separator, pause while the mouse is on
+        /// the bar). The percentage does not move: it stays where it is, and a text that stood together with it stands apart from it
+        /// while it moves, the percentage at the right end. The text moves only while it does not fit, while the bar is shown and enabled, and while Windows lets windows
+        /// animate (Settings, Accessibility); several texts (<see cref="LabelScroll.Texts"/>) are not supported here, use <see cref="Text"/>.
+        /// </summary>
+        public LabelScroll TextScroll
+        {
+            get { return _textScroller.Scroll; }
+            set { _textScroller.Scroll = value; }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _textScroller.SetHovered(true);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _textScroller.SetHovered(false);
         }
 
         protected override void OnTextChanged(EventArgs e)
@@ -457,6 +487,8 @@ namespace ErikwnkWFUI.Controls
 
             if (HasText)
                 PaintText(g, textArea);
+            else
+                _textScroller.Configure(0, 0, Font);
         }
 
         private void PaintText(Graphics g, Rectangle textArea)
@@ -467,15 +499,22 @@ namespace ErikwnkWFUI.Controls
 
             if (IsSide)
             {
-                ProgressBarPainting.PaintText(
+                // One text (the percentage with it); a text that moves leaves the percentage where it is, at the end of the room.
+                HorizontalAlignment side = _textPosition == SlimProgressBarTextPosition.Left ? HorizontalAlignment.Right : HorizontalAlignment.Left;
+
+                ProgressBarPainting.PaintTexts(
                     g,
                     textArea,
-                    ProgressBarPainting.Compose(Text, ShowsPercentage, percent),
+                    Text,
+                    ShowsPercentage ? percent : null,
+                    WidestPercent,
+                    side,
+                    side,
                     Font,
                     textColor,
                     textColor,
                     Rectangle.Empty,
-                    _textPosition == SlimProgressBarTextPosition.Left ? TextFormatFlags.Right : TextFormatFlags.Left);
+                    _textScroller);
 
                 return;
             }
@@ -492,13 +531,15 @@ namespace ErikwnkWFUI.Controls
                 Font,
                 textColor,
                 textColor,
-                Rectangle.Empty);
+                Rectangle.Empty,
+                _textScroller);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
                 _marquee.Dispose();
+                _textScroller.Dispose();
 
             base.Dispose(disposing);
         }

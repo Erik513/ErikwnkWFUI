@@ -101,9 +101,38 @@ namespace ErikwnkWFUI.Showcase
             right.PercentageAlign = HorizontalAlignment.Right;
             AddBarRow(table, "Both aligned Right", right);
 
+            // A text that is longer than the bar is cut with "..." (the percentage keeps its place and stays whole). The bar has a fixed
+            // width here, so it is cut whatever the width of the window.
+            ErikwnkWFUI.Controls.ProgressBar tooLong = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            tooLong.Text = LongProgressText;
+            tooLong.ShowPercentage = true;
+            AnimateProgressBar(v => tooLong.Value = v);
+            table.AddRow("Text longer than the bar", UIColumn.Absolute(tooLong, LongProgressBarWidth));
+            PinToDemoWidth(tooLong, LongProgressBarWidth);
+
+            // TextScroll moves it instead (the same values as for a label); the percentage stays where it is.
+            foreach ((string name, LabelScroll scroll) in new[]
+            {
+                ("TextScroll = BackAndForth", LabelScroll.BackAndForth()),
+                ("TextScroll = Endless", LabelScroll.Endless())
+            })
+            {
+                ErikwnkWFUI.Controls.ProgressBar moving = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+                moving.Text = LongProgressText;
+                moving.ShowPercentage = true;
+                moving.TextScroll = scroll;
+                AnimateProgressBar(v => moving.Value = v);
+                table.AddRow(name, UIColumn.Absolute(moving, LongProgressBarWidth));
+                PinToDemoWidth(moving, LongProgressBarWidth);
+            }
+
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);
         }
+
+        private const int LongProgressBarWidth = 300;
+
+        private const string LongProgressText = "Connecting to the server, checking the certificate and loading the first part of the data";
 
         // One animated bar in the column of the enabled ones (the width of the left column of a two column row).
         private void AddBarRow(PropertyTable table, string name, ProgressBar bar)
@@ -173,6 +202,27 @@ namespace ErikwnkWFUI.Showcase
                 labeled.TextPosition = position;
                 labeled.AutoSize = true;
                 AddSlimBarRow(table, "TextPosition = " + position + (position == SlimProgressBarTextPosition.Above ? " (default)" : ""), labeled);
+            }
+
+            // A text that is longer than the control is cut with "..." (the percentage stays whole; at the sides the strip keeps its
+            // room), or moves with TextScroll (the same values as for a label).
+            foreach ((string name, SlimProgressBarTextPosition position, LabelScroll scroll) in new[]
+            {
+                ("Text longer than the bar, Above", SlimProgressBarTextPosition.Above, LabelScroll.None),
+                ("Text longer than the bar, Right", SlimProgressBarTextPosition.Right, LabelScroll.None),
+                ("TextScroll = BackAndForth, Above", SlimProgressBarTextPosition.Above, LabelScroll.BackAndForth()),
+                ("TextScroll = Endless, Right", SlimProgressBarTextPosition.Right, LabelScroll.Endless())
+            })
+            {
+                SlimProgressBar tooLong = UIStyles.SlimProgressBars.CreatePrimary();
+                tooLong.Text = LongProgressText;
+                tooLong.ShowPercentage = true;
+                tooLong.TextPosition = position;
+                tooLong.TextScroll = scroll;
+                tooLong.Height = 22;
+                AnimateProgressBar(v => tooLong.Value = v);
+                table.AddRow(name, UIColumn.Absolute(tooLong, LongProgressBarWidth));
+                PinToDemoWidth(tooLong, LongProgressBarWidth);
             }
 
             // Above or below, TextAlign and PercentageAlign move the two (Left, Center or Right each; at the same place they are one text).

@@ -143,12 +143,47 @@ namespace ErikwnkWFUI.Controls
                 : TextFormatFlags.HorizontalCenter;
         }
 
+        // Where the percentage stands in the area, for its alignment and its width.
+        private static Rectangle PlacePercentage(Rectangle area, HorizontalAlignment alignment, int width)
+        {
+            Rectangle place = new Rectangle(area.X, area.Y, width, area.Height);
+
+            if (alignment == HorizontalAlignment.Right)
+                place.X = area.Right - width;
+            else if (alignment == HorizontalAlignment.Center)
+                place.X = area.X + (area.Width - width) / 2;
+
+            return place;
+        }
+
+        // The room the text takes next to the percentage: on the side where the text itself is.
+        private static Rectangle RoomNextTo(Rectangle area, Rectangle percentArea, HorizontalAlignment textAlign, HorizontalAlignment percentAlign)
+        {
+            Rectangle room = area;
+
+            // (With the percentage in the middle, the text goes to the side its own alignment names.)
+            bool onTheLeft = percentAlign == HorizontalAlignment.Right
+                || (percentAlign == HorizontalAlignment.Center && textAlign == HorizontalAlignment.Left);
+
+            if (onTheLeft)
+                room.Width = Math.Max(0, percentArea.X - PartsGap - area.X);
+            else
+            {
+                room.X = percentArea.Right + PartsGap;
+                room.Width = Math.Max(0, area.Right - room.X);
+            }
+
+            return room;
+        }
+
         /// <summary>
         /// Draws the text and the percentage (<paramref name="percent"/> is null when it is not shown) into <paramref name="area"/>.
         /// Alone, each stands where its alignment says. Together at the same place they are one text ("Upload - 42 %"); at different
         /// places they are drawn apart, the percentage keeping the room of its widest form (<paramref name="widestPercent"/>) and the
         /// text taking what is left next to it (and being centered, aligned or cut there). Both are readable on the track and on
-        /// the fill, see <see cref="PaintText"/>.
+        /// the fill, see <see cref="PaintText"/>. A text that is too wide for its room moves there when the
+        /// <paramref name="scroller"/> has a scroll for it (then the percentage stays where it is, and one text that was drawn
+        /// together with it is drawn apart from it, the percentage at the right end); otherwise it is cut with an ellipsis.
         /// </summary>
         public static void PaintTexts(
             Graphics graphics,
@@ -161,46 +196,138 @@ namespace ErikwnkWFUI.Controls
             Font font,
             Color onTrack,
             Color onFill,
-            Rectangle fillBounds)
+            Rectangle fillBounds,
+            ProgressTextScroller scroller = null)
         {
             bool hasText = !string.IsNullOrEmpty(text);
             bool hasPercent = percent != null;
 
             if (!hasText && !hasPercent)
-                return;
-
-            if (hasText != hasPercent || textAlign == percentAlign)
             {
-                HorizontalAlignment alignment = hasText && !hasPercent ? textAlign : percentAlign;
-                PaintText(graphics, area, Compose(text, hasPercent, percent), font, onTrack, onFill, fillBounds, ToFlags(alignment));
+                scroller?.Configure(0, 0, font);
 
                 return;
             }
 
-            int percentWidth = Math.Min(area.Width, MeasureText(widestPercent, font).Width);
-            Rectangle percentArea = new Rectangle(area.X, area.Y, percentWidth, area.Height);
-
-            if (percentAlign == HorizontalAlignment.Right)
-                percentArea.X = area.Right - percentWidth;
-            else if (percentAlign == HorizontalAlignment.Center)
-                percentArea.X = area.X + (area.Width - percentWidth) / 2;
-
-            // The text takes the room next to the percentage, on the side where the text itself is.
             Rectangle textArea = area;
-            // (With the percentage in the middle, the text goes to the side its own alignment names.)
-            bool textOnTheLeft = percentAlign == HorizontalAlignment.Right
-                || (percentAlign == HorizontalAlignment.Center && textAlign == HorizontalAlignment.Left);
+            Rectangle percentArea = Rectangle.Empty;
+            string textPart;
+            string percentPart = null;
+            HorizontalAlignment textAlignment;
+            bool together = hasText != hasPercent || textAlign == percentAlign;
 
-            if (textOnTheLeft)
-                textArea.Width = Math.Max(0, percentArea.X - PartsGap - area.X);
+            if (together)
+            {
+                textPart = Compose(text, hasPercent, percent);
+                textAlignment = hasText && !hasPercent ? textAlign : percentAlign;
+            }
             else
             {
-                textArea.X = percentArea.Right + PartsGap;
-                textArea.Width = Math.Max(0, area.Right - textArea.X);
+                int percentWidth = Math.Min(area.Width, MeasureText(widestPercent, font).Width);
+                percentArea = PlacePercentage(area, percentAlign, percentWidth);
+                textArea = RoomNextTo(area, percentArea, textAlign, percentAlign);
+                textPart = text;
+                percentPart = percent;
+                textAlignment = textAlign;
             }
 
-            PaintText(graphics, textArea, text, font, onTrack, onFill, fillBounds, ToFlags(textAlign));
-            PaintText(graphics, percentArea, percent, font, onTrack, onFill, fillBounds, TextFormatFlags.HorizontalCenter);
+            bool moves = false;
+
+            if (scroller != null && hasText && scroller.Scroll.Mode != LabelScrollMode.None)
+            {
+                int width = MeasureText(textPart, font).Width;
+
+                // One text with the percentage that is too wide: the percentage goes to the right end, and the text moves next to it.
+                if (together && hasPercent && width > textArea.Width)
+                {
+                    HorizontalAlignment side = HorizontalAlignment.Right;
+                    int percentWidth = Math.Min(area.Width, MeasureText(widestPercent, font).Width);
+
+                    percentArea = PlacePercentage(area, side, percentWidth);
+                    textArea = RoomNextTo(area, percentArea, textAlign, side);
+                    textPart = text;
+                    percentPart = percent;
+                    textAlignment = textAlign;
+                    percentAlign = side;
+                    width = MeasureText(textPart, font).Width;
+                }
+
+                scroller.Configure(width, textArea.Width, font);
+                moves = scroller.IsMoving;
+            }
+            else
+            {
+                scroller?.Configure(0, 0, font);
+            }
+
+            if (moves)
+                PaintMovingText(graphics, textArea, textPart, font, onTrack, onFill, fillBounds, scroller);
+            else
+                PaintText(graphics, textArea, textPart, font, onTrack, onFill, fillBounds, ToFlags(textAlignment));
+
+            if (percentPart != null)
+                PaintText(graphics, percentArea, percentPart, font, onTrack, onFill, fillBounds, TextFormatFlags.HorizontalCenter);
+        }
+
+        // The text that moves through its room: back and forth from its start to its end, or round and round with a separator.
+        private static void PaintMovingText(
+            Graphics graphics,
+            Rectangle room,
+            string text,
+            Font font,
+            Color onTrack,
+            Color onFill,
+            Rectangle fillBounds,
+            ProgressTextScroller scroller)
+        {
+            if (room.Width <= 0 || room.Height <= 0)
+                return;
+
+            TextFormatFlags flags = (TextFlags & ~TextFormatFlags.EndEllipsis) | TextFormatFlags.Left | TextFormatFlags.PreserveGraphicsClipping;
+            LabelScroll scroll = scroller.Scroll;
+            string separator = scroll.Separator.ToText();
+
+            Action<Color, Rectangle> pass = (color, clip) =>
+            {
+                System.Drawing.Drawing2D.GraphicsState state = graphics.Save();
+
+                try
+                {
+                    graphics.SetClip(clip, System.Drawing.Drawing2D.CombineMode.Intersect);
+
+                    if (scroll.Mode == LabelScrollMode.BackAndForth)
+                    {
+                        TextRenderer.DrawText(graphics, text, font, new Rectangle(room.X - scroller.Offset, room.Y, scroller.TextWidth + 8, room.Height), color, flags);
+
+                        return;
+                    }
+
+                    // The round: the text, a gap, the separator, a gap - and the next round behind it (and one before it, while it is on its way in).
+                    for (int round = -1; round <= 1; round++)
+                    {
+                        int left = room.X - scroller.Offset + round * scroller.Cycle;
+
+                        if (left > room.Right || left + scroller.Cycle < room.X)
+                            continue;
+
+                        TextRenderer.DrawText(graphics, text, font, new Rectangle(left, room.Y, scroller.TextWidth + 8, room.Height), color, flags);
+
+                        if (separator.Length > 0)
+                            TextRenderer.DrawText(graphics, separator, font, new Rectangle(left + scroller.TextWidth + scroller.Gap, room.Y, scroller.SeparatorWidth + 8, room.Height), color, flags);
+                    }
+                }
+                finally
+                {
+                    graphics.Restore(state);
+                }
+            };
+
+            pass(onTrack, room);
+
+            Rectangle covered = Rectangle.Intersect(room, fillBounds);
+
+            if (!covered.IsEmpty)
+                pass(onFill, covered);
         }
 
         /// <summary>The size of a text as it is drawn by <see cref="PaintText"/>.</summary>

@@ -24,6 +24,7 @@ namespace ErikwnkWFUI.Controls
         private readonly bool _useStatusGradient;
         private readonly ThemeColor _trackColor;
         private readonly MarqueeAnimator _marquee;
+        private readonly ProgressTextScroller _textScroller;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
         private bool _showPercentage;
         private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
@@ -36,6 +37,7 @@ namespace ErikwnkWFUI.Controls
             // The native bar ignores ForeColor and BackColor while visual styles are on, so it is not used for painting at all.
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
 
+            _textScroller = new ProgressTextScroller(this);
             _marquee = new MarqueeAnimator(this, () => Style == ProgressBarStyle.Marquee, () => MarqueeAnimationSpeed);
 
             // The track: the recessed surface of the theme (until BackColor is set).
@@ -190,6 +192,32 @@ namespace ErikwnkWFUI.Controls
             set { base.Text = value; }
         }
 
+        /// <summary>
+        /// How a <see cref="Text"/> that is too long for its place moves instead of ending in an ellipsis: <see cref="LabelScroll.None"/>
+        /// (the default: it is cut with "..."), <c>LabelScroll.BackAndForth()</c> (to its end, a rest, back) or
+        /// <c>LabelScroll.Endless()</c>, the same values as for a label (speed, pause, direction, separator, pause while the mouse is on
+        /// the bar). The percentage does not move: it stays where it is, and a text that stood together with it stands apart from it
+        /// while it moves, the percentage at the right end. The text moves only while it does not fit, while the bar is shown and enabled, and while Windows lets windows
+        /// animate (Settings, Accessibility); several texts (<see cref="LabelScroll.Texts"/>) are not supported here, use <see cref="Text"/>.
+        /// </summary>
+        public LabelScroll TextScroll
+        {
+            get { return _textScroller.Scroll; }
+            set { _textScroller.Scroll = value; }
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            _textScroller.SetHovered(true);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            _textScroller.SetHovered(false);
+        }
+
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -246,7 +274,8 @@ namespace ErikwnkWFUI.Controls
                 Font,
                 Enabled ? UIColors.GetBestTextColor(BackColor) : UIColors.GetDisabledText(BackColor),
                 UIColors.GetBestTextColor(fill),
-                covered);
+                covered,
+                _textScroller);
         }
 
         /// <summary>The room between the border of the bar and its text, in pixels at 96 dpi.</summary>
@@ -292,6 +321,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
                 _marquee.Dispose();
+                _textScroller.Dispose();
 
             base.Dispose(disposing);
         }
