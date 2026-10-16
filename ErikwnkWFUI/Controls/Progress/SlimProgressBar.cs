@@ -498,7 +498,7 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
                 fillColor = UIColors.DisabledGray;
             else if (_useStatusGradient)
-                fillColor = UIColors.GetStatusColor(_value, _minimum, _maximum);
+                fillColor = ProgressBarPainting.GetStatusFill(_value, _minimum, _maximum, BackColor);
             else
                 fillColor = ForeColor;
 
@@ -523,7 +523,7 @@ namespace ErikwnkWFUI.Controls
         private bool PaintText(Graphics g, Rectangle textArea)
         {
             Color surface = Parent != null ? SurfaceColor.Of(Parent) : UIColors.BackgroundMedium;
-            Color textColor = Enabled ? UIColors.GetBestTextColor(surface) : UIColors.GetDisabledText(surface);
+            Color textColor = Enabled ? ProgressBarPainting.GetTextColorOn(surface) : UIColors.GetDisabledText(surface);
             string percent = ProgressBarPainting.GetPercentText(_minimum, _maximum, _value);
 
             if (IsSide)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -16,6 +17,31 @@ namespace ErikwnkWFUI.Controls
 
         // The classic (blocks) style: blocks about three quarters as wide as the bar is high, with a gap of 2 px.
         private const int BlockGap = 2;
+
+        // What the colors of a bar have to reach (WCAG): the fill against the track is the state the bar shows (3:1 for the parts of a
+        // control), the text against what it stands on is text (4.5:1).
+        public const double FillContrast = 3.0;
+        public const double TextContrast = 4.5;
+
+        /// <summary>
+        /// The text color for text on <paramref name="background"/>: the best of the dark and the light text color of the library, and
+        /// - where that is not enough on a mid-tone (gray, teal, pink) - pure black or white, whichever reads better.
+        /// </summary>
+        public static Color GetTextColorOn(Color background)
+        {
+            Color best = UIColors.GetBestTextColor(background);
+
+            if (UIColors.GetContrastRatio(best, background) >= TextContrast)
+                return best;
+
+            return UIColors.GetContrastRatio(Color.White, background) >= UIColors.GetContrastRatio(Color.Black, background) ? Color.White : Color.Black;
+        }
+
+        /// <summary>The fill of a status bar at a value (red to green), moved just far enough to stand out from the track.</summary>
+        public static Color GetStatusFill(int value, int minimum, int maximum, Color track)
+        {
+            return UIColors.EnsureContrast(UIColors.GetStatusColor(value, minimum, maximum), track, FillContrast);
+        }
 
         /// <summary>The part of the bar that is filled, from 0 to 1.</summary>
         public static double GetFraction(int minimum, int maximum, int value)

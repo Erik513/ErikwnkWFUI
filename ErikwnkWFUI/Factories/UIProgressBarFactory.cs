@@ -25,13 +25,15 @@ namespace ErikwnkWFUI.Factories
         // The fill of a bar for a color set: its Hover color. The sets of the library keep their main color there (Green is
         // UIColors.Green, Primary is the accent, a set made of a color has that color) - Basic is the darker shade made for
         // the text on a button, and would nearly vanish on the dark track. No set (null) is the neutral gray.
-        // The set is asked for again each time: the primary set follows the accent.
+        // The set is asked for again each time: the primary set follows the accent. The fill is moved just far enough, lighter or
+        // darker, to stand out from the track (3:1): the main color of some sets (the blue accent on the dark track, yellow on the
+        // light one) would not otherwise.
         internal static Func<Color> FillOf(Func<UIColorSet> colors)
         {
             if (colors == null)
-                return () => UIColors.DisabledGray;
+                return () => UIColors.EnsureContrast(UIColors.DisabledGray, UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
 
-            return () => colors().Hover;
+            return () => UIColors.EnsureContrast(colors().Hover, UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
         }
 
         public static ProgressBar CreateGreen()

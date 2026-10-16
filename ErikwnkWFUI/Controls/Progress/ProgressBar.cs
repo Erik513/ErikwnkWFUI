@@ -279,7 +279,7 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
                 fill = UIColors.DisabledGray;
             else if (_useStatusGradient)
-                fill = UIColors.GetStatusColor(Value, Minimum, Maximum);
+                fill = ProgressBarPainting.GetStatusFill(Value, Minimum, Maximum, BackColor);
             else
                 fill = ForeColor;
 
@@ -301,8 +301,8 @@ namespace ErikwnkWFUI.Controls
                 _textAlign,
                 _percentageAlign,
                 Font,
-                Enabled ? UIColors.GetBestTextColor(BackColor) : UIColors.GetDisabledText(BackColor),
-                UIColors.GetBestTextColor(fill),
+                Enabled ? ProgressBarPainting.GetTextColorOn(BackColor) : UIColors.GetDisabledText(BackColor),
+                ProgressBarPainting.GetTextColorOn(fill),
                 covered,
                 _textScroller);
 

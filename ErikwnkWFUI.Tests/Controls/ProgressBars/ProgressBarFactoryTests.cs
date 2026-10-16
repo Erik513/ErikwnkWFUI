@@ -87,8 +87,9 @@ public class ProgressBarFactoryTests : IDisposable
         Assert.Equal(UIStyles.Colors.Sets.Green.Hover, green.ForeColor);
         Assert.Equal(green.ForeColor, slimGreen.ForeColor);
 
-        Assert.Equal(UIColors.Primary, primary.ForeColor);
-        Assert.Equal(UIStyles.Colors.Sets.Primary.Hover, primary.ForeColor);
+        // The accent, moved just far enough to stand out from the track (the blue accent is too dark for the dark one).
+        Color expected = UIColors.EnsureContrast(UIStyles.Colors.Sets.Primary.Hover, UIColors.BackgroundMedium, 3.0);
+        Assert.Equal(expected, primary.ForeColor);
         Assert.Equal(primary.ForeColor, slimPrimary.ForeColor);
     }
 
