@@ -145,6 +145,25 @@ public class ProgressBarToolTipTests : IDisposable
 
     [Theory]
     [MemberData(nameof(BothBars))]
+    public void ALongText_IsWrappedInTheTooltipWindow_AtTheFixedWidth(string which)
+    {
+        string veryLong = string.Join(" ", Enumerable.Repeat("a long text for a tooltip", 30));
+        Control bar = Make(which, veryLong);
+        using Form host = Host(bar);
+        ToolTip toolTip = Tip(bar).GetPrivateField<ToolTip>("_toolTip")!;
+        System.Reflection.PropertyInfo handle = typeof(ToolTip).GetProperty("Handle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!;
+
+        toolTip.Show(veryLong, bar, 5, 30, 1000);
+        Application.DoEvents();
+        IntPtr window = (IntPtr)handle.GetValue(toolTip)!;
+        int width = (int)ErikwnkWFUI.Native.NativeMethods.SendMessage(window, ErikwnkWFUI.Native.NativeMethods.TTM_GETMAXTIPWIDTH, IntPtr.Zero, IntPtr.Zero);
+        toolTip.Hide(bar);
+
+        Assert.Equal((int)Math.Round(FullTextToolTip.MaxWidthAt96Dpi * bar.DeviceDpi / 96.0), width);
+    }
+
+    [Theory]
+    [MemberData(nameof(BothBars))]
     public void TheTooltip_IsOnByDefault(string which)
     {
         Control bar = Make(which, "x");

@@ -30,6 +30,9 @@ namespace ErikwnkWFUI.Helpers
             {
                 toolTip.Active = false;
                 toolTip.Active = true;
+
+                // (The window of the tooltip is made anew: its widest line has to be set again.)
+                ToolTipWidth.Apply(toolTip);
             };
 
             void Hook()

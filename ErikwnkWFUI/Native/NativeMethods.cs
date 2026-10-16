@@ -78,6 +78,10 @@ namespace ErikwnkWFUI.Native
         public const int TME_LEAVE = 0x0002;
 
         // ---- window styles ----
+        // ---- tooltips ----
+        public const int TTM_SETMAXTIPWIDTH = 0x0418;
+        public const int TTM_GETMAXTIPWIDTH = 0x0419;
+
         public const int GWL_STYLE = -16;
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_STATICEDGE = 0x00020000;
