@@ -90,7 +90,9 @@ public class ProgressBarFactoryTests : IDisposable
         // The accent, moved just far enough to stand out from the track (the blue accent is too dark for the dark one).
         Color expected = UIColors.EnsureContrast(UIStyles.Colors.Sets.Primary.Hover, UIColors.BackgroundMedium, 3.0);
         Assert.Equal(expected, primary.ForeColor);
-        Assert.Equal(primary.ForeColor, slimPrimary.ForeColor);
+
+        // (The slim bar keeps the main color of the set and moves it against its own track when it paints, see ProgressBarColorContrastTests.)
+        Assert.Equal(UIStyles.Colors.Sets.Primary.Hover, slimPrimary.ForeColor);
     }
 
     [Fact]

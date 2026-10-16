@@ -38,7 +38,7 @@ public class ProgressBarTextTests : IDisposable
     // The pixels that are none of the colors of the bar: the letters.
     private static List<Point> Ink(Bitmap picture, Control bar, params Color[] known)
     {
-        HashSet<int> colors = new HashSet<int> { Color.Black.ToArgb(), bar.BackColor.ToArgb(), bar.ForeColor.ToArgb(), UIColors.BorderMedium.ToArgb() };
+        HashSet<int> colors = new HashSet<int> { Color.Black.ToArgb(), bar.BackColor.ToArgb(), PaintedColors.Fill(bar).ToArgb(), UIColors.BorderMedium.ToArgb() };
 
         foreach (Color color in known)
             colors.Add(color.ToArgb());
@@ -230,7 +230,7 @@ public class ProgressBarTextTests : IDisposable
         {
             int pixel = picture.GetPixel(x, y).ToArgb();
 
-            if (pixel == bar.BackColor.ToArgb() || pixel == bar.ForeColor.ToArgb())
+            if (pixel == bar.BackColor.ToArgb() || pixel == PaintedColors.Fill(bar).ToArgb())
             {
                 if (first < 0)
                     first = y;
@@ -292,7 +292,7 @@ public class ProgressBarTextTests : IDisposable
             {
                 int pixel = picture.GetPixel(x, 10).ToArgb();
 
-                if (pixel == slim.BackColor.ToArgb() || pixel == slim.ForeColor.ToArgb())
+                if (pixel == slim.BackColor.ToArgb() || pixel == PaintedColors.Fill(slim).ToArgb())
                 {
                     if (firstColumn < 0)
                         firstColumn = x;
@@ -632,7 +632,7 @@ public class ProgressBarTextTests : IDisposable
             for (int x = 0; x < picture.Width; x++)
             {
                 int pixel = picture.GetPixel(x, y).ToArgb();
-                run = pixel == slim.BackColor.ToArgb() || pixel == slim.ForeColor.ToArgb() ? run + 1 : 0;
+                run = pixel == slim.BackColor.ToArgb() || pixel == PaintedColors.Fill(slim).ToArgb() ? run + 1 : 0;
                 stripLength = Math.Max(stripLength, run);
             }
         }

@@ -9,13 +9,13 @@ namespace ErikwnkWFUI.Factories
     {
         // Neutral gray fill by default; reassign ForeColor for any other
         // color. With a color set the bar is filled in the main color of the
-        // set: its Hover color (see UIProgressBarFactory.FillOf). Matches the
+        // set: its Hover color (see UIProgressBarFactory.MainColorOf). Matches the
         // CreateStandard = neutral gray convention used for buttons and sliders;
         // CreateGreen/CreatePrimary are CreateStandard with the green and the
         // accent set.
         public static SlimProgressBar CreateStandard(UIColorSet colors = null)
         {
-            return Create(UIProgressBarFactory.FillOf(ColorSetSource.Of(colors)));
+            return Create(UIProgressBarFactory.MainColorOf(ColorSetSource.Of(colors)));
         }
 
         public static SlimProgressBar CreateGreen()
@@ -25,7 +25,7 @@ namespace ErikwnkWFUI.Factories
 
         public static SlimProgressBar CreatePrimary()
         {
-            return Create(UIProgressBarFactory.FillOf(() => UIColors.PrimarySet));
+            return Create(UIProgressBarFactory.MainColorOf(() => UIColors.PrimarySet));
         }
 
         // Fill color follows Value instead of ForeColor - see
@@ -39,8 +39,6 @@ namespace ErikwnkWFUI.Factories
                 UseStatusGradient = true
             };
 
-            ThemeWatcher.FollowBackColor(bar, () => UIColors.BackgroundMedium);
-
             return bar;
         }
 
@@ -52,8 +50,8 @@ namespace ErikwnkWFUI.Factories
                 Maximum = 100
             };
 
-            ThemeWatcher.FollowForeColor(bar, foreColor);
-            ThemeWatcher.FollowBackColor(bar, () => UIColors.BackgroundMedium);
+            // The main color of the set; the bar moves it against its track (which follows the panel it lies on).
+            bar.SetDefaultFill(foreColor);
 
             return bar;
         }

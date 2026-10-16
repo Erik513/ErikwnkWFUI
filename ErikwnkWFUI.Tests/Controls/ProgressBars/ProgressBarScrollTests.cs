@@ -354,7 +354,7 @@ public class ProgressBarScrollTests : IDisposable
             {
                 int pixel = atStart.GetPixel(x, 13).ToArgb();
 
-                if (pixel == slim.BackColor.ToArgb() || pixel == slim.ForeColor.ToArgb())
+                if (pixel == slim.BackColor.ToArgb() || pixel == PaintedColors.Fill(slim).ToArgb())
                 {
                     stripStart = x;
                     break;

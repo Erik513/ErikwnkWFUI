@@ -154,7 +154,7 @@ public class ProgressBarBehaviorTests : IDisposable
         int inner = InnerLeft(bar);
 
         for (int x = inner; x < 98; x++)
-            Assert.Equal(bar.ForeColor.ToArgb(), picture.GetPixel(x, y).ToArgb());
+            Assert.Equal(PaintedColors.Fill(bar).ToArgb(), picture.GetPixel(x, y).ToArgb());
 
         Assert.Equal(bar.BackColor.ToArgb(), picture.GetPixel(150, y).ToArgb());
     }
@@ -237,7 +237,7 @@ public class ProgressBarBehaviorTests : IDisposable
         {
             Color pixel = picture.GetPixel(x, y);
 
-            if (pixel.ToArgb() == bar.ForeColor.ToArgb())
+            if (pixel.ToArgb() == PaintedColors.Fill(bar).ToArgb())
                 fill++;
             else if (pixel.ToArgb() == bar.BackColor.ToArgb())
                 track++;
@@ -275,7 +275,7 @@ public class ProgressBarBehaviorTests : IDisposable
         bar.RightToLeft = RightToLeft.Yes;
         Application.DoEvents();
 
-        Assert.Equal(bar.ForeColor.ToArgb(), Pixel(bar, InnerLeft(bar) + 2).ToArgb());
+        Assert.Equal(PaintedColors.Fill(bar).ToArgb(), Pixel(bar, InnerLeft(bar) + 2).ToArgb());
         Assert.Equal(bar.BackColor.ToArgb(), Pixel(bar, bar.Width - 5).ToArgb());
     }
 
@@ -292,7 +292,7 @@ public class ProgressBarBehaviorTests : IDisposable
 
         slim.UseStatusGradient = true;
         Assert.True(invalidated > 0, "the gradient switch did not repaint");
-        Assert.Equal(UIColors.GetStatusColor(100, 0, 100).ToArgb(), Pixel(slim, 20).ToArgb());
+        Assert.Equal(ProgressBarPainting.GetStatusFill(100, 0, 100, slim.BackColor).ToArgb(), Pixel(slim, 20).ToArgb());
 
         invalidated = 0;
         slim.UseStatusGradient = true;

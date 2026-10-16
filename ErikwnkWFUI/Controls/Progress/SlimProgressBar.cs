@@ -46,6 +46,10 @@ namespace ErikwnkWFUI.Controls
         private const int SideGap = 8;
         private const int MinimumSideStripWidth = 40;
 
+        // The track follows the panel the bar lies on (see BackColor), the fill the factory's color (see ForeColor) until one is set.
+        private readonly ThemeColor _trackColor;
+        private readonly ThemeColor _fillColor;
+
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
         private readonly FullTextToolTip _fullTextToolTip;
@@ -78,12 +82,100 @@ namespace ErikwnkWFUI.Controls
             // A screen reader announces it as a progress bar (the value itself is not reported).
             AccessibleRole = AccessibleRole.ProgressBar;
 
+            _trackColor = new ThemeColor(() => UIColors.GetLineColor(GetSurface()));
+            _fillColor = new ThemeColor(() => base.ForeColor);
             _textScroller = new ProgressTextScroller(this);
             _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => _style == ProgressBarStyle.Marquee, () => _marqueeAnimationSpeed);
 
             // The disabled gray and the status colors are read while painting.
             ThemeWatcher.Attach(this, Invalidate);
+        }
+
+        /// <summary>
+        /// The color of the track. By default the quiet line of the library for the panel the bar lies on (as the frame of a panel):
+        /// the gray of the theme, moved only as far as the panel needs to keep the track seen (1.5:1) - the track has no border of its own
+        /// here. It follows the panel and the theme. Set a color for another one, <see cref="Color.Empty"/> gives the default back; a
+        /// transparent color is the one of the panel.
+        /// </summary>
+        public override Color BackColor
+        {
+            get
+            {
+                if (_trackColor == null)
+                    return base.BackColor;
+
+                Color track = _trackColor.Value;
+
+                return track.A != 255 ? GetSurface() : track;
+            }
+            set
+            {
+                if (_trackColor == null)
+                {
+                    base.BackColor = value;
+
+                    return;
+                }
+
+                if (value.IsEmpty)
+                    _trackColor.Reset();
+                else
+                    _trackColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// The color of the fill. The bars of <c>UIStyles.SlimProgressBars</c> have the main color of their color set (or the gray) until
+        /// one is set; that color is moved only as far as needed to stand out from the track (3:1), a color set here is used as it is.
+        /// <see cref="Color.Empty"/> gives the default back.
+        /// </summary>
+        public override Color ForeColor
+        {
+            get { return _fillColor == null ? base.ForeColor : _fillColor.Value; }
+            set
+            {
+                if (_fillColor == null)
+                {
+                    base.ForeColor = value;
+
+                    return;
+                }
+
+                if (value.IsEmpty)
+                    _fillColor.Reset();
+                else
+                    _fillColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        // The color the factory gives the fill; followed live (the theme, the accent) until a color is set by hand.
+        internal void SetDefaultFill(Func<Color> color)
+        {
+            _fillColor.SetDefault(color);
+            Invalidate();
+        }
+
+        // What the bar lies on: the first color that is not see-through behind it.
+        private Color GetSurface()
+        {
+            return Parent != null ? SurfaceColor.Of(Parent) : UIColors.BackgroundMedium;
+        }
+
+        // The fill as painted: a color set by hand as it is, the others moved just far enough to stand out from the track.
+        internal Color GetFillColor(Color track)
+        {
+            if (!Enabled)
+                return UIColors.EnsureContrast(UIColors.DisabledGray, track, ProgressBarPainting.FillContrast);
+
+            if (_useStatusGradient)
+                return ProgressBarPainting.GetStatusFill(_value, _minimum, _maximum, track);
+
+            return _fillColor.IsSet ? _fillColor.Value : UIColors.EnsureContrast(_fillColor.Value, track, ProgressBarPainting.FillContrast);
         }
 
         /// <summary>The lower end of the range (0 by default); it may be negative. A <see cref="Value"/> below it is raised to it.</summary>
@@ -361,6 +453,12 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        protected override void OnParentChanged(EventArgs e)
+        {
+            base.OnParentChanged(e);
+            Invalidate();
+        }
+
         protected override void OnParentBackColorChanged(EventArgs e)
         {
             base.OnParentBackColorChanged(e);
@@ -484,23 +582,16 @@ namespace ErikwnkWFUI.Controls
             // With a text the strip does not fill the control: the rest is the surface the control lies on.
             if (HasText)
             {
-                Color surface = Parent != null ? SurfaceColor.Of(Parent) : UIColors.BackgroundMedium;
-
-                using (SolidBrush surfaceBrush = new SolidBrush(surface))
+                using (SolidBrush surfaceBrush = new SolidBrush(GetSurface()))
                     g.FillRectangle(surfaceBrush, ClientRectangle);
             }
 
-            using (SolidBrush trackBrush = new SolidBrush(BackColor))
+            Color track = BackColor;
+
+            using (SolidBrush trackBrush = new SolidBrush(track))
                 g.FillRectangle(trackBrush, strip);
 
-            Color fillColor;
-
-            if (!Enabled)
-                fillColor = UIColors.DisabledGray;
-            else if (_useStatusGradient)
-                fillColor = ProgressBarPainting.GetStatusFill(_value, _minimum, _maximum, BackColor);
-            else
-                fillColor = ForeColor;
+            Color fillColor = GetFillColor(track);
 
             ProgressBarPainting.PaintFill(
                 g,
@@ -522,7 +613,7 @@ namespace ErikwnkWFUI.Controls
 
         private bool PaintText(Graphics g, Rectangle textArea)
         {
-            Color surface = Parent != null ? SurfaceColor.Of(Parent) : UIColors.BackgroundMedium;
+            Color surface = GetSurface();
             Color textColor = Enabled ? ProgressBarPainting.GetTextColorOn(surface) : UIColors.GetDisabledText(surface);
             string percent = ProgressBarPainting.GetPercentText(_minimum, _maximum, _value);
 

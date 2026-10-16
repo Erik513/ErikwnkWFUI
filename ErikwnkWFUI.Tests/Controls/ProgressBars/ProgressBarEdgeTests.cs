@@ -72,7 +72,7 @@ public class ProgressBarEdgeTests : IDisposable
         int count = 0;
 
         for (int x = 0; x < picture.Width; x++)
-            if (picture.GetPixel(x, picture.Height / 2).ToArgb() == bar.ForeColor.ToArgb())
+            if (picture.GetPixel(x, picture.Height / 2).ToArgb() == PaintedColors.Fill(bar).ToArgb())
                 count++;
 
         return count;

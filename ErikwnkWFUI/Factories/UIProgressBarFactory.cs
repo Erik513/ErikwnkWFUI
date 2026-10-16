@@ -30,10 +30,18 @@ namespace ErikwnkWFUI.Factories
         // light one) would not otherwise.
         internal static Func<Color> FillOf(Func<UIColorSet> colors)
         {
-            if (colors == null)
-                return () => UIColors.EnsureContrast(UIColors.DisabledGray, UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
+            Func<Color> main = MainColorOf(colors);
 
-            return () => UIColors.EnsureContrast(colors().Hover, UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
+            return () => UIColors.EnsureContrast(main(), UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
+        }
+
+        // The main color of the set (or the gray) as it is: the slim bar moves it against the track it really has.
+        internal static Func<Color> MainColorOf(Func<UIColorSet> colors)
+        {
+            if (colors == null)
+                return () => UIColors.DisabledGray;
+
+            return () => colors().Hover;
         }
 
         public static ProgressBar CreateGreen()

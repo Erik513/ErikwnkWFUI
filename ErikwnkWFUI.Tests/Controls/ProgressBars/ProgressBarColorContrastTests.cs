@@ -228,6 +228,126 @@ public class ProgressBarColorContrastTests
         });
     }
 
+    private static List<(string Name, Color Surface)> AllPanels()
+    {
+        List<(string, Color)> panels = new List<(string, Color)>
+        {
+            ("Dark", UIColors.BackgroundDark), ("Medium", UIColors.BackgroundMedium), ("Elevated", UIColors.BackgroundMediumElevated),
+            ("Light", UIColors.BackgroundLight), ("Lighter", UIColors.BackgroundLighter)
+        };
+
+        foreach ((string name, UIColorSet? set) in AllSets().Where(s => s.Set != null))
+            panels.Add((name + " set", set!.Basic));
+
+        return panels;
+    }
+
+    private static (System.Windows.Forms.Panel Panel, Form Host) OnPanel(Control bar, Color surface, int height)
+    {
+        System.Windows.Forms.Panel panel = new System.Windows.Forms.Panel { BackColor = surface, Size = new Size(200, height + 10) };
+        bar.SetBounds(0, 5, 200, height);
+        panel.Controls.Add(bar);
+        Form host = OffscreenForm.Create(panel.Size, surface);
+        host.Controls.Add(panel);
+        host.Show();
+        Application.DoEvents();
+
+        return (panel, host);
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void TheSlimTrack_IsSeenOnEveryPanel_AndTheFillStandsOutFromIt(bool light)
+    {
+        Run(light, shortfalls =>
+        {
+            foreach ((string name, Color surface) in AllPanels())
+            {
+                foreach ((string setName, UIColorSet? set) in AllSets())
+                {
+                    SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStandard(set);
+                    slim.Value = 50;
+                    (System.Windows.Forms.Panel panel, Form host) = OnPanel(slim, surface, 4);
+
+                    using (host)
+                    using (Bitmap picture = Draw(panel))
+                    {
+                        Color fill = picture.GetPixel(40, 7);
+                        Color track = picture.GetPixel(160, 7);
+
+                        Check(shortfalls, "slim " + setName + " on " + name + ": track on panel", track, surface, 1.5);
+                        Check(shortfalls, "slim " + setName + " on " + name + ": fill on track", fill, track, ProgressBarPainting.FillContrast);
+                    }
+                }
+            }
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void TheSlimTrackAndFill_FollowThePanelAndTheTheme_AndAColorSetByHandStays(bool light)
+    {
+        Run(light, shortfalls =>
+        {
+            SlimProgressBar slim = UIStyles.SlimProgressBars.CreatePrimary();
+            slim.Value = 50;
+            (System.Windows.Forms.Panel panel, Form host) = OnPanel(slim, UIColors.BackgroundLight, 4);
+
+            using (host)
+            {
+                Color onLight = slim.BackColor;
+                panel.BackColor = UIColors.BackgroundDark;
+                Application.DoEvents();
+                Color onDark = slim.BackColor;
+
+                if (onLight == onDark)
+                    shortfalls.Add("the track did not follow the panel (" + onLight + ")");
+
+                // A color set by hand is the one painted, as it is.
+                slim.BackColor = Color.Purple;
+                slim.ForeColor = Color.Orange;
+                using (Bitmap picture = Draw(panel))
+                {
+                    if (picture.GetPixel(40, 7).ToArgb() != Color.Orange.ToArgb())
+                        shortfalls.Add("a fill color set by hand is not painted as it is");
+
+                    if (picture.GetPixel(160, 7).ToArgb() != Color.Purple.ToArgb())
+                        shortfalls.Add("a track color set by hand is not painted as it is");
+                }
+
+                // Empty gives the defaults back.
+                slim.BackColor = Color.Empty;
+                slim.ForeColor = Color.Empty;
+
+                if (slim.BackColor != onDark)
+                    shortfalls.Add("the default track is not back");
+
+                if (slim.ForeColor == Color.Orange)
+                    shortfalls.Add("the default fill is not back");
+            }
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes))]
+    public void ADisabledSlimBar_StaysVisible_AgainstItsTrackOnEveryPanel(bool light)
+    {
+        Run(light, shortfalls =>
+        {
+            foreach ((string name, Color surface) in AllPanels())
+            {
+                SlimProgressBar slim = UIStyles.SlimProgressBars.CreatePrimary();
+                slim.Value = 50;
+                slim.Enabled = false;
+                (System.Windows.Forms.Panel panel, Form host) = OnPanel(slim, surface, 4);
+
+                using (host)
+                using (Bitmap picture = Draw(panel))
+                    Check(shortfalls, "disabled slim on " + name + ": fill on track", picture.GetPixel(40, 7), picture.GetPixel(160, 7), ProgressBarPainting.FillContrast);
+            }
+        });
+    }
+
     [Theory]
     [MemberData(nameof(Themes))]
     public void ADisabledBar_StaysVisible_AgainstItsTrack(bool light)
