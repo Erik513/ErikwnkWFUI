@@ -76,7 +76,7 @@ namespace ErikwnkWFUI.Showcase
                  AddPanelsSection),
 
                 ("ProgressBars",
-                 "Progress bars: Standard (gray, or any color of a color set), Primary (accent color), Green and Status (the color shifts from red over yellow to green with the value). BorderStyle = false takes the border away; a BackColor of Transparent makes the track take the color of the panel, so the bar looks transparent (two separate properties). All bars run on one shared animation; the first row of each kind also shows the disabled look (right, at a fixed value). The slim progress bar is a thin strip for tight places (a status line under a text): the same Standard (gray, or any color of a color set), Primary, Green and Status.",
+                 "Progress bars: Standard (gray, or any color of a color set), Primary (accent color), Green and Status (the color shifts from red over yellow to green with the value). BorderStyle = None takes the border away; a BackColor of Transparent makes the track take the color of the panel, so the bar looks transparent (two separate properties). All bars run on one shared animation; the first row of each kind also shows the disabled look (right, at a fixed value). The slim progress bar is a thin strip for tight places (a status line under a text): the same Standard (gray, or any color of a color set), Primary, Green and Status.",
                  AddProgressBarsSection),
 
                 ("SliderBar",
