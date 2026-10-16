@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -211,7 +211,7 @@ public class ProgressBarScrollTests : IDisposable
         using Bitmap moved = Draw(bar);
 
         Assert.True(scroller.Offset > 0);
-        Assert.False(SamePicture(atStart, moved, new Rectangle(0, 0, 300, bar.Height)), "the picture did not change");
+        Assert.False(SamePixels(atStart, moved, new Rectangle(0, 0, 300, bar.Height)), "the picture did not change");
     }
 
     // --- Endless ---
@@ -296,8 +296,8 @@ public class ProgressBarScrollTests : IDisposable
             Assert.True(scroller.Offset > 0);
 
             // The last 30 pixels (before the border and the room) show the percentage: the same before and after.
-            Assert.True(SamePicture(atStart, moved, new Rectangle(262, 4, 24, 15)), "the percentage moved: " + text + "/" + percentage);
-            Assert.False(SamePicture(atStart, moved, new Rectangle(8, 4, 120, 15)), "the text did not move: " + text + "/" + percentage);
+            Assert.True(SamePixels(atStart, moved, new Rectangle(262, 4, 24, 15)), "the percentage moved: " + text + "/" + percentage);
+            Assert.False(SamePixels(atStart, moved, new Rectangle(8, 4, 120, 15)), "the text did not move: " + text + "/" + percentage);
         }
     }
 
@@ -347,8 +347,8 @@ public class ProgressBarScrollTests : IDisposable
             percentageRoom = new Rectangle(Math.Max(0, stripStart - 8 - 30), 0, 30, 26);
         }
 
-        Assert.True(SamePicture(atStart, moved, percentageRoom), "the percentage moved: " + position);
-        Assert.False(SamePicture(atStart, moved, new Rectangle(0, 0, 150, 26)), "the text did not move: " + position);
+        Assert.True(SamePixels(atStart, moved, percentageRoom), "the percentage moved: " + position);
+        Assert.False(SamePixels(atStart, moved, new Rectangle(0, 0, 150, 26)), "the text did not move: " + position);
     }
 
     // --- The mouse ---

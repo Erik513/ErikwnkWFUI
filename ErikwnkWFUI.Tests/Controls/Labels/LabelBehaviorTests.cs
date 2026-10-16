@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
@@ -69,23 +70,6 @@ public class LabelBehaviorTests
         }
 
         return sum;
-    }
-
-    private static bool SamePixels(Bitmap a, Bitmap b)
-    {
-        if (a.Size != b.Size)
-            return false;
-
-        for (int y = 0; y < a.Height; y++)
-        {
-            for (int x = 0; x < a.Width; x++)
-            {
-                if (a.GetPixel(x, y) != b.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     // ---- the text color ----

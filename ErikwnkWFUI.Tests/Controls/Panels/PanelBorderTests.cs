@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;
 
@@ -31,14 +32,6 @@ public class PanelBorderTests : IDisposable
         _forms.Add(host);
 
         return control;
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     private static Color Opaque(Color color) => Color.FromArgb(color.R, color.G, color.B);

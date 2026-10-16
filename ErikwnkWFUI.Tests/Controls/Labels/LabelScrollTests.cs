@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
@@ -79,20 +80,6 @@ public class LabelScrollTests : IDisposable
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
 
         return bitmap;
-    }
-
-    private static bool Same(Bitmap a, Bitmap b)
-    {
-        for (int y = 0; y < a.Height; y++)
-        {
-            for (int x = 0; x < a.Width; x++)
-            {
-                if (a.GetPixel(x, y) != b.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     [Fact]
@@ -279,8 +266,8 @@ public class LabelScrollTests : IDisposable
         label.InvokePrivate<bool>("Step");
         using Bitmap two = Paint(label);
 
-        Assert.False(Same(half, whole));
-        Assert.False(Same(whole, two));
+        Assert.False(SamePixels(half, whole));
+        Assert.False(SamePixels(whole, two));
     }
 
     [Fact]
@@ -455,7 +442,7 @@ public class LabelScrollTests : IDisposable
         Tick(label, 2000);
         using Bitmap later = Paint(label);
 
-        Assert.False(Same(start, later), "the picture did not change as the text moved");
+        Assert.False(SamePixels(start, later), "the picture did not change as the text moved");
 
         // Nothing is painted in the padding, at the left and at the right.
         for (int y = 0; y < later.Height; y++)
@@ -478,7 +465,7 @@ public class LabelScrollTests : IDisposable
         using Bitmap first = Paint(scrolling);
         using Bitmap second = Paint(still);
 
-        Assert.True(Same(first, second));
+        Assert.True(SamePixels(first, second));
     }
 
     [Fact]

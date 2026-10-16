@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
@@ -81,23 +82,6 @@ public class LabelScrollEdgeCaseTests : IDisposable
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
 
         return bitmap;
-    }
-
-    private static bool Same(Bitmap a, Bitmap b)
-    {
-        if (a.Size != b.Size)
-            return false;
-
-        for (int y = 0; y < a.Height; y++)
-        {
-            for (int x = 0; x < a.Width; x++)
-            {
-                if (a.GetPixel(x, y) != b.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     public static IEnumerable<object[]> BothModes()
@@ -422,7 +406,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
         label.ForeColor = Color.Red;
         using Bitmap after = Paint(label);
 
-        Assert.False(Same(before, after));
+        Assert.False(SamePixels(before, after));
 
         bool red = false;
 
@@ -446,7 +430,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
         label.TextAlign = ContentAlignment.BottomLeft;
         using Bitmap bottom = Paint(label);
 
-        Assert.False(Same(top, bottom));
+        Assert.False(SamePixels(top, bottom));
     }
 
     [Fact]

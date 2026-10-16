@@ -3,8 +3,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 using ProgressBar = System.Windows.Forms.ProgressBar;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 

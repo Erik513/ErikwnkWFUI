@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 
@@ -72,32 +73,6 @@ public class CheckBoxBehaviorTests : IDisposable
     {
         SendMessage(control.Handle, 0x100, (IntPtr)0x20, IntPtr.Zero);
         SendMessage(control.Handle, 0x101, (IntPtr)0x20, IntPtr.Zero);
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        _ = control.Handle;
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
-    }
-
-    private static bool SamePixels(Bitmap first, Bitmap second)
-    {
-        if (first.Size != second.Size)
-            return false;
-
-        for (int y = 0; y < first.Height; y++)
-        {
-            for (int x = 0; x < first.Width; x++)
-            {
-                if (first.GetPixel(x, y) != second.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     // ---- toggling and the events ----

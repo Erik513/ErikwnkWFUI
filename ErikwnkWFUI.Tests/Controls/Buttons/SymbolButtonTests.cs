@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.Buttons;
 
@@ -223,15 +224,6 @@ public class SymbolButtonTests
     }
 
     // ---- drawing: centered symbols, and the fill of every state ----
-
-    private static Bitmap Draw(Button button)
-    {
-        _ = button.Handle;
-        Bitmap bitmap = new Bitmap(button.Width, button.Height);
-        button.DrawToBitmap(bitmap, new Rectangle(0, 0, button.Width, button.Height));
-
-        return bitmap;
-    }
 
     // How far the visible part of the symbol is from the middle of the
     // button, in pixels.

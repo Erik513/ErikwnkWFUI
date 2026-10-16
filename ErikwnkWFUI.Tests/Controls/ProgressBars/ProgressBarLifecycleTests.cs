@@ -5,7 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 

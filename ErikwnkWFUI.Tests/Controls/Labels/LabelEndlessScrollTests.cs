@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.LabelsTests;
 
@@ -90,20 +91,6 @@ public class LabelEndlessScrollTests : IDisposable
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
 
         return bitmap;
-    }
-
-    private static bool Same(Bitmap a, Bitmap b)
-    {
-        for (int y = 0; y < a.Height; y++)
-        {
-            for (int x = 0; x < a.Width; x++)
-            {
-                if (a.GetPixel(x, y) != b.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     [Fact]
@@ -316,7 +303,7 @@ public class LabelEndlessScrollTests : IDisposable
             using Bitmap first = Paint(left);
             using Bitmap second = Paint(right);
 
-            Assert.True(Same(first, second), "the two ways do not meet at " + offset);
+            Assert.True(SamePixels(first, second), "the two ways do not meet at " + offset);
         }
     }
 
@@ -330,7 +317,7 @@ public class LabelEndlessScrollTests : IDisposable
         SetOffset(right, 30f);
         using Bitmap later = Paint(right);
 
-        Assert.False(Same(start, later));
+        Assert.False(SamePixels(start, later));
     }
 
     [Fact]

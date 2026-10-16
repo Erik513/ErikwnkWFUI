@@ -5,7 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -114,13 +114,13 @@ public class ProgressBarLanguageTests
 
                 using Bitmap german = Draw(bar);
 
-                Assert.False(SamePicture(english, german), (thick ? "the bar" : "the slim bar") + " did not write the percentage again");
+                Assert.False(SamePixels(english, german), (thick ? "the bar" : "the slim bar") + " did not write the percentage again");
 
                 UIStrings.Language = UILanguage.English;
                 Application.DoEvents();
                 using Bitmap back = Draw(bar);
 
-                Assert.True(SamePicture(english, back), (thick ? "the bar" : "the slim bar") + " is not the same in English again");
+                Assert.True(SamePixels(english, back), (thick ? "the bar" : "the slim bar") + " is not the same in English again");
             });
         }
     }

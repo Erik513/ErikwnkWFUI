@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ComboBox;
 
@@ -288,8 +289,8 @@ public class ComboBoxBehaviorTests : IDisposable
         using Bitmap expected = Snapshot(fresh);
 
         Assert.Equal("Nein", switched.GetItemText(switched.SelectedItem));
-        Assert.False(SamePicture(before, after), "the closed box still shows the old text");
-        Assert.True(SamePicture(after, expected), "the closed box differs from one built with the new text");
+        Assert.False(SamePixels(before, after), "the closed box still shows the old text");
+        Assert.True(SamePixels(after, expected), "the closed box differs from one built with the new text");
     }
 
     private static Bitmap Snapshot(Control control)
@@ -298,20 +299,6 @@ public class ComboBoxBehaviorTests : IDisposable
         control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
 
         return bitmap;
-    }
-
-    private static bool SamePicture(Bitmap first, Bitmap second)
-    {
-        for (int y = 0; y < first.Height; y++)
-        {
-            for (int x = 0; x < first.Width; x++)
-            {
-                if (first.GetPixel(x, y) != second.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     [Fact]

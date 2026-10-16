@@ -3,8 +3,8 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
-using static ErikwnkWFUI.Tests.Controls.ProgressBars.ProgressBarTestSupport;
 using ProgressBar = System.Windows.Forms.ProgressBar;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ProgressBars;
 
@@ -137,18 +137,18 @@ public class ProgressBarTextTests : IDisposable
         bar.ShowPercentage = true;
         Application.DoEvents();
         using Bitmap at50 = Draw(bar);
-        Assert.False(SamePicture(without, at50), "the percentage is not written");
+        Assert.False(SamePixels(without, at50), "the percentage is not written");
 
         bar.Value = 100;
         Application.DoEvents();
         using Bitmap at100 = Draw(bar);
-        Assert.False(SamePicture(at50, at100), "the percentage did not follow the value");
+        Assert.False(SamePixels(at50, at100), "the percentage did not follow the value");
 
         bar.Value = 50;
         bar.ShowPercentage = false;
         Application.DoEvents();
         using Bitmap off = Draw(bar);
-        Assert.True(SamePicture(without, off), "the percentage is still there");
+        Assert.True(SamePixels(without, off), "the percentage is still there");
     }
 
     [Fact]
@@ -164,12 +164,12 @@ public class ProgressBarTextTests : IDisposable
         bar.ShowPercentage = false;
         Application.DoEvents();
         using Bitmap nothing = Draw(bar);
-        Assert.True(SamePicture(nothing, onlyPercentage), "a percentage is written although there is no value");
+        Assert.True(SamePixels(nothing, onlyPercentage), "a percentage is written although there is no value");
 
         bar.Text = "Looking for updates";
         Application.DoEvents();
         using Bitmap withText = Draw(bar);
-        Assert.False(SamePicture(nothing, withText), "the text is not written");
+        Assert.False(SamePixels(nothing, withText), "the text is not written");
     }
 
     [Fact]
@@ -570,7 +570,7 @@ public class ProgressBarTextTests : IDisposable
         Application.DoEvents();
         using Bitmap after = Draw(slim);
 
-        Assert.True(SamePicture(before, after));
+        Assert.True(SamePixels(before, after));
     }
 
     // --- A text that is longer than the control ---

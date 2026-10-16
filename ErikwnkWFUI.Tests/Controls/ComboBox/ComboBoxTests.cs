@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ComboBox;
 
@@ -223,17 +224,4 @@ public class ComboBoxTests
         public int Id { get; }
     }
 
-    private static bool SamePixels(Bitmap first, Bitmap second)
-    {
-        for (int y = 0; y < first.Height; y++)
-        {
-            for (int x = 0; x < first.Width; x++)
-            {
-                if (first.GetPixel(x, y) != second.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
-    }
 }

@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.ComboBox;
 
@@ -23,15 +24,6 @@ public class ComboBoxClosedBoxTests
         box.Width = 160;
 
         return box;
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        _ = control.Handle;
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     private static Color LeftEdge(Control control)
@@ -414,20 +406,6 @@ public class ComboBoxFocusTests
             box.DrawToBitmap(picture, new Rectangle(0, 0, box.Width, box.Height));
             Assert.Equal(UIColors.GetOutlineColor(box.BackColor), picture.GetPixel(0, box.Height / 2));
         });
-    }
-
-    private static bool SamePixels(Bitmap first, Bitmap second)
-    {
-        for (int y = 0; y < first.Height; y++)
-        {
-            for (int x = 0; x < first.Width; x++)
-            {
-                if (first.GetPixel(x, y) != second.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     [Fact]

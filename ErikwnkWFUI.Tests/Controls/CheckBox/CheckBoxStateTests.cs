@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 
@@ -20,15 +21,6 @@ public class CheckBoxStateTests
     private static System.Windows.Forms.CheckBox Create(bool isChecked, UIColorSet? colors = null, string text = "Label")
     {
         return UIStyles.CheckBoxes.CreateStandard(text, isChecked, colors);
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        _ = control.Handle;
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     // Where the box is: left margin 2, 16 px wide, centered vertically.
@@ -360,28 +352,6 @@ public class CheckBoxFocusTests
             Application.DoEvents();
             Thread.Sleep(40);
         }
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
-    }
-
-    private static bool SamePixels(Bitmap first, Bitmap second)
-    {
-        for (int y = 0; y < first.Height; y++)
-        {
-            for (int x = 0; x < first.Width; x++)
-            {
-                if (first.GetPixel(x, y) != second.GetPixel(x, y))
-                    return false;
-            }
-        }
-
-        return true;
     }
 
     [Fact]

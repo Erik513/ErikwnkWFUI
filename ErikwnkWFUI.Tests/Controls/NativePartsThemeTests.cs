@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls;
 
@@ -45,14 +46,6 @@ public class NativePartsThemeTests : IDisposable
             Application.DoEvents();
             Thread.Sleep(40);
         }
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     private static double Brightness(Color c) => (c.R + c.G + c.B) / 3.0;

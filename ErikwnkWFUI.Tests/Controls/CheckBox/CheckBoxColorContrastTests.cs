@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
 namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 
@@ -35,15 +36,6 @@ public class CheckBoxColorContrastTests
 
             yield return (property.Name, (UIColorSet)property.GetValue(null)!);
         }
-    }
-
-    private static Bitmap Draw(Control control)
-    {
-        _ = control.Handle;
-        Bitmap bitmap = new Bitmap(control.Width, control.Height);
-        control.DrawToBitmap(bitmap, new Rectangle(0, 0, control.Width, control.Height));
-
-        return bitmap;
     }
 
     private static (Color Fill, Color Mark) Probe(Control box)
