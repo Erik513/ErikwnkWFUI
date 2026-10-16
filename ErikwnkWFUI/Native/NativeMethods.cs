@@ -79,6 +79,8 @@ namespace ErikwnkWFUI.Native
 
         // ---- window styles ----
         public const int GWL_STYLE = -16;
+        public const int GWL_EXSTYLE = -20;
+        public const int WS_EX_STATICEDGE = 0x00020000;
         public const int WS_HSCROLL = 0x00100000;
         public const int WS_VSCROLL = 0x00200000;
 

@@ -48,6 +48,17 @@ namespace ErikwnkWFUI.Showcase
             withoutBorderTransparent.BackColor = Color.Transparent;
             AddBarRow(table, "CreateStandard (BorderStyle = None, BackColor = Transparent)", withoutBorderTransparent);
 
+            // The other styles of the standard control: blocks, and the marquee - a block that runs through the bar, for an action of
+            // unknown duration (no value; MarqueeAnimationSpeed is the time between two steps).
+            ProgressBar blocks = UIStyles.ProgressBars.CreatePrimary();
+            blocks.Style = ProgressBarStyle.Blocks;
+            AddBarRow(table, "CreatePrimary (Style = Blocks)", blocks);
+
+            ProgressBar marquee = UIStyles.ProgressBars.CreatePrimary();
+            marquee.Style = ProgressBarStyle.Marquee;
+            marquee.MarqueeAnimationSpeed = 30;
+            table.AddRow("CreatePrimary (Style = Marquee)", UIColumn.Percent(marquee, TwoColumnPercent));
+
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);
         }
@@ -78,6 +89,15 @@ namespace ErikwnkWFUI.Showcase
             AddSlimBarRow(table, "CreateStandard(colors: Yellow)", UIStyles.SlimProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow));
             AddSlimBarRow(table, "CreateGreen", UIStyles.SlimProgressBars.CreateGreen());
             AddSlimBarRow(table, "CreateStatus", UIStyles.SlimProgressBars.CreateStatus());
+
+            SlimProgressBar slimBlocks = UIStyles.SlimProgressBars.CreatePrimary();
+            slimBlocks.Style = ProgressBarStyle.Blocks;
+            AddSlimBarRow(table, "CreatePrimary (Style = Blocks)", slimBlocks);
+
+            SlimProgressBar slimMarquee = UIStyles.SlimProgressBars.CreatePrimary();
+            slimMarquee.Style = ProgressBarStyle.Marquee;
+            slimMarquee.MarqueeAnimationSpeed = 30;
+            table.AddRow("CreatePrimary (Style = Marquee)", UIColumn.Percent(slimMarquee, TwoColumnPercent));
         }
 
         // Value/Enabled are set directly rather than via AnimateProgressBar -

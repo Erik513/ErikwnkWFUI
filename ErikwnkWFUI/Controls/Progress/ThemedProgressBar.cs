@@ -8,37 +8,31 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// The progress bar of <c>UIStyles.ProgressBars</c>: the standard <see cref="ProgressBar"/> in the continuous style with the
-    /// colors of the library (the native control ignores them while visual styles are on, so this one opts out of them), with a
-    /// thin border or without one, and - for the status variants - a fill that follows the value from red over yellow to green.
-    /// The factories hand it back as a <see cref="ProgressBar"/>.
+    /// The progress bar of <c>UIStyles.ProgressBars</c>: the standard <see cref="ProgressBar"/> (<c>Minimum</c>, <c>Maximum</c>,
+    /// <c>Value</c>, <c>Step</c>, <c>PerformStep</c>, <c>Increment</c> and the <c>Style</c>s Blocks, Continuous and Marquee with its
+    /// <c>MarqueeAnimationSpeed</c>), drawn by the library in its colors (the native control ignores them while visual styles are
+    /// on), with a thin border or without one, and - for the status variants - a fill that follows the value from red over yellow
+    /// to green. Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored). The factories hand it back as a
+    /// <see cref="ProgressBar"/>.
     /// </summary>
     public class ThemedProgressBar : ProgressBar
     {
-        // Draws a 1px border around the bar so its extent is still legible
-        // even in the rare case a caller's panel happens to also be
-        // BackgroundMedium - relying on BackColor contrast alone isn't
-        // guaranteed the way it is for bordered buttons/textboxes.
-        // ProgressBar is natively drawn (WM_PAINT bypasses .NET's owner-draw
-        // pipeline, so Paint never fires for it - confirmed by testing),
-        // hence painting straight onto the HWND after the base paint instead
-        // of overriding OnPaint. BorderStyle None skips the border for callers
-        // who want the bar to blend into its container.
+        // The 1 px border keeps the extent of the bar legible even when the panel it lies on is BackgroundMedium too (BackColor
+        // alone does not guarantee a contrast); BorderStyle None skips it for callers who want the bar to blend into its container.
 
         private readonly bool _useStatusGradient;
         private readonly ThemeColor _trackColor;
+        private readonly MarqueeAnimator _marquee;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
         internal ThemedProgressBar(bool useStatusGradient = false)
         {
             _useStatusGradient = useStatusGradient;
 
-            // With visual styles enabled, the native ProgressBar ignores
-            // ForeColor/BackColor entirely and always shows the system
-            // green bar. SetWindowTheme("", "") opts just this control
-            // out of visual styles so the custom colors actually take
-            // effect.
-            HandleCreated += (s, e) => SetWindowTheme(Handle, "", "");
+            // The native bar ignores ForeColor and BackColor while visual styles are on, so it is not used for painting at all.
+            SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
+
+            _marquee = new MarqueeAnimator(this, () => Style == ProgressBarStyle.Marquee, () => MarqueeAnimationSpeed);
 
             // The track: the recessed surface of the theme (until BackColor is set).
             _trackColor = new ThemeColor(() => UIColors.BackgroundMedium);
@@ -131,75 +125,71 @@ namespace ErikwnkWFUI.Controls
             get { return _borderStyle != BorderStyle.None ? UIColors.BorderMedium : BackColor; }
         }
 
-        protected override void WndProc(ref Message m)
+        // The bar draws itself: the native control paints in WM_PAINT without the Paint event, and with visual styles off it shows
+        // nothing at all for the marquee style. UserPaint makes WM_PAINT reach OnPaint (the native control still tells us when the
+        // value changes: Value, Step, PerformStep and Increment need nothing here).
+        protected override void OnPaint(PaintEventArgs e)
         {
-            // The native fill is drawn by base.WndProc's own WM_PAINT
-            // handling, reading whatever ForeColor currently is -
-            // there's no ValueChanged event (WinForms' ProgressBar
-            // doesn't have one) and Value isn't virtual, so recomputing
-            // the color here, right before the native paint actually
-            // happens, is simpler than trying to intercept every place
-            // Value could change instead.
-            if (_useStatusGradient && m.Msg == WM_PAINT)
-            {
-                Color statusColor = Enabled
-                    ? UIColors.GetStatusColor(Value, Minimum, Maximum)
-                    : UIColors.DisabledGray;
+            Graphics g = e.Graphics;
+            Rectangle area = ClientRectangle;
 
-                if (ForeColor != statusColor)
-                    ForeColor = statusColor;
+            using (SolidBrush track = new SolidBrush(BackColor))
+                g.FillRectangle(track, area);
+
+            // The edge: the border, or - without one - the track itself.
+            using (Pen edge = new Pen(EdgeColor))
+                g.DrawRectangle(edge, 0, 0, area.Width - 1, area.Height - 1);
+
+            Color fill;
+
+            if (!Enabled)
+                fill = UIColors.DisabledGray;
+            else if (_useStatusGradient)
+                fill = UIColors.GetStatusColor(Value, Minimum, Maximum);
+            else
+                fill = ForeColor;
+
+            area.Inflate(-1, -1);
+            ProgressBarPainting.PaintFill(g, area, Style, ProgressBarPainting.GetFraction(Minimum, Maximum, Value), fill, _marquee.Offset);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+
+            // The native bar has a sunken edge of its own around the client area (WS_EX_STATICEDGE, which the control gives itself
+            // when it is created): the whole window is drawn by the library instead, so the edge is taken away and the border
+            // of BorderStyle is the only one.
+            int exStyle = GetWindowLong(Handle, GWL_EXSTYLE);
+
+            if ((exStyle & WS_EX_STATICEDGE) != 0)
+            {
+                SetWindowLong(Handle, GWL_EXSTYLE, exStyle & ~WS_EX_STATICEDGE);
+                SetWindowPos(Handle, IntPtr.Zero, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
             }
 
-            base.WndProc(ref m);
+            // Changing the Style creates the handle again: the right moment to start or stop the marquee.
+            _marquee.Update();
+        }
 
-            if (m.Msg != WM_PAINT)
-                return;
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            _marquee.Update();
+        }
 
-            // The classic (unthemed) native ProgressBar can show a 1px
-            // 3D sunken-edge frame independent of SetWindowTheme above -
-            // confirmed only after a real theme/accent-triggered
-            // rebuild (constructed while its parent hierarchy was
-            // already visible), never on a fresh construction. This
-            // affects BOTH variants. Painting over it via the CLIENT dc
-            // (Graphics.FromHwnd/GetDC) had no effect at all, which
-            // points at this edge being drawn into the window's
-            // NON-CLIENT area specifically - GetWindowDC (unlike GetDC)
-            // gives access to the full window surface, non-client area
-            // included, so painting there reaches pixels the client dc
-            // structurally never could.
-            //
-            // Erasing on the window dc first and then drawing a bordered
-            // variant's own border separately on the client dc (two
-            // draws, two device contexts) left a second, visibly
-            // different-colored ring of its own: the erase used
-            // BackColor (BackgroundMedium, this control's own recessed
-            // track shade), one pixel further out than the border drawn
-            // after it, which doesn't match the row's actual
-            // surrounding background - so instead of one clean border,
-            // there were two concentric rings in different colors,
-            // which is likely the "line" the user spotted. Drawing the
-            // final, correct color (the border color for a bordered
-            // variant, or just BackColor without one)
-            // directly on the window dc in one single pass avoids that
-            // entirely - there's no separate erase step to leave a
-            // mismatched trace behind.
-            Color edgeColor = EdgeColor;
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Invalidate();
+        }
 
-            System.IntPtr windowDc = GetWindowDC(Handle);
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                _marquee.Dispose();
 
-            if (windowDc != System.IntPtr.Zero)
-            {
-                try
-                {
-                    using (Graphics g = Graphics.FromHdc(windowDc))
-                    using (Pen pen = new Pen(edgeColor))
-                        g.DrawRectangle(pen, 0, 0, Width - 1, Height - 1);
-                }
-                finally
-                {
-                    ReleaseDC(Handle, windowDc);
-                }
-            }
+            base.Dispose(disposing);
         }
     }
 }
