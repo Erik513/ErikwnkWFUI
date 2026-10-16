@@ -92,7 +92,7 @@ namespace ErikwnkWFUI.Showcase
                  AddSymbolsSection),
 
                 ("TabControl",
-                 "The tabs this window is made of. ReadOnlyTabControl can be switched but not edited; TabControl also lets the user add, rename and close tabs with a right-click menu, and individual tabs can be locked. Tabs that do not fit scroll with arrows, and a cut-off tab shows its full name as a tooltip. The last row shows every variant.",
+                 "The tabs this window is made of. ReadOnlyTabControl can be switched but not edited; TabControl also lets the user add, rename and close tabs with a right-click menu, and individual tabs can be locked. Tabs that do not fit scroll with arrows, and a cut-off tab shows its full name as a tooltip.",
                  AddTabControlSection),
 
                 ("TextBoxes",

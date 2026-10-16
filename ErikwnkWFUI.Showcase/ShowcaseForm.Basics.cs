@@ -96,20 +96,17 @@ namespace ErikwnkWFUI.Showcase
             };
 
             table.AddRow(
-                "Colors.Sets",
+                "CreateStandard(colors: …)",
                 118,
                 UIColumn.Percent(CreateSetButtons(sets, enabled: true), TwoColumnPercent),
                 UIColumn.Percent(CreateSetButtons(sets, enabled: false), TwoColumnPercent));
 
-            Button green = UIStyles.Buttons.CreateGreen("Confirm", size: textButtonSize);
-            Button greenDisabled = UIStyles.Buttons.CreateGreen("Disabled", size: textButtonSize);
-            greenDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateGreen", green, greenDisabled);
-
-            Button danger = UIStyles.Buttons.CreateRed("Delete", size: textButtonSize);
-            Button dangerDisabled = UIStyles.Buttons.CreateRed("Disabled", size: textButtonSize);
-            dangerDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateRed", danger, dangerDisabled);
+            // The two short forms for confirming and for destructive actions, in one row (each with its disabled look on the right).
+            AddTwoColumnRow(
+                table,
+                "CreateGreen, CreateRed",
+                CreateShortFormButtons(textButtonSize, enabled: true),
+                CreateShortFormButtons(textButtonSize, enabled: false));
 
             // Ready-made designs: pass a preset to CreateSymbol and it brings the symbol and
             // the colors. All presets of UIStyles.Buttons.Presets, found by reflection so a
@@ -142,6 +139,26 @@ namespace ErikwnkWFUI.Showcase
                 84,
                 UIColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
                 UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
+        }
+
+        private static Control CreateShortFormButtons(Size size, bool enabled)
+        {
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
+            flow.FlowDirection = FlowDirection.LeftToRight;
+            flow.WrapContents = true;
+
+            foreach (Button button in new[]
+            {
+                UIStyles.Buttons.CreateGreen(enabled ? "Confirm" : "Disabled", size: size),
+                UIStyles.Buttons.CreateRed(enabled ? "Delete" : "Disabled", size: size)
+            })
+            {
+                button.Margin = new Padding(0, 0, 6, 6);
+                button.Enabled = enabled;
+                flow.Controls.Add(button);
+            }
+
+            return flow;
         }
 
         private static Control CreatePresetButtons((string Name, UIButtonPreset Preset)[] presets)
@@ -210,25 +227,22 @@ namespace ErikwnkWFUI.Showcase
             compactPrimaryDisabled.Enabled = false;
             AddUniformRow(table, "CreatePrimaryCompact", compactPrimaryChecked, compactPrimaryUnchecked, compactPrimaryDisabled);
 
-            // The third state (ThreeState and CheckState) of the Standard one ...
-            System.Windows.Forms.CheckBox undetermined = UIStyles.CheckBoxes.CreateStandard("Undetermined", true);
-            undetermined.ThreeState = true;
-            undetermined.CheckState = CheckState.Indeterminate;
-            System.Windows.Forms.CheckBox undeterminedDisabled = UIStyles.CheckBoxes.CreateStandard("Disabled", true);
-            undeterminedDisabled.ThreeState = true;
-            undeterminedDisabled.CheckState = CheckState.Indeterminate;
-            undeterminedDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard (undetermined)", undetermined, undeterminedDisabled);
+            // The third state (ThreeState and CheckState): Standard, Primary and the disabled Standard one.
+            AddUniformRow(
+                table,
+                "ThreeState (undetermined)",
+                CreateUndetermined(UIStyles.CheckBoxes.CreateStandard("Undetermined", true), enabled: true),
+                CreateUndetermined(UIStyles.CheckBoxes.CreatePrimary("Undetermined", true), enabled: true),
+                CreateUndetermined(UIStyles.CheckBoxes.CreateStandard("Disabled", true), enabled: false));
+        }
 
-            // ... and of the Primary one.
-            System.Windows.Forms.CheckBox primaryUndetermined = UIStyles.CheckBoxes.CreatePrimary("Undetermined", true);
-            primaryUndetermined.ThreeState = true;
-            primaryUndetermined.CheckState = CheckState.Indeterminate;
-            System.Windows.Forms.CheckBox primaryUndeterminedDisabled = UIStyles.CheckBoxes.CreatePrimary("Disabled", true);
-            primaryUndeterminedDisabled.ThreeState = true;
-            primaryUndeterminedDisabled.CheckState = CheckState.Indeterminate;
-            primaryUndeterminedDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary (undetermined)", primaryUndetermined, primaryUndeterminedDisabled);
+        private static System.Windows.Forms.CheckBox CreateUndetermined(System.Windows.Forms.CheckBox box, bool enabled)
+        {
+            box.ThreeState = true;
+            box.CheckState = CheckState.Indeterminate;
+            box.Enabled = enabled;
+
+            return box;
         }
 
         private void AddToggleSwitchesSection(PropertyTable table)
@@ -267,43 +281,36 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddComboBoxesSection(PropertyTable table)
         {
-            System.Windows.Forms.ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
-            combo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            combo.SelectedIndex = 0;
-            System.Windows.Forms.ComboBox comboDisabled = UIStyles.ComboBoxes.CreateStandard();
-            comboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            comboDisabled.SelectedIndex = 0;
-            comboDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", combo, comboDisabled);
+            AddComboBoxRow(table, "CreateStandard", () => UIStyles.ComboBoxes.CreateStandard());
+            AddComboBoxRow(table, "CreatePrimary", () => UIStyles.ComboBoxes.CreatePrimary());
+            AddComboBoxRow(table, "CreateStandard(colors: Green)", () => UIStyles.ComboBoxes.CreateStandard(colors: UIStyles.Colors.Sets.Green));
+        }
 
-            System.Windows.Forms.ComboBox primaryCombo = UIStyles.ComboBoxes.CreatePrimary();
-            primaryCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            primaryCombo.SelectedIndex = 0;
-            System.Windows.Forms.ComboBox primaryComboDisabled = UIStyles.ComboBoxes.CreatePrimary();
-            primaryComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            primaryComboDisabled.SelectedIndex = 0;
-            primaryComboDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", primaryCombo, primaryComboDisabled);
+        // Enabled on the left, disabled on the right.
+        private void AddComboBoxRow(PropertyTable table, string label, Func<System.Windows.Forms.ComboBox> create)
+        {
+            System.Windows.Forms.ComboBox enabled = create();
+            System.Windows.Forms.ComboBox disabled = create();
+            disabled.Enabled = false;
 
-            System.Windows.Forms.ComboBox greenCombo = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
-            greenCombo.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            greenCombo.SelectedIndex = 0;
-            System.Windows.Forms.ComboBox greenComboDisabled = UIStyles.ComboBoxes.CreateStandard(ComboBoxStyle.DropDownList, UIStyles.Colors.Sets.Green);
-            greenComboDisabled.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
-            greenComboDisabled.SelectedIndex = 0;
-            greenComboDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard(colors: Green)", greenCombo, greenComboDisabled);
+            foreach (System.Windows.Forms.ComboBox box in new[] { enabled, disabled })
+            {
+                box.Items.AddRange(new object[] { "Option A", "Option B", "Option C" });
+                box.SelectedIndex = 0;
+            }
+
+            AddTwoColumnRow(table, label, enabled, disabled);
         }
 
         private void AddContextMenusSection(PropertyTable table)
         {
-            Button standardButton = UIStyles.Buttons.CreateStandard("Right-click here (Standard)", size: new Size(220, 32));
+            Button standardButton = UIStyles.Buttons.CreateStandard("Right-click here", size: new Size(140, 32));
             standardButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreateStandard());
 
-            Button primaryButton = UIStyles.Buttons.CreateStandard("Right-click here (Primary)", size: new Size(220, 32));
+            Button primaryButton = UIStyles.Buttons.CreateStandard("Right-click here", size: new Size(140, 32));
             primaryButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreatePrimary());
 
-            Button colorsButton = UIStyles.Buttons.CreateStandard("Right-click here (Green)", size: new Size(220, 32));
+            Button colorsButton = UIStyles.Buttons.CreateStandard("Right-click here", size: new Size(140, 32));
             colorsButton.ContextMenuStrip = BuildDemoContextMenu(UIStyles.ContextMenuStrips.CreateStandard(UIStyles.Colors.Sets.Green));
 
             table.AddRow("CreateStandard", standardButton);
@@ -348,6 +355,13 @@ namespace ErikwnkWFUI.Showcase
 
                 return box;
             });
+            AddNumericUpDownRow(table, "Prefix", () =>
+            {
+                ErikwnkWFUI.Controls.NumericUpDown box = (ErikwnkWFUI.Controls.NumericUpDown)UIStyles.NumericUpDowns.CreatePrimary(0, 1000, 10, 250);
+                box.Prefix = "$ ";
+
+                return box;
+            });
         }
 
         // Enabled on the left, disabled on the right.
@@ -366,10 +380,12 @@ namespace ErikwnkWFUI.Showcase
             AddLabelRow(table, "CreateStandard", "Standard body text", text => UIStyles.Labels.CreateStandard(text));
             AddLabelRow(table, "CreatePrimary", "Body text in the accent color", text => UIStyles.Labels.CreatePrimary(text));
             AddLabelRow(table, "CreateStandard(colors: Green)", "Body text in a color set", text => UIStyles.Labels.CreateStandard(text, UIStyles.Colors.Sets.Green));
+
             table.AddSection("Title");
 
             AddLabelRow(table, "CreateTitle", "Title label", text => UIStyles.Labels.CreateTitle(text));
             AddLabelRow(table, "CreateTitle(colors: Green)", "Title label in a color set", text => UIStyles.Labels.CreateTitle(text, UIStyles.Colors.Sets.Green));
+
             table.AddSection("Muted");
 
             AddLabelRow(table, "CreateMuted", "Muted / de-emphasized text", text => UIStyles.Labels.CreateMuted(text));

@@ -28,29 +28,33 @@ namespace ErikwnkWFUI.Showcase
         // The list box and the one with a title above it share a tab: the titled one is the same list box.
         private void AddListBoxSection(PropertyTable table)
         {
+            table.AddSection("List boxes");
+
             ErikwnkWFUI.Controls.ListBox standard = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true);
             FillListBoxDemo(standard);
-            table.AddRow("ListBoxes.CreateStandard", 220, standard);
+            table.AddRow("CreateStandard", 200, standard);
 
             ErikwnkWFUI.Controls.ListBox primary = UIStyles.ListBoxes.CreatePrimary(allowReorder: true, showEnumeration: true);
             FillListBoxDemo(primary);
-            table.AddRow("ListBoxes.CreatePrimary", 220, primary);
+            table.AddRow("CreatePrimary", 200, primary);
 
             ErikwnkWFUI.Controls.ListBox green = UIStyles.ListBoxes.CreateStandard(allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
             FillListBoxDemo(green);
-            table.AddRow("ListBoxes.CreateStandard(colors: Green)", 220, green);
+            table.AddRow("CreateStandard(colors: Green)", 200, green);
+
+            table.AddSection("List boxes with a title");
 
             TitledListBox titled = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true);
             FillListBoxDemo(titled.InnerListBox);
-            table.AddRow("TitledListBoxes.CreateStandard", 260, titled);
+            table.AddRow("CreateStandard", 240, titled);
 
             TitledListBox titledPrimary = UIStyles.TitledListBoxes.CreatePrimary("Sample list", allowReorder: true, showEnumeration: true);
             FillListBoxDemo(titledPrimary.InnerListBox);
-            table.AddRow("TitledListBoxes.CreatePrimary", 260, titledPrimary);
+            table.AddRow("CreatePrimary", 240, titledPrimary);
 
             TitledListBox titledGreen = UIStyles.TitledListBoxes.CreateStandard("Sample list", allowReorder: true, showEnumeration: true, colors: UIStyles.Colors.Sets.Green);
             FillListBoxDemo(titledGreen.InnerListBox);
-            table.AddRow("TitledListBoxes.CreateStandard(colors: Green)", 260, titledGreen);
+            table.AddRow("CreateStandard(colors: Green)", 240, titledGreen);
         }
 
         private void AddListViewSection(PropertyTable table)
@@ -72,6 +76,8 @@ namespace ErikwnkWFUI.Showcase
             PopulateListViewDemo(purpleListView);
             table.AddRow("CreateStandard(colors: Purple)", 260, UIColumn.Absolute(purpleListView, demoWidth));
             PinToDemoWidth(purpleListView, demoWidth);
+
+            table.AddSection("Size");
 
             // A list as big as its columns and its rows (here 5), no scroll bars.
             var displayListView = (ErikwnkWFUI.Controls.ListView)UIStyles.ListViews.CreateStandard();
@@ -188,11 +194,15 @@ namespace ErikwnkWFUI.Showcase
             // itself (see ReadOnlyDataGridView.ReorderDataSource), which
             // needs an IList data source; a DataTable isn't one, so
             // sorting silently did nothing against it here.
+            table.AddSection("Editable");
+
             AddEditableDataGridRow(table, "CreateStandard", data => UIStyles.DataGridViews.CreateStandard(data));
             AddEditableDataGridRow(table, "CreatePrimary", data => UIStyles.DataGridViews.CreatePrimary(data));
 
             // Any other color: pass a color set (here a ready-made one) - border, selection, drag line and menu follow it.
             AddEditableDataGridRow(table, "CreateStandard(colors: Teal)", data => UIStyles.DataGridViews.CreateStandard(data, UIStyles.Colors.Sets.Teal));
+
+            table.AddSection("Read-only");
 
             // The lighter of the two variants above - column-header sorting
             // still works, but no adding/deleting/cutting/pasting rows, so
@@ -229,20 +239,20 @@ namespace ErikwnkWFUI.Showcase
                 UIColumn.Percent(readOnlyPrimaryGrid, 50),
                 UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
 
-            var orangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
-            orangeGrid.Dock = DockStyle.Fill;
-            NarrowLengthColumn(orangeGrid);
+            var tealGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
+            tealGrid.Dock = DockStyle.Fill;
+            NarrowLengthColumn(tealGrid);
 
-            var disabledOrangeGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Orange);
-            disabledOrangeGrid.Dock = DockStyle.Fill;
-            disabledOrangeGrid.Enabled = false;
-            NarrowLengthColumn(disabledOrangeGrid);
+            var disabledTealGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Teal);
+            disabledTealGrid.Dock = DockStyle.Fill;
+            disabledTealGrid.Enabled = false;
+            NarrowLengthColumn(disabledTealGrid);
 
             table.AddRow(
-                "CreateReadOnlyStandard(colors: Orange)",
+                "CreateReadOnlyStandard(colors: Teal)",
                 180,
-                UIColumn.Percent(orangeGrid, 50),
-                UIColumn.Percent(disabledOrangeGrid, 50));
+                UIColumn.Percent(tealGrid, 50),
+                UIColumn.Percent(disabledTealGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the
