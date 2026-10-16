@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -102,13 +104,18 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>The value as a percentage of the range, as text ("42 %"); a range without width is 0 %.</summary>
+        /// <summary>
+        /// The value as a percentage of the range, as text, written the way of the language of the library: "42%" in English, "42 %"
+        /// in German. A range without width is 0 %.
+        /// </summary>
         public static string GetPercentText(int minimum, int maximum, int value)
         {
-            return (int)Math.Round(GetFraction(minimum, maximum, value) * 100) + " %";
+            CultureInfo culture = CultureInfo.GetCultureInfo(UIStrings.Language == UILanguage.German ? "de-DE" : "en-US");
+
+            return (Math.Round(GetFraction(minimum, maximum, value) * 100) / 100.0).ToString("P0", culture);
         }
 
-        /// <summary>The text and the percentage in one: "Upload - 42 %", or only one of them, or nothing.</summary>
+        /// <summary>The text and the percentage in one: "Upload - 42%", or only one of them, or nothing.</summary>
         public static string Compose(string text, bool showPercentage, string percent)
         {
             bool hasText = !string.IsNullOrEmpty(text);
@@ -205,7 +212,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Draws the text and the percentage (<paramref name="percent"/> is null when it is not shown) into <paramref name="area"/>.
-        /// Alone, each stands where its alignment says. Together at the same place they are one text ("Upload - 42 %"); at different
+        /// Alone, each stands where its alignment says. Together at the same place they are one text ("Upload - 42%"); at different
         /// places they are drawn apart, the percentage keeping the room of its widest form (<paramref name="widestPercent"/>) and the
         /// text taking what is left next to it (and being centered, aligned or cut there). Both are readable on the track and on
         /// the fill, see <see cref="PaintText"/>. A text that is too wide for its room moves there when the

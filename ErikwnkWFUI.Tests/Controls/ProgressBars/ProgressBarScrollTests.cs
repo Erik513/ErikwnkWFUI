@@ -343,7 +343,7 @@ public class ProgressBarScrollTests : IDisposable
             ? new Rectangle(268, 0, 30, 26)
             : position == SlimProgressBarTextPosition.Left
                 ? new Rectangle(0, 0, 0, 26)
-                : new Rectangle(262, 0, 36, 14);
+                : new Rectangle(300 - ProgressBarPainting.MeasureText(ProgressBarPainting.GetPercentText(0, 100, 100), slim.Font).Width, 0, ProgressBarPainting.MeasureText(ProgressBarPainting.GetPercentText(0, 100, 100), slim.Font).Width, 14);
 
         if (position == SlimProgressBarTextPosition.Left)
         {

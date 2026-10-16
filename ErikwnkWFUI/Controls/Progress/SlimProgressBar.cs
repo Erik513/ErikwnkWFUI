@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -85,6 +86,7 @@ namespace ErikwnkWFUI.Controls
             _trackColor = new ThemeColor(() => UIColors.GetLineColor(GetSurface()));
             _fillColor = new ThemeColor(() => base.ForeColor);
             _textScroller = new ProgressTextScroller(this);
+            UIStrings.LanguageChanged += OnLanguageChanged;
             _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => _style == ProgressBarStyle.Marquee, () => _marqueeAnimationSpeed);
 
@@ -300,9 +302,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether the value is written as a percentage ("42 %"; off by default), at the <see cref="TextPosition"/>. Above and below
+        /// Whether the value is written as a percentage ("42%" in English, "42 %" in German; off by default), at the <see cref="TextPosition"/>. Above and below
         /// the bar it stands on the right, with the <see cref="Text"/> on the left; at the sides both are one text:
-        /// "Upload – 42 %". Not in the <see cref="ProgressBarStyle.Marquee"/> style, which has no value.
+        /// "Upload – 42%". Not in the <see cref="ProgressBarStyle.Marquee"/> style, which has no value.
         /// </summary>
         [DefaultValue(false)]
         public bool ShowPercentage
@@ -320,7 +322,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Where the <see cref="Text"/> stands in its line above or below the strip: left (the default), centered or right. At the same
-        /// place as the percentage (<see cref="PercentageAlign"/>) both are one text, "Upload – 42 %"; at another place they are
+        /// place as the percentage (<see cref="PercentageAlign"/>) both are one text, "Upload – 42%"; at another place they are
         /// drawn apart (by default the text on the left and the percentage on the right). At the sides of the strip there is one
         /// text that has just its room, so neither of the two alignments does anything there.
         /// </summary>
@@ -451,6 +453,18 @@ namespace ErikwnkWFUI.Controls
             base.OnEnabledChanged(e);
 
             Invalidate();
+        }
+
+        // The percentage is written the way of the language ("42%", "42 %"), which can change the width of the text.
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (IsDisposed || !IsHandleCreated)
+                return;
+
+            if (InvokeRequired)
+                BeginInvoke(new Action(Relayout));
+            else
+                Relayout();
         }
 
         protected override void OnParentChanged(EventArgs e)
@@ -657,6 +671,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
+                UIStrings.LanguageChanged -= OnLanguageChanged;
                 _marquee.Dispose();
                 _textScroller.Dispose();
                 _fullTextToolTip.Dispose();

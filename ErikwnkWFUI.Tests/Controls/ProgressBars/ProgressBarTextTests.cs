@@ -58,12 +58,12 @@ public class ProgressBarTextTests : IDisposable
     [Fact]
     public void ThePercentage_IsTheValueInTheRange_Rounded_AndZeroForARangeWithoutWidth()
     {
-        Assert.Equal("0 %", ProgressBarPainting.GetPercentText(0, 100, 0));
-        Assert.Equal("42 %", ProgressBarPainting.GetPercentText(0, 100, 42));
-        Assert.Equal("100 %", ProgressBarPainting.GetPercentText(0, 100, 100));
-        Assert.Equal("50 %", ProgressBarPainting.GetPercentText(10, 30, 20));
-        Assert.Equal("33 %", ProgressBarPainting.GetPercentText(0, 3, 1));
-        Assert.Equal("0 %", ProgressBarPainting.GetPercentText(5, 5, 5));
+        Assert.Equal("0%", ProgressBarPainting.GetPercentText(0, 100, 0));
+        Assert.Equal("42%", ProgressBarPainting.GetPercentText(0, 100, 42));
+        Assert.Equal("100%", ProgressBarPainting.GetPercentText(0, 100, 100));
+        Assert.Equal("50%", ProgressBarPainting.GetPercentText(10, 30, 20));
+        Assert.Equal("33%", ProgressBarPainting.GetPercentText(0, 3, 1));
+        Assert.Equal("0%", ProgressBarPainting.GetPercentText(5, 5, 5));
     }
 
     [Fact]
@@ -516,7 +516,7 @@ public class ProgressBarTextTests : IDisposable
         bar.Value = 100;
 
         List<Point> ink = BarInk(bar);
-        int percentWidth = ProgressBarPainting.MeasureText("100 %", bar.Font).Width;
+        int percentWidth = ProgressBarPainting.MeasureText(ProgressBarPainting.GetPercentText(0, 100, 100), bar.Font).Width;
 
         // The percentage stands in the last pixels (inside the border); the text ends before it (cut with an ellipsis), with a gap.
         Assert.Contains(ink, point => point.X >= 299 - bar.GetTextPadding() - percentWidth);

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
 
@@ -43,6 +44,7 @@ namespace ErikwnkWFUI.Controls
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
 
             _textScroller = new ProgressTextScroller(this);
+            UIStrings.LanguageChanged += OnLanguageChanged;
             _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => Style == ProgressBarStyle.Marquee, () => MarqueeAnimationSpeed);
 
@@ -132,7 +134,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether the value is written on the bar as a percentage ("42 %"; off by default). With a <see cref="Text"/> the text stands
+        /// Whether the value is written on the bar as a percentage ("42%" in English, "42 %" in German; off by default). With a <see cref="Text"/> the text stands
         /// on the left and the percentage on the right (see <see cref="TextAlign"/> and <see cref="PercentageAlign"/>). Not in the
         /// <see cref="ProgressBarStyle.Marquee"/> style, which has no value.
         /// </summary>
@@ -152,7 +154,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// Where the <see cref="Text"/> stands on the bar: left (the default), centered or right. At the same place as the percentage
-        /// (<see cref="PercentageAlign"/>) both are one text, "Upload – 42 %"; at another place they are drawn apart, for
+        /// (<see cref="PercentageAlign"/>) both are one text, "Upload – 42%"; at another place they are drawn apart, for
         /// instance the text left and the percentage right.
         /// </summary>
         [DefaultValue(HorizontalAlignment.Left)]
@@ -310,6 +312,18 @@ namespace ErikwnkWFUI.Controls
             _fullTextToolTip.Set(_showFullTextToolTip && cut ? Text : "");
         }
 
+        // The percentage is written the way of the language ("42%", "42 %"): the bar is painted again when the language changes.
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (IsDisposed || !IsHandleCreated)
+                return;
+
+            if (InvokeRequired)
+                BeginInvoke(new Action(Invalidate));
+            else
+                Invalidate();
+        }
+
         /// <summary>The room between the border of the bar and its text, in pixels at 96 dpi.</summary>
         internal const int TextPaddingAt96Dpi = 6;
 
@@ -353,6 +367,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
+                UIStrings.LanguageChanged -= OnLanguageChanged;
                 _marquee.Dispose();
                 _textScroller.Dispose();
                 _fullTextToolTip.Dispose();
