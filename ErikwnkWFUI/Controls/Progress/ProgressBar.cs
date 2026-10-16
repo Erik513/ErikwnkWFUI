@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -24,6 +25,9 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _trackColor;
         private readonly MarqueeAnimator _marquee;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
+        private bool _showPercentage;
+        private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
+        private HorizontalAlignment _percentageAlign = HorizontalAlignment.Right;
 
         internal ProgressBar(bool useStatusGradient = false)
         {
@@ -119,6 +123,79 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>
+        /// Whether the value is written on the bar as a percentage ("42 %"; off by default). With a <see cref="Text"/> the text stands
+        /// on the left and the percentage on the right (see <see cref="TextAlign"/> and <see cref="PercentageAlign"/>). Not in the
+        /// <see cref="ProgressBarStyle.Marquee"/> style, which has no value.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool ShowPercentage
+        {
+            get { return _showPercentage; }
+            set
+            {
+                if (value == _showPercentage)
+                    return;
+
+                _showPercentage = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Where the <see cref="Text"/> stands on the bar: left (the default), centered or right. At the same place as the percentage
+        /// (<see cref="PercentageAlign"/>) both are one text, "Upload – 42 %"; at another place they are drawn apart, for
+        /// instance the text left and the percentage right.
+        /// </summary>
+        [DefaultValue(HorizontalAlignment.Left)]
+        public HorizontalAlignment TextAlign
+        {
+            get { return _textAlign; }
+            set
+            {
+                if (value == _textAlign)
+                    return;
+
+                _textAlign = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Where the percentage stands on the bar: left, centered or right (the default); see <see cref="TextAlign"/>. It keeps the
+        /// room of its widest form ("100 %") when it is drawn apart from the text.
+        /// </summary>
+        [DefaultValue(HorizontalAlignment.Right)]
+        public HorizontalAlignment PercentageAlign
+        {
+            get { return _percentageAlign; }
+            set
+            {
+                if (value == _percentageAlign)
+                    return;
+
+                _percentageAlign = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// A text written on the bar (for a message about the state, like "Uploading ..."); empty by default. It is in the colors that
+        /// can be read on the track and on the fill, on whatever fill level the bar has.
+        /// </summary>
+        [Browsable(true), EditorBrowsable(EditorBrowsableState.Always), DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public override string Text
+        {
+            get { return base.Text; }
+            set { base.Text = value; }
+        }
+
+        protected override void OnTextChanged(EventArgs e)
+        {
+            base.OnTextChanged(e);
+            Invalidate();
+        }
+
         // The color of the 1 px edge around the bar: the border, or - without one - the track itself (what is seen, when it is transparent).
         internal Color EdgeColor
         {
@@ -150,7 +227,34 @@ namespace ErikwnkWFUI.Controls
                 fill = ForeColor;
 
             area.Inflate(-1, -1);
-            ProgressBarPainting.PaintFill(g, area, Style, ProgressBarPainting.GetFraction(Minimum, Maximum, Value), fill, _marquee.Offset);
+            Rectangle covered = ProgressBarPainting.PaintFill(g, area, Style, ProgressBarPainting.GetFraction(Minimum, Maximum, Value), fill, _marquee.Offset);
+
+            bool percentage = _showPercentage && Style != ProgressBarStyle.Marquee;
+
+            // The text keeps away from the edge of the bar.
+            Rectangle textArea = area;
+            textArea.Inflate(-GetTextPadding(), 0);
+
+            ProgressBarPainting.PaintTexts(
+                g,
+                textArea,
+                Text,
+                percentage ? ProgressBarPainting.GetPercentText(Minimum, Maximum, Value) : null,
+                ProgressBarPainting.GetPercentText(0, 100, 100),
+                _textAlign,
+                _percentageAlign,
+                Font,
+                Enabled ? UIColors.GetBestTextColor(BackColor) : UIColors.GetDisabledText(BackColor),
+                UIColors.GetBestTextColor(fill),
+                covered);
+        }
+
+        /// <summary>The room between the border of the bar and its text, in pixels at 96 dpi.</summary>
+        internal const int TextPaddingAt96Dpi = 6;
+
+        internal int GetTextPadding()
+        {
+            return (int)Math.Round(TextPaddingAt96Dpi * DeviceDpi / 96.0);
         }
 
         protected override void OnHandleCreated(EventArgs e)

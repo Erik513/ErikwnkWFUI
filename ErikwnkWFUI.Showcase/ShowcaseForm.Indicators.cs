@@ -60,6 +60,32 @@ namespace ErikwnkWFUI.Showcase
             marquee.MarqueeAnimationSpeed = 30;
             table.AddRow("CreatePrimary (Style = Marquee)", UIColumn.Percent(marquee, TwoColumnPercent));
 
+            // The value as a percentage on the bar (off by default), and a text for a message about the state; together they are one text.
+            ErikwnkWFUI.Controls.ProgressBar percentage = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            percentage.ShowPercentage = true;
+            AddBarRow(table, "CreatePrimary (ShowPercentage)", percentage);
+
+            ErikwnkWFUI.Controls.ProgressBar labeled = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreateStandard(UIStyles.Colors.Sets.Yellow);
+            labeled.Text = "Uploading";
+            labeled.ShowPercentage = true;
+            AddBarRow(table, "CreateStandard(colors: Yellow) (Text, ShowPercentage)", labeled);
+
+            // Where the text and the percentage stand: the text on the left and the percentage on the right (as in the row above);
+            // at the same place they are one text.
+            ErikwnkWFUI.Controls.ProgressBar centered = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            centered.Text = "Uploading";
+            centered.ShowPercentage = true;
+            centered.TextAlign = HorizontalAlignment.Center;
+            centered.PercentageAlign = HorizontalAlignment.Center;
+            AddBarRow(table, "CreatePrimary (TextAlign = Center, PercentageAlign = Center)", centered);
+
+            ErikwnkWFUI.Controls.ProgressBar right = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();
+            right.Text = "Uploading";
+            right.ShowPercentage = true;
+            right.TextAlign = HorizontalAlignment.Right;
+            right.PercentageAlign = HorizontalAlignment.Right;
+            AddBarRow(table, "CreatePrimary (TextAlign = Right, PercentageAlign = Right)", right);
+
             table.AddSection("Slim progress bars");
             AddSlimProgressBarsSection(table);
         }
@@ -94,6 +120,32 @@ namespace ErikwnkWFUI.Showcase
             SlimProgressBar slimBlocks = UIStyles.SlimProgressBars.CreatePrimary();
             slimBlocks.Style = ProgressBarStyle.Blocks;
             AddSlimBarRow(table, "CreatePrimary (Style = Blocks)", slimBlocks);
+
+            // A text (a message about the state) and the percentage next to the strip: above it by default, or below, left or right.
+            foreach (SlimProgressBarTextPosition position in new[]
+            {
+                SlimProgressBarTextPosition.Above,
+                SlimProgressBarTextPosition.Below,
+                SlimProgressBarTextPosition.Left,
+                SlimProgressBarTextPosition.Right
+            })
+            {
+                SlimProgressBar labeled = UIStyles.SlimProgressBars.CreatePrimary();
+                labeled.Text = "Uploading";
+                labeled.ShowPercentage = true;
+                labeled.TextPosition = position;
+                labeled.AutoSize = true;
+                AddSlimBarRow(table, "CreatePrimary (Text, ShowPercentage, TextPosition = " + position + ")", labeled);
+            }
+
+            // Above or below, the text is on the left and the percentage on the right; each can be put elsewhere (one place: one text).
+            SlimProgressBar slimCentered = UIStyles.SlimProgressBars.CreatePrimary();
+            slimCentered.Text = "Uploading";
+            slimCentered.ShowPercentage = true;
+            slimCentered.TextAlign = HorizontalAlignment.Center;
+            slimCentered.PercentageAlign = HorizontalAlignment.Center;
+            slimCentered.AutoSize = true;
+            AddSlimBarRow(table, "CreatePrimary (TextAlign = Center, PercentageAlign = Center)", slimCentered);
 
             SlimProgressBar slimMarquee = UIStyles.SlimProgressBars.CreatePrimary();
             slimMarquee.Style = ProgressBarStyle.Marquee;
