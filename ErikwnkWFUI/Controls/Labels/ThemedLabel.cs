@@ -48,6 +48,7 @@ namespace ErikwnkWFUI.Controls
             _enabledForeColor = enabledForeColor;
             _colors = colors;
             _muted = muted;
+            _fullTextToolTip = new Helpers.FullTextToolTip(this);
 
             // The text color is worked out while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);

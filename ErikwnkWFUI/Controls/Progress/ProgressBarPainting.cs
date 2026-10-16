@@ -183,9 +183,10 @@ namespace ErikwnkWFUI.Controls
         /// text taking what is left next to it (and being centered, aligned or cut there). Both are readable on the track and on
         /// the fill, see <see cref="PaintText"/>. A text that is too wide for its room moves there when the
         /// <paramref name="scroller"/> has a scroll for it (then the percentage stays where it is, and one text that was drawn
-        /// together with it is drawn apart from it, the percentage at the right end); otherwise it is cut with an ellipsis.
+        /// together with it is drawn apart from it, the percentage at the right end). Returns whether the text could not be shown
+        /// whole (it moves or is cut), for the tooltip with the full text.; otherwise it is cut with an ellipsis.
         /// </summary>
-        public static void PaintTexts(
+        public static bool PaintTexts(
             Graphics graphics,
             Rectangle area,
             string text,
@@ -206,7 +207,7 @@ namespace ErikwnkWFUI.Controls
             {
                 scroller?.Configure(0, 0, font);
 
-                return;
+                return false;
             }
 
             Rectangle textArea = area;
@@ -267,6 +268,9 @@ namespace ErikwnkWFUI.Controls
 
             if (percentPart != null)
                 PaintText(graphics, percentArea, percentPart, font, onTrack, onFill, fillBounds, TextFormatFlags.HorizontalCenter);
+
+            // Whether the text could not be shown whole: it moves, or it is cut with an ellipsis.
+            return hasText && (moves || MeasureText(textPart, font).Width > textArea.Width);
         }
 
         // The text that moves through its room: back and forth from its start to its end, or round and round with a separator.

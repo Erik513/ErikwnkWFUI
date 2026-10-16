@@ -51,6 +51,8 @@ namespace ErikwnkWFUI.Controls
 
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
+        private readonly FullTextToolTip _fullTextToolTip;
+        private bool _showFullTextToolTip = true;
 
         private int _minimum;
         private int _maximum = 100;
@@ -80,6 +82,7 @@ namespace ErikwnkWFUI.Controls
             AccessibleRole = AccessibleRole.ProgressBar;
 
             _textScroller = new ProgressTextScroller(this);
+            _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => _style == ProgressBarStyle.Marquee, () => _marqueeAnimationSpeed);
 
             // The disabled gray and the status colors are read while painting.
@@ -305,6 +308,28 @@ namespace ErikwnkWFUI.Controls
             set { _textScroller.Scroll = value; }
         }
 
+        /// <summary>
+        /// Whether a tooltip shows the whole <see cref="Text"/> while the mouse is on the bar and the text is cut with an ellipsis or moves
+        /// (on by default); a text that is shown whole has none.
+        /// </summary>
+        [DefaultValue(true)]
+        public bool ShowFullTextToolTip
+        {
+            get { return _showFullTextToolTip; }
+            set
+            {
+                if (value == _showFullTextToolTip)
+                    return;
+
+                _showFullTextToolTip = value;
+
+                if (!value)
+                    _fullTextToolTip.Set("");
+
+                Invalidate();
+            }
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -485,13 +510,17 @@ namespace ErikwnkWFUI.Controls
                 fillColor,
                 _marquee.Offset);
 
+            bool cut = false;
+
             if (HasText)
-                PaintText(g, textArea);
+                cut = PaintText(g, textArea);
             else
                 _textScroller.Configure(0, 0, Font);
+
+            _fullTextToolTip.Set(_showFullTextToolTip && cut ? Text : "");
         }
 
-        private void PaintText(Graphics g, Rectangle textArea)
+        private bool PaintText(Graphics g, Rectangle textArea)
         {
             Color surface = Parent != null ? SurfaceColor.Of(Parent) : UIColors.BackgroundMedium;
             Color textColor = Enabled ? UIColors.GetBestTextColor(surface) : UIColors.GetDisabledText(surface);
@@ -502,7 +531,7 @@ namespace ErikwnkWFUI.Controls
                 // One text (the percentage with it); a text that moves leaves the percentage where it is, at the end of the room.
                 HorizontalAlignment side = _textPosition == SlimProgressBarTextPosition.Left ? HorizontalAlignment.Right : HorizontalAlignment.Left;
 
-                ProgressBarPainting.PaintTexts(
+                return ProgressBarPainting.PaintTexts(
                     g,
                     textArea,
                     Text,
@@ -515,12 +544,10 @@ namespace ErikwnkWFUI.Controls
                     textColor,
                     Rectangle.Empty,
                     _textScroller);
-
-                return;
             }
 
             // Above or below: each where its alignment says (by default the text on the left, the percentage on the right).
-            ProgressBarPainting.PaintTexts(
+            return ProgressBarPainting.PaintTexts(
                 g,
                 textArea,
                 Text,
@@ -540,6 +567,7 @@ namespace ErikwnkWFUI.Controls
             if (disposing)
                 _marquee.Dispose();
                 _textScroller.Dispose();
+                _fullTextToolTip.Dispose();
 
             base.Dispose(disposing);
         }

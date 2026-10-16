@@ -25,6 +25,8 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _trackColor;
         private readonly MarqueeAnimator _marquee;
         private readonly ProgressTextScroller _textScroller;
+        private readonly FullTextToolTip _fullTextToolTip;
+        private bool _showFullTextToolTip = true;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
         private bool _showPercentage;
         private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
@@ -38,6 +40,7 @@ namespace ErikwnkWFUI.Controls
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
 
             _textScroller = new ProgressTextScroller(this);
+            _fullTextToolTip = new FullTextToolTip(this);
             _marquee = new MarqueeAnimator(this, () => Style == ProgressBarStyle.Marquee, () => MarqueeAnimationSpeed);
 
             // The track: the recessed surface of the theme (until BackColor is set).
@@ -206,6 +209,28 @@ namespace ErikwnkWFUI.Controls
             set { _textScroller.Scroll = value; }
         }
 
+        /// <summary>
+        /// Whether a tooltip shows the whole <see cref="Text"/> while the mouse is on the bar and the text is cut with an ellipsis or moves
+        /// (on by default); a text that is shown whole has none.
+        /// </summary>
+        [DefaultValue(true)]
+        public bool ShowFullTextToolTip
+        {
+            get { return _showFullTextToolTip; }
+            set
+            {
+                if (value == _showFullTextToolTip)
+                    return;
+
+                _showFullTextToolTip = value;
+
+                if (!value)
+                    _fullTextToolTip.Set("");
+
+                Invalidate();
+            }
+        }
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -263,7 +288,7 @@ namespace ErikwnkWFUI.Controls
             Rectangle textArea = area;
             textArea.Inflate(-GetTextPadding(), 0);
 
-            ProgressBarPainting.PaintTexts(
+            bool cut = ProgressBarPainting.PaintTexts(
                 g,
                 textArea,
                 Text,
@@ -276,6 +301,8 @@ namespace ErikwnkWFUI.Controls
                 UIColors.GetBestTextColor(fill),
                 covered,
                 _textScroller);
+
+            _fullTextToolTip.Set(_showFullTextToolTip && cut ? Text : "");
         }
 
         /// <summary>The room between the border of the bar and its text, in pixels at 96 dpi.</summary>
@@ -322,6 +349,7 @@ namespace ErikwnkWFUI.Controls
             if (disposing)
                 _marquee.Dispose();
                 _textScroller.Dispose();
+                _fullTextToolTip.Dispose();
 
             base.Dispose(disposing);
         }

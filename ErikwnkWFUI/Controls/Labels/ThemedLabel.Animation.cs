@@ -276,6 +276,7 @@ namespace ErikwnkWFUI.Controls
 
                 StopWatching();
                 DisposePicture();
+                _fullTextToolTip.Dispose();
             }
 
             base.Dispose(disposing);

@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Linq;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
@@ -40,6 +41,10 @@ namespace ErikwnkWFUI.Controls
 
         // Whether the mouse is on the label now (for the pause on hover).
         private bool _hovered;
+
+        // The tooltip with the whole text, while the text moves because it does not fit (see ShowFullTextToolTip).
+        private readonly FullTextToolTip _fullTextToolTip;
+        private bool _showFullTextToolTip = true;
 
         // The movement. How wide the text is; back and forth: how far the text can go to show its end; endless: how long
         // one round is (the text, a gap, the separator, a gap). Of the last two, at most one is more than 0,
@@ -124,6 +129,21 @@ namespace ErikwnkWFUI.Controls
             {
                 _scrollMode = value;
                 Restart();
+            }
+        }
+
+        /// <summary>
+        /// Whether a tooltip shows the whole text while the mouse is on the label and the text moves because it is too long for
+        /// the label (on by default). A text that fits has none, and neither has one that does not move (a standard label with
+        /// <see cref="Label.AutoEllipsis"/> has a tooltip of its own).
+        /// </summary>
+        public bool ShowFullTextToolTip
+        {
+            get { return _showFullTextToolTip; }
+            set
+            {
+                _showFullTextToolTip = value;
+                UpdateFullTextToolTip();
             }
         }
 
@@ -263,7 +283,18 @@ namespace ErikwnkWFUI.Controls
                 StopAnimating();
             }
 
+            UpdateFullTextToolTip();
             Invalidate();
+        }
+
+        // The tooltip has the whole text while the text moves because it does not fit (an endless text that fits moves too, but
+        // is shown whole at some time in each round: it has none).
+        private void UpdateFullTextToolTip()
+        {
+            bool moves = (_maxOffset > 0 || _cycle > 0) && Visible && IsHandleCreated;
+            bool exceeds = _maxOffset > 0 || (_cycle > 0 && _textWidth + 2 * _textInset > ClientSize.Width - Padding.Horizontal);
+
+            _fullTextToolTip.Set(_showFullTextToolTip && moves && exceeds ? Text : "");
         }
 
         // How the text has to move: back and forth needs to know how far to go to show its end, the endless
