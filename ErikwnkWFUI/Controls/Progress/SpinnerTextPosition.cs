@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Controls
+﻿namespace ErikwnkWFUI.Controls
 {
     /// <summary>Where the text of a <see cref="Spinner"/> is placed in relation to the ring.</summary>
     public enum SpinnerTextPosition

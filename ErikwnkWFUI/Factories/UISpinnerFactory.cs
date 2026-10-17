@@ -7,8 +7,8 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UISpinnerFactory
     {
-        // Plain rotating spinners - the colour variants mirror UIProgressBarFactory: neutral gray by default, the main colour of a colour
-        // set (its Hover colour) with one, the accent for Primary, and Green is the green set.
+        // Plain rotating spinners - the color variants mirror UIProgressBarFactory: neutral gray by default, the main color of a color
+        // set (its Hover color) with one, the accent for Primary, and Green is the green set.
 
         public static Spinner CreateStandard(int size = 24, int thickness = 0, UIColorSet colors = null)
         {
@@ -32,7 +32,7 @@ namespace ErikwnkWFUI.Factories
             return spinner;
         }
 
-        // The arc is coloured red -> yellow -> green by the Value (raise it as the load advances), without a number in the centre.
+        // The arc is colored red -> yellow -> green by the Value (raise it as the load advances), without a number in the centre.
         public static Spinner CreateStatus(int size = 24, int thickness = 0)
         {
             Spinner spinner = Configure(size, thickness);
@@ -41,7 +41,7 @@ namespace ErikwnkWFUI.Factories
             return spinner;
         }
 
-        // Same, plus the percentage in the centre (40 px by default: smaller rings leave the digits out as not legible; starts at 0 - raise Value as the load advances). The status one also colours the
+        // Same, plus the percentage in the centre (40 px by default: smaller rings leave the digits out as not legible; starts at 0 - raise Value as the load advances). The status one also colors the
         // arc red -> yellow -> green by the value (CreateStatus is the same without the number).
 
         public static Spinner CreateProgressStandard(int size = 40, int thickness = 0, UIColorSet colors = null)

@@ -8,21 +8,27 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// An indeterminate loading spinner: a coloured arc rotating over a faint
-    /// full ring. Owner-drawn, theme-aware, transparent background. Only animates
-    /// while it is actually visible, so an off-screen or hidden one costs
-    /// nothing. It turns while <see cref="IsSpinning"/> and the control is enabled and Windows lets windows animate; with
-    /// <see cref="IsIndeterminate"/> off it is a ring that fills up to the <see cref="Value"/> and stands still. Set <see cref="ShowPercentage"/> to also show the <see cref="Value"/> (a load
-    /// percentage) in the centre. The colour comes from <see cref="ArcColor"/>, the main colour of
-    /// <see cref="Colors"/> (a colour set) or the neutral gray - or, with <see cref="UseStatusGradient"/>,
-    /// from the <see cref="Value"/>. The <see cref="UIStyles.Spinners"/> factories preset
-    /// these (a colour set, the accent, and with a percentage the red→yellow→green status colour).
+    /// A loading spinner: an arc that turns over a faint full ring (the load is unknown), or, with <see cref="IsIndeterminate"/> off,
+    /// a ring that fills up to the <see cref="Value"/> (the load is known). Fully custom-drawn, follows the theme, transparent background.
+    /// The arc turns while <see cref="IsSpinning"/> is set and the control is shown and enabled and Windows lets windows animate (a spinner
+    /// on a hidden window only looks four times a second whether it is shown again); <see cref="Speed"/> says how fast, and
+    /// <see cref="HideWhenStopped"/> hides the ring while it does not. A <see cref="Text"/> stands next to the ring (at the
+    /// <see cref="TextPosition"/>), and <see cref="ShowPercentage"/> writes the <see cref="Value"/> in its centre. The color of the arc is
+    /// <see cref="ArcColor"/> if set, else, with <see cref="UseStatusGradient"/>, red over yellow to green by the <see cref="Value"/>,
+    /// else the main color of <see cref="Colors"/> (a color set) or the neutral gray; a disabled spinner is in the disabled color.
+    /// The <see cref="UIStyles.Spinners"/> factories preset these. For a screen reader it is a progress bar: the text is its name and, for a
+    /// known load, the percentage its value. Right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
     /// </summary>
     public partial class Spinner : Control
     {
         private const int TickMs = 16;              // ~60 fps
-        private const int HiddenPollMs = 250;      // how often a spinner on a hidden window looks whether it is shown again
+        private const int HiddenPollMs = 250;       // how often a spinner on a hidden window looks whether it is shown again
+        private const int AskEveryTicks = 32;       // Windows is asked again for its animation setting after this many ticks (~0.5 s)
         private const float MinimumDigitSize = 7f;  // smaller digits in the ring are not legible, so they are left out
+
+        // The same blend red -> yellow -> green as the status color of the bars, with the same breakpoint (the green of "done" takes
+        // over only near the top).
+        private const double YellowBreakpoint = 0.65;
 
         private readonly Timer _timer;
         private float _angle;
@@ -39,15 +45,6 @@ namespace ErikwnkWFUI.Controls
         private int _ticksSinceAsked;
         private bool _hideWhenStopped;
         private SpinnerSpeed _speed = SpinnerSpeed.Medium;
-
-        // Windows is asked again for its animation setting after this many ticks (~0.5 s), not on every one.
-        private const int AskEveryTicks = 32;
-
-        // Same two-segment red->yellow->green blend as SlimProgressBar, and the
-        // same 0.65 breakpoint (green as "done" should only take over near the
-        // top of the range). Duplicated per the codebase's per-control colour
-        // helper pattern rather than shared.
-        private const double YellowBreakpoint = 0.65;
 
         public Spinner()
         {
@@ -66,11 +63,12 @@ namespace ErikwnkWFUI.Controls
             _timer = new Timer { Interval = TickMs };
             _timer.Tick += OnTick;
 
-            // The track, the text and the gray arc are read while painting.
+            // The track, the text and the gray arc are read while painting; a change of theme or accent only has to paint again.
             ThemeWatcher.Attach(this, Invalidate);
         }
 
-        /// <summary>Stroke width in pixels. 0 (the default) scales it to the control's size.</summary>
+        /// <summary>Stroke width in pixels. 0 (the default) scales it to the size of the control (an eighth, at least 2 px).</summary>
+        [DefaultValue(0)]
         public int Thickness
         {
             get { return _thickness; }
@@ -82,10 +80,12 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// The colours of the arc: its main colour is the <c>Hover</c> colour of the set (Green is the usual green, the primary set the
+        /// The colors of the arc: its main color is the <c>Hover</c> color of the set (Green is the usual green, the primary set the
         /// accent). Null (the default) is the neutral gray; <c>UIStyles.Spinners.CreatePrimary</c> makes one that follows the accent.
-        /// <see cref="ArcColor"/> and <see cref="UseStatusGradient"/> win over it.
+        /// <see cref="ArcColor"/> and <see cref="UseStatusGradient"/> win over it. Not written by the designer (a set is code).
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return _colorsSource?.Invoke() ?? _colors; }
@@ -97,7 +97,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // A set that is asked for again each time (the primary set, which follows the accent).
+        // A set that is asked for again each time it is needed (the primary set, which follows the accent); a later Colors replaces it.
         internal void FollowColors(Func<UIColorSet> source)
         {
             _colorsSource = source;
@@ -105,7 +105,8 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        /// <summary>An explicit arc colour, overriding <see cref="Colors"/> and <see cref="UseStatusGradient"/>. <see cref="Color.Empty"/> (the default) uses those rules.</summary>
+        /// <summary>An explicit color of the arc, overriding <see cref="Colors"/> and <see cref="UseStatusGradient"/> (not the disabled look). <see cref="Color.Empty"/> (the default) uses those rules.</summary>
+        [DefaultValue(typeof(Color), "")]
         public Color ArcColor
         {
             get { return _arcColor; }
@@ -117,11 +118,10 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// True = the arc colour communicates the load state - a solid colour
-        /// blended red (0) → yellow → green (100) by <see cref="Value"/>.
-        /// Ignored when <see cref="ArcColor"/> is set. Mirrors
-        /// <see cref="Controls.SlimProgressBar.UseStatusGradient"/>.
+        /// True = the arc color tells the state of the load: a solid color blended red (0) over yellow to green (100) by
+        /// <see cref="Value"/>. Ignored when <see cref="ArcColor"/> is set. As <see cref="SlimProgressBar.UseStatusGradient"/>.
         /// </summary>
+        [DefaultValue(false)]
         public bool UseStatusGradient
         {
             get { return _useStatusGradient; }
@@ -133,9 +133,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// The load, as a percentage from 0 to 100 (a value outside is limited to it; 0 by default). It colours the arc with
-        /// <see cref="UseStatusGradient"/> and is written in the centre with <see cref="ShowPercentage"/>.
+        /// The load, as a percentage from 0 to 100 (a value outside is limited to it; 0 by default). It colors the arc with
+        /// <see cref="UseStatusGradient"/>, is written in the centre with <see cref="ShowPercentage"/>, is the length of the arc
+        /// with <see cref="IsIndeterminate"/> off and then also the value for a screen reader.
         /// </summary>
+        [DefaultValue(0)]
         public int Value
         {
             get { return _value; }
@@ -154,9 +156,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether the <see cref="Value"/> is drawn (bold, as a number) in the centre of the ring while the arc keeps spinning (off by
-        /// default). The digits scale to the ring, so a small spinner needs to be a few px larger than usual to stay legible.
+        /// Whether the <see cref="Value"/> is written (bold, as a number) in the centre of the ring (off by default). The digits
+        /// scale to the ring, with the size of "100" so that they do not change while the number counts up; in a ring too small for
+        /// them (below about 30 px) they are left out. <c>UIStyles.Spinners.CreateProgress*</c> make a ring of 40 px.
         /// </summary>
+        [DefaultValue(false)]
         public bool ShowPercentage
         {
             get { return _showPercentage; }
@@ -171,9 +175,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Whether the arc turns (true by default). False stands it still where it is, e.g. while nothing is loading. It also stands
-        /// still while the control is disabled or while Windows has the animations switched off.
+        /// Whether the arc turns (true by default). False stands it still where it is, e.g. while nothing is loading; with
+        /// <see cref="HideWhenStopped"/> the ring is gone then. It also stands still while the control is disabled or while Windows has the
+        /// animations switched off (the ring stays visible then). A known load (<see cref="IsIndeterminate"/> off) never turns.
         /// </summary>
+        [DefaultValue(true)]
         public bool IsSpinning
         {
             get { return _isSpinning; }
@@ -218,6 +224,7 @@ namespace ErikwnkWFUI.Controls
         /// True (the default) = the load is unknown: an arc of fixed length turns. False = the load is known: the arc is as long as
         /// the <see cref="Value"/> (from the top, clockwise) and stands still.
         /// </summary>
+        [DefaultValue(true)]
         public bool IsIndeterminate
         {
             get { return _isIndeterminate; }
@@ -292,6 +299,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        // Starts or stops the clock: it runs only while there is something to turn and somebody to see it.
         private void UpdateRunning()
         {
             bool run = Visible && IsHandleCreated && !DesignMode
