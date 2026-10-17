@@ -496,4 +496,60 @@ public class TrackBarEdgeCaseTests
             PopupSupport.OwnerIsActive = before;
         }
     }
+
+    [Fact]
+    public void AfterADragThatEndsOutsideTheSlider_ThePopupStaysAMomentAndThenGoes()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
+            using Form host = Show(bar);
+
+            bar.InvokePrivate("OnMouseDown", Mouse(60));
+            bar.InvokePrivate("OnMouseMove", Mouse(113));
+            bar.InvokePrivate("OnMouseUp", Mouse(300));      // let go far to the right of the slider ...
+            bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);   // ... and the mouse leaves right after the release
+
+            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            Assert.True(popup.Visible, "the popup is gone as soon as the mouse is let go");
+
+            // It waits for the hide timer (about 1.5 s) to take it away - not for the mouse that has left.
+            System.Windows.Forms.Timer linger = bar.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!;
+            Assert.True(linger.Enabled, "nothing keeps the popup for a moment");
+
+            TestPictures.Pump(2200);
+            Assert.False(popup.Visible, "the popup stays for good");
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
+
+    [Fact]
+    public void ThePopupOfAHover_GoesAtOnce_WhenTheMouseLeaves()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
+            using Form host = Show(bar);
+
+            bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            Assert.True(popup.Visible);
+
+            bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);
+            Assert.False(popup.Visible);
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
 }

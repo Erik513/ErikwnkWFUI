@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Controls
         // goes through DragStarted/DragEnded just as fast as any other
         // click, so without this the popup would flash on and instantly
         // back off again.
-        private const int PopupHideDelayMs = 700;
+        private const int PopupHideDelayMs = 1500;
 
         private InfoPopupForm _popup;
         private Timer _hideTimer;
@@ -77,7 +77,7 @@ namespace ErikwnkWFUI.Controls
         {
             // ValueChanged alone would already cover dragging too (it fires
             // continuously on every mouse-move, restarting the hide timer
-            // each time so it never gets 700ms of quiet to actually fire) -
+            // each time so it never gets a quiet moment of that length to actually fire) -
             // DragStarted is only needed for the click-without-moving edge
             // case, where SetValueFromUser's no-op-if-unchanged check means
             // ValueChanged never fires at all.
@@ -376,6 +376,11 @@ namespace ErikwnkWFUI.Controls
         private void PopupMouseLeave()
         {
             if (!_showValuePopup || IsDragging)
+                return;
+
+            // A drag that ends with the mouse outside of the slider (a slide past the end) lets the mouse leave right after the
+            // release: the popup is still in the short time it stays after an interaction, and the hide timer takes it away then.
+            if (_hideTimer != null && _hideTimer.Enabled)
                 return;
 
             HidePopup();
