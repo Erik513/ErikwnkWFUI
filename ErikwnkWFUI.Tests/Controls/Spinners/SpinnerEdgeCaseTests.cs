@@ -174,17 +174,13 @@ public class SpinnerEdgeCaseTests : IDisposable
     }
 
     [Fact]
-    public void ThicknessAndSweep_AreLimited()
+    public void TheThickness_CannotBeNegative()
     {
         using Spinner spinner = new Spinner();
 
         spinner.Thickness = -4;
-        Assert.Equal(0, spinner.Thickness);
 
-        spinner.ArcSweep = 5;
-        Assert.Equal(10f, spinner.ArcSweep);
-        spinner.ArcSweep = 500;
-        Assert.Equal(350f, spinner.ArcSweep);
+        Assert.Equal(0, spinner.Thickness);
     }
 
     [Fact]

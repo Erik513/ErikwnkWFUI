@@ -118,23 +118,26 @@ public class SpinnerTextTests
     }
 
     [Fact]
-    public void TheSpeed_IsHowFarTheArcTurnsOnEachBeat()
+    public void TheSpeed_IsHowFarTheArcTurnsInTheTimeThatPassed_WhateverTheBeatOfTheClock()
     {
         using Spinner spinner = new Spinner();
 
-        float Turn(SpinnerSpeed speed)
+        float Turn(SpinnerSpeed speed, double milliseconds)
         {
             spinner.Speed = speed;
             float before = spinner.GetPrivateField<float>("_angle");
-            spinner.InvokePrivate("OnTick", spinner, EventArgs.Empty);
+            spinner.Advance(milliseconds);
 
             return (spinner.GetPrivateField<float>("_angle") - before + 360f) % 360f;
         }
 
         Assert.Equal(SpinnerSpeed.Medium, spinner.Speed);
-        Assert.Equal(5f, Turn(SpinnerSpeed.Medium));
-        Assert.Equal(3f, Turn(SpinnerSpeed.Slow));
-        Assert.Equal(9f, Turn(SpinnerSpeed.Fast));
+
+        // A turn takes about 2, 1.2 and 0.7 seconds; the arc turns by the time, so a late or an uneven beat changes nothing.
+        Assert.Equal(30f, Turn(SpinnerSpeed.Medium, 100), 0.01f);
+        Assert.Equal(18f, Turn(SpinnerSpeed.Slow, 100), 0.01f);
+        Assert.Equal(54f, Turn(SpinnerSpeed.Fast, 100), 0.01f);
+        Assert.Equal(Turn(SpinnerSpeed.Medium, 100), Turn(SpinnerSpeed.Medium, 40) + Turn(SpinnerSpeed.Medium, 60), 0.01f);
     }
 
     [Fact]
@@ -179,5 +182,52 @@ public class SpinnerTextTests
 
         Assert.Equal(Height(8), Height(100));
         Assert.Equal(Height(8), Height(5));
+    }
+
+    [Fact]
+    public void TheFontOfTheDigits_IsWorkedOutOnce_AndAgainOnlyWhenTheRingChanges()
+    {
+        using Spinner spinner = UIStyles.Spinners.CreateProgressPrimary(60, 6);
+        spinner.IsSpinning = false;
+        using Form host = OffscreenForm.Create(new Size(120, 120), Color.Black);
+        spinner.SetBounds(0, 0, 60, 60);
+        host.Controls.Add(spinner);
+        host.Show();
+        Application.DoEvents();
+        using (Bitmap first = Draw(spinner)) { }
+        Font? font = spinner.GetPrivateField<Font>("_digitFont");
+        Assert.NotNull(font);
+
+        spinner.Value = 99;
+        using (Bitmap again = Draw(spinner)) { }
+        spinner.Invalidate();
+        using (Bitmap third = Draw(spinner)) { }
+        Assert.Same(font, spinner.GetPrivateField<Font>("_digitFont"));
+
+        spinner.Width = 90;
+        spinner.Height = 90;
+        using (Bitmap bigger = Draw(spinner)) { }
+        Font? other = spinner.GetPrivateField<Font>("_digitFont");
+        Assert.NotNull(other);
+        Assert.NotSame(font, other);
+        Assert.True(other!.Size > font!.Size);
+    }
+
+    [Fact]
+    public void AStallOfTheWindow_DoesNotMakeTheArcJump()
+    {
+        using Spinner spinner = UIStyles.Spinners.CreatePrimary(40);
+        using Form host = OffscreenForm.Create(new Size(40, 40), Color.Black);
+        spinner.SetBounds(0, 0, 40, 40);
+        host.Controls.Add(spinner);
+        host.Show();
+        Application.DoEvents();
+
+        float before = spinner.GetPrivateField<float>("_angle");
+        spinner.SetPrivateField("_lastTickMs", -60120L); // the last beat was a minute ago (a number of turns plus a little: a jump would show)
+        spinner.InvokePrivate("OnTick", spinner, EventArgs.Empty);
+        float turned = (spinner.GetPrivateField<float>("_angle") - before + 360f) % 360f;
+
+        Assert.True(turned > 0 && turned <= 30.5f, "the arc jumped by " + turned + " degrees");
     }
 }

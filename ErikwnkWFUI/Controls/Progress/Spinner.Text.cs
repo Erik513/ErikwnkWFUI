@@ -12,7 +12,14 @@ namespace ErikwnkWFUI.Controls
         private const TextFormatFlags TextFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
             | TextFormatFlags.EndEllipsis | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding;
 
+        private const float MinimumDigitSize = 7f;  // smaller digits in the ring are not legible, so they are left out
+
         private SpinnerTextPosition _textPosition = SpinnerTextPosition.Right;
+
+        // The font of the digits in the ring, worked out once for the size of the ring (null: too small for legible digits).
+        private Font _digitFont;
+        private float _digitInner = -1f;
+        private string _digitFamily;
 
         /// <summary>
         /// A text next to the ring (empty by default: only the ring). Make the control as wide as ring and text need - the ring
@@ -95,6 +102,65 @@ namespace ErikwnkWFUI.Controls
                 return;
 
             TextRenderer.DrawText(g, Text, Font, area, GetTextColor(), TextFlags | alignment);
+        }
+
+        // The digits sit inside the ring stroke; the widest they may get is the inner diameter. The size is worked out for "100"
+        // whatever the value is, so the digits do not change their size while the number counts up; where that size is not legible
+        // (a small ring), they are left out.
+        private void DrawProgressText(Graphics g, RectangleF ring, float stroke, string text)
+        {
+            float inner = ring.Width - stroke * 2f - 2f;
+            if (inner <= 3f)
+                return;
+
+            Font font = GetDigitFont(g, inner);
+            if (font == null)
+                return;
+
+            using (SolidBrush brush = new SolidBrush(GetTextColor()))
+            using (StringFormat sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            })
+            {
+                g.DrawString(text, font, brush, ring, sf);
+            }
+        }
+
+        // Measuring the font down until "100" fits takes a few fonts: it is done again only when the ring or the font family changes,
+        // not on every picture of the turning arc.
+        private Font GetDigitFont(Graphics g, float inner)
+        {
+            if (Math.Abs(inner - _digitInner) < 0.01f && _digitFamily == Font.FontFamily.Name)
+                return _digitFont;
+
+            _digitFont?.Dispose();
+            _digitFont = null;
+            _digitInner = inner;
+            _digitFamily = Font.FontFamily.Name;
+
+            float size = inner * 0.7f;
+            for (int i = 0; i < 8; i++)
+            {
+                Font font = new Font(Font.FontFamily, size, FontStyle.Bold, GraphicsUnit.Pixel);
+                SizeF measured = g.MeasureString("100", font);
+
+                if (measured.Width <= inner && measured.Height <= inner)
+                {
+                    if (size >= MinimumDigitSize)
+                        _digitFont = font;
+                    else
+                        font.Dispose();
+
+                    return _digitFont;
+                }
+
+                font.Dispose();
+                size *= 0.85f;
+            }
+
+            return null;
         }
     }
 }
