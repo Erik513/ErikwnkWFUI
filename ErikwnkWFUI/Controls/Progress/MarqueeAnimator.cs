@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -14,7 +15,7 @@ namespace ErikwnkWFUI.Controls
         private readonly Control _owner;
         private readonly Func<bool> _wanted;
         private readonly Func<int> _speed;
-        private readonly Timer _timer = new Timer { Interval = 20 };
+        private readonly FrameTicker _ticker;
         private readonly Stopwatch _clock = new Stopwatch();
 
         public MarqueeAnimator(Control owner, Func<bool> wanted, Func<int> speed)
@@ -23,7 +24,7 @@ namespace ErikwnkWFUI.Controls
             _wanted = wanted;
             _speed = speed;
 
-            _timer.Tick += (sender, e) => Tick();
+            _ticker = new FrameTicker(owner, milliseconds => Tick());
         }
 
         /// <summary>How far the block has moved, in pixels (the bar wraps it).</summary>
@@ -34,21 +35,21 @@ namespace ErikwnkWFUI.Controls
         {
             bool run = _wanted() && _owner.IsHandleCreated && _owner.Visible;
 
-            if (run && !_timer.Enabled)
+            if (run && !_ticker.IsRunning)
             {
                 _clock.Restart();
-                _timer.Start();
+                _ticker.Start();
             }
-            else if (!run && _timer.Enabled)
+            else if (!run && _ticker.IsRunning)
             {
-                _timer.Stop();
+                _ticker.Stop();
                 _clock.Stop();
             }
         }
 
         private void Tick()
         {
-            if (!_wanted() || !_owner.Visible)
+            if (!_wanted())
             {
                 Update();
 
@@ -72,7 +73,7 @@ namespace ErikwnkWFUI.Controls
 
         public void Dispose()
         {
-            _timer.Dispose();
+            _ticker.Dispose();
         }
     }
 }

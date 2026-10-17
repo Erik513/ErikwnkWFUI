@@ -21,8 +21,7 @@ namespace ErikwnkWFUI.Controls
         private const int AnimationSettingMilliseconds = 500;
 
         private readonly Control _owner;
-        private readonly Timer _timer = new Timer { Interval = 15 };
-        private readonly Stopwatch _clock = new Stopwatch();
+        private readonly FrameTicker _ticker;
 
         private LabelScroll _scroll = LabelScroll.None;
         private bool _active;
@@ -36,9 +35,8 @@ namespace ErikwnkWFUI.Controls
         private int _separatorWidth;
         private int _gap;
 
-        // How long the text has been moving (not counting the time it was paused by the mouse), and when it was counted last.
+        // How long the text has been moving (not counting the time it was paused by the mouse).
         private double _elapsed;
-        private long _lastTick;
         private int _offset;
 
         // The last answer about the animations of Windows, and when it was asked.
@@ -49,7 +47,7 @@ namespace ErikwnkWFUI.Controls
         public ProgressTextScroller(Control owner)
         {
             _owner = owner;
-            _timer.Tick += (sender, e) => Tick();
+            _ticker = new FrameTicker(owner, Tick);
             _settings = new ControlAnimationListener(owner, OnSettingChanged);
         }
 
@@ -176,7 +174,7 @@ namespace ErikwnkWFUI.Controls
                 if (measuresChanged)
                     _offset = ComputeOffset(_elapsed);
 
-                if (!_timer.Enabled)
+                if (!_ticker.IsRunning)
                     StartClock();
             }
         }
@@ -209,18 +207,16 @@ namespace ErikwnkWFUI.Controls
 
         private void StartClock()
         {
-            _clock.Restart();
-            _lastTick = 0;
-            _timer.Start();
+            _ticker.Start();
         }
 
         private void StopClock()
         {
-            _timer.Stop();
-            _clock.Stop();
+            _ticker.Stop();
         }
 
-        private void Tick()
+        // On each beat of the clock, with the time that has passed since the last one.
+        private void Tick(double milliseconds)
         {
             if (!_active || _owner.IsDisposed || !_owner.Visible || !_owner.Enabled)
             {
@@ -230,11 +226,7 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            long now = _clock.ElapsedMilliseconds;
-            long passed = now - _lastTick;
-            _lastTick = now;
-
-            Advance(passed);
+            Advance(milliseconds);
         }
 
         /// <summary>Lets the text move on by this many milliseconds (not while the mouse holds it, if the scroll asks for that); the clock does it on every beat.</summary>
@@ -287,8 +279,7 @@ namespace ErikwnkWFUI.Controls
         public void Dispose()
         {
             AnimationSettings.Remove(_settings);
-            _timer.Dispose();
-            _clock.Stop();
+            _ticker.Dispose();
         }
     }
 }

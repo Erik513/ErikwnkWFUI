@@ -10,7 +10,7 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     // The moving text of ThemedLabel, in three files: this one (the settings, the state and the measure), ThemedLabel.Animation.cs
-    // (the steps on the beat of LabelAnimationClock and what the label is told) and ThemedLabel.Picture.cs (the picture of the
+    // (the steps on the beat of AnimationClock and what the label is told) and ThemedLabel.Picture.cs (the picture of the
     // text and how it is painted). The colors, the disabled text and the dispatch of the painting are in ThemedLabel.cs.
     public sealed partial class ThemedLabel
     {
@@ -78,7 +78,7 @@ namespace ErikwnkWFUI.Controls
         private HotkeyPrefix _measuredPrefix;
         private HotkeyPrefix _pictureHotkeyPrefix;
 
-        // Whether the label is on the beat of LabelAnimationClock, whether it has been asked for a picture
+        // Whether the label is on the beat of AnimationClock, whether it has been asked for a picture
         // that it has not made yet (so that a slow window is asked once, not many times), and the handle the
         // clock posts to (kept here: the clock thread must not ask the control for its Handle).
         private bool _animating;
@@ -263,7 +263,7 @@ namespace ErikwnkWFUI.Controls
             if (moves && !_animating)
             {
                 _animating = true;
-                LabelAnimationClock.Add(this);
+                AnimationClock.Add(this);
             }
             else if (!moves && _animating)
             {

@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -261,7 +262,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [MemberData(nameof(BothModes))]
     public void WhenTheWindowIsDisposed_TheLabelsInItLeaveTheClock(LabelScrollMode mode)
     {
-        int before = LabelAnimationClock.Count;
+        int before = AnimationClock.Count;
         Form form = NewForm();
 
         for (int i = 0; i < 5; i++)
@@ -271,11 +272,11 @@ public class LabelScrollEdgeCaseTests : IDisposable
             form.Controls.Add(label);
         }
 
-        Assert.Equal(before + 5, LabelAnimationClock.Count);
+        Assert.Equal(before + 5, AnimationClock.Count);
 
         form.Dispose();
 
-        Assert.Equal(before, LabelAnimationClock.Count);
+        Assert.Equal(before, AnimationClock.Count);
     }
 
     [Fact]
@@ -308,7 +309,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ManyLabels_AreAllOnTheClock_AndAllLeaveIt()
     {
-        int before = LabelAnimationClock.Count;
+        int before = AnimationClock.Count;
         Form form = NewForm();
         form.ClientSize = new Size(400, 1300);
         List<ThemedLabel> labels = new List<ThemedLabel>();
@@ -321,12 +322,12 @@ public class LabelScrollEdgeCaseTests : IDisposable
             labels.Add(label);
         }
 
-        Assert.Equal(before + 50, LabelAnimationClock.Count);
+        Assert.Equal(before + 50, AnimationClock.Count);
 
         foreach (ThemedLabel label in labels)
             label.Dispose();
 
-        Assert.Equal(before, LabelAnimationClock.Count);
+        Assert.Equal(before, AnimationClock.Count);
     }
 
     [Fact]
@@ -357,7 +358,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void TheClock_StopsItsThreadWhenNoLabelMoves_AndStartsAnotherWhenOneDoes()
     {
-        FieldInfo thread = typeof(LabelAnimationClock).GetField("_thread", BindingFlags.NonPublic | BindingFlags.Static)!;
+        FieldInfo thread = typeof(AnimationClock).GetField("_thread", BindingFlags.NonPublic | BindingFlags.Static)!;
 
         ThemedLabel first = Create(LabelScroll.Endless());
         first.Dispose();
@@ -482,7 +483,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     public void SettingsOnALabelThatIsDisposed_AreHarmless_AndItStaysOffTheClock()
     {
         ThemedLabel label = Create(LabelScroll.Endless());
-        int before = LabelAnimationClock.Count;
+        int before = AnimationClock.Count;
         label.Dispose();
         label.Dispose();
 
@@ -495,7 +496,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
         }));
 
         Assert.False(Moving(label));
-        Assert.Equal(before - 1, LabelAnimationClock.Count);
+        Assert.Equal(before - 1, AnimationClock.Count);
     }
 
     // ---- a mouse that stays, a label that is resized ----

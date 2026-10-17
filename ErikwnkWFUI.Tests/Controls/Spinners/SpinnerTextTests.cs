@@ -212,22 +212,4 @@ public class SpinnerTextTests
         Assert.NotSame(font, other);
         Assert.True(other!.Size > font!.Size);
     }
-
-    [Fact]
-    public void AStallOfTheWindow_DoesNotMakeTheArcJump()
-    {
-        using Spinner spinner = UIStyles.Spinners.CreatePrimary(40);
-        using Form host = OffscreenForm.Create(new Size(40, 40), Color.Black);
-        spinner.SetBounds(0, 0, 40, 40);
-        host.Controls.Add(spinner);
-        host.Show();
-        Application.DoEvents();
-
-        float before = spinner.GetPrivateField<float>("_angle");
-        spinner.SetPrivateField("_lastTickMs", -60120L); // the last beat was a minute ago (a number of turns plus a little: a jump would show)
-        spinner.InvokePrivate("OnTick", spinner, EventArgs.Empty);
-        float turned = (spinner.GetPrivateField<float>("_angle") - before + 360f) % 360f;
-
-        Assert.True(turned > 0 && turned <= 30.5f, "the arc jumped by " + turned + " degrees");
-    }
 }

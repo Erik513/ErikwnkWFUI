@@ -33,12 +33,8 @@ public class SpinnerBehaviorTests : IDisposable
         return host;
     }
 
-    private static bool Runs(Spinner spinner)
-    {
-        System.Windows.Forms.Timer timer = spinner.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
-
-        return timer.Enabled && timer.Interval < 100;
-    }
+    // On the beat of the clock (not stopped, and not only watching because the window is hidden).
+    private static bool Runs(Spinner spinner) => spinner.GetPrivateField<FrameTicker>("_ticker")!.IsOnClock;
 
     [Fact]
     public void ItTurnsWhenShown_AndStopsWhenDisabledStoppedOrHidden()

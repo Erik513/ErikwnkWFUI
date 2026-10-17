@@ -4,84 +4,91 @@ using System.Diagnostics;
 using System.Threading;
 using static ErikwnkWFUI.Native.NativeMethods;
 
-namespace ErikwnkWFUI.Controls
+namespace ErikwnkWFUI.Helpers
 {
+    /// <summary>Something that moves on the beat of the <see cref="AnimationClock"/>.</summary>
+    internal interface IAnimationClient
+    {
+        /// <summary>Called from the thread of the clock, once on each beat: ask the window for the next picture (post a message) and return.</summary>
+        void RequestFrame();
+    }
+
     /// <summary>
-    /// The beat for the moving text of all labels: one thread that wakes with the display (as often as
-    /// the display shows a new picture, 60 times a second or more) and asks every label that moves for its
-    /// next picture. A Windows Forms timer
-    /// cannot do that: it ticks about every 31 milliseconds, late and unevenly, behind everything else
-    /// in the message queue, and the text then moves in jerks. The thread runs only while a label moves.
+    /// The beat for everything that moves in the library (the text of a label, a spinner, the marquee of a progress bar, a moving text
+    /// on a bar): one thread that wakes with the display (as often as the display shows a new picture, 60 times a second or more) and
+    /// asks every client that moves for its next picture. A Windows Forms timer cannot do that: it ticks about every 31 milliseconds,
+    /// late and unevenly, behind everything else in the message queue, and what moves then moves in jerks. The thread runs only while a
+    /// client moves.
     /// </summary>
-    internal static class LabelAnimationClock
+    internal static class AnimationClock
     {
         private static readonly object Gate = new object();
-        private static readonly List<ThemedLabel> Labels = new List<ThemedLabel>();
+        private static readonly List<IAnimationClient> Clients = new List<IAnimationClient>();
         private static Thread _thread;
 
-        // The labels that move now.
+        // The clients that move now.
         internal static int Count
         {
             get
             {
                 lock (Gate)
-                    return Labels.Count;
+                    return Clients.Count;
             }
         }
 
-        internal static void Add(ThemedLabel label)
+        internal static void Add(IAnimationClient client)
         {
             lock (Gate)
             {
-                if (!Labels.Contains(label))
-                    Labels.Add(label);
+                if (!Clients.Contains(client))
+                    Clients.Add(client);
 
                 if (_thread == null)
                 {
                     // It only waits for the display and posts a message: it must not be late.
-                    _thread = new Thread(Run) { IsBackground = true, Name = "Label animation", Priority = ThreadPriority.Highest };
+                    _thread = new Thread(Run) { IsBackground = true, Name = "Animation", Priority = ThreadPriority.Highest };
                     _thread.Start();
                 }
             }
         }
 
-        internal static void Remove(ThemedLabel label)
+        internal static void Remove(IAnimationClient client)
         {
             lock (Gate)
-                Labels.Remove(label);
+                Clients.Remove(client);
         }
 
         private static void Run()
         {
             while (true)
             {
-                ThemedLabel[] labels;
+                IAnimationClient[] clients;
 
                 lock (Gate)
                 {
-                    if (Labels.Count == 0)
+                    if (Clients.Count == 0)
                     {
                         _thread = null;
 
                         return;
                     }
 
-                    labels = Labels.ToArray();
+                    clients = Clients.ToArray();
                 }
 
                 WaitForNextPicture();
 
-                foreach (ThemedLabel label in labels)
+                foreach (IAnimationClient client in clients)
                 {
-                    // One label that fails must not end the beat of all the others (and with it the thread, which
+                    // One client that fails must not end the beat of all the others (and with it the thread, which
                     // would then never be started again).
                     try
                     {
-                        label.RequestFrame();
+                        client.RequestFrame();
                     }
                     catch (Exception)
                     {
-                        // the label is gone or in a bad state: it asks for the next beat again or leaves the clock
+                        // the client is gone or in a bad state: it asks for the next beat again or leaves the clock
                     }
                 }
             }

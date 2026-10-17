@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 
@@ -9,31 +8,22 @@ namespace ErikwnkWFUI.Controls
     // The turning of the arc: the clock, and when it runs.
     public partial class Spinner
     {
-        private const int TickMs = 16;              // ~60 fps
-        private const int HiddenPollMs = 250;       // how often a spinner on a hidden window looks whether it is shown again
-        private const int LongestStepMs = 100;      // a step after a longer stall (a busy window) does not make the arc jump
-
-        private readonly Timer _timer = new Timer { Interval = TickMs };
-        private readonly Stopwatch _clock = new Stopwatch();
+        private FrameTicker _ticker;
         private float _angle;
-        private long _lastTickMs;
         private ControlAnimationListener _settings;   // the animations of Windows were switched: the clock starts or stops
         private bool _isSpinning = true;
         private SpinnerSpeed _speed = SpinnerSpeed.Medium;
 
         private void InitializeClock()
         {
-            _timer.Tick += OnTick;
+            _ticker = new FrameTicker(this, Step);
             _settings = new ControlAnimationListener(this, UpdateRunning);
         }
 
         private void DisposeClock()
         {
             AnimationSettings.Remove(_settings);
-            _timer.Stop();
-            _clock.Stop();
-            _timer.Tick -= OnTick;
-            _timer.Dispose();
+            _ticker.Dispose();
         }
 
         /// <summary>
@@ -64,28 +54,10 @@ namespace ErikwnkWFUI.Controls
             set { _speed = value; }
         }
 
-        // The arc turns by the time that has passed, not by a fixed step per beat: the beat of a Windows timer is late and uneven.
-        private void OnTick(object sender, EventArgs e)
+        // On each beat of the clock: the arc turns by the time that has passed, not by a fixed step per beat.
+        private void Step(double milliseconds)
         {
-            long now = _clock.ElapsedMilliseconds;
-            long passed = Math.Min(now - _lastTickMs, LongestStepMs);
-            _lastTickMs = now;
-
-            // A window that is hidden (or a spinner taken off its window) hides the spinner without telling it (no VisibleChanged,
-            // and none when the window is shown again): the clock keeps watching at a slow pace and takes up its speed when it is
-            // shown again.
-            if (!Visible)
-            {
-                if (_timer.Interval != HiddenPollMs)
-                    _timer.Interval = HiddenPollMs;
-
-                return;
-            }
-
-            if (_timer.Interval != TickMs)
-                _timer.Interval = TickMs;
-
-            Advance(passed);
+            Advance(milliseconds);
             Invalidate();
         }
 
@@ -99,16 +71,12 @@ namespace ErikwnkWFUI.Controls
 
         private void StartClock()
         {
-            _clock.Restart();
-            _lastTickMs = 0;
-            _timer.Interval = TickMs;
-            _timer.Start();
+            _ticker.Start();
         }
 
         private void StopClock()
         {
-            _timer.Stop();
-            _clock.Stop();
+            _ticker.Stop();
         }
 
         // Starts or stops the clock: it runs only while there is something to turn and somebody to see it.
@@ -117,9 +85,9 @@ namespace ErikwnkWFUI.Controls
             bool run = Visible && IsHandleCreated && !DesignMode
                 && _isSpinning && _isIndeterminate && Enabled && AnimationSettings.Enabled();
 
-            if (run && !_timer.Enabled)
+            if (run)
                 StartClock();
-            else if (!run && _timer.Enabled)
+            else
                 StopClock();
         }
 

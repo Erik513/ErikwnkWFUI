@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -409,12 +410,12 @@ public class LabelScrollTests : IDisposable
     public void ALabelThatIsDisposed_LeavesTheClock()
     {
         ThemedLabel label = Create();
-        Assert.True(LabelAnimationClock.Count >= 1);
+        Assert.True(AnimationClock.Count >= 1);
 
         label.Dispose();
 
         Assert.False(Moving(label));
-        Assert.Equal(0, LabelAnimationClock.Count);
+        Assert.Equal(0, AnimationClock.Count);
         Assert.Null(Record.Exception(() => label.ScrollMode = LabelScrollMode.None));
     }
 

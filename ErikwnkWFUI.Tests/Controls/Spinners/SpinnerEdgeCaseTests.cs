@@ -20,7 +20,7 @@ public class SpinnerEdgeCaseTests : IDisposable
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
-    private static System.Windows.Forms.Timer TimerOf(Spinner spinner) => spinner.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
+    private static FrameTicker TickerOf(Spinner spinner) => spinner.GetPrivateField<FrameTicker>("_ticker")!;
 
     private static Form Host(Spinner spinner, Size size)
     {
@@ -79,8 +79,8 @@ public class SpinnerEdgeCaseTests : IDisposable
         }
     }
 
-    // The clock at full speed (not the slow watching of a hidden spinner).
-    private static bool Turning(Spinner spinner) => TimerOf(spinner).Enabled && TimerOf(spinner).Interval < 100;
+    // On the beat of the clock (not the slow watching of a spinner on a hidden window).
+    private static bool Turning(Spinner spinner) => TickerOf(spinner).IsOnClock;
 
     [Fact]
     public void ASpinnerOnAHiddenWindow_OnlyWatches_AndTurnsAgainWhenTheWindowIsShown()
@@ -111,14 +111,14 @@ public class SpinnerEdgeCaseTests : IDisposable
     {
         Spinner spinner = UIStyles.Spinners.CreatePrimary();
         Form host = Host(spinner, new Size(24, 24));
-        System.Windows.Forms.Timer timer = TimerOf(spinner);
-        Assert.True(timer.Enabled);
+        FrameTicker ticker = TickerOf(spinner);
+        Assert.True(ticker.IsRunning);
 
         spinner.Dispose();
         spinner.Dispose();
         host.Dispose();
 
-        Assert.False(timer.Enabled);
+        Assert.False(ticker.IsRunning);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class SpinnerEdgeCaseTests : IDisposable
         AnimationSettings.Enabled = () => false;
         AnimationSettings.Raise();
         Pump(100);
-        Assert.False(TimerOf(spinner).Enabled, "still turns after Windows switched the animations off");
+        Assert.False(TickerOf(spinner).IsRunning, "still turns after Windows switched the animations off");
 
         AnimationSettings.Enabled = _animations;
         AnimationSettings.Raise();
@@ -159,13 +159,13 @@ public class SpinnerEdgeCaseTests : IDisposable
     {
         using Spinner spinner = UIStyles.Spinners.CreateProgressPrimary();
         using Form host = Host(spinner, new Size(40, 40));
-        Assert.True(TimerOf(spinner).Enabled);
+        Assert.True(TickerOf(spinner).IsRunning);
 
         spinner.IsIndeterminate = false;
-        Assert.False(TimerOf(spinner).Enabled);
+        Assert.False(TickerOf(spinner).IsRunning);
 
         spinner.IsIndeterminate = true;
-        Assert.True(TimerOf(spinner).Enabled);
+        Assert.True(TickerOf(spinner).IsRunning);
     }
 
     [Fact]

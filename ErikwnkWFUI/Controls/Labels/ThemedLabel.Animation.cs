@@ -6,8 +6,8 @@ using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
-    // The steps of the movement on the beat of LabelAnimationClock, the messages of the window, and what the label does when it is told something (text, size, visibility, handle, dispose).
-    public sealed partial class ThemedLabel : IAnimationSettingsListener
+    // The steps of the movement on the beat of AnimationClock, the messages of the window, and what the label does when it is told something (text, size, visibility, handle, dispose).
+    public sealed partial class ThemedLabel : IAnimationSettingsListener, IAnimationClient
     {
 
         // ---- the beat of the clock and the steps ----
@@ -15,7 +15,7 @@ namespace ErikwnkWFUI.Controls
         private void StopAnimating()
         {
             _animating = false;
-            LabelAnimationClock.Remove(this);
+            AnimationClock.Remove(this);
         }
 
         private void StopWatching()
@@ -34,6 +34,11 @@ namespace ErikwnkWFUI.Controls
 
             if (handle != IntPtr.Zero)
                 PostMessage(handle, WM_SETTING_CHANGED, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        void IAnimationClient.RequestFrame()
+        {
+            RequestFrame();
         }
 
         // Called from the thread of the clock: ask the window for the next picture, once.

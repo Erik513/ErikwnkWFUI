@@ -18,7 +18,7 @@ namespace ErikwnkWFUI.Controls
     /// fixed system gray, so the text is drawn in <c>UIColors.DisabledGray</c>, the one gray every other control
     /// uses for "disabled", and reads the same in every control and both themes. The <b>moving</b> text is
     /// painted here as well, from a picture of its own that can be put between two pixels (see
-    /// <see cref="ScrollMode"/>); the picture is made and moved on the beat of <c>LabelAnimationClock</c>.
+    /// <see cref="ScrollMode"/>); the picture is made and moved on the beat of <c>AnimationClock</c>.
     /// </remarks>
     public sealed partial class ThemedLabel : Label
     {
