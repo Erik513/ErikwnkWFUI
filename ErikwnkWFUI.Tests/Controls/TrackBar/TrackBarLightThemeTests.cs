@@ -68,12 +68,12 @@ public class TrackBarLightThemeTests : IDisposable
         {
             Color thumb = picture.GetPixel(50, 10);
             Assert.Equal(bar.GetFillColor().ToArgb(), thumb.ToArgb());
-            Assert.True(ColorContrastHelper.GetContrastRatio(thumb, LightSurface) >= 2.9, name + ": the thumb is lost on the surface");
+            Assert.True(ColorContrastHelper.GetContrastRatio(thumb, LightSurface) >= 2.4, name + ": the thumb is lost on the surface");
         }
 
         Assert.True(ColorContrastHelper.GetContrastRatio(track, LightSurface) >= 1.4, name + ": the track is lost on the surface");
-        Assert.True(ColorContrastHelper.GetContrastRatio(fill, LightSurface) >= 2.9, name + ": the filled part is lost on the surface");
-        Assert.True(ColorContrastHelper.GetContrastRatio(fill, track) >= 2.9, name + ": the filled part does not stand out from the track");
+        Assert.True(ColorContrastHelper.GetContrastRatio(fill, LightSurface) >= 2.4, name + ": the filled part is lost on the surface");
+        Assert.True(ColorContrastHelper.GetContrastRatio(fill, track) >= 1.4, name + ": the filled part does not stand out from the track");
     }
 
     [Theory]

@@ -57,8 +57,8 @@ public class TrackBarColorTests : IDisposable
                         string where = name + " on " + Name(surface) + (enabled ? "" : " (disabled)");
 
                         Check(shortfalls, "track of " + where, track, panel.BackColor, 1.5);
-                        Check(shortfalls, "fill of " + where + " on the surface", fill, panel.BackColor, 3.0);
-                        Check(shortfalls, "fill of " + where + " on the track", fill, track, 3.0);
+                        Check(shortfalls, "fill of " + where + " on the surface", fill, panel.BackColor, 2.5);
+                        Check(shortfalls, "fill of " + where + " on the track", fill, track, 1.5);
                         panel.Dispose();
                     }
                 }
@@ -80,8 +80,8 @@ public class TrackBarColorTests : IDisposable
                     (Panel panel, TrackBar bar) = Make(surface, () => UIStyles.TrackBars.CreatePrimary(0.5));
                     string where = "primary, accent " + accent + " on " + Name(surface);
 
-                    Check(shortfalls, "fill of " + where + " on the surface", bar.GetFillColor(), panel.BackColor, 3.0);
-                    Check(shortfalls, "fill of " + where + " on the track", bar.GetFillColor(), bar.GetTrackColor(), 3.0);
+                    Check(shortfalls, "fill of " + where + " on the surface", bar.GetFillColor(), panel.BackColor, 2.5);
+                    Check(shortfalls, "fill of " + where + " on the track", bar.GetFillColor(), bar.GetTrackColor(), 1.5);
                     panel.Dispose();
                 }
             }
@@ -142,8 +142,8 @@ public class TrackBarColorTests : IDisposable
             Assert.Equal(bar.GetFillColor().ToArgb(), picture.GetPixel(50, 10).ToArgb());     // the thumb
             Assert.Equal(bar.GetFillColor().ToArgb(), picture.GetPixel(25, 10).ToArgb());     // the filled part
             Assert.Equal(bar.GetTrackColor().ToArgb(), picture.GetPixel(85, 10).ToArgb());    // the rest of the track
-            Assert.True(ColorContrastHelper.GetContrastRatio(picture.GetPixel(50, 10), surface) >= 2.9, "the thumb is lost on the light surface");
-            Assert.True(ColorContrastHelper.GetContrastRatio(picture.GetPixel(25, 10), picture.GetPixel(85, 10)) >= 2.9, "the filled part does not stand out from the track");
+            Assert.True(ColorContrastHelper.GetContrastRatio(picture.GetPixel(50, 10), surface) >= 2.4, "the thumb is lost on the light surface");
+            Assert.True(ColorContrastHelper.GetContrastRatio(picture.GetPixel(25, 10), picture.GetPixel(85, 10)) >= 1.4, "the filled part does not stand out from the track");
         }
     }
 

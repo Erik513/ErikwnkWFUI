@@ -60,8 +60,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The color of the filled part and the thumb: a color set by hand as it is; the others (the main color of the set, the gray, the
-        // disabled color) moved just far enough to stand out from the surface and from the track (3:1, as the fill of the bars). The
-        // thumb reaches beyond the track, so it has to be seen on the surface too.
+        // disabled color) moved just far enough to stand out from the surface (2.5:1) and from the track (1.5:1).
         internal Color GetFillColor()
         {
             Color surface = GetSurface();
@@ -77,9 +76,16 @@ namespace ErikwnkWFUI.Controls
             return Stand(colors != null ? colors.Hover : UIColors.DisabledGray, surface);
         }
 
+        // The thumb reaches beyond the track and has to be seen on the surface (2.5:1: a strong accent such as a red keeps its strength; the
+        // 3:1 of the bars would turn it pale on a dark surface); the filled part only has to be told from the empty rest of the track
+        // (1.5:1, as quiet as the track itself: a stronger demand made a red accent lighter and paler on a dark surface, only to stand
+        // out from the lighter track).
+        private const double FillOnSurfaceContrast = 2.5;
+        private const double FillOnTrackContrast = 1.5;
+
         private Color Stand(Color color, Color surface)
         {
-            return UIColors.EnsureContrast(color, surface, GetTrackColor(), ProgressBarPainting.FillContrast);
+            return UIColors.EnsureContrast(color, surface, FillOnSurfaceContrast, GetTrackColor(), FillOnTrackContrast);
         }
     }
 }

@@ -461,12 +461,12 @@ namespace ErikwnkWFUI.Styles
 
         /// <summary>
         /// The same against two colors at once: the nearest lightness of <paramref name="color"/> (hue and saturation kept) that has at least
-        /// <paramref name="minimum"/> contrast against the page and against <paramref name="other"/> (a color that lies on the page, such as the
+        /// <paramref name="minimum"/> contrast against the page and at least <paramref name="minimumOther"/> against <paramref name="other"/> (a color that lies on the page, such as the
         /// track of a slider), looking in the direction of the page first (lighter on a dark page, darker on a light one) and then the other way:
         /// the other color may lie on the far side of the color, and moving it for each of the two in turn would move it back and forth.
         /// Where no lightness has both, the one whose worse contrast is the best.
         /// </summary>
-        internal static Color EnsureContrast(Color color, Color page, Color other, double minimum)
+        internal static Color EnsureContrast(Color color, Color page, double minimum, Color other, double minimumOther)
         {
             double toward = IsLight(page) ? -0.01 : 0.01;
             Color best = color;
@@ -477,10 +477,14 @@ namespace ErikwnkWFUI.Styles
                 foreach (double direction in new[] { toward, -toward })
                 {
                     Color candidate = i == 0 ? color : ShiftLightness(color, direction * i);
-                    double worst = Math.Min(GetContrastRatio(candidate, page), GetContrastRatio(candidate, other));
+                    double onPage = GetContrastRatio(candidate, page);
+                    double onOther = GetContrastRatio(candidate, other);
 
-                    if (worst >= minimum)
+                    if (onPage >= minimum && onOther >= minimumOther)
                         return candidate;
+
+                    // (How far short each is, in the share of what it needs: the better of the two worse ones wins.)
+                    double worst = Math.Min(onPage / minimum, onOther / minimumOther);
 
                     if (worst > bestWorst)
                     {

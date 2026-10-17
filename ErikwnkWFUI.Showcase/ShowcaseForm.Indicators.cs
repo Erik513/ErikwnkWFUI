@@ -314,6 +314,11 @@ namespace ErikwnkWFUI.Showcase
             AddTrackBarRow(table, "CreatePrimary", UIStyles.TrackBars.CreatePrimary(0.4));
             AddTrackBarRow(table, "CreateStandard(colors: Yellow)", UIStyles.TrackBars.CreateStandard(0.4, 1.0, UIStyles.Colors.Sets.Yellow));
 
+            // One color for the filled part and the thumb, without a color set.
+            TrackBar own = UIStyles.TrackBars.CreateStandard(0.4);
+            own.FillColor = Color.MediumPurple;
+            AddTrackBarRow(table, "FillColor = MediumPurple", own);
+
             table.AddSection("Track bars: range and value popup");
 
             // One slider each: ShowValuePopup writes the value above the thumb while the mouse is over it or it is dragged (hover over it,
@@ -321,6 +326,10 @@ namespace ErikwnkWFUI.Showcase
             // usable.
             TrackBar popup = UIStyles.TrackBars.CreatePrimary(40, 100, showValuePopup: true);
             AddTrackBarRow(table, "ShowValuePopup = true", popup);
+
+            // The popup has the colors of the slider: here a color set.
+            AddTrackBarRow(table, "ShowValuePopup, colors: Yellow",
+                UIStyles.TrackBars.CreateStandard(40, 100, UIStyles.Colors.Sets.Yellow, showValuePopup: true));
 
             TrackBar range = UIStyles.TrackBars.CreatePrimary(3, 12);
             range.Minimum = -12;

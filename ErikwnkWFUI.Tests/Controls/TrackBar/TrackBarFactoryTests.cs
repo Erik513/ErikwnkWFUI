@@ -19,12 +19,12 @@ public class TrackBarFactoryTests : IDisposable
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
-    // What the fill of a slider is for a color: moved just far enough to stand out from the surface and the track (3:1).
+    // What the fill of a slider is for a color: moved just far enough to stand out from the surface and the track (2.5:1).
     private static Color Stood(TrackBar bar, Color raw)
     {
         Color surface = ErikwnkWFUI.Helpers.SurfaceColor.Of(bar);
 
-        return UIColors.EnsureContrast(raw, surface, bar.GetTrackColor(), 3.0);
+        return UIColors.EnsureContrast(raw, surface, 2.5, bar.GetTrackColor(), 1.5);
     }
 
     [Fact]
