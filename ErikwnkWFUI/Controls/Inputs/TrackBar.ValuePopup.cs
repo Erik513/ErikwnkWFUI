@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
@@ -25,6 +26,31 @@ namespace ErikwnkWFUI.Controls
         private Timer _hideTimer;
 
         private bool _showValuePopup;
+
+        /// <summary>
+        /// Whether the value is shown in a small popup above the thumb: while the user drags it, then briefly after they let go, click
+        /// once or use a key or the wheel, and for as long as the mouse hovers over the slider. Off by default.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool ShowValuePopup
+        {
+            get { return _showValuePopup; }
+            set
+            {
+                if (value == _showValuePopup)
+                    return;
+
+                _showValuePopup = value;
+
+                if (!value)
+                {
+                    if (_hideTimer != null)
+                        _hideTimer.Stop();
+
+                    HidePopup();
+                }
+            }
+        }
         private bool _popupWidthStale = true;
 
         private void InitializePopup()
@@ -51,7 +77,15 @@ namespace ErikwnkWFUI.Controls
             // a slightly-stale value (e.g. 95% instead of 100%). KeyUp fires
             // even though IsInputKey claims these keys - it only changes
             // which keys generate KeyDown/KeyUp, not whether they do.
-            KeyUp += delegate { if (_showValuePopup) { ShowPopup(force: true); StartHideTimer(); } };
+            KeyUp += delegate(object sender, KeyEventArgs e) { if (_showValuePopup && IsValueKey(e.KeyCode)) { ShowPopup(force: true); StartHideTimer(); } };
+        }
+
+        // The keys that move the value: only these show the popup (not every key that is let go while the slider has the focus: Shift,
+        // Ctrl, the Tab that brought the focus here ...).
+        private static bool IsValueKey(Keys key)
+        {
+            return key == Keys.Left || key == Keys.Right || key == Keys.Up || key == Keys.Down
+                || key == Keys.PageUp || key == Keys.PageDown || key == Keys.Home || key == Keys.End;
         }
 
         private static Size PopupSizeFor(Size text)

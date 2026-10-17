@@ -386,4 +386,39 @@ public class TrackBarEdgeCaseTests
         bar.Value = 0.7;
         Assert.Equal(0.7.ToString("0.##", UIStrings.NumberCulture), bar.AccessibilityObject.Value);
     }
+
+    [Fact]
+    public void TheThumbIsNotLeftBig_WhenTheSliderWasDisabledOrHiddenUnderTheMouse()
+    {
+        using TrackBar bar = new TrackBar();
+        using Form host = Show(bar);
+
+        // The mouse is over the slider (the thumb grows); then it is disabled: it gets no MouseLeave, and the mouse goes away.
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        Assert.True(bar.GetPrivateField<bool>("_hover"));
+        bar.Enabled = false;
+        bar.Enabled = true;
+        Assert.False(bar.GetPrivateField<bool>("_hover"), "the thumb stays big after the slider was disabled under the mouse");
+
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        bar.Visible = false;
+        bar.Visible = true;
+        Assert.False(bar.GetPrivateField<bool>("_hover"), "the thumb stays big after the slider was hidden under the mouse");
+    }
+
+    [Fact]
+    public void OnlyTheKeysThatMoveTheValue_ShowThePopupWhenLetGo()
+    {
+        using TrackBar bar = new TrackBar { ShowValuePopup = true };
+        using Form host = Show(bar);
+
+        // Shift, Ctrl, Tab (the key that brought the focus here) and the like show nothing.
+        foreach (Keys key in new[] { Keys.Tab, Keys.ShiftKey, Keys.ControlKey, Keys.A, Keys.Enter })
+            bar.InvokePrivate("OnKeyUp", new KeyEventArgs(key));
+
+        Assert.Null(bar.GetPrivateField<InfoPopupForm>("_popup"));
+
+        bar.InvokePrivate("OnKeyUp", new KeyEventArgs(Keys.Right));
+        Assert.NotNull(bar.GetPrivateField<InfoPopupForm>("_popup"));
+    }
 }
