@@ -341,6 +341,16 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreateGreen(),
                 UIStyles.Spinners.CreateGreen(40, 5));
 
+            Spinner stopped = UIStyles.Spinners.CreatePrimary(40, 5);
+            stopped.IsSpinning = false;
+            Spinner disabled = UIStyles.Spinners.CreatePrimary(40, 5);
+            disabled.Enabled = false;
+            AddSpinnerRow(table, "IsSpinning = false, Enabled = false", stopped, disabled);
+
+            Spinner determinate = UIStyles.Spinners.CreateProgressPrimary(40, 4);
+            determinate.IsIndeterminate = false;
+            AddAnimatedSpinnerRow(table, "IsIndeterminate = false", determinate);
+
             AddAnimatedSpinnerRow(table, "CreateProgressStandard",
                 UIStyles.Spinners.CreateProgressStandard(40, 4));
             AddAnimatedSpinnerRow(table, "CreateProgressGreen",

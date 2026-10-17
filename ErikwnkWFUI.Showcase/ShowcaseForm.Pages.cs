@@ -85,7 +85,7 @@ namespace ErikwnkWFUI.Showcase
                  AddSliderBarSection),
 
                 ("Spinner",
-                 "Loading circles. Standard, Green and Primary spin endlessly, in the default size and in a larger, heavier one. The Progress variants show a percentage instead; Progress Status shifts from red to green.",
+                 "Loading circles. Standard, Green and Primary spin endlessly (load unknown), in the default size and in a larger, heavier one. IsSpinning = false stands the arc still; a disabled spinner and a Windows with the animations switched off stand still too. The Progress variants also show the load as a percentage (Value) while the arc keeps turning; Progress Status shifts from red over yellow to green. IsIndeterminate = false is for a known load: the arc grows to the Value and does not turn.",
                  AddSpinnerSection),
 
                 ("Symbols",

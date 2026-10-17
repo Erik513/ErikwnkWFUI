@@ -10,7 +10,8 @@ namespace ErikwnkWFUI.Controls
     /// An indeterminate loading spinner: a coloured arc rotating over a faint
     /// full ring. Owner-drawn, theme-aware, transparent background. Only animates
     /// while it is actually visible, so an off-screen or hidden one costs
-    /// nothing. Set <see cref="ShowPercentage"/> to also show the <see cref="Value"/> (a load
+    /// nothing. It turns while <see cref="IsSpinning"/> and the control is enabled and Windows lets windows animate; with
+    /// <see cref="IsIndeterminate"/> off it is a ring that fills up to the <see cref="Value"/> and stands still. Set <see cref="ShowPercentage"/> to also show the <see cref="Value"/> (a load
     /// percentage) in the centre. The colour comes from <see cref="ArcColor"/>, the main colour of
     /// <see cref="Colors"/> (a colour set) or the neutral gray - or, with <see cref="UseStatusGradient"/>,
     /// from the <see cref="Value"/>. The <see cref="UIStyles.Spinners"/> factories preset
@@ -31,6 +32,12 @@ namespace ErikwnkWFUI.Controls
         private bool _useStatusGradient;
         private int _value;
         private bool _showPercentage;
+        private bool _isSpinning = true;
+        private bool _isIndeterminate = true;
+        private int _ticksSinceAsked;
+
+        // Windows is asked again for its animation setting after this many ticks (~0.5 s), not on every one.
+        private const int AskEveryTicks = 32;
 
         // Same two-segment red->yellow->green blend as SlimProgressBar, and the
         // same 0.65 breakpoint (green as "done" should only take over near the
@@ -137,6 +144,8 @@ namespace ErikwnkWFUI.Controls
 
                 _value = limited;
                 Invalidate();
+                if (!_isIndeterminate)
+                    AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
             }
         }
 
@@ -154,6 +163,43 @@ namespace ErikwnkWFUI.Controls
 
                 _showPercentage = value;
                 Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Whether the arc turns (true by default). False stands it still where it is, e.g. while nothing is loading. It also stands
+        /// still while the control is disabled or while Windows has the animations switched off.
+        /// </summary>
+        public bool IsSpinning
+        {
+            get { return _isSpinning; }
+            set
+            {
+                if (value == _isSpinning)
+                    return;
+
+                _isSpinning = value;
+                UpdateRunning();
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// True (the default) = the load is unknown: an arc of fixed length turns. False = the load is known: the arc is as long as
+        /// the <see cref="Value"/> (from the top, clockwise) and stands still.
+        /// </summary>
+        public bool IsIndeterminate
+        {
+            get { return _isIndeterminate; }
+            set
+            {
+                if (value == _isIndeterminate)
+                    return;
+
+                _isIndeterminate = value;
+                UpdateRunning();
+                Invalidate();
+                AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
             }
         }
 
@@ -184,13 +230,27 @@ namespace ErikwnkWFUI.Controls
 
         private void OnTick(object sender, EventArgs e)
         {
+            if (++_ticksSinceAsked >= AskEveryTicks)
+            {
+                _ticksSinceAsked = 0;
+
+                if (!ThemedLabel.AnimationsEnabled())
+                {
+                    _timer.Stop();
+
+                    return;
+                }
+            }
+
             _angle = (_angle + DegreesPerTick) % 360f;
             Invalidate();
         }
 
         private void UpdateRunning()
         {
-            bool run = Visible && IsHandleCreated && !DesignMode;
+            bool run = Visible && IsHandleCreated && !DesignMode
+                && _isSpinning && _isIndeterminate && Enabled && ThemedLabel.AnimationsEnabled();
+            _ticksSinceAsked = 0;
             if (run && !_timer.Enabled)
                 _timer.Start();
             else if (!run && _timer.Enabled)
@@ -201,6 +261,13 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnVisibleChanged(e);
             UpdateRunning();
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            UpdateRunning();
+            Invalidate();
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -247,7 +314,11 @@ namespace ErikwnkWFUI.Controls
             {
                 arc.StartCap = LineCap.Round;
                 arc.EndCap = LineCap.Round;
-                g.DrawArc(arc, ring, _angle, _arcSweep);
+
+                if (_isIndeterminate)
+                    g.DrawArc(arc, ring, _angle, _arcSweep);
+                else if (_value > 0)
+                    g.DrawArc(arc, ring, -90f, _value * 3.6f);
             }
 
             if (_showPercentage)
@@ -329,6 +400,40 @@ namespace ErikwnkWFUI.Controls
                 }
                 font.Dispose();
                 size *= 0.85f;
+            }
+        }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new SpinnerAccessibleObject(this);
+        }
+
+        // A screen reader asks for the value of a progress bar: the percentage when the load is known, nothing when it is not.
+        private sealed class SpinnerAccessibleObject : ControlAccessibleObject
+        {
+            private readonly Spinner _spinner;
+
+            public SpinnerAccessibleObject(Spinner spinner)
+                : base(spinner)
+            {
+                _spinner = spinner;
+            }
+
+            public override AccessibleRole Role
+            {
+                get { return AccessibleRole.ProgressBar; }
+            }
+
+            public override string Name
+            {
+                get { return base.Name ?? (string.IsNullOrEmpty(_spinner.Text) ? null : _spinner.Text); }
+                set { base.Name = value; }
+            }
+
+            public override string Value
+            {
+                get { return _spinner._isIndeterminate ? null : ProgressBarPainting.GetPercentText(0, 100, _spinner._value); }
+                set { }
             }
         }
 
