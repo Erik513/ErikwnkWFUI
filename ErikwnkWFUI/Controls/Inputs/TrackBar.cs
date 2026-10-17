@@ -207,14 +207,51 @@ namespace ErikwnkWFUI.Controls
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
-            if (_dragging)
+            EndDrag();
+        }
+
+        // The drag also ends where no MouseUp comes: the mouse is taken from the control (a dialog, another window, Alt+Tab), the
+        // control is disabled or its window is gone. Otherwise it would go on following the mouse with no button pressed.
+        private void EndDrag()
+        {
+            if (!_dragging)
             {
-                _dragging = false;
-                if (DragEnded != null)
-                {
-                    DragEnded(this, EventArgs.Empty);
-                }
+                return;
             }
+
+            _dragging = false;
+            Invalidate();
+
+            if (DragEnded != null)
+            {
+                DragEnded(this, EventArgs.Empty);
+            }
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+            if (!Capture)
+            {
+                EndDrag();
+            }
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            if (!Enabled)
+            {
+                EndDrag();
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            // (No DragEnded: whoever listens may be on its way out as well.)
+            _dragging = false;
+            _hover = false;
+            base.OnHandleDestroyed(e);
         }
 
         protected override void OnMouseEnter(EventArgs e)
