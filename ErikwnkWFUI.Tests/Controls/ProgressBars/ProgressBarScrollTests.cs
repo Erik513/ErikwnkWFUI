@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -13,11 +14,11 @@ public class ProgressBarScrollTests : IDisposable
 {
     private const string LongText = "Connecting to the server, checking the certificate and loading the first part of the data";
 
-    private readonly Func<bool> _animations = ThemedLabel.AnimationsEnabled;
+    private readonly Func<bool> _animations = AnimationSettings.Enabled;
 
     public void Dispose()
     {
-        ThemedLabel.AnimationsEnabled = _animations;
+        AnimationSettings.Enabled = _animations;
         UIColors.ApplyTheme(UIThemes.Dark);
     }
 
@@ -149,7 +150,7 @@ public class ProgressBarScrollTests : IDisposable
     [MemberData(nameof(BothBars))]
     public void WhereWindowsSwitchesTheAnimationsOff_TheTextDoesNotMove_AndIsCut(string which)
     {
-        ThemedLabel.AnimationsEnabled = () => false;
+        AnimationSettings.Enabled = () => false;
         Control bar = Make(which, LabelScroll.Endless());
         using Form host = Host(bar, 300, 26);
         using Bitmap picture = Draw(bar);

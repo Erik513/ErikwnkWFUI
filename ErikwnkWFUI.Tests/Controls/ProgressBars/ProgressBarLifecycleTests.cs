@@ -15,11 +15,11 @@ public class ProgressBarLifecycleTests : IDisposable
 {
     private const string LongText = "Connecting to the server, checking the certificate and loading the first part of the data";
 
-    private readonly Func<bool> _animations = ErikwnkWFUI.Controls.ThemedLabel.AnimationsEnabled;
+    private readonly Func<bool> _animations = AnimationSettings.Enabled;
 
     public void Dispose()
     {
-        ErikwnkWFUI.Controls.ThemedLabel.AnimationsEnabled = _animations;
+        AnimationSettings.Enabled = _animations;
         UIColors.ApplyTheme(UIThemes.Dark);
     }
 
@@ -183,7 +183,7 @@ public class ProgressBarLifecycleTests : IDisposable
     public void WhetherWindowsLetsWindowsAnimate_IsNotAskedOnEveryPicture(string which)
     {
         int asked = 0;
-        ErikwnkWFUI.Controls.ThemedLabel.AnimationsEnabled = () =>
+        AnimationSettings.Enabled = () =>
         {
             asked++;
 
@@ -204,6 +204,58 @@ public class ProgressBarLifecycleTests : IDisposable
         }
 
         Assert.True(asked <= 2, "Windows was asked " + asked + " times for 60 pictures");
+    }
+
+    [Theory]
+    [MemberData(nameof(BothBars))]
+    public void ATextThatStoodStill_BecauseWindowsHadItsAnimationsOff_MovesWhenTheyAreSwitchedOn(string which)
+    {
+        AnimationSettings.Enabled = () => false;
+
+        Control bar = Make(which, LabelScroll.Endless(LabelScrollDirection.Left, LabelScrollSeparator.Dot, LabelScrollSpeed.Fast));
+        using Form host = Host(bar);
+        ProgressTextScroller scroller = Scroller(bar);
+        Assert.False(scroller.IsMoving);
+
+        // Nothing paints a bar that stands still: the system has to tell it (the bar is told to paint; a window far off the screen is
+        // not painted at all, so the picture is made here).
+        int paints = 0;
+        bar.Invalidated += (sender, e) => paints++;
+
+        AnimationSettings.Enabled = _animations;
+        AnimationSettings.Raise();
+        Pump(100);
+        Assert.True(paints > 0, "the bar is not told to paint again");
+        using (Bitmap picture = Draw(bar)) { }
+
+        Assert.True(scroller.IsMoving, "the text does not move although Windows lets windows animate again");
+
+        // And it stops again when they are switched off.
+        AnimationSettings.Enabled = () => false;
+        AnimationSettings.Raise();
+        Pump(100);
+        using (Bitmap picture = Draw(bar)) { }
+
+        Assert.False(scroller.IsMoving);
+    }
+
+    [Theory]
+    [MemberData(nameof(BothBars))]
+    public void ABarListensForTheSettingsOfWindows_OnlyWhileItHasATextThatMoves(string which)
+    {
+        int before = AnimationSettings.Count;
+        Control bar = Make(which, LabelScroll.None);
+        Assert.Equal(before, AnimationSettings.Count);
+
+        bar.GetType().GetProperty("TextScroll")!.SetValue(bar, LabelScroll.BackAndForth());
+        Assert.Equal(before + 1, AnimationSettings.Count);
+
+        bar.GetType().GetProperty("TextScroll")!.SetValue(bar, LabelScroll.None);
+        Assert.Equal(before, AnimationSettings.Count);
+
+        bar.GetType().GetProperty("TextScroll")!.SetValue(bar, LabelScroll.BackAndForth());
+        bar.Dispose();
+        Assert.Equal(before, AnimationSettings.Count);
     }
 
     // --- The tooltip helper ---

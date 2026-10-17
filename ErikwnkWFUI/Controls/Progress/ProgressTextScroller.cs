@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -43,11 +44,21 @@ namespace ErikwnkWFUI.Controls
         // The last answer about the animations of Windows, and when it was asked.
         private bool _animationsAllowed = true;
         private long _animationsAsked = long.MinValue;
+        private readonly ControlAnimationListener _settings;
 
         public ProgressTextScroller(Control owner)
         {
             _owner = owner;
             _timer.Tick += (sender, e) => Tick();
+            _settings = new ControlAnimationListener(owner, OnSettingChanged);
+        }
+
+        // Windows switched its animations on or off: the answer is asked again at the next picture, and that picture is made now (a
+        // text that stands still because they were off makes none by itself).
+        private void OnSettingChanged()
+        {
+            _animationsAsked = long.MinValue;
+            _owner.Invalidate();
         }
 
         /// <summary>How the text moves; <see cref="LabelScroll.None"/> (it does not) until it is set.</summary>
@@ -57,6 +68,13 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _scroll = value ?? LabelScroll.None;
+
+                // It hears of the animations of Windows only while it has a movement to make.
+                if (_scroll.Mode != LabelScrollMode.None)
+                    AnimationSettings.Add(_settings);
+                else
+                    AnimationSettings.Remove(_settings);
+
                 Restart();
                 _owner.Invalidate();
             }
@@ -169,7 +187,7 @@ namespace ErikwnkWFUI.Controls
 
             if (_animationsAsked == long.MinValue || now - _animationsAsked >= AnimationSettingMilliseconds)
             {
-                _animationsAllowed = ThemedLabel.AnimationsEnabled();
+                _animationsAllowed = AnimationSettings.Enabled();
                 _animationsAsked = now;
             }
 
@@ -268,6 +286,7 @@ namespace ErikwnkWFUI.Controls
 
         public void Dispose()
         {
+            AnimationSettings.Remove(_settings);
             _timer.Dispose();
             _clock.Stop();
         }

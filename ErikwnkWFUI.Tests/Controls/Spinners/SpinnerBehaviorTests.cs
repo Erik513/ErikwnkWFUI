@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -12,12 +13,12 @@ namespace ErikwnkWFUI.Tests.Controls.Spinners;
 [Collection(LanguageTestCollection.Name)]
 public class SpinnerBehaviorTests : IDisposable
 {
-    private readonly Func<bool> _animations = ThemedLabel.AnimationsEnabled;
+    private readonly Func<bool> _animations = AnimationSettings.Enabled;
     private readonly UILanguage _language = UIStrings.Language;
 
     public void Dispose()
     {
-        ThemedLabel.AnimationsEnabled = _animations;
+        AnimationSettings.Enabled = _animations;
         UIStrings.Language = _language;
     }
 
@@ -66,13 +67,13 @@ public class SpinnerBehaviorTests : IDisposable
     [Fact]
     public void WithTheAnimationsSwitchedOffInWindows_ItStandsStill_AndAKnownLoadNeverTurns()
     {
-        ThemedLabel.AnimationsEnabled = () => false;
+        AnimationSettings.Enabled = () => false;
 
         using Spinner off = UIStyles.Spinners.CreatePrimary();
         using Form host = Host(off);
         Assert.False(Runs(off));
 
-        ThemedLabel.AnimationsEnabled = _animations;
+        AnimationSettings.Enabled = _animations;
         using Spinner known = UIStyles.Spinners.CreateProgressPrimary();
         known.IsIndeterminate = false;
         using Form host2 = Host(known);

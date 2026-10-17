@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -151,11 +152,11 @@ public class LabelLanguageTests : IDisposable
     [Fact]
     public void TheAnimationSettingOfWindows_DoesNotDependOnTheLanguage()
     {
-        Func<bool> original = ThemedLabel.AnimationsEnabled;
+        Func<bool> original = AnimationSettings.Enabled;
 
         try
         {
-            ThemedLabel.AnimationsEnabled = () => false;
+            AnimationSettings.Enabled = () => false;
 
             foreach (UILanguage language in LanguageTestHelper.AllLanguages)
             {
@@ -169,7 +170,7 @@ public class LabelLanguageTests : IDisposable
         }
         finally
         {
-            ThemedLabel.AnimationsEnabled = original;
+            AnimationSettings.Enabled = original;
         }
     }
 }

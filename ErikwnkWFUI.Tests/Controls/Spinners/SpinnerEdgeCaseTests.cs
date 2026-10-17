@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -11,11 +12,11 @@ namespace ErikwnkWFUI.Tests.Controls.Spinners;
 [Collection(AccentColorTestCollection.Name)]
 public class SpinnerEdgeCaseTests : IDisposable
 {
-    private readonly Func<bool> _animations = ThemedLabel.AnimationsEnabled;
+    private readonly Func<bool> _animations = AnimationSettings.Enabled;
 
     public void Dispose()
     {
-        ThemedLabel.AnimationsEnabled = _animations;
+        AnimationSettings.Enabled = _animations;
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
@@ -121,19 +122,36 @@ public class SpinnerEdgeCaseTests : IDisposable
     }
 
     [Fact]
-    public void TheAnimationSettingOfWindows_IsAskedAgainWhileItTurns_AndAStillArcStaysStill()
+    public void WhenWindowsSwitchesTheAnimationsOffAndOn_TheSpinnerStopsAndTurnsAgain()
     {
         using Spinner spinner = UIStyles.Spinners.CreatePrimary();
         using Form host = Host(spinner, new Size(24, 24));
+        Assert.True(Turning(spinner));
 
-        for (int tick = 0; tick < 100; tick++)
-            spinner.InvokePrivate("OnTick", spinner, EventArgs.Empty);
-        Assert.True(TimerOf(spinner).Enabled);
-
-        ThemedLabel.AnimationsEnabled = () => false;
-        for (int tick = 0; tick < 32; tick++)
-            spinner.InvokePrivate("OnTick", spinner, EventArgs.Empty);
+        AnimationSettings.Enabled = () => false;
+        AnimationSettings.Raise();
+        Pump(100);
         Assert.False(TimerOf(spinner).Enabled, "still turns after Windows switched the animations off");
+
+        AnimationSettings.Enabled = _animations;
+        AnimationSettings.Raise();
+        Pump(100);
+        Assert.True(Turning(spinner), "does not turn again after Windows switched the animations on");
+    }
+
+    [Fact]
+    public void ASpinnerListensForTheSettingsOfWindows_OnlyWhileItHasAWindow()
+    {
+        int before = AnimationSettings.Count;
+        Spinner spinner = UIStyles.Spinners.CreatePrimary();
+        Assert.Equal(before, AnimationSettings.Count);
+
+        Form host = Host(spinner, new Size(24, 24));
+        Assert.Equal(before + 1, AnimationSettings.Count);
+
+        host.Dispose();
+        spinner.Dispose();
+        Assert.Equal(before, AnimationSettings.Count);
     }
 
     [Fact]

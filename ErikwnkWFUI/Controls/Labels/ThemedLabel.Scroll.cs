@@ -85,24 +85,12 @@ namespace ErikwnkWFUI.Controls
         private int _framePending;
         private volatile IntPtr _postHandle;
 
-        // Whether the label waits for LabelSettingsWatcher (it moves, or could), and how much room the screen
+        // Whether the label waits for AnimationSettings (it moves, or could), and how much room the screen
         // font puts before the text (measured with the text, see Measure).
         private bool _watching;
         private int _textInset;
 
         // ---- the seams of the tests ----
-
-        // Whether Windows lets windows animate (Settings, Accessibility, "Animation effects"). Replaceable so a test
-        // can switch it.
-        internal static Func<bool> AnimationsEnabled = ReadAnimationSetting;
-
-        private static bool ReadAnimationSetting()
-        {
-            int on = 1;
-
-            // Where Windows cannot say, the animation is allowed.
-            return !SystemParametersInfo(SPI_GETCLIENTAREAANIMATION, 0, ref on, 0) || on != 0;
-        }
 
         // The time of the moving text. Replaceable so a test can let time pass.
         internal static Func<long> Milliseconds = () => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
@@ -263,7 +251,7 @@ namespace ErikwnkWFUI.Controls
             if (wantsSettings && !_watching)
             {
                 _watching = true;
-                LabelSettingsWatcher.Add(this);
+                AnimationSettings.Add(this);
             }
             else if (!wantsSettings)
             {
@@ -363,7 +351,7 @@ namespace ErikwnkWFUI.Controls
         {
             return _scrollMode != LabelScrollMode.None
                 && Enabled
-                && AnimationsEnabled()
+                && AnimationSettings.Enabled()
                 && (!AutoSize || MovesWhenAutoSized())
                 && !string.IsNullOrWhiteSpace(Text)
                 && Text.IndexOfAny(LineBreaks) < 0;

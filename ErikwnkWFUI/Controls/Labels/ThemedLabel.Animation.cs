@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
     // The steps of the movement on the beat of LabelAnimationClock, the messages of the window, and what the label does when it is told something (text, size, visibility, handle, dispose).
-    public sealed partial class ThemedLabel
+    public sealed partial class ThemedLabel : IAnimationSettingsListener
     {
 
         // ---- the beat of the clock and the steps ----
@@ -23,11 +24,11 @@ namespace ErikwnkWFUI.Controls
                 return;
 
             _watching = false;
-            LabelSettingsWatcher.Remove(this);
+            AnimationSettings.Remove(this);
         }
 
-        // Called from the thread of the system events: tell the window that a setting of Windows has changed.
-        internal void NotifySettingChanged()
+        // Called from the thread of the system events (AnimationSettings): tell the window that a setting of Windows has changed.
+        void IAnimationSettingsListener.NotifySettingChanged()
         {
             IntPtr handle = _postHandle;
 

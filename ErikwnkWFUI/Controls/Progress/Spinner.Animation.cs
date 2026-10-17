@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -10,24 +11,25 @@ namespace ErikwnkWFUI.Controls
     {
         private const int TickMs = 16;              // ~60 fps
         private const int HiddenPollMs = 250;       // how often a spinner on a hidden window looks whether it is shown again
-        private const int AskEveryTicks = 32;       // Windows is asked again for its animation setting after this many ticks (~0.5 s)
         private const int LongestStepMs = 100;      // a step after a longer stall (a busy window) does not make the arc jump
 
         private readonly Timer _timer = new Timer { Interval = TickMs };
         private readonly Stopwatch _clock = new Stopwatch();
         private float _angle;
         private long _lastTickMs;
-        private int _ticksSinceAsked;
+        private ControlAnimationListener _settings;   // the animations of Windows were switched: the clock starts or stops
         private bool _isSpinning = true;
         private SpinnerSpeed _speed = SpinnerSpeed.Medium;
 
         private void InitializeClock()
         {
             _timer.Tick += OnTick;
+            _settings = new ControlAnimationListener(this, UpdateRunning);
         }
 
         private void DisposeClock()
         {
+            AnimationSettings.Remove(_settings);
             _timer.Stop();
             _clock.Stop();
             _timer.Tick -= OnTick;
@@ -83,18 +85,6 @@ namespace ErikwnkWFUI.Controls
             if (_timer.Interval != TickMs)
                 _timer.Interval = TickMs;
 
-            if (++_ticksSinceAsked >= AskEveryTicks)
-            {
-                _ticksSinceAsked = 0;
-
-                if (!ThemedLabel.AnimationsEnabled())
-                {
-                    StopClock();
-
-                    return;
-                }
-            }
-
             Advance(passed);
             Invalidate();
         }
@@ -125,8 +115,7 @@ namespace ErikwnkWFUI.Controls
         private void UpdateRunning()
         {
             bool run = Visible && IsHandleCreated && !DesignMode
-                && _isSpinning && _isIndeterminate && Enabled && ThemedLabel.AnimationsEnabled();
-            _ticksSinceAsked = 0;
+                && _isSpinning && _isIndeterminate && Enabled && AnimationSettings.Enabled();
 
             if (run && !_timer.Enabled)
                 StartClock();
@@ -150,11 +139,13 @@ namespace ErikwnkWFUI.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            AnimationSettings.Add(_settings);
             UpdateRunning();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            AnimationSettings.Remove(_settings);
             StopClock();
             base.OnHandleDestroyed(e);
         }
