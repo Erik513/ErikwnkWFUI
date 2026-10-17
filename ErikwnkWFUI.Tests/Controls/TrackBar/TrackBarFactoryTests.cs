@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -45,14 +46,14 @@ public class TrackBarFactoryTests : IDisposable
         Assert.Equal(0.4, volume.Value);
         Assert.Equal(1.0, volume.Maximum);
         Assert.True(volume.ShowValuePopup);
-        Assert.Equal("40%", volume.FormatValue(volume.Value));
+        Assert.Equal((0.4).ToString("P0", UIStrings.NumberCulture), volume.FormatValue(volume.Value));
 
         Assert.False(standard.ShowValuePopup);
         Assert.False(primary.ShowValuePopup);
 
         using TrackBar primaryVolume = UIStyles.TrackBars.CreatePrimary(0.4, showValuePopup: true, formatValue: TrackBar.FormatPercent);
         Assert.True(primaryVolume.ShowValuePopup);
-        Assert.Equal("40%", primaryVolume.FormatValue(primaryVolume.Value));
+        Assert.Equal((0.4).ToString("P0", UIStrings.NumberCulture), primaryVolume.FormatValue(primaryVolume.Value));
     }
 
     [Fact]

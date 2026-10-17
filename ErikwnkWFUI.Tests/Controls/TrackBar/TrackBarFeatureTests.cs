@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 using TrackBar = ErikwnkWFUI.Controls.TrackBar;
@@ -209,11 +210,11 @@ public class TrackBarFeatureTests
     {
         using TrackBar bar = new TrackBar { Minimum = -12, Maximum = 12 };
 
-        CultureInfo culture = CultureInfo.CurrentCulture;
+        CultureInfo culture = UIStrings.NumberCulture;
         Assert.Equal((3.5).ToString("0.##", culture), bar.FormatValue(3.5));
-        Assert.Equal("10%", TrackBar.FormatPercent(0.1));
-        Assert.Equal("100%", TrackBar.FormatPercent(1.0));
-        Assert.Equal("0%", TrackBar.FormatPercent(0));
+        Assert.Equal((0.1).ToString("P0", culture), TrackBar.FormatPercent(0.1));
+        Assert.Equal((1.0).ToString("P0", culture), TrackBar.FormatPercent(1.0));
+        Assert.Equal((0.0).ToString("P0", culture), TrackBar.FormatPercent(0));
 
         bar.FormatValue = value => value + " dB";
         Assert.Equal("3 dB", bar.FormatValue(3));
@@ -222,7 +223,7 @@ public class TrackBarFeatureTests
         Assert.Equal((3.5).ToString("0.##", culture), bar.FormatValue(3.5));
 
         bar.FormatValue = TrackBar.FormatPercent;
-        Assert.Equal("10%", bar.FormatValue(0.1));
+        Assert.Equal((0.1).ToString("P0", culture), bar.FormatValue(0.1));
     }
 
     [Fact]
@@ -238,7 +239,7 @@ public class TrackBarFeatureTests
         Assert.Equal("-6 dB", bar.AccessibilityObject.Value);
 
         using TrackBar volume = new TrackBar { Value = 0.42, FormatValue = TrackBar.FormatPercent };
-        Assert.Equal("42%", volume.AccessibilityObject.Value);
+        Assert.Equal((0.42).ToString("P0", UIStrings.NumberCulture), volume.AccessibilityObject.Value);
     }
 
     // ---- the popup switch ----

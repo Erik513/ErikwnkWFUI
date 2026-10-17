@@ -1,10 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Globalization;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -214,8 +214,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// How a value is written for the popup and for a screen reader. By default as a number with up to two decimals;
-        /// <see cref="FormatPercent"/> writes a value from 0 to 1 as whole percent. Null gives the default back.
+        /// How a value is written for the popup and for a screen reader. By default as a number with up to two decimals, the decimal
+        /// sign by the language of the library (not the culture of the computer); <see cref="FormatPercent"/> writes a value from 0 to 1 as
+        /// whole percent. Null gives the default back.
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -231,13 +232,16 @@ namespace ErikwnkWFUI.Controls
 
         private static string FormatNumber(double value)
         {
-            return value.ToString("0.##", CultureInfo.CurrentCulture);
+            return value.ToString("0.##", UIStrings.NumberCulture);
         }
 
-        /// <summary>A value from 0 to 1 as whole percent (0.1 is "10%"): for <see cref="FormatValue"/> of a volume or the like.</summary>
+        /// <summary>
+        /// A value from 0 to 1 as whole percent, written the way of the language of the library ("10%" in English, "10 %" in German): for
+        /// <see cref="FormatValue"/> of a volume or the like.
+        /// </summary>
         public static string FormatPercent(double value)
         {
-            return (int)Math.Round(value * 100) + "%";
+            return (Math.Round(value * 100) / 100.0).ToString("P0", UIStrings.NumberCulture);
         }
 
         /// <summary>

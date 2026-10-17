@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
@@ -380,9 +381,9 @@ public class TrackBarEdgeCaseTests
         using Form host = Show(bar);
         Assert.NotNull(bar.AccessibilityObject);
 
-        Assert.Equal(0.1.ToString("0.##"), bar.AccessibilityObject.Value);
+        Assert.Equal(0.1.ToString("0.##", UIStrings.NumberCulture), bar.AccessibilityObject.Value);
 
         bar.Value = 0.7;
-        Assert.Equal(0.7.ToString("0.##"), bar.AccessibilityObject.Value);
+        Assert.Equal(0.7.ToString("0.##", UIStrings.NumberCulture), bar.AccessibilityObject.Value);
     }
 }

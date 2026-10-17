@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Localization
@@ -30,6 +31,15 @@ namespace ErikwnkWFUI.Localization
         }
 
         public static event EventHandler LanguageChanged;
+
+        /// <summary>
+        /// The culture a number is written in, by the language of the library (not the one of the computer): the decimal sign and the
+        /// way a percentage is written ("42%" in English, "42 %" in German).
+        /// </summary>
+        public static CultureInfo NumberCulture
+        {
+            get { return CultureInfo.GetCultureInfo(_language == UILanguage.German ? "de-DE" : "en-US"); }
+        }
 
         private static readonly Dictionary<string, string> English = new Dictionary<string, string>
         {

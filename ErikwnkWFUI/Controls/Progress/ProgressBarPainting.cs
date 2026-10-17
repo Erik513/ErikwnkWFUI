@@ -110,9 +110,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public static string GetPercentText(int minimum, int maximum, int value)
         {
-            CultureInfo culture = CultureInfo.GetCultureInfo(UIStrings.Language == UILanguage.German ? "de-DE" : "en-US");
-
-            return (Math.Round(GetFraction(minimum, maximum, value) * 100) / 100.0).ToString("P0", culture);
+            return (Math.Round(GetFraction(minimum, maximum, value) * 100) / 100.0).ToString("P0", UIStrings.NumberCulture);
         }
 
         /// <summary>The text and the percentage in one: "Upload - 42%", or only one of them, or nothing.</summary>
