@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -33,8 +34,9 @@ namespace ErikwnkWFUI.Controls
         private Func<UIColorSet> _colorsSource;
         private Color? _fillColor;
 
-        private const int TrackHeight = 4;
-        private const int ThumbRadius = 6;
+        // The measures at 96 dpi; the screen of the control scales them (see TrackHeight, ThumbRadius, TrackInsetPixels).
+        private const int TrackHeight96 = 4;
+        private const int ThumbRadius96 = 6;
 
         // The range cannot be empty: the top is at least this far above the bottom.
         private const double MinimumRange = 0.0001;
@@ -44,7 +46,26 @@ namespace ErikwnkWFUI.Controls
         /// Anything meant to line up with the track (e.g. a progress bar next to
         /// the slider) should use the same left/right margin.
         /// </summary>
-        public const int TrackInset = ThumbRadius + 1;
+        public const int TrackInset = ThumbRadius96 + 1;
+
+        /// <summary>The same in the pixels of the screen this slider is on (more than <see cref="TrackInset"/> where the screen is scaled).</summary>
+        public int TrackInsetPixels
+        {
+            get { return ThumbRadius + 1; }
+        }
+
+        // Another dpi than the one of the screen, for the tests.
+        internal int DpiOverride;
+
+        private int TrackHeight
+        {
+            get { return Dpi.Scale(this, TrackHeight96, DpiOverride); }
+        }
+
+        private int ThumbRadius
+        {
+            get { return Dpi.Scale(this, ThumbRadius96, DpiOverride); }
+        }
 
         public TrackBar()
         {
@@ -120,6 +141,9 @@ namespace ErikwnkWFUI.Controls
             get { return _minimum; }
             set
             {
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                    return;
+
                 _minimum = Math.Min(value, _maximum - MinimumRange);
                 RangeChanged();
             }
@@ -132,6 +156,9 @@ namespace ErikwnkWFUI.Controls
             get { return _maximum; }
             set
             {
+                if (double.IsNaN(value) || double.IsInfinity(value))
+                    return;
+
                 _maximum = Math.Max(value, _minimum + MinimumRange);
                 RangeChanged();
             }
@@ -147,7 +174,7 @@ namespace ErikwnkWFUI.Controls
         /// <summary>How far an arrow key or a step of the mouse wheel moves the value. 0 or less (the default) is a twentieth of the range.</summary>
         public double SmallChange
         {
-            get { return _smallChange ?? (_maximum - _minimum) / 20.0; }
+            get { return _smallChange ?? _maximum / 20.0 - _minimum / 20.0; }
             set { _smallChange = value > 0 ? value : (double?)null; }
         }
 
@@ -164,7 +191,7 @@ namespace ErikwnkWFUI.Controls
         /// <summary>How far Page Up and Page Down move the value. 0 or less (the default) is a tenth of the range.</summary>
         public double LargeChange
         {
-            get { return _largeChange ?? (_maximum - _minimum) / 10.0; }
+            get { return _largeChange ?? _maximum / 10.0 - _minimum / 10.0; }
             set { _largeChange = value > 0 ? value : (double?)null; }
         }
 
@@ -236,6 +263,9 @@ namespace ErikwnkWFUI.Controls
             get { return _value; }
             set
             {
+                if (double.IsNaN(value))
+                    return;
+
                 double clamped = Clamp(value, _minimum, _maximum);
                 if (Math.Abs(clamped - _value) < double.Epsilon)
                 {
@@ -250,7 +280,8 @@ namespace ErikwnkWFUI.Controls
         // How far along the track the value is, from 0 to 1.
         private double Fraction
         {
-            get { return (_value - _minimum) / (_maximum - _minimum); }
+            // (Halved first: the width of a range from the lowest to the highest number would be too big for a double.)
+            get { return (_value / 2 - _minimum / 2) / (_maximum / 2 - _minimum / 2); }
         }
 
         /// <summary>Pixel x of the thumb centre - for positioning something (e.g. a value popup) over it.</summary>
@@ -271,6 +302,11 @@ namespace ErikwnkWFUI.Controls
 
         private void SetValueFromUser(double v)
         {
+            if (double.IsNaN(v))
+            {
+                return;
+            }
+
             double clamped = Clamp(v, _minimum, _maximum);
             if (Math.Abs(clamped - _value) < double.Epsilon)
             {
@@ -287,12 +323,12 @@ namespace ErikwnkWFUI.Controls
 
         private int TrackLeft
         {
-            get { return TrackInset; }
+            get { return TrackInsetPixels; }
         }
 
         private int TrackRight
         {
-            get { return Width - TrackInset; }
+            get { return Width - TrackInsetPixels; }
         }
 
         private int TrackWidth
@@ -302,20 +338,22 @@ namespace ErikwnkWFUI.Controls
 
         private double ValueFromX(int x)
         {
-            return _minimum + (x - TrackLeft) / (double)TrackWidth * (_maximum - _minimum);
+            double fraction = Clamp((x - TrackLeft) / (double)TrackWidth, 0, 1);
+
+            return _minimum * (1 - fraction) + _maximum * fraction;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            if (e.Button == MouseButtons.Left && Enabled)
+            if (e.Button == MouseButtons.Left && Enabled && !_dragging)
             {
                 Focus();
                 _dragging = true;
 
                 // A press on the thumb takes hold of it where it was pressed (the thumb does not jump to the mouse); a press on the
                 // track puts the thumb under the mouse and drags it from its middle.
-                _grabOffset = Math.Abs(e.X - ThumbCenterX) <= ThumbRadius + 2 ? e.X - ThumbCenterX : 0;
+                _grabOffset = Math.Abs(e.X - ThumbCenterX) <= ThumbRadius + Dpi.Scale(this, 2, DpiOverride) ? e.X - ThumbCenterX : 0;
 
                 if (DragStarted != null)
                 {
@@ -516,7 +554,7 @@ namespace ErikwnkWFUI.Controls
                 // The thumb grows slightly on hover, drag or keyboard focus -
                 // that is the only focus cue (a dotted rectangle around a slider
                 // looks out of place).
-                int r = _hover || _dragging || Focused ? ThumbRadius : ThumbRadius - 1;
+                int r = _hover || _dragging || Focused ? ThumbRadius : ThumbRadius - Math.Max(1, ThumbRadius / 6);
                 using (SolidBrush thumb = new SolidBrush(fillColor))
                 {
                     g.FillEllipse(thumb, thumbX - r, midY - r, r * 2, r * 2);
