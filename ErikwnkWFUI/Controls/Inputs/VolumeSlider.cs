@@ -7,15 +7,15 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A <see cref="SliderBar"/> preconfigured for a 0..1 volume value that
+    /// A <see cref="TrackBar"/> preconfigured for a 0..1 volume value that
     /// shows the current percentage in a small popup above the thumb while the
     /// user drags it, then briefly after they let go, click once, or change
     /// the value with an arrow key - and also for as long as the mouse simply
     /// hovers over it, disappearing the instant the mouse leaves. The
-    /// consuming app only wires <see cref="SliderBar.ValueChanged"/> and sets
-    /// <see cref="SliderBar.Value"/> - the readout is handled here.
+    /// consuming app only wires <see cref="TrackBar.ValueChanged"/> and sets
+    /// <see cref="TrackBar.Value"/> - the readout is handled here.
     /// </summary>
-    public class VolumeSlider : SliderBar
+    public class VolumeSlider : TrackBar
     {
         // How long the popup stays up once nothing is actively changing the
         // value anymore (drag released, single click, or the last arrow-key

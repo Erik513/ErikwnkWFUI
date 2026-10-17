@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -12,13 +13,14 @@ namespace ErikwnkWFUI.Controls
     /// fires on every change from the user (drag, track click, arrow keys); it
     /// does not fire when <see cref="Value"/> is set from code.
     /// </summary>
-    public class SliderBar : Control
+    public class TrackBar : Control
     {
         private double _value;
         private double _maximum = 1.0;
         private bool _dragging;
         private bool _hover;
-        private bool _accent;
+        private UIColorSet _colors;
+        private Func<UIColorSet> _colorsSource;
         private Color? _fillColor;
 
         private const int TrackHeight = 4;
@@ -31,7 +33,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public const int TrackInset = ThumbRadius + 1;
 
-        public SliderBar()
+        public TrackBar()
         {
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
@@ -64,17 +66,32 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// True = the filled part and thumb follow the live theme accent
-        /// (<see cref="UIStyles.Colors.Primary"/>); false (the default) = a fixed
-        /// neutral grey. Ignored when <see cref="FillColor"/> is set.
+        /// The colors of the filled part and the thumb: the <c>Hover</c> color of the set is the main color (Green is the usual
+        /// green, the primary set the accent). Null (the default) is a neutral gray; <c>UIStyles.TrackBars.CreatePrimary</c> makes
+        /// one that follows the accent. <see cref="FillColor"/> wins over it. Not written by the designer (a set is code).
         /// </summary>
-        public bool Accent
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIColorSet Colors
         {
-            get { return _accent; }
-            set { _accent = value; Invalidate(); }
+            get { return _colorsSource?.Invoke() ?? _colors; }
+            set
+            {
+                _colors = value;
+                _colorsSource = null;
+                Invalidate();
+            }
         }
 
-        /// <summary>An explicit fill/thumb colour, overriding <see cref="Accent"/>. Null (the default) uses the accent/grey rule.</summary>
+        // A set that is asked for again each time it is needed (the primary set, which follows the accent); a later Colors replaces it.
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+            Invalidate();
+        }
+
+        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/>. Null (the default) uses the color of the set, or the neutral gray.</summary>
         public Color? FillColor
         {
             get { return _fillColor; }
@@ -254,6 +271,19 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The color of the filled part and the thumb.
+        internal Color GetFillColor()
+        {
+            if (!Enabled)
+                return UIStyles.Colors.TextDisabled;
+            if (_fillColor.HasValue)
+                return _fillColor.Value;
+
+            UIColorSet colors = Colors;
+
+            return colors != null ? colors.Hover : UIColors.DisabledGray;
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -265,11 +295,7 @@ namespace ErikwnkWFUI.Controls
             int thumbX = TrackLeft + (int)Math.Round(frac * TrackWidth);
 
             Color trackColor = UIStyles.Colors.BorderMedium;
-            Color fillColor =
-                !Enabled ? UIStyles.Colors.TextDisabled :
-                _fillColor.HasValue ? _fillColor.Value :
-                _accent ? UIStyles.Colors.Primary :
-                UIColors.DisabledGray;
+            Color fillColor = GetFillColor();
 
             using (SolidBrush track = new SolidBrush(trackColor))
             {

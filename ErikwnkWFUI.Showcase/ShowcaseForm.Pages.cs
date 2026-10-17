@@ -80,10 +80,6 @@ namespace ErikwnkWFUI.Showcase
                  "Progress bars: Standard (gray, or any color of a color set), Primary (accent color), Green and Status (the color shifts from red over yellow to green with the value). Border and track: BorderStyle = None takes the border away, a BackColor of Transparent makes the track take the color of the panel (two separate properties). Style: Blocks, or Marquee for an action whose duration is not known. Text and percentage: both are off by default; the text stands on the left and the percentage on the right, TextAlign and PercentageAlign move them (at the same place they are one text). A text that is too long is cut with an ellipsis, or moves with TextScroll (as in a label). Either way a tooltip shows the whole text on hover (ShowFullTextToolTip). The slim progress bar is a thin strip for tight places (a status line under a text) with the same variants; its text stands above the strip (the default), or below, left or right of it (TextPosition). Rows with two bars name the variants from left to right. All bars run on one shared animation; the first row of each kind also shows the disabled look (right, at a fixed value).",
                  AddProgressBarsSection),
 
-                ("SliderBar",
-                 "A slider for a value between 0 and 1. Standard is neutral, Primary follows the accent color. Left enabled, right disabled.",
-                 AddSliderBarSection),
-
                 ("Spinner",
                  "Loading circles. The size and the stroke width are the first two parameters of every factory method - CreateStandard(40, 5) is a ring of 40 px with a stroke of 5 px (0 scales the stroke to the size); the colors come third: CreateStandard(40, 5, colors). Standard, Primary, Green and Status turn while the load is unknown, in the default size and in a larger, heavier one; the Progress variants (40 px) also write the Value in the centre as a plain number (no percent sign: there is no room for it; a screen reader is told '42%'), and the status color shifts from red over yellow to green. IsSpinning = false stands the arc still (HideWhenStopped hides the ring); a disabled spinner, or Windows with the animations switched off, stands still too. IsIndeterminate = false is for a known load: the arc grows to the Value. Text puts a message next to the ring (TextPosition), Speed turns the arc slower or faster. A ring smaller than about 30 px leaves the digits out as not legible.",
                  AddSpinnerSection),
@@ -107,6 +103,10 @@ namespace ErikwnkWFUI.Showcase
                 ("ToggleSwitches",
                  "An on/off switch in three sizes (Small, Standard, Large) with optional captions. The columns show on, off and disabled.",
                  AddToggleSwitchesSection),
+
+                ("TrackBar",
+                 "A slider for a value between 0 and 1 (WinForms calls it TrackBar). Standard is neutral gray, or any color of a color set (colors:), Primary follows the accent color. Left enabled, right disabled.",
+                 AddTrackBarSection),
 
                 ("VolumeSlider",
                  "A slider with a popup that shows the value while it is dragged; drag the enabled one to see it. Standard is neutral, Primary follows the accent color.",

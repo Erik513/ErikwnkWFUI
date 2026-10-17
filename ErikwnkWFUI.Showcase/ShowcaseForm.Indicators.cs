@@ -10,6 +10,7 @@ using MessageBox = ErikwnkWFUI.Forms.MessageBox;
 using MessageBoxButtons = ErikwnkWFUI.Forms.MessageBoxButtons;
 using MessageBoxIcon = ErikwnkWFUI.Forms.MessageBoxIcon;
 using ProgressBar = System.Windows.Forms.ProgressBar;
+using TrackBar = ErikwnkWFUI.Controls.TrackBar;
 
 namespace ErikwnkWFUI.Showcase
 {
@@ -300,21 +301,22 @@ namespace ErikwnkWFUI.Showcase
                 CreateSlimLongTextBar(SlimProgressBarTextPosition.Right, LabelScroll.Endless()));
         }
 
-        // Value/Enabled are set directly rather than via AnimateProgressBar -
-        // a slider represents a user-set position, not a moving load, so a
-        // fixed demo value (like the disabled ProgressBar rows use) is the
-        // right comparison here, not motion.
-        private void AddSliderBarSection(PropertyTable table)
+        // Value/Enabled are set directly rather than via AnimateProgressBar - a slider represents a user-set position, not a moving
+        // load, so a fixed demo value (like the disabled ProgressBar rows use) is the right comparison here, not motion. Left enabled,
+        // right disabled.
+        private void AddTrackBarSection(PropertyTable table)
         {
-            SliderBar slider = UIStyles.SliderBars.CreateStandard(0.4);
-            SliderBar sliderDisabled = UIStyles.SliderBars.CreateStandard(0.65);
-            sliderDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", slider, sliderDisabled);
+            AddTrackBarRow(table, "CreateStandard", UIStyles.TrackBars.CreateStandard(0.4), UIStyles.TrackBars.CreateStandard(0.65));
+            AddTrackBarRow(table, "CreatePrimary", UIStyles.TrackBars.CreatePrimary(0.4), UIStyles.TrackBars.CreatePrimary(0.65));
+            AddTrackBarRow(table, "CreateStandard(colors: Yellow)",
+                UIStyles.TrackBars.CreateStandard(0.4, 1.0, UIStyles.Colors.Sets.Yellow),
+                UIStyles.TrackBars.CreateStandard(0.65, 1.0, UIStyles.Colors.Sets.Yellow));
+        }
 
-            SliderBar sliderAccent = UIStyles.SliderBars.CreatePrimary(0.4);
-            SliderBar sliderAccentDisabled = UIStyles.SliderBars.CreatePrimary(0.65);
-            sliderAccentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", sliderAccent, sliderAccentDisabled);
+        private void AddTrackBarRow(PropertyTable table, string label, TrackBar enabled, TrackBar disabled)
+        {
+            disabled.Enabled = false;
+            AddTwoColumnRow(table, label, enabled, disabled);
         }
 
         // Like the progress bars: one row for each factory method, the variants of a property side by side in two columns (the label
@@ -416,7 +418,7 @@ namespace ErikwnkWFUI.Showcase
                 table.AddRow(label, left, rightColumn);
         }
 
-        // VolumeSlider adds its own drag-value popup on top of SliderBar -
+        // VolumeSlider adds its own drag-value popup on top of TrackBar -
         // drag the enabled one to see it. No separate "with popup" variant
         // to demo since that popup is the whole point of this control, not
         // an optional extra.
