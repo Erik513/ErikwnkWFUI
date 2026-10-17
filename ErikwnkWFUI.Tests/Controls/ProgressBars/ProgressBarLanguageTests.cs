@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;

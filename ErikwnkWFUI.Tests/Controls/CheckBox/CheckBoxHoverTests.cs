@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Controls.CheckBox;

@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;
 

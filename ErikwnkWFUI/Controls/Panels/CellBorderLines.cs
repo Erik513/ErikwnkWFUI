@@ -1,4 +1,4 @@
-namespace ErikwnkWFUI.Controls
+﻿namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// Which lines of a table with <c>CellBorderStyle.Single</c> are shown (<see cref="TableLayoutPanel.CellBorderLines"/>).

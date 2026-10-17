@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Tests.Infrastructure;

@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Styles;
+﻿using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Styles;

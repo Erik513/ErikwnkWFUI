@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Tests.Infrastructure;

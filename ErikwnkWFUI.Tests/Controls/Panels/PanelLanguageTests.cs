@@ -1,4 +1,4 @@
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ErikwnkCore.Updater;

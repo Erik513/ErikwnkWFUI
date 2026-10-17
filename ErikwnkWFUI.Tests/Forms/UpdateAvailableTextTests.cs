@@ -1,4 +1,4 @@
-using ErikwnkWFUI.Controls;
+﻿using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
