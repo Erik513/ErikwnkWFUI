@@ -302,15 +302,17 @@ namespace ErikwnkWFUI.Showcase
         }
 
         // Value/Enabled are set directly rather than via AnimateProgressBar - a slider represents a user-set position, not a moving
-        // load, so a fixed demo value (like the disabled ProgressBar rows use) is the right comparison here, not motion. Left enabled,
-        // right disabled.
+        // load, so a fixed demo value is the right comparison here, not motion. As on the progress bar page, the first row also shows
+        // the disabled look (right).
         private void AddTrackBarSection(PropertyTable table)
         {
-            AddTrackBarRow(table, "CreateStandard", UIStyles.TrackBars.CreateStandard(0.4), UIStyles.TrackBars.CreateStandard(0.65));
-            AddTrackBarRow(table, "CreatePrimary", UIStyles.TrackBars.CreatePrimary(0.4), UIStyles.TrackBars.CreatePrimary(0.65));
-            AddTrackBarRow(table, "CreateStandard(colors: Yellow)",
-                UIStyles.TrackBars.CreateStandard(0.4, 1.0, UIStyles.Colors.Sets.Yellow),
-                UIStyles.TrackBars.CreateStandard(0.65, 1.0, UIStyles.Colors.Sets.Yellow));
+            table.AddSection("Track bars");
+
+            TrackBar disabled = UIStyles.TrackBars.CreateStandard(0.65);
+            disabled.Enabled = false;
+            AddTwoColumnRow(table, "CreateStandard", UIStyles.TrackBars.CreateStandard(0.4), disabled);
+            AddTrackBarRow(table, "CreatePrimary", UIStyles.TrackBars.CreatePrimary(0.4));
+            AddTrackBarRow(table, "CreateStandard(colors: Yellow)", UIStyles.TrackBars.CreateStandard(0.4, 1.0, UIStyles.Colors.Sets.Yellow));
 
             table.AddSection("Track bars: range and value popup");
 
@@ -318,7 +320,7 @@ namespace ErikwnkWFUI.Showcase
             // drag it or use the keys to see it); the second one has its own range and writes its value with FormatValue. Both are
             // usable.
             TrackBar popup = UIStyles.TrackBars.CreatePrimary(40, 100, showValuePopup: true);
-            table.AddRow("ShowValuePopup", UIColumn.Percent(popup, TwoColumnPercent));
+            AddTrackBarRow(table, "ShowValuePopup = true", popup);
 
             TrackBar range = UIStyles.TrackBars.CreatePrimary(3, 12);
             range.Minimum = -12;
@@ -326,13 +328,12 @@ namespace ErikwnkWFUI.Showcase
             range.SmallChange = 1;
             range.LargeChange = 6;
             range.FormatValue = value => (value > 0 ? "+" : string.Empty) + Math.Round(value) + " dB";
-            table.AddRow("Minimum = -12, FormatValue", UIColumn.Percent(range, TwoColumnPercent));
+            AddTrackBarRow(table, "Minimum = -12, FormatValue", range);
         }
 
-        private void AddTrackBarRow(PropertyTable table, string label, TrackBar enabled, TrackBar disabled)
+        private void AddTrackBarRow(PropertyTable table, string label, TrackBar bar)
         {
-            disabled.Enabled = false;
-            AddTwoColumnRow(table, label, enabled, disabled);
+            table.AddRow(label, UIColumn.Percent(bar, TwoColumnPercent));
         }
 
         // Like the progress bars: one row for each factory method, the variants of a property side by side in two columns (the label
