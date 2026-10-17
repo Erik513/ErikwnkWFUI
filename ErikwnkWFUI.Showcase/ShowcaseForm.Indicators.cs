@@ -333,6 +333,10 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
 
+            AddSpinnerRow(table, "CreateStandard(colors: Yellow)",
+                UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.Sets.Yellow),
+                UIStyles.Spinners.CreateStandard(40, 5, UIStyles.Colors.Sets.Yellow));
+
             AddSpinnerRow(table, "CreateGreen",
                 UIStyles.Spinners.CreateGreen(),
                 UIStyles.Spinners.CreateGreen(40, 5));
@@ -357,7 +361,7 @@ namespace ErikwnkWFUI.Showcase
         private void AddAnimatedSpinnerRow(PropertyTable table, string label, Spinner spinner)
         {
             spinner.Anchor = AnchorStyles.Left;
-            AnimateProgressBar(v => spinner.Progress = v);
+            AnimateProgressBar(v => spinner.Value = v);
             table.AddRow(label, UIColumn.Percent(spinner, TwoColumnPercent));
         }
 

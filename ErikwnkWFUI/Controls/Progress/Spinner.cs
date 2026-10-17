@@ -10,11 +10,11 @@ namespace ErikwnkWFUI.Controls
     /// An indeterminate loading spinner: a coloured arc rotating over a faint
     /// full ring. Owner-drawn, theme-aware, transparent background. Only animates
     /// while it is actually visible, so an off-screen or hidden one costs
-    /// nothing. Set <see cref="Progress"/> to also show a load percentage in the
-    /// centre. Colour comes from <see cref="ArcColor"/> / <see cref="Accent"/> /
-    /// <see cref="UseStatusGradient"/> - the <see cref="UIStyles.Spinners"/>
-    /// factories preset these (green / accent, and with a percentage a
-    /// red→yellow→green status colour driven by <see cref="Progress"/>).
+    /// nothing. Set <see cref="ShowPercentage"/> to also show the <see cref="Value"/> (a load
+    /// percentage) in the centre. The colour comes from <see cref="ArcColor"/>, the main colour of
+    /// <see cref="Colors"/> (a colour set) or the neutral gray - or, with <see cref="UseStatusGradient"/>,
+    /// from the <see cref="Value"/>. The <see cref="UIStyles.Spinners"/> factories preset
+    /// these (a colour set, the accent, and with a percentage the red→yellow→green status colour).
     /// </summary>
     public class Spinner : Control
     {
@@ -25,10 +25,12 @@ namespace ErikwnkWFUI.Controls
         private float _angle;
         private int _thickness;
         private float _arcSweep = 300f;
-        private bool _accent;
-        private Color? _arcColor;
+        private UIColorSet _colors;
+        private Func<UIColorSet> _colorsSource;
+        private Color _arcColor = Color.Empty;
         private bool _useStatusGradient;
-        private int? _progress;
+        private int _value;
+        private bool _showPercentage;
 
         // Same two-segment red->yellow->green blend as SlimProgressBar, and the
         // same 0.65 breakpoint (green as "done" should only take over near the
@@ -69,22 +71,31 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// True = the arc follows the live theme accent
-        /// (<see cref="UIStyles.Colors.Primary"/>); false (the default) = a
-        /// fixed neutral grey. Ignored when <see cref="ArcColor"/> is set.
+        /// The colours of the arc: its main colour is the <c>Hover</c> colour of the set (Green is the usual green, the primary set the
+        /// accent). Null (the default) is the neutral gray; <c>UIStyles.Spinners.CreatePrimary</c> makes one that follows the accent.
+        /// <see cref="ArcColor"/> and <see cref="UseStatusGradient"/> win over it.
         /// </summary>
-        public bool Accent
+        public UIColorSet Colors
         {
-            get { return _accent; }
+            get { return _colorsSource?.Invoke() ?? _colors; }
             set
             {
-                _accent = value;
+                _colors = value;
+                _colorsSource = null;
                 Invalidate();
             }
         }
 
-        /// <summary>An explicit arc colour, overriding <see cref="Accent"/> and <see cref="UseStatusGradient"/>. Null (the default) uses those rules.</summary>
-        public Color? ArcColor
+        // A set that is asked for again each time (the primary set, which follows the accent).
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorsSource = source;
+            _colors = null;
+            Invalidate();
+        }
+
+        /// <summary>An explicit arc colour, overriding <see cref="Colors"/> and <see cref="UseStatusGradient"/>. <see cref="Color.Empty"/> (the default) uses those rules.</summary>
+        public Color ArcColor
         {
             get { return _arcColor; }
             set
@@ -96,9 +107,8 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// True = the arc colour communicates the load state - a solid colour
-        /// blended red (0) → yellow → green (100) by <see cref="Progress"/>.
-        /// Only meaningful together with a <see cref="Progress"/> value; ignored
-        /// when <see cref="ArcColor"/> is set. Mirrors
+        /// blended red (0) → yellow → green (100) by <see cref="Value"/>.
+        /// Ignored when <see cref="ArcColor"/> is set. Mirrors
         /// <see cref="Controls.SlimProgressBar.UseStatusGradient"/>.
         /// </summary>
         public bool UseStatusGradient
@@ -112,34 +122,43 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// An optional load percentage drawn (bold) in the centre of the ring
-        /// while the arc keeps spinning. Null (the default) shows nothing; a
-        /// value is clamped to 0..100. The digits auto-scale to the ring, so a
-        /// small spinner needs to be a few px larger than usual to stay legible.
+        /// The load, as a percentage from 0 to 100 (a value outside is limited to it; 0 by default). It colours the arc with
+        /// <see cref="UseStatusGradient"/> and is written in the centre with <see cref="ShowPercentage"/>.
         /// </summary>
-        public int? Progress
+        public int Value
         {
-            get { return _progress; }
+            get { return _value; }
             set
             {
-                if (value.HasValue)
-                {
-                    int v = value.Value;
-                    if (v < 0)
-                        v = 0;
-                    if (v > 100)
-                        v = 100;
-                    value = v;
-                }
-                if (_progress == value)
+                int limited = Math.Max(0, Math.Min(100, value));
+
+                if (limited == _value)
                     return;
-                _progress = value;
+
+                _value = limited;
+                Invalidate();
+            }
+        }
+
+        /// <summary>
+        /// Whether the <see cref="Value"/> is drawn (bold, as a number) in the centre of the ring while the arc keeps spinning (off by
+        /// default). The digits scale to the ring, so a small spinner needs to be a few px larger than usual to stay legible.
+        /// </summary>
+        public bool ShowPercentage
+        {
+            get { return _showPercentage; }
+            set
+            {
+                if (value == _showPercentage)
+                    return;
+
+                _showPercentage = value;
                 Invalidate();
             }
         }
 
         /// <summary>How much of the circle the moving arc covers, in degrees (10..350, default 300).</summary>
-        public float ArcSweep
+        internal float ArcSweep
         {
             get { return _arcSweep; }
             set
@@ -231,9 +250,9 @@ namespace ErikwnkWFUI.Controls
                 g.DrawArc(arc, ring, _angle, _arcSweep);
             }
 
-            if (_progress.HasValue)
+            if (_showPercentage)
             {
-                DrawProgressText(g, ring, t, _progress.Value.ToString());
+                DrawProgressText(g, ring, t, _value.ToString());
             }
         }
 
@@ -241,13 +260,14 @@ namespace ErikwnkWFUI.Controls
         {
             if (!Enabled)
                 return UIStyles.Colors.TextDisabled;
-            if (_arcColor.HasValue)
-                return _arcColor.Value;
+            if (!_arcColor.IsEmpty)
+                return _arcColor;
             if (_useStatusGradient)
-                return StatusColor((_progress ?? 0) / 100f);
-            if (_accent)
-                return UIStyles.Colors.Primary;
-            return UIColors.DisabledGray;
+                return StatusColor(_value / 100f);
+
+            UIColorSet colors = Colors;
+
+            return colors != null ? colors.Hover : UIColors.DisabledGray;
         }
 
         private static Color StatusColor(float fraction)
