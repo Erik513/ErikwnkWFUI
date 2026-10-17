@@ -11,12 +11,12 @@ namespace ErikwnkWFUI.Controls
     {
         private UIColorSet _colors;
         private Func<UIColorSet> _colorsSource;
-        private Color? _fillColor;
 
         /// <summary>
         /// The colors of the filled part and the thumb: the <c>Hover</c> color of the set is the main color (Green is the usual
         /// green, the primary set the accent). Null (the default) is a neutral gray; <c>UIStyles.TrackBars.CreatePrimary</c> makes
-        /// one that follows the accent. <see cref="FillColor"/> wins over it. Not written by the designer (a set is code).
+        /// one that follows the accent; <c>UIStyles.TrackBars.CreateStandard(colors: ...)</c> takes a color set or simply a color. The popup has the
+        /// same colors unless <see cref="ValuePopupColors"/> says otherwise. Not written by the designer (a set is code).
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -39,14 +39,6 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/> and kept as it is (not the disabled look). Null (the default) uses the color of the set, or the neutral gray.</summary>
-        [DefaultValue(null)]
-        public Color? FillColor
-        {
-            get { return _fillColor; }
-            set { _fillColor = value; Invalidate(); }
-        }
-
         // What the slider lies on: its own color if it has one, else the first color that is not see-through behind it.
         private Color GetSurface()
         {
@@ -67,9 +59,6 @@ namespace ErikwnkWFUI.Controls
 
             if (!Enabled)
                 return Stand(UIColors.GetDisabledText(surface), surface);
-
-            if (_fillColor.HasValue)
-                return _fillColor.Value;
 
             UIColorSet colors = Colors;
 

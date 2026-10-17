@@ -15,8 +15,8 @@ namespace ErikwnkWFUI.Controls
     /// the ends) and the mouse wheel work as on the original. <see cref="ValueChanged"/> fires on every change from the user (drag,
     /// click on the track, keys, wheel); unlike the original it does not fire when <see cref="Value"/> is set from code, so that code
     /// which keeps the slider up to date cannot start a loop. The filled part and the thumb are gray, the color of <see cref="Colors"/>
-    /// (a color set; <c>UIStyles.TrackBars.CreatePrimary</c> follows the accent) or <see cref="FillColor"/>; except for the last, they are
-    /// moved as far as needed to stand out from what the slider lies on, in both themes. The popup has the colors of the set too. <see cref="ShowValuePopup"/>
+    /// (a color set or simply a color; <c>UIStyles.TrackBars.CreatePrimary</c> follows the accent), moved as far as needed to stand
+    /// out from what the slider lies on, in both themes. The popup has the same colors unless <see cref="ValuePopupColors"/> says otherwise. <see cref="ShowValuePopup"/>
     /// shows the value above the thumb, written as <see cref="FormatValue"/> says (<see cref="FormatPercent"/> for a volume from 0 to 1);
     /// a screen reader is told it is a slider and its value. The measures are scaled with the screen. Not offered: tick marks, the
     /// vertical orientation, <c>AutoSize</c>; right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).

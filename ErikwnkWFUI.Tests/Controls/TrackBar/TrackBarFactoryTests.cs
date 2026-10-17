@@ -93,7 +93,7 @@ public class TrackBarFactoryTests : IDisposable
     }
 
     [Fact]
-    public void TheColorsSetOneAfterTheOther_EachReplacesTheLast_AndAColorByHandWinsOverAll()
+    public void TheColorsSetOneAfterTheOther_EachReplacesTheLast()
     {
         UIColorSet teal = UIStyles.Colors.Sets.Teal;
         using TrackBar bar = UIStyles.TrackBars.CreatePrimary(0.5);
@@ -110,18 +110,12 @@ public class TrackBarFactoryTests : IDisposable
         bar.FollowColors(() => UIColors.PrimarySet);
         Assert.Equal(Stood(bar, UIColors.PrimarySet.Hover), bar.GetFillColor());
 
-        bar.FillColor = Color.Purple;
-        Assert.Equal(Color.Purple, bar.GetFillColor());
-
-        bar.FillColor = null;
-        Assert.Equal(Stood(bar, UIColors.PrimarySet.Hover), bar.GetFillColor());
     }
 
     [Fact]
     public void ADisabledTrackBar_HasTheDisabledColor_WhateverTheSet()
     {
         using TrackBar bar = UIStyles.TrackBars.CreateStandard(0.5, 1.0, UIStyles.Colors.Sets.Teal);
-        bar.FillColor = Color.Purple;
         bar.Enabled = false;
 
         Assert.Equal(Stood(bar, UIColors.GetDisabledText(ErikwnkWFUI.Helpers.SurfaceColor.Of(bar))), bar.GetFillColor());

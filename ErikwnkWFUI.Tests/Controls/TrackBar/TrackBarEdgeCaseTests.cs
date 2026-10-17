@@ -271,13 +271,14 @@ public class TrackBarEdgeCaseTests
     [Fact]
     public void RightToLeft_IsIgnored_TheMinimumStaysOnTheLeft()
     {
-        using TrackBar bar = new TrackBar { Value = 0.3, RightToLeft = RightToLeft.Yes };
-        bar.FillColor = Color.Red;
+        using TrackBar bar = UIStyles.TrackBars.CreatePrimary(0.3);
+        bar.RightToLeft = RightToLeft.Yes;
         using Form host = Show(bar);
         using Bitmap picture = Draw(bar);
 
-        Assert.Equal(Color.Red.ToArgb(), picture.GetPixel(20, 10).ToArgb());
-        Assert.NotEqual(Color.Red.ToArgb(), picture.GetPixel(100, 10).ToArgb());
+        Color fill = bar.GetFillColor();
+        Assert.Equal(fill.ToArgb(), picture.GetPixel(20, 10).ToArgb());
+        Assert.NotEqual(fill.ToArgb(), picture.GetPixel(100, 10).ToArgb());
     }
 
     // ---- the keys ----
@@ -420,5 +421,79 @@ public class TrackBarEdgeCaseTests
 
         bar.InvokePrivate("OnKeyUp", new KeyEventArgs(Keys.Right));
         Assert.NotNull(bar.GetPrivateField<InfoPopupForm>("_popup"));
+    }
+
+    private static string ShownText(TrackBar bar)
+    {
+        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupSection[] sections = popup.GetPrivateField<InfoPopupSection[]>("_sections")!;
+
+        return sections.Length == 0 ? "" : sections[0].Text;
+    }
+
+    [Fact]
+    public void AFastSlideToAnEnd_LeavesThePopupAtTheEnd_NotAtTheLastValueThatWasShown()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
+            bar.FormatValue = value => Math.Round(value).ToString();
+            using Form host = Show(bar);
+
+            // Down on the thumb, then fast to the right end: the moves come faster than the popup is updated (every 40 ms at most),
+            // and the last one of them (at the end) is held back - no move comes after it, the mouse stays where it is.
+            bar.InvokePrivate("OnMouseDown", Mouse(7));
+            bar.InvokePrivate("OnMouseMove", Mouse(40));
+            bar.InvokePrivate("OnMouseMove", Mouse(90));
+            bar.InvokePrivate("OnMouseMove", Mouse(113));
+
+            Assert.Equal(100, bar.Value);
+
+            TestPictures.Pump(200);
+
+            Assert.True(bar.IsDragging);
+            Assert.Equal("100", ShownText(bar));
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
+
+    [Fact]
+    public void ThePopupThatWasHeldBack_IsNotShownForASliderThatIsDisabledOrGoneInTheMeantime()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true, SmallChange = 10 };
+            bar.FormatValue = value => Math.Round(value).ToString();
+            Form host = Show(bar);
+
+            Key(bar, Keys.Right);
+            Key(bar, Keys.Right);               // held back
+            bar.Enabled = false;                // the popup goes with it
+            TestPictures.Pump(200);
+
+            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            Assert.False(popup.Visible, "the held-back update showed the popup of a disabled slider");
+
+            bar.Enabled = true;
+            Key(bar, Keys.Right);
+            Key(bar, Keys.Right);               // held back again, and the slider is disposed before it is made
+            bar.Dispose();
+
+            Assert.Null(Record.Exception(() => TestPictures.Pump(200)));
+            host.Dispose();
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
     }
 }

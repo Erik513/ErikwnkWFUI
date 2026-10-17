@@ -26,6 +26,7 @@ namespace ErikwnkWFUI.Controls
         private Timer _hideTimer;
 
         private bool _showValuePopup;
+        private UIColorSet _popupColors;
 
         /// <summary>
         /// Whether the value is shown in a small popup above the thumb: while the user drags it, then briefly after they let go, click
@@ -52,6 +53,25 @@ namespace ErikwnkWFUI.Controls
             }
         }
         private bool _popupWidthStale = true;
+
+        /// <summary>
+        /// The colors of the popup (its background and its text): a color set, or simply a color. Null (the default) gives it the colors
+        /// of the slider - gray for <c>CreateStandard</c>, the accent for <c>CreatePrimary</c>, the set of <see cref="Colors"/> - and it
+        /// follows them. Not written by the designer (a set is code).
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIColorSet ValuePopupColors
+        {
+            get { return _popupColors; }
+            set
+            {
+                _popupColors = value;
+
+                if (_popup != null && !_popup.IsDisposed)
+                    _popup.Invalidate();
+            }
+        }
 
         private void InitializePopup()
         {
@@ -145,9 +165,10 @@ namespace ErikwnkWFUI.Controls
             {
                 if (_popup == null || _popup.IsDisposed)
                 {
-                    // The colors of the slider (gray, a set, the accent), asked for again each time: it follows them.
+                    // Its own colors if it has some, else the colors of the slider (gray, a set, the accent), asked for again each time: it
+                    // follows them.
                     _popup = UIStyles.InfoPopups.CreateStandard();
-                    _popup.FollowColors(() => Colors);
+                    _popup.FollowColors(() => _popupColors ?? Colors);
 
                     _popupWidthStale = true;
                 }
@@ -208,8 +229,20 @@ namespace ErikwnkWFUI.Controls
 
             int now = Environment.TickCount;
             bool alreadyVisible = _popup != null && !_popup.IsDisposed && _popup.Visible;
-            if (!force && alreadyVisible && unchecked(now - _lastPopupUpdateTickCount) < MinPopupUpdateIntervalMs)
+            int sinceLast = unchecked(now - _lastPopupUpdateTickCount);
+
+            if (!force && alreadyVisible && sinceLast < MinPopupUpdateIntervalMs)
+            {
+                // Not shown now, but not forgotten: when the user stops (a fast slide to an end, the mouse held there), nothing else
+                // would come, and the popup would stay at the value of the last update ("95" with the thumb at 100). The last value is
+                // shown when the pause is over.
+                ScheduleTrailingUpdate(MinPopupUpdateIntervalMs - sinceLast);
+
                 return;
+            }
+
+            if (_trailingTimer != null)
+                _trailingTimer.Stop();
 
             _lastPopupUpdateTickCount = now;
 
@@ -248,8 +281,36 @@ namespace ErikwnkWFUI.Controls
             }));
         }
 
+        // The update of the popup that was held back by the throttle, made when the pause is over (with the value of that moment).
+        private Timer _trailingTimer;
+
+        private void ScheduleTrailingUpdate(int milliseconds)
+        {
+            if (_trailingTimer == null)
+            {
+                _trailingTimer = new Timer();
+                _trailingTimer.Tick += delegate
+                {
+                    _trailingTimer.Stop();
+
+                    if (_showValuePopup && !IsDisposed)
+                        ShowPopup(force: true);
+                };
+            }
+
+            // The first one that is waiting stays: later values only change what it will show.
+            if (_trailingTimer.Enabled)
+                return;
+
+            _trailingTimer.Interval = Math.Max(1, milliseconds);
+            _trailingTimer.Start();
+        }
+
         private void HidePopup()
         {
+            if (_trailingTimer != null)
+                _trailingTimer.Stop();
+
             if (_popup == null || _popup.IsDisposed)
                 return;
 
@@ -355,6 +416,13 @@ namespace ErikwnkWFUI.Controls
 
         private void DisposePopup()
         {
+            if (_trailingTimer != null)
+            {
+                _trailingTimer.Stop();
+                _trailingTimer.Dispose();
+                _trailingTimer = null;
+            }
+
             if (_hideTimer != null)
             {
                 _hideTimer.Stop();

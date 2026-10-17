@@ -89,17 +89,17 @@ public class TrackBarColorTests : IDisposable
     }
 
     [Fact]
-    public void AColorByHand_IsKeptAsItIs_AndALazyColorIsMovedAwayFromTheSurface()
+    public void ALazyColor_IsMovedAwayFromTheSurface_AndASingleColorIsTakenAsTheMainColor()
     {
         using Panel panel = new Panel { BackColor = Color.White };
-        using TrackBar bar = UIStyles.TrackBars.CreateStandard(0.5, 1.0, UIStyles.Colors.Sets.Yellow);
-        panel.Controls.Add(bar);
+        using TrackBar yellow = UIStyles.TrackBars.CreateStandard(0.5, 1.0, UIStyles.Colors.Sets.Yellow);
+        using TrackBar single = UIStyles.TrackBars.CreateStandard(0.5, 1.0, Color.MediumPurple);
+        panel.Controls.Add(yellow);
+        panel.Controls.Add(single);
 
-        Color raw = UIStyles.Colors.Sets.Yellow.Hover;
-        Assert.NotEqual(raw, bar.GetFillColor());   // the yellow of the set is too pale on white
-
-        bar.FillColor = Color.FromArgb(250, 250, 250);
-        Assert.Equal(Color.FromArgb(250, 250, 250), bar.GetFillColor());
+        Assert.NotEqual(UIStyles.Colors.Sets.Yellow.Hover, yellow.GetFillColor());   // the yellow of the set is too pale on white
+        Assert.Equal(Color.MediumPurple, single.Colors.Hover);
+        Assert.True(ColorContrastHelper.GetContrastRatio(single.GetFillColor(), Color.White) >= 2.5);
     }
 
     [Fact]
@@ -209,6 +209,88 @@ public class TrackBarColorTests : IDisposable
 
             bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
             Assert.False(popup.Visible, "a disabled slider shows its popup");
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
+
+    [Fact]
+    public void ThePopup_HasTheStandardTransparencyOfAnInfoPopup()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            using InfoPopupForm standard = UIStyles.InfoPopups.CreateStandard();
+            using TrackBar bar = UIStyles.TrackBars.CreatePrimary(0.5, 1.0, showValuePopup: true);
+            using Form host = OffscreenForm.Create(new Size(100, 20), Color.Black);
+            bar.SetBounds(0, 0, 100, 20);
+            host.Controls.Add(bar);
+            host.Show();
+            Application.DoEvents();
+            bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+
+            Assert.True(popup.Visible);
+            Assert.Equal(standard.Transparency, popup.Transparency);
+            Assert.Equal(standard.Opacity, popup.Opacity);
+            Assert.True(popup.Opacity < 1.0, "the popup is not see-through at all");
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
+
+    [Fact]
+    public void ThePopup_HasItsOwnColorsWhenGiven_AndOtherwiseThoseOfTheSlider()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            UIColorSet green = UIStyles.Colors.Sets.Green;
+            using TrackBar standard = UIStyles.TrackBars.CreateStandard(0.5, 1.0, showValuePopup: true);
+            using TrackBar primary = UIStyles.TrackBars.CreatePrimary(0.5, 1.0, showValuePopup: true);
+            using TrackBar own = UIStyles.TrackBars.CreatePrimary(0.5, 1.0, showValuePopup: true, popupColors: green);
+            using TrackBar single = UIStyles.TrackBars.CreateStandard(0.5, 1.0, showValuePopup: true, popupColors: Color.Purple);
+
+            InfoPopupForm Popup(TrackBar bar)
+            {
+                using Form host = OffscreenForm.Create(new Size(100, 20), Color.Black);
+                bar.SetBounds(0, 0, 100, 20);
+                host.Controls.Add(bar);
+                host.Show();
+                Application.DoEvents();
+                bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+                host.Controls.Remove(bar);
+
+                return bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            }
+
+            // Standard is gray (no set), Primary the accent: the popup is, too.
+            Assert.Null(standard.ValuePopupColors);
+            Assert.Null(Popup(standard).Colors);
+            Assert.Equal(UIColors.PrimarySet.Hover, Popup(primary).Colors!.Hover);
+
+            // Colors of its own win, whatever the slider has - a set, or simply a color.
+            Assert.Same(green, Popup(own).Colors);
+            Assert.Equal(Color.Purple, Popup(single).Colors!.Hover);
+
+            // Taken back, the popup has the colors of the slider again; given later, it has them at once.
+            own.ValuePopupColors = null;
+            Assert.Equal(UIColors.PrimarySet.Hover, own.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
+
+            standard.ValuePopupColors = UIStyles.Colors.Sets.Teal;
+            Assert.Equal(UIStyles.Colors.Sets.Teal.Hover, standard.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
+
+            // The accent changes: the popup that follows the slider follows the accent.
+            UIColors.SetAccent(Color.OrangeRed);
+            Assert.Equal(UIColors.PrimarySet.Hover, primary.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
         }
         finally
         {
