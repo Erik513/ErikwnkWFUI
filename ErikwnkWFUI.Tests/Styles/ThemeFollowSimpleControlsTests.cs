@@ -154,7 +154,7 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("Spinners.Primary", () => UIStyles.Spinners.CreatePrimary(), false),
             ("TrackBars.Standard", () => UIStyles.TrackBars.CreateStandard(0.4), true),
             ("TrackBars.Primary", () => UIStyles.TrackBars.CreatePrimary(0.4), true),
-            ("VolumeSliders.Primary", () => UIStyles.VolumeSliders.CreatePrimary(0.4), true),
+            ("TrackBars.PrimaryWithPopup", () => UIStyles.TrackBars.CreatePrimary(0.4, 1.0, showValuePopup: true, formatValue: ErikwnkWFUI.Controls.TrackBar.FormatPercent), true),
             ("ToggleSwitches.Standard", () => UIStyles.ToggleSwitches.CreateStandard(true), true),
             ("ToggleSwitches.Unchecked", () => UIStyles.ToggleSwitches.CreateStandard(false), true),
         })

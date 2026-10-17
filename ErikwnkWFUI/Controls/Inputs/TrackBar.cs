@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -8,15 +9,24 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A slim, theme-matching horizontal slider (WinForms has none of its own).
-    /// Value runs from 0 to <see cref="Maximum"/>. <see cref="ValueChanged"/>
-    /// fires on every change from the user (drag, track click, arrow keys); it
-    /// does not fire when <see cref="Value"/> is set from code.
+    /// A slim, theme-matching horizontal slider (the library's version of the WinForms <c>TrackBar</c>). The <see cref="Value"/> runs
+    /// from <see cref="Minimum"/> (0 by default) to <see cref="Maximum"/> (1 by default) and is a fraction, not a whole number.
+    /// The keys (arrows by <see cref="SmallChange"/>, Page Up and Down by <see cref="LargeChange"/>, Home and End to the ends) and the
+    /// mouse wheel work as on the original. <see cref="ValueChanged"/> fires on every change from the user (drag, click on the track,
+    /// keys, wheel); unlike the original it does not fire when <see cref="Value"/> is set from code, so that code which keeps the
+    /// slider up to date cannot start a loop. <see cref="ShowValuePopup"/> shows the value above the thumb, written as
+    /// <see cref="FormatValue"/> says (<see cref="FormatPercent"/> for a volume from 0 to 1). Not offered: tick marks, the vertical
+    /// orientation, <c>AutoSize</c>; right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
     /// </summary>
-    public class TrackBar : Control
+    public partial class TrackBar : Control
     {
         private double _value;
+        private double _minimum;
         private double _maximum = 1.0;
+        private double? _smallChange;
+        private double? _largeChange;
+        private Func<double, string> _formatValue;
+        private int _grabOffset;
         private bool _dragging;
         private bool _hover;
         private UIColorSet _colors;
@@ -25,6 +35,9 @@ namespace ErikwnkWFUI.Controls
 
         private const int TrackHeight = 4;
         private const int ThumbRadius = 6;
+
+        // The range cannot be empty: the top is at least this far above the bottom.
+        private const double MinimumRange = 0.0001;
 
         /// <summary>
         /// Pixels the track is inset from each edge (room for the thumb).
@@ -48,6 +61,8 @@ namespace ErikwnkWFUI.Controls
             Height = 20;
             TabStop = true;
             BackColor = Color.Transparent;
+
+            InitializePopup();
         }
 
         /// <summary>Raised when the user changes the value (not when code sets it).</summary>
@@ -98,17 +113,120 @@ namespace ErikwnkWFUI.Controls
             set { _fillColor = value; Invalidate(); }
         }
 
+        /// <summary>The bottom of the range (0 by default). A <see cref="Value"/> below it is raised to it.</summary>
+        [DefaultValue(0.0)]
+        public double Minimum
+        {
+            get { return _minimum; }
+            set
+            {
+                _minimum = Math.Min(value, _maximum - MinimumRange);
+                RangeChanged();
+            }
+        }
+
+        /// <summary>The top of the range (1 by default); it is always above <see cref="Minimum"/>. A <see cref="Value"/> above it is lowered to it.</summary>
+        [DefaultValue(1.0)]
         public double Maximum
         {
             get { return _maximum; }
             set
             {
-                _maximum = Math.Max(0.0001, value);
-                if (_value > _maximum)
+                _maximum = Math.Max(value, _minimum + MinimumRange);
+                RangeChanged();
+            }
+        }
+
+        private void RangeChanged()
+        {
+            _value = Clamp(_value, _minimum, _maximum);
+            _popupWidthStale = true;
+            Invalidate();
+        }
+
+        /// <summary>How far an arrow key or a step of the mouse wheel moves the value. 0 or less (the default) is a twentieth of the range.</summary>
+        public double SmallChange
+        {
+            get { return _smallChange ?? (_maximum - _minimum) / 20.0; }
+            set { _smallChange = value > 0 ? value : (double?)null; }
+        }
+
+        private bool ShouldSerializeSmallChange()
+        {
+            return _smallChange.HasValue;
+        }
+
+        private void ResetSmallChange()
+        {
+            _smallChange = null;
+        }
+
+        /// <summary>How far Page Up and Page Down move the value. 0 or less (the default) is a tenth of the range.</summary>
+        public double LargeChange
+        {
+            get { return _largeChange ?? (_maximum - _minimum) / 10.0; }
+            set { _largeChange = value > 0 ? value : (double?)null; }
+        }
+
+        private bool ShouldSerializeLargeChange()
+        {
+            return _largeChange.HasValue;
+        }
+
+        private void ResetLargeChange()
+        {
+            _largeChange = null;
+        }
+
+        /// <summary>
+        /// How a value is written for the popup and for a screen reader. By default as a number with up to two decimals;
+        /// <see cref="FormatPercent"/> writes a value from 0 to 1 as whole percent. Null gives the default back.
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Func<double, string> FormatValue
+        {
+            get { return _formatValue ?? FormatNumber; }
+            set
+            {
+                _formatValue = value;
+                _popupWidthStale = true;
+            }
+        }
+
+        private static string FormatNumber(double value)
+        {
+            return value.ToString("0.##", CultureInfo.CurrentCulture);
+        }
+
+        /// <summary>A value from 0 to 1 as whole percent (0.1 is "10%"): for <see cref="FormatValue"/> of a volume or the like.</summary>
+        public static string FormatPercent(double value)
+        {
+            return (int)Math.Round(value * 100) + "%";
+        }
+
+        /// <summary>
+        /// Whether the value is shown in a small popup above the thumb: while the user drags it, then briefly after they let go, click
+        /// once or use a key or the wheel, and for as long as the mouse hovers over the slider. Off by default.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool ShowValuePopup
+        {
+            get { return _showValuePopup; }
+            set
+            {
+                if (value == _showValuePopup)
+                    return;
+
+                _showValuePopup = value;
+
+                if (!value)
                 {
-                    _value = _maximum;
+                    if (_hideTimer != null)
+                        _hideTimer.Stop();
+
+                    HidePopup();
                 }
-                Invalidate();
             }
         }
 
@@ -118,14 +236,21 @@ namespace ErikwnkWFUI.Controls
             get { return _value; }
             set
             {
-                double clamped = Clamp(value, 0, _maximum);
+                double clamped = Clamp(value, _minimum, _maximum);
                 if (Math.Abs(clamped - _value) < double.Epsilon)
                 {
                     return;
                 }
                 _value = clamped;
                 Invalidate();
+                AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
             }
+        }
+
+        // How far along the track the value is, from 0 to 1.
+        private double Fraction
+        {
+            get { return (_value - _minimum) / (_maximum - _minimum); }
         }
 
         /// <summary>Pixel x of the thumb centre - for positioning something (e.g. a value popup) over it.</summary>
@@ -133,8 +258,7 @@ namespace ErikwnkWFUI.Controls
         {
             get
             {
-                double frac = _maximum <= 0 ? 0 : _value / _maximum;
-                return TrackLeft + (int)Math.Round(frac * TrackWidth);
+                return TrackLeft + (int)Math.Round(Fraction * TrackWidth);
             }
         }
 
@@ -147,13 +271,14 @@ namespace ErikwnkWFUI.Controls
 
         private void SetValueFromUser(double v)
         {
-            double clamped = Clamp(v, 0, _maximum);
+            double clamped = Clamp(v, _minimum, _maximum);
             if (Math.Abs(clamped - _value) < double.Epsilon)
             {
                 return;
             }
             _value = clamped;
             Invalidate();
+            AccessibilityNotifyClients(AccessibleEvents.ValueChange, -1);
             if (ValueChanged != null)
             {
                 ValueChanged(this, EventArgs.Empty);
@@ -177,7 +302,7 @@ namespace ErikwnkWFUI.Controls
 
         private double ValueFromX(int x)
         {
-            return (x - TrackLeft) / (double)TrackWidth * _maximum;
+            return _minimum + (x - TrackLeft) / (double)TrackWidth * (_maximum - _minimum);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -187,11 +312,16 @@ namespace ErikwnkWFUI.Controls
             {
                 Focus();
                 _dragging = true;
+
+                // A press on the thumb takes hold of it where it was pressed (the thumb does not jump to the mouse); a press on the
+                // track puts the thumb under the mouse and drags it from its middle.
+                _grabOffset = Math.Abs(e.X - ThumbCenterX) <= ThumbRadius + 2 ? e.X - ThumbCenterX : 0;
+
                 if (DragStarted != null)
                 {
                     DragStarted(this, EventArgs.Empty);
                 }
-                SetValueFromUser(ValueFromX(e.X));
+                SetValueFromUser(ValueFromX(e.X - _grabOffset));
             }
         }
 
@@ -200,7 +330,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseMove(e);
             if (_dragging)
             {
-                SetValueFromUser(ValueFromX(e.X));
+                SetValueFromUser(ValueFromX(e.X - _grabOffset));
             }
         }
 
@@ -259,6 +389,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseEnter(e);
             _hover = true;
             Invalidate();
+            PopupMouseEnter();
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -266,11 +397,13 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseLeave(e);
             _hover = false;
             Invalidate();
+            PopupMouseLeave();
         }
 
         protected override bool IsInputKey(Keys keyData)
         {
-            if (keyData == Keys.Left || keyData == Keys.Right
+            if (keyData == Keys.Left || keyData == Keys.Right || keyData == Keys.Up || keyData == Keys.Down
+                || keyData == Keys.PageUp || keyData == Keys.PageDown
                 || keyData == Keys.Home || keyData == Keys.End)
             {
                 return true;
@@ -286,19 +419,28 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            double step = _maximum / 20.0;   // ~5% per arrow press
             switch (e.KeyCode)
             {
                 case Keys.Left:
-                    SetValueFromUser(_value - step);
+                case Keys.Down:
+                    SetValueFromUser(_value - SmallChange);
                     e.Handled = true;
                     break;
                 case Keys.Right:
-                    SetValueFromUser(_value + step);
+                case Keys.Up:
+                    SetValueFromUser(_value + SmallChange);
+                    e.Handled = true;
+                    break;
+                case Keys.PageDown:
+                    SetValueFromUser(_value - LargeChange);
+                    e.Handled = true;
+                    break;
+                case Keys.PageUp:
+                    SetValueFromUser(_value + LargeChange);
                     e.Handled = true;
                     break;
                 case Keys.Home:
-                    SetValueFromUser(0);
+                    SetValueFromUser(_minimum);
                     e.Handled = true;
                     break;
                 case Keys.End:
@@ -306,6 +448,33 @@ namespace ErikwnkWFUI.Controls
                     e.Handled = true;
                     break;
             }
+        }
+
+        // A step of the wheel moves the value by SmallChange (up = more) while the slider has the focus, as on the original; the
+        // parent does not scroll with it then.
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+
+            HandledMouseEventArgs handled = e as HandledMouseEventArgs;
+
+            if (handled != null)
+            {
+                handled.Handled = true;
+            }
+
+            if (!Enabled || _dragging)
+            {
+                return;
+            }
+
+            SetValueFromUser(_value + e.Delta / (double)SystemInformation.MouseWheelScrollDelta * SmallChange);
+        }
+
+        protected override void OnGotFocus(EventArgs e)
+        {
+            base.OnGotFocus(e);
+            Invalidate();
         }
 
         // The color of the filled part and the thumb.
@@ -328,8 +497,7 @@ namespace ErikwnkWFUI.Controls
 
             int midY = Height / 2;
             int trackTop = midY - TrackHeight / 2;
-            double frac = _maximum <= 0 ? 0 : _value / _maximum;
-            int thumbX = TrackLeft + (int)Math.Round(frac * TrackWidth);
+            int thumbX = TrackLeft + (int)Math.Round(Fraction * TrackWidth);
 
             Color trackColor = UIStyles.Colors.BorderMedium;
             Color fillColor = GetFillColor();
@@ -354,6 +522,44 @@ namespace ErikwnkWFUI.Controls
                     g.FillEllipse(thumb, thumbX - r, midY - r, r * 2, r * 2);
                 }
             }
+        }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new TrackBarAccessibleObject(this);
+        }
+
+        // A screen reader asks for the role (a slider) and the value, written as the popup writes it.
+        private sealed class TrackBarAccessibleObject : ControlAccessibleObject
+        {
+            private readonly TrackBar _bar;
+
+            public TrackBarAccessibleObject(TrackBar bar)
+                : base(bar)
+            {
+                _bar = bar;
+            }
+
+            public override AccessibleRole Role
+            {
+                get { return AccessibleRole.Slider; }
+            }
+
+            public override string Value
+            {
+                get { return _bar.FormatValue(_bar._value); }
+                set { }
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                DisposePopup();
+            }
+
+            base.Dispose(disposing);
         }
     }
 }

@@ -6,16 +6,10 @@ using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
-    /// <summary>
-    /// A <see cref="TrackBar"/> preconfigured for a 0..1 volume value that
-    /// shows the current percentage in a small popup above the thumb while the
-    /// user drags it, then briefly after they let go, click once, or change
-    /// the value with an arrow key - and also for as long as the mouse simply
-    /// hovers over it, disappearing the instant the mouse leaves. The
-    /// consuming app only wires <see cref="TrackBar.ValueChanged"/> and sets
-    /// <see cref="TrackBar.Value"/> - the readout is handled here.
-    /// </summary>
-    public class VolumeSlider : TrackBar
+    // The popup with the current value above the thumb (ShowValuePopup): while the user drags it, then briefly after they let go,
+    // click once, or change the value with a key or the wheel - and for as long as the mouse simply hovers over it,
+    // disappearing the instant the mouse leaves.
+    public partial class TrackBar
     {
         // How long the popup stays up once nothing is actively changing the
         // value anymore (drag released, single click, or the last arrow-key
@@ -29,28 +23,27 @@ namespace ErikwnkWFUI.Controls
 
         private InfoPopupForm _popup;
         private Timer _hideTimer;
-        private Func<double, string> _formatValue;
 
-        public VolumeSlider()
+        private bool _showValuePopup;
+        private bool _popupWidthStale = true;
+
+        private void InitializePopup()
         {
-            Maximum = 1.0;
-            _formatValue = DefaultFormat;
-
             // ValueChanged alone would already cover dragging too (it fires
             // continuously on every mouse-move, restarting the hide timer
             // each time so it never gets 700ms of quiet to actually fire) -
             // DragStarted is only needed for the click-without-moving edge
             // case, where SetValueFromUser's no-op-if-unchanged check means
             // ValueChanged never fires at all.
-            DragStarted += delegate { ShowPopup(); };
-            ValueChanged += delegate { ShowPopup(); StartHideTimer(); };
+            DragStarted += delegate { if (_showValuePopup) ShowPopup(); };
+            ValueChanged += delegate { if (_showValuePopup) { ShowPopup(); StartHideTimer(); } };
 
             // Forced (bypasses the throttle below) - releasing a fast drag
             // right on 0% or 100% could otherwise land its very last
             // ValueChanged inside the throttle window, leaving the popup
             // stuck showing a slightly-stale value forever (the drag is
             // over, so nothing else would ever trigger another update).
-            DragEnded += delegate { ShowPopup(force: true); StartHideTimer(); };
+            DragEnded += delegate { if (_showValuePopup) { ShowPopup(force: true); StartHideTimer(); } };
 
             // Same problem, same fix, for holding an arrow key: OS key-repeat
             // can outrun the throttle just like a fast drag can, so the last
@@ -58,7 +51,15 @@ namespace ErikwnkWFUI.Controls
             // a slightly-stale value (e.g. 95% instead of 100%). KeyUp fires
             // even though IsInputKey claims these keys - it only changes
             // which keys generate KeyDown/KeyUp, not whether they do.
-            KeyUp += delegate { ShowPopup(force: true); StartHideTimer(); };
+            KeyUp += delegate { if (_showValuePopup) { ShowPopup(force: true); StartHideTimer(); } };
+        }
+
+        private static Size MeasurePopupText(string text)
+        {
+            return TextRenderer.MeasureText(
+                text, UIFonts.Normal,
+                new Size(short.MaxValue, short.MaxValue),
+                TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
         }
 
         private void StartHideTimer()
@@ -81,21 +82,6 @@ namespace ErikwnkWFUI.Controls
             _hideTimer.Start();
         }
 
-        /// <summary>
-        /// How the popup renders the 0..1 value. Default: whole percent, e.g.
-        /// 0.1 -> "10%".
-        /// </summary>
-        public Func<double, string> FormatValue
-        {
-            get { return _formatValue; }
-            set { _formatValue = value ?? DefaultFormat; }
-        }
-
-        private static string DefaultFormat(double value)
-        {
-            return (int)Math.Round(value * 100) + "%";
-        }
-
         private InfoPopupForm Popup
         {
             get
@@ -104,15 +90,21 @@ namespace ErikwnkWFUI.Controls
                 {
                     _popup = UIStyles.InfoPopups.CreatePrimary();
 
-                    // Fixed size for the widest value ("100%") so it doesn't
-                    // jitter as digits are added/removed while dragging - just a
-                    // few px of breathing room around the text, like a tooltip.
-                    Size widest = TextRenderer.MeasureText(
-                        _formatValue(1.0), UIFonts.Normal,
-                        new Size(short.MaxValue, short.MaxValue),
-                        TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
-                    _popup.FixedSize = new Size(widest.Width + 8, widest.Height + 6);
+                    _popupWidthStale = true;
                 }
+
+                // Fixed size for the widest value (one of the two ends of the range, "100%" for a volume) so it doesn't
+                // jitter as digits are added/removed while dragging - just a few px of breathing room around the text,
+                // like a tooltip. Worked out again when the range or the format has changed.
+                if (_popupWidthStale)
+                {
+                    _popupWidthStale = false;
+
+                    Size low = MeasurePopupText(FormatValue(Minimum));
+                    Size high = MeasurePopupText(FormatValue(Maximum));
+                    _popup.FixedSize = new Size(Math.Max(low.Width, high.Width) + 8, Math.Max(low.Height, high.Height) + 6);
+                }
+
                 return _popup;
             }
         }
@@ -167,7 +159,7 @@ namespace ErikwnkWFUI.Controls
             Point savedScroll = CaptureScrollPosition();
 
             _isSelfFocusChurn = true;
-            Popup.SetContent(_formatValue(Value));
+            Popup.SetContent(FormatValue(Value));
             Popup.ShowCenteredAbove(this, ThumbCenterX);
 
             RestoreScrollPosition(savedScroll);
@@ -240,11 +232,9 @@ namespace ErikwnkWFUI.Controls
         // DragEnded already own the popup for that, and the mouse can leave
         // the control mid-drag (no Capture is set) without the drag itself
         // ending.
-        protected override void OnMouseEnter(EventArgs e)
+        private void PopupMouseEnter()
         {
-            base.OnMouseEnter(e);
-
-            if (IsDragging)
+            if (!_showValuePopup || IsDragging)
                 return;
 
             if (_hideTimer != null)
@@ -253,11 +243,9 @@ namespace ErikwnkWFUI.Controls
             ShowPopup(force: true);
         }
 
-        protected override void OnMouseLeave(EventArgs e)
+        private void PopupMouseLeave()
         {
-            base.OnMouseLeave(e);
-
-            if (IsDragging)
+            if (!_showValuePopup || IsDragging)
                 return;
 
             HidePopup();
@@ -266,6 +254,10 @@ namespace ErikwnkWFUI.Controls
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
+            Invalidate();
+
+            if (!_showValuePopup)
+                return;
 
             if (_isSelfFocusChurn)
             {
@@ -292,24 +284,20 @@ namespace ErikwnkWFUI.Controls
             HidePopup();
         }
 
-        protected override void Dispose(bool disposing)
+        private void DisposePopup()
         {
-            if (disposing)
+            if (_hideTimer != null)
             {
-                if (_hideTimer != null)
-                {
-                    _hideTimer.Stop();
-                    _hideTimer.Dispose();
-                    _hideTimer = null;
-                }
-
-                if (_popup != null)
-                {
-                    _popup.Dispose();
-                    _popup = null;
-                }
+                _hideTimer.Stop();
+                _hideTimer.Dispose();
+                _hideTimer = null;
             }
-            base.Dispose(disposing);
+
+            if (_popup != null)
+            {
+                _popup.Dispose();
+                _popup = null;
+            }
         }
     }
 }

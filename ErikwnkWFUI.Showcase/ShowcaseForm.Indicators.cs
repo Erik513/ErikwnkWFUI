@@ -311,6 +311,26 @@ namespace ErikwnkWFUI.Showcase
             AddTrackBarRow(table, "CreateStandard(colors: Yellow)",
                 UIStyles.TrackBars.CreateStandard(0.4, 1.0, UIStyles.Colors.Sets.Yellow),
                 UIStyles.TrackBars.CreateStandard(0.65, 1.0, UIStyles.Colors.Sets.Yellow));
+
+            table.AddSection("Track bars: range and value popup");
+
+            // The range is any range (Minimum, Maximum), the keys and the wheel move by SmallChange and LargeChange, and the popup shows the
+            // value the way FormatValue writes it - hover over a slider, drag it or use the keys to see it.
+            TrackBar range = UIStyles.TrackBars.CreatePrimary(3, 12);
+            range.Minimum = -12;
+            range.ShowValuePopup = true;
+            range.SmallChange = 1;
+            range.LargeChange = 6;
+            range.FormatValue = value => (value > 0 ? "+" : string.Empty) + Math.Round(value) + " dB";
+
+            TrackBar plain = UIStyles.TrackBars.CreateStandard(0.4);
+            plain.ShowValuePopup = true;
+            AddTwoColumnRow(table, "Minimum = -12 | ShowValuePopup", range, plain);
+
+            // A volume slider is a track bar with the popup and the percent format.
+            AddTwoColumnRow(table, "FormatValue = FormatPercent",
+                UIStyles.TrackBars.CreatePrimary(0.4, 1.0, showValuePopup: true, formatValue: TrackBar.FormatPercent),
+                UIStyles.TrackBars.CreateStandard(0.65, 1.0, showValuePopup: true, formatValue: TrackBar.FormatPercent));
         }
 
         private void AddTrackBarRow(PropertyTable table, string label, TrackBar enabled, TrackBar disabled)
@@ -416,23 +436,6 @@ namespace ErikwnkWFUI.Showcase
                 table.AddRow(label, rowHeight, left, rightColumn);
             else
                 table.AddRow(label, left, rightColumn);
-        }
-
-        // VolumeSlider adds its own drag-value popup on top of TrackBar -
-        // drag the enabled one to see it. No separate "with popup" variant
-        // to demo since that popup is the whole point of this control, not
-        // an optional extra.
-        private void AddVolumeSliderSection(PropertyTable table)
-        {
-            VolumeSlider volume = UIStyles.VolumeSliders.CreateStandard(0.4);
-            VolumeSlider volumeDisabled = UIStyles.VolumeSliders.CreateStandard(0.65);
-            volumeDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", volume, volumeDisabled);
-
-            VolumeSlider volumeAccent = UIStyles.VolumeSliders.CreatePrimary(0.4);
-            VolumeSlider volumeAccentDisabled = UIStyles.VolumeSliders.CreatePrimary(0.65);
-            volumeAccentDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreatePrimary", volumeAccent, volumeAccentDisabled);
         }
 
         // Applies the current animation percentage immediately (so the bar

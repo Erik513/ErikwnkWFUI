@@ -33,19 +33,26 @@ public class TrackBarFactoryTests : IDisposable
         Assert.Equal(0.5, colored.Value);
         Assert.Equal(2.0, colored.Maximum);
 
-        using VolumeSlider volume = UIStyles.VolumeSliders.CreateStandard(0.4);
+        using TrackBar volume = UIStyles.TrackBars.CreateStandard(0.4, showValuePopup: true, formatValue: TrackBar.FormatPercent);
         Assert.Equal(0.4, volume.Value);
         Assert.Equal(1.0, volume.Maximum);
+        Assert.True(volume.ShowValuePopup);
+        Assert.Equal("40%", volume.FormatValue(volume.Value));
+
+        Assert.False(standard.ShowValuePopup);
+        Assert.False(primary.ShowValuePopup);
+
+        using TrackBar primaryVolume = UIStyles.TrackBars.CreatePrimary(0.4, showValuePopup: true, formatValue: TrackBar.FormatPercent);
+        Assert.True(primaryVolume.ShowValuePopup);
+        Assert.Equal("40%", primaryVolume.FormatValue(primaryVolume.Value));
     }
 
     [Fact]
     public void WithoutAColorSet_TheFillIsTheNeutralGray_AsItWas()
     {
         using TrackBar standard = UIStyles.TrackBars.CreateStandard(0.5);
-        using VolumeSlider volume = UIStyles.VolumeSliders.CreateStandard(0.5);
 
         Assert.Equal(UIColors.DisabledGray, standard.GetFillColor());
-        Assert.Equal(UIColors.DisabledGray, volume.GetFillColor());
         Assert.Null(standard.Colors);
     }
 
@@ -55,30 +62,25 @@ public class TrackBarFactoryTests : IDisposable
         UIColorSet teal = UIStyles.Colors.Sets.Teal;
 
         using TrackBar standard = UIStyles.TrackBars.CreateStandard(0.5, 1.0, teal);
-        using VolumeSlider volume = UIStyles.VolumeSliders.CreateStandard(0.5, teal);
         using TrackBar plain = UIStyles.TrackBars.CreateStandard(0.5, 1.0, UIStyles.Colors.CreateSet(Color.FromArgb(210, 110, 20)));
 
         Assert.Equal(teal.Hover, standard.GetFillColor());
-        Assert.Equal(teal.Hover, volume.GetFillColor());
         Assert.Same(teal, standard.Colors);
         Assert.Equal(Color.FromArgb(210, 110, 20), plain.GetFillColor());
     }
 
     [Fact]
-    public void Primary_FollowsTheAccent_ForBoth()
+    public void Primary_FollowsTheAccent()
     {
         using TrackBar primary = UIStyles.TrackBars.CreatePrimary(0.5);
-        using VolumeSlider volume = UIStyles.VolumeSliders.CreatePrimary(0.5);
 
         Assert.Equal(UIColors.PrimarySet.Hover, primary.GetFillColor());
-        Assert.Equal(UIColors.PrimarySet.Hover, volume.GetFillColor());
 
         Color before = primary.GetFillColor();
         UIColors.SetAccent(Color.OrangeRed);
 
         Assert.NotEqual(before, primary.GetFillColor());
         Assert.Equal(UIColors.PrimarySet.Hover, primary.GetFillColor());
-        Assert.Equal(UIColors.PrimarySet.Hover, volume.GetFillColor());
     }
 
     [Fact]

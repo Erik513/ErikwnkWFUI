@@ -105,12 +105,8 @@ namespace ErikwnkWFUI.Showcase
                  AddToggleSwitchesSection),
 
                 ("TrackBar",
-                 "A slider for a value between 0 and 1 (WinForms calls it TrackBar). Standard is neutral gray, or any color of a color set (colors:), Primary follows the accent color. Left enabled, right disabled.",
+                 "A slider for a value between 0 and 1 (WinForms calls it TrackBar). Standard is neutral gray, or any color of a color set (colors:), Primary follows the accent color. Left enabled, right disabled. The range is any range (Minimum, Maximum); the arrow keys, Page Up and Down and the mouse wheel move it by SmallChange and LargeChange. ShowValuePopup shows the value above the thumb, written as FormatValue says - with TrackBar.FormatPercent it is a volume slider.",
                  AddTrackBarSection),
-
-                ("VolumeSlider",
-                 "A slider with a popup that shows the value while it is dragged; drag the enabled one to see it. Standard is neutral, Primary follows the accent color.",
-                 AddVolumeSliderSection)
             };
         }
 
