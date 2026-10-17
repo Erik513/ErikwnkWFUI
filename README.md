@@ -160,6 +160,43 @@ await version.CheckForUpdateAsync(appUpdater, TimeSpan.FromSeconds(5));
   `ShowCenteredAbove`). Transparency, how long it stays and the delay before it
   shows are set with `PopupTransparency`, `PopupDuration` and `PopupDelay`.
 
+## Progress bars and spinners
+
+`UIStyles.ProgressBars` (a bar with a border) and `UIStyles.SlimProgressBars` (a thin strip for tight places, such
+as a status line) have `CreateStandard` (gray, or the color of a color set), `CreatePrimary` (the accent),
+`CreateGreen` and `CreateStatus` (the fill goes from red over yellow to green with the value). Both offer what the
+standard `ProgressBar` does (`Minimum`, `Maximum`, `Value`, `Step`, `PerformStep`, the styles Blocks and Marquee for an
+action of unknown duration) and more: a `Text` (a message about the state) and `ShowPercentage`, both off by default
+(the text stands on the left, the percentage on the right; `TextAlign`, `PercentageAlign` and, on the slim bar, `TextPosition`
+move them). A text that is too long ends in an ellipsis or moves with `TextScroll` (as in a label); a tooltip shows it whole.
+
+```csharp
+var bar = UIStyles.ProgressBars.CreatePrimary();
+bar.Text = "Uploading";
+bar.ShowPercentage = true;
+bar.Value = 42;
+
+var strip = UIStyles.SlimProgressBars.CreateStatus();   // under a text, as thin as it is
+```
+
+`UIStyles.Spinners` are loading circles: `CreateStandard(size, thickness, colors)`, `CreatePrimary`, `CreateGreen` and
+`CreateStatus`, and the `CreateProgress*` versions (40 px by default) that also write the `Value` in the centre.
+The size and the stroke width are the first two parameters of every method. The arc turns while the load is unknown;
+with `IsIndeterminate = false` it fills up to the `Value` instead. `Text` (at the `TextPosition`), `Speed`, `IsSpinning`
+and `HideWhenStopped` do what their names say.
+
+```csharp
+var wait = UIStyles.Spinners.CreatePrimary(40, 5);
+wait.Text = "Loading data...";
+wait.Width = 200;
+
+var load = UIStyles.Spinners.CreateProgressStatus();
+load.Value = 73;
+```
+
+Everything that moves runs on one beat of the display (as the moving text of a label) and stands still where
+Windows has the animations switched off or while the control is disabled; it starts again when they are switched on.
+
 ## Symbol buttons
 
 A button that shows a symbol instead of a caption always comes from
