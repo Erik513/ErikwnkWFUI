@@ -32,9 +32,17 @@ namespace ErikwnkWFUI.Factories
             return spinner;
         }
 
+        // The arc is coloured red -> yellow -> green by the Value (raise it as the load advances), without a number in the centre.
+        public static Spinner CreateStatus(int size = 24, int thickness = 0)
+        {
+            Spinner spinner = Configure(size, thickness);
+            spinner.UseStatusGradient = true;
+
+            return spinner;
+        }
+
         // Same, plus the percentage in the centre (40 px by default: smaller rings leave the digits out as not legible; starts at 0 - raise Value as the load advances). The status one also colours the
-        // arc red -> yellow -> green by the value; a plain "status" spinner without a number makes no sense, so there is no
-        // non-progress CreateStatus.
+        // arc red -> yellow -> green by the value (CreateStatus is the same without the number).
 
         public static Spinner CreateProgressStandard(int size = 40, int thickness = 0, UIColorSet colors = null)
         {
@@ -53,10 +61,7 @@ namespace ErikwnkWFUI.Factories
 
         public static Spinner CreateProgressStatus(int size = 40, int thickness = 0)
         {
-            Spinner spinner = Configure(size, thickness);
-            spinner.UseStatusGradient = true;
-
-            return WithPercentage(spinner);
+            return WithPercentage(CreateStatus(size, thickness));
         }
 
         private static Spinner Configure(int size, int thickness)

@@ -23,6 +23,7 @@ public class SpinnerFactoryTests : IDisposable
         yield return new object[] { "CreateStandard", (Func<Spinner>)(() => UIStyles.Spinners.CreateStandard()), false };
         yield return new object[] { "CreateGreen", (Func<Spinner>)(() => UIStyles.Spinners.CreateGreen()), false };
         yield return new object[] { "CreatePrimary", (Func<Spinner>)(() => UIStyles.Spinners.CreatePrimary()), false };
+        yield return new object[] { "CreateStatus", (Func<Spinner>)(() => UIStyles.Spinners.CreateStatus()), false };
         yield return new object[] { "CreateProgressStandard", (Func<Spinner>)(() => UIStyles.Spinners.CreateProgressStandard()), true };
         yield return new object[] { "CreateProgressGreen", (Func<Spinner>)(() => UIStyles.Spinners.CreateProgressGreen()), true };
         yield return new object[] { "CreateProgressPrimary", (Func<Spinner>)(() => UIStyles.Spinners.CreateProgressPrimary()), true };
@@ -48,7 +49,7 @@ public class SpinnerFactoryTests : IDisposable
         {
             UIStyles.Spinners.CreateStandard(40, 5), UIStyles.Spinners.CreateGreen(40, 5), UIStyles.Spinners.CreatePrimary(40, 5),
             UIStyles.Spinners.CreateProgressStandard(40, 5), UIStyles.Spinners.CreateProgressGreen(40, 5),
-            UIStyles.Spinners.CreateProgressPrimary(40, 5), UIStyles.Spinners.CreateProgressStatus(40, 5),
+            UIStyles.Spinners.CreateProgressPrimary(40, 5), UIStyles.Spinners.CreateProgressStatus(40, 5), UIStyles.Spinners.CreateStatus(40, 5),
             UIStyles.Spinners.CreateStandard(40, 5, UIStyles.Colors.Sets.Teal)
         })
         {
@@ -115,6 +116,13 @@ public class SpinnerFactoryTests : IDisposable
         using Spinner status = UIStyles.Spinners.CreateProgressStatus();
 
         Assert.True(status.UseStatusGradient);
+        Assert.True(status.ShowPercentage);
+
+        using Spinner plainStatus = UIStyles.Spinners.CreateStatus();
+        Assert.True(plainStatus.UseStatusGradient);
+        Assert.False(plainStatus.ShowPercentage);
+        plainStatus.Value = 100;
+        Assert.Equal(UIColors.Green, ArcOf(plainStatus));
 
         status.Value = 0;
         Color red = ArcOf(status);

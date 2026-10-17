@@ -341,6 +341,20 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreateGreen(),
                 UIStyles.Spinners.CreateGreen(40, 5));
 
+            AddAnimatedSpinnerRow(table, "CreateStatus",
+                UIStyles.Spinners.CreateStatus(40, 5));
+
+            AddAnimatedSpinnerRow(table, "CreateProgressStandard",
+                UIStyles.Spinners.CreateProgressStandard(40, 4));
+            AddAnimatedSpinnerRow(table, "CreateProgressPrimary",
+                UIStyles.Spinners.CreateProgressPrimary(40, 4));
+            AddAnimatedSpinnerRow(table, "CreateProgressStandard(colors: Yellow)",
+                UIStyles.Spinners.CreateProgressStandard(40, 4, UIStyles.Colors.Sets.Yellow));
+            AddAnimatedSpinnerRow(table, "CreateProgressGreen",
+                UIStyles.Spinners.CreateProgressGreen(40, 4));
+            AddAnimatedSpinnerRow(table, "CreateProgressStatus",
+                UIStyles.Spinners.CreateProgressStatus(40, 4));
+
             Spinner stopped = UIStyles.Spinners.CreatePrimary(40, 5);
             stopped.IsSpinning = false;
             Spinner disabled = UIStyles.Spinners.CreatePrimary(40, 5);
@@ -368,15 +382,6 @@ namespace ErikwnkWFUI.Showcase
             Spinner determinate = UIStyles.Spinners.CreateProgressPrimary(40, 4);
             determinate.IsIndeterminate = false;
             AddAnimatedSpinnerRow(table, "IsIndeterminate = false", determinate);
-
-            AddAnimatedSpinnerRow(table, "CreateProgressStandard",
-                UIStyles.Spinners.CreateProgressStandard(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressGreen",
-                UIStyles.Spinners.CreateProgressGreen(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressPrimary",
-                UIStyles.Spinners.CreateProgressPrimary(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressStatus",
-                UIStyles.Spinners.CreateProgressStatus(40, 4));
         }
 
         private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b)

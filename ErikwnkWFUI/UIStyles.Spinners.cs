@@ -38,6 +38,12 @@ namespace ErikwnkWFUI
                 return UISpinnerFactory.CreatePrimary(size, thickness);
             }
 
+            /// <summary>The arc is a solid colour blended red (0) → yellow → green (100) by <see cref="Spinner.Value"/> (starts at 0 - raise it as the load advances); no number in the centre.</summary>
+            public static Spinner CreateStatus(int size = 24, int thickness = 0)
+            {
+                return UISpinnerFactory.CreateStatus(size, thickness);
+            }
+
             /// <summary>A gray spinner (or one in the colour of a colour set) that also shows a percentage in the centre (starts at 0; 40 px by default - a ring smaller than about 30 px leaves the digits out as not legible).</summary>
             public static Spinner CreateProgressStandard(int size = 40, int thickness = 0, UIColorSet colors = null)
             {
