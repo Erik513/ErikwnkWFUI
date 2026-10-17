@@ -564,7 +564,8 @@ namespace ErikwnkWFUI.Styles
             return Blend(Yellow, Green, (fraction - YellowBreakpoint) / (1 - YellowBreakpoint));
         }
 
-        private static Color Blend(Color from, Color to, double t)
+        /// <summary>The color the share <paramref name="t"/> (0-1) of the way from <paramref name="from"/> to <paramref name="to"/>, rounded.</summary>
+        internal static Color Blend(Color from, Color to, double t)
         {
             t = Math.Max(0, Math.Min(1, t));
 

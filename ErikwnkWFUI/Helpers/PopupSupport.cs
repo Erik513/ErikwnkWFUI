@@ -71,22 +71,13 @@ namespace ErikwnkWFUI.Helpers
 
             foreach (Color page in new[] { Color.White, Color.Black })
             {
-                Color seenBack = Mix(back, page, opacity);
-                Color seenText = Mix(text, page, opacity);
+                Color seenBack = UIColors.Blend(page, back, opacity);
+                Color seenText = UIColors.Blend(page, text, opacity);
 
                 worst = Math.Min(worst, UIColors.GetContrastRatio(seenText, seenBack));
             }
 
             return worst;
-        }
-
-        // A color seen through the window: its share of the opacity, the rest from the page.
-        private static Color Mix(Color color, Color page, double opacity)
-        {
-            return Color.FromArgb(
-                (int)Math.Round(color.R * opacity + page.R * (1 - opacity)),
-                (int)Math.Round(color.G * opacity + page.G * (1 - opacity)),
-                (int)Math.Round(color.B * opacity + page.B * (1 - opacity)));
         }
 
         internal const int ScreenMargin = 10;
