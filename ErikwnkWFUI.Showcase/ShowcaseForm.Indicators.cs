@@ -318,13 +318,13 @@ namespace ErikwnkWFUI.Showcase
         }
 
         // Like the progress bars: one row for each factory method, the variants of a property side by side in two columns (the label
-        // names them from left to right). The plain rows show a default and a larger, heavier ring; the percentage rows a ring of 40 and
+        // names them from left to right). The plain rows show a default and a larger, heavier ring; the progress rows a ring of 40 and
         // of 48 px (smaller rings leave the digits out). The status color and the percentage need a load that counts up, so those spinners
         // run on the shared animation timer (like the ProgressBar rows). The control always draws a centred circle, so a stretched
         // column is fine.
         private void AddSpinnerSection(PropertyTable table)
         {
-            table.AddSection("Spinners");
+            table.AddSection("Spinners (size: 24 (default) | size: 40, thickness: 5)");
 
             AddSpinnerRow(table, "CreateStandard",
                 UIStyles.Spinners.CreateStandard(),
@@ -342,7 +342,7 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.Spinners.CreateStatus(),
                 UIStyles.Spinners.CreateStatus(40, 5), animate: true);
 
-            table.AddSection("Spinners: percentage");
+            table.AddSection("Spinners: progress (size: 40 (default) | size: 48, thickness: 5)");
 
             AddSpinnerRow(table, "CreateProgressStandard",
                 UIStyles.Spinners.CreateProgressStandard(),
