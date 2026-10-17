@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Localization;
@@ -32,7 +32,12 @@ public class SpinnerBehaviorTests : IDisposable
         return host;
     }
 
-    private static bool Runs(Spinner spinner) => spinner.GetPrivateField<System.Windows.Forms.Timer>("_timer")!.Enabled;
+    private static bool Runs(Spinner spinner)
+    {
+        System.Windows.Forms.Timer timer = spinner.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
+
+        return timer.Enabled && timer.Interval < 100;
+    }
 
     [Fact]
     public void ItTurnsWhenShown_AndStopsWhenDisabledStoppedOrHidden()

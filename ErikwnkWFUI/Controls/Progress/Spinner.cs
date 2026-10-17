@@ -21,6 +21,7 @@ namespace ErikwnkWFUI.Controls
     public partial class Spinner : Control
     {
         private const int TickMs = 16;              // ~60 fps
+        private const int HiddenPollMs = 250;      // how often a spinner on a hidden window looks whether it is shown again
         private const float MinimumDigitSize = 7f;  // smaller digits in the ring are not legible, so they are left out
 
         private readonly Timer _timer;
@@ -259,6 +260,20 @@ namespace ErikwnkWFUI.Controls
 
         private void OnTick(object sender, EventArgs e)
         {
+            // A window that is hidden (or a spinner taken off its window) hides the spinner without telling it (no VisibleChanged,
+            // and none when the window is shown again): the clock keeps watching at a slow pace and takes up its speed when it is
+            // shown again.
+            if (!Visible)
+            {
+                if (_timer.Interval != HiddenPollMs)
+                    _timer.Interval = HiddenPollMs;
+
+                return;
+            }
+
+            if (_timer.Interval != TickMs)
+                _timer.Interval = TickMs;
+
             if (++_ticksSinceAsked >= AskEveryTicks)
             {
                 _ticksSinceAsked = 0;
@@ -283,7 +298,10 @@ namespace ErikwnkWFUI.Controls
                 && _isSpinning && _isIndeterminate && Enabled && ThemedLabel.AnimationsEnabled();
             _ticksSinceAsked = 0;
             if (run && !_timer.Enabled)
+            {
+                _timer.Interval = TickMs;
                 _timer.Start();
+            }
             else if (!run && _timer.Enabled)
                 _timer.Stop();
         }
