@@ -314,23 +314,19 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("Track bars: range and value popup");
 
-            // The range is any range (Minimum, Maximum), the keys and the wheel move by SmallChange and LargeChange, and the popup shows the
-            // value the way FormatValue writes it - hover over a slider, drag it or use the keys to see it.
+            // One slider each: ShowValuePopup writes the value above the thumb while the mouse is over it or it is dragged (hover over it,
+            // drag it or use the keys to see it); the second one has its own range and writes its value with FormatValue. Both are
+            // usable.
+            TrackBar popup = UIStyles.TrackBars.CreatePrimary(40, 100, showValuePopup: true);
+            table.AddRow("ShowValuePopup", UIColumn.Percent(popup, TwoColumnPercent));
+
             TrackBar range = UIStyles.TrackBars.CreatePrimary(3, 12);
             range.Minimum = -12;
             range.ShowValuePopup = true;
             range.SmallChange = 1;
             range.LargeChange = 6;
             range.FormatValue = value => (value > 0 ? "+" : string.Empty) + Math.Round(value) + " dB";
-
-            TrackBar plain = UIStyles.TrackBars.CreateStandard(0.4);
-            plain.ShowValuePopup = true;
-            AddTwoColumnRow(table, "Minimum = -12 | ShowValuePopup", range, plain);
-
-            // A volume slider is a track bar with the popup and the percent format.
-            AddTwoColumnRow(table, "FormatValue = FormatPercent",
-                UIStyles.TrackBars.CreatePrimary(0.4, 1.0, showValuePopup: true, formatValue: TrackBar.FormatPercent),
-                UIStyles.TrackBars.CreateStandard(0.65, 1.0, showValuePopup: true, formatValue: TrackBar.FormatPercent));
+            table.AddRow("Minimum = -12, FormatValue", UIColumn.Percent(range, TwoColumnPercent));
         }
 
         private void AddTrackBarRow(PropertyTable table, string label, TrackBar enabled, TrackBar disabled)

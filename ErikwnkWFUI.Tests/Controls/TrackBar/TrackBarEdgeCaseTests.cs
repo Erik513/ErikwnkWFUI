@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
@@ -12,7 +13,9 @@ namespace ErikwnkWFUI.Tests.Controls.TrackBars;
 /// <summary>
 /// The odd cases of the track bar: numbers that are not numbers, a range as wide as a double can be, every size, a screen that is scaled,
 /// a handler that disposes or disables it, a popup without a window, and the keys and the mouse in unusual order.
+/// [Collection]: the popup test replaces the check which window is in front, as the popup tests do.
 /// </summary>
+[Collection(AccentColorTestCollection.Name)]
 public class TrackBarEdgeCaseTests
 {
     private static Form Show(TrackBar bar, int width = 120, int height = 20)
@@ -311,6 +314,22 @@ public class TrackBarEdgeCaseTests
 
     [Fact]
     public void ThePopup_ShowsWhileTheMouseIsOver_AndGoesWhenItLeavesOrTheSwitchIsOff()
+    {
+        // A popup is only shown over the window that is in front: the test does not depend on what is in front on the machine.
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            PopupShowsWhileTheMouseIsOver();
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
+
+    private static void PopupShowsWhileTheMouseIsOver()
     {
         using TrackBar bar = new TrackBar { ShowValuePopup = true, Value = 0.5 };
         using Form host = Show(bar);

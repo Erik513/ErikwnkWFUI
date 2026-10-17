@@ -54,6 +54,29 @@ namespace ErikwnkWFUI.Controls
             KeyUp += delegate { if (_showValuePopup) { ShowPopup(force: true); StartHideTimer(); } };
         }
 
+        private static Size PopupSizeFor(Size text)
+        {
+            return new Size(text.Width + 8, text.Height + 6);
+        }
+
+        // The widest text of the values in the range: not only the two ends (a number with decimals is wider in the middle than
+        // at the ends, "0.37" against "0" and "1"), so the range is measured in twenty steps, and the current value on top.
+        private Size MeasureWidestValue()
+        {
+            Func<double, string> format = FormatValue;
+            Size widest = MeasurePopupText(format(Value));
+
+            for (int step = 0; step <= 20; step++)
+            {
+                double fraction = step / 20.0;
+                Size size = MeasurePopupText(format(Minimum * (1 - fraction) + Maximum * fraction));
+
+                widest = new Size(Math.Max(widest.Width, size.Width), Math.Max(widest.Height, size.Height));
+            }
+
+            return widest;
+        }
+
         private static Size MeasurePopupText(string text)
         {
             return TextRenderer.MeasureText(
@@ -93,16 +116,13 @@ namespace ErikwnkWFUI.Controls
                     _popupWidthStale = true;
                 }
 
-                // Fixed size for the widest value (one of the two ends of the range, "100%" for a volume) so it doesn't
-                // jitter as digits are added/removed while dragging - just a few px of breathing room around the text,
-                // like a tooltip. Worked out again when the range or the format has changed.
+                // Fixed size for the widest value so it doesn't jitter as digits are added/removed while dragging - just a
+                // few px of breathing room around the text, like a tooltip. Worked out again when the range or the format has
+                // changed.
                 if (_popupWidthStale)
                 {
                     _popupWidthStale = false;
-
-                    Size low = MeasurePopupText(FormatValue(Minimum));
-                    Size high = MeasurePopupText(FormatValue(Maximum));
-                    _popup.FixedSize = new Size(Math.Max(low.Width, high.Width) + 8, Math.Max(low.Height, high.Height) + 6);
+                    _popup.FixedSize = PopupSizeFor(MeasureWidestValue());
                 }
 
                 return _popup;
@@ -134,7 +154,7 @@ namespace ErikwnkWFUI.Controls
         // BeginInvoke above - it runs once
         // per ValueChanged, i.e. once per mouse-move during a drag, dozens
         // of times a second, and that alone was enough to visibly stall the
-        // Showcase's ProgressBar animation. A percentage readout doesn't
+        // Showcase's ProgressBar animation. A value readout doesn't
         // need to redraw faster than this to still look instant, so actual
         // updates are capped to this interval; ShowPopup() calls in between
         // just keep the already-visible popup up (via the hide timer) with
@@ -159,8 +179,20 @@ namespace ErikwnkWFUI.Controls
             Point savedScroll = CaptureScrollPosition();
 
             _isSelfFocusChurn = true;
-            Popup.SetContent(FormatValue(Value));
-            Popup.ShowCenteredAbove(this, ThumbCenterX);
+            string text = FormatValue(Value);
+            InfoPopupForm popup = Popup;
+
+            // A value wider than all that were measured (a format with more digits at some value): the popup grows to it and
+            // stays so, rather than cutting the text.
+            Size needed = PopupSizeFor(MeasurePopupText(text));
+
+            if (needed.Width > popup.FixedSize.Width || needed.Height > popup.FixedSize.Height)
+            {
+                popup.FixedSize = new Size(Math.Max(needed.Width, popup.FixedSize.Width), Math.Max(needed.Height, popup.FixedSize.Height));
+            }
+
+            popup.SetContent(text);
+            popup.ShowCenteredAbove(this, ThumbCenterX);
 
             RestoreScrollPosition(savedScroll);
 

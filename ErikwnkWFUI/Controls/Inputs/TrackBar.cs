@@ -10,14 +10,17 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A slim, theme-matching horizontal slider (the library's version of the WinForms <c>TrackBar</c>). The <see cref="Value"/> runs
-    /// from <see cref="Minimum"/> (0 by default) to <see cref="Maximum"/> (1 by default) and is a fraction, not a whole number.
-    /// The keys (arrows by <see cref="SmallChange"/>, Page Up and Down by <see cref="LargeChange"/>, Home and End to the ends) and the
-    /// mouse wheel work as on the original. <see cref="ValueChanged"/> fires on every change from the user (drag, click on the track,
-    /// keys, wheel); unlike the original it does not fire when <see cref="Value"/> is set from code, so that code which keeps the
-    /// slider up to date cannot start a loop. <see cref="ShowValuePopup"/> shows the value above the thumb, written as
-    /// <see cref="FormatValue"/> says (<see cref="FormatPercent"/> for a volume from 0 to 1). Not offered: tick marks, the vertical
-    /// orientation, <c>AutoSize</c>; right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
+    /// A slim, theme-matching horizontal slider: the library's version of the WinForms <c>TrackBar</c>, fully custom-drawn. The
+    /// <see cref="Value"/> runs from <see cref="Minimum"/> (0 by default) to <see cref="Maximum"/> (1 by default) and is a fraction,
+    /// not a whole number. The mouse drags the thumb (a press on the thumb takes hold of it where it was pressed, a press on the track
+    /// puts it there), and the keys (arrows by <see cref="SmallChange"/>, Page Up and Down by <see cref="LargeChange"/>, Home and End to
+    /// the ends) and the mouse wheel work as on the original. <see cref="ValueChanged"/> fires on every change from the user (drag,
+    /// click on the track, keys, wheel); unlike the original it does not fire when <see cref="Value"/> is set from code, so that code
+    /// which keeps the slider up to date cannot start a loop. The filled part and the thumb are gray, the color of <see cref="Colors"/>
+    /// (a color set; <c>UIStyles.TrackBars.CreatePrimary</c> follows the accent) or <see cref="FillColor"/>. <see cref="ShowValuePopup"/>
+    /// shows the value above the thumb, written as <see cref="FormatValue"/> says (<see cref="FormatPercent"/> for a volume from 0 to 1);
+    /// a screen reader is told it is a slider and its value. The measures are scaled with the screen. Not offered: tick marks, the
+    /// vertical orientation, <c>AutoSize</c>; right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
     /// </summary>
     public partial class TrackBar : Control
     {
@@ -42,13 +45,14 @@ namespace ErikwnkWFUI.Controls
         private const double MinimumRange = 0.0001;
 
         /// <summary>
-        /// Pixels the track is inset from each edge (room for the thumb).
-        /// Anything meant to line up with the track (e.g. a progress bar next to
-        /// the slider) should use the same left/right margin.
+        /// Pixels the track is inset from each edge (room for the thumb) at 96 dpi. Anything meant to line up with the track (e.g. a
+        /// progress bar next to the slider) should use the same left/right margin - <see cref="TrackInsetPixels"/> where the screen is
+        /// scaled.
         /// </summary>
         public const int TrackInset = ThumbRadius96 + 1;
 
         /// <summary>The same in the pixels of the screen this slider is on (more than <see cref="TrackInset"/> where the screen is scaled).</summary>
+        [Browsable(false)]
         public int TrackInsetPixels
         {
             get { return ThumbRadius + 1; }
@@ -86,16 +90,17 @@ namespace ErikwnkWFUI.Controls
             InitializePopup();
         }
 
-        /// <summary>Raised when the user changes the value (not when code sets it).</summary>
+        /// <summary>Raised when the user changes the value (drag, click on the track, keys, wheel), once for each other value; not when code sets it.</summary>
         public event EventHandler ValueChanged;
 
-        /// <summary>Raised when the user presses the thumb/track to begin a drag.</summary>
+        /// <summary>Raised when the user presses the thumb or the track to begin a drag (before the value follows the mouse).</summary>
         public event EventHandler DragStarted;
 
-        /// <summary>Raised when the user releases the mouse after a drag.</summary>
+        /// <summary>Raised once when a drag ends: the mouse is released, taken away (a dialog, another window) or the slider is disabled.</summary>
         public event EventHandler DragEnded;
 
         /// <summary>True while the user is dragging the thumb - callers can pause external updates.</summary>
+        [Browsable(false)]
         public bool IsDragging
         {
             get { return _dragging; }
@@ -127,14 +132,15 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/>. Null (the default) uses the color of the set, or the neutral gray.</summary>
+        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/> (not the disabled look). Null (the default) uses the color of the set, or the neutral gray.</summary>
+        [DefaultValue(null)]
         public Color? FillColor
         {
             get { return _fillColor; }
             set { _fillColor = value; Invalidate(); }
         }
 
-        /// <summary>The bottom of the range (0 by default). A <see cref="Value"/> below it is raised to it.</summary>
+        /// <summary>The bottom of the range (0 by default). A <see cref="Value"/> below it is raised to it; not a number and infinity are ignored.</summary>
         [DefaultValue(0.0)]
         public double Minimum
         {
@@ -149,7 +155,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>The top of the range (1 by default); it is always above <see cref="Minimum"/>. A <see cref="Value"/> above it is lowered to it.</summary>
+        /// <summary>The top of the range (1 by default); it is always above <see cref="Minimum"/>. A <see cref="Value"/> above it is lowered to it; not a number and infinity are ignored.</summary>
         [DefaultValue(1.0)]
         public double Maximum
         {
@@ -164,6 +170,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The range has changed: the value stays in it, the popup is measured again, and the thumb moves.
         private void RangeChanged()
         {
             _value = Clamp(_value, _minimum, _maximum);
@@ -257,7 +264,11 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        /// <summary>Setting this from code updates the display without raising <see cref="ValueChanged"/>.</summary>
+        /// <summary>
+        /// The value, from <see cref="Minimum"/> to <see cref="Maximum"/> (one outside is limited to it, infinity is the end of the range,
+        /// not a number is ignored). Setting it from code updates the display without raising <see cref="ValueChanged"/>.
+        /// </summary>
+        [DefaultValue(0.0)]
         public double Value
         {
             get { return _value; }
@@ -293,6 +304,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // v limited to min..max (the callers leave out a v that is not a number before).
         private static double Clamp(double v, double min, double max)
         {
             if (v < min) return min;
@@ -336,6 +348,7 @@ namespace ErikwnkWFUI.Controls
             get { return Math.Max(1, TrackRight - TrackLeft); }
         }
 
+        // The value at a pixel of the track: its left end is the minimum, its right end the maximum (beyond the ends they are the ends).
         private double ValueFromX(int x)
         {
             double fraction = Clamp((x - TrackLeft) / (double)TrackWidth, 0, 1);
@@ -346,6 +359,8 @@ namespace ErikwnkWFUI.Controls
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+
+            // Only the left button, and not while a drag is on already (a second press with the mouse held starts no second drag).
             if (e.Button == MouseButtons.Left && Enabled && !_dragging)
             {
                 Focus();
@@ -449,6 +464,8 @@ namespace ErikwnkWFUI.Controls
             return base.IsInputKey(keyData);
         }
 
+        // As on the original: left and down make it less, right and up more, by SmallChange; Page Down and Up by LargeChange;
+        // Home and End go to the ends. A disabled slider does not move.
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -515,7 +532,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // The color of the filled part and the thumb.
+        // The color of the filled part and the thumb: the disabled color, else FillColor, else the main color of the set, else gray.
         internal Color GetFillColor()
         {
             if (!Enabled)

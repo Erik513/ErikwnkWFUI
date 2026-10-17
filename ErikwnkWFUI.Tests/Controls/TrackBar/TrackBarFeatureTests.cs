@@ -299,4 +299,44 @@ public class TrackBarFeatureTests
         Key(bar, Keys.Right);
         Assert.True(popup.FixedSize.Width > wide);
     }
+
+    private static int TextWidth(string text) =>
+        TextRenderer.MeasureText(text, ErikwnkWFUI.Styles.UIFonts.Normal, new Size(short.MaxValue, short.MaxValue), TextFormatFlags.NoPadding | TextFormatFlags.SingleLine).Width;
+
+    [Fact]
+    public void ThePopup_HasRoomForANumberWithDecimals_EvenThoughTheEndsOfTheRangeAreShort()
+    {
+        // A slider from 0 to 1 in the default format: the ends are "0" and "1", but a value in between is "0.37" or "0.88".
+        using TrackBar bar = new TrackBar { ShowValuePopup = true };
+        using Form host = Show(bar);
+
+        // The popup is made while the value is 0 (the mouse comes over the slider), before any wider value was seen.
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+
+        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        string text = bar.FormatValue(0.85);
+        Assert.True(popup.FixedSize.Width >= TextWidth(text) + 8, "the popup of " + popup.FixedSize.Width + " px cuts \"" + text + "\" (" + TextWidth(text) + " px)");
+    }
+
+    [Fact]
+    public void ThePopup_GrowsToAValueWiderThanAllThatWereMeasured_AndKeepsTheSize()
+    {
+        // The range is measured in steps of a twentieth (0, 5, 10 ... 100): 37 is none of them.
+        using TrackBar bar = new TrackBar { Maximum = 100, SmallChange = 37, ShowValuePopup = true };
+        bar.FormatValue = value => Math.Abs(value - 37) < 0.001 ? "a value that is much wider than all the others" : "1";
+        using Form host = Show(bar);
+
+        // The popup is made while the value is 0 (the mouse comes over the slider); then the user moves it to 37.
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        TestPictures.Pump(80);
+        Key(bar, Keys.Right);
+
+        int wide = TextWidth("a value that is much wider than all the others") + 8;
+        Assert.True(popup.FixedSize.Width >= wide, "the popup of " + popup.FixedSize.Width + " px cuts the text (" + wide + " px)");
+
+        TestPictures.Pump(80);
+        Key(bar, Keys.Right);
+        Assert.True(popup.FixedSize.Width >= wide, "the popup got narrower again");
+    }
 }
