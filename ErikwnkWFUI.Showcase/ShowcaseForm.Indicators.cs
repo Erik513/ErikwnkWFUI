@@ -317,85 +317,103 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreatePrimary", sliderAccent, sliderAccentDisabled);
         }
 
-        // The plain rows show a default and a bigger, heavier-stroke one in two
-        // 50/50 columns. The CreateProgress* rows are a single spinner whose
-        // percentage counts up on the shared animation timer (like the
-        // ProgressBar rows) - that's the only way to see CreateProgressStatus
-        // shift red -> yellow -> green. The control always draws a centred
-        // circle, so a stretched column is fine.
+        // Like the progress bars: one row for each factory method, the variants of a property side by side in two columns (the label
+        // names them from left to right). The plain rows show a default and a larger, heavier ring; the percentage rows a ring of 40 and
+        // of 48 px (smaller rings leave the digits out). The status color and the percentage need a load that counts up, so those spinners
+        // run on the shared animation timer (like the ProgressBar rows). The control always draws a centred circle, so a stretched
+        // column is fine.
         private void AddSpinnerSection(PropertyTable table)
         {
+            table.AddSection("Spinners");
+
             AddSpinnerRow(table, "CreateStandard",
                 UIStyles.Spinners.CreateStandard(),
                 UIStyles.Spinners.CreateStandard(40, 5));
-
             AddSpinnerRow(table, "CreatePrimary",
                 UIStyles.Spinners.CreatePrimary(),
                 UIStyles.Spinners.CreatePrimary(40, 5));
-
             AddSpinnerRow(table, "CreateStandard(colors: Yellow)",
                 UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.Sets.Yellow),
                 UIStyles.Spinners.CreateStandard(40, 5, UIStyles.Colors.Sets.Yellow));
-
             AddSpinnerRow(table, "CreateGreen",
                 UIStyles.Spinners.CreateGreen(),
                 UIStyles.Spinners.CreateGreen(40, 5));
+            AddSpinnerRow(table, "CreateStatus",
+                UIStyles.Spinners.CreateStatus(),
+                UIStyles.Spinners.CreateStatus(40, 5), animate: true);
 
-            AddAnimatedSpinnerRow(table, "CreateStatus",
-                UIStyles.Spinners.CreateStatus(40, 5));
+            table.AddSection("Spinners: percentage");
 
-            AddAnimatedSpinnerRow(table, "CreateProgressStandard",
-                UIStyles.Spinners.CreateProgressStandard(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressPrimary",
-                UIStyles.Spinners.CreateProgressPrimary(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressStandard(colors: Yellow)",
-                UIStyles.Spinners.CreateProgressStandard(40, 4, UIStyles.Colors.Sets.Yellow));
-            AddAnimatedSpinnerRow(table, "CreateProgressGreen",
-                UIStyles.Spinners.CreateProgressGreen(40, 4));
-            AddAnimatedSpinnerRow(table, "CreateProgressStatus",
-                UIStyles.Spinners.CreateProgressStatus(40, 4));
+            AddSpinnerRow(table, "CreateProgressStandard",
+                UIStyles.Spinners.CreateProgressStandard(),
+                UIStyles.Spinners.CreateProgressStandard(48, 5), animate: true, rowHeight: 56);
+            AddSpinnerRow(table, "CreateProgressPrimary",
+                UIStyles.Spinners.CreateProgressPrimary(),
+                UIStyles.Spinners.CreateProgressPrimary(48, 5), animate: true, rowHeight: 56);
+            AddSpinnerRow(table, "CreateProgressStandard(colors: Yellow)",
+                UIStyles.Spinners.CreateProgressStandard(40, 0, UIStyles.Colors.Sets.Yellow),
+                UIStyles.Spinners.CreateProgressStandard(48, 5, UIStyles.Colors.Sets.Yellow), animate: true, rowHeight: 56);
+            AddSpinnerRow(table, "CreateProgressGreen",
+                UIStyles.Spinners.CreateProgressGreen(),
+                UIStyles.Spinners.CreateProgressGreen(48, 5), animate: true, rowHeight: 56);
+            AddSpinnerRow(table, "CreateProgressStatus",
+                UIStyles.Spinners.CreateProgressStatus(),
+                UIStyles.Spinners.CreateProgressStatus(48, 5), animate: true, rowHeight: 56);
+
+            table.AddSection("Spinners: states, text and speed");
 
             Spinner stopped = UIStyles.Spinners.CreatePrimary(40, 5);
             stopped.IsSpinning = false;
             Spinner disabled = UIStyles.Spinners.CreatePrimary(40, 5);
             disabled.Enabled = false;
-            AddSpinnerRow(table, "IsSpinning = false, Enabled = false", stopped, disabled);
+            AddSpinnerRow(table, "IsSpinning = false | Enabled = false", stopped, disabled);
+
+            Spinner slow = UIStyles.Spinners.CreateGreen(40, 5);
+            slow.Speed = SpinnerSpeed.Slow;
+            Spinner medium = UIStyles.Spinners.CreateGreen(40, 5);
+            Spinner fast = UIStyles.Spinners.CreateGreen(40, 5);
+            fast.Speed = SpinnerSpeed.Fast;
+            slow.Anchor = medium.Anchor = fast.Anchor = AnchorStyles.Left;
+            table.AddRow("Speed = Slow | Medium | Fast",
+                UIColumn.Percent(slow, 100f / 3),
+                UIColumn.Percent(medium, 100f / 3),
+                UIColumn.Percent(fast, 100f / 3));
+
+            Spinner determinate = UIStyles.Spinners.CreateProgressPrimary();
+            determinate.IsIndeterminate = false;
+            Spinner determinateStatus = UIStyles.Spinners.CreateProgressStatus();
+            determinateStatus.IsIndeterminate = false;
+            AddSpinnerRow(table, "IsIndeterminate = false", determinate, determinateStatus, animate: true);
 
             Spinner right = UIStyles.Spinners.CreatePrimary(32);
             right.Text = "Loading data...";
             right.Width = 170;
-            Spinner below = UIStyles.Spinners.CreatePrimary(64);
+            Spinner below = UIStyles.Spinners.CreatePrimary(60);
             below.Text = "Please wait";
             below.TextPosition = SpinnerTextPosition.Below;
             below.Width = 120;
-            AddSpinnerRow(table, "Text, TextPosition", right, below);
-
-            Spinner fast = UIStyles.Spinners.CreateGreen(40, 5);
-            fast.Speed = SpinnerSpeed.Fast;
-            Spinner hidden = UIStyles.Spinners.CreateGreen(40, 5);
-            hidden.Text = "Done";
-            hidden.Width = 100;
-            hidden.IsSpinning = false;
-            hidden.HideWhenStopped = true;
-            AddSpinnerRow(table, "Speed = Fast, HideWhenStopped", fast, hidden);
-
-            Spinner determinate = UIStyles.Spinners.CreateProgressPrimary(40, 4);
-            determinate.IsIndeterminate = false;
-            AddAnimatedSpinnerRow(table, "IsIndeterminate = false", determinate);
+            below.Height = 84;
+            AddSpinnerRow(table, "Text | TextPosition = Below", right, below, rowHeight: 96);
         }
 
-        private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b)
+        private void AddSpinnerRow(PropertyTable table, string label, Spinner a, Spinner b, bool animate = false, int rowHeight = 0)
         {
             a.Anchor = AnchorStyles.Left;
             b.Anchor = AnchorStyles.Left;
-            AddTwoColumnRow(table, label, a, b);
-        }
 
-        private void AddAnimatedSpinnerRow(PropertyTable table, string label, Spinner spinner)
-        {
-            spinner.Anchor = AnchorStyles.Left;
-            AnimateProgressBar(v => spinner.Value = v);
-            table.AddRow(label, UIColumn.Percent(spinner, TwoColumnPercent));
+            if (animate)
+            {
+                AnimateProgressBar(v => a.Value = v);
+                AnimateProgressBar(v => b.Value = v);
+            }
+
+            UIColumn left = UIColumn.Percent(a, TwoColumnPercent);
+            UIColumn rightColumn = UIColumn.Percent(b, TwoColumnPercent);
+
+            if (rowHeight > 0)
+                table.AddRow(label, rowHeight, left, rightColumn);
+            else
+                table.AddRow(label, left, rightColumn);
         }
 
         // VolumeSlider adds its own drag-value popup on top of SliderBar -

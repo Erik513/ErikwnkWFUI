@@ -85,7 +85,7 @@ namespace ErikwnkWFUI.Showcase
                  AddSliderBarSection),
 
                 ("Spinner",
-                 "Loading circles. Standard, Green and Primary spin endlessly (load unknown), in the default size and in a larger, heavier one. IsSpinning = false stands the arc still; a disabled spinner and a Windows with the animations switched off stand still too. The Progress variants also show the load as a percentage (Value) while the arc keeps turning; Progress Status shifts from red over yellow to green. IsIndeterminate = false is for a known load: the arc grows to the Value and does not turn. Text puts a message next to the ring (TextPosition: right, left, above or below); Speed turns the arc slower or faster; HideWhenStopped hides the ring while IsSpinning is false. The Progress variants are 40 px by default: in a ring smaller than about 30 px the digits would not be legible, so they are left out.",
+                 "Loading circles. Standard, Primary, Green and Status turn while the load is unknown, in the default size and in a larger, heavier one; the Progress variants (40 px) also write the Value in the centre, and the status color shifts from red over yellow to green. IsSpinning = false stands the arc still (HideWhenStopped hides the ring); a disabled spinner, or Windows with the animations switched off, stands still too. IsIndeterminate = false is for a known load: the arc grows to the Value. Text puts a message next to the ring (TextPosition), Speed turns the arc slower or faster. A ring smaller than about 30 px leaves the digits out as not legible.",
                  AddSpinnerSection),
 
                 ("Symbols",
