@@ -449,6 +449,50 @@ namespace ErikwnkWFUI.Styles
             return color;
         }
 
+        /// <summary>
+        /// A track for a slider on <paramref name="surface"/>: the surface itself moved lighter (on a dark one) or darker (on a light one)
+        /// until it stands out by the quiet 1.5:1 - and no more, in either theme. (<see cref="GetLineColor"/> keeps the gray of the theme, which
+        /// may lie far from a surface of another brightness: no color would then stand out from both.)
+        /// </summary>
+        internal static Color GetQuietTrackColor(Color surface)
+        {
+            return EnsureContrast(surface, surface, QuietLineContrast);
+        }
+
+        /// <summary>
+        /// The same against two colors at once: the nearest lightness of <paramref name="color"/> (hue and saturation kept) that has at least
+        /// <paramref name="minimum"/> contrast against the page and against <paramref name="other"/> (a color that lies on the page, such as the
+        /// track of a slider), looking in the direction of the page first (lighter on a dark page, darker on a light one) and then the other way:
+        /// the other color may lie on the far side of the color, and moving it for each of the two in turn would move it back and forth.
+        /// Where no lightness has both, the one whose worse contrast is the best.
+        /// </summary>
+        internal static Color EnsureContrast(Color color, Color page, Color other, double minimum)
+        {
+            double toward = IsLight(page) ? -0.01 : 0.01;
+            Color best = color;
+            double bestWorst = -1;
+
+            for (int i = 0; i <= 100; i++)
+            {
+                foreach (double direction in new[] { toward, -toward })
+                {
+                    Color candidate = i == 0 ? color : ShiftLightness(color, direction * i);
+                    double worst = Math.Min(GetContrastRatio(candidate, page), GetContrastRatio(candidate, other));
+
+                    if (worst >= minimum)
+                        return candidate;
+
+                    if (worst > bestWorst)
+                    {
+                        bestWorst = worst;
+                        best = candidate;
+                    }
+                }
+            }
+
+            return best;
+        }
+
         // Text keeps the color it has at rest as long as it stays clearly
         // readable on the next fill; only when it would not, the better one
         // takes over. Otherwise the text would flip between light and dark each

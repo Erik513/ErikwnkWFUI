@@ -111,7 +111,9 @@ namespace ErikwnkWFUI.Controls
             {
                 if (_popup == null || _popup.IsDisposed)
                 {
-                    _popup = UIStyles.InfoPopups.CreatePrimary();
+                    // The colors of the slider (gray, a set, the accent), asked for again each time: it follows them.
+                    _popup = UIStyles.InfoPopups.CreateStandard();
+                    _popup.FollowColors(() => Colors);
 
                     _popupWidthStale = true;
                 }
@@ -166,7 +168,8 @@ namespace ErikwnkWFUI.Controls
         // final value is always shown, even if it lands inside the window.
         private void ShowPopup(bool force = false)
         {
-            if (FindForm() == null)
+            // A disabled slider reacts to nothing, so it shows nothing either.
+            if (FindForm() == null || !Enabled)
                 return;
 
             int now = Environment.TickCount;

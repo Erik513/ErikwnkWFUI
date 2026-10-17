@@ -17,7 +17,8 @@ namespace ErikwnkWFUI.Controls
     /// the ends) and the mouse wheel work as on the original. <see cref="ValueChanged"/> fires on every change from the user (drag,
     /// click on the track, keys, wheel); unlike the original it does not fire when <see cref="Value"/> is set from code, so that code
     /// which keeps the slider up to date cannot start a loop. The filled part and the thumb are gray, the color of <see cref="Colors"/>
-    /// (a color set; <c>UIStyles.TrackBars.CreatePrimary</c> follows the accent) or <see cref="FillColor"/>. <see cref="ShowValuePopup"/>
+    /// (a color set; <c>UIStyles.TrackBars.CreatePrimary</c> follows the accent) or <see cref="FillColor"/>; except for the last, they are
+    /// moved as far as needed to stand out from what the slider lies on, in both themes. The popup has the colors of the set too. <see cref="ShowValuePopup"/>
     /// shows the value above the thumb, written as <see cref="FormatValue"/> says (<see cref="FormatPercent"/> for a volume from 0 to 1);
     /// a screen reader is told it is a slider and its value. The measures are scaled with the screen. Not offered: tick marks, the
     /// vertical orientation, <c>AutoSize</c>; right-to-left layouts are not supported (<c>RightToLeft</c> is ignored).
@@ -132,7 +133,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/> (not the disabled look). Null (the default) uses the color of the set, or the neutral gray.</summary>
+        /// <summary>An explicit fill/thumb color, overriding <see cref="Colors"/> and kept as it is (not the disabled look). Null (the default) uses the color of the set, or the neutral gray.</summary>
         [DefaultValue(null)]
         public Color? FillColor
         {
@@ -426,6 +427,7 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
             {
                 EndDrag();
+                HidePopup();
             }
         }
 
@@ -532,17 +534,39 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
-        // The color of the filled part and the thumb: the disabled color, else FillColor, else the main color of the set, else gray.
+        // What the slider lies on: its own color if it has one, else the first color that is not see-through behind it.
+        private Color GetSurface()
+        {
+            return SurfaceColor.Of(this);
+        }
+
+        // The track: the surface moved just far enough to stand out from it, 1.5:1, in both themes.
+        internal Color GetTrackColor()
+        {
+            return UIColors.GetQuietTrackColor(GetSurface());
+        }
+
+        // The color of the filled part and the thumb: a color set by hand as it is; the others (the main color of the set, the gray, the
+        // disabled color) moved just far enough to stand out from the surface and from the track (3:1, as the fill of the bars). The
+        // thumb reaches beyond the track, so it has to be seen on the surface too.
         internal Color GetFillColor()
         {
+            Color surface = GetSurface();
+
             if (!Enabled)
-                return UIStyles.Colors.TextDisabled;
+                return Stand(UIColors.GetDisabledText(surface), surface);
+
             if (_fillColor.HasValue)
                 return _fillColor.Value;
 
             UIColorSet colors = Colors;
 
-            return colors != null ? colors.Hover : UIColors.DisabledGray;
+            return Stand(colors != null ? colors.Hover : UIColors.DisabledGray, surface);
+        }
+
+        private Color Stand(Color color, Color surface)
+        {
+            return UIColors.EnsureContrast(color, surface, GetTrackColor(), ProgressBarPainting.FillContrast);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -554,7 +578,7 @@ namespace ErikwnkWFUI.Controls
             int trackTop = midY - TrackHeight / 2;
             int thumbX = TrackLeft + (int)Math.Round(Fraction * TrackWidth);
 
-            Color trackColor = UIStyles.Colors.BorderMedium;
+            Color trackColor = GetTrackColor();
             Color fillColor = GetFillColor();
 
             using (SolidBrush track = new SolidBrush(trackColor))

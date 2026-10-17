@@ -18,6 +18,14 @@ public class TrackBarFactoryTests : IDisposable
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
+    // What the fill of a slider is for a color: moved just far enough to stand out from the surface and the track (3:1).
+    private static Color Stood(TrackBar bar, Color raw)
+    {
+        Color surface = ErikwnkWFUI.Helpers.SurfaceColor.Of(bar);
+
+        return UIColors.EnsureContrast(raw, surface, bar.GetTrackColor(), 3.0);
+    }
+
     [Fact]
     public void TheFactoryMethods_SetTheValueAndTheRange()
     {
@@ -52,7 +60,7 @@ public class TrackBarFactoryTests : IDisposable
     {
         using TrackBar standard = UIStyles.TrackBars.CreateStandard(0.5);
 
-        Assert.Equal(UIColors.DisabledGray, standard.GetFillColor());
+        Assert.Equal(Stood(standard, UIColors.DisabledGray), standard.GetFillColor());
         Assert.Null(standard.Colors);
     }
 
@@ -64,9 +72,9 @@ public class TrackBarFactoryTests : IDisposable
         using TrackBar standard = UIStyles.TrackBars.CreateStandard(0.5, 1.0, teal);
         using TrackBar plain = UIStyles.TrackBars.CreateStandard(0.5, 1.0, UIStyles.Colors.CreateSet(Color.FromArgb(210, 110, 20)));
 
-        Assert.Equal(teal.Hover, standard.GetFillColor());
+        Assert.Equal(Stood(standard, teal.Hover), standard.GetFillColor());
         Assert.Same(teal, standard.Colors);
-        Assert.Equal(Color.FromArgb(210, 110, 20), plain.GetFillColor());
+        Assert.Equal(Stood(plain, Color.FromArgb(210, 110, 20)), plain.GetFillColor());
     }
 
     [Fact]
@@ -74,13 +82,13 @@ public class TrackBarFactoryTests : IDisposable
     {
         using TrackBar primary = UIStyles.TrackBars.CreatePrimary(0.5);
 
-        Assert.Equal(UIColors.PrimarySet.Hover, primary.GetFillColor());
+        Assert.Equal(Stood(primary, UIColors.PrimarySet.Hover), primary.GetFillColor());
 
         Color before = primary.GetFillColor();
         UIColors.SetAccent(Color.OrangeRed);
 
         Assert.NotEqual(before, primary.GetFillColor());
-        Assert.Equal(UIColors.PrimarySet.Hover, primary.GetFillColor());
+        Assert.Equal(Stood(primary, UIColors.PrimarySet.Hover), primary.GetFillColor());
     }
 
     [Fact]
@@ -89,23 +97,23 @@ public class TrackBarFactoryTests : IDisposable
         UIColorSet teal = UIStyles.Colors.Sets.Teal;
         using TrackBar bar = UIStyles.TrackBars.CreatePrimary(0.5);
 
-        Assert.Equal(UIColors.PrimarySet.Hover, bar.GetFillColor());
+        Assert.Equal(Stood(bar, UIColors.PrimarySet.Hover), bar.GetFillColor());
 
         bar.Colors = teal;
         UIColors.SetAccent(Color.OrangeRed);
-        Assert.Equal(teal.Hover, bar.GetFillColor());
+        Assert.Equal(Stood(bar, teal.Hover), bar.GetFillColor());
 
         bar.Colors = null;
-        Assert.Equal(UIColors.DisabledGray, bar.GetFillColor());
+        Assert.Equal(Stood(bar, UIColors.DisabledGray), bar.GetFillColor());
 
         bar.FollowColors(() => UIColors.PrimarySet);
-        Assert.Equal(UIColors.PrimarySet.Hover, bar.GetFillColor());
+        Assert.Equal(Stood(bar, UIColors.PrimarySet.Hover), bar.GetFillColor());
 
         bar.FillColor = Color.Purple;
         Assert.Equal(Color.Purple, bar.GetFillColor());
 
         bar.FillColor = null;
-        Assert.Equal(UIColors.PrimarySet.Hover, bar.GetFillColor());
+        Assert.Equal(Stood(bar, UIColors.PrimarySet.Hover), bar.GetFillColor());
     }
 
     [Fact]
@@ -115,7 +123,7 @@ public class TrackBarFactoryTests : IDisposable
         bar.FillColor = Color.Purple;
         bar.Enabled = false;
 
-        Assert.Equal(UIStyles.Colors.TextDisabled, bar.GetFillColor());
+        Assert.Equal(Stood(bar, UIColors.GetDisabledText(ErikwnkWFUI.Helpers.SurfaceColor.Of(bar))), bar.GetFillColor());
     }
 
     [Fact]
@@ -131,8 +139,10 @@ public class TrackBarFactoryTests : IDisposable
         using Bitmap picture = Draw(bar);
 
         // The thumb in the middle, and the filled part of the track left of it.
-        Assert.Equal(teal.Hover.ToArgb(), picture.GetPixel(50, 10).ToArgb());
-        Assert.Equal(teal.Hover.ToArgb(), picture.GetPixel(25, 10).ToArgb());
-        Assert.NotEqual(teal.Hover.ToArgb(), picture.GetPixel(80, 10).ToArgb());
+        Color fill = bar.GetFillColor();
+        Assert.Equal(fill.ToArgb(), picture.GetPixel(50, 10).ToArgb());
+        Assert.Equal(fill.ToArgb(), picture.GetPixel(25, 10).ToArgb());
+        Assert.NotEqual(fill.ToArgb(), picture.GetPixel(80, 10).ToArgb());
+        Assert.Equal(bar.GetTrackColor().ToArgb(), picture.GetPixel(80, 10).ToArgb());
     }
 }
