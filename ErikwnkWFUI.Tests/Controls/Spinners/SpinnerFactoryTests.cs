@@ -18,6 +18,9 @@ public class SpinnerFactoryTests : IDisposable
     // The color the arc is painted in (what the spinner works out while it paints).
     private static Color ArcOf(Spinner spinner) => spinner.InvokePrivate<Color>("ResolveArcColor");
 
+    // What the arc of a spinner is for a color: moved just far enough to stand out from the track (3:1).
+    private static Color Ensured(Spinner spinner, Color raw) => UIColors.EnsureContrast(raw, spinner.GetTrackColor(), 3.0);
+
     public static IEnumerable<object[]> All()
     {
         yield return new object[] { "CreateStandard", (Func<Spinner>)(() => UIStyles.Spinners.CreateStandard()), false };
@@ -67,8 +70,8 @@ public class SpinnerFactoryTests : IDisposable
         using Spinner standard = UIStyles.Spinners.CreateStandard();
         using Spinner progress = UIStyles.Spinners.CreateProgressStandard();
 
-        Assert.Equal(UIColors.DisabledGray, ArcOf(standard));
-        Assert.Equal(UIColors.DisabledGray, ArcOf(progress));
+        Assert.Equal(Ensured(standard, UIColors.DisabledGray), ArcOf(standard));
+        Assert.Equal(Ensured(progress, UIColors.DisabledGray), ArcOf(progress));
         Assert.Null(standard.Colors);
         Assert.True(standard.ArcColor.IsEmpty);
     }
@@ -82,10 +85,10 @@ public class SpinnerFactoryTests : IDisposable
         using Spinner progress = UIStyles.Spinners.CreateProgressStandard(24, 0, teal);
         using Spinner plain = UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.CreateSet(Color.FromArgb(210, 110, 20)));
 
-        Assert.Equal(teal.Hover, ArcOf(standard));
-        Assert.Equal(teal.Hover, ArcOf(progress));
+        Assert.Equal(Ensured(standard, teal.Hover), ArcOf(standard));
+        Assert.Equal(Ensured(progress, teal.Hover), ArcOf(progress));
         Assert.Same(teal, standard.Colors);
-        Assert.Equal(Color.FromArgb(210, 110, 20), ArcOf(plain));
+        Assert.Equal(Ensured(plain, Color.FromArgb(210, 110, 20)), ArcOf(plain));
     }
 
     [Fact]
@@ -96,18 +99,18 @@ public class SpinnerFactoryTests : IDisposable
         using Spinner primary = UIStyles.Spinners.CreatePrimary();
         using Spinner progressPrimary = UIStyles.Spinners.CreateProgressPrimary();
 
-        Assert.Equal(UIColors.Green, ArcOf(green));
-        Assert.Equal(UIColors.Green, ArcOf(progressGreen));
+        Assert.Equal(Ensured(green, UIColors.Green), ArcOf(green));
+        Assert.Equal(Ensured(progressGreen, UIColors.Green), ArcOf(progressGreen));
 
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf(primary));
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf(progressPrimary));
+        Assert.Equal(Ensured(primary, UIColors.PrimarySet.Hover), ArcOf(primary));
+        Assert.Equal(Ensured(progressPrimary, UIColors.PrimarySet.Hover), ArcOf(progressPrimary));
 
         Color before = ArcOf(primary);
         UIColors.SetAccent(Color.OrangeRed);
 
         Assert.NotEqual(before, ArcOf(primary));
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf(primary));
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf(progressPrimary));
+        Assert.Equal(Ensured(primary, UIColors.PrimarySet.Hover), ArcOf(primary));
+        Assert.Equal(Ensured(progressPrimary, UIColors.PrimarySet.Hover), ArcOf(progressPrimary));
     }
 
     [Fact]
@@ -122,7 +125,7 @@ public class SpinnerFactoryTests : IDisposable
         Assert.True(plainStatus.UseStatusGradient);
         Assert.False(plainStatus.ShowPercentage);
         plainStatus.Value = 100;
-        Assert.Equal(UIColors.Green, ArcOf(plainStatus));
+        Assert.Equal(Ensured(plainStatus, UIColors.Green), ArcOf(plainStatus));
 
         status.Value = 0;
         Color red = ArcOf(status);
@@ -131,9 +134,9 @@ public class SpinnerFactoryTests : IDisposable
         status.Value = 100;
         Color green = ArcOf(status);
 
-        Assert.Equal(UIColors.Red, red);
-        Assert.Equal(UIColors.Yellow, yellow);
-        Assert.Equal(UIColors.Green, green);
+        Assert.Equal(Ensured(status, UIColors.Red), red);
+        Assert.Equal(Ensured(status, UIColors.Yellow), yellow);
+        Assert.Equal(Ensured(status, UIColors.Green), green);
     }
 
     [Fact]
@@ -146,7 +149,7 @@ public class SpinnerFactoryTests : IDisposable
         Assert.Equal(Color.Purple, ArcOf(status));
 
         status.ArcColor = Color.Empty;
-        Assert.Equal(UIColors.Green, ArcOf(status));
+        Assert.Equal(Ensured(status, UIColors.Green), ArcOf(status));
 
         using Spinner set = UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.Sets.Teal);
         set.ArcColor = Color.Purple;
@@ -159,7 +162,7 @@ public class SpinnerFactoryTests : IDisposable
         using Spinner spinner = UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.Sets.Teal);
         spinner.Enabled = false;
 
-        Assert.Equal(UIStyles.Colors.TextDisabled, ArcOf(spinner));
+        Assert.Equal(UIColors.EnsureContrast(UIColors.GetDisabledText(UIColors.BackgroundMedium), spinner.GetTrackColor(), 3.0), ArcOf(spinner));
     }
 
     [Fact]

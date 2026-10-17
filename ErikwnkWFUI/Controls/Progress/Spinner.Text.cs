@@ -94,9 +94,7 @@ namespace ErikwnkWFUI.Controls
             if (area.Width <= 0 || area.Height <= 0)
                 return;
 
-            Color color = Enabled ? UIStyles.Colors.TextPrimary : UIStyles.Colors.TextDisabled;
-
-            TextRenderer.DrawText(g, Text, Font, area, color, TextFlags | alignment);
+            TextRenderer.DrawText(g, Text, Font, area, GetTextColor(), TextFlags | alignment);
         }
     }
 }

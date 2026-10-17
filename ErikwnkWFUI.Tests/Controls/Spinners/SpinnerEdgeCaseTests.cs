@@ -156,20 +156,21 @@ public class SpinnerEdgeCaseTests : IDisposable
         UIColorSet teal = UIStyles.Colors.Sets.Teal;
         using Spinner spinner = UIStyles.Spinners.CreatePrimary();
         Color ArcOf() => spinner.InvokePrivate<Color>("ResolveArcColor");
+        Color Ensured(Color raw) => UIColors.EnsureContrast(raw, spinner.GetTrackColor(), 3.0);
 
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf());
+        Assert.Equal(Ensured(UIColors.PrimarySet.Hover), ArcOf());
 
         spinner.Colors = teal;
         UIColors.SetAccent(Color.OrangeRed);
-        Assert.Equal(teal.Hover, ArcOf());
+        Assert.Equal(Ensured(teal.Hover), ArcOf());
 
         spinner.Colors = null;
-        Assert.Equal(UIColors.DisabledGray, ArcOf());
+        Assert.Equal(Ensured(UIColors.DisabledGray), ArcOf());
 
         spinner.FollowColors(() => UIColors.PrimarySet);
-        Assert.Equal(UIColors.PrimarySet.Hover, ArcOf());
+        Assert.Equal(Ensured(UIColors.PrimarySet.Hover), ArcOf());
         spinner.Colors = teal;
-        Assert.Equal(teal.Hover, ArcOf());
+        Assert.Equal(Ensured(teal.Hover), ArcOf());
     }
 
     [Fact]

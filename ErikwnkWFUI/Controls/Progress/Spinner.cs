@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -25,10 +26,6 @@ namespace ErikwnkWFUI.Controls
         private const int HiddenPollMs = 250;       // how often a spinner on a hidden window looks whether it is shown again
         private const int AskEveryTicks = 32;       // Windows is asked again for its animation setting after this many ticks (~0.5 s)
         private const float MinimumDigitSize = 7f;  // smaller digits in the ring are not legible, so they are left out
-
-        // The same blend red -> yellow -> green as the status color of the bars, with the same breakpoint (the green of "done" takes
-        // over only near the top).
-        private const double YellowBreakpoint = 0.65;
 
         private readonly Timer _timer;
         private float _angle;
@@ -368,9 +365,7 @@ namespace ErikwnkWFUI.Controls
             if (ring.Width <= 0f || ring.Height <= 0f)
                 return;
 
-            Color trackColor = UIStyles.Colors.BorderMedium;
-
-            using (Pen track = new Pen(trackColor, t))
+            using (Pen track = new Pen(GetTrackColor(), t))
             {
                 g.DrawEllipse(track, ring);
             }
@@ -392,45 +387,42 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // What the spinner lies on: its own color if it has one, else the first color that is not see-through behind it.
+        private Color GetSurface()
+        {
+            return SurfaceColor.Of(this);
+        }
+
+        // The faint full ring: the quiet line color of the surface (1.5:1 against it, in both themes).
+        internal Color GetTrackColor()
+        {
+            return UIColors.GetLineColor(GetSurface());
+        }
+
+        // The arc as painted: a color set by hand as it is, the others moved just far enough to stand out from the track (3:1, as the
+        // fill of the bars). A disabled spinner has the disabled look.
         private Color ResolveArcColor()
         {
+            Color track = GetTrackColor();
+
             if (!Enabled)
-                return UIStyles.Colors.TextDisabled;
+                return UIColors.EnsureContrast(UIColors.GetDisabledText(GetSurface()), track, ProgressBarPainting.FillContrast);
             if (!_arcColor.IsEmpty)
                 return _arcColor;
             if (_useStatusGradient)
-                return StatusColor(_value / 100f);
+                return ProgressBarPainting.GetStatusFill(_value, 0, 100, track);
 
             UIColorSet colors = Colors;
 
-            return colors != null ? colors.Hover : UIColors.DisabledGray;
+            return UIColors.EnsureContrast(colors != null ? colors.Hover : UIColors.DisabledGray, track, ProgressBarPainting.FillContrast);
         }
 
-        private static Color StatusColor(float fraction)
+        // The color of the text (the digits, the text next to the ring): readable on what the spinner lies on.
+        private Color GetTextColor()
         {
-            if (fraction < 0f)
-                fraction = 0f;
-            if (fraction > 1f)
-                fraction = 1f;
+            Color surface = GetSurface();
 
-            if (fraction <= YellowBreakpoint)
-                return Lerp(UIColors.Red, UIColors.Yellow, fraction / (float)YellowBreakpoint);
-
-            return Lerp(UIColors.Yellow, UIColors.Green,
-                (fraction - (float)YellowBreakpoint) / (float)(1 - YellowBreakpoint));
-        }
-
-        private static Color Lerp(Color from, Color to, float amount)
-        {
-            if (amount < 0f)
-                amount = 0f;
-            if (amount > 1f)
-                amount = 1f;
-
-            return Color.FromArgb(
-                (int)Math.Round(from.R + (to.R - from.R) * amount),
-                (int)Math.Round(from.G + (to.G - from.G) * amount),
-                (int)Math.Round(from.B + (to.B - from.B) * amount));
+            return Enabled ? ProgressBarPainting.GetTextColorOn(surface) : UIColors.GetDisabledText(surface);
         }
 
         // The digits sit inside the ring stroke; the widest they may get is the inner diameter. The size is worked out for "100"
@@ -442,7 +434,7 @@ namespace ErikwnkWFUI.Controls
             if (inner <= 3f)
                 return;
 
-            Color textColor = Enabled ? UIStyles.Colors.TextPrimary : UIStyles.Colors.TextDisabled;
+            Color textColor = GetTextColor();
 
             float size = inner * 0.7f;
             for (int i = 0; i < 8; i++)

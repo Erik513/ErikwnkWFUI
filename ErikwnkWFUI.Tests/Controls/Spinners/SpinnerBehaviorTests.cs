@@ -88,7 +88,7 @@ public class SpinnerBehaviorTests : IDisposable
         using Spinner spinner = UIStyles.Spinners.CreateStandard(60, 8, UIStyles.Colors.Sets.Green);
         spinner.IsIndeterminate = false;
         using Form host = Host(spinner);
-        Color arc = UIColors.Green;
+        Color arc = spinner.InvokePrivate<Color>("ResolveArcColor");
 
         // Cut so close to the ring that the pixel is on the stroke (12 o'clock, 3, 6, 9 o'clock).
         Point Top() => new Point(30, 5);
