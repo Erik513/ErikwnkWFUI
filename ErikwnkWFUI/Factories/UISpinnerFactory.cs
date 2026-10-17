@@ -32,26 +32,26 @@ namespace ErikwnkWFUI.Factories
             return spinner;
         }
 
-        // Same, plus the percentage in the centre (starts at 0 - raise Value as the load advances). The status one also colours the
+        // Same, plus the percentage in the centre (40 px by default: smaller rings leave the digits out as not legible; starts at 0 - raise Value as the load advances). The status one also colours the
         // arc red -> yellow -> green by the value; a plain "status" spinner without a number makes no sense, so there is no
         // non-progress CreateStatus.
 
-        public static Spinner CreateProgressStandard(int size = 24, int thickness = 0, UIColorSet colors = null)
+        public static Spinner CreateProgressStandard(int size = 40, int thickness = 0, UIColorSet colors = null)
         {
             return WithPercentage(CreateStandard(size, thickness, colors));
         }
 
-        public static Spinner CreateProgressGreen(int size = 24, int thickness = 0)
+        public static Spinner CreateProgressGreen(int size = 40, int thickness = 0)
         {
             return WithPercentage(CreateGreen(size, thickness));
         }
 
-        public static Spinner CreateProgressPrimary(int size = 24, int thickness = 0)
+        public static Spinner CreateProgressPrimary(int size = 40, int thickness = 0)
         {
             return WithPercentage(CreatePrimary(size, thickness));
         }
 
-        public static Spinner CreateProgressStatus(int size = 24, int thickness = 0)
+        public static Spinner CreateProgressStatus(int size = 40, int thickness = 0)
         {
             Spinner spinner = Configure(size, thickness);
             spinner.UseStatusGradient = true;

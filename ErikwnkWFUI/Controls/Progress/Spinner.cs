@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -17,10 +18,10 @@ namespace ErikwnkWFUI.Controls
     /// from the <see cref="Value"/>. The <see cref="UIStyles.Spinners"/> factories preset
     /// these (a colour set, the accent, and with a percentage the red→yellow→green status colour).
     /// </summary>
-    public class Spinner : Control
+    public partial class Spinner : Control
     {
         private const int TickMs = 16;              // ~60 fps
-        private const float DegreesPerTick = 5f;    // full turn in ~1.2 s
+        private const float MinimumDigitSize = 7f;  // smaller digits in the ring are not legible, so they are left out
 
         private readonly Timer _timer;
         private float _angle;
@@ -35,6 +36,8 @@ namespace ErikwnkWFUI.Controls
         private bool _isSpinning = true;
         private bool _isIndeterminate = true;
         private int _ticksSinceAsked;
+        private bool _hideWhenStopped;
+        private SpinnerSpeed _speed = SpinnerSpeed.Medium;
 
         // Windows is asked again for its animation setting after this many ticks (~0.5 s), not on every one.
         private const int AskEveryTicks = 32;
@@ -185,6 +188,32 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// True = the ring is not drawn while <see cref="IsSpinning"/> is false (the <see cref="Text"/> stays); false (the default) =
+        /// the ring stands still where it is.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool HideWhenStopped
+        {
+            get { return _hideWhenStopped; }
+            set
+            {
+                if (value == _hideWhenStopped)
+                    return;
+
+                _hideWhenStopped = value;
+                Invalidate();
+            }
+        }
+
+        /// <summary>How fast the arc turns (a turn in about 1.2 seconds by default). It has no effect on a known load.</summary>
+        [DefaultValue(SpinnerSpeed.Medium)]
+        public SpinnerSpeed Speed
+        {
+            get { return _speed; }
+            set { _speed = value; }
+        }
+
+        /// <summary>
         /// True (the default) = the load is unknown: an arc of fixed length turns. False = the load is known: the arc is as long as
         /// the <see cref="Value"/> (from the top, clockwise) and stands still.
         /// </summary>
@@ -242,7 +271,9 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
-            _angle = (_angle + DegreesPerTick) % 360f;
+            float degrees = _speed == SpinnerSpeed.Slow ? 3f : _speed == SpinnerSpeed.Fast ? 9f : 5f;
+
+            _angle = (_angle + degrees) % 360f;
             Invalidate();
         }
 
@@ -287,16 +318,24 @@ namespace ErikwnkWFUI.Controls
             Graphics g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
 
+            Rectangle box = GetLayout(out Rectangle textArea, out TextFormatFlags alignment);
+
+            if (textArea != Rectangle.Empty)
+                DrawText(g, textArea, alignment);
+
+            if (_hideWhenStopped && !_isSpinning)
+                return;
+
             float t = EffectiveThickness;
             float inset = t / 2f + 1f;
 
             // Always a circle, centred - a non-square control (e.g. stretched by
             // a table cell) draws the ring in the largest square that fits, not
             // an ellipse.
-            float d = Math.Min(Width, Height);
+            float d = Math.Min(box.Width, box.Height);
             RectangleF ring = new RectangleF(
-                (Width - d) / 2f + inset,
-                (Height - d) / 2f + inset,
+                box.X + (box.Width - d) / 2f + inset,
+                box.Y + (box.Height - d) / 2f + inset,
                 d - inset * 2f,
                 d - inset * 2f);
 
@@ -368,8 +407,9 @@ namespace ErikwnkWFUI.Controls
                 (int)Math.Round(from.B + (to.B - from.B) * amount));
         }
 
-        // The digits sit inside the ring stroke; the widest they may get is the
-        // inner diameter, so the font is measured down until "100" fits.
+        // The digits sit inside the ring stroke; the widest they may get is the inner diameter. The size is worked out for "100"
+        // whatever the value is, so the digits do not change their size while the number counts up; where that size is not legible
+        // (a small ring), they are left out.
         private void DrawProgressText(Graphics g, RectangleF ring, float stroke, string text)
         {
             float inner = ring.Width - stroke * 2f - 2f;
@@ -381,24 +421,28 @@ namespace ErikwnkWFUI.Controls
             float size = inner * 0.7f;
             for (int i = 0; i < 8; i++)
             {
-                Font font = new Font(Font.FontFamily, size, FontStyle.Bold, GraphicsUnit.Pixel);
-                SizeF measured = g.MeasureString(text, font);
-                bool fits = measured.Width <= inner && measured.Height <= inner;
-                if (fits || size <= 4f)
+                using (Font font = new Font(Font.FontFamily, size, FontStyle.Bold, GraphicsUnit.Pixel))
                 {
-                    using (font)
-                    using (SolidBrush brush = new SolidBrush(textColor))
-                    using (StringFormat sf = new StringFormat
+                    SizeF measured = g.MeasureString("100", font);
+                    if (measured.Width <= inner && measured.Height <= inner)
                     {
-                        Alignment = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
-                    })
-                    {
-                        g.DrawString(text, font, brush, ring, sf);
+                        if (size < MinimumDigitSize)
+                            return;
+
+                        using (SolidBrush brush = new SolidBrush(textColor))
+                        using (StringFormat sf = new StringFormat
+                        {
+                            Alignment = StringAlignment.Center,
+                            LineAlignment = StringAlignment.Center
+                        })
+                        {
+                            g.DrawString(text, font, brush, ring, sf);
+                        }
+
+                        return;
                     }
-                    return;
                 }
-                font.Dispose();
+
                 size *= 0.85f;
             }
         }

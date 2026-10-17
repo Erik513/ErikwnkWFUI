@@ -347,6 +347,24 @@ namespace ErikwnkWFUI.Showcase
             disabled.Enabled = false;
             AddSpinnerRow(table, "IsSpinning = false, Enabled = false", stopped, disabled);
 
+            Spinner right = UIStyles.Spinners.CreatePrimary(32);
+            right.Text = "Loading data...";
+            right.Width = 170;
+            Spinner below = UIStyles.Spinners.CreatePrimary(64);
+            below.Text = "Please wait";
+            below.TextPosition = SpinnerTextPosition.Below;
+            below.Width = 120;
+            AddSpinnerRow(table, "Text, TextPosition", right, below);
+
+            Spinner fast = UIStyles.Spinners.CreateGreen(40, 5);
+            fast.Speed = SpinnerSpeed.Fast;
+            Spinner hidden = UIStyles.Spinners.CreateGreen(40, 5);
+            hidden.Text = "Done";
+            hidden.Width = 100;
+            hidden.IsSpinning = false;
+            hidden.HideWhenStopped = true;
+            AddSpinnerRow(table, "Speed = Fast, HideWhenStopped", fast, hidden);
+
             Spinner determinate = UIStyles.Spinners.CreateProgressPrimary(40, 4);
             determinate.IsIndeterminate = false;
             AddAnimatedSpinnerRow(table, "IsIndeterminate = false", determinate);

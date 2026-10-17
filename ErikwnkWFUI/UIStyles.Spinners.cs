@@ -38,26 +38,26 @@ namespace ErikwnkWFUI
                 return UISpinnerFactory.CreatePrimary(size, thickness);
             }
 
-            /// <summary>A gray spinner (or one in the colour of a colour set) that also shows a percentage in the centre (starts at 0).</summary>
-            public static Spinner CreateProgressStandard(int size = 24, int thickness = 0, UIColorSet colors = null)
+            /// <summary>A gray spinner (or one in the colour of a colour set) that also shows a percentage in the centre (starts at 0; 40 px by default - a ring smaller than about 30 px leaves the digits out as not legible).</summary>
+            public static Spinner CreateProgressStandard(int size = 40, int thickness = 0, UIColorSet colors = null)
             {
                 return UISpinnerFactory.CreateProgressStandard(size, thickness, colors);
             }
 
             /// <summary>A green spinner that also shows a percentage in the centre (starts at 0).</summary>
-            public static Spinner CreateProgressGreen(int size = 24, int thickness = 0)
+            public static Spinner CreateProgressGreen(int size = 40, int thickness = 0)
             {
                 return UISpinnerFactory.CreateProgressGreen(size, thickness);
             }
 
             /// <summary>An accent spinner that also shows a percentage in the centre (starts at 0).</summary>
-            public static Spinner CreateProgressPrimary(int size = 24, int thickness = 0)
+            public static Spinner CreateProgressPrimary(int size = 40, int thickness = 0)
             {
                 return UISpinnerFactory.CreateProgressPrimary(size, thickness);
             }
 
             /// <summary>Shows a percentage in the centre; the arc is a solid colour blended red (0) → yellow → green (100) by that value.</summary>
-            public static Spinner CreateProgressStatus(int size = 24, int thickness = 0)
+            public static Spinner CreateProgressStatus(int size = 40, int thickness = 0)
             {
                 return UISpinnerFactory.CreateProgressStatus(size, thickness);
             }

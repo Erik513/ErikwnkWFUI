@@ -35,7 +35,7 @@ public class SpinnerFactoryTests : IDisposable
     {
         using Spinner spinner = make();
 
-        Assert.Equal(new Size(24, 24), spinner.Size);
+        Assert.Equal(withPercentage ? new Size(40, 40) : new Size(24, 24), spinner.Size);
         Assert.Equal(0, spinner.Thickness);
         Assert.Equal(withPercentage, spinner.ShowPercentage);
         Assert.Equal(0, spinner.Value);
