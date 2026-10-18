@@ -505,6 +505,7 @@ public class TrackBarEdgeCaseTests
 
         try
         {
+            TrackBar.PopupHideDelayMs = 200;
             using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
             using Form host = Show(bar);
 
@@ -516,15 +517,16 @@ public class TrackBarEdgeCaseTests
             InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
             Assert.True(popup.Visible, "the popup is gone as soon as the mouse is let go");
 
-            // It waits for the hide timer (about 1.5 s) to take it away - not for the mouse that has left.
+            // It waits for the hide timer (1.5 s, shortened for the test) to take it away - not for the mouse that has left.
             System.Windows.Forms.Timer linger = bar.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!;
             Assert.True(linger.Enabled, "nothing keeps the popup for a moment");
 
-            TestPictures.Pump(2200);
+            TestPictures.Pump(600);
             Assert.False(popup.Visible, "the popup stays for good");
         }
         finally
         {
+            TrackBar.PopupHideDelayMs = 1500;
             PopupSupport.OwnerIsActive = before;
         }
     }
@@ -551,5 +553,11 @@ public class TrackBarEdgeCaseTests
         {
             PopupSupport.OwnerIsActive = before;
         }
+    }
+
+    [Fact]
+    public void ThePopupStaysForAMomentAndAHalfAfterAnInteraction_ByDefault()
+    {
+        Assert.Equal(1500, TrackBar.PopupHideDelayMs);
     }
 }

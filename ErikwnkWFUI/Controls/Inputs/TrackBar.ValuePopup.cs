@@ -19,8 +19,8 @@ namespace ErikwnkWFUI.Controls
         // tooltip. A plain click (mouse down then up with no movement) still
         // goes through DragStarted/DragEnded just as fast as any other
         // click, so without this the popup would flash on and instantly
-        // back off again.
-        private const int PopupHideDelayMs = 1500;
+        // back off again. (Not a constant so that a test does not have to wait for the whole time.)
+        internal static int PopupHideDelayMs = 1500;
 
         private InfoPopupForm _popup;
         private Timer _hideTimer;
@@ -150,6 +150,8 @@ namespace ErikwnkWFUI.Controls
                     HidePopup();
                 };
             }
+
+            _hideTimer.Interval = Math.Max(1, PopupHideDelayMs);
 
             // Restart rather than let an already-running one finish early -
             // repeated arrow presses (or a fresh drag right after a click)
