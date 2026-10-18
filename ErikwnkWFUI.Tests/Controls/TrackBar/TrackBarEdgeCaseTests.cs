@@ -560,4 +560,36 @@ public class TrackBarEdgeCaseTests
     {
         Assert.Equal(1500, TrackBar.PopupHideDelayMs);
     }
+
+    [Fact]
+    public void ALossOfTheFocus_HidesThePopupAtOnce_EvenRightAfterItWasShown_AndTheFocusIsNotTakenBack()
+    {
+        Func<Form, bool> before = PopupSupport.OwnerIsActive;
+        PopupSupport.OwnerIsActive = _ => true;
+
+        try
+        {
+            using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
+            using Form host = Show(bar);
+            int regained = 0;
+            bar.GotFocus += (s, e) => regained++;
+
+            Key(bar, Keys.Right);                    // the popup is shown ...
+            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            Assert.True(popup.Visible);
+
+            bar.InvokePrivate("OnLostFocus", EventArgs.Empty);   // ... and the user goes to another control at once
+
+            Assert.False(popup.Visible, "the popup stays on a slider that has lost the focus");
+            Assert.False(bar.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.Enabled);
+
+            // Nothing takes the focus back later (the popup never had it).
+            TestPictures.Pump(150);
+            Assert.Equal(0, regained);
+        }
+        finally
+        {
+            PopupSupport.OwnerIsActive = before;
+        }
+    }
 }
