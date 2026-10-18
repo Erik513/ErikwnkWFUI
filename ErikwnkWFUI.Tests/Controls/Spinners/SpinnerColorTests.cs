@@ -68,7 +68,7 @@ public class SpinnerColorTests
                 {
                     (Panel panel, Spinner spinner) = Make(surface, () => UIStyles.Spinners.CreateStatus(40, 4));
                     spinner.Value = value;
-                    Check(shortfalls, "status arc at " + value + " on " + Name(surface), spinner.InvokePrivate<Color>("ResolveArcColor"), spinner.GetTrackColor(), 3.0);
+                    Check(shortfalls, "status arc at " + value + " on " + Name(surface), spinner.InvokePrivate<Color>("ResolveArcColor"), spinner.GetTrackColor(), ProgressBarPainting.StatusFillContrast);
                     panel.Dispose();
                 }
 

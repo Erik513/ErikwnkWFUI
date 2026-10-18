@@ -79,7 +79,7 @@ public class ProgressBarColorContrastTests
         Run(light, shortfalls =>
         {
             // (At 0 there is no fill to look at: the color it would have is checked.)
-            Check(shortfalls, "status 0: fill on track", ProgressBarPainting.GetStatusFill(0, 0, 100, UIColors.BackgroundMedium), UIColors.BackgroundMedium, ProgressBarPainting.FillContrast);
+            Check(shortfalls, "status 0: fill on track", ProgressBarPainting.GetStatusFill(0, 0, 100, UIColors.BackgroundMedium), UIColors.BackgroundMedium, ProgressBarPainting.StatusFillContrast);
 
             for (int value = 5; value <= 100; value += 5)
             {
@@ -87,13 +87,13 @@ public class ProgressBarColorContrastTests
                 thick.Value = value;
                 using Form thickHost = Host(thick, 200, 23);
                 using (Bitmap picture = Draw(thick))
-                    Check(shortfalls, "status " + value + ": fill on track", picture.GetPixel(2, 11), thick.BackColor, ProgressBarPainting.FillContrast);
+                    Check(shortfalls, "status " + value + ": fill on track", picture.GetPixel(2, 11), thick.BackColor, ProgressBarPainting.StatusFillContrast);
 
                 SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStatus();
                 slim.Value = value;
                 using Form slimHost = Host(slim, 200, 4);
                 using (Bitmap picture = Draw(slim))
-                    Check(shortfalls, "slim status " + value + ": fill on track", picture.GetPixel(0, 2), slim.BackColor, ProgressBarPainting.FillContrast);
+                    Check(shortfalls, "slim status " + value + ": fill on track", picture.GetPixel(0, 2), slim.BackColor, ProgressBarPainting.StatusFillContrast);
             }
         });
     }

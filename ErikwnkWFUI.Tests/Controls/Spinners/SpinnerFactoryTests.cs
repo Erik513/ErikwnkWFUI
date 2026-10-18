@@ -21,6 +21,9 @@ public class SpinnerFactoryTests : IDisposable
     // What the arc of a spinner is for a color: moved just far enough to stand out from the track (3:1).
     private static Color Ensured(Spinner spinner, Color raw) => UIColors.EnsureContrast(raw, spinner.GetTrackColor(), 3.0);
 
+    // The same for a status color (red to green): less is asked of it (2:1), or the red turned pale.
+    private static Color EnsuredStatus(Spinner spinner, Color raw) => UIColors.EnsureContrast(raw, spinner.GetTrackColor(), ProgressBarPainting.StatusFillContrast);
+
     public static IEnumerable<object[]> All()
     {
         yield return new object[] { "CreateStandard", (Func<Spinner>)(() => UIStyles.Spinners.CreateStandard()), false };
@@ -125,7 +128,7 @@ public class SpinnerFactoryTests : IDisposable
         Assert.True(plainStatus.UseStatusGradient);
         Assert.False(plainStatus.ShowPercentage);
         plainStatus.Value = 100;
-        Assert.Equal(Ensured(plainStatus, UIColors.Green), ArcOf(plainStatus));
+        Assert.Equal(EnsuredStatus(plainStatus, UIColors.Green), ArcOf(plainStatus));
 
         status.Value = 0;
         Color red = ArcOf(status);
@@ -134,9 +137,9 @@ public class SpinnerFactoryTests : IDisposable
         status.Value = 100;
         Color green = ArcOf(status);
 
-        Assert.Equal(Ensured(status, UIColors.Red), red);
-        Assert.Equal(Ensured(status, UIColors.Yellow), yellow);
-        Assert.Equal(Ensured(status, UIColors.Green), green);
+        Assert.Equal(EnsuredStatus(status, UIColors.Red), red);
+        Assert.Equal(EnsuredStatus(status, UIColors.Yellow), yellow);
+        Assert.Equal(EnsuredStatus(status, UIColors.Green), green);
     }
 
     [Fact]
@@ -149,7 +152,7 @@ public class SpinnerFactoryTests : IDisposable
         Assert.Equal(Color.Purple, ArcOf(status));
 
         status.ArcColor = Color.Empty;
-        Assert.Equal(Ensured(status, UIColors.Green), ArcOf(status));
+        Assert.Equal(EnsuredStatus(status, UIColors.Green), ArcOf(status));
 
         using Spinner set = UIStyles.Spinners.CreateStandard(24, 0, UIStyles.Colors.Sets.Teal);
         set.ArcColor = Color.Purple;

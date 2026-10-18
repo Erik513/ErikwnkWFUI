@@ -39,10 +39,17 @@ namespace ErikwnkWFUI.Controls
             return UIColors.GetContrastRatio(Color.White, background) >= UIColors.GetContrastRatio(Color.Black, background) ? Color.White : Color.Black;
         }
 
-        /// <summary>The fill of a status bar at a value (red to green), moved just far enough to stand out from the track.</summary>
+        /// <summary>
+        /// What the status colors (red, orange, yellow, green) have to reach against the track: 2:1, less than the other fills. A
+        /// stronger demand turned the red of a status on a dark track into a pale pink (and the green and the orange into lighter ones), only to
+        /// stand out from the lighter track; the hue tells the fill from the track as well.
+        /// </summary>
+        public const double StatusFillContrast = 2.0;
+
+        /// <summary>The fill of a status bar at a value (red to green), moved just far enough to stand out from the track (<see cref="StatusFillContrast"/>).</summary>
         public static Color GetStatusFill(int value, int minimum, int maximum, Color track)
         {
-            return UIColors.EnsureContrast(UIColors.GetStatusColor(value, minimum, maximum), track, FillContrast);
+            return UIColors.EnsureContrast(UIColors.GetStatusColor(value, minimum, maximum), track, StatusFillContrast);
         }
 
         /// <summary>The part of the bar that is filled, from 0 to 1.</summary>
