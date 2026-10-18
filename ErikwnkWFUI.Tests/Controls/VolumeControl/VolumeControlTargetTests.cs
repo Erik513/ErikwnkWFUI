@@ -322,4 +322,26 @@ public class VolumeControlTargetTests
 
         Assert.Equal(0.35, control.Slider.Value, 6);
     }
+
+    [Fact]
+    public void TheReadyMadeAudioVolumeState_CanBeCoupled_AndGivesTheEffectiveVolumeForTheOutput()
+    {
+        AudioVolumeState player = new AudioVolumeState(0.6);
+        using VolumeControl control = UIStyles.VolumeControls.CreateStandard();
+        using Form host = Show(control);
+        control.Target = player;
+
+        Assert.Equal(0.6, control.Volume);
+
+        Click(control);
+        Assert.True(player.IsMuted);
+        Assert.Equal(0.0, player.EffectiveVolume);
+
+        Click(control);
+        Assert.Equal(0.6, player.EffectiveVolume);
+
+        player.Volume = 0.3;
+        Assert.Equal(0.3, control.Volume);
+        Assert.Equal(0.3, control.Slider.Value, 6);
+    }
 }

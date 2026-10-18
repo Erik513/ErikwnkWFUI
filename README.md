@@ -199,6 +199,10 @@ load.Value = 73;
 time, the slider moved to 0 mutes and moved away from 0 turns the sound on again, and the slider shows the percentage in a popup. Read
 `EffectiveVolume` (0 while muted) for what the audio output gets and react to `VolumeChanged`.
 
+A player is coupled with one line: it implements `IAudioVolume` of ErikwnkCore (or is derived from the ready-made `AudioVolumeState`, which limits
+the volume, raises the event only on a change and has `EffectiveVolume`), and `volume.Target = player;` does the rest - the control sets the player
+and follows it when it changes by itself.
+
 ```csharp
 var volume = UIStyles.VolumeControls.CreatePrimary(0.6);
 volume.VolumeChanged += (s, e) => player.Volume = (float)volume.EffectiveVolume;
