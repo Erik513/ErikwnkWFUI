@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkCore;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
@@ -19,7 +20,9 @@ namespace ErikwnkWFUI.Controls
     /// what the audio output is to get (0 while muted). <see cref="VolumeChanged"/> comes when the user changes what is heard, not when code
     /// sets <see cref="Volume"/> or <see cref="IsMuted"/> (as the <see cref="TrackBar.ValueChanged"/> of the slider). Make one with
     /// <c>UIStyles.VolumeControls</c>. The mute button and the slider are reachable for what is not offered here (<see cref="MuteButton"/>,
-    /// <see cref="Slider"/>: the colors of the popup, the steps of the keys ...); right-to-left layouts are not supported.
+    /// <see cref="Slider"/>: the colors of the popup, the steps of the keys ...); right-to-left layouts are not supported. It makes no sound
+    /// itself: a player that implements <see cref="IAudioVolume"/> (of ErikwnkCore) is coupled with <see cref="Target"/> - the control
+    /// sets it, and follows it when it changes by itself.
     /// </summary>
     public class VolumeControl : Panel
     {
@@ -34,6 +37,8 @@ namespace ErikwnkWFUI.Controls
         private double _volume = 1.0;
         private double _volumeBeforeDrag = 1.0;
         private bool _muted;
+        private IAudioVolume _target;
+        private bool _pushing;
 
         public VolumeControl()
         {
@@ -74,6 +79,7 @@ namespace ErikwnkWFUI.Controls
                     _volume = Math.Min(1.0, value);
 
                 UpdateParts();
+                PushToTarget();
             }
         }
 
@@ -89,6 +95,7 @@ namespace ErikwnkWFUI.Controls
 
                 _muted = value;
                 UpdateParts();
+                PushToTarget();
             }
         }
 
@@ -114,6 +121,97 @@ namespace ErikwnkWFUI.Controls
         internal void FollowColors(Func<UIColorSet> source)
         {
             _slider.FollowColors(source);
+        }
+
+        /// <summary>
+        /// The player (or anything else that makes sound) this control is coupled to; null (the default) is none. On assigning, the control
+        /// takes over its volume and mute; from then on every change by the user - and every <see cref="Volume"/> or <see cref="IsMuted"/> set
+        /// from code - is passed on to it (the volume that is remembered and the mute as two things), and the control follows the
+        /// <see cref="IAudioVolume.VolumeChanged"/> of the player (also when it is raised on another thread). The control lets go of it when it is
+        /// disposed.
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IAudioVolume Target
+        {
+            get { return _target; }
+            set
+            {
+                if (ReferenceEquals(value, _target))
+                    return;
+
+                if (_target != null)
+                    _target.VolumeChanged -= OnTargetChanged;
+
+                _target = value;
+
+                if (_target == null)
+                    return;
+
+                _target.VolumeChanged += OnTargetChanged;
+                SyncFromTarget();
+            }
+        }
+
+        // The player changed by itself (maybe on the thread of the sound): the control follows, on its own thread.
+        private void OnTargetChanged(object sender, EventArgs e)
+        {
+            if (_pushing || IsDisposed)
+                return;
+
+            if (IsHandleCreated && InvokeRequired)
+            {
+                try
+                {
+                    BeginInvoke(new Action(SyncFromTarget));
+                }
+                catch (InvalidOperationException)
+                {
+                    // the window has gone since: nothing is shown any more
+                }
+
+                return;
+            }
+
+            SyncFromTarget();
+        }
+
+        private void SyncFromTarget()
+        {
+            IAudioVolume target = _target;
+
+            if (target == null || IsDisposed)
+                return;
+
+            double volume = target.Volume;
+
+            if (!double.IsNaN(volume) && volume > 0)
+                _volume = Math.Min(1.0, volume);
+
+            // A volume of 0 is as good as muted (the remembered level stays), as when it is set from code.
+            _muted = target.IsMuted || double.IsNaN(volume) || volume <= 0;
+            UpdateParts();
+        }
+
+        // The control sets the player: the volume that is remembered, and whether it is muted.
+        private void PushToTarget()
+        {
+            IAudioVolume target = _target;
+
+            if (target == null)
+                return;
+
+            _pushing = true;
+
+            try
+            {
+                target.Volume = _volume;
+                target.IsMuted = _muted;
+            }
+            finally
+            {
+                _pushing = false;
+            }
         }
 
         /// <summary>The slider, for what the control does not offer by itself (the popup, the steps of the keys, its own events).</summary>
@@ -198,6 +296,7 @@ namespace ErikwnkWFUI.Controls
             }
 
             UpdateParts();
+            PushToTarget();
             RaiseVolumeChanged();
         }
 
@@ -223,6 +322,7 @@ namespace ErikwnkWFUI.Controls
 
             _muted = !_muted;
             UpdateParts();
+            PushToTarget();
             RaiseVolumeChanged();
         }
 
@@ -264,7 +364,15 @@ namespace ErikwnkWFUI.Controls
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 UIStrings.LanguageChanged -= OnLanguageChanged;
+
+                if (_target != null)
+                {
+                    _target.VolumeChanged -= OnTargetChanged;
+                    _target = null;
+                }
+            }
 
             base.Dispose(disposing);
         }
