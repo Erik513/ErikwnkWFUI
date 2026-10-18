@@ -50,7 +50,7 @@ namespace ErikwnkWFUI.Controls
         private void RangeChanged()
         {
             _value = Clamp(_value, _minimum, _maximum);
-            _popupWidthStale = true;
+            _valuePopup?.MarkWidthStale();
             Invalidate();
         }
 

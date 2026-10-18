@@ -22,7 +22,7 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _formatValue = value;
-                _popupWidthStale = true;
+                _valuePopup?.MarkWidthStale();
             }
         }
 

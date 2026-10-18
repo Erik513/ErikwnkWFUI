@@ -134,7 +134,7 @@ public class TrackBarLightThemeTests : IDisposable
                 host.Show();
                 Application.DoEvents();
                 bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-                InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+                InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
 
                 Color text = popup.InvokePrivate<Color>("GetForeColor");
                 Color back = popup.InvokePrivate<Color>("GetBackColor");

@@ -86,7 +86,7 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
             {
                 EndDrag();
-                HidePopup();
+                _valuePopup.Hide();
             }
 
             Invalidate();
@@ -116,7 +116,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseEnter(e);
             _hover = true;
             Invalidate();
-            PopupMouseEnter();
+            _valuePopup.MouseEnter(IsDragging);
         }
 
         protected override void OnMouseLeave(EventArgs e)
@@ -124,7 +124,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseLeave(e);
             _hover = false;
             Invalidate();
-            PopupMouseLeave();
+            _valuePopup.MouseLeave(IsDragging);
         }
 
         protected override bool IsInputKey(Keys keyData)

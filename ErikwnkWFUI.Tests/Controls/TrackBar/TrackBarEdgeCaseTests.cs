@@ -203,7 +203,7 @@ public class TrackBarEdgeCaseTests
         TrackBar bar = new TrackBar { ShowValuePopup = true };
         Form host = Show(bar);
         Key(bar, Keys.Right);
-        InfoPopupForm? popup = bar.GetPrivateField<InfoPopupForm>("_popup");
+        InfoPopupForm? popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form;
         Assert.NotNull(popup);
 
         bar.Dispose();
@@ -311,7 +311,7 @@ public class TrackBarEdgeCaseTests
         Assert.Null(Record.Exception(() => Key(bar, Keys.Right)));
         Assert.Null(Record.Exception(() => bar.InvokePrivate("OnMouseEnter", EventArgs.Empty)));
         Assert.Null(Record.Exception(() => bar.InvokePrivate("OnMouseLeave", EventArgs.Empty)));
-        Assert.Null(bar.GetPrivateField<InfoPopupForm>("_popup"));
+        Assert.Null(bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form);
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public class TrackBarEdgeCaseTests
         using Form host = Show(bar);
 
         bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
         Assert.True(popup.Visible, "no popup while the mouse is over the slider");
 
         bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);
@@ -417,15 +417,15 @@ public class TrackBarEdgeCaseTests
         foreach (Keys key in new[] { Keys.Tab, Keys.ShiftKey, Keys.ControlKey, Keys.A, Keys.Enter })
             bar.InvokePrivate("OnKeyUp", new KeyEventArgs(key));
 
-        Assert.Null(bar.GetPrivateField<InfoPopupForm>("_popup"));
+        Assert.Null(bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form);
 
         bar.InvokePrivate("OnKeyUp", new KeyEventArgs(Keys.Right));
-        Assert.NotNull(bar.GetPrivateField<InfoPopupForm>("_popup"));
+        Assert.NotNull(bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form);
     }
 
     private static string ShownText(TrackBar bar)
     {
-        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
         InfoPopupSection[] sections = popup.GetPrivateField<InfoPopupSection[]>("_sections")!;
 
         return sections.Length == 0 ? "" : sections[0].Text;
@@ -480,7 +480,7 @@ public class TrackBarEdgeCaseTests
             bar.Enabled = false;                // the popup goes with it
             TestPictures.Pump(200);
 
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             Assert.False(popup.Visible, "the held-back update showed the popup of a disabled slider");
 
             bar.Enabled = true;
@@ -505,7 +505,7 @@ public class TrackBarEdgeCaseTests
 
         try
         {
-            TrackBar.PopupHideDelayMs = 200;
+            ValuePopup.HideDelayMs = 200;
             using TrackBar bar = new TrackBar { Maximum = 100, ShowValuePopup = true };
             using Form host = Show(bar);
 
@@ -514,11 +514,11 @@ public class TrackBarEdgeCaseTests
             bar.InvokePrivate("OnMouseUp", Mouse(300));      // let go far to the right of the slider ...
             bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);   // ... and the mouse leaves right after the release
 
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             Assert.True(popup.Visible, "the popup is gone as soon as the mouse is let go");
 
             // It waits for the hide timer (1.5 s, shortened for the test) to take it away - not for the mouse that has left.
-            System.Windows.Forms.Timer linger = bar.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!;
+            System.Windows.Forms.Timer linger = bar.GetPrivateField<ValuePopup>("_valuePopup")!.LingerTimer!;
             Assert.True(linger.Enabled, "nothing keeps the popup for a moment");
 
             TestPictures.Pump(600);
@@ -526,7 +526,7 @@ public class TrackBarEdgeCaseTests
         }
         finally
         {
-            TrackBar.PopupHideDelayMs = 1500;
+            ValuePopup.HideDelayMs = 1500;
             PopupSupport.OwnerIsActive = before;
         }
     }
@@ -543,7 +543,7 @@ public class TrackBarEdgeCaseTests
             using Form host = Show(bar);
 
             bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             Assert.True(popup.Visible);
 
             bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);
@@ -558,7 +558,7 @@ public class TrackBarEdgeCaseTests
     [Fact]
     public void ThePopupStaysForAMomentAndAHalfAfterAnInteraction_ByDefault()
     {
-        Assert.Equal(1500, TrackBar.PopupHideDelayMs);
+        Assert.Equal(1500, ValuePopup.HideDelayMs);
     }
 
     [Fact]
@@ -575,13 +575,13 @@ public class TrackBarEdgeCaseTests
             bar.GotFocus += (s, e) => regained++;
 
             Key(bar, Keys.Right);                    // the popup is shown ...
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             Assert.True(popup.Visible);
 
             bar.InvokePrivate("OnLostFocus", EventArgs.Empty);   // ... and the user goes to another control at once
 
             Assert.False(popup.Visible, "the popup stays on a slider that has lost the focus");
-            Assert.False(bar.GetPrivateField<System.Windows.Forms.Timer>("_hideTimer")!.Enabled);
+            Assert.False(bar.GetPrivateField<ValuePopup>("_valuePopup")!.LingerTimer!.Enabled);
 
             // Nothing takes the focus back later (the popup never had it).
             TestPictures.Pump(150);

@@ -274,8 +274,8 @@ public class TrackBarFeatureTests
         Key(off, Keys.Right);
         Key(on, Keys.Right);
 
-        Assert.Null(off.GetPrivateField<object>("_popup"));
-        Assert.NotNull(on.GetPrivateField<object>("_popup"));
+        Assert.Null(off.GetPrivateField<ValuePopup>("_valuePopup")!.Form);
+        Assert.NotNull(on.GetPrivateField<ValuePopup>("_valuePopup")!.Form);
     }
 
     [Fact]
@@ -285,7 +285,7 @@ public class TrackBarFeatureTests
         using Form host = Show(bar);
 
         Key(bar, Keys.Right);
-        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
         int narrow = popup.FixedSize.Width;
 
         // (The popup is not made again within a few milliseconds of the last time.)
@@ -315,7 +315,7 @@ public class TrackBarFeatureTests
         // The popup is made while the value is 0 (the mouse comes over the slider), before any wider value was seen.
         bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
 
-        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
         string text = bar.FormatValue(0.85);
         Assert.True(popup.FixedSize.Width >= TextWidth(text) + 8, "the popup of " + popup.FixedSize.Width + " px cuts \"" + text + "\" (" + TextWidth(text) + " px)");
     }
@@ -330,7 +330,7 @@ public class TrackBarFeatureTests
 
         // The popup is made while the value is 0 (the mouse comes over the slider); then the user moves it to 37.
         bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-        InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+        InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
         TestPictures.Pump(80);
         Key(bar, Keys.Right);
 

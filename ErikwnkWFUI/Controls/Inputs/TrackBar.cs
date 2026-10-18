@@ -151,7 +151,7 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
-                DisposePopup();
+                _valuePopup.Dispose();
             }
 
             base.Dispose(disposing);

@@ -164,7 +164,7 @@ public class TrackBarColorTests : IDisposable
             host.Show();
             Application.DoEvents();
             bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
 
             // The accent: the popup has the primary set, and follows the accent.
             Assert.Equal(UIColors.PrimarySet.Hover, popup.Colors!.Hover);
@@ -201,7 +201,7 @@ public class TrackBarColorTests : IDisposable
             Application.DoEvents();
 
             bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             Assert.True(popup.Visible);
 
             bar.Enabled = false;
@@ -232,7 +232,7 @@ public class TrackBarColorTests : IDisposable
             host.Show();
             Application.DoEvents();
             bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
-            InfoPopupForm popup = bar.GetPrivateField<InfoPopupForm>("_popup")!;
+            InfoPopupForm popup = bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
 
             Assert.True(popup.Visible);
             Assert.Equal(standard.Transparency, popup.Transparency);
@@ -269,7 +269,7 @@ public class TrackBarColorTests : IDisposable
                 bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
                 host.Controls.Remove(bar);
 
-                return bar.GetPrivateField<InfoPopupForm>("_popup")!;
+                return bar.GetPrivateField<ValuePopup>("_valuePopup")!.Form!;
             }
 
             // Standard is gray (no set), Primary the accent: the popup is, too.
@@ -283,14 +283,14 @@ public class TrackBarColorTests : IDisposable
 
             // Taken back, the popup has the colors of the slider again; given later, it has them at once.
             own.ValuePopupColors = null;
-            Assert.Equal(UIColors.PrimarySet.Hover, own.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
+            Assert.Equal(UIColors.PrimarySet.Hover, own.GetPrivateField<ValuePopup>("_valuePopup")!.Form!.Colors!.Hover);
 
             standard.ValuePopupColors = UIStyles.Colors.Sets.Teal;
-            Assert.Equal(UIStyles.Colors.Sets.Teal.Hover, standard.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
+            Assert.Equal(UIStyles.Colors.Sets.Teal.Hover, standard.GetPrivateField<ValuePopup>("_valuePopup")!.Form!.Colors!.Hover);
 
             // The accent changes: the popup that follows the slider follows the accent.
             UIColors.SetAccent(Color.OrangeRed);
-            Assert.Equal(UIColors.PrimarySet.Hover, primary.GetPrivateField<InfoPopupForm>("_popup")!.Colors!.Hover);
+            Assert.Equal(UIColors.PrimarySet.Hover, primary.GetPrivateField<ValuePopup>("_valuePopup")!.Form!.Colors!.Hover);
         }
         finally
         {
