@@ -59,14 +59,7 @@ namespace ErikwnkWFUI.Controls
         {
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
-            SetStyle(
-                ControlStyles.OptimizedDoubleBuffer
-                | ControlStyles.AllPaintingInWmPaint
-                | ControlStyles.UserPaint
-                | ControlStyles.ResizeRedraw
-                | ControlStyles.SupportsTransparentBackColor
-                | ControlStyles.Selectable,
-                true);
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor | ControlStyles.Selectable, true);
             Height = 20;
             TabStop = true;
             BackColor = Color.Transparent;

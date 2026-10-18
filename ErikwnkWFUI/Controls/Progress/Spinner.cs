@@ -31,13 +31,7 @@ namespace ErikwnkWFUI.Controls
 
         public Spinner()
         {
-            SetStyle(
-                ControlStyles.OptimizedDoubleBuffer
-                | ControlStyles.AllPaintingInWmPaint
-                | ControlStyles.UserPaint
-                | ControlStyles.ResizeRedraw
-                | ControlStyles.SupportsTransparentBackColor,
-                true);
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
             Size = new Size(24, 24);
             BackColor = Color.Transparent;

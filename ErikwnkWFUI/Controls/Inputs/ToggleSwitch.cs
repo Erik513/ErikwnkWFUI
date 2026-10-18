@@ -202,15 +202,7 @@ namespace ErikwnkWFUI.Controls
         {
             Size = new Size(DefaultWidth, DefaultHeight);
 
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor,
-                true);
-
-            DoubleBuffered = true;
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
             Cursor = Cursors.Hand;
             BackColor = Color.Transparent;

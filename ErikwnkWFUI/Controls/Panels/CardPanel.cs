@@ -32,13 +32,7 @@ namespace ErikwnkWFUI.Controls
 
         public CardPanel()
         {
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor,
-                true);
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
             _borderColor = new ThemeColor(() => UIColors.GetLineColor(SurfaceColor.Of(this)));
             Padding = new Padding(Dpi.Scale(this, DefaultPadding96));

@@ -285,15 +285,7 @@ namespace ErikwnkWFUI.Controls
             _followedPageBackColor = PageBackColor;
             HotTrack = true;
 
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw |
-                ControlStyles.SupportsTransparentBackColor,
-                true);
-
-            UpdateStyles();
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
             ThemeWatcher.Attach(this, OnThemeChanged);
         }

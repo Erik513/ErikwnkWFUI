@@ -74,14 +74,8 @@ namespace ErikwnkWFUI.Controls
 
         public SlimProgressBar()
         {
-            SetStyle(
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.UserPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw,
-                true);
+            SetStyle(ControlStyleSets.OwnerDrawn, true);
 
-            DoubleBuffered = true;
             Height = DefaultHeight;
 
             // A screen reader announces it as a progress bar (the value itself is not reported).

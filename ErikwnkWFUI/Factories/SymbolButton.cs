@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -27,13 +28,7 @@ namespace ErikwnkWFUI.Factories
         {
             // Every paint covers the whole button with an opaque fill, so
             // nothing of a neighbor can show through.
-            SetStyle(
-                ControlStyles.UserPaint |
-                ControlStyles.Opaque |
-                ControlStyles.AllPaintingInWmPaint |
-                ControlStyles.OptimizedDoubleBuffer |
-                ControlStyles.ResizeRedraw,
-                true);
+            SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.Opaque, true);
         }
 
         // A button like on a tool bar: a click does not take the focus (and the tab key skips it). For buttons that
