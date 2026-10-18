@@ -17,6 +17,13 @@ namespace ErikwnkWFUI.Showcase
     // The track bars.
     public partial class ShowcaseForm
     {
+        // The track bar page: the sliders, and below them the volume control that is built from one.
+        private void AddTrackBarPage(PropertyTable table)
+        {
+            AddTrackBarSection(table);
+            AddVolumeControlSection(table);
+        }
+
         // Value/Enabled are set directly rather than via AnimateProgressBar - a slider represents a user-set position, not a moving
         // load, so a fixed demo value is the right comparison here, not motion. As on the progress bar page, the first row also shows
         // the disabled look (right).
