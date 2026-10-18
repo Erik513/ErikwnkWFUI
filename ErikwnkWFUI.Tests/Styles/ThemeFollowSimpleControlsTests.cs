@@ -75,14 +75,16 @@ public class ThemeFollowSimpleControlsTests : IDisposable
     }
 
     // The ones with no background of their own and the ones in a color set (a set is the same in every theme): they look the
-    // same whatever the theme, and are not told to paint again.
+    // same whatever the theme, and are not told to paint again. A volume control is a transparent panel whose parts (the button and the
+    // slider) paint themselves: the panel itself paints nothing (its parts are looked at by the tests of the track bar and the control).
     private static readonly HashSet<string> LooksTheSameInEveryTheme = new HashSet<string>
     {
         "Panels.Transparent",
         "Panels.Standard(colors)",
         "FlowLayoutPanels.Transparent",
         "FlowLayoutPanels.Standard(colors)",
-        "VersionPanels.Standard(colors)"
+        "VersionPanels.Standard(colors)",
+        "VolumeControls.Primary"
     };
 
     // A flow panel is as big as its content: with nothing in it it has no size to look at.
@@ -154,6 +156,13 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("Spinners.Primary", () => UIStyles.Spinners.CreatePrimary(), false),
             ("TrackBars.Standard", () => UIStyles.TrackBars.CreateStandard(0.4), true),
             ("TrackBars.Primary", () => UIStyles.TrackBars.CreatePrimary(0.4), true),
+            ("VolumeControls.Primary", () =>
+            {
+                VolumeControl control = UIStyles.VolumeControls.CreatePrimary(0.4);
+                control.Slider.TabStop = false;   // no focus cue (a bigger thumb) on only one of two
+
+                return control;
+            }, true),
             ("TrackBars.PrimaryWithPopup", () => UIStyles.TrackBars.CreatePrimary(0.4, 1.0, showValuePopup: true, formatValue: ErikwnkWFUI.Controls.TrackBar.FormatPercent), true),
             ("ToggleSwitches.Standard", () => UIStyles.ToggleSwitches.CreateStandard(true), true),
             ("ToggleSwitches.Unchecked", () => UIStyles.ToggleSwitches.CreateStandard(false), true),

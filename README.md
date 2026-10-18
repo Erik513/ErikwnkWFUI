@@ -194,6 +194,18 @@ var load = UIStyles.Spinners.CreateProgressStatus();
 load.Value = 73;
 ```
 
+`UIStyles.VolumeControls` is a ready-made volume control for audio: a mute button (a loudspeaker, crossed out while muted) with a
+`TrackBar` beside it, as on video sites. A click on the button (or the key M on the slider) mutes and brings the volume back the next
+time, the slider moved to 0 mutes and moved away from 0 turns the sound on again, and the slider shows the percentage in a popup. Read
+`EffectiveVolume` (0 while muted) for what the audio output gets and react to `VolumeChanged`.
+
+```csharp
+var volume = UIStyles.VolumeControls.CreatePrimary(0.6);
+volume.VolumeChanged += (s, e) => player.Volume = (float)volume.EffectiveVolume;
+```
+
+`UIStyles.TrackBars` is the slider alone (any range, steps, keys, wheel, a popup with the value).
+
 Everything that moves runs on one beat of the display (as the moving text of a label) and stands still where
 Windows has the animations switched off or while the control is disabled; it starts again when they are switched on.
 

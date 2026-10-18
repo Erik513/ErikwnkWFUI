@@ -407,8 +407,9 @@ namespace ErikwnkWFUI.Controls
             }
 
             // A Spinner is as big as it was made (a square, or as wide as ring and text need) - Fill would stretch it wide and its
-            // circle would just sit centred in the extra width. Left-anchor it at its natural size like the Button/CheckBox cases above.
-            if (control is Spinner)
+            // circle would just sit centred in the extra width; a volume control is as wide as it was made, too. Left-anchor it at its natural
+            // size like the Button/CheckBox cases above.
+            if (control is Spinner || control is VolumeControl)
             {
                 control.Dock = DockStyle.None;
                 control.Anchor = AnchorStyles.Left;
