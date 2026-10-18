@@ -219,8 +219,9 @@ public class TrackBarFeatureTests
         bar.FormatValue = value => value + " dB";
         Assert.Equal("3 dB", bar.FormatValue(3));
 
-        bar.FormatValue = null;
-        Assert.Equal((3.5).ToString("0.##", culture), bar.FormatValue(3.5));
+        bar.FormatValue = null!;
+        Func<double, string> byDefault = bar.FormatValue;   // (null gives the default back: the getter never answers null)
+        Assert.Equal((3.5).ToString("0.##", culture), byDefault(3.5));
 
         bar.FormatValue = TrackBar.FormatPercent;
         Assert.Equal((0.1).ToString("P0", culture), bar.FormatValue(0.1));
