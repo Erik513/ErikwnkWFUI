@@ -100,9 +100,8 @@ namespace ErikwnkWFUI.Forms
 
         private InfoPopupSection[] _sections = new InfoPopupSection[0];
 
-        private UIColorSet _colors;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
-        private Func<UIColorSet> _colorsSource;
 
         private PopupDuration _duration = PopupDuration.Medium;
 
@@ -186,11 +185,10 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
+            get { return _colorSet.Value; }
             set
             {
-                _colors = value;
-                _colorsSource = null;
+                _colorSet.Value = value;
 
                 if (IsDisposed)
                     return;
@@ -204,8 +202,7 @@ namespace ErikwnkWFUI.Forms
         // A set that is asked for again each time (the primary set, which follows the accent).
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
 
             if (IsDisposed)
                 return;

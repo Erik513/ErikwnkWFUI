@@ -17,23 +17,17 @@ namespace ErikwnkWFUI.Forms
         /// <summary>The colors of the toast: null is the neutral gray; see <see cref="ToastForm.Colors"/>.</summary>
         public UIColorSet Colors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
-            set
-            {
-                _colors = value;
-                _colorsSource = null;
-            }
+            get { return _colorSet.Value; }
+            set { _colorSet.Value = value; }
         }
 
-        private UIColorSet _colors;
-        private Func<UIColorSet> _colorsSource;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         // A set that is asked for again at each toast (the primary set, which follows the accent): a toaster that is
         // kept for the whole run shows the accent as it is now, not as it was when the toaster was made.
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
         }
 
         /// <summary>How see-through the toasts are; medium by default.</summary>

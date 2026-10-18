@@ -9,8 +9,7 @@ namespace ErikwnkWFUI.Controls
     // The colors of the track, the filled part and the thumb, and what they are worked out from.
     public partial class TrackBar
     {
-        private UIColorSet _colors;
-        private Func<UIColorSet> _colorsSource;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         /// <summary>
         /// The colors of the filled part and the thumb: the <c>Hover</c> color of the set is the main color (Green is the usual
@@ -22,11 +21,10 @@ namespace ErikwnkWFUI.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
+            get { return _colorSet.Value; }
             set
             {
-                _colors = value;
-                _colorsSource = null;
+                _colorSet.Value = value;
                 Invalidate();
             }
         }
@@ -34,8 +32,7 @@ namespace ErikwnkWFUI.Controls
         // A set that is asked for again each time it is needed (the primary set, which follows the accent); a later Colors replaces it.
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
             Invalidate();
         }
 

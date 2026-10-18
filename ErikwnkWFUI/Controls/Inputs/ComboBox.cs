@@ -48,7 +48,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ListFrame _listFrame;
         private bool _isHot;
         private bool _lastInputWasMouse;
-        private UIColorSet _colors;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         public ComboBox()
         {
@@ -87,24 +87,20 @@ namespace ErikwnkWFUI.Controls
             get { return ResolvedColors; }
             set
             {
-                _colors = value;
-                _colorsSource = null;
+                _colorSet.Value = value;
                 Invalidate();
             }
         }
 
-        // A set that is asked for again each time (the primary set, which follows the accent).
-        private Func<UIColorSet> _colorsSource;
-
         private UIColorSet ResolvedColors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
+            get { return _colorSet.Value; }
         }
 
+        // A set that is asked for again each time (the primary set, which follows the accent).
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
             Invalidate();
         }
 

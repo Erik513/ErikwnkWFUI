@@ -91,7 +91,7 @@ namespace ErikwnkWFUI.Controls
 
         private bool _isHot;
         private bool _isPressed;
-        private UIColorSet _colors;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         /// <summary>
         /// The colors of the filled box: its fill at rest, hovered and pressed, and the
@@ -101,28 +101,24 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
+            get { return _colorSet.Value; }
             set
             {
-                _colors = value;
-                _colorsSource = null;
+                _colorSet.Value = value;
                 Invalidate();
             }
         }
 
         // A set that is asked for again each time (the primary set, which follows the accent).
-        private Func<UIColorSet> _colorsSource;
-
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
             Invalidate();
         }
 
         private UIColorSet GetColors()
         {
-            return _colorsSource?.Invoke() ?? _colors ?? UIStyles.Colors.Sets.Gray;
+            return _colorSet.Value ?? UIStyles.Colors.Sets.Gray;
         }
 
         protected override void OnMouseEnter(System.EventArgs e)

@@ -64,8 +64,7 @@ namespace ErikwnkWFUI.Controls
         private readonly Control _edit;
         private readonly ArrowFields _arrowFields;
 
-        private UIColorSet _colors;
-        private Func<UIColorSet> _colorsSource;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         // Moving the text field to the middle (see CenterNumber).
         private bool _centering;
@@ -112,11 +111,10 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public UIColorSet Colors
         {
-            get { return _colorsSource?.Invoke() ?? _colors; }
+            get { return _colorSet.Value; }
             set
             {
-                _colors = value;
-                _colorsSource = null;
+                _colorSet.Value = value;
                 RepaintArrows();
             }
         }
@@ -124,8 +122,7 @@ namespace ErikwnkWFUI.Controls
         // A set that is asked for again each time (the primary set, which follows the accent).
         internal void FollowColors(Func<UIColorSet> source)
         {
-            _colorsSource = source;
-            _colors = null;
+            _colorSet.Follow(source);
             RepaintArrows();
         }
 
