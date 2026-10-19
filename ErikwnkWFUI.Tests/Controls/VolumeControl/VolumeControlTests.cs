@@ -146,6 +146,18 @@ public class VolumeControlTests : IDisposable
         Assert.Equal("Unmute", control.MuteButton.AccessibleName);
     }
 
+    [Fact]
+    public void TheTooltipOfTheButton_NamesTheKeyM_AndFollowsTheState()
+    {
+        using VolumeControl control = UIStyles.VolumeControls.CreateStandard();
+        using Form host = Show(control);
+
+        Assert.Equal("Mute (M)", ButtonToolTipReader.Text(control.MuteButton));
+
+        Click(control);
+        Assert.Equal("Unmute (M)", ButtonToolTipReader.Text(control.MuteButton));
+    }
+
     // ---- the slider ----
 
     [Fact]

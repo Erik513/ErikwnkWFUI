@@ -318,7 +318,8 @@ namespace ErikwnkWFUI.Controls
 
             if (_button != null)
             {
-                UIButtonFactory.UpdateTooltip(_button, text);
+                // The tooltip names the key as well (a screen reader gets the name alone, and the key as a shortcut).
+                UIButtonFactory.UpdateTooltip(_button, text + " (M)");
                 _button.AccessibleName = text;
             }
 
@@ -371,6 +372,10 @@ namespace ErikwnkWFUI.Controls
         private void OnButtonClick(object sender, EventArgs e)
         {
             ToggleMute();
+
+            // The button takes no focus, so the slider gets it: the key M (named in the tooltip) and the arrow keys work right after the click.
+            if (_slider.CanFocus)
+                _slider.Focus();
         }
 
         private void OnSliderKeyDown(object sender, KeyEventArgs e)

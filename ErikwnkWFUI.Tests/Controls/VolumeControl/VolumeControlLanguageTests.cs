@@ -14,6 +14,30 @@ public class VolumeControlLanguageTests
     private static void Click(VolumeControl control) => control.MuteButton.InvokePrivate("OnClick", EventArgs.Empty);
 
     [Fact]
+    public void EveryText_IsTranslatedForEveryLanguage()
+    {
+        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "VolumeControl.Mute", "VolumeControl.Unmute", "VolumeControl.Volume" });
+    }
+
+    [Fact]
+    public void TheTooltipOfTheButton_IsInTheLanguage_AndNamesTheKey()
+    {
+        using VolumeControl control = UIStyles.VolumeControls.CreateStandard(0.5);
+        using Form host = OffscreenForm.Create(new Size(150, 30), Color.Black);
+        host.Controls.Add(control);
+        host.Show();
+        Application.DoEvents();
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            Assert.Equal("Stumm schalten (M)", ButtonToolTipReader.Text(control.MuteButton));
+
+            Click(control);
+            Assert.Equal("Ton einschalten (M)", ButtonToolTipReader.Text(control.MuteButton));
+        });
+    }
+
+    [Fact]
     public void TheNames_FollowTheLanguage_AlsoWhenItIsSwitchedWhileTheControlIsShown()
     {
         LanguageTestHelper.RunWithLanguage(UILanguage.English, () =>
