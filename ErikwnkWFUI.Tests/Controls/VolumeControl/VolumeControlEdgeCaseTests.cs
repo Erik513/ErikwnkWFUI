@@ -85,6 +85,23 @@ public class VolumeControlEdgeCaseTests
         Assert.Equal(0, playerEvents);
     }
 
+    [Fact]
+    public void ATargetGivenToADisposedControl_IsNotListenedTo()
+    {
+        AudioVolumeState player = new AudioVolumeState(0.5);
+        VolumeControl control = UIStyles.VolumeControls.CreateStandard();
+        control.Dispose();
+
+        Exception? failure = Record.Exception(() => control.Target = player);
+
+        Assert.Null(failure);
+
+        // (Nothing is subscribed: the player does not keep the dead control alive.)
+        System.Reflection.FieldInfo field = typeof(AudioVolumeState).GetField("VolumeChanged", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        Assert.Null(field.GetValue(player));
+        Assert.Null(control.Target);
+    }
+
     // ---- the wheel at the ends ----
 
     [Fact]
