@@ -126,6 +126,34 @@ public class VolumeControlTargetTests
         Assert.Equal(0.7, control.Volume);
     }
 
+    [Fact]
+    public void TheFactories_CoupleAPlayerAtOnce_AndTheVolumeGivenIsNotUsed()
+    {
+        FakePlayer player = new FakePlayer();
+        player.ChangeByItself(0.3, true);
+
+        using VolumeControl standard = UIStyles.VolumeControls.CreateStandard(0.9, target: player);
+        Assert.Same(player, standard.Target);
+        Assert.Equal(0.3, standard.Volume);
+        Assert.True(standard.IsMuted);
+        Assert.Equal(0.0, standard.Slider.Value);
+        Assert.Equal(0, player.VolumeSets + player.MutedSets);
+
+        using VolumeControl primary = UIStyles.VolumeControls.CreatePrimary(0.9, target: player);
+        Assert.Same(player, primary.Target);
+        Assert.Equal(0.3, primary.Volume);
+        Assert.Equal(2, player.Listeners);
+    }
+
+    [Fact]
+    public void TheFactories_LeaveTheControlUncoupled_WithoutAPlayer()
+    {
+        using VolumeControl control = UIStyles.VolumeControls.CreateStandard(0.9);
+
+        Assert.Null(control.Target);
+        Assert.Equal(0.9, control.Volume);
+    }
+
     // ---- the control sets the player ----
 
     [Fact]

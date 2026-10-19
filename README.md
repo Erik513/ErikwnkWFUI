@@ -200,7 +200,7 @@ time, the slider moved to 0 mutes and moved away from 0 turns the sound on again
 `EffectiveVolume` (0 while muted) for what the audio output gets and react to `VolumeChanged`.
 
 A player is coupled with one line: it implements `IAudioVolume` of ErikwnkCore (or is derived from the ready-made `AudioVolumeState`, which limits
-the volume, raises the event only on a change and has `EffectiveVolume`), and `volume.Target = player;` does the rest - the control sets the player
+the volume, raises the event only on a change and has `EffectiveVolume`), and `volume.Target = player;` (or `target: player` in the factory call) does the rest - the control sets the player
 and follows it when it changes by itself.
 
 ```csharp
