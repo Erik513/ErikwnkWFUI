@@ -13,9 +13,11 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// A ready-made volume control for audio: a mute button (a loudspeaker, crossed out while it is muted) with a <see cref="TrackBar"/>
-    /// beside it, as on video sites. The slider shows the percentage in a popup while it is used. It works as the controls of YouTube and Twitch:
-    /// a click on the button (or the key M on the slider) mutes and, the next time, brings back the volume that was before; moving the slider
-    /// to 0 mutes, moving it away from 0 turns the sound on again; while it is muted the slider stands at 0 and the volume is remembered.
+    /// beside it, as on video sites. The slider shows the percentage in a popup while it is used (or, with <see cref="ShowPercentage"/>, as
+    /// a number beside it). It works as the controls of YouTube and Twitch: a click on the button (or the key M on the slider) mutes and,
+    /// the next time, brings back the volume that was before; moving the slider to 0 mutes, moving it away from 0 turns the sound on again;
+    /// the mouse wheel over the button turns the volume like the wheel over the slider; while it is muted the slider stands at 0 and the
+    /// volume is remembered.
     /// <see cref="Volume"/> is the level the sound has when it is on, <see cref="IsMuted"/> whether it is off, and <see cref="EffectiveVolume"/>
     /// what the audio output is to get (0 while muted). <see cref="VolumeChanged"/> comes when the user changes what is heard, not when code
     /// sets <see cref="Volume"/> or <see cref="IsMuted"/> (as the <see cref="TrackBar.ValueChanged"/> of the slider). Make one with
@@ -33,13 +35,23 @@ namespace ErikwnkWFUI.Controls
 
         private readonly TrackBar _slider;
         private Button _button;
+
+        // The size the button was made for (the symbol grows with it, so another size makes a new button).
         private int _buttonHeight;
+
+        // The level for when the sound is on; it stays while the control is muted.
         private double _volume = 1.0;
+
+        // The level when a slide began: a slide down to 0 mutes, and what the button brings back is this, not the sliver the thumb passed last.
         private double _volumeBeforeDrag = 1.0;
         private bool _muted;
         private IAudioVolume _target;
+
+        // True while the control sets the player: the event the player raises for that is not an answer to follow.
         private bool _pushing;
         private bool _showPercentage;
+
+        // The number beside the slider; made when ShowPercentage is first switched on.
         private Label _percent;
 
         public VolumeControl()
