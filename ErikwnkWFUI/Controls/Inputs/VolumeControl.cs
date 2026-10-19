@@ -39,6 +39,8 @@ namespace ErikwnkWFUI.Controls
         private bool _muted;
         private IAudioVolume _target;
         private bool _pushing;
+        private bool _showPercentage;
+        private Label _percent;
 
         public VolumeControl()
         {
@@ -104,6 +106,39 @@ namespace ErikwnkWFUI.Controls
         public double EffectiveVolume
         {
             get { return _muted ? 0.0 : _volume; }
+        }
+
+        /// <summary>
+        /// Whether the volume is written as a percentage ("60 %") beside the slider, as in players like VLC (off by default). While it
+        /// is on, the popup of the slider is off, so that the number is not shown twice; the text is 0 % while the control is muted.
+        /// </summary>
+        [DefaultValue(false)]
+        public bool ShowPercentage
+        {
+            get { return _showPercentage; }
+            set
+            {
+                if (value == _showPercentage)
+                    return;
+
+                _showPercentage = value;
+                _slider.ShowValuePopup = !value;
+
+                if (value && _percent == null)
+                {
+                    _percent = UIStyles.Labels.CreateStandard();
+                    _percent.AutoSize = false;
+                    _percent.TextAlign = ContentAlignment.MiddleRight;
+                    _percent.TabStop = false;
+                    Controls.Add(_percent);
+                }
+
+                if (_percent != null)
+                    _percent.Visible = value;
+
+                UpdateParts();
+                PerformLayout();
+            }
         }
 
         /// <summary>
@@ -239,6 +274,7 @@ namespace ErikwnkWFUI.Controls
             _buttonHeight = size;
             ((SymbolButton)_button).TakeNoFocus();
             _button.Click += OnButtonClick;
+            _button.MouseWheel += OnWheelOverPart;
             Controls.Add(_button);
 
             if (old != null)
@@ -275,6 +311,26 @@ namespace ErikwnkWFUI.Controls
             }
 
             _slider.AccessibleName = UIStrings.Get("VolumeControl.Volume");
+
+            if (_percent != null)
+                _percent.Text = TrackBar.FormatPercent(EffectiveVolume);
+        }
+
+        // The wheel over the button (or the gap beside it) turns the volume like the wheel over the slider.
+        private void OnWheelOverPart(object sender, MouseEventArgs e)
+        {
+            HandledMouseEventArgs handled = e as HandledMouseEventArgs;
+
+            if (handled != null)
+                handled.Handled = true;
+
+            _slider.StepByWheel(e.Delta);
+        }
+
+        protected override void OnMouseWheel(MouseEventArgs e)
+        {
+            base.OnMouseWheel(e);
+            OnWheelOverPart(this, e);
         }
 
         private void OnSliderChanged(object sender, EventArgs e)
@@ -337,6 +393,10 @@ namespace ErikwnkWFUI.Controls
         private void OnLanguageChanged(object sender, EventArgs e)
         {
             UpdateParts();
+
+            // (The number is written with the decimal sign and the space of the language, so the room for it may change.)
+            if (_showPercentage)
+                PerformLayout();
         }
 
         protected override void OnLayout(LayoutEventArgs levent)
@@ -357,8 +417,18 @@ namespace ErikwnkWFUI.Controls
             int sliderHeight = Math.Min(height, Dpi.Scale(this, SliderHeight96));
             int left = buttonSize + gap;
 
+            // The room for the percentage: the widest text it can have (100 %), at the right edge.
+            int percentWidth = 0;
+
+            if (_showPercentage && _percent != null)
+            {
+                percentWidth = TextRenderer.MeasureText(TrackBar.FormatPercent(1.0), _percent.Font, new Size(short.MaxValue, short.MaxValue),
+                    TextFormatFlags.NoPadding | TextFormatFlags.SingleLine).Width + gap;
+                _percent.SetBounds(Math.Max(left, ClientSize.Width - percentWidth), 0, Math.Min(percentWidth, Math.Max(1, ClientSize.Width - left)), height);
+            }
+
             _button.SetBounds(0, (height - buttonSize) / 2, buttonSize, buttonSize);
-            _slider.SetBounds(left, (height - sliderHeight) / 2, Math.Max(1, ClientSize.Width - left), sliderHeight);
+            _slider.SetBounds(left, (height - sliderHeight) / 2, Math.Max(1, ClientSize.Width - left - percentWidth), sliderHeight);
         }
 
         protected override void Dispose(bool disposing)

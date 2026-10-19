@@ -1,4 +1,4 @@
-﻿# ErikwnkWFUI
+# ErikwnkWFUI
 
 A dark-themed WinForms UI control library: borderless windows with a custom
 title bar, styled buttons/labels/lists/tables/dialogs, and a small theming
@@ -196,7 +196,8 @@ load.Value = 73;
 
 `UIStyles.VolumeControls` is a ready-made volume control for audio: a mute button (a loudspeaker, crossed out while muted) with a
 `TrackBar` beside it, as on video sites. A click on the button (or the key M on the slider) mutes and brings the volume back the next
-time, the slider moved to 0 mutes and moved away from 0 turns the sound on again, and the slider shows the percentage in a popup. Read
+time, the slider moved to 0 mutes and moved away from 0 turns the sound on again, and the slider shows the percentage in a popup (or,
+with `showPercentage: true`, as a number beside it). The mouse wheel over the button turns the volume like the wheel over the slider. Read
 `EffectiveVolume` (0 while muted) for what the audio output gets and react to `VolumeChanged`.
 
 A player is coupled with one line: it implements `IAudioVolume` of ErikwnkCore (or is derived from the ready-made `AudioVolumeState`, which limits
@@ -207,6 +208,9 @@ and follows it when it changes by itself.
 var volume = UIStyles.VolumeControls.CreatePrimary(0.6);
 volume.VolumeChanged += (s, e) => player.Volume = (float)volume.EffectiveVolume;
 ```
+
+People do not hear loudness linearly (a plain linear gain at 50 % already sounds almost as loud as at 100 %), so an audio output usually gets a
+curve of the slider: `AudioVolumeState.ToGain(volume)` (or `state.Gain()`) squares it, `ToGain(volume, 3)` makes a cube.
 
 `UIStyles.TrackBars` is the slider alone (any range, steps, keys, wheel, a popup with the value).
 

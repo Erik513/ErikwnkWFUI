@@ -29,7 +29,7 @@ namespace ErikwnkWFUI.Showcase
             AddVolumeControlRow(table, "CreatePrimary", UIStyles.VolumeControls.CreatePrimary(0.4));
             AddVolumeControlRow(table, "CreateStandard(colors: Yellow)", UIStyles.VolumeControls.CreateStandard(0.4, UIStyles.Colors.Sets.Yellow));
 
-            table.AddSection("Volume controls: state and size");
+            table.AddSection("Volume controls: state, size and percentage");
 
             // Muted: the slider stands at 0 and the volume is remembered (60 %): a click on the button brings it back.
             VolumeControl muted = UIStyles.VolumeControls.CreatePrimary(0.6);
@@ -37,6 +37,9 @@ namespace ErikwnkWFUI.Showcase
             AddVolumeControlRow(table, "IsMuted = true", muted);
 
             AddVolumeControlRow(table, "size: 260 x 40", UIStyles.VolumeControls.CreatePrimary(0.6, new Size(260, 40)));
+
+            // The number beside the slider instead of the popup; the wheel over the button turns the volume too.
+            AddVolumeControlRow(table, "showPercentage: true", UIStyles.VolumeControls.CreatePrimary(0.6, showPercentage: true));
 
             // What the audio output gets: EffectiveVolume, after each change by the user.
             VolumeControl live = UIStyles.VolumeControls.CreatePrimary(0.6);

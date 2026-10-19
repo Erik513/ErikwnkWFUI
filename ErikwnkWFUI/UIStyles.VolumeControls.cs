@@ -20,16 +20,19 @@ namespace ErikwnkWFUI
             /// <param name="volume">The start volume, from 0 to 1 (0 starts it muted).</param>
             /// <param name="colors">A color set for the slider and its popup: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>; null (the default) is gray.</param>
             /// <param name="size">The size of the control (the button is as high as it, the slider takes the rest); 150 x 30 when left out.</param>
+            /// <param name="showPercentage">Whether the volume is written as a percentage beside the slider (<see cref="Controls.VolumeControl.ShowPercentage"/>); the popup of the slider is off then. Off by default.</param>
             /// <param name="target">A player to couple at once (<see cref="Controls.VolumeControl.Target"/>): the control then shows its volume and mute, <paramref name="volume"/> is not used, and what the user does is set on the player. Null (the default): not coupled.</param>
-            public static VolumeControl CreateStandard(double volume = 1.0, UIColorSet colors = null, Size? size = null, IAudioVolume target = null)
+            public static VolumeControl CreateStandard(double volume = 1.0, UIColorSet colors = null, Size? size = null,
+                bool showPercentage = false, IAudioVolume target = null)
             {
-                return UIVolumeControlFactory.CreateStandard(volume, colors, size, target);
+                return UIVolumeControlFactory.CreateStandard(volume, colors, size, showPercentage, target);
             }
 
-            /// <summary>Same, but the slider and its popup follow the theme accent (<paramref name="volume"/>, <paramref name="size"/> and <paramref name="target"/> as there).</summary>
-            public static VolumeControl CreatePrimary(double volume = 1.0, Size? size = null, IAudioVolume target = null)
+            /// <summary>Same, but the slider and its popup follow the theme accent (<paramref name="volume"/>, <paramref name="size"/>, <paramref name="showPercentage"/> and <paramref name="target"/> as there).</summary>
+            public static VolumeControl CreatePrimary(double volume = 1.0, Size? size = null,
+                bool showPercentage = false, IAudioVolume target = null)
             {
-                return UIVolumeControlFactory.CreatePrimary(volume, size, target);
+                return UIVolumeControlFactory.CreatePrimary(volume, size, showPercentage, target);
             }
         }
     }

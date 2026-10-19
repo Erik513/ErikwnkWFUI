@@ -197,7 +197,18 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            SetValueFromUser(_value + e.Delta / (double)SystemInformation.MouseWheelScrollDelta * SmallChange);
+            StepByWheel(e.Delta);
+        }
+
+        // A step of the mouse wheel (also for a control that passes the wheel on to this one, like the volume control from its button).
+        internal void StepByWheel(int delta)
+        {
+            if (!Enabled || _dragging)
+            {
+                return;
+            }
+
+            SetValueFromUser(_value + delta / (double)SystemInformation.MouseWheelScrollDelta * SmallChange);
         }
 
         protected override void OnGotFocus(EventArgs e)
