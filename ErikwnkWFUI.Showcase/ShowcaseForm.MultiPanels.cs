@@ -32,8 +32,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateCardStandard (ShowPageCount, ShowHeaderLine, TitleAlignment)",
                 MultiPanelRowHeight,
-                UIColumn.Percent(centered, TwoColumnPercent),
-                UIColumn.Percent(right, TwoColumnPercent));
+                PropertyColumn.Percent(centered, TwoColumnPercent),
+                PropertyColumn.Percent(right, TwoColumnPercent));
         }
 
         private const int PairedWidth = 250;

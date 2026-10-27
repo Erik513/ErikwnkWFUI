@@ -63,18 +63,18 @@ namespace ErikwnkWFUI.Showcase
 
             var standardListView = UIStyles.ListViews.CreateStandard();
             PopulateListViewDemo(standardListView);
-            table.AddRow("CreateStandard", 260, UIColumn.Absolute(standardListView, demoWidth));
+            table.AddRow("CreateStandard", 260, PropertyColumn.Absolute(standardListView, demoWidth));
             PinToDemoWidth(standardListView, demoWidth);
 
             var primaryListView = UIStyles.ListViews.CreatePrimary();
             PopulateListViewDemo(primaryListView);
-            table.AddRow("CreatePrimary", 260, UIColumn.Absolute(primaryListView, demoWidth));
+            table.AddRow("CreatePrimary", 260, PropertyColumn.Absolute(primaryListView, demoWidth));
             PinToDemoWidth(primaryListView, demoWidth);
 
             // Any other color: pass a color set.
             var yellowListView = UIStyles.ListViews.CreateStandard(UIStyles.Colors.Sets.Yellow);
             PopulateListViewDemo(yellowListView);
-            table.AddRow("CreateStandard(colors: Yellow)", 260, UIColumn.Absolute(yellowListView, demoWidth));
+            table.AddRow("CreateStandard(colors: Yellow)", 260, PropertyColumn.Absolute(yellowListView, demoWidth));
             PinToDemoWidth(yellowListView, demoWidth);
 
             table.AddSection("Size");
@@ -89,7 +89,7 @@ namespace ErikwnkWFUI.Showcase
             foreach (string[] row in new[] { new[] { "First", "Done" }, new[] { "Second", "Done" }, new[] { "Third", "Open" }, new[] { "Fourth", "Open" }, new[] { "Fifth", "Open" } })
                 displayListView.Items.Add(new ListViewItem(row));
 
-            table.AddRow("FixedRowCount = 5", 200, UIColumn.Absolute(displayListView, demoWidth));
+            table.AddRow("FixedRowCount = 5", 200, PropertyColumn.Absolute(displayListView, demoWidth));
             displayListView.Dock = DockStyle.None;
             displayListView.Anchor = AnchorStyles.Top | AnchorStyles.Left;
 
@@ -104,12 +104,12 @@ namespace ErikwnkWFUI.Showcase
             for (int i = 1; i <= 12; i++)
                 autoListView.Items.Add(new ListViewItem(new[] { "Item " + i, i % 2 == 0 ? "Done" : "Open" }));
 
-            table.AddRow("AutoSizeToContent (max 150)", 190, UIColumn.Absolute(autoListView, demoWidth));
+            table.AddRow("AutoSizeToContent (max 150)", 190, PropertyColumn.Absolute(autoListView, demoWidth));
             autoListView.Dock = DockStyle.None;
             autoListView.Anchor = AnchorStyles.Top | AnchorStyles.Left;
         }
 
-        // AddRow's UIColumn.Absolute only bounds the WRAPPER cell to
+        // AddRow's PropertyColumn.Absolute only bounds the WRAPPER cell to
         // demoWidth - PropertyTable.ConfigureEditorControl (run as part of
         // AddRow, no special case for ListView) still sets Dock = Fill on
         // the control itself afterward, which stretches it right back out
@@ -221,8 +221,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateReadOnlyStandard",
                 180,
-                UIColumn.Percent(readOnlyGrid, 50),
-                UIColumn.Percent(disabledReadOnlyGrid, 50));
+                PropertyColumn.Percent(readOnlyGrid, 50),
+                PropertyColumn.Percent(disabledReadOnlyGrid, 50));
 
             var readOnlyPrimaryGrid = UIStyles.DataGridViews.CreateReadOnlyPrimary(CreateSampleTracks());
             readOnlyPrimaryGrid.Dock = DockStyle.Fill;
@@ -236,8 +236,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateReadOnlyPrimary",
                 180,
-                UIColumn.Percent(readOnlyPrimaryGrid, 50),
-                UIColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
+                PropertyColumn.Percent(readOnlyPrimaryGrid, 50),
+                PropertyColumn.Percent(disabledReadOnlyPrimaryGrid, 50));
 
             var yellowGrid = UIStyles.DataGridViews.CreateReadOnlyStandard(CreateSampleTracks(), UIStyles.Colors.Sets.Yellow);
             yellowGrid.Dock = DockStyle.Fill;
@@ -251,8 +251,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateReadOnlyStandard(colors: Yellow)",
                 180,
-                UIColumn.Percent(yellowGrid, 50),
-                UIColumn.Percent(disabledYellowGrid, 50));
+                PropertyColumn.Percent(yellowGrid, 50),
+                PropertyColumn.Percent(disabledYellowGrid, 50));
         }
 
         // "Length" only ever holds a short "m:ss" string - narrowed so the
@@ -300,8 +300,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 labelText,
                 180,
-                UIColumn.Percent(grid, 50),
-                UIColumn.Percent(gridWithDeleteColumn, 50));
+                PropertyColumn.Percent(grid, 50),
+                PropertyColumn.Percent(gridWithDeleteColumn, 50));
         }
 
         // A fresh list each call - CreateStandard/CreateReadOnly bind

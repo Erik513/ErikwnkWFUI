@@ -67,7 +67,7 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddTrackBarRow(PropertyTable table, string label, TrackBar bar)
         {
-            table.AddRow(label, UIColumn.Percent(bar, TwoColumnPercent));
+            table.AddRow(label, PropertyColumn.Percent(bar, TwoColumnPercent));
         }
     }
 }

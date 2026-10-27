@@ -39,9 +39,9 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddRow(
                 labelText,
-                UIColumn.Percent(variant1, UniformColumnPercent),
-                UIColumn.Percent(variant2, UniformColumnPercent),
-                UIColumn.Percent(disabled, UniformColumnPercent));
+                PropertyColumn.Percent(variant1, UniformColumnPercent),
+                PropertyColumn.Percent(variant2, UniformColumnPercent),
+                PropertyColumn.Percent(disabled, UniformColumnPercent));
         }
 
         // For sections where every row only ever has a Variant 1 and a
@@ -63,8 +63,8 @@ namespace ErikwnkWFUI.Showcase
         {
             table.AddRow(
                 labelText,
-                UIColumn.Percent(primary, TwoColumnPercent),
-                UIColumn.Percent(disabled, TwoColumnPercent));
+                PropertyColumn.Percent(primary, TwoColumnPercent),
+                PropertyColumn.Percent(disabled, TwoColumnPercent));
         }
 
         private void AddButtonsSection(PropertyTable table)
@@ -101,8 +101,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateStandard(colors: …)",
                 118,
-                UIColumn.Percent(CreateSetButtons(sets, enabled: true), TwoColumnPercent),
-                UIColumn.Percent(CreateSetButtons(sets, enabled: false), TwoColumnPercent));
+                PropertyColumn.Percent(CreateSetButtons(sets, enabled: true), TwoColumnPercent),
+                PropertyColumn.Percent(CreateSetButtons(sets, enabled: false), TwoColumnPercent));
 
             // The two short forms for confirming and for destructive actions, in one row (each with its disabled look on the right).
             AddTwoColumnRow(
@@ -140,8 +140,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow(
                 "CreateSet(color)",
                 84,
-                UIColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
-                UIColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
+                PropertyColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
+                PropertyColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
         }
 
         private static Control CreateShortFormButtons(Size size, bool enabled)
@@ -301,8 +301,8 @@ namespace ErikwnkWFUI.Showcase
             shown.AutoSize = true;
             live.CheckedChanged += delegate { shown.Text = "Checked = " + live.Checked; };
             table.AddRow("CheckedChanged",
-                UIColumn.Percent(live, UniformColumnPercent),
-                UIColumn.Percent(shown, UniformColumnPercent * 2));
+                PropertyColumn.Percent(live, UniformColumnPercent),
+                PropertyColumn.Percent(shown, UniformColumnPercent * 2));
         }
 
         // The property table makes a text box that it holds borderless (its cells are the frame). Inside a panel the box keeps its own
@@ -517,7 +517,7 @@ namespace ErikwnkWFUI.Showcase
             const string longText = "This text is much longer than the label it is shown in, so it rests at its start, moves to its end, rests there and moves back again - and a label that is disabled shows the start with an ellipsis instead.";
 
             table.AddRow("CreatePrimary (scroll: BackAndForth)",
-                UIColumn.Percent(UIStyles.Labels.CreatePrimary(longText, scroll: LabelScroll.BackAndForth()), TwoColumnPercent));
+                PropertyColumn.Percent(UIStyles.Labels.CreatePrimary(longText, scroll: LabelScroll.BackAndForth()), TwoColumnPercent));
 
             // Endless moves whether the text fits or not: a long text, and (second column) a short one that
             // keeps the room of the label.
@@ -527,7 +527,7 @@ namespace ErikwnkWFUI.Showcase
 
             // Several texts, one behind the other: the same room after each of them, the separator in its middle.
             table.AddRow("CreatePrimary (scroll: Endless, texts)",
-                UIColumn.Percent(UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[] { "First message", "Second message", "Third" })), TwoColumnPercent));
+                PropertyColumn.Percent(UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[] { "First message", "Second message", "Third" })), TwoColumnPercent));
         }
 
         // One row: the label, and the same label disabled in the second column.

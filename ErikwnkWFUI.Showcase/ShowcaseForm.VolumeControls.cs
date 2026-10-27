@@ -41,7 +41,7 @@ namespace ErikwnkWFUI.Showcase
             AddVolumeControlRow(table, "IsMuted = true", muted);
 
             // (The row is taller than the usual one: the control is 40 px high, and would be cut off at the top and the bottom.)
-            table.AddRow("size: 260 x 40", 50, UIColumn.Percent(UIStyles.VolumeControls.CreatePrimary(0.6, new Size(260, 40)), TwoColumnPercent));
+            table.AddRow("size: 260 x 40", 50, PropertyColumn.Percent(UIStyles.VolumeControls.CreatePrimary(0.6, new Size(260, 40)), TwoColumnPercent));
 
             // The number beside the slider instead of the popup; the wheel over the button turns the volume too.
             AddVolumeControlRow(table, "showPercentage: true", UIStyles.VolumeControls.CreatePrimary(0.6, showPercentage: true));
@@ -73,7 +73,7 @@ namespace ErikwnkWFUI.Showcase
             playerSide.Controls.Add(byItself);
             playerSide.Controls.Add(held);
             held.Margin = new Padding(12, 6, 0, 0);
-            table.AddRow("target: player", UIColumn.Percent(coupled, TwoColumnPercent), UIColumn.Percent(playerSide, TwoColumnPercent));
+            table.AddRow("target: player", PropertyColumn.Percent(coupled, TwoColumnPercent), PropertyColumn.Percent(playerSide, TwoColumnPercent));
 
             // What the audio output gets: EffectiveVolume, after each change by the user.
             VolumeControl live = UIStyles.VolumeControls.CreatePrimary(0.6);
@@ -83,12 +83,12 @@ namespace ErikwnkWFUI.Showcase
             {
                 shown.Text = "EffectiveVolume = " + Math.Round(live.EffectiveVolume * 100) + " %";
             };
-            table.AddRow("VolumeChanged", UIColumn.Percent(live, TwoColumnPercent), UIColumn.Percent(shown, TwoColumnPercent));
+            table.AddRow("VolumeChanged", PropertyColumn.Percent(live, TwoColumnPercent), PropertyColumn.Percent(shown, TwoColumnPercent));
         }
 
         private void AddVolumeControlRow(PropertyTable table, string label, VolumeControl control)
         {
-            table.AddRow(label, UIColumn.Percent(control, TwoColumnPercent));
+            table.AddRow(label, PropertyColumn.Percent(control, TwoColumnPercent));
         }
     }
 }

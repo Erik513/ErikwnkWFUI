@@ -162,7 +162,7 @@ namespace ErikwnkWFUI.Showcase
         private void AddBarRow(PropertyTable table, string name, ProgressBar bar)
         {
             AnimateProgressBar(v => bar.Value = v);
-            table.AddRow(name, UIColumn.Percent(bar, TwoColumnPercent));
+            table.AddRow(name, PropertyColumn.Percent(bar, TwoColumnPercent));
         }
 
         // Two animated bars side by side (the left and the right half of the row).
@@ -173,13 +173,13 @@ namespace ErikwnkWFUI.Showcase
             if (animateRight)
                 AnimateProgressBar(v => right.Value = v);
 
-            table.AddRow(name, UIColumn.Percent(left, TwoColumnPercent), UIColumn.Percent(right, TwoColumnPercent));
+            table.AddRow(name, PropertyColumn.Percent(left, TwoColumnPercent), PropertyColumn.Percent(right, TwoColumnPercent));
         }
 
         private void AddSlimBarRow(PropertyTable table, string name, SlimProgressBar bar)
         {
             AnimateProgressBar(v => bar.Value = v);
-            table.AddRow(name, UIColumn.Percent(bar, TwoColumnPercent));
+            table.AddRow(name, PropertyColumn.Percent(bar, TwoColumnPercent));
         }
 
         private void AddSlimBarPair(PropertyTable table, string name, SlimProgressBar left, SlimProgressBar right, bool animateRight = true)
@@ -189,7 +189,7 @@ namespace ErikwnkWFUI.Showcase
             if (animateRight)
                 AnimateProgressBar(v => right.Value = v);
 
-            table.AddRow(name, UIColumn.Percent(left, TwoColumnPercent), UIColumn.Percent(right, TwoColumnPercent));
+            table.AddRow(name, PropertyColumn.Percent(left, TwoColumnPercent), PropertyColumn.Percent(right, TwoColumnPercent));
         }
 
         private static SlimProgressBar CreateSlimTextBar(bool text, bool percentage, SlimProgressBarTextPosition position = SlimProgressBarTextPosition.Above)

@@ -75,9 +75,9 @@ namespace ErikwnkWFUI.Showcase
             fast.Speed = SpinnerSpeed.Fast;
             slow.Anchor = medium.Anchor = fast.Anchor = AnchorStyles.Left;
             table.AddRow("Speed = Slow | Medium | Fast",
-                UIColumn.Percent(slow, 100f / 3),
-                UIColumn.Percent(medium, 100f / 3),
-                UIColumn.Percent(fast, 100f / 3));
+                PropertyColumn.Percent(slow, 100f / 3),
+                PropertyColumn.Percent(medium, 100f / 3),
+                PropertyColumn.Percent(fast, 100f / 3));
 
             Spinner determinate = UIStyles.Spinners.CreateProgressPrimary();
             determinate.IsIndeterminate = false;
@@ -107,8 +107,8 @@ namespace ErikwnkWFUI.Showcase
                 AnimateProgressBar(v => b.Value = v);
             }
 
-            UIColumn left = UIColumn.Percent(a, TwoColumnPercent);
-            UIColumn rightColumn = UIColumn.Percent(b, TwoColumnPercent);
+            PropertyColumn left = PropertyColumn.Percent(a, TwoColumnPercent);
+            PropertyColumn rightColumn = PropertyColumn.Percent(b, TwoColumnPercent);
 
             if (rowHeight > 0)
                 table.AddRow(label, rowHeight, left, rightColumn);

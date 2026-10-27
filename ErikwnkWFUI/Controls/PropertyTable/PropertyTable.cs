@@ -9,7 +9,7 @@ namespace ErikwnkWFUI.Controls
     /// sections - typical use is a settings/options panel. Build it up with
     /// <see cref="AddSection"/> and <see cref="AddRow(string,Control[])"/>;
     /// a row can hold more than one editor control side by side via the
-    /// <see cref="UIColumn"/>-based overloads.
+    /// <see cref="PropertyColumn"/>-based overloads.
     /// </summary>
     public partial class PropertyTable : UserControl
     {
@@ -66,15 +66,15 @@ namespace ErikwnkWFUI.Controls
         /// <summary>
         /// Adds a row: a label on the left, one or more editor controls
         /// sharing the remaining width equally on the right (each gets
-        /// <see cref="UIColumn.Auto"/> sizing). Use the
-        /// <see cref="AddRow(string,UIColumn[])"/> overload instead if the
+        /// <see cref="PropertyColumn.Auto"/> sizing). Use the
+        /// <see cref="AddRow(string,PropertyColumn[])"/> overload instead if the
         /// controls need different widths.
         /// </summary>
         public void AddRow(
             string labelText,
             params Control[] controls)
         {
-            UIColumn[] columns = CreateAutoColumns(controls);
+            PropertyColumn[] columns = CreateAutoColumns(controls);
 
             AddRow(
                 labelText,
@@ -88,7 +88,7 @@ namespace ErikwnkWFUI.Controls
             int rowHeight,
             params Control[] controls)
         {
-            UIColumn[] columns = CreateAutoColumns(controls);
+            PropertyColumn[] columns = CreateAutoColumns(controls);
 
             AddRow(
                 labelText,
@@ -96,10 +96,10 @@ namespace ErikwnkWFUI.Controls
                 columns);
         }
 
-        /// <summary>Adds a row with explicit per-column sizing - see <see cref="UIColumn.Auto"/>/<see cref="UIColumn.Absolute"/>/<see cref="UIColumn.Percent"/>.</summary>
+        /// <summary>Adds a row with explicit per-column sizing - see <see cref="PropertyColumn.Auto"/>/<see cref="PropertyColumn.Absolute"/>/<see cref="PropertyColumn.Percent"/>.</summary>
         public void AddRow(
             string labelText,
-            params UIColumn[] columns)
+            params PropertyColumn[] columns)
         {
             AddRow(
                 labelText,
@@ -107,11 +107,11 @@ namespace ErikwnkWFUI.Controls
                 columns);
         }
 
-        /// <inheritdoc cref="AddRow(string,UIColumn[])"/>
+        /// <inheritdoc cref="AddRow(string,PropertyColumn[])"/>
         public void AddRow(
             string labelText,
             int rowHeight,
-            params UIColumn[] columns)
+            params PropertyColumn[] columns)
         {
             int row = AddRowStyle(rowHeight);
 
@@ -125,15 +125,15 @@ namespace ErikwnkWFUI.Controls
             _layout.Controls.Add(editorArea, 1, row);
         }
 
-        private UIColumn[] CreateAutoColumns(Control[] controls)
+        private PropertyColumn[] CreateAutoColumns(Control[] controls)
         {
             if (controls == null || controls.Length == 0)
-                return new[] { UIColumn.Auto(null) };
+                return new[] { PropertyColumn.Auto(null) };
 
-            UIColumn[] columns = new UIColumn[controls.Length];
+            PropertyColumn[] columns = new PropertyColumn[controls.Length];
 
             for (int i = 0; i < controls.Length; i++)
-                columns[i] = UIColumn.Auto(controls[i]);
+                columns[i] = PropertyColumn.Auto(controls[i]);
 
             return columns;
         }
@@ -178,7 +178,7 @@ namespace ErikwnkWFUI.Controls
             return layout;
         }
 
-        private System.Windows.Forms.TableLayoutPanel CreateEditorLayout(UIColumn[] columns)
+        private System.Windows.Forms.TableLayoutPanel CreateEditorLayout(PropertyColumn[] columns)
         {
             int columnCount = columns == null || columns.Length == 0
                 ? 1
@@ -202,9 +202,9 @@ namespace ErikwnkWFUI.Controls
 
             for (int i = 0; i < columnCount; i++)
             {
-                UIColumn column = columns != null && i < columns.Length
+                PropertyColumn column = columns != null && i < columns.Length
                     ? columns[i]
-                    : UIColumn.Auto(null);
+                    : PropertyColumn.Auto(null);
 
                 layout.ColumnStyles.Add(
                     column.Style);

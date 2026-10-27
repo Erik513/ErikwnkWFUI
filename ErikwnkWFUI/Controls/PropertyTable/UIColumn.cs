@@ -1,55 +1,18 @@
-﻿using System.Windows.Forms;
+﻿using System;
 
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// Pairs a <see cref="Control"/> (or a null placeholder) with a
-    /// <see cref="TableLayoutPanel"/> column width, for
-    /// <see cref="PropertyTable"/>'s multi-column row overloads. Build
-    /// one with <see cref="Auto"/>, <see cref="Absolute"/>, or
-    /// <see cref="Percent"/> rather than constructing it directly.
+    /// The old name of <see cref="PropertyColumn"/>: <c>UIColumn.Percent(...)</c>, <c>Absolute</c> and <c>Auto</c> still work (and give a
+    /// <see cref="PropertyColumn"/>); code that declares a variable of the type <c>UIColumn</c> has to use <see cref="PropertyColumn"/>. It is
+    /// removed once the projects that use it have been changed.
     /// </summary>
-    public class UIColumn
+    [Obsolete("Use PropertyColumn (the same, a name that says which table it belongs to).")]
+    public sealed class UIColumn : PropertyColumn
     {
-        public Control Control { get; private set; }
-
-        public ColumnStyle Style { get; private set; }
-
-        private UIColumn(
-            Control control,
-            ColumnStyle style)
+        private UIColumn()
+            : base(null, null)
         {
-            Control = control;
-            Style = style;
-        }
-
-        /// <summary>A column that takes up all remaining width (equivalent to <see cref="Percent"/> with 100).</summary>
-        public static UIColumn Auto(Control control)
-        {
-            return new UIColumn(
-                control,
-                new ColumnStyle(SizeType.Percent, 100));
-        }
-
-        /// <summary>A column with a fixed pixel width.</summary>
-        public static UIColumn Absolute(
-            Control control,
-            int width)
-        {
-            return new UIColumn(
-                control,
-                new ColumnStyle(SizeType.Absolute, width));
-        }
-
-        /// <summary>A column sized as a percentage of the row's total width.</summary>
-        public static UIColumn Percent(
-            Control control,
-            float percent)
-        {
-            return new UIColumn(
-                control,
-                new ColumnStyle(SizeType.Percent, percent));
         }
     }
-
 }
