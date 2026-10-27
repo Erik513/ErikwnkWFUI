@@ -501,7 +501,7 @@ namespace ErikwnkWFUI.Controls
         {
             // A disabled knob has no outline of its own: it is a little lighter than the track, as the whole switch is quiet.
             Color borderColor = Enabled
-                ? UIStyles.Colors.BorderMedium
+                ? GetOutlineColor()
                 : GetDisabledTrackColor();
 
             Pen pen = new Pen(borderColor, Math.Max(1, Px(BorderThickness)));
@@ -545,6 +545,15 @@ namespace ErikwnkWFUI.Controls
             return Mix(off, on);
         }
 
+        // The outline of the track while the switch is off, and of the knob: the gray of the theme, moved to stand out from the surface (2.2:1;
+        // the plain gray was 1.5:1 on the light theme, where the track itself is as light as the surface, and the off switch was hard to see).
+        private const double OutlineContrast = 2.2;
+
+        private Color GetOutlineColor()
+        {
+            return UIColors.EnsureContrast(UIStyles.Colors.BorderMedium, SurfaceColor.Of(this), OutlineContrast);
+        }
+
         // The main color of the set, or the neutral gray.
         private Color GetMainColor()
         {
@@ -575,7 +584,7 @@ namespace ErikwnkWFUI.Controls
             // The main color of the set, moved to stand out from the surface (gray for CreateStandard, the accent for CreatePrimary).
             Color resting = _isHovered
                 ? UIColors.EnsureContrast(GetMainColor(), SurfaceColor.Of(this), CheckedOnSurfaceContrast)
-                : UIStyles.Colors.BorderMedium;
+                : GetOutlineColor();
 
             return Mix(resting, GetCheckedColor());
         }

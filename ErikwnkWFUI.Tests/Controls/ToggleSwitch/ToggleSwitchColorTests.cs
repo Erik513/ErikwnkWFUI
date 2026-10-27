@@ -63,6 +63,34 @@ public class ToggleSwitchColorTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void TheOutlineOfASwitchThatIsOff_IsSeenOnTheSurface_AlsoWhileTheMouseIsOverIt(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            Color surface = SurfaceOf(lightTheme);
+
+            using ToggleSwitch gray = UIStyles.ToggleSwitches.CreateStandard(false);
+            using ToggleSwitch primary = UIStyles.ToggleSwitches.CreatePrimary(false);
+            using Form form = OffscreenForm.Create(new Size(120, 40), surface);
+            gray.Location = new Point(5, 5);
+            primary.Location = new Point(60, 5);
+            form.Controls.Add(gray);
+            form.Controls.Add(primary);
+            form.Show();
+            Application.DoEvents();
+
+            Check(shortfalls, "outline, gray", gray.InvokePrivate<Color>("GetBorderColor"), surface, 2.0);
+            Check(shortfalls, "outline, primary", primary.InvokePrivate<Color>("GetBorderColor"), surface, 2.0);
+
+            gray.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+            primary.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+            Check(shortfalls, "outline while hovered, gray", gray.InvokePrivate<Color>("GetBorderColor"), surface, 2.0);
+            Check(shortfalls, "outline while hovered, primary", primary.InvokePrivate<Color>("GetBorderColor"), surface, 2.0);
+        });
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes), MemberType = typeof(ColorContrastTestSupport))]
     public void ADisabledSwitch_IsQuieterThanAnEnabledOne_AndStillSeen_InBothStates(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>

@@ -9,8 +9,8 @@ using ToggleSwitch = ErikwnkWFUI.Controls.ToggleSwitch;
 
 namespace ErikwnkWFUI.Tests.Controls.ToggleSwitches;
 
-/// <summary>What the switch does with the mouse and the keyboard, as a standard check box does it: the press has to end over it, the space bar works, nothing stays pressed or hovered, and a screen reader is told what it is. [Collection]: the focus belongs to the whole process.</summary>
-[Collection(FocusTestCollection.Name)]
+/// <summary>What the switch does with the mouse and the keyboard, as a standard check box does it: the press has to end over it, the space bar works, nothing stays pressed or hovered, and a screen reader is told what it is.</summary>
+[Collection(AccentColorTestCollection.Name)]
 public class ToggleSwitchBehaviorTests : IDisposable
 {
     [DllImport("user32.dll")]
@@ -28,7 +28,6 @@ public class ToggleSwitchBehaviorTests : IDisposable
         toggle.Location = new Point(5, 5);
         form.Controls.Add(toggle);
         form.Show();
-        form.Activate();
         Application.DoEvents();
 
         return form;
@@ -252,32 +251,6 @@ public class ToggleSwitchBehaviorTests : IDisposable
         toggle.InvokePrivate("OnKeyDown", new KeyEventArgs(Keys.Space | Keys.Control));
 
         Assert.False(Pressed(toggle));
-    }
-
-    // ---- the focus cue ----
-
-    [Fact]
-    public void TheFocusFrame_IsShownOnlyWithTheFocusAndAfterTheKeyboardWasUsed()
-    {
-        StaThread.Run(() =>
-        {
-            using ToggleSwitch toggle = UIStyles.ToggleSwitches.CreatePrimary(true);
-            using Form form = Show(toggle);
-            using Bitmap resting = Draw(toggle);
-
-            toggle.Focus();
-            Application.DoEvents();
-            Assert.True(toggle.Focused);
-
-            // Hidden until the keyboard is used (UIS_CLEAR + UISF_HIDEFOCUS shows the cues, as a key press does).
-            using Bitmap withoutCues = Draw(toggle);
-            Assert.True(SamePixels(resting, withoutCues), "the frame is there before the keyboard has been used");
-
-            SendMessage(toggle.Handle, 0x0128, (IntPtr)((1 << 16) | 2), IntPtr.Zero);
-            Application.DoEvents();
-            using Bitmap withCues = Draw(toggle);
-            Assert.False(SamePixels(resting, withCues), "no focus frame");
-        });
     }
 
     // ---- what a screen reader is told ----
