@@ -1,5 +1,10 @@
-﻿using System.Drawing;
+﻿using System;
+using System.ComponentModel;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.UIStyles;
 
 namespace ErikwnkWFUI.Controls
@@ -19,13 +24,15 @@ namespace ErikwnkWFUI.Controls
         private const int LabelLeftPadding = 10;
 
         private readonly System.Windows.Forms.TableLayoutPanel _layout;
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
+        private readonly List<Label> _sectionLabels = new List<Label>();
 
         public PropertyTable()
         {
             Dock = DockStyle.Top;
             AutoSize = true;
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            ThemeWatcher.FollowBackColor(this, () => Colors.BackgroundMedium);
+            ThemeWatcher.FollowBackColor(this, () => UIStyles.Colors.BackgroundMedium);
             Margin = new Padding(0);
             Padding = new Padding(0);
 
@@ -47,6 +54,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public void ClearRows()
         {
+            _sectionLabels.Clear();
             _layout.Controls.Clear();
             _layout.RowStyles.Clear();
             _layout.RowCount = 0;
@@ -58,6 +66,8 @@ namespace ErikwnkWFUI.Controls
             int row = AddRowStyle(DefaultSectionHeight);
 
             Label label = CreateSectionLabel(title);
+            label.Paint += (sender, e) => PaintSectionLine(label, e.Graphics);
+            _sectionLabels.Add(label);
 
             _layout.Controls.Add(label, 0, row);
             _layout.SetColumnSpan(label, 2);
@@ -163,7 +173,7 @@ namespace ErikwnkWFUI.Controls
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(layout, () => Colors.BackgroundMedium);
+            ThemeWatcher.FollowBackColor(layout, () => UIStyles.Colors.BackgroundMedium);
 
             layout.ColumnStyles.Add(
                 new ColumnStyle(
@@ -193,7 +203,7 @@ namespace ErikwnkWFUI.Controls
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(layout, () => Colors.BackgroundMedium);
+            ThemeWatcher.FollowBackColor(layout, () => UIStyles.Colors.BackgroundMedium);
 
             layout.RowStyles.Add(
                 new RowStyle(
@@ -243,7 +253,7 @@ namespace ErikwnkWFUI.Controls
                 Margin = new Padding(1)
             };
 
-            ThemeWatcher.FollowBackColor(wrapper, () => Colors.BackgroundLight);
+            ThemeWatcher.FollowBackColor(wrapper, () => UIStyles.Colors.BackgroundLight);
 
             wrapper.ColumnStyles.Add(
                 new ColumnStyle(SizeType.Percent, 100));
@@ -276,6 +286,54 @@ namespace ErikwnkWFUI.Controls
             return row;
         }
 
+        /// <summary>
+        /// The color of the line at the left edge of each section header: the <c>Hover</c> color of the set is the main color (brought to where it
+        /// is seen against the header). Null (the default) is no line; <c>UIStyles.PropertyTables.CreatePrimary</c> makes one that follows the
+        /// accent; <c>CreateStandard(colors: ...)</c> takes a color set or simply a color. The labels, the cells and the controls in them
+        /// stay as they are (the controls have colors of their own). Not written by the designer (a set is code).
+        /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIColorSet Colors
+        {
+            get { return _colorSet.Value; }
+            set
+            {
+                _colorSet.Value = value;
+                InvalidateSections();
+            }
+        }
+
+        // A set that is asked for again each time it is needed (the primary set, which follows the accent); a later Colors replaces it.
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorSet.Follow(source);
+            InvalidateSections();
+        }
+
+        private void InvalidateSections()
+        {
+            foreach (Label label in _sectionLabels)
+                label.Invalidate();
+        }
+
+        // The line at the left edge of a section header, in the main color of the set (3 px at 96 dpi), nothing without a set.
+        private void PaintSectionLine(Label header, Graphics graphics)
+        {
+            UIColorSet set = Colors;
+
+            if (set == null)
+                return;
+
+            Color color = UIColors.EnsureContrast(set.Hover, header.BackColor, SectionLineContrast);
+
+            using (SolidBrush brush = new SolidBrush(color))
+                graphics.FillRectangle(brush, 0, 0, Dpi.Scale(header, SectionLineWidth96), header.Height);
+        }
+
+        private const int SectionLineWidth96 = 3;
+        private const double SectionLineContrast = 3.0;
+
         private Label CreateRowLabel(string text)
         {
             Label label = Labels.CreateStandard(text ?? "");
@@ -284,7 +342,7 @@ namespace ErikwnkWFUI.Controls
             label.TextAlign = ContentAlignment.MiddleLeft;
             label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
             label.Margin = new Padding(0);
-            ThemeWatcher.FollowBackColor(label, () => Colors.BackgroundMedium);
+            ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundMedium);
 
             return label;
         }
@@ -297,7 +355,7 @@ namespace ErikwnkWFUI.Controls
             label.TextAlign = ContentAlignment.MiddleLeft;
             label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
             label.Margin = new Padding(0);
-            ThemeWatcher.FollowBackColor(label, () => Colors.BackgroundDark);
+            ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundDark);
 
             return label;
         }
@@ -311,7 +369,7 @@ namespace ErikwnkWFUI.Controls
                 Margin = new Padding(0)
             };
 
-            ThemeWatcher.FollowBackColor(panel, () => Colors.BackgroundMedium);
+            ThemeWatcher.FollowBackColor(panel, () => UIStyles.Colors.BackgroundMedium);
 
             return panel;
         }
@@ -330,7 +388,7 @@ namespace ErikwnkWFUI.Controls
                 Margin = new Padding(0, 2, 2, 2)
             };
 
-            ThemeWatcher.FollowBackColor(panel, () => Colors.BackgroundLight);
+            ThemeWatcher.FollowBackColor(panel, () => UIStyles.Colors.BackgroundLight);
 
             // A themed border around each editor cell, independent of how
             // close BackgroundLight happens to sit next to the surrounding
@@ -344,7 +402,7 @@ namespace ErikwnkWFUI.Controls
             // around itself specifically so this has room to show through.
             panel.Paint += (sender, e) =>
             {
-                using (Pen pen = new Pen(Colors.BorderMedium))
+                using (Pen pen = new Pen(UIStyles.Colors.BorderMedium))
                 {
                     e.Graphics.DrawRectangle(pen, 0, 0, panel.ClientSize.Width - 1, panel.ClientSize.Height - 1);
                 }
