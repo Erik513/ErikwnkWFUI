@@ -162,6 +162,23 @@ public class PropertyTableRowTests : IDisposable
     }
 
     [Fact]
+    public void ALongLabel_WrapsOntoMoreLines_AndIsNotCutWhileTheLinesFitTheRow()
+    {
+        PropertyTable table = Show(new PropertyTable());
+        string twoLines = "Name of the folder for the files";
+        table.AddRow(twoLines, new Button());
+        Relayout(table);
+        ScrollingLabel label = (ScrollingLabel)LabelOf(table, twoLines);
+
+        int oneLine = TextRenderer.MeasureText("A", label.Font).Height;
+        int needed = TextRenderer.MeasureText(twoLines, label.Font, new Size(label.ClientSize.Width - label.Padding.Horizontal, int.MaxValue), label.GetTextFormatFlags()).Height;
+
+        Assert.False(label.AutoEllipsis);
+        Assert.True(needed >= 2 * oneLine - 2, "the text did not wrap");
+        Assert.False(PropertyTable.IsCut(label));
+    }
+
+    [Fact]
     public void ThePointerOverALabel_DoesNotBreakWhenTheLabelIsCutOrNot()
     {
         PropertyTable table = Show(new PropertyTable());

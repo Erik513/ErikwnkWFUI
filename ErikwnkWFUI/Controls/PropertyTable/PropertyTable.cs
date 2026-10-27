@@ -47,7 +47,7 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The width of the label column in pixels at 96 dpi (130 by default; scaled to the screen). A label that is longer than this
-        /// is cut, and the whole text is its tooltip. Takes effect at once for the rows that are there.
+        /// wraps onto more lines; what does not fit the row then is cut, and the whole text is its tooltip. Takes effect at once for the rows that are there.
         /// </summary>
         [DefaultValue(DefaultLabelWidth96)]
         public int LabelWidth
@@ -387,13 +387,16 @@ namespace ErikwnkWFUI.Controls
         {
             ScrollingLabel label = Labels.CreateStandard(text ?? "");
 
+            // A long text wraps onto more lines (the row has room for two or three); only what does not fit then is cut, with the tooltip below.
+            label.AutoEllipsis = false;
+
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;
             label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
             label.Margin = new Padding(0);
             ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundMedium);
 
-            // A label whose text does not fit its row is cut: the whole text is its tooltip (asked when the pointer comes, so a change of the
+            // A label whose text does not fit its row even wrapped is cut: the whole text is its tooltip (asked when the pointer comes, so a change of the
             // width, the text or the font is followed).
             FullTextToolTip toolTip = new FullTextToolTip(label);
             label.MouseEnter += (sender, e) => toolTip.Update(label.Text, IsCut(label));
