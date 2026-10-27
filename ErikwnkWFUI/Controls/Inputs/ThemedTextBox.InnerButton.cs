@@ -69,8 +69,7 @@ namespace ErikwnkWFUI.Controls
             get { return _innerGlyph == null ? 0 : Dpi.Scale(this, InnerWidth96); }
         }
 
-        // Another dpi than the one of the screen, for the tests: nothing here, the box uses the one of the screen.
-
+        // Where the button is, in the client area of the box (at its right end).
         internal Rectangle InnerBounds
         {
             get

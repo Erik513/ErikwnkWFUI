@@ -14,7 +14,9 @@ namespace ErikwnkWFUI.Controls
     /// the color of <see cref="Colors"/>) instead of the system's, a placeholder that is painted and never is the text, a slightly dimmed
     /// background while it is read-only, and a tooltip with the whole text when the text is wider than the box (<see cref="ToolTipWhenCut"/>).
     /// Make one with <c>UIStyles.TextBoxes</c>; the factories give the standard type, except
-    /// <c>CreateLockable</c>, which gives a <see cref="LockableTextBox"/>. The class has its own name, as
+    /// <c>CreateLockable</c>, which gives a <see cref="LockableTextBox"/>. The box can have a button at its right end, inside the frame
+    /// (the pencil of a <see cref="LockableTextBox"/>, the eye of a password box): it is painted by the box, so it is not a control of its
+    /// own and not seen by a screen reader - what it does can also be done with the keyboard (see <see cref="LockableTextBox"/>). The class has its own name, as
     /// <c>ErikwnkWFUI.Controls.TextBox</c> would be ambiguous in every file that uses both namespaces.
     /// </summary>
     public partial class ThemedTextBox : TextBox
@@ -205,7 +207,7 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
-        // ---- the system's formatting rectangle of the text, and the placeholder ----
+        // ---- painting over what the system painted, the formatting rectangle of the text ----
 
         protected override void WndProc(ref Message m)
         {

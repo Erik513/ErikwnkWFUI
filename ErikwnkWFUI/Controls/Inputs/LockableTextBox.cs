@@ -9,7 +9,9 @@ namespace ErikwnkWFUI.Controls
     /// A text box that is locked (read-only) until the user unlocks it: a pencil in the box, at its right end, starts the editing - the box
     /// is unlocked, has the focus and has its text selected, and the pencil becomes a check mark - and the check mark or the Enter key
     /// accepts what was typed and locks the box again; the Escape key gives the old text back. The F2 key and the Enter key on a locked
-    /// box start the editing too, so that it can be done with the keyboard alone. Make one with
+    /// box start the editing too, so that it can be done with the keyboard alone (the pencil is painted by the box and is not seen by a
+    /// screen reader). The box keeps its <see cref="Control.TabStop"/> as it is: locked, it can still be reached with the Tab key.
+    /// Make one with
     /// <c>UIStyles.TextBoxes.CreateLockable</c>.
     /// </summary>
     public class LockableTextBox : ThemedTextBox
