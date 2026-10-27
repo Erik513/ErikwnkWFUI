@@ -314,6 +314,27 @@ public class TextBoxInnerButtonTests : IDisposable
     }
 
     [Fact]
+    public void TheKeysAltF8_ShowAndHideThePassword_OtherKeysDoNot_AndADisabledBoxIgnoresThem()
+    {
+        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+
+        Assert.True(Key(box, Keys.Alt | Keys.F8));
+        Assert.False(box.UseSystemPasswordChar);
+        Assert.True(box.GetPrivateField<bool>("_innerActive"));
+
+        Assert.False(Key(box, Keys.F8));
+        Assert.False(Key(box, Keys.Alt | Keys.F7));
+        Assert.False(box.UseSystemPasswordChar);
+
+        Assert.True(Key(box, Keys.Alt | Keys.F8));
+        Assert.True(box.UseSystemPasswordChar);
+
+        box.Enabled = false;
+        Key(box, Keys.Alt | Keys.F8);
+        Assert.True(box.UseSystemPasswordChar);
+    }
+
+    [Fact]
     public void APasswordBox_ShowsItsTextInATooltipOnlyWhileThePasswordIsShown()
     {
         TextBox box = Show(UIStyles.TextBoxes.CreatePassword(), 70);

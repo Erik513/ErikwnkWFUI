@@ -70,7 +70,7 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
-            /// A text box for a password: what is typed is hidden, and an eye in the box shows it with a click and hides it again with the next one
+            /// A text box for a password: what is typed is hidden, and an eye in the box (or the keys Alt+F8) shows it with a click and hides it again with the next one
             /// (the tooltip with the whole text of a box that is too narrow only appears while the password is shown).
             /// </summary>
             /// <param name="text">The text it starts with.</param>

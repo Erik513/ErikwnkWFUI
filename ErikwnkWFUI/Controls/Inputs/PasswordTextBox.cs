@@ -6,7 +6,7 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// A text box for a password: what is typed is hidden (the system's dots), and an eye in the box, at its right end, shows it while it
-    /// is switched on (a click on the eye shows the password, the next click hides it again). Make one with
+    /// is switched on (a click on the eye, or the keys Alt+F8, show the password, the next one hides it again). Make one with
     /// <c>UIStyles.TextBoxes.CreatePassword</c>, which gives the standard type; the class itself is not public.
     /// </summary>
     internal sealed class PasswordTextBox : ThemedTextBox
@@ -28,6 +28,19 @@ namespace ErikwnkWFUI.Controls
                 UseSystemPasswordChar = !value;
                 ShowEyeState();
             }
+        }
+
+        // The keyboard shows and hides the password too (the eye is painted by the box and is not seen by a screen reader): Alt+F8.
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Alt | Keys.F8) && Enabled)
+            {
+                IsPasswordShown = !IsPasswordShown;
+
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         protected override void OnInnerClick()
