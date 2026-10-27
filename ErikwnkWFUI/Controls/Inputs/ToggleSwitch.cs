@@ -12,7 +12,12 @@ namespace ErikwnkWFUI.Controls
 {
     /// <summary>
     /// An iOS-style on/off switch, an alternative to a <see cref="CheckBox"/>. Make one with <c>UIStyles.ToggleSwitches</c>: gray when it is on
-    /// (<c>CreateStandard</c>), in the accent (<c>CreatePrimary</c>) or in the colors of a color set (<c>colors:</c>).
+    /// (<c>CreateStandard</c>), in the accent (<c>CreatePrimary</c>) or in the colors of a color set (<c>colors:</c>). It works as a standard
+    /// check box does: a click toggles it when the press ends over it, the space bar toggles it (pressed while down, toggled on release, with
+    /// a focus frame once the keyboard has been used), and a screen reader is told a check button with its state - set
+    /// <see cref="Control.AccessibleName"/>, as there is no text on the switch. When the user switches it, the knob glides (not when code
+    /// sets <see cref="Checked"/>, nor while Windows has the animations off). It follows the theme and the dpi of the screen. There is no
+    /// <c>Text</c> (put a label beside it), no three states and no right-to-left layout.
     /// </summary>
     public partial class ToggleSwitch : Control
     {
@@ -423,13 +428,7 @@ namespace ErikwnkWFUI.Controls
 
         private Rectangle GetKnobRectangle(Rectangle toggleRectangle)
         {
-            // Margin applied on all four sides equally - it was previously
-            // only being subtracted from the height once (leaving the knob
-            // 2px short of the track) and then that same 2px slack applied
-            // only at the top, leaving the knob flush against the bottom
-            // with no gap there at all. KnobMargin here needs to match on
-            // both axes for the knob to actually sit centered vertically
-            // and inset symmetrically at each end horizontally.
+            // The same margin on all four sides: the knob sits centered vertically and inset equally at each end.
             int margin = Px(KnobMargin);
 
             int knobSize = toggleRectangle.Height - margin * 2;
@@ -526,13 +525,8 @@ namespace ErikwnkWFUI.Controls
             if (_position >= 1)
                 return GetCheckedColor();
 
-            // BackgroundMedium is pure white in Light theme, so an
-            // unchecked track was indistinguishable from its own
-            // surroundings there ("der Hintergrund... ist komplett weiß,
-            // sie sollte ganz leicht grau sein"). BackgroundLight is a
-            // step up from Medium in both themes (subtly lighter in Dark,
-            // a visible light gray - not white - in Light), giving the
-            // track a visible pill shape against either background.
+            // BackgroundLight, not BackgroundMedium: that one is pure white in the light theme, where the track would vanish into its
+            // surroundings. BackgroundLight is a visible light gray there (and subtly lighter than the surface in the dark theme).
             return Mix(UIStyles.Colors.BackgroundLight, GetCheckedColor());
         }
 
@@ -588,16 +582,7 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetKnobColor()
         {
-            // Computed against the disabled track color (GetBackgroundColor's
-            // own !Enabled case, now the fixed DisabledGray) so the knob
-            // still contrasts against whatever the track actually renders
-            // as, blended 35% toward that same track color rather than used
-            // at full strength (GetContrastingForeColor alone is a binary
-            // black/white pick - at full strength the knob looked exactly as
-            // bold/undimmed as an enabled one). Using the same fixed
-            // DisabledGray the track itself now uses means this - and
-            // therefore the whole disabled switch - renders identically in
-            // both themes, matching disabled buttons.
+            // Disabled: white taken part of the way toward the disabled track, so it is not as bold as an enabled knob.
             if (!Enabled)
                 return UIColors.BlendToward(UIColors.White, GetDisabledTrackColor(), DisabledKnobBlend);
 
