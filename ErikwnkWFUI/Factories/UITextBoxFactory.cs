@@ -11,7 +11,7 @@ namespace ErikwnkWFUI.Factories
             string placeholder = "",
             UIColorSet colors = null)
         {
-            ThemedTextBox textBox = Create<ThemedTextBox>(text, placeholder, BorderStyle.FixedSingle);
+            TextField textBox = Create<TextField>(text, placeholder, BorderStyle.FixedSingle);
             textBox.Colors = colors;
 
             return textBox;
@@ -22,7 +22,7 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             string placeholder = "")
         {
-            ThemedTextBox textBox = Create<ThemedTextBox>(text, placeholder, BorderStyle.FixedSingle);
+            TextField textBox = Create<TextField>(text, placeholder, BorderStyle.FixedSingle);
             textBox.FollowColors(() => UIColors.PrimarySet);
 
             return textBox;
@@ -32,7 +32,7 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             string placeholder = "")
         {
-            return Create<ThemedTextBox>(text, placeholder, BorderStyle.None);
+            return Create<TextField>(text, placeholder, BorderStyle.None);
         }
 
         // Locked (read-only) until the pencil in the box is used.
@@ -61,7 +61,7 @@ namespace ErikwnkWFUI.Factories
             return textBox;
         }
 
-        private static T Create<T>(string text, string placeholder, BorderStyle borderStyle) where T : ThemedTextBox, new()
+        private static T Create<T>(string text, string placeholder, BorderStyle borderStyle) where T : TextField, new()
         {
             T textBox = new T
             {
@@ -79,7 +79,7 @@ namespace ErikwnkWFUI.Factories
         }
 
         // The fill and the text follow the theme as long as they still are the colors the factory gave.
-        private static void Follow(ThemedTextBox textBox)
+        private static void Follow(TextField textBox)
         {
             System.Drawing.Color primary = UIColors.TextPrimary;
             textBox.ForeColor = primary;

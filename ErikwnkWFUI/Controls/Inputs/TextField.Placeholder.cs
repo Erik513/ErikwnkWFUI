@@ -10,7 +10,7 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     // The placeholder, and what is painted over what the system painted (the placeholder and the button in the box).
-    public partial class ThemedTextBox
+    public partial class TextField
     {
         private string _placeholder = "";
 

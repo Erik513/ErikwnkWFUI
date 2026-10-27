@@ -20,27 +20,27 @@ public class LabelScrollTests : IDisposable
 {
     private const string LongText = "A text that is much longer than the label it is shown in, so it has to move";
 
-    private readonly Func<long> _originalClock = ThemedLabel.Milliseconds;
+    private readonly Func<long> _originalClock = ScrollingLabel.Milliseconds;
     private readonly List<Form> _forms = new List<Form>();
     private long _now = 1_000_000;
 
     public LabelScrollTests()
     {
-        ThemedLabel.Milliseconds = () => _now;
+        ScrollingLabel.Milliseconds = () => _now;
     }
 
     public void Dispose()
     {
-        ThemedLabel.Milliseconds = _originalClock;
+        ScrollingLabel.Milliseconds = _originalClock;
 
         foreach (Form form in _forms)
             form.Dispose();
     }
 
     // A label of 120 pixels with a long text, in a window that is shown (out of sight).
-    private ThemedLabel Create(bool scroll = true, string text = LongText)
+    private ScrollingLabel Create(bool scroll = true, string text = LongText)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard(text);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(text);
         label.Size = new Size(120, 24);
         label.ScrollMode = scroll ? LabelScrollMode.BackAndForth : LabelScrollMode.None;
 
@@ -61,21 +61,21 @@ public class LabelScrollTests : IDisposable
         return label;
     }
 
-    private static float Offset(ThemedLabel label) => label.GetPrivateField<float>("_offset");
+    private static float Offset(ScrollingLabel label) => label.GetPrivateField<float>("_offset");
 
-    private static int MaxOffset(ThemedLabel label) => label.GetPrivateField<int>("_maxOffset");
+    private static int MaxOffset(ScrollingLabel label) => label.GetPrivateField<int>("_maxOffset");
 
     // Whether the label is on the beat of the animation clock (the thing that makes it move).
-    private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
+    private static bool Moving(ScrollingLabel label) => label.GetPrivateField<bool>("_animating");
 
     // The animation clock beats after this long.
-    private void Tick(ThemedLabel label, int milliseconds)
+    private void Tick(ScrollingLabel label, int milliseconds)
     {
         _now += milliseconds;
         label.InvokePrivate("OnFrame", label, EventArgs.Empty);
     }
 
-    private static Bitmap Paint(ThemedLabel label)
+    private static Bitmap Paint(ScrollingLabel label)
     {
         Bitmap bitmap = new Bitmap(label.Width, label.Height);
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
@@ -86,7 +86,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ByDefault_TheTextDoesNotMove_AndEndsInAnEllipsis()
     {
-        using ThemedLabel label = Create(scroll: false);
+        using ScrollingLabel label = Create(scroll: false);
 
         Assert.Equal(LabelScrollMode.None, label.ScrollMode);
         Assert.Equal(0, MaxOffset(label));
@@ -97,7 +97,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ALongText_WhenTheScrollingIsOn_GetsARoomToMove_AndIsOnTheClock()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         Assert.True(MaxOffset(label) > 0);
         Assert.True(Moving(label));
@@ -106,7 +106,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void TheTextRestsAtTheStart_ThenMoves_AtItsSpeed()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         Tick(label, 2000);
         Assert.Equal(0f, Offset(label));
@@ -126,13 +126,13 @@ public class LabelScrollTests : IDisposable
     public void TheSpeed_DoesNotDependOnHowOftenTheClockBeats()
     {
         // One label whose clock beats every 20 milliseconds, one whose clock beats once a second.
-        using ThemedLabel often = Create();
+        using ScrollingLabel often = Create();
         Tick(often, 2200);
 
         for (int i = 0; i < 50; i++)
             Tick(often, 20);
 
-        using ThemedLabel seldom = Create();
+        using ScrollingLabel seldom = Create();
         Tick(seldom, 2200);
         Tick(seldom, 1000);
 
@@ -145,7 +145,7 @@ public class LabelScrollTests : IDisposable
     {
         float Moved(LabelScrollSpeed speed)
         {
-            using ThemedLabel label = Create(scroll: false);
+            using ScrollingLabel label = Create(scroll: false);
             label.ScrollSpeed = speed;
             label.ScrollMode = LabelScrollMode.BackAndForth;
             Tick(label, 2200);
@@ -160,7 +160,7 @@ public class LabelScrollTests : IDisposable
     }
 
     // Lets time pass in steps until the label's text has got to where it should.
-    private void RunUntil(ThemedLabel label, Func<bool> reached)
+    private void RunUntil(ScrollingLabel label, Func<bool> reached)
     {
         for (int i = 0; i < 400 && !reached(); i++)
             Tick(label, 50);
@@ -171,7 +171,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AtTheEnd_TheTextRests_ThenMovesBack_AndRestsAtTheStartAgain()
     {
-        using ThemedLabel label = Create(scroll: false);
+        using ScrollingLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Fast;
         label.ScrollPause = LabelScrollPause.Short;
         label.ScrollMode = LabelScrollMode.BackAndForth;
@@ -204,7 +204,7 @@ public class LabelScrollTests : IDisposable
         // How long the text rests at the start, found by letting time pass until it moves.
         int Rest(LabelScrollPause pause)
         {
-            using ThemedLabel label = Create(scroll: false);
+            using ScrollingLabel label = Create(scroll: false);
             label.ScrollPause = pause;
             label.ScrollMode = LabelScrollMode.BackAndForth;
             int rested = 0;
@@ -229,7 +229,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void APictureIsOnlyMade_WhenTheTextHasMoved_AtAnyPlaceBetweenTwoPixels()
     {
-        using ThemedLabel label = Create(scroll: false);
+        using ScrollingLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Slow;
         label.ScrollMode = LabelScrollMode.BackAndForth;
 
@@ -249,7 +249,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void BetweenTwoPixels_TheTextIsPaintedBetweenThem()
     {
-        using ThemedLabel label = Create(scroll: false);
+        using ScrollingLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Slow;
         label.ScrollMode = LabelScrollMode.BackAndForth;
         _now += 2200;
@@ -274,7 +274,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void TheClock_ReachesTheLabel_ThroughItsMessageQueue_AndTheLabelMoves()
     {
-        using ThemedLabel label = Create(scroll: false);
+        using ScrollingLabel label = Create(scroll: false);
         label.ScrollSpeed = LabelScrollSpeed.Fast;
         label.ScrollMode = LabelScrollMode.BackAndForth;
         _now += 2200;
@@ -294,7 +294,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ALabelThatIsAskedTwice_BeforeItAnswers_IsAskedOnce()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         label.RequestFrame();
         label.RequestFrame();
@@ -308,7 +308,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AskingALabelWithoutAWindow_IsHarmless()
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+        ScrollingLabel label = UIStyles.Labels.CreateStandard("x");
 
         Assert.Null(Record.Exception(() => label.RequestFrame()));
 
@@ -319,7 +319,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ATextThatFits_StandsStill_OffTheClock()
     {
-        using ThemedLabel label = Create(text: "Short");
+        using ScrollingLabel label = Create(text: "Short");
 
         Assert.Equal(0, MaxOffset(label));
         Assert.False(Moving(label));
@@ -328,7 +328,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void WhenTheLabelBecomesWideEnough_ItStopsMoving_AndWhenNarrowAgain_StartsAnew()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         Tick(label, 2200);
         Tick(label, 500);
         Assert.True(Offset(label) > 0f);
@@ -347,7 +347,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ANewText_ANewFont_AndANewPadding_StartTheMovementOver()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         Tick(label, 2200);
         Tick(label, 500);
 
@@ -368,7 +368,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AfterAChange_TheTextRestsFirst()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.Text = LongText + " again";
 
         Tick(label, 2000);
@@ -379,7 +379,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ADisabledLabel_DoesNotMove_AndLeavesTheClock()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         Tick(label, 2200);
         Tick(label, 500);
 
@@ -397,7 +397,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AHiddenLabel_IsOffTheClock()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         label.Visible = false;
         Assert.False(Moving(label));
@@ -409,7 +409,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ALabelThatIsDisposed_LeavesTheClock()
     {
-        ThemedLabel label = Create();
+        ScrollingLabel label = Create();
         Assert.True(AnimationClock.Count >= 1);
 
         label.Dispose();
@@ -422,11 +422,11 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AnAutoSizedLabel_AndATextOfSeveralLines_DoNotMove()
     {
-        using ThemedLabel autoSized = Create();
+        using ScrollingLabel autoSized = Create();
         autoSized.AutoSize = true;
         autoSized.Text = LongText + " and more";
 
-        using ThemedLabel lines = Create(text: LongText + "\nSecond line");
+        using ScrollingLabel lines = Create(text: LongText + "\nSecond line");
 
         Assert.Equal(0, MaxOffset(autoSized));
         Assert.Equal(0, MaxOffset(lines));
@@ -435,7 +435,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void TheMovingText_IsPaintedFurtherLeft_AsItMoves_AndStaysInsideTheLabel()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.Padding = new Padding(10, 0, 10, 0);
         using Bitmap start = Paint(label);
 
@@ -459,8 +459,8 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void ADisabledLabel_LooksTheSame_WithOrWithoutTheScrolling()
     {
-        using ThemedLabel scrolling = Create();
-        using ThemedLabel still = Create(scroll: false);
+        using ScrollingLabel scrolling = Create();
+        using ScrollingLabel still = Create(scroll: false);
         scrolling.Enabled = still.Enabled = false;
 
         using Bitmap first = Paint(scrolling);
@@ -488,7 +488,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void TheDefaults_AreTheMediumOnes_AndTheScrollingIsOff()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x");
 
         Assert.Equal(LabelScrollSpeed.Medium, label.ScrollSpeed);
         Assert.Equal(LabelScrollPause.Medium, label.ScrollPause);
@@ -500,7 +500,7 @@ public class LabelScrollTests : IDisposable
     [Fact]
     public void AllFourKinds_CanScroll()
     {
-        foreach (ThemedLabel label in new[]
+        foreach (ScrollingLabel label in new[]
         {
             UIStyles.Labels.CreateStandard(LongText), UIStyles.Labels.CreatePrimary(LongText),
             UIStyles.Labels.CreateTitle(LongText), UIStyles.Labels.CreateMuted(LongText)

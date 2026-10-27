@@ -9,10 +9,10 @@ using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
 {
-    // The moving text of ThemedLabel, in three files: this one (the settings, the state and the measure), ThemedLabel.Animation.cs
-    // (the steps on the beat of AnimationClock and what the label is told) and ThemedLabel.Picture.cs (the picture of the
-    // text and how it is painted). The colors, the disabled text and the dispatch of the painting are in ThemedLabel.cs.
-    public sealed partial class ThemedLabel
+    // The moving text of ScrollingLabel, in three files: this one (the settings, the state and the measure), ScrollingLabel.Animation.cs
+    // (the steps on the beat of AnimationClock and what the label is told) and ScrollingLabel.Picture.cs (the picture of the
+    // text and how it is painted). The colors, the disabled text and the dispatch of the painting are in ScrollingLabel.cs.
+    public sealed partial class ScrollingLabel
     {
         // ---- the constants ----
 

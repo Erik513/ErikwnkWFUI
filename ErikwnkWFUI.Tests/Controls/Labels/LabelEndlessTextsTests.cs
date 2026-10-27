@@ -22,9 +22,9 @@ public class LabelEndlessTextsTests : IDisposable
             form.Dispose();
     }
 
-    private ThemedLabel Create(LabelScroll scroll, int width = 400)
+    private ScrollingLabel Create(LabelScroll scroll, int width = 400)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard("Plain", scroll: scroll);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard("Plain", scroll: scroll);
         label.Size = new Size(width, 24);
 
         Form form = new Form
@@ -44,15 +44,15 @@ public class LabelEndlessTextsTests : IDisposable
         return label;
     }
 
-    private static int Cycle(ThemedLabel label) => label.GetPrivateField<int>("_cycle");
+    private static int Cycle(ScrollingLabel label) => label.GetPrivateField<int>("_cycle");
 
-    private static void SetOffset(ThemedLabel label, float offset)
+    private static void SetOffset(ScrollingLabel label, float offset)
     {
-        typeof(ThemedLabel).GetField("_offset", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(label, offset);
+        typeof(ScrollingLabel).GetField("_offset", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(label, offset);
     }
 
     // The columns of ink, joined to groups wherever the gap between two columns is not wider than 8 pixels.
-    private static List<(int Start, int End)> Groups(ThemedLabel label)
+    private static List<(int Start, int End)> Groups(ScrollingLabel label)
     {
         using Bitmap bitmap = new Bitmap(label.Width, label.Height);
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
@@ -80,7 +80,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void TheTexts_AreTheTextOfTheLabelWhereItDoesNotMove_JoinedBytheSeparator()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }, separator: LabelScrollSeparator.Diamond));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }, separator: LabelScrollSeparator.Diamond));
 
         Assert.Equal("One ◆ Two", label.Text);
         Assert.Equal(new[] { "One", "Two" }, label.Scroll.Texts);
@@ -102,7 +102,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void ANewSeparator_ChangesTheJoinedText_AndTheTextsStay()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
 
         label.ScrollSeparator = LabelScrollSeparator.Bar;
 
@@ -113,7 +113,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void WithoutASeparator_TheTextsAreJoinedByASpace()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }, separator: LabelScrollSeparator.None));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }, separator: LabelScrollSeparator.None));
 
         Assert.Equal("One Two", label.Text);
     }
@@ -131,7 +131,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void ANewText_EndsTheTexts_AndTheLabelMovesThatTextAlone()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
 
         label.Text = "Another";
 
@@ -143,7 +143,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void ANewScroll_WithoutTexts_EndsThem()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "One", "Two" }));
 
         label.Scroll = LabelScroll.Endless();
 
@@ -153,7 +153,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void TheRoomAfterEveryText_IsTheSame_TheSeparatorInTheMiddleOfIt()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "Aa", "Bb" }, separator: LabelScrollSeparator.Bar));
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "Aa", "Bb" }, separator: LabelScrollSeparator.Bar));
         Assert.Equal(400, Cycle(label));
         SetOffset(label, 0f);
 
@@ -177,7 +177,7 @@ public class LabelEndlessTextsTests : IDisposable
     [Fact]
     public void SeveralTexts_TakeTheirOwnRoom_WhenTheLabelIsShort()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(new[] { "A rather long first text", "and a second one" }), width: 100);
+        using ScrollingLabel label = Create(LabelScroll.Endless(new[] { "A rather long first text", "and a second one" }), width: 100);
 
         // Both texts, and a gap, the separator and a gap behind each of them.
         Assert.True(Cycle(label) > 2 * 100);

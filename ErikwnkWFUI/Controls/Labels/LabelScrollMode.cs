@@ -1,6 +1,6 @@
 ﻿namespace ErikwnkWFUI.Controls
 {
-    /// <summary>Whether and how the text of a <see cref="ThemedLabel"/> moves when it is too long for the label.</summary>
+    /// <summary>Whether and how the text of a <see cref="ScrollingLabel"/> moves when it is too long for the label.</summary>
     public enum LabelScrollMode
     {
         /// <summary>The text does not move; one that is too long ends in an ellipsis (the default).</summary>
@@ -9,11 +9,11 @@
         /// <summary>The text moves to its end, rests there, moves back to its start, rests there, and so on.</summary>
         BackAndForth,
 
-        /// <summary>The text moves on without rest and comes again behind a gap and a separator, one direction for good (<see cref="ThemedLabel.ScrollDirection"/>). It moves whether the text fits or not; a short text keeps the room of the label (a word of 10 pixels in 50 comes back after 40 empty ones).</summary>
+        /// <summary>The text moves on without rest and comes again behind a gap and a separator, one direction for good (<see cref="ScrollingLabel.ScrollDirection"/>). It moves whether the text fits or not; a short text keeps the room of the label (a word of 10 pixels in 50 comes back after 40 empty ones).</summary>
         Endless
     }
 
-    /// <summary>Which way the text of a <see cref="ThemedLabel"/> moves in the endless mode.</summary>
+    /// <summary>Which way the text of a <see cref="ScrollingLabel"/> moves in the endless mode.</summary>
     public enum LabelScrollDirection
     {
         /// <summary>To the left: the text appears at the right edge and leaves at the left one (the default).</summary>

@@ -19,13 +19,13 @@ namespace ErikwnkWFUI.Controls
     /// own and not seen by a screen reader - what it does can also be done with the keyboard (see <see cref="LockableTextBox"/>). The class has its own name, as
     /// <c>ErikwnkWFUI.Controls.TextBox</c> would be ambiguous in every file that uses both namespaces.
     /// </summary>
-    public partial class ThemedTextBox : TextBox
+    public partial class TextField : TextBox
     {
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         private readonly Action _redrawFrame;
 
-        public ThemedTextBox()
+        public TextField()
         {
             // The border of BorderStyle.FixedSingle is part of the window outside its client area, in the system's gray: the library paints
             // its own frame over it - a quiet outline, with the focus the color of the set - and moves the line to the middle of the box.

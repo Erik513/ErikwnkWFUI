@@ -63,7 +63,7 @@ public class LabelScrollSettingsTests
     [Fact]
     public void EveryFactory_WithoutAScroll_MakesALabelThatDoesNotMove()
     {
-        foreach (ThemedLabel label in new[]
+        foreach (ScrollingLabel label in new[]
         {
             UIStyles.Labels.CreateStandard("x"), UIStyles.Labels.CreatePrimary("x"),
             UIStyles.Labels.CreateTitle("x"), UIStyles.Labels.CreateMuted("x"),
@@ -83,7 +83,7 @@ public class LabelScrollSettingsTests
 
         foreach (LabelScroll scroll in new[] { endless, backAndForth })
         {
-            foreach (ThemedLabel label in new[]
+            foreach (ScrollingLabel label in new[]
             {
                 UIStyles.Labels.CreateStandard("x", scroll: scroll), UIStyles.Labels.CreatePrimary("x", scroll),
                 UIStyles.Labels.CreateTitle("x", scroll: scroll), UIStyles.Labels.CreateMuted("x", scroll: scroll),
@@ -106,7 +106,7 @@ public class LabelScrollSettingsTests
     [Fact]
     public void TheScrollOfTheFactory_ReallyMakesALongTextMove()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
         label.Size = new Size(120, 24);
 
         Assert.True(label.GetPrivateField<int>("_cycle") > 0);
@@ -115,7 +115,7 @@ public class LabelScrollSettingsTests
     [Fact]
     public void TheScrollProperty_GivesBackTheSettingsOfTheCurrentMode()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x");
         Assert.Equal(LabelScrollMode.None, label.Scroll.Mode);
 
         label.Scroll = LabelScroll.Endless(LabelScrollDirection.Right, LabelScrollSeparator.None, LabelScrollSpeed.Fast);
@@ -137,7 +137,7 @@ public class LabelScrollSettingsTests
     [Fact]
     public void ANullScroll_IsNoMovement()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless());
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless());
 
         label.Scroll = null!;
 
@@ -148,8 +148,8 @@ public class LabelScrollSettingsTests
     public void OneScroll_CanServeManyLabels_AndTheLabelsChangeOnTheirOwn()
     {
         LabelScroll shared = LabelScroll.Endless();
-        using ThemedLabel first = UIStyles.Labels.CreateStandard("x", scroll: shared);
-        using ThemedLabel second = UIStyles.Labels.CreateStandard("y", scroll: shared);
+        using ScrollingLabel first = UIStyles.Labels.CreateStandard("x", scroll: shared);
+        using ScrollingLabel second = UIStyles.Labels.CreateStandard("y", scroll: shared);
 
         first.ScrollSpeed = LabelScrollSpeed.Fast;
         first.ScrollDirection = LabelScrollDirection.Right;
@@ -163,7 +163,7 @@ public class LabelScrollSettingsTests
     [Fact]
     public void ASingleProperty_ChangesJustThatSetting()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless(LabelScrollDirection.Right, LabelScrollSeparator.Bar));
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless(LabelScrollDirection.Right, LabelScrollSeparator.Bar));
 
         label.ScrollSpeed = LabelScrollSpeed.Slow;
 

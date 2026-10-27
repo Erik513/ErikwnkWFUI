@@ -20,7 +20,7 @@ namespace ErikwnkWFUI.Controls
     /// painted here as well, from a picture of its own that can be put between two pixels (see
     /// <see cref="ScrollMode"/>); the picture is made and moved on the beat of <c>AnimationClock</c>.
     /// </remarks>
-    public sealed partial class ThemedLabel : Label
+    public sealed partial class ScrollingLabel : Label
     {
         // ---- the constants ----
 
@@ -43,7 +43,7 @@ namespace ErikwnkWFUI.Controls
         private readonly bool _muted;
         private bool _hasOwnForeColor;
 
-        internal ThemedLabel(Func<Color> enabledForeColor, Func<UIColorSet> colors, bool muted = false)
+        internal ScrollingLabel(Func<Color> enabledForeColor, Func<UIColorSet> colors, bool muted = false)
         {
             _enabledForeColor = enabledForeColor;
             _colors = colors;

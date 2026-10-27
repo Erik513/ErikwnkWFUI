@@ -20,18 +20,18 @@ public class LabelScrollEdgeCaseTests : IDisposable
 {
     private const string LongText = "A text that is much longer than the label it is shown in, so it has to move";
 
-    private readonly Func<long> _originalClock = ThemedLabel.Milliseconds;
+    private readonly Func<long> _originalClock = ScrollingLabel.Milliseconds;
     private readonly List<Form> _forms = new List<Form>();
     private long _now = 1_000_000;
 
     public LabelScrollEdgeCaseTests()
     {
-        ThemedLabel.Milliseconds = () => _now;
+        ScrollingLabel.Milliseconds = () => _now;
     }
 
     public void Dispose()
     {
-        ThemedLabel.Milliseconds = _originalClock;
+        ScrollingLabel.Milliseconds = _originalClock;
 
         foreach (Form form in _forms)
             form.Dispose();
@@ -54,30 +54,30 @@ public class LabelScrollEdgeCaseTests : IDisposable
         return form;
     }
 
-    private ThemedLabel Create(LabelScroll scroll, string text = LongText, int width = 120)
+    private ScrollingLabel Create(LabelScroll scroll, string text = LongText, int width = 120)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard(text, scroll: scroll);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(text, scroll: scroll);
         label.Bounds = new Rectangle(5, 5, width, 24);
         NewForm().Controls.Add(label);
 
         return label;
     }
 
-    private static float Offset(ThemedLabel label) => label.GetPrivateField<float>("_offset");
+    private static float Offset(ScrollingLabel label) => label.GetPrivateField<float>("_offset");
 
-    private static int MaxOffset(ThemedLabel label) => label.GetPrivateField<int>("_maxOffset");
+    private static int MaxOffset(ScrollingLabel label) => label.GetPrivateField<int>("_maxOffset");
 
-    private static int Cycle(ThemedLabel label) => label.GetPrivateField<int>("_cycle");
+    private static int Cycle(ScrollingLabel label) => label.GetPrivateField<int>("_cycle");
 
-    private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
+    private static bool Moving(ScrollingLabel label) => label.GetPrivateField<bool>("_animating");
 
-    private void Tick(ThemedLabel label, int milliseconds)
+    private void Tick(ScrollingLabel label, int milliseconds)
     {
         _now += milliseconds;
         label.InvokePrivate("OnFrame", label, EventArgs.Empty);
     }
 
-    private static Bitmap Paint(ThemedLabel label)
+    private static Bitmap Paint(ScrollingLabel label)
     {
         Bitmap bitmap = new Bitmap(Math.Max(1, label.Width), Math.Max(1, label.Height));
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, bitmap.Width, bitmap.Height));
@@ -100,10 +100,10 @@ public class LabelScrollEdgeCaseTests : IDisposable
     public void AText_ThatJustFits_StandsStill()
     {
         LabelScrollMode mode = LabelScrollMode.BackAndForth;
-        using ThemedLabel probe = Create(For(mode));
+        using ScrollingLabel probe = Create(For(mode));
         int needed = probe.GetPrivateField<int>("_textWidth") + 2 * probe.InvokePrivate<int>("GetTextInset");
 
-        using ThemedLabel label = Create(For(mode), width: needed);
+        using ScrollingLabel label = Create(For(mode), width: needed);
 
         Assert.Equal(0, MaxOffset(label));
         Assert.Equal(0, Cycle(label));
@@ -114,10 +114,10 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [MemberData(nameof(BothModes))]
     public void AText_OnePixelTooLong_Moves(LabelScrollMode mode)
     {
-        using ThemedLabel probe = Create(For(mode));
+        using ScrollingLabel probe = Create(For(mode));
         int needed = probe.GetPrivateField<int>("_textWidth") + 2 * probe.InvokePrivate<int>("GetTextInset");
 
-        using ThemedLabel label = Create(For(mode), width: needed - 1);
+        using ScrollingLabel label = Create(For(mode), width: needed - 1);
 
         Assert.True(MaxOffset(label) > 0 || Cycle(label) > 0);
         Assert.True(Moving(label));
@@ -129,8 +129,8 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [MemberData(nameof(BothModes))]
     public void ALabelOfNoSize_OrWithMorePaddingThanRoom_DoesNotFail(LabelScrollMode mode)
     {
-        using ThemedLabel empty = Create(For(mode), width: 0);
-        using ThemedLabel padded = Create(For(mode));
+        using ScrollingLabel empty = Create(For(mode), width: 0);
+        using ScrollingLabel padded = Create(For(mode));
         padded.Padding = new Padding(200, 0, 200, 0);
 
         Assert.Null(Record.Exception(() =>
@@ -151,8 +151,8 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [MemberData(nameof(BothModes))]
     public void AnEmptyText_AndAText_OfOnlySpaces_DoNotMove(LabelScrollMode mode)
     {
-        using ThemedLabel empty = Create(For(mode), text: "");
-        using ThemedLabel spaces = Create(For(mode), text: "     ");
+        using ScrollingLabel empty = Create(For(mode), text: "");
+        using ScrollingLabel spaces = Create(For(mode), text: "     ");
 
         Assert.False(Moving(empty));
         Assert.False(Moving(spaces));
@@ -166,7 +166,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     {
         string huge = string.Concat(Enumerable.Repeat("Wide text, wide text, wide text. ", 800));
 
-        using ThemedLabel label = Create(For(mode), text: huge);
+        using ScrollingLabel label = Create(For(mode), text: huge);
 
         Assert.Equal(0, MaxOffset(label));
         Assert.Equal(0, Cycle(label));
@@ -179,8 +179,8 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void AnAmpersand_IsPartOfTheMovingText_AsLongAsMnemonicsAreOff()
     {
-        using ThemedLabel plain = Create(LabelScroll.BackAndForth(), text: "Fish and Chips and a good deal more text to run");
-        using ThemedLabel withAmpersand = Create(LabelScroll.BackAndForth(), text: "Fish & Chips & a good deal more text to run");
+        using ScrollingLabel plain = Create(LabelScroll.BackAndForth(), text: "Fish and Chips and a good deal more text to run");
+        using ScrollingLabel withAmpersand = Create(LabelScroll.BackAndForth(), text: "Fish & Chips & a good deal more text to run");
 
         // The ampersands take room: the text with them is wider than the one with "and" written differently.
         Assert.True(withAmpersand.GetPrivateField<int>("_textWidth") != plain.GetPrivateField<int>("_textWidth"));
@@ -190,8 +190,8 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void WithMnemonics_TheAmpersandIsNotInTheMovingText_AsSoonAsTheLabelIsPainted()
     {
-        using ThemedLabel off = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
-        using ThemedLabel on = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
+        using ScrollingLabel off = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
+        using ScrollingLabel on = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
         int before = on.GetPrivateField<int>("_textWidth");
 
         // UseMnemonic does not tell the label; it sees it when it paints.
@@ -205,7 +205,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void SwitchingMnemonicsBack_BringsTheAmpersandBack()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(), text: "&Open the file and read all of it, from top to bottom");
         int withAmpersand = label.GetPrivateField<int>("_textWidth");
 
         label.UseMnemonic = true;
@@ -220,10 +220,10 @@ public class LabelScrollEdgeCaseTests : IDisposable
     public void AMnemonicThatMakesTheTextFit_StopsTheMovement()
     {
         // Text that fits only without its ampersands: "&&&&&&" is six signs, but with mnemonics only half.
-        using ThemedLabel probe = Create(LabelScroll.BackAndForth(), text: "Fits");
+        using ScrollingLabel probe = Create(LabelScroll.BackAndForth(), text: "Fits");
         int fits = probe.GetPrivateField<int>("_textWidth") + 2 * probe.InvokePrivate<int>("GetTextInset");
 
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(), text: "F&i&t&s", width: fits);
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(), text: "F&i&t&s", width: fits);
         Assert.True(Moving(label), "with the ampersands the text does not fit");
 
         label.UseMnemonic = true;
@@ -240,7 +240,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     {
         Form first = NewForm();
         Form second = NewForm();
-        ThemedLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: For(mode));
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: For(mode));
         label.Bounds = new Rectangle(5, 5, 120, 24);
 
         // Not in a window yet: no handle, no movement.
@@ -267,7 +267,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
 
         for (int i = 0; i < 5; i++)
         {
-            ThemedLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: For(mode));
+            ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: For(mode));
             label.Bounds = new Rectangle(5, 5 + i * 25, 120, 24);
             form.Controls.Add(label);
         }
@@ -283,7 +283,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     public void ALabelThatIsHiddenWithItsWindow_LeavesTheClock_AndComesBackWithIt()
     {
         Form form = NewForm();
-        ThemedLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
         label.Bounds = new Rectangle(5, 5, 120, 24);
         form.Controls.Add(label);
         Assert.True(Moving(label));
@@ -312,11 +312,11 @@ public class LabelScrollEdgeCaseTests : IDisposable
         int before = AnimationClock.Count;
         Form form = NewForm();
         form.ClientSize = new Size(400, 1300);
-        List<ThemedLabel> labels = new List<ThemedLabel>();
+        List<ScrollingLabel> labels = new List<ScrollingLabel>();
 
         for (int i = 0; i < 50; i++)
         {
-            ThemedLabel label = UIStyles.Labels.CreateStandard(LongText + " " + i, scroll: i % 2 == 0 ? LabelScroll.Endless() : LabelScroll.BackAndForth());
+            ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText + " " + i, scroll: i % 2 == 0 ? LabelScroll.Endless() : LabelScroll.BackAndForth());
             label.Bounds = new Rectangle(5, 5 + i * 25, 120, 24);
             form.Controls.Add(label);
             labels.Add(label);
@@ -324,7 +324,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
 
         Assert.Equal(before + 50, AnimationClock.Count);
 
-        foreach (ThemedLabel label in labels)
+        foreach (ScrollingLabel label in labels)
             label.Dispose();
 
         Assert.Equal(before, AnimationClock.Count);
@@ -340,7 +340,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
         {
             for (int i = 0; i < 100; i++)
             {
-                ThemedLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
+                ScrollingLabel label = UIStyles.Labels.CreateStandard(LongText, scroll: LabelScroll.Endless());
                 label.Bounds = new Rectangle(5, 5, 120, 24);
                 form.Controls.Add(label);
                 Application.DoEvents();
@@ -360,7 +360,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     {
         FieldInfo thread = typeof(AnimationClock).GetField("_thread", BindingFlags.NonPublic | BindingFlags.Static)!;
 
-        ThemedLabel first = Create(LabelScroll.Endless());
+        ScrollingLabel first = Create(LabelScroll.Endless());
         first.Dispose();
 
         for (int i = 0; i < 100 && thread.GetValue(null) != null; i++)
@@ -368,7 +368,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
 
         Assert.Null(thread.GetValue(null));
 
-        using ThemedLabel second = Create(LabelScroll.Endless());
+        using ScrollingLabel second = Create(LabelScroll.Endless());
         Assert.NotNull(thread.GetValue(null));
 
         // The new thread really delivers.
@@ -387,7 +387,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ANewSpeed_TakesEffectAtOnce_WithoutRestarting()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         Tick(label, 1000);
         float slowStep = Offset(label);
 
@@ -400,7 +400,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ANewForeColor_ChangesThePictureOfTheMovingText()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         label.ScrollSeparator = LabelScrollSeparator.None;
         using Bitmap before = Paint(label);
 
@@ -423,7 +423,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ANewTextAlign_MovesTheMovingTextUpOrDown()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth());
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth());
         label.Height = 60;
         label.TextAlign = ContentAlignment.TopLeft;
         using Bitmap top = Paint(label);
@@ -437,7 +437,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void AnOpaqueBackColor_IsKeptBehindTheMovingText()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         label.BackColor = Color.FromArgb(120, 20, 20);
         using Bitmap painted = Paint(label);
 
@@ -447,7 +447,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void AnImage_IsNotShownWhileTheTextMoves_ButAfterItStops()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth());
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth());
         using Bitmap image = new Bitmap(16, 16);
         using (Graphics g = Graphics.FromImage(image))
             g.Clear(Color.Orange);
@@ -469,7 +469,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void AutoSize_SwitchedOnWhileMoving_StopsTheMovement()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth());
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth());
         Assert.True(Moving(label));
 
         label.AutoSize = true;
@@ -482,7 +482,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void SettingsOnALabelThatIsDisposed_AreHarmless_AndItStaysOffTheClock()
     {
-        ThemedLabel label = Create(LabelScroll.Endless());
+        ScrollingLabel label = Create(LabelScroll.Endless());
         int before = AnimationClock.Count;
         label.Dispose();
         label.Dispose();
@@ -504,7 +504,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ALongHover_AfterTheRestWasOver_DoesNotMakeTheNextRestLonger()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short, pauseOnHover: true));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short, pauseOnHover: true));
         Tick(label, 1000);
         Tick(label, 500);
         float partway = Offset(label);
@@ -528,8 +528,8 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void ALabelThatIsHiddenOrDisabled_IsNotHoveredAnyMore()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(pauseOnHover: true));
-        FieldInfo hovered = typeof(ThemedLabel).GetField("_hovered", BindingFlags.NonPublic | BindingFlags.Instance)!;
+        using ScrollingLabel label = Create(LabelScroll.Endless(pauseOnHover: true));
+        FieldInfo hovered = typeof(ScrollingLabel).GetField("_hovered", BindingFlags.NonPublic | BindingFlags.Instance)!;
 
         label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
         label.Visible = false;
@@ -548,7 +548,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void WhenALabelIsResized_BackAndForthKeepsItsPlace_AsFarAsItStillExists()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
         Tick(label, 1000);
         Tick(label, 1500);
         float place = Offset(label);
@@ -569,7 +569,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void WhenALabelIsResized_TheEndlessTextKeepsItsPlace()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         Tick(label, 2000);
         float place = Offset(label);
         Assert.True(place > 50f);
@@ -583,7 +583,7 @@ public class LabelScrollEdgeCaseTests : IDisposable
     [Fact]
     public void WhenAResizedLabelHasRoomForTheText_ItStopsAtTheStart_AndWhenNarrowAgainItStartsAtTheStart()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short));
         Tick(label, 1000);
         Tick(label, 1500);
         Assert.True(Offset(label) > 0f);

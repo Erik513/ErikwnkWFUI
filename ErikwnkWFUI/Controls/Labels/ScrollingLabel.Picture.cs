@@ -8,7 +8,7 @@ using System.Windows.Forms;
 namespace ErikwnkWFUI.Controls
 {
     // The picture of the moving text and how it is painted.
-    public sealed partial class ThemedLabel
+    public sealed partial class ScrollingLabel
     {
 
         // ---- painting the moving text ----

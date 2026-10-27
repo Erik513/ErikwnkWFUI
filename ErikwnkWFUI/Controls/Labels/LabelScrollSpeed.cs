@@ -1,6 +1,6 @@
 ﻿namespace ErikwnkWFUI.Controls
 {
-    /// <summary>How fast the text of a <see cref="ThemedLabel"/> moves while it scrolls: 25, 45 or 90 pixels per second.</summary>
+    /// <summary>How fast the text of a <see cref="ScrollingLabel"/> moves while it scrolls: 25, 45 or 90 pixels per second.</summary>
     public enum LabelScrollSpeed
     {
         /// <summary>Slowly, for a text that is read while it moves.</summary>

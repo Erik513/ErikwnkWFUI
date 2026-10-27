@@ -10,7 +10,7 @@ namespace ErikwnkWFUI.Controls
     // A button in the box, at its right end, inside the frame (the pencil of a box that can be unlocked, the eye of a password box): a
     // margin of the text keeps the text away from it, it is painted over what the system painted, and the mouse messages over it are
     // taken before the box sees them (so a click on it does not set the caret).
-    public partial class ThemedTextBox
+    public partial class TextField
     {
         private const int EM_SETMARGINS = 0x00D3;
         private const int EC_RIGHTMARGIN = 0x0002;

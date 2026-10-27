@@ -7,7 +7,7 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     // The steps of the movement on the beat of AnimationClock, the messages of the window, and what the label does when it is told something (text, size, visibility, handle, dispose).
-    public sealed partial class ThemedLabel : IAnimationSettingsListener, IAnimationClient
+    public sealed partial class ScrollingLabel : IAnimationSettingsListener, IAnimationClient
     {
 
         // ---- the beat of the clock and the steps ----

@@ -93,7 +93,7 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
         LockableTextBox plain = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-        typeof(ThemedTextBox).GetProperty("InnerGlyph", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(plain, null);
+        typeof(TextField).GetProperty("InnerGlyph", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(plain, null);
         Rectangle bounds = InnerBounds(box);
 
         Assert.True(bounds.Right <= box.ClientSize.Width);
@@ -370,7 +370,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void TheTooltipOfACutText_FollowsTheWidthOfTheBox_AndCanBeSwitchedOff()
     {
-        ThemedTextBox box = Show((ThemedTextBox)UIStyles.TextBoxes.CreateStandard(), 80);
+        TextField box = Show((TextField)UIStyles.TextBoxes.CreateStandard(), 80);
         box.Text = "a text that is wider than eighty pixels";
         Assert.NotEqual(string.Empty, ToolTipOf(box));
 
@@ -382,7 +382,7 @@ public class TextBoxInnerButtonTests : IDisposable
 
         box.ToolTipWhenCut = false;
         Assert.Equal(string.Empty, ToolTipOf(box));
-        Assert.True(UIStyles.TextBoxes.CreateStandard() is ThemedTextBox { ToolTipWhenCut: true });
+        Assert.True(UIStyles.TextBoxes.CreateStandard() is TextField { ToolTipWhenCut: true });
     }
 
     [Fact]

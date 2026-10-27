@@ -127,7 +127,7 @@ public class TextBoxColorTests : IDisposable
 
             TextBox primary = UIStyles.TextBoxes.CreatePrimary("x");
             Show(primary);
-            Check(shortfalls, "frame with the focus, primary", InputField.GetFrameColor(primary, ((ThemedTextBox)primary).Colors, true), primary.BackColor, 3.0);
+            Check(shortfalls, "frame with the focus, primary", InputField.GetFrameColor(primary, ((TextField)primary).Colors, true), primary.BackColor, 3.0);
         });
     }
 

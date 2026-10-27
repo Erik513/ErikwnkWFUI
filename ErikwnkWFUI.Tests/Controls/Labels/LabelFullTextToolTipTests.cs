@@ -22,9 +22,9 @@ public class LabelFullTextToolTipTests : IDisposable
             form.Dispose();
     }
 
-    private ThemedLabel Create(string text, LabelScroll scroll)
+    private ScrollingLabel Create(string text, LabelScroll scroll)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard(text);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(text);
         label.Size = new Size(120, 24);
         label.Scroll = scroll;
 
@@ -45,7 +45,7 @@ public class LabelFullTextToolTipTests : IDisposable
         return label;
     }
 
-    private static string Shown(ThemedLabel label)
+    private static string Shown(ScrollingLabel label)
     {
         FullTextToolTip tip = label.GetPrivateField<FullTextToolTip>("_fullTextToolTip")!;
 
@@ -53,7 +53,7 @@ public class LabelFullTextToolTipTests : IDisposable
     }
 
     // What the tooltip window of the label really has for it (not only what the label told it).
-    private static string Real(ThemedLabel label)
+    private static string Real(ScrollingLabel label)
     {
         ToolTip? toolTip = label.GetPrivateField<FullTextToolTip>("_fullTextToolTip")!.GetPrivateField<ToolTip>("_toolTip");
 
@@ -65,7 +65,7 @@ public class LabelFullTextToolTipTests : IDisposable
     {
         foreach (LabelScroll scroll in new[] { LabelScroll.BackAndForth(), LabelScroll.Endless() })
         {
-            ThemedLabel label = Create(LongText, scroll);
+            ScrollingLabel label = Create(LongText, scroll);
 
             Assert.Equal(LongText, Shown(label));
             Assert.Equal(LongText, Real(label));
@@ -85,7 +85,7 @@ public class LabelFullTextToolTipTests : IDisposable
     [Fact]
     public void TheTooltip_FollowsTheTextAndTheSize()
     {
-        ThemedLabel label = Create(LongText, LabelScroll.BackAndForth());
+        ScrollingLabel label = Create(LongText, LabelScroll.BackAndForth());
         Assert.Equal(LongText, Shown(label));
 
         label.Text = "Short";
@@ -103,7 +103,7 @@ public class LabelFullTextToolTipTests : IDisposable
     [Fact]
     public void ADisabledLabel_HasNone_AndTheTooltipComesBackWhenItIsEnabled()
     {
-        ThemedLabel label = Create(LongText, LabelScroll.BackAndForth());
+        ScrollingLabel label = Create(LongText, LabelScroll.BackAndForth());
 
         label.Enabled = false;
         Assert.Equal("", Shown(label));
@@ -115,7 +115,7 @@ public class LabelFullTextToolTipTests : IDisposable
     [Fact]
     public void TheTooltip_CanBeSwitchedOff_AndOnAgain()
     {
-        ThemedLabel label = Create(LongText, LabelScroll.BackAndForth());
+        ScrollingLabel label = Create(LongText, LabelScroll.BackAndForth());
         Assert.True(label.ShowFullTextToolTip);
 
         label.ShowFullTextToolTip = false;
@@ -129,7 +129,7 @@ public class LabelFullTextToolTipTests : IDisposable
     [Fact]
     public void SeveralTexts_HaveATooltipWithAllOfThem()
     {
-        ThemedLabel label = Create("", LabelScroll.Endless(new[] { "First message of the banner", "Second message of the banner", "Third message" }));
+        ScrollingLabel label = Create("", LabelScroll.Endless(new[] { "First message of the banner", "Second message of the banner", "Third message" }));
 
         Assert.Equal(label.Text, Shown(label));
         Assert.Contains("Second message", Shown(label));
@@ -139,7 +139,7 @@ public class LabelFullTextToolTipTests : IDisposable
     public void ALongTooltipText_IsWrappedAtAFixedWidth_EachTimeItIsShown()
     {
         string veryLong = string.Join(" ", Enumerable.Repeat("a long text for a tooltip", 30));
-        ThemedLabel label = Create(veryLong, LabelScroll.BackAndForth());
+        ScrollingLabel label = Create(veryLong, LabelScroll.BackAndForth());
         ToolTip toolTip = label.GetPrivateField<FullTextToolTip>("_fullTextToolTip")!.GetPrivateField<ToolTip>("_toolTip")!;
         System.Reflection.PropertyInfo handleProperty = typeof(ToolTip).GetProperty("Handle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic)!;
         int expected = (int)Math.Round(ToolTipWidth.MaxWidthAt96Dpi * label.DeviceDpi / 96.0);
@@ -198,7 +198,7 @@ public class LabelFullTextToolTipTests : IDisposable
         Application.DoEvents();
 
         string veryLong = string.Join(" ", Enumerable.Repeat("a long text for a tooltip", 30));
-        ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+        ScrollingLabel label = UIStyles.Labels.CreateStandard("x");
         label.Size = new Size(120, 24);
         label.Location = new Point(5, 5);
         form.Controls.Add(label);
@@ -220,7 +220,7 @@ public class LabelFullTextToolTipTests : IDisposable
     [Fact]
     public void ALabelThatIsDisposed_TakesItsTooltipWithIt()
     {
-        ThemedLabel label = Create(LongText, LabelScroll.BackAndForth());
+        ScrollingLabel label = Create(LongText, LabelScroll.BackAndForth());
 
         label.Dispose();
 

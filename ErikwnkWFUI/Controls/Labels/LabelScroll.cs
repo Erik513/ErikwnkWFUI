@@ -5,8 +5,8 @@ using System.Linq;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// How the text of a <see cref="ThemedLabel"/> moves when it is too long for the label, all in one value
-    /// to hand to <c>UIStyles.Labels</c> (or to <see cref="ThemedLabel.Scroll"/>):
+    /// How the text of a <see cref="ScrollingLabel"/> moves when it is too long for the label, all in one value
+    /// to hand to <c>UIStyles.Labels</c> (or to <see cref="ScrollingLabel.Scroll"/>):
     /// <c>LabelScroll.Endless()</c>, <c>LabelScroll.BackAndForth(LabelScrollSpeed.Fast)</c>. It cannot be
     /// changed; one value can serve any number of labels.
     /// </summary>

@@ -21,28 +21,28 @@ public class LabelScrollOptionsTests : IDisposable
 {
     private const string LongText = "A text that is much longer than the label it is shown in, so it has to move";
 
-    private readonly Func<long> _originalClock = ThemedLabel.Milliseconds;
+    private readonly Func<long> _originalClock = ScrollingLabel.Milliseconds;
     private readonly Func<bool> _originalAnimations = AnimationSettings.Enabled;
     private readonly List<Form> _forms = new List<Form>();
     private long _now = 1_000_000;
 
     public LabelScrollOptionsTests()
     {
-        ThemedLabel.Milliseconds = () => _now;
+        ScrollingLabel.Milliseconds = () => _now;
     }
 
     public void Dispose()
     {
-        ThemedLabel.Milliseconds = _originalClock;
+        ScrollingLabel.Milliseconds = _originalClock;
         AnimationSettings.Enabled = _originalAnimations;
 
         foreach (Form form in _forms)
             form.Dispose();
     }
 
-    private ThemedLabel Create(LabelScroll scroll, string text = LongText)
+    private ScrollingLabel Create(LabelScroll scroll, string text = LongText)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard(text, scroll: scroll);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(text, scroll: scroll);
         label.Size = new Size(120, 24);
 
         Form form = new Form
@@ -62,11 +62,11 @@ public class LabelScrollOptionsTests : IDisposable
         return label;
     }
 
-    private static float Offset(ThemedLabel label) => label.GetPrivateField<float>("_offset");
+    private static float Offset(ScrollingLabel label) => label.GetPrivateField<float>("_offset");
 
-    private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
+    private static bool Moving(ScrollingLabel label) => label.GetPrivateField<bool>("_animating");
 
-    private void Tick(ThemedLabel label, int milliseconds)
+    private void Tick(ScrollingLabel label, int milliseconds)
     {
         _now += milliseconds;
         label.InvokePrivate("OnFrame", label, EventArgs.Empty);
@@ -102,7 +102,7 @@ public class LabelScrollOptionsTests : IDisposable
     public void WhereTheAnimationsAreOff_TheTextDoesNotMove_AndEndsInAnEllipsis(LabelScrollMode mode)
     {
         AnimationSettings.Enabled = () => false;
-        ThemedLabel scrollingLabel = Create(mode == LabelScrollMode.Endless ? LabelScroll.Endless() : LabelScroll.BackAndForth());
+        ScrollingLabel scrollingLabel = Create(mode == LabelScrollMode.Endless ? LabelScroll.Endless() : LabelScroll.BackAndForth());
 
         using (scrollingLabel)
         {
@@ -119,7 +119,7 @@ public class LabelScrollOptionsTests : IDisposable
     {
         bool animations = true;
         AnimationSettings.Enabled = () => animations;
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         Assert.True(Moving(label));
 
         // Windows tells the labels through AnimationSettings (a window hears of a setting only for itself).
@@ -148,14 +148,14 @@ public class LabelScrollOptionsTests : IDisposable
     public void OnlyLabelsThatCouldMove_WaitForTheSettingsOfWindows()
     {
         int before = AnimationSettings.Count;
-        ThemedLabel idle = Create(LabelScroll.None);
+        ScrollingLabel idle = Create(LabelScroll.None);
         Assert.Equal(before, AnimationSettings.Count);
 
-        ThemedLabel moving = Create(LabelScroll.Endless());
+        ScrollingLabel moving = Create(LabelScroll.Endless());
         Assert.Equal(before + 1, AnimationSettings.Count);
 
         // Also one whose text fits: the setting may matter when it is made smaller.
-        ThemedLabel fits = Create(LabelScroll.BackAndForth(), text: "Short");
+        ScrollingLabel fits = Create(LabelScroll.BackAndForth(), text: "Short");
         Assert.Equal(before + 2, AnimationSettings.Count);
 
         moving.ScrollMode = LabelScrollMode.None;
@@ -172,7 +172,7 @@ public class LabelScrollOptionsTests : IDisposable
     {
         bool animations = false;
         AnimationSettings.Enabled = () => animations;
-        using ThemedLabel label = Create(LabelScroll.BackAndForth());
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth());
         Assert.False(Moving(label));
 
         animations = true;
@@ -184,14 +184,14 @@ public class LabelScrollOptionsTests : IDisposable
 
     // ---- the mouse ----
 
-    private static void MouseEnters(ThemedLabel label) => label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+    private static void MouseEnters(ScrollingLabel label) => label.InvokePrivate("OnMouseEnter", EventArgs.Empty);
 
-    private static void MouseLeaves(ThemedLabel label) => label.InvokePrivate("OnMouseLeave", EventArgs.Empty);
+    private static void MouseLeaves(ScrollingLabel label) => label.InvokePrivate("OnMouseLeave", EventArgs.Empty);
 
     [Fact]
     public void ByDefault_TheMouseChangesNothing()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless());
+        using ScrollingLabel label = Create(LabelScroll.Endless());
         Assert.False(label.ScrollPauseOnHover);
 
         MouseEnters(label);
@@ -203,7 +203,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void WithThePauseOnHover_TheEndlessTextStandsStill_WhileTheMouseIsOnTheLabel()
     {
-        using ThemedLabel label = Create(LabelScroll.Endless(pauseOnHover: true));
+        using ScrollingLabel label = Create(LabelScroll.Endless(pauseOnHover: true));
         Tick(label, 1000);
         float before = Offset(label);
         Assert.True(before > 0f);
@@ -224,7 +224,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void WithThePauseOnHover_TheBackAndForthTextStandsStill_AndItsRestIsNotUsedUp()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Medium, LabelScrollPause.Short, pauseOnHover: true));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Medium, LabelScrollPause.Short, pauseOnHover: true));
 
         // The rest is a second; half of it has passed, then the mouse comes.
         Tick(label, 500);
@@ -244,7 +244,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void WithThePauseOnHover_TheBackAndForthTextStandsStill_InTheMiddleOfTheWay()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short, pauseOnHover: true));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(LabelScrollSpeed.Fast, LabelScrollPause.Short, pauseOnHover: true));
         Tick(label, 1000);
         Tick(label, 1000);
         float before = Offset(label);
@@ -259,7 +259,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void TheMouse_OnALabelThatDoesNotWaitForIt_ChangesNothing()
     {
-        using ThemedLabel label = Create(LabelScroll.BackAndForth(pauseOnHover: false));
+        using ScrollingLabel label = Create(LabelScroll.BackAndForth(pauseOnHover: false));
         Tick(label, 2200);
 
         MouseEnters(label);
@@ -271,7 +271,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void ThePauseOnHover_IsPartOfTheScroll_AndComesBackFromIt()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless(pauseOnHover: true));
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x", scroll: LabelScroll.Endless(pauseOnHover: true));
         Assert.True(label.ScrollPauseOnHover);
         Assert.True(label.Scroll.PauseOnHover);
 
@@ -292,8 +292,8 @@ public class LabelScrollOptionsTests : IDisposable
     {
         UIColorSet set = UIStyles.Colors.Sets.Green;
 
-        using ThemedLabel title = UIStyles.Labels.CreateTitle("x", set);
-        using ThemedLabel standard = UIStyles.Labels.CreateStandard("x", set);
+        using ScrollingLabel title = UIStyles.Labels.CreateTitle("x", set);
+        using ScrollingLabel standard = UIStyles.Labels.CreateStandard("x", set);
 
         using Panel host = new Panel { BackColor = UIColors.BackgroundMedium };
         host.Controls.AddRange(new Control[] { title, standard });
@@ -317,8 +317,8 @@ public class LabelScrollOptionsTests : IDisposable
                 foreach (System.Reflection.PropertyInfo property in typeof(UIStyles.Colors.Sets).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static))
                 {
                     UIColorSet set = (UIColorSet)property.GetValue(null)!;
-                    using ThemedLabel muted = UIStyles.Labels.CreateMuted("x", set);
-                    using ThemedLabel standard = UIStyles.Labels.CreateStandard("x", set);
+                    using ScrollingLabel muted = UIStyles.Labels.CreateMuted("x", set);
+                    using ScrollingLabel standard = UIStyles.Labels.CreateStandard("x", set);
                     using Panel host = new Panel { BackColor = UIColors.BackgroundMedium };
                     host.Controls.AddRange(new Control[] { muted, standard });
 
@@ -345,8 +345,8 @@ public class LabelScrollOptionsTests : IDisposable
     public void TheMutedLabel_WithASet_IsNotTheColorOfTheStandardOne()
     {
         UIColorSet set = UIStyles.Colors.Sets.Green;
-        using ThemedLabel muted = UIStyles.Labels.CreateMuted("x", set);
-        using ThemedLabel standard = UIStyles.Labels.CreateStandard("x", set);
+        using ScrollingLabel muted = UIStyles.Labels.CreateMuted("x", set);
+        using ScrollingLabel standard = UIStyles.Labels.CreateStandard("x", set);
         using Panel host = new Panel { BackColor = UIColors.BackgroundMedium };
         host.Controls.AddRange(new Control[] { muted, standard });
 
@@ -357,8 +357,8 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void WithoutASet_TheTitleAndTheMutedLabel_KeepTheirOwnColors()
     {
-        using ThemedLabel title = UIStyles.Labels.CreateTitle("x");
-        using ThemedLabel muted = UIStyles.Labels.CreateMuted("x", null);
+        using ScrollingLabel title = UIStyles.Labels.CreateTitle("x");
+        using ScrollingLabel muted = UIStyles.Labels.CreateMuted("x", null);
 
         Assert.Equal(UIColors.TextPrimary, TextColor(title));
         Assert.Equal(UIColors.TextMuted, TextColor(muted));
@@ -367,7 +367,7 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void ADisabledTitleWithASet_IsTheGrayOfTheLibrary()
     {
-        using ThemedLabel title = UIStyles.Labels.CreateTitle("x", UIStyles.Colors.Sets.Green);
+        using ScrollingLabel title = UIStyles.Labels.CreateTitle("x", UIStyles.Colors.Sets.Green);
         title.Enabled = false;
 
         Assert.Equal(UIColors.DisabledGray, TextColor(title));
@@ -376,8 +376,8 @@ public class LabelScrollOptionsTests : IDisposable
     [Fact]
     public void TheTitleTakesTheSetBeforeTheScroll_AsTheStandardLabelDoes()
     {
-        using ThemedLabel title = UIStyles.Labels.CreateTitle("x", UIStyles.Colors.Sets.Green, LabelScroll.Endless());
-        using ThemedLabel muted = UIStyles.Labels.CreateMuted("x", scroll: LabelScroll.BackAndForth());
+        using ScrollingLabel title = UIStyles.Labels.CreateTitle("x", UIStyles.Colors.Sets.Green, LabelScroll.Endless());
+        using ScrollingLabel muted = UIStyles.Labels.CreateMuted("x", scroll: LabelScroll.BackAndForth());
 
         Assert.Equal(LabelScrollMode.Endless, title.ScrollMode);
         Assert.Equal(LabelScrollMode.BackAndForth, muted.ScrollMode);

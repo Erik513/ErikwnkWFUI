@@ -357,8 +357,8 @@ public class TextBoxEdgeCaseTests : IDisposable
         Assert.Equal(string.Empty, lockable.Text);
         Assert.Equal(string.Empty, password.Text);
 
-        ((ThemedTextBox)box).Placeholder = null!;
-        Assert.Equal(string.Empty, ((ThemedTextBox)box).Placeholder);
+        ((TextField)box).Placeholder = null!;
+        Assert.Equal(string.Empty, ((TextField)box).Placeholder);
     }
 
     [Fact]

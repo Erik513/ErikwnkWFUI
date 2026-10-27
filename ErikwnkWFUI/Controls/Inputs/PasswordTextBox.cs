@@ -9,7 +9,7 @@ namespace ErikwnkWFUI.Controls
     /// is switched on (a click on the eye, or the keys Alt+F8, show the password, the next one hides it again). Make one with
     /// <c>UIStyles.TextBoxes.CreatePassword</c>, which gives the standard type; the class itself is not public.
     /// </summary>
-    internal sealed class PasswordTextBox : ThemedTextBox
+    internal sealed class PasswordTextBox : TextField
     {
         public PasswordTextBox()
         {

@@ -26,7 +26,7 @@ public class LabelLanguageTests : IDisposable
             form.Dispose();
     }
 
-    private ThemedLabel Show(ThemedLabel label, int width = 120)
+    private ScrollingLabel Show(ScrollingLabel label, int width = 120)
     {
         label.Bounds = new Rectangle(5, 5, width, 24);
 
@@ -50,7 +50,7 @@ public class LabelLanguageTests : IDisposable
     public void TheText_ThatWasHandedOver_StaysAsItWas_WhenTheLanguageChanges()
     {
         string english = "";
-        ThemedLabel label = null!;
+        ScrollingLabel label = null!;
 
         LanguageTestHelper.RunWithLanguage(UILanguage.English, () =>
         {
@@ -113,7 +113,7 @@ public class LabelLanguageTests : IDisposable
         {
             foreach (string text in new[] { german, english })
             {
-                using ThemedLabel label = Show(UIStyles.Labels.CreateStandard(text, scroll: scroll));
+                using ScrollingLabel label = Show(UIStyles.Labels.CreateStandard(text, scroll: scroll));
 
                 Assert.True(label.GetPrivateField<bool>("_animating"), "the text did not start to move: " + scroll.Mode + " " + text.Substring(0, 12));
                 Assert.True(label.GetPrivateField<int>("_textWidth") > 200);
@@ -124,7 +124,7 @@ public class LabelLanguageTests : IDisposable
     [Fact]
     public void AGermanCompoundWord_AsOneUnbreakableWord_MovesToo()
     {
-        using ThemedLabel label = Show(UIStyles.Labels.CreateStandard(
+        using ScrollingLabel label = Show(UIStyles.Labels.CreateStandard(
             "Donaudampfschifffahrtsgesellschaftskapitänsmützenabzeichenhersteller", scroll: LabelScroll.BackAndForth()));
 
         Assert.True(label.GetPrivateField<bool>("_animating"));
@@ -134,7 +134,7 @@ public class LabelLanguageTests : IDisposable
     [Fact]
     public void TheUmlauts_ArePaintedInTheMovingPicture()
     {
-        using ThemedLabel label = Show(UIStyles.Labels.CreateStandard("ÄÖÜäöüß - Umlaute und noch mehr Text zum Bewegen", scroll: LabelScroll.BackAndForth()));
+        using ScrollingLabel label = Show(UIStyles.Labels.CreateStandard("ÄÖÜäöüß - Umlaute und noch mehr Text zum Bewegen", scroll: LabelScroll.BackAndForth()));
         using Bitmap bitmap = new Bitmap(label.Width, label.Height);
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
 
@@ -162,7 +162,7 @@ public class LabelLanguageTests : IDisposable
             {
                 LanguageTestHelper.RunWithLanguage(language, () =>
                 {
-                    using ThemedLabel label = Show(UIStyles.Labels.CreateStandard("A text that is much longer than the label it is shown in", scroll: LabelScroll.Endless()));
+                    using ScrollingLabel label = Show(UIStyles.Labels.CreateStandard("A text that is much longer than the label it is shown in", scroll: LabelScroll.Endless()));
 
                     Assert.False(label.GetPrivateField<bool>("_animating"));
                 });

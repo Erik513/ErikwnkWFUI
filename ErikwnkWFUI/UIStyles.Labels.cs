@@ -24,7 +24,7 @@ namespace ErikwnkWFUI
             /// lightened or darkened where the page behind it needs that to read.
             /// </param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+            public static ScrollingLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
             {
                 return UILabelFactory.CreateStandard(text, colors, scroll);
             }
@@ -32,7 +32,7 @@ namespace ErikwnkWFUI
             /// <summary>Like <see cref="CreateStandard"/> but in the current accent color instead of the neutral gray - mirrors <see cref="Buttons.CreatePrimary"/>.</summary>
             /// <param name="text">The text of the label.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreatePrimary(string text = "", LabelScroll scroll = null)
+            public static ScrollingLabel CreatePrimary(string text = "", LabelScroll scroll = null)
             {
                 return UILabelFactory.CreatePrimary(text, scroll);
             }
@@ -41,7 +41,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The text of the label.</param>
             /// <param name="colors">A color set for the text instead of the usual color of this label: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>; as for <see cref="CreateStandard"/>.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+            public static ScrollingLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
             {
                 return UILabelFactory.CreateTitle(text, colors, scroll);
             }
@@ -50,7 +50,7 @@ namespace ErikwnkWFUI
             /// <param name="text">The text of the label.</param>
             /// <param name="colors">A color set for the text: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or simply a <see cref="System.Drawing.Color"/>. The text takes the main color of the set but dimmed toward the page behind it (and never below a contrast of 3:1), so it stays muted.</param>
             /// <param name="scroll">How the text moves when it is too long for the label: <c>LabelScroll.BackAndForth()</c> or <c>LabelScroll.Endless()</c>, each with its own settings. Null (the default) means it does not move, the text ends in an ellipsis.</param>
-            public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+            public static ScrollingLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
             {
                 return UILabelFactory.CreateMuted(text, colors, scroll);
             }

@@ -14,7 +14,7 @@ namespace ErikwnkWFUI.Controls
     /// Make one with
     /// <c>UIStyles.TextBoxes.CreateLockable</c>.
     /// </summary>
-    public class LockableTextBox : ThemedTextBox
+    public class LockableTextBox : TextField
     {
         private bool _locked = true;
         private string _textBeforeEdit = "";

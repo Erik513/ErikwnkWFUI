@@ -10,7 +10,7 @@ using static ErikwnkWFUI.Native.NativeMethods;
 namespace ErikwnkWFUI.Controls
 {
     // The tooltip with the whole text when it is wider than the box, and the tooltip of the button in the box.
-    public partial class ThemedTextBox
+    public partial class TextField
     {
         private bool _toolTipWhenCut = true;
 

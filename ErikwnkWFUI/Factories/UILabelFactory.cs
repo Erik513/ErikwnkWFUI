@@ -10,35 +10,35 @@ namespace ErikwnkWFUI.Factories
     {
         private const AnchorStyles AllSides = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
 
-        public static ThemedLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+        public static ScrollingLabel CreateTitle(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
             return Create(text, () => UIColors.TextPrimary, ColorSetSource.Of(colors), UIFonts.Title, ContentAlignment.MiddleCenter, false, scroll);
         }
 
-        public static ThemedLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+        public static ScrollingLabel CreateStandard(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
             return Standard(text, ColorSetSource.Of(colors), scroll);
         }
 
         // The Standard one in the current accent - the primary color set.
-        public static ThemedLabel CreatePrimary(string text = "", LabelScroll scroll = null)
+        public static ScrollingLabel CreatePrimary(string text = "", LabelScroll scroll = null)
         {
             return Standard(text, () => UIColors.PrimarySet, scroll);
         }
 
-        public static ThemedLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
+        public static ScrollingLabel CreateMuted(string text = "", UIColorSet colors = null, LabelScroll scroll = null)
         {
             return Create(text, () => UIColors.TextMuted, ColorSetSource.Of(colors), UIFonts.Small, ContentAlignment.MiddleLeft, true, scroll);
         }
 
-        private static ThemedLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)
+        private static ScrollingLabel Standard(string text, Func<UIColorSet> colors, LabelScroll scroll)
         {
             return Create(text, () => UIColors.TextSecondary, colors, UIFonts.Normal, ContentAlignment.MiddleLeft, false, scroll);
         }
 
         // What the kinds have in common; they differ in the color of their kind, the font, the alignment
         // and whether they are the muted kind.
-        private static ThemedLabel Create(
+        private static ScrollingLabel Create(
             string text,
             Func<Color> enabledForeColor,
             Func<UIColorSet> colors,
@@ -47,7 +47,7 @@ namespace ErikwnkWFUI.Factories
             bool muted,
             LabelScroll scroll)
         {
-            ThemedLabel label = new ThemedLabel(enabledForeColor, colors, muted)
+            ScrollingLabel label = new ScrollingLabel(enabledForeColor, colors, muted)
             {
                 Text = text ?? "",
                 Font = font,

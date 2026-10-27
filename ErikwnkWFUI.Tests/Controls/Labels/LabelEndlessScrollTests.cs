@@ -18,31 +18,31 @@ public class LabelEndlessScrollTests : IDisposable
 {
     private const string LongText = "A text that is much longer than the label it is shown in, so it has to move";
 
-    private readonly Func<long> _originalClock = ThemedLabel.Milliseconds;
+    private readonly Func<long> _originalClock = ScrollingLabel.Milliseconds;
     private readonly List<Form> _forms = new List<Form>();
     private long _now = 1_000_000;
 
     public LabelEndlessScrollTests()
     {
-        ThemedLabel.Milliseconds = () => _now;
+        ScrollingLabel.Milliseconds = () => _now;
     }
 
     public void Dispose()
     {
-        ThemedLabel.Milliseconds = _originalClock;
+        ScrollingLabel.Milliseconds = _originalClock;
 
         foreach (Form form in _forms)
             form.Dispose();
     }
 
     // A label of 120 pixels with a long text, moving endlessly, in a window that is shown (out of sight).
-    private ThemedLabel Create(
+    private ScrollingLabel Create(
         LabelScrollDirection direction = LabelScrollDirection.Left,
         LabelScrollSeparator separator = LabelScrollSeparator.Dot,
         string text = LongText,
         bool endless = true)
     {
-        ThemedLabel label = UIStyles.Labels.CreateStandard(text);
+        ScrollingLabel label = UIStyles.Labels.CreateStandard(text);
         label.Size = new Size(120, 24);
         label.ScrollDirection = direction;
         label.ScrollSeparator = separator;
@@ -65,27 +65,27 @@ public class LabelEndlessScrollTests : IDisposable
         return label;
     }
 
-    private static float Offset(ThemedLabel label) => label.GetPrivateField<float>("_offset");
+    private static float Offset(ScrollingLabel label) => label.GetPrivateField<float>("_offset");
 
-    private static int Cycle(ThemedLabel label) => label.GetPrivateField<int>("_cycle");
+    private static int Cycle(ScrollingLabel label) => label.GetPrivateField<int>("_cycle");
 
-    private static int MaxOffset(ThemedLabel label) => label.GetPrivateField<int>("_maxOffset");
+    private static int MaxOffset(ScrollingLabel label) => label.GetPrivateField<int>("_maxOffset");
 
-    private static bool Moving(ThemedLabel label) => label.GetPrivateField<bool>("_animating");
+    private static bool Moving(ScrollingLabel label) => label.GetPrivateField<bool>("_animating");
 
-    private void Tick(ThemedLabel label, int milliseconds)
+    private void Tick(ScrollingLabel label, int milliseconds)
     {
         _now += milliseconds;
         label.InvokePrivate("OnFrame", label, EventArgs.Empty);
     }
 
     // Puts the text at a place of its round, as if the clock had brought it there.
-    private static void SetOffset(ThemedLabel label, float offset)
+    private static void SetOffset(ScrollingLabel label, float offset)
     {
-        typeof(ThemedLabel).GetField("_offset", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(label, offset);
+        typeof(ScrollingLabel).GetField("_offset", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(label, offset);
     }
 
-    private static Bitmap Paint(ThemedLabel label)
+    private static Bitmap Paint(ScrollingLabel label)
     {
         Bitmap bitmap = new Bitmap(label.Width, label.Height);
         label.DrawToBitmap(bitmap, new Rectangle(0, 0, label.Width, label.Height));
@@ -96,7 +96,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void TheDefaults_AreNoMovement_ToTheLeft_WithADot()
     {
-        using ThemedLabel label = UIStyles.Labels.CreateStandard("x");
+        using ScrollingLabel label = UIStyles.Labels.CreateStandard("x");
 
         Assert.Equal(LabelScrollMode.None, label.ScrollMode);
         Assert.Equal(LabelScrollDirection.Left, label.ScrollDirection);
@@ -106,7 +106,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ALongText_InTheEndlessMode_HasARound_AndIsOnTheClock_NotARangeToGo()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         Assert.True(Cycle(label) > 0);
         Assert.Equal(0, MaxOffset(label));
@@ -116,10 +116,10 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void TheRound_IsTheTextAGapTheSeparatorAndAGap_WiderThanTheText()
     {
-        using ThemedLabel dot = Create(separator: LabelScrollSeparator.Dot);
-        using ThemedLabel none = Create(separator: LabelScrollSeparator.None);
-        using ThemedLabel diamond = Create(separator: LabelScrollSeparator.Diamond);
-        using ThemedLabel bar = Create(separator: LabelScrollSeparator.Bar);
+        using ScrollingLabel dot = Create(separator: LabelScrollSeparator.Dot);
+        using ScrollingLabel none = Create(separator: LabelScrollSeparator.None);
+        using ScrollingLabel diamond = Create(separator: LabelScrollSeparator.Diamond);
+        using ScrollingLabel bar = Create(separator: LabelScrollSeparator.Bar);
 
         int textWidth = none.GetPrivateField<int>("_textWidth");
 
@@ -132,7 +132,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ATextThatFits_MovesInTheEndlessMode_AndTheRoundIsAsWideAsTheLabel()
     {
-        using ThemedLabel label = Create(text: "Short");
+        using ScrollingLabel label = Create(text: "Short");
 
         // The label is 120 pixels: one round is the label, so the room behind the word stays.
         Assert.Equal(120, Cycle(label));
@@ -144,7 +144,7 @@ public class LabelEndlessScrollTests : IDisposable
     [InlineData(LabelScrollDirection.Right)]
     public void AShortWord_ComesBackAfterTheRoomOfTheLabel_AndLeavesItEmptyUntilThen(LabelScrollDirection direction)
     {
-        using ThemedLabel label = Create(direction, LabelScrollSeparator.None, text: "Hi");
+        using ScrollingLabel label = Create(direction, LabelScrollSeparator.None, text: "Hi");
         label.Width = 200;
         int cycle = Cycle(label);
         Assert.Equal(200, cycle);
@@ -175,7 +175,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void InAWideLabel_TheSeparatorStandsInTheMiddleOfTheRoomBehindAShortWord()
     {
-        using ThemedLabel label = Create(LabelScrollDirection.Left, LabelScrollSeparator.Bar, text: "Hi");
+        using ScrollingLabel label = Create(LabelScrollDirection.Left, LabelScrollSeparator.Bar, text: "Hi");
         label.Width = 400;
         SetOffset(label, 0f);
         using Bitmap bitmap = Paint(label);
@@ -215,7 +215,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ALabelMuchWiderThanTheWord_ShowsTheWordOnceAnd_AShortRoundNever()
     {
-        using ThemedLabel label = Create(text: "Hi");
+        using ScrollingLabel label = Create(text: "Hi");
         label.Width = 1000;
 
         Assert.Equal(1000, Cycle(label));
@@ -224,7 +224,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ALongText_KeepsItsOwnRound_WhichIsWiderThanTheLabel()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         Assert.True(Cycle(label) > label.Width);
     }
@@ -232,7 +232,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void TheEndlessText_HasNoRestAtTheStart_AndNoneAtAnyPoint()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.ScrollPause = LabelScrollPause.Long;
 
         // 45 pixels a second from the very first moment, whatever the pause says.
@@ -246,7 +246,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void AtTheEndOfARound_TheTextBeginsTheNextOne_WithoutAStop()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.ScrollSpeed = LabelScrollSpeed.Fast;
         int cycle = Cycle(label);
         float previous = 0f;
@@ -275,7 +275,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void TheOffset_NeverReachesTheLengthOfARound()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.ScrollSpeed = LabelScrollSpeed.Fast;
         int cycle = Cycle(label);
 
@@ -290,8 +290,8 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ToTheRight_ThePictureIsTheOneToTheLeft_OfTheRestOfTheRound()
     {
-        using ThemedLabel left = Create(LabelScrollDirection.Left);
-        using ThemedLabel right = Create(LabelScrollDirection.Right);
+        using ScrollingLabel left = Create(LabelScrollDirection.Left);
+        using ScrollingLabel right = Create(LabelScrollDirection.Right);
         int cycle = Cycle(left);
         Assert.Equal(cycle, Cycle(right));
 
@@ -310,7 +310,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ToTheRight_ThePictureChangesWithTheOffset()
     {
-        using ThemedLabel right = Create(LabelScrollDirection.Right);
+        using ScrollingLabel right = Create(LabelScrollDirection.Right);
 
         SetOffset(right, 0f);
         using Bitmap start = Paint(right);
@@ -327,7 +327,7 @@ public class LabelEndlessScrollTests : IDisposable
         // is at x = 20, the gap follows, then the separator.
         int InkOfTheSeparator(LabelScrollSeparator separator)
         {
-            using ThemedLabel label = Create(separator: separator);
+            using ScrollingLabel label = Create(separator: separator);
             int textWidth = label.GetPrivateField<int>("_textWidth");
             int inset = label.InvokePrivate<int>("GetTextInset");
             int gap = label.InvokePrivate<int>("GetGap");
@@ -357,7 +357,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void TheTwoRounds_CoverTheLabel_AtEveryPlace()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         int cycle = Cycle(label);
 
         // Whatever the place, the label shows text (ink) in its middle part.
@@ -384,7 +384,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ChangingTheMode_TheDirection_OrTheSeparator_StartsTheMovementOver()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         Tick(label, 1000);
         Assert.True(Offset(label) > 0f);
 
@@ -405,7 +405,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void BackAndForth_StillRestsFirst_AfterTheModeWentThroughTheEndlessOne()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         label.ScrollMode = LabelScrollMode.BackAndForth;
 
         Tick(label, 2000);
@@ -415,7 +415,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ADisabledLabel_HasNoRound_AndAnEnabledOneHasItAgain()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
 
         label.Enabled = false;
         Assert.Equal(0, Cycle(label));
@@ -429,8 +429,8 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void AMultiLineText_AndAnAutoSizedLabelThatWraps_DoNotMove_InTheEndlessModeToo()
     {
-        using ThemedLabel lines = Create(text: LongText + "\nSecond line");
-        using ThemedLabel wrapping = Create();
+        using ScrollingLabel lines = Create(text: LongText + "\nSecond line");
+        using ScrollingLabel wrapping = Create();
         wrapping.MaximumSize = new Size(100, 0);
         wrapping.AutoSize = true;
 
@@ -441,7 +441,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void AnAutoSizedLabel_MovesEndlessly_AndKeepsTheSizeOfItsText()
     {
-        using ThemedLabel label = Create(text: "Short");
+        using ScrollingLabel label = Create(text: "Short");
         label.AutoSize = true;
         Size size = label.Size;
 
@@ -459,7 +459,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void ANewText_ANewWidth_AndANewFont_MakeANewRound()
     {
-        using ThemedLabel label = Create();
+        using ScrollingLabel label = Create();
         int first = Cycle(label);
 
         label.Text = LongText + " and a good deal more text";
@@ -488,7 +488,7 @@ public class LabelEndlessScrollTests : IDisposable
     [Fact]
     public void AllFourKinds_CanMoveEndlessly()
     {
-        foreach (ThemedLabel label in new[]
+        foreach (ScrollingLabel label in new[]
         {
             UIStyles.Labels.CreateStandard(LongText), UIStyles.Labels.CreatePrimary(LongText),
             UIStyles.Labels.CreateTitle(LongText), UIStyles.Labels.CreateMuted(LongText)

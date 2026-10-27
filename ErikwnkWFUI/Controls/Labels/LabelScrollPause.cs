@@ -1,6 +1,6 @@
 ﻿namespace ErikwnkWFUI.Controls
 {
-    /// <summary>How long the text of a <see cref="ThemedLabel"/> rests at its start and at its end while it scrolls: 1, 2.2 or 4 seconds.</summary>
+    /// <summary>How long the text of a <see cref="ScrollingLabel"/> rests at its start and at its end while it scrolls: 1, 2.2 or 4 seconds.</summary>
     public enum LabelScrollPause
     {
         /// <summary>A short rest.</summary>

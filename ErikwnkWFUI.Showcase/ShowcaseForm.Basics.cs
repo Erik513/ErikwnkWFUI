@@ -383,7 +383,7 @@ namespace ErikwnkWFUI.Showcase
             // A text that is wider than the box is the tooltip of the box (hover over it); ToolTipWhenCut = false switches it off.
             TextBox cut = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box shows itself in a tooltip");
             TextBox noTip = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box and has no tooltip");
-            ((ThemedTextBox)noTip).ToolTipWhenCut = false;
+            ((TextField)noTip).ToolTipWhenCut = false;
             AddTwoColumnRow(table, "ToolTipWhenCut", Framed(cut), Framed(noTip));
 
             // A text that is given stays; the placeholder stands in only for an empty box.
