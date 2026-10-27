@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
@@ -25,6 +26,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly System.Windows.Forms.TableLayoutPanel _layout;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
+        private readonly List<Control> _editors = new List<Control>();
         private readonly List<Label> _sectionLabels = new List<Label>();
 
         public PropertyTable()
@@ -55,6 +57,17 @@ namespace ErikwnkWFUI.Controls
         public void ClearRows()
         {
             _sectionLabels.Clear();
+
+            // The editors belong to the caller and stay alive (they can be added again); everything the table built around them
+            // is disposed, so that it does not stay registered at the theme.
+            foreach (Control editor in _editors)
+                editor.Parent?.Controls.Remove(editor);
+
+            _editors.Clear();
+
+            foreach (Control built in _layout.Controls.Cast<Control>().ToList())
+                built.Dispose();
+
             _layout.Controls.Clear();
             _layout.RowStyles.Clear();
             _layout.RowCount = 0;
@@ -268,6 +281,7 @@ namespace ErikwnkWFUI.Controls
                 new RowStyle(SizeType.Percent, 50));
 
             wrapper.Controls.Add(control, 0, 1);
+            _editors.Add(control);
 
             cellPanel.Controls.Add(wrapper);
         }

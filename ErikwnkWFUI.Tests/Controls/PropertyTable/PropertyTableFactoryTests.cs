@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
@@ -165,5 +166,35 @@ public class PropertyTableFactoryTests : IDisposable
         Assert.NotNull(table.Colors);
         Assert.Null(Record.Exception(() => table.Colors = UIStyles.Colors.Sets.Red));
         Assert.Null(Record.Exception(() => table.ClearRows()));
+    }
+
+    private static IEnumerable<Label> AllLabels(Control parent)
+    {
+        foreach (Control child in parent.Controls)
+        {
+            if (child is Label label)
+                yield return label;
+
+            foreach (Label inner in AllLabels(child))
+                yield return inner;
+        }
+    }
+
+    [Fact]
+    public void ClearingTheRows_KeepsTheEditorsAlive_AndDisposesWhatTheTableBuiltAroundThem()
+    {
+        PropertyTable table = Show(UIStyles.PropertyTables.CreateStandard());
+        Button editor = new Button { Text = "kept" };
+        table.AddRow("Another", editor);
+        Control wrapper = editor.Parent!;
+        Label rowLabel = AllLabels(table).First(l => l.Text == "Another");
+
+        table.ClearRows();
+
+        Assert.False(editor.IsDisposed);
+        Assert.Null(editor.Parent);
+        Assert.True(wrapper.IsDisposed);
+        Assert.True(rowLabel.IsDisposed);
+        editor.Dispose();
     }
 }
