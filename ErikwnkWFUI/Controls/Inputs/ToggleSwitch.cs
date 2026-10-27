@@ -14,12 +14,21 @@ namespace ErikwnkWFUI.Controls
     /// An iOS-style on/off switch, an alternative to a <see cref="CheckBox"/>. Make one with <c>UIStyles.ToggleSwitches</c>: gray when it is on
     /// (<c>CreateStandard</c>), in the accent (<c>CreatePrimary</c>) or in the colors of a color set (<c>colors:</c>).
     /// </summary>
-    public class ToggleSwitch : Control
+    public partial class ToggleSwitch : Control
     {
         private const int DefaultWidth = 45;
         private const int DefaultHeight = 25;
         private const int PaddingSize = 2;
         private const int BorderThickness = 1;
+        private const int KnobMargin = 2;
+
+        // Another dpi than the one of the screen, for the tests (every measure is one of 96 dpi, scaled to the screen).
+        internal int DpiOverride;
+
+        private int Px(int value96)
+        {
+            return Dpi.Scale(this, value96, DpiOverride);
+        }
 
         private bool _checked;
         private bool _isHovered;
@@ -47,6 +56,7 @@ namespace ErikwnkWFUI.Controls
 
                 _checked = value;
 
+                OnCheckedChangedAnimation();
                 UpdateToolTip();
                 Invalidate();
 
@@ -128,6 +138,7 @@ namespace ErikwnkWFUI.Controls
         {
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
+            InitializeAnimation();
             ConfigureControl();
             CreateToolTip();
         }
@@ -172,7 +183,7 @@ namespace ErikwnkWFUI.Controls
                 // As a standard check box: the press has to end over the switch (a press that is dragged away and let go elsewhere
                 // does nothing), and a press that has been cancelled in the meantime (the capture was lost) does not count.
                 if (wasPressed && ClientRectangle.Contains(e.Location))
-                    Checked = !Checked;
+                    ToggleByUser();
 
                 Invalidate();
             }
@@ -218,7 +229,7 @@ namespace ErikwnkWFUI.Controls
 
             if (wasPressed && Enabled)
             {
-                Checked = !Checked;
+                ToggleByUser();
                 e.Handled = true;
             }
         }
@@ -259,8 +270,16 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            AnimationSettings.Add(_settings);
+        }
+
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            AnimationSettings.Remove(_settings);
+            Settle();
             _isHovered = false;
             _isPressed = false;
             base.OnHandleDestroyed(e);
@@ -301,7 +320,7 @@ namespace ErikwnkWFUI.Controls
             public override void DoDefaultAction()
             {
                 if (_switch.Enabled)
-                    _switch.Checked = !_switch.Checked;
+                    _switch.ToggleByUser();
             }
         }
 
@@ -327,7 +346,7 @@ namespace ErikwnkWFUI.Controls
             if (!Focused || !ShowFocusCues)
                 return;
 
-            Rectangle area = Rectangle.Inflate(toggleRectangle, 2, 2);
+            Rectangle area = Rectangle.Inflate(toggleRectangle, Px(2), Px(2));
             area.Intersect(ClientRectangle);
 
             ControlPaint.DrawFocusRectangle(graphics, area, UIColors.TextPrimary, SurfaceColor.Of(this));
@@ -352,6 +371,8 @@ namespace ErikwnkWFUI.Controls
         {
             if (disposing)
             {
+                DisposeAnimation();
+
                 if (_toolTip != null)
                 {
                     _toolTip.Dispose();
@@ -364,7 +385,7 @@ namespace ErikwnkWFUI.Controls
 
         private void ConfigureControl()
         {
-            Size = new Size(DefaultWidth, DefaultHeight);
+            Size = new Size(Dpi.Scale(this, DefaultWidth), Dpi.Scale(this, DefaultHeight));
 
             SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
@@ -391,11 +412,13 @@ namespace ErikwnkWFUI.Controls
 
         private Rectangle GetToggleRectangle()
         {
+            int padding = Px(PaddingSize);
+
             return new Rectangle(
-                PaddingSize,
-                PaddingSize,
-                Width - PaddingSize * 2,
-                Height - PaddingSize * 2);
+                padding,
+                padding,
+                Width - padding * 2,
+                Height - padding * 2);
         }
 
         private Rectangle GetKnobRectangle(Rectangle toggleRectangle)
@@ -407,17 +430,18 @@ namespace ErikwnkWFUI.Controls
             // with no gap there at all. KnobMargin here needs to match on
             // both axes for the knob to actually sit centered vertically
             // and inset symmetrically at each end horizontally.
-            const int KnobMargin = 2;
+            int margin = Px(KnobMargin);
 
-            int knobSize = toggleRectangle.Height - KnobMargin * 2;
+            int knobSize = toggleRectangle.Height - margin * 2;
 
-            int knobX = Checked
-                ? toggleRectangle.Right - knobSize - KnobMargin
-                : toggleRectangle.X + KnobMargin;
+            // From the left end to the right one; between them while the knob glides.
+            int left = toggleRectangle.X + margin;
+            int right = toggleRectangle.Right - knobSize - margin;
+            int knobX = left + (int)Math.Round((right - left) * _position);
 
             return new Rectangle(
                 knobX,
-                toggleRectangle.Y + KnobMargin,
+                toggleRectangle.Y + margin,
                 knobSize,
                 knobSize);
         }
@@ -447,7 +471,7 @@ namespace ErikwnkWFUI.Controls
                 rectangle,
                 rectangle.Height / 2);
 
-            Pen pen = new Pen(GetBorderColor(), BorderThickness);
+            Pen pen = new Pen(GetBorderColor(), Math.Max(1, Px(BorderThickness)));
 
             try
             {
@@ -485,7 +509,7 @@ namespace ErikwnkWFUI.Controls
                 ? UIStyles.Colors.BorderMedium
                 : UIColors.DisabledGray;
 
-            Pen pen = new Pen(borderColor, BorderThickness);
+            Pen pen = new Pen(borderColor, Math.Max(1, Px(BorderThickness)));
 
             try
             {
@@ -512,7 +536,8 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
                 return UIColors.DisabledGray;
 
-            if (Checked)
+            // (Between the two while the knob glides.)
+            if (_position >= 1)
                 return GetCheckedColor();
 
             // BackgroundMedium is pure white in Light theme, so an
@@ -522,7 +547,7 @@ namespace ErikwnkWFUI.Controls
             // step up from Medium in both themes (subtly lighter in Dark,
             // a visible light gray - not white - in Light), giving the
             // track a visible pill shape against either background.
-            return UIStyles.Colors.BackgroundLight;
+            return Mix(UIStyles.Colors.BackgroundLight, GetCheckedColor());
         }
 
         // The main color of the set, or the neutral gray.
@@ -551,14 +576,15 @@ namespace ErikwnkWFUI.Controls
 
             // Matches the fill exactly, so a checked switch always reads as one consistent color instead of a colored center with a
             // leftover neutral-gray outline.
-            if (Checked)
+            if (_position >= 1)
                 return GetCheckedColor();
 
             // The main color of the set, moved to stand out from the surface (gray for CreateStandard, the accent for CreatePrimary).
-            if (_isHovered)
-                return UIColors.EnsureContrast(GetMainColor(), SurfaceColor.Of(this), CheckedOnSurfaceContrast);
+            Color resting = _isHovered
+                ? UIColors.EnsureContrast(GetMainColor(), SurfaceColor.Of(this), CheckedOnSurfaceContrast)
+                : UIStyles.Colors.BorderMedium;
 
-            return UIStyles.Colors.BorderMedium;
+            return Mix(resting, GetCheckedColor());
         }
 
         private Color GetKnobColor()

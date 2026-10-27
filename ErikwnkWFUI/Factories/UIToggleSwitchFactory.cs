@@ -6,8 +6,6 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIToggleSwitchFactory
     {
-        private static readonly Size DefaultSize = new Size(45, 25);
-
         public static ToggleSwitch CreateStandard(
             bool isChecked = true,
             string tooltipChecked = null,
@@ -17,7 +15,7 @@ namespace ErikwnkWFUI.Factories
         {
             ToggleSwitch toggle = CreateToggleSwitch(
                 isChecked,
-                size ?? DefaultSize,
+                size,
                 tooltipChecked,
                 tooltipUnchecked);
             toggle.Colors = colors;
@@ -34,7 +32,7 @@ namespace ErikwnkWFUI.Factories
         {
             ToggleSwitch toggle = CreateToggleSwitch(
                 isChecked,
-                size ?? DefaultSize,
+                size,
                 tooltipChecked,
                 tooltipUnchecked);
             toggle.FollowColors(() => UIColors.PrimarySet);
@@ -44,18 +42,23 @@ namespace ErikwnkWFUI.Factories
 
         private static ToggleSwitch CreateToggleSwitch(
             bool isChecked,
-            Size size,
+            Size? size,
             string tooltipChecked,
             string tooltipUnchecked)
         {
-            return new ToggleSwitch
+            ToggleSwitch toggle = new ToggleSwitch
             {
                 Checked = isChecked,
-                Size = size,
                 ToolTipTextChecked = tooltipChecked,
                 ToolTipTextUnchecked = tooltipUnchecked,
                 BackColor = UIColors.Transparent
             };
+
+            // Without a size the switch has its own: 45 x 25 at 96 dpi, as big as that on the screen it is on.
+            if (size.HasValue)
+                toggle.Size = size.Value;
+
+            return toggle;
         }
     }
 }
