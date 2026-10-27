@@ -93,7 +93,7 @@ namespace ErikwnkWFUI.Showcase
                  AddTabControlSection),
 
                 ("TextBoxes",
-                 "Text input in the theme colors. Standard has a quiet frame that takes the text color while the box has the focus (click into a box), Primary has the accent as the color of that frame, and colors: gives it any color of a color set; the fill and the text stay those of the theme. Borderless has no frame and blends into the surface behind it. A placeholder is shown while the box is empty; a text that is given stays. ReadOnly sets the background apart from an editable box (less than a disabled one). Left enabled, right disabled.",
+                 "Text input in the theme colors. Standard has a quiet frame that takes the text color while the box has the focus (click into a box), Primary has the accent as the color of that frame, and colors: gives it any color of a color set; the fill and the text stay those of the theme. Borderless has no frame and blends into the surface behind it. A placeholder is shown while the box is empty; a text that is given stays. ReadOnly sets the background apart from an editable box (less than a disabled one). CreateLockable is a box that is locked until the pencil in it is used (check mark or Enter accepts, Escape gives the old text back); CreatePassword hides what is typed and has an eye in the box to show it; a text that is wider than the box is its tooltip (ToolTipWhenCut). Left enabled, right disabled.",
                  AddTextBoxesSection),
 
                 ("ToastForm",

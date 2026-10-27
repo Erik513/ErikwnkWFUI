@@ -33,7 +33,7 @@ public class TextBoxFactoryTests : IDisposable
         Assert.Equal("my text", given.Text);
         Assert.Equal("my text", borderless.Text);
         Assert.Equal(string.Empty, empty.Text);
-        Assert.Equal("type here", ((ErikwnkWFUI.Controls.TextBox)empty).Placeholder);
+        Assert.Equal("type here", ((ErikwnkWFUI.Controls.ThemedTextBox)empty).Placeholder);
     }
 
     [Fact]
@@ -45,19 +45,19 @@ public class TextBoxFactoryTests : IDisposable
         using TextBox primary = UIStyles.TextBoxes.CreatePrimary("x");
         using TextBox borderless = UIStyles.TextBoxes.CreateBorderless("x");
 
-        Assert.IsType<ErikwnkWFUI.Controls.TextBox>(standard);
-        Assert.IsType<ErikwnkWFUI.Controls.TextBox>(borderless);
-        Assert.Null(((ErikwnkWFUI.Controls.TextBox)standard).Colors);
-        Assert.Same(UIStyles.Colors.Sets.Yellow, ((ErikwnkWFUI.Controls.TextBox)yellow).Colors);
-        Assert.Equal(System.Drawing.Color.MediumPurple.ToArgb(), ((ErikwnkWFUI.Controls.TextBox)purple).Colors.Hover.ToArgb());
-        Assert.Equal(UIColors.PrimarySet.Hover.ToArgb(), ((ErikwnkWFUI.Controls.TextBox)primary).Colors.Hover.ToArgb());
+        Assert.IsType<ErikwnkWFUI.Controls.ThemedTextBox>(standard);
+        Assert.IsType<ErikwnkWFUI.Controls.ThemedTextBox>(borderless);
+        Assert.Null(((ErikwnkWFUI.Controls.ThemedTextBox)standard).Colors);
+        Assert.Same(UIStyles.Colors.Sets.Yellow, ((ErikwnkWFUI.Controls.ThemedTextBox)yellow).Colors);
+        Assert.Equal(System.Drawing.Color.MediumPurple.ToArgb(), ((ErikwnkWFUI.Controls.ThemedTextBox)purple).Colors.Hover.ToArgb());
+        Assert.Equal(UIColors.PrimarySet.Hover.ToArgb(), ((ErikwnkWFUI.Controls.ThemedTextBox)primary).Colors.Hover.ToArgb());
     }
 
     [Fact]
     public void ThePrimaryColors_AreAskedForAgain_SoTheyFollowTheAccent_AndALaterColorsReplacesThem()
     {
         using TextBox primary = UIStyles.TextBoxes.CreatePrimary("x");
-        ErikwnkWFUI.Controls.TextBox box = (ErikwnkWFUI.Controls.TextBox)primary;
+        ErikwnkWFUI.Controls.ThemedTextBox box = (ErikwnkWFUI.Controls.ThemedTextBox)primary;
         System.Drawing.Color before = box.Colors.Hover;
 
         UIColors.SetAccent(System.Drawing.Color.OrangeRed);

@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -10,11 +11,8 @@ namespace ErikwnkWFUI.Factories
             string placeholder = "",
             UIColorSet colors = null)
         {
-            Controls.TextBox textBox = Create(text, BorderStyle.FixedSingle);
+            ThemedTextBox textBox = Create<ThemedTextBox>(text, placeholder, BorderStyle.FixedSingle);
             textBox.Colors = colors;
-
-            if (!string.IsNullOrWhiteSpace(placeholder))
-                SetPlaceholder(textBox, placeholder);
 
             return textBox;
         }
@@ -24,25 +22,8 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             string placeholder = "")
         {
-            Controls.TextBox textBox = Create(text, BorderStyle.FixedSingle);
+            ThemedTextBox textBox = Create<ThemedTextBox>(text, placeholder, BorderStyle.FixedSingle);
             textBox.FollowColors(() => UIColors.PrimarySet);
-
-            if (!string.IsNullOrWhiteSpace(placeholder))
-                SetPlaceholder(textBox, placeholder);
-
-            return textBox;
-        }
-
-        private static Controls.TextBox Create(string text, BorderStyle borderStyle)
-        {
-            Controls.TextBox textBox = new Controls.TextBox
-            {
-                Text = text ?? "",
-                BorderStyle = borderStyle,
-                Font = UIFonts.Normal
-            };
-
-            Follow(textBox);
 
             return textBox;
         }
@@ -51,16 +32,54 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             string placeholder = "")
         {
-            Controls.TextBox textBox = Create(text, BorderStyle.None);
+            return Create<ThemedTextBox>(text, placeholder, BorderStyle.None);
+        }
+
+        // Locked (read-only) until the pencil in the box is used.
+        public static LockableTextBox CreateLockable(
+            string text = "",
+            string placeholder = "",
+            bool locked = true,
+            UIColorSet colors = null)
+        {
+            LockableTextBox textBox = Create<LockableTextBox>(text, placeholder, BorderStyle.FixedSingle);
+            textBox.Colors = colors;
+            textBox.IsLocked = locked;
+
+            return textBox;
+        }
+
+        // What is typed is hidden; the eye in the box shows it.
+        public static TextBox CreatePassword(
+            string text = "",
+            string placeholder = "",
+            UIColorSet colors = null)
+        {
+            PasswordTextBox textBox = Create<PasswordTextBox>(text, placeholder, BorderStyle.FixedSingle);
+            textBox.Colors = colors;
+
+            return textBox;
+        }
+
+        private static T Create<T>(string text, string placeholder, BorderStyle borderStyle) where T : ThemedTextBox, new()
+        {
+            T textBox = new T
+            {
+                Text = text ?? "",
+                BorderStyle = borderStyle,
+                Font = UIFonts.Normal
+            };
+
+            Follow(textBox);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
-                SetPlaceholder(textBox, placeholder);
+                textBox.Placeholder = placeholder;
 
             return textBox;
         }
 
         // The fill and the text follow the theme as long as they still are the colors the factory gave.
-        private static void Follow(Controls.TextBox textBox)
+        private static void Follow(ThemedTextBox textBox)
         {
             System.Drawing.Color primary = UIColors.TextPrimary;
             textBox.ForeColor = primary;
@@ -77,15 +96,6 @@ namespace ErikwnkWFUI.Factories
 
                 primary = UIColors.TextPrimary;
             });
-        }
-
-        // The hint is painted by the box while it is empty and has not the focus (it is not its Text).
-        private static void SetPlaceholder(
-            Controls.TextBox textBox,
-            string placeholder)
-        {
-            if (textBox != null)
-                textBox.Placeholder = placeholder;
         }
     }
 }

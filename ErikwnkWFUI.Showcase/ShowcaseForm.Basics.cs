@@ -352,6 +352,31 @@ namespace ErikwnkWFUI.Showcase
             readOnlyDisabled.Enabled = false;
             AddTwoColumnRow(table, "ReadOnly = true", Framed(readOnly), Framed(readOnlyDisabled));
 
+            // A pencil in the box unlocks it (it gets the focus and its text is selected), the check mark or Enter accepts the text, Escape gives the
+            // old text back; F2 or Enter on a locked box start the editing too.
+            AddTwoColumnRow(table, "CreateLockable",
+                Framed(UIStyles.TextBoxes.CreateLockable("Playlist name")),
+                Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled"))));
+
+            LockableTextBox events = UIStyles.TextBoxes.CreateLockable("Edit me");
+            Label eventText = UIStyles.Labels.CreateStandard("locked");
+            eventText.AutoSize = true;
+            events.LockedChanged += delegate { eventText.Text = events.IsLocked ? "locked" : "unlocked"; };
+            events.EditAccepted += delegate { eventText.Text = "EditAccepted: " + events.Text; };
+            events.EditCancelled += delegate { eventText.Text = "EditCancelled: " + events.Text; };
+            AddTwoColumnRow(table, "Lockable events", Framed(events), eventText);
+
+            // What is typed is hidden; the eye in the box shows it, the next click hides it again.
+            AddTwoColumnRow(table, "CreatePassword",
+                Framed(UIStyles.TextBoxes.CreatePassword("secret", "Password")),
+                Framed(Disabled(UIStyles.TextBoxes.CreatePassword("secret", ""))));
+
+            // A text that is wider than the box is the tooltip of the box (hover over it); ToolTipWhenCut = false switches it off.
+            TextBox cut = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box shows itself in a tooltip");
+            TextBox noTip = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box and has no tooltip");
+            ((ThemedTextBox)noTip).ToolTipWhenCut = false;
+            AddTwoColumnRow(table, "ToolTipWhenCut", Framed(cut), Framed(noTip));
+
             // A text that is given stays; the placeholder stands in only for an empty box.
             AddTwoColumnRow(table, "text and placeholder",
                 Framed(UIStyles.TextBoxes.CreateStandard("A text that is given", "Placeholder")),
