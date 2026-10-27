@@ -17,21 +17,11 @@ public class TextBoxLanguageTests : IDisposable
     [DllImport("user32.dll")]
     private static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wParam, IntPtr lParam);
 
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
-    }
-
-    private T Show<T>(T box) where T : TextBox
-    {
-        box.TabStop = false;
-        box.Width = 160;
-        _forms.Add(OffscreenForm.Show(box, new Size(180, 40), UIColors.BackgroundMedium, new Point(10, 8)));
-
-        return box;
+        _host.Dispose();
     }
 
     private static void ClickEye(TextBox box)
@@ -63,8 +53,8 @@ public class TextBoxLanguageTests : IDisposable
     [Fact]
     public void TheTooltipsOfTheButtons_AreInTheLanguage_AndFollowASwitchOfItWhileTheBoxIsShown()
     {
-        LockableTextBox lockable = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-        TextBox password = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        LockableTextBox lockable = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        TextBox password = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
         {
@@ -87,8 +77,8 @@ public class TextBoxLanguageTests : IDisposable
     {
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
         {
-            LockableTextBox lockable = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-            TextBox password = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+            LockableTextBox lockable = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
+            TextBox password = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
             Assert.Equal("Bearbeiten", Tip(lockable));
             Assert.Equal("Passwort anzeigen", Tip(password));

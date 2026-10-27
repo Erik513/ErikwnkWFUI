@@ -31,28 +31,13 @@ public class TextBoxEdgeCaseTests : IDisposable
     private const int WM_LBUTTONUP = 0x0202;
     private const int WM_LBUTTONDBLCLK = 0x0203;
 
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
-    }
-
-    private T Show<T>(T box, int width = 160, int height = 0) where T : TextBox
-    {
-        box.TabStop = false;
-        box.Width = width;
-
-        if (height > 0)
-            box.Height = height;
-
-        Form form = OffscreenForm.Show(box, new Size(width + 20, Math.Max(box.Height + 20, 40)), UIColors.BackgroundMedium, new Point(10, 8));
-        _forms.Add(form);
-
-        return box;
     }
 
     private static IntPtr At(int x, int y) => (IntPtr)((y << 16) | (x & 0xFFFF));
@@ -97,7 +82,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void AHandlerThatUnlocksTheBoxAgain_AfterItIsAccepted_DoesNotLoop()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc", locked: false));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc", locked: false));
         int accepted = 0;
         box.EditAccepted += (s, e) =>
         {
@@ -114,7 +99,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void AHandlerThatChangesTheText_WhileTheEditIsCancelled_LeavesThatText()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("old"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("old"));
         box.BeginEdit();
         box.Text = "typed";
         box.EditCancelled += (s, e) => box.Text = "set by the handler";
@@ -142,7 +127,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void BeginEditTwice_AcceptWhileLocked_AndCancelWhileLocked_DoNothingNew()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         int changes = 0;
         int accepted = 0;
         int cancelled = 0;
@@ -162,7 +147,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void UnlockingFromCode_AndThenCancelling_GivesBackTheTextFromBeforeTheUnlock()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("old"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("old"));
 
         box.IsLocked = false;
         box.Text = "typed";
@@ -177,7 +162,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ADoubleClickOnTheButton_CountsAsTwoClicks()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         Click(box);
         Assert.False(box.UseSystemPasswordChar);
@@ -191,7 +176,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void APressThatIsNotLetGo_StaysNoLongerPressed_WhenTheCaptureIsLost_AndTheLateReleaseDoesNothing()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         Press(box);
         Assert.True(box.GetPrivateField<bool>("_innerPressed"));
@@ -209,7 +194,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void DisablingTheBox_WhileTheMouseIsOverTheButton_ClearsTheHotAndPressedLook()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
         box.SetPrivateField("_innerHot", true);
         box.SetPrivateField("_innerPressed", true);
 
@@ -222,7 +207,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void HidingTheBox_ClearsTheHotLook()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
         box.SetPrivateField("_innerHot", true);
 
         box.Visible = false;
@@ -233,7 +218,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ADisabledPasswordBox_DoesNotRespondToTheEye()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
         box.Enabled = false;
 
         Click(box);
@@ -244,8 +229,8 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void AnEmptyPasswordBox_CanShowAndHide_AndTheSelectionStays()
     {
-        TextBox empty = Show(UIStyles.TextBoxes.CreatePassword(""));
-        TextBox filled = Show(UIStyles.TextBoxes.CreatePassword("abcdef"));
+        TextBox empty = _host.Show(UIStyles.TextBoxes.CreatePassword(""));
+        TextBox filled = _host.Show(UIStyles.TextBoxes.CreatePassword("abcdef"));
         filled.Select(2, 3);
 
         Click(empty);
@@ -263,7 +248,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void AWindowThatIsMadeAgain_KeepsTheButton_ItsMargin_AndItsState()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         box.BeginEdit();
 
         box.InvokePrivate("RecreateHandle");
@@ -283,7 +268,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [InlineData(400)]
     public void TheTextKeepsAwayFromTheButton_AtEveryWidth_AndAfterAResize(int width)
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"), width);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"), width);
         Assert.True(TextArea(box).Right <= box.ClientSize.Width - InnerBounds(box).Width);
 
         box.Width = width + 50;
@@ -295,7 +280,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ABiggerFont_KeepsTheButtonAtTheRight_AndTheTooltipIsWorkedOutAgain()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("a text that fits nicely in the box"), 260);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("a text that fits nicely in the box"), 260);
         string? tip = box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box);
         Assert.Equal(string.Empty, tip);
 
@@ -308,7 +293,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void TheButtonIsAsWideAsTheDpiSays_AndNeverWiderThanTheBox()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"), 30);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"), 30);
 
         Rectangle bounds = InnerBounds(box);
 
@@ -319,7 +304,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ThePlaceholder_DoesNotReachUnderTheButton()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("", "A placeholder that is much longer than the box can show"), 120);
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("", "A placeholder that is much longer than the box can show"), 120);
         Rectangle button = InnerBounds(box);
         using Bitmap picture = Draw(box);
 
@@ -335,7 +320,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     {
         LockableTextBox box = UIStyles.TextBoxes.CreateLockable("one", locked: false);
         box.Multiline = true;
-        Show(box, 160, 90);
+        _host.Show(box, 160, 90);
 
         Rectangle bounds = InnerBounds(box);
 
@@ -364,7 +349,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ATextOfTenThousandCharacters_IsHandledAtOnce_AndItsTooltipIsTheWholeText()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard(), 100);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard(), 100);
         string text = new string('x', 10000);
 
         box.Text = text;
@@ -375,8 +360,8 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ThePlaceholderOfABoxThatIsMadeLockedAndUnlockedAgain_IsStillThere()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("", "hint"));
-        LockableTextBox plain = Show(UIStyles.TextBoxes.CreateLockable(""));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("", "hint"));
+        LockableTextBox plain = _host.Show(UIStyles.TextBoxes.CreateLockable(""));
 
         box.IsLocked = false;
         box.IsLocked = true;

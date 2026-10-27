@@ -13,30 +13,19 @@ namespace ErikwnkWFUI.Tests.Controls.TextBoxes;
 [Collection(AccentColorTestCollection.Name)]
 public class TextBoxReadOnlyTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
-    }
-
-    private TextBox Show(TextBox box)
-    {
-        box.TabStop = false;
-        Form form = OffscreenForm.Show(box, new Size(box.Width + 20, 40), UIColors.BackgroundMedium, new Point(10, 8));
-        ThemeWatcher.FollowBackColor(form, () => UIColors.BackgroundMedium); // the page, as in an application
-        _forms.Add(form);
-
-        return box;
     }
 
     [Fact]
     public void AReadOnlyBox_HasADimmedBackground_AnEditableOneTheField_AndItComesBack()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
         Color field = box.BackColor;
 
         box.ReadOnly = true;
@@ -52,8 +41,8 @@ public class TextBoxReadOnlyTests : IDisposable
     [Fact]
     public void AReadOnlyBox_IsLessDimmedThanADisabledOne_AndADisabledReadOnlyBoxIsTheDisabledOne()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
-        TextBox disabled = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox disabled = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
         disabled.Enabled = false;
         box.ReadOnly = true;
 
@@ -71,7 +60,7 @@ public class TextBoxReadOnlyTests : IDisposable
     [Fact]
     public void AReadOnlyBox_FollowsTheTheme_WhileItIsShown()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
         box.ReadOnly = true;
 
         UIColors.ApplyTheme(UIThemes.Light);
@@ -83,7 +72,7 @@ public class TextBoxReadOnlyTests : IDisposable
     [Fact]
     public void ABackgroundSetByHand_IsLeftAlone_WhenTheBoxBecomesReadOnly()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
         box.BackColor = Color.Lavender;
 
         box.ReadOnly = true;
@@ -97,7 +86,7 @@ public class TextBoxReadOnlyTests : IDisposable
     {
         Run(lightTheme, shortfalls =>
         {
-            TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+            TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
             box.ReadOnly = true;
 
             Check(shortfalls, "text of a read-only box", box.ForeColor, box.BackColor, 7.0);
@@ -107,8 +96,8 @@ public class TextBoxReadOnlyTests : IDisposable
     [Fact]
     public void TheBorderlessAndThePrimaryBox_DoItToo()
     {
-        TextBox borderless = Show(UIStyles.TextBoxes.CreateBorderless("abc"));
-        TextBox primary = Show(UIStyles.TextBoxes.CreatePrimary("abc"));
+        TextBox borderless = _host.Show(UIStyles.TextBoxes.CreateBorderless("abc"));
+        TextBox primary = _host.Show(UIStyles.TextBoxes.CreatePrimary("abc"));
 
         borderless.ReadOnly = true;
         primary.ReadOnly = true;
@@ -120,7 +109,7 @@ public class TextBoxReadOnlyTests : IDisposable
     [Fact]
     public void AnEditableBox_IsNotChangedByAnyOfThis()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("abc"));
 
         Assert.False(box.ReadOnly);
         Assert.Equal(UIColors.BackgroundLight, box.BackColor);

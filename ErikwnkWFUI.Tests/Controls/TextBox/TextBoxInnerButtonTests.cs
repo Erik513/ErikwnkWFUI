@@ -21,24 +21,13 @@ public class TextBoxInnerButtonTests : IDisposable
     private const int WM_LBUTTONUP = 0x0202;
     private const int WM_MOUSEMOVE = 0x0200;
 
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
-    }
-
-    private T Show<T>(T box, int width = 160) where T : TextBox
-    {
-        box.TabStop = false;
-        box.Width = width;
-        Form form = OffscreenForm.Show(box, new Size(width + 20, box.Multiline ? 100 : 40), UIColors.BackgroundMedium, new Point(10, 8));
-        _forms.Add(form);
-
-        return box;
     }
 
     private static IntPtr At(int x, int y) => (IntPtr)((y << 16) | (x & 0xFFFF));
@@ -75,8 +64,8 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void ALockableBox_StartsLocked_WithAPencil_AndCanStartUnlocked()
     {
-        LockableTextBox locked = Show(UIStyles.TextBoxes.CreateLockable("name", "hint"));
-        LockableTextBox open = Show(UIStyles.TextBoxes.CreateLockable("name", locked: false));
+        LockableTextBox locked = _host.Show(UIStyles.TextBoxes.CreateLockable("name", "hint"));
+        LockableTextBox open = _host.Show(UIStyles.TextBoxes.CreateLockable("name", locked: false));
 
         Assert.True(locked.IsLocked);
         Assert.True(locked.ReadOnly);
@@ -91,8 +80,8 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void TheButtonInTheBox_IsPainted_AtTheRightEnd_AndTheTextKeepsAwayFromIt()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-        LockableTextBox plain = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox plain = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         typeof(TextField).GetProperty("InnerGlyph", BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(plain, null);
         Rectangle bounds = InnerBounds(box);
 
@@ -126,7 +115,7 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         StaThread.Run(() =>
         {
-            LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("old name"));
+            LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("old name"));
             int unlocked = 0;
             int accepted = 0;
             box.LockedChanged += (s, e) => unlocked++;
@@ -156,7 +145,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void AClickOnTheTextOfALockedBox_DoesNotUnlockIt()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
 
         SendMessage(box.Handle, WM_LBUTTONDOWN, IntPtr.Zero, At(10, 8));
         SendMessage(box.Handle, WM_LBUTTONUP, IntPtr.Zero, At(10, 8));
@@ -167,7 +156,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void APressOnTheButton_LetGoElsewhere_DoesNothing()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         Point point = Middle(InnerBounds(box));
 
         SendMessage(box.Handle, WM_LBUTTONDOWN, IntPtr.Zero, At(point.X, point.Y));
@@ -182,7 +171,7 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         StaThread.Run(() =>
         {
-            LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("old"));
+            LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("old"));
             int cancelled = 0;
             int accepted = 0;
             box.EditCancelled += (s, e) => cancelled++;
@@ -211,8 +200,8 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         StaThread.Run(() =>
         {
-            LockableTextBox first = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-            LockableTextBox second = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+            LockableTextBox first = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
+            LockableTextBox second = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
 
             Assert.True(Key(first, Keys.F2));
             Assert.False(first.IsLocked);
@@ -227,14 +216,14 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         StaThread.Run(() =>
         {
-            LockableTextBox locked = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+            LockableTextBox locked = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
             Assert.False(Key(locked, Keys.A));
             Assert.False(Key(locked, Keys.Escape));
             Assert.True(locked.IsLocked);
 
             LockableTextBox multi = UIStyles.TextBoxes.CreateLockable("abc", locked: false);
             multi.Multiline = true;
-            Show(multi);
+            _host.Show(multi);
 
             Assert.False(Key(multi, Keys.Enter));
             Assert.False(multi.IsLocked);
@@ -246,7 +235,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void SettingIsLockedFromCode_LocksOrUnlocks_RaisesOnlyLockedChanged_AndKeepsTheText()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         int changed = 0;
         int accepted = 0;
         int cancelled = 0;
@@ -269,7 +258,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void ADisabledLockableBox_CannotBeUnlocked()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         box.Enabled = false;
 
         ClickInner(box);
@@ -282,7 +271,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void ALockedBox_LooksSetApart_AndLocksBackToTheOrdinaryLookWhenUnlocked()
     {
-        LockableTextBox box = Show(UIStyles.TextBoxes.CreateLockable("abc"));
+        LockableTextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable("abc"));
         Color locked = box.BackColor;
 
         box.IsLocked = false;
@@ -296,7 +285,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void APasswordBox_HidesWhatIsTyped_AndTheEyeShowsItAndHidesItAgain()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("secret"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("secret"));
 
         Assert.True(box.UseSystemPasswordChar);
         Assert.Equal("secret", box.Text);
@@ -316,7 +305,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void TheKeysAltF8_ShowAndHideThePassword_OtherKeysDoNot_AndADisabledBoxIgnoresThem()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         Assert.True(Key(box, Keys.Alt | Keys.F8));
         Assert.False(box.UseSystemPasswordChar);
@@ -337,7 +326,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void APasswordBox_ShowsItsTextInATooltipOnlyWhileThePasswordIsShown()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreatePassword(), 70);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword(), 70);
         string password = "a very long password that does not fit into the box";
 
         box.Text = password;
@@ -355,7 +344,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void ATextThatIsCut_IsTheTooltipOfTheBox_AndATextThatFitsIsNot()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard(), 80);
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard(), 80);
 
         box.Text = "short";
         Assert.Equal(string.Empty, ToolTipOf(box));
@@ -370,7 +359,7 @@ public class TextBoxInnerButtonTests : IDisposable
     [Fact]
     public void TheTooltipOfACutText_FollowsTheWidthOfTheBox_AndCanBeSwitchedOff()
     {
-        TextField box = Show((TextField)UIStyles.TextBoxes.CreateStandard(), 80);
+        TextField box = _host.Show((TextField)UIStyles.TextBoxes.CreateStandard(), 80);
         box.Text = "a text that is wider than eighty pixels";
         Assert.NotEqual(string.Empty, ToolTipOf(box));
 
@@ -390,7 +379,7 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         TextBox box = UIStyles.TextBoxes.CreateStandard();
         box.Multiline = true;
-        Show(box, 60);
+        _host.Show(box, 60);
 
         box.Text = "a long text in a narrow box that wraps";
 

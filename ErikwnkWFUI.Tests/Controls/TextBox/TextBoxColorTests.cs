@@ -15,24 +15,14 @@ namespace ErikwnkWFUI.Tests.Controls.TextBoxes;
 [Collection(AccentColorTestCollection.Name)]
 public class TextBoxColorTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
         UIColors.SetAccent(UIAccentColors.Blue);
-    }
-
-    private T Show<T>(T box, int width = 160) where T : TextBox
-    {
-        box.TabStop = false;
-        box.Width = width;
-        _forms.Add(OffscreenForm.Show(box, new Size(width + 20, 40), UIColors.BackgroundMedium, new Point(10, 8)));
-
-        return box;
     }
 
     // The most different color of the area from the field: what the text or the symbol is painted in.
@@ -64,7 +54,7 @@ public class TextBoxColorTests : IDisposable
     {
         Run(lightTheme, shortfalls =>
         {
-            TextBox box = Show(UIStyles.TextBoxes.CreateStandard("", "Placeholder"));
+            TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Placeholder"));
             double strongest = Strongest(box, new Rectangle(3, 3, 100, 14));
 
             if (strongest < 4.0)
@@ -78,10 +68,10 @@ public class TextBoxColorTests : IDisposable
     {
         Run(lightTheme, shortfalls =>
         {
-            LockableTextBox rest = Show(UIStyles.TextBoxes.CreateLockable("x"));
-            LockableTextBox hot = Show(UIStyles.TextBoxes.CreateLockable("x"));
-            LockableTextBox active = Show(UIStyles.TextBoxes.CreateLockable("x", locked: false));
-            LockableTextBox disabled = Show(UIStyles.TextBoxes.CreateLockable("x"));
+            LockableTextBox rest = _host.Show(UIStyles.TextBoxes.CreateLockable("x"));
+            LockableTextBox hot = _host.Show(UIStyles.TextBoxes.CreateLockable("x"));
+            LockableTextBox active = _host.Show(UIStyles.TextBoxes.CreateLockable("x", locked: false));
+            LockableTextBox disabled = _host.Show(UIStyles.TextBoxes.CreateLockable("x"));
             hot.SetPrivateField("_innerHot", true);
             disabled.Enabled = false;
 
@@ -119,14 +109,14 @@ public class TextBoxColorTests : IDisposable
             foreach ((string name, UIColorSet? set) in AllSets())
             {
                 TextBox box = UIStyles.TextBoxes.CreateStandard("x", colors: set);
-                Show(box);
+                _host.Show(box);
                 Color frame = InputField.GetFrameColor(box, set, true);
 
                 Check(shortfalls, "frame with the focus, " + name, frame, box.BackColor, set == null ? 4.5 : 3.0);
             }
 
             TextBox primary = UIStyles.TextBoxes.CreatePrimary("x");
-            Show(primary);
+            _host.Show(primary);
             Check(shortfalls, "frame with the focus, primary", InputField.GetFrameColor(primary, ((TextField)primary).Colors, true), primary.BackColor, 3.0);
         });
     }
@@ -137,8 +127,8 @@ public class TextBoxColorTests : IDisposable
     {
         Run(lightTheme, shortfalls =>
         {
-            LockableTextBox gray = Show(UIStyles.TextBoxes.CreateLockable("x", locked: false));
-            LockableTextBox yellow = Show(UIStyles.TextBoxes.CreateLockable("x", locked: false, colors: UIStyles.Colors.Sets.Yellow));
+            LockableTextBox gray = _host.Show(UIStyles.TextBoxes.CreateLockable("x", locked: false));
+            LockableTextBox yellow = _host.Show(UIStyles.TextBoxes.CreateLockable("x", locked: false, colors: UIStyles.Colors.Sets.Yellow));
             using Bitmap first = Draw(gray);
             using Bitmap second = Draw(yellow);
 
