@@ -25,7 +25,7 @@ namespace ErikwnkWFUI.Factories
             return textBox;
         }
 
-        public static TextBox CreateBorderstyleNone(
+        public static TextBox CreateBorderless(
             string text = "",
             string placeholder = "")
         {
@@ -80,8 +80,12 @@ namespace ErikwnkWFUI.Factories
 
             string placeholderText = placeholder ?? "";
 
-            textBox.Text = placeholderText;
-            textBox.ForeColor = UIColors.TextMuted;
+            // A text that was given stays; the placeholder stands in only where there is none.
+            if (string.IsNullOrEmpty(textBox.Text))
+            {
+                textBox.Text = placeholderText;
+                textBox.ForeColor = UIColors.TextMuted;
+            }
 
             textBox.GotFocus += delegate
             {

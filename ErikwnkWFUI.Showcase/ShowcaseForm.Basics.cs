@@ -312,10 +312,10 @@ namespace ErikwnkWFUI.Showcase
             textDisabled.Enabled = false;
             AddTwoColumnRow(table, "CreateStandard", standardBox, textDisabled);
 
-            TextBox borderless = UIStyles.TextBoxes.CreateBorderstyleNone("Borderless text", "");
-            TextBox borderlessDisabled = UIStyles.TextBoxes.CreateBorderstyleNone("Disabled", "");
+            TextBox borderless = UIStyles.TextBoxes.CreateBorderless("Borderless text", "");
+            TextBox borderlessDisabled = UIStyles.TextBoxes.CreateBorderless("Disabled", "");
             borderlessDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateBorderstyleNone", borderless, borderlessDisabled);
+            AddTwoColumnRow(table, "CreateBorderless", borderless, borderlessDisabled);
         }
 
         private void AddComboBoxesSection(PropertyTable table)

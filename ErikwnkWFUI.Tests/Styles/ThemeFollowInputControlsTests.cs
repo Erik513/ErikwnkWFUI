@@ -79,7 +79,7 @@ public class ThemeFollowInputControlsTests : IDisposable
             ("ComboBoxes.Primary", () => UIStyles.ComboBoxes.CreatePrimary()),
             ("TextBoxes.Standard", () => UIStyles.TextBoxes.CreateStandard("Text")),
             ("TextBoxes.Placeholder", () => UIStyles.TextBoxes.CreateStandard("", "Hint")),
-            ("TextBoxes.None", () => UIStyles.TextBoxes.CreateBorderstyleNone("Text")),
+            ("TextBoxes.None", () => UIStyles.TextBoxes.CreateBorderless("Text")),
             ("NumericUpDowns.Standard", () => UIStyles.NumericUpDowns.CreateStandard()),
             ("NumericUpDowns.Primary", () => UIStyles.NumericUpDowns.CreatePrimary()),
             ("NumericUpDowns.Green", () => UIStyles.NumericUpDowns.CreateStandard(colors: UIStyles.Colors.Sets.Green)),

@@ -43,7 +43,7 @@ public class InputFieldTests : IDisposable
         foreach (var entry in new (string, Func<Control>)[]
         {
             ("TextBox", () => UIStyles.TextBoxes.CreateStandard("x")),
-            ("TextBox without border", () => UIStyles.TextBoxes.CreateBorderstyleNone("x")),
+            ("TextBox without border", () => UIStyles.TextBoxes.CreateBorderless("x")),
             ("ComboBox", () => UIStyles.ComboBoxes.CreateStandard()),
             ("NumericUpDown", () => UIStyles.NumericUpDowns.CreateStandard()),
             ("NumericUpDown primary", () => UIStyles.NumericUpDowns.CreatePrimary()),
@@ -179,7 +179,7 @@ public class InputFieldTests : IDisposable
     {
         TextBox multiline = Show(UIStyles.TextBoxes.CreateStandard("a"));
         multiline.Multiline = true;
-        TextBox borderless = Show(UIStyles.TextBoxes.CreateBorderstyleNone("a"));
+        TextBox borderless = Show(UIStyles.TextBoxes.CreateBorderless("a"));
 
         Assert.Equal(0, InputField.GetTextTopInset(multiline));
         Assert.Equal(0, InputField.GetTextTopInset(borderless));
@@ -225,7 +225,7 @@ public class InputFieldTests : IDisposable
     [Fact]
     public void ATextBoxWithoutABorder_HasNoFrame()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateBorderstyleNone("x"));
+        TextBox box = Show(UIStyles.TextBoxes.CreateBorderless("x"));
 
         Assert.Equal(box.BackColor.ToArgb(), Edge(box).ToArgb());
     }
