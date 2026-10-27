@@ -206,6 +206,7 @@ public class InputFieldTests : IDisposable
         Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMedium).ToArgb(), Edge(box).ToArgb());
     }
 
+    [Trait("Focus", "true")]
     [Fact]
     public void WithTheFocus_TheTextBoxFrame_IsSeenAgainstTheField()
     {
@@ -229,6 +230,7 @@ public class InputFieldTests : IDisposable
         Assert.Equal(box.BackColor.ToArgb(), Edge(box).ToArgb());
     }
 
+    [Trait("Focus", "true")]
     [Fact]
     public void TheNumericUpDownFrame_IsTheQuietOutline_AndWithTheFocusTheColorOfTheSet()
     {

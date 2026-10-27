@@ -7,6 +7,7 @@ using VolumeControl = ErikwnkWFUI.Controls.VolumeControl;
 namespace ErikwnkWFUI.Tests.Controls.VolumeControls;
 
 /// <summary>Where the focus is after a click on the mute button: on the slider, so that the key M (named in the tooltip) and the arrow keys work at once. [Collection]: the focus belongs to the whole process.</summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class VolumeControlFocusTests
 {

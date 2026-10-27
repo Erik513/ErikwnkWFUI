@@ -12,6 +12,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// <summary>
 /// Renaming a tab: starting, ending, the length, right after adding, and the box going away with the control.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlRenameTests : TabControlRenameTestBase
 {

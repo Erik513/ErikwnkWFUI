@@ -329,6 +329,7 @@ public class NumericUpDownTests : IDisposable
         }
     }
 
+    [Trait("Focus", "true")]
     [Fact]
     public void WithTheFocus_TheFieldsAreFramedInTheColorOfTheSet()
     {
@@ -344,6 +345,7 @@ public class NumericUpDownTests : IDisposable
         Assert.True(UIColors.GetContrastRatio(framed, box.BackColor) >= 3.0);
     }
 
+    [Trait("Focus", "true")]
     [Theory]
     [InlineData(false, 0)]
     [InlineData(false, 1)]
@@ -375,6 +377,7 @@ public class NumericUpDownTests : IDisposable
         }
     }
 
+    [Trait("Focus", "true")]
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

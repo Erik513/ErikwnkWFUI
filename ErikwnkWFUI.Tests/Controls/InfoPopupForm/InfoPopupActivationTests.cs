@@ -13,6 +13,7 @@ public class InfoPopupActivationTests
 
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(IntPtr handle);
 
+    [Trait("Focus", "true")]
     [Fact]
     public void ShowingThePopupAtTheMouse_LeavesTheOwnerInFront()
     {

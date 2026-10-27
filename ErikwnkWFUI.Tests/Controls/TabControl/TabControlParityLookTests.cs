@@ -10,6 +10,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// <summary>
 /// The themed tab control looks like the standard one: geometry and defaults.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlParityLookTests : TabControlParityTestBase
 {

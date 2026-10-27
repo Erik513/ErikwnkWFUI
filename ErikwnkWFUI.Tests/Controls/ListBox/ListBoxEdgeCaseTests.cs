@@ -135,6 +135,7 @@ public class ListBoxEdgeCaseTests : IDisposable
 
     // ---- the keyboard ----
 
+    [Trait("Focus", "true")]
     [Fact]
     public void TheArrowKeys_MoveTheSelection_AndAreNotAToggle()
     {
@@ -250,6 +251,7 @@ public class ListBoxEdgeCaseTests : IDisposable
 
     // ---- empty, one item, scrolled ----
 
+    [Trait("Focus", "true")]
     [Fact]
     public void AnEmptyList_TakesClicksAndKeysWithoutAFailure()
     {
@@ -554,6 +556,7 @@ public class ListBoxEdgeCaseTests : IDisposable
     [DllImport("user32.dll", EntryPoint = "SendMessageW")]
     private static extern IntPtr SendMessageUiState(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
 
+    [Trait("Focus", "true")]
     [Fact]
     public void InAMultipleSelection_TheItemWithTheFocus_ShowsItEvenWhenItIsNotSelected()
     {

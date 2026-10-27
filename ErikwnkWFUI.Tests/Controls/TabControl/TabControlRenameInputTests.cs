@@ -12,6 +12,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// <summary>
 /// Renaming a tab: what ends an edit, clicks that do not take the focus, the double-click and the menu.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlRenameInputTests : TabControlRenameTestBase
 {

@@ -182,6 +182,7 @@ public class InfoPopupPlacementTests : InfoPopupTestBase
         Assert.True(popup.Visible);
     }
 
+    [Trait("Focus", "true")]   // (it minimizes a window, which hands the foreground to another one)
     [Fact]
     public void OverAMinimizedWindow_NothingIsShown()
     {

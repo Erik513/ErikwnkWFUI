@@ -358,6 +358,7 @@ public class ComboBoxClosedBoxTests
 /// one: the focus does not change its border. Needs a real window with the focus, so it runs
 /// on its own (see FocusTestCollection).
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class ComboBoxFocusTests
 {

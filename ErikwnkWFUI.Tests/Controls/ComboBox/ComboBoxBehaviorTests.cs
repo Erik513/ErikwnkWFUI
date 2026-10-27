@@ -188,6 +188,7 @@ public class ComboBoxBehaviorTests : IDisposable
         Assert.True(box.DroppedDown, "F4 did not open the list");
     }
 
+    [Trait("Focus", "true")]
     [Fact]
     public void TheBoxLosingTheFocus_WhileOpen_ClosesTheList_AndTheLookGoesBack()
     {

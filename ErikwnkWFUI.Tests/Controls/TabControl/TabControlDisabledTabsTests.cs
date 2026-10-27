@@ -13,6 +13,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// - by click, keyboard or code - while the arrow keys and Ctrl+Tab step
 /// over it instead of getting stuck in front of it.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlDisabledTabsTests
 {

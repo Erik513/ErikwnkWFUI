@@ -19,6 +19,7 @@ namespace ErikwnkWFUI.Tests.Controls.Panels;
 [Collection(ErikwnkWFUI.Tests.Infrastructure.AccentColorTestCollection.Name)]
 public class MultiPanelInputTests : MultiPanelTestBase
 {
+    [Trait("Focus", "true")]
     [Fact]
     public void FocusInTheLeftPage_GoesOnToTheFirstControlOfTheNewPage()
     {

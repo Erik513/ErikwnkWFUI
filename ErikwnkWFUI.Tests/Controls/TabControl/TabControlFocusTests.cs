@@ -28,6 +28,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// state - otherwise "state unchanged after the switch" would prove nothing.
 /// Uses a shown form: focus needs real windows.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlFocusTests
 {

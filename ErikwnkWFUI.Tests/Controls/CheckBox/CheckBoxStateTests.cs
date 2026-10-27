@@ -339,6 +339,7 @@ public class CheckBoxStateTests
 /// The dotted focus frame: shown once the keyboard is used, on the focused box only.
 /// Needs a real window with the focus, so it runs on its own (see FocusTestCollection).
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class CheckBoxFocusTests
 {

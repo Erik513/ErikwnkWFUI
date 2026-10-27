@@ -12,6 +12,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// <summary>
 /// Renaming a tab: the events, and the per-tab switches.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlRenameEventsTests : TabControlRenameTestBase
 {

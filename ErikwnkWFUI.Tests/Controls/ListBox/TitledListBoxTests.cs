@@ -308,6 +308,7 @@ public class TitledListBoxTests : IDisposable
         Assert.Equal("Consolas", control.Font.Name);
     }
 
+    [Trait("Focus", "true")]
     [Fact]
     public void Focus_GoesToTheList()
     {

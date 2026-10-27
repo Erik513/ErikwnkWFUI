@@ -10,6 +10,7 @@ namespace ErikwnkWFUI.Tests.Controls.TabControl;
 /// <summary>
 /// The themed tab control behaves like the standard one: selection, pages, mouse events, hot tracking.
 /// </summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class TabControlParityTests : TabControlParityTestBase
 {
