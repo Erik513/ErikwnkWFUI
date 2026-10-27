@@ -214,6 +214,18 @@ curve of the slider: `AudioVolumeState.ToGain(volume)` (or `state.Gain()`) squar
 
 `UIStyles.TrackBars` is the slider alone (any range, steps, keys, wheel, a popup with the value).
 
+`UIStyles.ToggleSwitches` is an on/off switch, an alternative to a check box: `CreateStandard` is gray while it is on, `CreatePrimary` follows
+the accent, and `colors:` takes a color set or a single color (`Color.Red` for a switch that is always a danger); `size:` makes it smaller or
+larger (45 x 25 at 96 dpi by default, scaled to the screen). A click toggles it and the knob glides; the space bar does too (Tab to it), and a
+screen reader is told a check button with its state - set `AccessibleName`, as there is no text on the switch (put a label beside it).
+`CheckedChanged` is raised for every change, also when code sets `Checked`.
+
+```csharp
+var dark = UIStyles.ToggleSwitches.CreatePrimary(isChecked: false, "Dark mode on", "Dark mode off");
+dark.AccessibleName = "Dark mode";
+dark.CheckedChanged += (s, e) => UIStyles.Colors.ApplyTheme(dark.Checked ? UIThemes.Dark : UIThemes.Light);
+```
+
 Everything that moves runs on one beat of the display (as the moving text of a label) and stands still where
 Windows has the animations switched off or while the control is disabled; it starts again when they are switched on.
 
