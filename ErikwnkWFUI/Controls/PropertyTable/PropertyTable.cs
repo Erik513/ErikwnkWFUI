@@ -15,7 +15,10 @@ namespace ErikwnkWFUI.Controls
     /// sections - typical use is a settings/options panel. Build it up with
     /// <see cref="AddSection"/> and <see cref="AddRow(string,Control[])"/>;
     /// a row can hold more than one editor control side by side via the
-    /// <see cref="PropertyColumn"/>-based overloads.
+    /// <see cref="PropertyColumn"/>-based overloads. Both return a
+    /// <see cref="PropertyRow"/> to hide or disable the row later. The width of the
+    /// label column is <see cref="LabelWidth"/>, the line at the section headers
+    /// follows <see cref="Colors"/> (none by default; see <c>UIStyles.PropertyTables</c>).
     /// </summary>
     public partial class PropertyTable : UserControl
     {
@@ -25,10 +28,12 @@ namespace ErikwnkWFUI.Controls
         private const int LabelLeftPadding = 10;
 
         private readonly System.Windows.Forms.TableLayoutPanel _layout;
-        private int _labelWidth = DefaultLabelWidth96;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
+
+        // The editors the caller gave (they are detached, not disposed, by ClearRows) and the section headers (they paint the line).
         private readonly List<Control> _editors = new List<Control>();
         private readonly List<Label> _sectionLabels = new List<Label>();
+        private int _labelWidth = DefaultLabelWidth96;
 
         public PropertyTable()
         {
@@ -75,15 +80,17 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Removes every row and section, leaving an empty table. Only
-        /// detaches the editor controls added via <see cref="AddRow(string,Control[])"/>
-        /// - it does NOT call <see cref="Control.Dispose"/> on them, so they
+        /// Removes every row and section, leaving an empty table. The editor
+        /// controls added via <see cref="AddRow(string,Control[])"/> are only
+        /// detached - <see cref="Control.Dispose"/> is NOT called on them, so they
         /// keep whatever state they had (text, selection, checked state,
         /// ...) and can be re-added afterward via a fresh AddRow. Handy for
         /// rebuilding a table live (e.g. on a language switch, re-adding the
         /// same controls with new labels) without losing in-progress editor
         /// state; if a caller genuinely wants the old controls gone for
-        /// good, dispose them explicitly first.
+        /// good, dispose them explicitly first. Everything the table built
+        /// itself (labels, cells) is disposed, and the <see cref="PropertyRow"/>
+        /// handles of the old rows do nothing any more.
         /// </summary>
         public void ClearRows()
         {
@@ -104,7 +111,7 @@ namespace ErikwnkWFUI.Controls
             _layout.RowCount = 0;
         }
 
-        /// <summary>Adds a full-width section header row.</summary>
+        /// <summary>Adds a full-width section header row; the handle can hide or disable it.</summary>
         public PropertyRow AddSection(string title)
         {
             int row = AddRowStyle(DefaultSectionHeight);
@@ -124,7 +131,8 @@ namespace ErikwnkWFUI.Controls
         /// sharing the remaining width equally on the right (each gets
         /// <see cref="PropertyColumn.Auto"/> sizing). Use the
         /// <see cref="AddRow(string,PropertyColumn[])"/> overload instead if the
-        /// controls need different widths.
+        /// controls need different widths. The row is 42 pixels high; a longer
+        /// label wraps onto a second line. Returns the handle of the row.
         /// </summary>
         public PropertyRow AddRow(
             string labelText,
@@ -152,7 +160,7 @@ namespace ErikwnkWFUI.Controls
                 columns);
         }
 
-        /// <summary>Adds a row with explicit per-column sizing - see <see cref="PropertyColumn.Auto"/>/<see cref="PropertyColumn.Absolute"/>/<see cref="PropertyColumn.Percent"/>.</summary>
+        /// <summary>Adds a row with explicit per-column sizing (a column may hold no control) - see <see cref="PropertyColumn.Auto"/>/<see cref="PropertyColumn.Absolute"/>/<see cref="PropertyColumn.Percent"/>.</summary>
         public PropertyRow AddRow(
             string labelText,
             params PropertyColumn[] columns)
