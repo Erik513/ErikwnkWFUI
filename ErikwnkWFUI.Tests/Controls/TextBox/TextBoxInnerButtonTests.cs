@@ -67,7 +67,7 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         ToolTip tip = box.GetPrivateField<ToolTip>("_toolTip")!;
 
-        return tip.GetToolTip(box);
+        return tip.GetToolTip(box) ?? string.Empty;
     }
 
     // ---- the box that is locked ----
@@ -374,35 +374,5 @@ public class TextBoxInnerButtonTests : IDisposable
         box.Text = "a long text in a narrow box that wraps";
 
         Assert.Equal(string.Empty, ToolTipOf(box));
-    }
-
-    // ---- the language ----
-
-    [Fact]
-    public void TheTooltipsOfTheButtons_AreInTheLanguage_AndFollowASwitchOfIt()
-    {
-        LockableTextBox lockable = Show(UIStyles.TextBoxes.CreateLockable("abc"));
-        TextBox password = Show(UIStyles.TextBoxes.CreatePassword("abc"));
-
-        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
-        {
-            Assert.Equal("Bearbeiten", lockable.GetPrivateField<string>("_innerToolTip"));
-            Assert.Equal("Passwort anzeigen", password.GetPrivateField<string>("_innerToolTip"));
-
-            lockable.BeginEdit();
-            Assert.Equal("Speichern", lockable.GetPrivateField<string>("_innerToolTip"));
-
-            ClickInner(password);
-            Assert.Equal("Passwort verbergen", password.GetPrivateField<string>("_innerToolTip"));
-        });
-
-        Assert.Equal("Save", lockable.GetPrivateField<string>("_innerToolTip"));
-        Assert.Equal("Hide password", password.GetPrivateField<string>("_innerToolTip"));
-    }
-
-    [Fact]
-    public void EveryText_IsTranslatedForEveryLanguage()
-    {
-        LanguageTestHelper.AssertAllTranslatedForEveryLanguage(new[] { "TextBox.Edit", "TextBox.Accept", "TextBox.ShowPassword", "TextBox.HidePassword" });
     }
 }

@@ -296,7 +296,7 @@ public class TextBoxEdgeCaseTests : IDisposable
     public void ABiggerFont_KeepsTheButtonAtTheRight_AndTheTooltipIsWorkedOutAgain()
     {
         TextBox box = Show(UIStyles.TextBoxes.CreateStandard("a text that fits nicely in the box"), 260);
-        string tip = box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box);
+        string? tip = box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box);
         Assert.Equal(string.Empty, tip);
 
         box.Font = new Font("Segoe UI", 18);
