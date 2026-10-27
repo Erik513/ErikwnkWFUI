@@ -101,7 +101,7 @@ namespace ErikwnkWFUI.Showcase
                  AddToastsSection),
 
                 ("ToggleSwitches",
-                 "An on/off switch in three sizes (Small, Standard, Large) with optional captions. The columns show on, off and disabled.",
+                 "An on/off switch with optional tooltips for on and off: Standard (gray while it is on, or any color of a color set, colors:) and Primary (accent color), in any size (size:). A click toggles it. The columns show on, off and disabled.",
                  AddToggleSwitchesSection),
 
                 ("TrackBar",

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -8,7 +9,10 @@ using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
-    /// <summary>An iOS-style on/off switch, an alternative to a <see cref="CheckBox"/>.</summary>
+    /// <summary>
+    /// An iOS-style on/off switch, an alternative to a <see cref="CheckBox"/>. Make one with <c>UIStyles.ToggleSwitches</c>: gray when it is on
+    /// (<c>CreateStandard</c>), in the accent (<c>CreatePrimary</c>) or in the colors of a color set (<c>colors:</c>).
+    /// </summary>
     public class ToggleSwitch : Control
     {
         private const int DefaultWidth = 45;
@@ -91,17 +95,33 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        private readonly ColorSetHolder _colorSet = new ColorSetHolder();
+
         /// <summary>
-        /// Null (the default) means "follow the current theme/accent", same
-        /// as every other control - set any of these to opt a single
-        /// instance out of the shared theme for a special case (e.g. a
-        /// danger toggle that should always read red, regardless of accent).
+        /// The colors of the switch while it is on: the <c>Hover</c> color of the set is the main color (the track, its outline and the
+        /// outline while the mouse is over it); it is moved just far enough to stand out from the surface and from the white knob. Null
+        /// (the default) is a neutral gray; <c>UIStyles.ToggleSwitches.CreatePrimary</c> makes one that follows the accent;
+        /// <c>CreateStandard(colors: ...)</c> takes a color set or simply a color (e.g. a red one for a switch that is always a danger).
+        /// Not written by the designer (a set is code).
         /// </summary>
-        public Color? CheckedBackColor { get; set; }
-        /// <inheritdoc cref="CheckedBackColor"/>
-        public Color? UncheckedBackColor { get; set; }
-        /// <inheritdoc cref="CheckedBackColor"/>
-        public Color? KnobColor { get; set; }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public UIColorSet Colors
+        {
+            get { return _colorSet.Value; }
+            set
+            {
+                _colorSet.Value = value;
+                Invalidate();
+            }
+        }
+
+        // A set that is asked for again each time it is needed (the primary set, which follows the accent); a later Colors replaces it.
+        internal void FollowColors(Func<UIColorSet> source)
+        {
+            _colorSet.Follow(source);
+            Invalidate();
+        }
 
         public ToggleSwitch()
         {
@@ -349,7 +369,7 @@ namespace ErikwnkWFUI.Controls
                 return UIColors.DisabledGray;
 
             if (Checked)
-                return CheckedBackColor ?? UIStyles.Colors.Primary;
+                return GetCheckedColor();
 
             // BackgroundMedium is pure white in Light theme, so an
             // unchecked track was indistinguishable from its own
@@ -358,7 +378,23 @@ namespace ErikwnkWFUI.Controls
             // step up from Medium in both themes (subtly lighter in Dark,
             // a visible light gray - not white - in Light), giving the
             // track a visible pill shape against either background.
-            return UncheckedBackColor ?? UIStyles.Colors.BackgroundLight;
+            return UIStyles.Colors.BackgroundLight;
+        }
+
+        // The main color of the set, or the neutral gray.
+        private Color GetMainColor()
+        {
+            return (Colors ?? UIStyles.Colors.Sets.Gray).Hover;
+        }
+
+        // The track while the switch is on: the main color moved just far enough to stand out from the surface (2:1) and to let the white
+        // knob stand out from it (1.5:1) - a pale yellow turns a little darker, a dark blue stays as it is.
+        private const double CheckedOnSurfaceContrast = 2.0;
+        private const double CheckedUnderKnobContrast = 1.5;
+
+        private Color GetCheckedColor()
+        {
+            return UIColors.EnsureContrast(GetMainColor(), SurfaceColor.Of(this), CheckedOnSurfaceContrast, UIColors.White, CheckedUnderKnobContrast);
         }
 
         private Color GetBorderColor()
@@ -369,17 +405,14 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
                 return UIColors.DisabledGray;
 
-            // Matches the fill exactly - CheckedBackColor if that instance
-            // has its own override, otherwise the app-wide accent
-            // (BorderPrimary tracks SetAccent the same way Primary/
-            // PrimaryDark/etc. do), so a checked switch always reads as one
-            // consistent color instead of an accent-filled center with a
+            // Matches the fill exactly, so a checked switch always reads as one consistent color instead of a colored center with a
             // leftover neutral-gray outline.
             if (Checked)
-                return CheckedBackColor ?? UIStyles.Colors.BorderPrimary;
+                return GetCheckedColor();
 
+            // The main color of the set, moved to stand out from the surface (gray for CreateStandard, the accent for CreatePrimary).
             if (_isHovered)
-                return UIStyles.Colors.Primary;
+                return UIColors.EnsureContrast(GetMainColor(), SurfaceColor.Of(this), CheckedOnSurfaceContrast);
 
             return UIStyles.Colors.BorderMedium;
         }
@@ -399,11 +432,8 @@ namespace ErikwnkWFUI.Controls
             if (!Enabled)
                 return UIColors.BlendToward(UIColors.GetContrastingForeColor(UIColors.DisabledGray), UIColors.DisabledGray, 0.35);
 
-            if (KnobColor.HasValue)
-                return KnobColor.Value;
-
             if (_isPressed)
-                return UIStyles.Colors.PrimaryLight;
+                return UIColors.BlendToward(UIColors.White, GetCheckedColor(), 0.25);
 
             // TextPrimary flips to near-black in Light theme (it's a theme
             // role, not a fixed shade), which made a hovered knob go black

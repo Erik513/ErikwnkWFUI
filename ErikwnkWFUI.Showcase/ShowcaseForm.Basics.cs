@@ -250,23 +250,50 @@ namespace ErikwnkWFUI.Showcase
 
         private void AddToggleSwitchesSection(PropertyTable table)
         {
-            ToggleSwitch standardOn = UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off");
-            ToggleSwitch standardOff = UIStyles.ToggleSwitches.CreateStandard(false, "On", "Off");
+            // The columns: on, off, disabled (on). Every row is one factory call; the tooltips say On and Off.
             ToggleSwitch disabledToggle = UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off");
             disabledToggle.Enabled = false;
-            AddUniformRow(table, "CreateStandard", standardOn, standardOff, disabledToggle);
+            AddUniformRow(table, "CreateStandard",
+                UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off"),
+                UIStyles.ToggleSwitches.CreateStandard(false, "On", "Off"),
+                disabledToggle);
 
-            ToggleSwitch smallOn = UIStyles.ToggleSwitches.CreateSmall(true, "On", "Off");
-            ToggleSwitch smallOff = UIStyles.ToggleSwitches.CreateSmall(false, "On", "Off");
-            ToggleSwitch smallDisabled = UIStyles.ToggleSwitches.CreateSmall(true, "On", "Off");
+            ToggleSwitch primaryDisabled = UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off");
+            primaryDisabled.Enabled = false;
+            AddUniformRow(table, "CreatePrimary",
+                UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off"),
+                UIStyles.ToggleSwitches.CreatePrimary(false, "On", "Off"),
+                primaryDisabled);
+
+            ToggleSwitch yellowDisabled = UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off", UIStyles.Colors.Sets.Yellow);
+            yellowDisabled.Enabled = false;
+            AddUniformRow(table, "CreateStandard(colors: Yellow)",
+                UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off", UIStyles.Colors.Sets.Yellow),
+                UIStyles.ToggleSwitches.CreateStandard(false, "On", "Off", UIStyles.Colors.Sets.Yellow),
+                yellowDisabled);
+
+            // A single color instead of a color set: it is taken as the main color.
+            ToggleSwitch purpleDisabled = UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off", Color.MediumPurple);
+            purpleDisabled.Enabled = false;
+            AddUniformRow(table, "CreateStandard(colors: MediumPurple)",
+                UIStyles.ToggleSwitches.CreateStandard(true, "On", "Off", Color.MediumPurple),
+                UIStyles.ToggleSwitches.CreateStandard(false, "On", "Off", Color.MediumPurple),
+                purpleDisabled);
+
+            // Another size: small (35 x 20) and large (55 x 30).
+            ToggleSwitch smallDisabled = UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off", new Size(35, 20));
             smallDisabled.Enabled = false;
-            AddUniformRow(table, "CreateSmall", smallOn, smallOff, smallDisabled);
+            AddUniformRow(table, "size: 35 x 20",
+                UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off", new Size(35, 20)),
+                UIStyles.ToggleSwitches.CreatePrimary(false, "On", "Off", new Size(35, 20)),
+                smallDisabled);
 
-            ToggleSwitch largeOn = UIStyles.ToggleSwitches.CreateLarge(true, "On", "Off");
-            ToggleSwitch largeOff = UIStyles.ToggleSwitches.CreateLarge(false, "On", "Off");
-            ToggleSwitch largeDisabled = UIStyles.ToggleSwitches.CreateLarge(true, "On", "Off");
+            ToggleSwitch largeDisabled = UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off", new Size(55, 30));
             largeDisabled.Enabled = false;
-            AddUniformRow(table, "CreateLarge", largeOn, largeOff, largeDisabled);
+            AddUniformRow(table, "size: 55 x 30",
+                UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off", new Size(55, 30)),
+                UIStyles.ToggleSwitches.CreatePrimary(false, "On", "Off", new Size(55, 30)),
+                largeDisabled);
         }
 
         private void AddTextBoxesSection(PropertyTable table)

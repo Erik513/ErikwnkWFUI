@@ -6,40 +6,40 @@ namespace ErikwnkWFUI.Factories
 {
     internal static class UIToggleSwitchFactory
     {
+        private static readonly Size DefaultSize = new Size(45, 25);
+
         public static ToggleSwitch CreateStandard(
             bool isChecked = true,
             string tooltipChecked = null,
-            string tooltipUnchecked = null)
+            string tooltipUnchecked = null,
+            UIColorSet colors = null,
+            Size? size = null)
         {
-            return CreateToggleSwitch(
+            ToggleSwitch toggle = CreateToggleSwitch(
                 isChecked,
-                new Size(45, 25),
+                size ?? DefaultSize,
                 tooltipChecked,
                 tooltipUnchecked);
+            toggle.Colors = colors;
+
+            return toggle;
         }
 
-        public static ToggleSwitch CreateSmall(
+        // The set is asked for again each time: the primary set follows the accent.
+        public static ToggleSwitch CreatePrimary(
             bool isChecked = true,
             string tooltipChecked = null,
-            string tooltipUnchecked = null)
+            string tooltipUnchecked = null,
+            Size? size = null)
         {
-            return CreateToggleSwitch(
+            ToggleSwitch toggle = CreateToggleSwitch(
                 isChecked,
-                new Size(35, 20),
+                size ?? DefaultSize,
                 tooltipChecked,
                 tooltipUnchecked);
-        }
+            toggle.FollowColors(() => UIColors.PrimarySet);
 
-        public static ToggleSwitch CreateLarge(
-            bool isChecked = true,
-            string tooltipChecked = null,
-            string tooltipUnchecked = null)
-        {
-            return CreateToggleSwitch(
-                isChecked,
-                new Size(55, 30),
-                tooltipChecked,
-                tooltipUnchecked);
+            return toggle;
         }
 
         private static ToggleSwitch CreateToggleSwitch(

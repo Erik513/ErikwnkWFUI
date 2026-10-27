@@ -170,6 +170,8 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             }),
             ("TrackBars.PrimaryWithPopup", () => UIStyles.TrackBars.CreatePrimary(0.4, 1.0, showValuePopup: true, formatValue: ErikwnkWFUI.Controls.TrackBar.FormatPercent)),
             ("ToggleSwitches.Standard", () => UIStyles.ToggleSwitches.CreateStandard(true)),
+            ("ToggleSwitches.Primary", () => UIStyles.ToggleSwitches.CreatePrimary(true)),
+            ("ToggleSwitches.Yellow", () => UIStyles.ToggleSwitches.CreateStandard(true, colors: UIStyles.Colors.Sets.Yellow)),
             ("ToggleSwitches.Unchecked", () => UIStyles.ToggleSwitches.CreateStandard(false)),
         })
             yield return new object[] { entry.Item1, entry.Item2 };

@@ -276,8 +276,8 @@ UIStyles.Colors.ThemeChanged += (sender, e) => { /* ... */ };
 ```
 
 Most controls also expose their own colors as regular properties for a
-one-off override (e.g. `ToggleSwitch.CheckedBackColor`,
-`ListBox.SelectedBackColor`) - those work per-instance, any time,
+one-off override (e.g. `ListBox.SelectedBackColor`; a switch, a slider or a progress bar takes a
+color set instead: `UIStyles.ToggleSwitches.CreateStandard(colors: ...)`) - those work per-instance, any time,
 independent of the two calls above.
 
 ## Localization
