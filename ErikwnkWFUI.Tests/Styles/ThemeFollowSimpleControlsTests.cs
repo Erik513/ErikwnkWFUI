@@ -173,6 +173,8 @@ public class ThemeFollowSimpleControlsTests : IDisposable
             ("ToggleSwitches.Primary", () => UIStyles.ToggleSwitches.CreatePrimary(true)),
             ("ToggleSwitches.Yellow", () => UIStyles.ToggleSwitches.CreateStandard(true, colors: UIStyles.Colors.Sets.Yellow)),
             ("ToggleSwitches.Unchecked", () => UIStyles.ToggleSwitches.CreateStandard(false)),
+            ("ToggleSwitches.DisabledOn", () => { var toggle = UIStyles.ToggleSwitches.CreatePrimary(true); toggle.Enabled = false; return toggle; }),
+            ("ToggleSwitches.DisabledOff", () => { var toggle = UIStyles.ToggleSwitches.CreatePrimary(false); toggle.Enabled = false; return toggle; }),
         })
             yield return new object[] { entry.Item1, entry.Item2 };
     }
