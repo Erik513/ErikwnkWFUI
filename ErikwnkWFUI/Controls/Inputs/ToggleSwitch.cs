@@ -500,14 +500,10 @@ namespace ErikwnkWFUI.Controls
 
         private void DrawKnobBorder(Graphics graphics, Rectangle rectangle)
         {
-            // Was unconditionally BorderMedium regardless of Enabled - a
-            // theme role (70 in Dark, 200 in Light), so even after the
-            // fill/track/border were all made theme-independent for
-            // disabled, the knob's outline alone still visibly differed
-            // between themes ("the knob's outline is darker in dark mode").
+            // A disabled knob has no outline of its own: it is a little lighter than the track, as the whole switch is quiet.
             Color borderColor = Enabled
                 ? UIStyles.Colors.BorderMedium
-                : UIColors.DisabledGray;
+                : GetDisabledTrackColor();
 
             Pen pen = new Pen(borderColor, Math.Max(1, Px(BorderThickness)));
 
@@ -523,18 +519,8 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBackgroundColor()
         {
-            // DisabledGray rather than BackgroundDark or TextDisabled - both
-            // are theme roles (BackgroundDark near-black in Dark, near-WHITE
-            // in Light; TextDisabled 100 vs 170), so a disabled switch's
-            // track came out a different shade of gray - or, with
-            // BackgroundDark, invisible white-on-white - depending on which
-            // theme was active. Disabled buttons already look identical in
-            // both themes (CreatePrimary/CreateGreen/CreateRed's disabled
-            // color derives from the theme-independent accent, not a theme
-            // role); DisabledGray gives ToggleSwitch the same
-            // theme-independent uniformity.
             if (!Enabled)
-                return UIColors.DisabledGray;
+                return GetDisabledTrackColor();
 
             // (Between the two while the knob glides.)
             if (_position >= 1)
@@ -548,6 +534,21 @@ namespace ErikwnkWFUI.Controls
             // a visible light gray - not white - in Light), giving the
             // track a visible pill shape against either background.
             return Mix(UIStyles.Colors.BackgroundLight, GetCheckedColor());
+        }
+
+        // A disabled switch is quiet in both states and in both themes, quieter than an enabled one that is off: the off track is the surface
+        // moved just far enough to be seen (1.5:1, as the track of a slider), the on track the same a little further (2.2:1) - so on and off
+        // can still be told apart by the track as well as by the knob - and the knob is white taken a good way toward the track.
+        private const double DisabledOnContrast = 2.2;
+        private const double DisabledKnobBlend = 0.45;
+
+        private Color GetDisabledTrackColor()
+        {
+            Color surface = SurfaceColor.Of(this);
+            Color off = UIColors.GetQuietTrackColor(surface);
+            Color on = UIColors.EnsureContrast(surface, surface, DisabledOnContrast);
+
+            return Mix(off, on);
         }
 
         // The main color of the set, or the neutral gray.
@@ -568,11 +569,9 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBorderColor()
         {
-            // Same fixed gray as the fill, for the same reason - a
-            // uniformly muted pill that looks the same in both themes,
-            // rather than a separate (also theme-varying) outline.
+            // The same as the fill: a uniformly muted pill, without a separate outline.
             if (!Enabled)
-                return UIColors.DisabledGray;
+                return GetDisabledTrackColor();
 
             // Matches the fill exactly, so a checked switch always reads as one consistent color instead of a colored center with a
             // leftover neutral-gray outline.
@@ -600,7 +599,7 @@ namespace ErikwnkWFUI.Controls
             // therefore the whole disabled switch - renders identically in
             // both themes, matching disabled buttons.
             if (!Enabled)
-                return UIColors.BlendToward(UIColors.GetContrastingForeColor(UIColors.DisabledGray), UIColors.DisabledGray, 0.35);
+                return UIColors.BlendToward(UIColors.White, GetDisabledTrackColor(), DisabledKnobBlend);
 
             if (_isPressed)
                 return UIColors.BlendToward(UIColors.White, GetCheckedColor(), 0.25);
