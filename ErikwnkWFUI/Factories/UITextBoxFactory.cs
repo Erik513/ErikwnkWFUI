@@ -7,20 +7,42 @@ namespace ErikwnkWFUI.Factories
     {
         public static TextBox CreateStandard(
             string text = "",
+            string placeholder = "",
+            UIColorSet colors = null)
+        {
+            Controls.TextBox textBox = Create(text, BorderStyle.FixedSingle);
+            textBox.Colors = colors;
+
+            if (!string.IsNullOrWhiteSpace(placeholder))
+                SetPlaceholder(textBox, placeholder);
+
+            return textBox;
+        }
+
+        // The set is asked for again each time: the primary set follows the accent.
+        public static TextBox CreatePrimary(
+            string text = "",
             string placeholder = "")
         {
-            TextBox textBox = new TextBox
+            Controls.TextBox textBox = Create(text, BorderStyle.FixedSingle);
+            textBox.FollowColors(() => UIColors.PrimarySet);
+
+            if (!string.IsNullOrWhiteSpace(placeholder))
+                SetPlaceholder(textBox, placeholder);
+
+            return textBox;
+        }
+
+        private static Controls.TextBox Create(string text, BorderStyle borderStyle)
+        {
+            Controls.TextBox textBox = new Controls.TextBox
             {
                 Text = text ?? "",
-                BorderStyle = BorderStyle.FixedSingle,
+                BorderStyle = borderStyle,
                 Font = UIFonts.Normal
             };
 
             Follow(textBox);
-            Controls.InputField.FrameTextBox(textBox);
-
-            if (!string.IsNullOrWhiteSpace(placeholder))
-                SetPlaceholder(textBox, placeholder);
 
             return textBox;
         }
@@ -29,14 +51,7 @@ namespace ErikwnkWFUI.Factories
             string text = "",
             string placeholder = "")
         {
-            TextBox textBox = new TextBox
-            {
-                Text = text ?? "",
-                BorderStyle = BorderStyle.None,
-                Font = UIFonts.Normal
-            };
-
-            Follow(textBox);
+            Controls.TextBox textBox = Create(text, BorderStyle.None);
 
             if (!string.IsNullOrWhiteSpace(placeholder))
                 SetPlaceholder(textBox, placeholder);

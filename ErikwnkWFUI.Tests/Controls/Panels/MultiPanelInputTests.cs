@@ -9,6 +9,7 @@ using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using Xunit;
+using TextBox = System.Windows.Forms.TextBox;
 using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Tests.Controls.Panels;

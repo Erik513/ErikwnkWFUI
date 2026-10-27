@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Tests.Infrastructure;
+using TextBox = System.Windows.Forms.TextBox;
 using VolumeControl = ErikwnkWFUI.Controls.VolumeControl;
 
 namespace ErikwnkWFUI.Tests.Controls.VolumeControls;

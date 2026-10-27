@@ -305,13 +305,51 @@ namespace ErikwnkWFUI.Showcase
                 UIColumn.Percent(shown, UniformColumnPercent * 2));
         }
 
+        // The property table makes a text box that it holds borderless (its cells are the frame). Inside a panel the box keeps its own
+        // frame - a quiet outline, and while the box has the focus the color of the factory: this is what the rows below show.
+        private static Control Framed(TextBox box)
+        {
+            // (The cell gives a control the height it has, so the holder is as high as the box and its padding.)
+            Panel holder = new Panel { BackColor = Color.Transparent, Padding = new Padding(0, 2, 0, 2), Height = box.PreferredHeight + 4 };
+            box.Dock = DockStyle.Fill;
+            holder.Controls.Add(box);
+
+            return holder;
+        }
+
+        private static TextBox Disabled(TextBox box)
+        {
+            box.Enabled = false;
+
+            return box;
+        }
+
         private void AddTextBoxesSection(PropertyTable table)
         {
-            TextBox standardBox = UIStyles.TextBoxes.CreateStandard("", "Standard");
-            TextBox textDisabled = UIStyles.TextBoxes.CreateStandard("Disabled", "");
-            textDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateStandard", standardBox, textDisabled);
+            // Click into a box to see the frame while it has the focus.
+            AddTwoColumnRow(table, "CreateStandard",
+                Framed(UIStyles.TextBoxes.CreateStandard("", "Standard")),
+                Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", ""))));
 
+            AddTwoColumnRow(table, "CreatePrimary",
+                Framed(UIStyles.TextBoxes.CreatePrimary("", "Primary")),
+                Framed(Disabled(UIStyles.TextBoxes.CreatePrimary("Disabled", ""))));
+
+            AddTwoColumnRow(table, "CreateStandard(colors: Yellow)",
+                Framed(UIStyles.TextBoxes.CreateStandard("", "Yellow", UIStyles.Colors.Sets.Yellow)),
+                Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", "", UIStyles.Colors.Sets.Yellow))));
+
+            // A single color instead of a color set: it is taken as the main color.
+            AddTwoColumnRow(table, "CreateStandard(colors: MediumPurple)",
+                Framed(UIStyles.TextBoxes.CreateStandard("", "MediumPurple", System.Drawing.Color.MediumPurple)),
+                Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", "", System.Drawing.Color.MediumPurple))));
+
+            // A text that is given stays; the placeholder stands in only for an empty box.
+            AddTwoColumnRow(table, "text and placeholder",
+                Framed(UIStyles.TextBoxes.CreateStandard("A text that is given", "Placeholder")),
+                Framed(UIStyles.TextBoxes.CreateStandard("", "Placeholder")));
+
+            // Without a frame the box blends into the surface behind it (the table shows every box like this).
             TextBox borderless = UIStyles.TextBoxes.CreateBorderless("Borderless text", "");
             TextBox borderlessDisabled = UIStyles.TextBoxes.CreateBorderless("Disabled", "");
             borderlessDisabled.Enabled = false;

@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using TextBox = System.Windows.Forms.TextBox;
 
 namespace ErikwnkWFUI.Tests.Styles;
 
@@ -21,6 +22,7 @@ public class InputFieldTests : IDisposable
             form.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
+        UIColors.SetAccent(UIAccentColors.Blue);
     }
 
     private T Show<T>(T control) where T : Control
@@ -44,6 +46,7 @@ public class InputFieldTests : IDisposable
         {
             ("TextBox", () => UIStyles.TextBoxes.CreateStandard("x")),
             ("TextBox without border", () => UIStyles.TextBoxes.CreateBorderless("x")),
+            ("TextBox primary", () => UIStyles.TextBoxes.CreatePrimary("x")),
             ("ComboBox", () => UIStyles.ComboBoxes.CreateStandard()),
             ("NumericUpDown", () => UIStyles.NumericUpDowns.CreateStandard()),
             ("NumericUpDown primary", () => UIStyles.NumericUpDowns.CreatePrimary()),
@@ -220,6 +223,53 @@ public class InputFieldTests : IDisposable
 
         Assert.NotEqual(rest.ToArgb(), focused.ToArgb());
         Assert.True(UIColors.GetContrastRatio(focused, box.BackColor) >= 4.5);
+    }
+
+    [Trait("Focus", "true")]
+    [Fact]
+    public void WithTheFocus_TheTextBoxFrame_HasTheColorOfTheSet_Primary_TheAccent_AndWithoutASetTheTextColor()
+    {
+        TextBox yellow = Show(UIStyles.TextBoxes.CreateStandard("x", colors: UIStyles.Colors.Sets.Yellow));
+        yellow.Focus();
+        Application.DoEvents();
+        Assert.Equal(UIColors.EnsureContrast(UIStyles.Colors.Sets.Yellow.Hover, yellow.BackColor, 3.0).ToArgb(), Edge(yellow).ToArgb());
+
+        TextBox primary = Show(UIStyles.TextBoxes.CreatePrimary("x"));
+        primary.Focus();
+        Application.DoEvents();
+        Assert.Equal(UIColors.EnsureContrast(UIColors.PrimarySet.Hover, primary.BackColor, 3.0).ToArgb(), Edge(primary).ToArgb());
+
+        TextBox plain = Show(UIStyles.TextBoxes.CreateStandard("x"));
+        plain.Focus();
+        Application.DoEvents();
+        Assert.Equal(UIColors.EnsureContrast(plain.ForeColor, plain.BackColor, 4.5).ToArgb(), Edge(plain).ToArgb());
+    }
+
+    [Trait("Focus", "true")]
+    [Fact]
+    public void ThePrimaryTextBoxFrame_FollowsAChangeOfTheAccent_WhileTheBoxHasTheFocus()
+    {
+        TextBox primary = Show(UIStyles.TextBoxes.CreatePrimary("x"));
+        primary.Focus();
+        Application.DoEvents();
+        Color before = Edge(primary);
+
+        UIColors.SetAccent(Color.OrangeRed);
+        Application.DoEvents();
+
+        Assert.NotEqual(before.ToArgb(), Edge(primary).ToArgb());
+        Assert.Equal(UIColors.EnsureContrast(UIColors.PrimarySet.Hover, primary.BackColor, 3.0).ToArgb(), Edge(primary).ToArgb());
+    }
+
+    [Fact]
+    public void WithoutTheFocus_TheColorsOfTheSet_DoNotChangeTheFrame()
+    {
+        TextBox plain = Show(UIStyles.TextBoxes.CreateStandard("x"));
+        TextBox colored = Show(UIStyles.TextBoxes.CreateStandard("x", colors: UIStyles.Colors.Sets.Green));
+        TextBox primary = Show(UIStyles.TextBoxes.CreatePrimary("x"));
+
+        Assert.Equal(Edge(plain).ToArgb(), Edge(colored).ToArgb());
+        Assert.Equal(Edge(plain).ToArgb(), Edge(primary).ToArgb());
     }
 
     [Fact]

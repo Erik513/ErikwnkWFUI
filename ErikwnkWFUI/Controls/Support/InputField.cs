@@ -87,22 +87,12 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// Gives a text box with a border (<see cref="BorderStyle.FixedSingle"/>) the frame of the library instead of the
-        /// system's. The border is part of the window outside its client area, so it is painted over after the system
-        /// has drawn it.
-        /// </summary>
-        public static void FrameTextBox(TextBox textBox)
-        {
-            AttachFrame(textBox, () => textBox.BorderStyle == BorderStyle.FixedSingle, () => GetFrameColor(textBox, null, textBox.Focused), () => GetTextTopInset(textBox));
-        }
-
-        /// <summary>
         /// How far the single line of a text box is moved down to stand in the middle of the box. The system puts the line
         /// at the top edge, so with the usual small fonts it sits two pixels too high (measured for 8 to 24 points: 2 up to
         /// a line height of 16, 1 up to 22, then none; with very large fonts the line is slightly too low, which an inset
         /// cannot correct).
         /// </summary>
-        public static int GetTextTopInset(TextBox textBox)
+        public static int GetTextTopInset(System.Windows.Forms.TextBox textBox)
         {
             // (Without a border the box is as high as its line: nothing to center in.)
             if (textBox.Multiline || textBox.BorderStyle == BorderStyle.None)
@@ -115,9 +105,10 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>
         /// The same for any control whose border is part of its window: <paramref name="hasBorder"/> says whether it has
-        /// one now, <paramref name="color"/> gives the color of the frame in the current state.
+        /// one now, <paramref name="color"/> gives the color of the frame in the current state. The border is part of the window outside its
+        /// client area, so it is painted over after the system has drawn it. Returns what paints the frame again (after the color has changed).
         /// </summary>
-        public static void AttachFrame(Control control, Func<bool> hasBorder, Func<Color> color, Func<int> topInset = null)
+        public static Action AttachFrame(Control control, Func<bool> hasBorder, Func<Color> color, Func<int> topInset = null)
         {
             FrameWindow frame = new FrameWindow(control, hasBorder, color, topInset ?? (() => 0));
 
@@ -135,6 +126,8 @@ namespace ErikwnkWFUI.Controls
 
             if (control.IsHandleCreated)
                 frame.AssignHandle(control.Handle);
+
+            return frame.Redraw;
         }
 
         private sealed class FrameWindow : NativeWindow
