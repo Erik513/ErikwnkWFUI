@@ -5,6 +5,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -165,13 +166,143 @@ namespace ErikwnkWFUI.Controls
         {
             if (e.Button == MouseButtons.Left)
             {
+                bool wasPressed = _isPressed;
                 _isPressed = false;
-                Checked = !Checked;
+
+                // As a standard check box: the press has to end over the switch (a press that is dragged away and let go elsewhere
+                // does nothing), and a press that has been cancelled in the meantime (the capture was lost) does not count.
+                if (wasPressed && ClientRectangle.Contains(e.Location))
+                    Checked = !Checked;
 
                 Invalidate();
             }
 
             base.OnMouseUp(e);
+        }
+
+        // The window that takes the mouse away (a dialog that opens on the press) means no release will come: nothing stays pressed.
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+
+            if (_isPressed && !Capture)
+            {
+                _isPressed = false;
+                Invalidate();
+            }
+        }
+
+        // The space bar works as on a standard check box: the switch looks pressed while it is down and toggles when it is let go.
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (e.KeyCode == Keys.Space && !e.Alt && !e.Control && !_isPressed && Enabled)
+            {
+                _isPressed = true;
+                Invalidate();
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnKeyUp(KeyEventArgs e)
+        {
+            base.OnKeyUp(e);
+
+            if (e.KeyCode != Keys.Space)
+                return;
+
+            bool wasPressed = _isPressed;
+            _isPressed = false;
+            Invalidate();
+
+            if (wasPressed && Enabled)
+            {
+                Checked = !Checked;
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnGotFocus(EventArgs e)
+        {
+            base.OnGotFocus(e);
+            Invalidate();
+        }
+
+        // A press with the space bar that is interrupted by the focus going elsewhere is cancelled (its release would never come).
+        protected override void OnLostFocus(EventArgs e)
+        {
+            base.OnLostFocus(e);
+            _isPressed = false;
+            Invalidate();
+        }
+
+        // A disabled control gets no MouseLeave: whether the mouse is over it is looked at again, and nothing stays pressed.
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+
+            _isPressed = false;
+            _isHovered = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
+            Invalidate();
+        }
+
+        // A control that is hidden under the mouse gets no MouseLeave either.
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+
+            if (!Visible)
+            {
+                _isHovered = false;
+                _isPressed = false;
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            _isHovered = false;
+            _isPressed = false;
+            base.OnHandleDestroyed(e);
+        }
+
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new ToggleSwitchAccessibleObject(this);
+        }
+
+        // What a screen reader is told: a check button (a switch is read as one), whether it is on, and that it can be toggled. The name
+        // is the AccessibleName of the control (there is no text on the switch; set it, or let a label beside it name it).
+        private sealed class ToggleSwitchAccessibleObject : ControlAccessibleObject
+        {
+            private readonly ToggleSwitch _switch;
+
+            public ToggleSwitchAccessibleObject(ToggleSwitch toggle)
+                : base(toggle)
+            {
+                _switch = toggle;
+            }
+
+            public override AccessibleRole Role
+            {
+                get { return AccessibleRole.CheckButton; }
+            }
+
+            public override AccessibleStates State
+            {
+                get { return _switch.Checked ? base.State | AccessibleStates.Checked : base.State; }
+            }
+
+            public override string DefaultAction
+            {
+                get { return _switch.Enabled ? UIStrings.Get("ToggleSwitch.Toggle") : string.Empty; }
+            }
+
+            public override void DoDefaultAction()
+            {
+                if (_switch.Enabled)
+                    _switch.Checked = !_switch.Checked;
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -187,6 +318,19 @@ namespace ErikwnkWFUI.Controls
             DrawBorder(e.Graphics, toggleRectangle);
             DrawKnob(e.Graphics, knobRectangle);
             DrawKnobBorder(e.Graphics, knobRectangle);
+            PaintFocus(e.Graphics, toggleRectangle);
+        }
+
+        // The dotted frame of the keyboard focus around the track - only once the keyboard has been used (as on a standard check box).
+        private void PaintFocus(Graphics graphics, Rectangle toggleRectangle)
+        {
+            if (!Focused || !ShowFocusCues)
+                return;
+
+            Rectangle area = Rectangle.Inflate(toggleRectangle, 2, 2);
+            area.Intersect(ClientRectangle);
+
+            ControlPaint.DrawFocusRectangle(graphics, area, UIColors.TextPrimary, SurfaceColor.Of(this));
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)
