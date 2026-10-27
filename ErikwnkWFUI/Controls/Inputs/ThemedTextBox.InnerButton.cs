@@ -77,7 +77,10 @@ namespace ErikwnkWFUI.Controls
             {
                 Rectangle client = ClientRectangle;
 
-                return new Rectangle(client.Right - InnerWidth, client.Top, InnerWidth, client.Height);
+                // (A box of several lines has its button at the top, as high as one line, not as high as the whole box.)
+                int height = Multiline ? Math.Min(client.Height, Dpi.Scale(this, InnerWidth96)) : client.Height;
+
+                return new Rectangle(client.Right - InnerWidth, client.Top, InnerWidth, height);
             }
         }
 
@@ -153,6 +156,35 @@ namespace ErikwnkWFUI.Controls
             _innerHot = hot;
             Invalidate();
             UpdateToolTip(hot);
+        }
+
+        // A disabled box gets no MouseLeave, and a window that takes the mouse away no release: nothing stays hot or pressed
+        // (see also OnEnabledChanged of the box).
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+
+            if (!Visible)
+                ResetInnerState();
+        }
+
+        protected override void OnMouseCaptureChanged(EventArgs e)
+        {
+            base.OnMouseCaptureChanged(e);
+
+            if (_innerPressed && !Capture)
+                ResetInnerState();
+        }
+
+        internal void ResetInnerState()
+        {
+            if (!_innerHot && !_innerPressed)
+                return;
+
+            _innerHot = false;
+            _innerPressed = false;
+            Invalidate();
+            UpdateToolTip(false);
         }
 
         protected override void OnMouseLeave(EventArgs e)

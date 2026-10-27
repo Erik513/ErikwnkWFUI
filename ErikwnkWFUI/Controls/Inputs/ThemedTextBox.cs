@@ -158,6 +158,10 @@ namespace ErikwnkWFUI.Controls
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
+
+            if (!Enabled)
+                ResetInnerState();
+
             Invalidate();
         }
 
@@ -165,6 +169,7 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnFontChanged(e);
             ApplyInnerMargin();
+            UpdateToolTip(_innerHot);
         }
 
         protected override void OnSizeChanged(EventArgs e)
