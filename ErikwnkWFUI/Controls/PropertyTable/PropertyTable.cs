@@ -500,7 +500,7 @@ namespace ErikwnkWFUI.Controls
             // cell doesn't gain anything, so it gets the same left-anchored
             // treatment as ToggleSwitch/Button instead of the Fill every
             // other control type gets by default below.
-            if (control is CheckBox)
+            if (control is System.Windows.Forms.CheckBox)
             {
                 control.Dock = DockStyle.None;
                 control.Anchor = AnchorStyles.Left;
@@ -545,10 +545,10 @@ namespace ErikwnkWFUI.Controls
                 control.Margin = new Padding(0);
                 return;
             }
-            if (control is NumericUpDown)
+            if (control is System.Windows.Forms.NumericUpDown)
             {
                 // The cell has its own frame.
-                ((NumericUpDown)control).BorderStyle = BorderStyle.None;
+                ((System.Windows.Forms.NumericUpDown)control).BorderStyle = BorderStyle.None;
                 control.Dock = DockStyle.Left;
                 control.Margin = new Padding(0);
                 return;
