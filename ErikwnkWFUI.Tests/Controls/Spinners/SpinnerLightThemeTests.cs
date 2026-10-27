@@ -42,13 +42,7 @@ public class SpinnerLightThemeTests : IDisposable
         spinner.IsIndeterminate = false;
         spinner.IsSpinning = false;
         spinner.Value = 50;
-        spinner.SetBounds(0, 0, 60, 60);
-        Form form = OffscreenForm.Create(new Size(60, 60), surface);
-        form.Controls.Add(spinner);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(spinner, new Size(60, 60), surface, bounds: new Rectangle(0, 0, 60, 60));
     }
 
     [Theory]

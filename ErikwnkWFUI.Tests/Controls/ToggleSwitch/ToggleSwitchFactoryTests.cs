@@ -20,13 +20,7 @@ public class ToggleSwitchFactoryTests : IDisposable
 
     private static Form Show(ToggleSwitch toggle)
     {
-        Form form = OffscreenForm.Create(new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20));
-        toggle.Location = new Point(5, 5);
-        form.Controls.Add(toggle);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(toggle, new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20), new Point(5, 5));
     }
 
     // The color of the track, a pixel inside it where the knob is not (the knob is at the other end).

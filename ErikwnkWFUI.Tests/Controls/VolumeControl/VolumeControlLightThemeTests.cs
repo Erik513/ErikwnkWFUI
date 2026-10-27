@@ -46,13 +46,7 @@ public class VolumeControlLightThemeTests : IDisposable
     private static Form Show(VolumeControl control, Color surface)
     {
         control.Slider.TabStop = false;    // no focus cue (a bigger thumb) on only one of two controls that are compared
-        Form form = OffscreenForm.Create(new Size(Math.Max(control.Width, 20), Math.Max(control.Height, 20)), surface);
-        form.Controls.Add(control);
-        form.Show();
-        control.PerformLayout();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(control, surface: surface);
     }
 
     // The most different color of the area from the surface: what the symbol (or the thumb) is painted in.

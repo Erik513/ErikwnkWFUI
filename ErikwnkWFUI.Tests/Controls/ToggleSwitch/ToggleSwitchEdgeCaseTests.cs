@@ -36,13 +36,7 @@ public class ToggleSwitchEdgeCaseTests : IDisposable
 
     private static Form Show(ToggleSwitch toggle)
     {
-        Form form = OffscreenForm.Create(new Size(Math.Max(toggle.Width + 10, 20), Math.Max(toggle.Height + 10, 20)), Color.Black);
-        toggle.Location = new Point(5, 5);
-        form.Controls.Add(toggle);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(toggle, new Size(Math.Max(toggle.Width + 10, 20), Math.Max(toggle.Height + 10, 20)), Color.Black, new Point(5, 5));
     }
 
     private static IntPtr At(int x, int y) => (IntPtr)((y << 16) | (x & 0xFFFF));

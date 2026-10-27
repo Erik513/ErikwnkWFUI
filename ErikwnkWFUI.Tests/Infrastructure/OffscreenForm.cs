@@ -25,4 +25,27 @@ public static class OffscreenForm
 
         return form;
     }
+
+    /// <summary>
+    /// Puts <paramref name="control"/> on such a form and shows it (laid out, its messages handled): the form is
+    /// <paramref name="clientSize"/> big (the size of the control, at least 20 x 20, when left out) and has the color <paramref name="surface"/>.
+    /// The control is placed at <paramref name="location"/>, or - <paramref name="bounds"/> - given those bounds, before it is added.
+    /// The caller disposes the form.
+    /// </summary>
+    public static Form Show(Control control, Size? clientSize = null, Color? surface = null, Point? location = null, Rectangle? bounds = null)
+    {
+        Form form = Create(clientSize ?? new Size(Math.Max(control.Width, 20), Math.Max(control.Height, 20)), surface);
+
+        if (bounds.HasValue)
+            control.Bounds = bounds.Value;
+        else if (location.HasValue)
+            control.Location = location.Value;
+
+        form.Controls.Add(control);
+        form.Show();
+        control.PerformLayout();
+        Application.DoEvents();
+
+        return form;
+    }
 }

@@ -40,13 +40,7 @@ public class TrackBarLightThemeTests : IDisposable
     private static Form Show(TrackBar bar, Color surface)
     {
         bar.TabStop = false;    // the form shown last is the active one: no focus cue (a bigger thumb) on only one of two
-        bar.SetBounds(0, 0, 100, 20);
-        Form form = OffscreenForm.Create(new Size(100, 20), surface);
-        form.Controls.Add(bar);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(bar, new Size(100, 20), surface, bounds: new Rectangle(0, 0, 100, 20));
     }
 
     [Theory]

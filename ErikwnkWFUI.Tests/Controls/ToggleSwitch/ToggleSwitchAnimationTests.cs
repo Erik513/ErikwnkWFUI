@@ -30,13 +30,7 @@ public class ToggleSwitchAnimationTests : IDisposable
     private static Form Show(ToggleSwitch toggle)
     {
         toggle.TabStop = false;
-        Form form = OffscreenForm.Create(new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20));
-        toggle.Location = new Point(5, 5);
-        form.Controls.Add(toggle);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(toggle, new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20), new Point(5, 5));
     }
 
     private static void Click(ToggleSwitch toggle)

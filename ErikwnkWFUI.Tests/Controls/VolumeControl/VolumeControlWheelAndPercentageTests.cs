@@ -16,13 +16,7 @@ public class VolumeControlWheelAndPercentageTests
 {
     private static Form Show(VolumeControl control)
     {
-        Form host = OffscreenForm.Create(new Size(Math.Max(control.Width, 20), Math.Max(control.Height, 20)), Color.Black);
-        host.Controls.Add(control);
-        host.Show();
-        control.PerformLayout();
-        Application.DoEvents();
-
-        return host;
+        return OffscreenForm.Show(control, surface: Color.Black);
     }
 
     private static Label Percent(VolumeControl control) => control.GetPrivateField<Label>("_percent")!;

@@ -16,13 +16,7 @@ public class FrameTickerTests
 {
     private static Form Show(Control control)
     {
-        Form host = OffscreenForm.Create(new Size(100, 100));
-        control.SetBounds(0, 0, 50, 50);
-        host.Controls.Add(control);
-        host.Show();
-        Application.DoEvents();
-
-        return host;
+        return OffscreenForm.Show(control, new Size(100, 100), bounds: new Rectangle(0, 0, 50, 50));
     }
 
     [Fact]

@@ -10,6 +10,7 @@ using ToggleSwitch = ErikwnkWFUI.Controls.ToggleSwitch;
 namespace ErikwnkWFUI.Tests.Controls.ToggleSwitches;
 
 /// <summary>The focus frame of the switch. It needs the real focus (the window is activated), so it is on its own: it takes the focus from whatever else is open on the computer while it runs. [Collection]: the focus belongs to the whole process.</summary>
+[Trait("Focus", "true")]
 [Collection(FocusTestCollection.Name)]
 public class ToggleSwitchFocusTests
 {
@@ -18,12 +19,8 @@ public class ToggleSwitchFocusTests
 
     private static Form Show(ToggleSwitch toggle)
     {
-        Form form = OffscreenForm.Create(new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20));
-        toggle.Location = new Point(5, 5);
-        form.Controls.Add(toggle);
-        form.Show();
+        Form form = OffscreenForm.Show(toggle, new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20), new Point(5, 5));
         form.Activate();
-        Application.DoEvents();
 
         return form;
     }

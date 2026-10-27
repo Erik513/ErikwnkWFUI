@@ -15,13 +15,7 @@ public class TrackBarFeatureTests
 {
     private static Form Show(TrackBar bar, int width = 120)
     {
-        Form host = OffscreenForm.Create(new Size(width, 20), Color.Black);
-        bar.SetBounds(0, 0, width, 20);
-        host.Controls.Add(bar);
-        host.Show();
-        Application.DoEvents();
-
-        return host;
+        return OffscreenForm.Show(bar, new Size(width, 20), Color.Black, bounds: new Rectangle(0, 0, width, 20));
     }
 
     private static void Key(TrackBar bar, Keys key) => bar.InvokePrivate("OnKeyDown", new KeyEventArgs(key));

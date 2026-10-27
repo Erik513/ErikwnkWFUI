@@ -40,14 +40,8 @@ public class ToggleSwitchLightThemeTests : IDisposable
 
     private static Form Show(ToggleSwitch toggle, bool light)
     {
-        Form form = OffscreenForm.Create(new Size(60, 40), light ? Color.FromArgb(243, 243, 243) : Color.FromArgb(30, 30, 30));
         toggle.TabStop = false;
-        toggle.Location = new Point(7, 7);
-        form.Controls.Add(toggle);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(toggle, new Size(60, 40), light ? Color.FromArgb(243, 243, 243) : Color.FromArgb(30, 30, 30), new Point(7, 7));
     }
 
     [Theory]

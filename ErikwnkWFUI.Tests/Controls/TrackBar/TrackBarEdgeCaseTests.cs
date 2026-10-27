@@ -21,13 +21,7 @@ public class TrackBarEdgeCaseTests
 {
     private static Form Show(TrackBar bar, int width = 120, int height = 20)
     {
-        Form host = OffscreenForm.Create(new Size(Math.Max(width, 20), Math.Max(height, 20)), Color.Black);
-        bar.SetBounds(0, 0, width, height);
-        host.Controls.Add(bar);
-        host.Show();
-        Application.DoEvents();
-
-        return host;
+        return OffscreenForm.Show(bar, new Size(Math.Max(width, 20), Math.Max(height, 20)), Color.Black, bounds: new Rectangle(0, 0, width, height));
     }
 
     private static MouseEventArgs Mouse(int x, MouseButtons buttons = MouseButtons.Left) => new MouseEventArgs(buttons, 1, x, 10, 0);

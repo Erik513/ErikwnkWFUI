@@ -13,13 +13,7 @@ public class TrackBarDragTests
 
     private static Form Show(TrackBar bar)
     {
-        Form host = OffscreenForm.Create(new Size(120, 20), Color.Black);
-        bar.SetBounds(0, 0, 120, 20);
-        host.Controls.Add(bar);
-        host.Show();
-        Application.DoEvents();
-
-        return host;
+        return OffscreenForm.Show(bar, new Size(120, 20), Color.Black, bounds: new Rectangle(0, 0, 120, 20));
     }
 
     private static void Down(TrackBar bar, int x) => bar.InvokePrivate("OnMouseDown", Mouse(x));

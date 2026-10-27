@@ -24,13 +24,7 @@ public class ToggleSwitchBehaviorTests : IDisposable
 
     private static Form Show(ToggleSwitch toggle)
     {
-        Form form = OffscreenForm.Create(new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20));
-        toggle.Location = new Point(5, 5);
-        form.Controls.Add(toggle);
-        form.Show();
-        Application.DoEvents();
-
-        return form;
+        return OffscreenForm.Show(toggle, new Size(toggle.Width + 10, toggle.Height + 10), Color.FromArgb(20, 20, 20), new Point(5, 5));
     }
 
     private static MouseEventArgs Mouse(int x, int y, MouseButtons button = MouseButtons.Left) => new MouseEventArgs(button, 1, x, y, 0);
