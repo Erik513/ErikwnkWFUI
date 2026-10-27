@@ -247,7 +247,8 @@ namespace ErikwnkWFUI.Controls
             TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding
                 | (Multiline ? TextFormatFlags.WordBreak : TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
 
-            TextRenderer.DrawText(graphics, _placeholder, Font, GetPlaceholderArea(), UIColors.TextMuted, flags);
+            // Quieter than a text, but readable: at least 4.5:1 on the field (the muted text color of the theme was 2.9:1 on the dark one).
+            TextRenderer.DrawText(graphics, _placeholder, Font, GetPlaceholderArea(), UIColors.GetMutedText(BackColor, 0.45, 4.5), flags);
         }
 
         // Where the system draws the text of the box: its formatting rectangle.

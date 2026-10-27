@@ -239,10 +239,11 @@ namespace ErikwnkWFUI.Controls
             }
 
             // The symbol: quiet (muted), the text color while the mouse is over it, the color of the frame while it is switched on.
-            Color glyph = !Enabled ? fore
+            // (Disabled: fainter than at rest, 2:1 and a little more.)
+            Color glyph = !Enabled ? UIColors.BlendToward(UIColors.GetBestTextColor(back), back, 0.65)
                 : _innerActive ? InputField.GetFrameColor(this, Colors, true)
                 : _innerHot || _innerPressed ? fore
-                : UIColors.GetMutedText(back, 0.35, 3.0);
+                : UIColors.GetMutedText(back, 0.45, 3.5);
 
             TextRenderer.DrawText(graphics, _innerGlyph, GetInnerFont(), bounds, glyph,
                 TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
