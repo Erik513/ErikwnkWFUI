@@ -13,25 +13,13 @@ namespace ErikwnkWFUI.Tests.Controls.TextBoxes;
 [Collection(AccentColorTestCollection.Name)]
 public class TextBoxPlaceholderTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly TextBoxHost _host = new TextBoxHost();
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
-    }
-
-    private TextBox Show(TextBox box, int width = 160)
-    {
-        box.TabStop = false;
-        box.Width = width;
-        Form form = OffscreenForm.Show(box, new Size(width + 20, box.Multiline ? 100 : 40), UIColors.BackgroundMedium, new Point(10, 8));
-        ThemeWatcher.FollowBackColor(form, () => UIColors.BackgroundMedium); // the page, as in an application
-        _forms.Add(form);
-
-        return box;
     }
 
     // Whether anything is painted in the box that is not its background: the placeholder, or a text.
@@ -55,8 +43,8 @@ public class TextBoxPlaceholderTests : IDisposable
     [Fact]
     public void AnEmptyBox_ShowsThePlaceholder_AndWithoutOneNothing()
     {
-        TextBox with = Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
-        TextBox without = Show(UIStyles.TextBoxes.CreateStandard("", ""));
+        TextBox with = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+        TextBox without = _host.Show(UIStyles.TextBoxes.CreateStandard("", ""));
 
         Assert.True(HasInk(with), "the placeholder is not painted");
         Assert.False(HasInk(without));
@@ -65,8 +53,8 @@ public class TextBoxPlaceholderTests : IDisposable
     [Fact]
     public void ABoxWithAText_ShowsTheText_NotThePlaceholder_AndTheTextIsAsGiven()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("x", "Type here"));
-        TextBox plain = Show(UIStyles.TextBoxes.CreateStandard("x", ""));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("x", "Type here"));
+        TextBox plain = _host.Show(UIStyles.TextBoxes.CreateStandard("x", ""));
         using Bitmap first = Draw(box);
         using Bitmap second = Draw(plain);
 
@@ -77,8 +65,8 @@ public class TextBoxPlaceholderTests : IDisposable
     [Fact]
     public void TypingAText_TakesThePlaceholderAway_AndClearingItBringsItBack()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
-        TextBox plain = Show(UIStyles.TextBoxes.CreateStandard("", ""));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+        TextBox plain = _host.Show(UIStyles.TextBoxes.CreateStandard("", ""));
         using Bitmap empty = Draw(box);
 
         box.Text = "a";
@@ -96,8 +84,8 @@ public class TextBoxPlaceholderTests : IDisposable
     public void ThePlaceholder_RaisesNoTextChanged_AndIsNotMaskedByAPasswordChar_NorCutByMaxLength()
     {
         int changes = 0;
-        TextBox plainBox = Show(UIStyles.TextBoxes.CreateStandard("", "A long placeholder"));
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("", "A long placeholder"));
+        TextBox plainBox = _host.Show(UIStyles.TextBoxes.CreateStandard("", "A long placeholder"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("", "A long placeholder"));
         box.TextChanged += (s, e) => changes++;
         box.PasswordChar = '*';
         box.MaxLength = 3;
@@ -116,7 +104,7 @@ public class TextBoxPlaceholderTests : IDisposable
         foreach (bool light in new[] { false, true })
         {
             UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
-            TextBox box = Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+            TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
             using Bitmap picture = Draw(box);
             double strongest = 1.0;
 
@@ -133,12 +121,12 @@ public class TextBoxPlaceholderTests : IDisposable
     [Fact]
     public void ThePlaceholder_FollowsAThemeChange_WhileTheBoxIsShown()
     {
-        TextBox box = Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
         using Bitmap dark = Draw(box);
 
         UIColors.ApplyTheme(UIThemes.Light);
         Application.DoEvents();
-        TextBox made = Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+        TextBox made = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
         using Bitmap shown = Draw(box);
         using Bitmap reference = Draw(made);
 
@@ -180,8 +168,8 @@ public class TextBoxPlaceholderTests : IDisposable
         hint.Multiline = multiline;
         typed.Height = multiline ? 60 : typed.Height;
         hint.Height = multiline ? 60 : hint.Height;
-        Show(typed);
-        Show(hint);
+        _host.Show(typed);
+        _host.Show(hint);
 
         Rectangle text = InkBounds(typed);
         Rectangle placeholder = InkBounds(hint);
@@ -197,17 +185,53 @@ public class TextBoxPlaceholderTests : IDisposable
         TextBox box = UIStyles.TextBoxes.CreateStandard("", "Type here");
         box.Multiline = true;
         box.Height = 80;
-        Show(box);
+        _host.Show(box);
 
         Assert.True(HasInk(box));
     }
+
+#if NET
+    // The PlaceholderText of the standard box (.NET 5 and later) is the placeholder of the library, not the hint that the system draws in a gray of
+    // its own: code that sets it (an application that was written for the standard box) gets the look of the library.
+    [Fact]
+    public void ThePlaceholderTextOfTheStandardBox_IsThePlaceholderOfTheLibrary_NotTheSystemHint()
+    {
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard());
+        TextBox reference = _host.Show(UIStyles.TextBoxes.CreateStandard("", "Type here"));
+
+        box.PlaceholderText = "Type here";
+
+        Assert.Equal("Type here", box.PlaceholderText);
+        Assert.Equal("Type here", ((ErikwnkWFUI.Controls.TextField)box).Placeholder);
+        Assert.Equal(string.Empty, box.Text);
+        Assert.Equal(IntPtr.Zero, SystemHint(box));
+        using Bitmap set = Draw(box);
+        using Bitmap made = Draw(reference);
+        Assert.True(SamePixels(set, made), "the hint looks different from the placeholder of the library");
+
+        box.PlaceholderText = null!;
+        Assert.Equal(string.Empty, box.PlaceholderText);
+    }
+
+    // The hint that the system keeps for the box (EM_GETCUEBANNER): none, as the library paints the placeholder itself.
+    private static IntPtr SystemHint(TextBox box)
+    {
+        System.Text.StringBuilder text = new System.Text.StringBuilder(64);
+        SendMessageText(box.Handle, 0x1502, text, text.Capacity);
+
+        return text.Length == 0 ? IntPtr.Zero : (IntPtr)1;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = System.Runtime.InteropServices.CharSet.Unicode)]
+    private static extern IntPtr SendMessageText(IntPtr handle, int message, System.Text.StringBuilder text, int length);
+#endif
 
     [Fact]
     public void ADisabledBox_StillShowsThePlaceholder()
     {
         TextBox box = UIStyles.TextBoxes.CreateStandard("", "Type here");
         box.Enabled = false;
-        Show(box);
+        _host.Show(box);
 
         Assert.True(HasInk(box));
     }

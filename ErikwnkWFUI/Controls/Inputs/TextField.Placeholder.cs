@@ -28,6 +28,22 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+#if NET5_0_OR_GREATER
+        /// <summary>
+        /// The <c>PlaceholderText</c> of the standard box (.NET 5 and later) is the <see cref="Placeholder"/> of this one: code that sets it gets the
+        /// hint of the library (in the colors of the theme, where a text would stand) instead of the system's, which is drawn in a gray of its
+        /// own.
+        /// </summary>
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public override string PlaceholderText
+        {
+            get { return _placeholder; }
+            set { Placeholder = value; }
+        }
+#endif
+
         // Whether there is anything to paint over what the system painted: a button in the box, or a placeholder that is shown.
         private bool HasPaintOver
         {
