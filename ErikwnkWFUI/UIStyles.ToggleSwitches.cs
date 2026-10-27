@@ -9,34 +9,34 @@ namespace ErikwnkWFUI
         public static class ToggleSwitches
         {
             public static ToggleSwitch CreateStandard(
-                bool checkedState = true,
+                bool isChecked = true,
                 string tooltipChecked = null,
                 string tooltipUnchecked = null)
             {
                 return UIToggleSwitchFactory.CreateStandard(
-                    checkedState,
+                    isChecked,
                     tooltipChecked,
                     tooltipUnchecked);
             }
 
             public static ToggleSwitch CreateSmall(
-                bool checkedState = true,
+                bool isChecked = true,
                 string tooltipChecked = null,
                 string tooltipUnchecked = null)
             {
                 return UIToggleSwitchFactory.CreateSmall(
-                    checkedState,
+                    isChecked,
                     tooltipChecked,
                     tooltipUnchecked);
             }
 
             public static ToggleSwitch CreateLarge(
-                bool checkedState = true,
+                bool isChecked = true,
                 string tooltipChecked = null,
                 string tooltipUnchecked = null)
             {
                 return UIToggleSwitchFactory.CreateLarge(
-                    checkedState,
+                    isChecked,
                     tooltipChecked,
                     tooltipUnchecked);
             }
