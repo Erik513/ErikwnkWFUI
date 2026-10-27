@@ -19,12 +19,13 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     public partial class PropertyTable : UserControl
     {
-        private const int DefaultLabelColumnWidth = 130;
+        private const int DefaultLabelWidth96 = 130;
         private const int DefaultRowHeight = 42;
         private const int DefaultSectionHeight = 32;
         private const int LabelLeftPadding = 10;
 
         private readonly System.Windows.Forms.TableLayoutPanel _layout;
+        private int _labelWidth = DefaultLabelWidth96;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
         private readonly List<Control> _editors = new List<Control>();
         private readonly List<Label> _sectionLabels = new List<Label>();
@@ -41,6 +42,36 @@ namespace ErikwnkWFUI.Controls
             _layout = CreateMainLayout();
 
             Controls.Add(_layout);
+            ApplyLabelWidth();
+        }
+
+        /// <summary>
+        /// The width of the label column in pixels at 96 dpi (130 by default; scaled to the screen). A label that is longer than this
+        /// is cut, and the whole text is its tooltip. Takes effect at once for the rows that are there.
+        /// </summary>
+        [DefaultValue(DefaultLabelWidth96)]
+        public int LabelWidth
+        {
+            get { return _labelWidth; }
+            set
+            {
+                if (value < 1)
+                    throw new ArgumentOutOfRangeException(nameof(value), "The label column needs a width.");
+
+                _labelWidth = value;
+                ApplyLabelWidth();
+            }
+        }
+
+        private void ApplyLabelWidth()
+        {
+            _layout.ColumnStyles[0].Width = Dpi.Scale(this, _labelWidth);
+        }
+
+        protected override void OnDpiChangedAfterParent(EventArgs e)
+        {
+            base.OnDpiChangedAfterParent(e);
+            ApplyLabelWidth();
         }
 
         /// <summary>
@@ -74,7 +105,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Adds a full-width section header row.</summary>
-        public void AddSection(string title)
+        public PropertyRow AddSection(string title)
         {
             int row = AddRowStyle(DefaultSectionHeight);
 
@@ -84,6 +115,8 @@ namespace ErikwnkWFUI.Controls
 
             _layout.Controls.Add(label, 0, row);
             _layout.SetColumnSpan(label, 2);
+
+            return new PropertyRow(_layout.RowStyles[row], label);
         }
 
         /// <summary>
@@ -93,45 +126,45 @@ namespace ErikwnkWFUI.Controls
         /// <see cref="AddRow(string,PropertyColumn[])"/> overload instead if the
         /// controls need different widths.
         /// </summary>
-        public void AddRow(
+        public PropertyRow AddRow(
             string labelText,
             params Control[] controls)
         {
             PropertyColumn[] columns = CreateAutoColumns(controls);
 
-            AddRow(
+            return AddRow(
                 labelText,
                 DefaultRowHeight,
                 columns);
         }
 
         /// <inheritdoc cref="AddRow(string,Control[])"/>
-        public void AddRow(
+        public PropertyRow AddRow(
             string labelText,
             int rowHeight,
             params Control[] controls)
         {
             PropertyColumn[] columns = CreateAutoColumns(controls);
 
-            AddRow(
+            return AddRow(
                 labelText,
                 rowHeight,
                 columns);
         }
 
         /// <summary>Adds a row with explicit per-column sizing - see <see cref="PropertyColumn.Auto"/>/<see cref="PropertyColumn.Absolute"/>/<see cref="PropertyColumn.Percent"/>.</summary>
-        public void AddRow(
+        public PropertyRow AddRow(
             string labelText,
             params PropertyColumn[] columns)
         {
-            AddRow(
+            return AddRow(
                 labelText,
                 DefaultRowHeight,
                 columns);
         }
 
         /// <inheritdoc cref="AddRow(string,PropertyColumn[])"/>
-        public void AddRow(
+        public PropertyRow AddRow(
             string labelText,
             int rowHeight,
             params PropertyColumn[] columns)
@@ -146,6 +179,8 @@ namespace ErikwnkWFUI.Controls
 
             _layout.Controls.Add(label, 0, row);
             _layout.Controls.Add(editorArea, 1, row);
+
+            return new PropertyRow(_layout.RowStyles[row], label, editorArea);
         }
 
         private PropertyColumn[] CreateAutoColumns(Control[] controls)
@@ -191,7 +226,7 @@ namespace ErikwnkWFUI.Controls
             layout.ColumnStyles.Add(
                 new ColumnStyle(
                     SizeType.Absolute,
-                    DefaultLabelColumnWidth));
+                    DefaultLabelWidth96));
 
             layout.ColumnStyles.Add(
                 new ColumnStyle(
@@ -350,7 +385,7 @@ namespace ErikwnkWFUI.Controls
 
         private Label CreateRowLabel(string text)
         {
-            Label label = Labels.CreateStandard(text ?? "");
+            ScrollingLabel label = Labels.CreateStandard(text ?? "");
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;
@@ -358,7 +393,29 @@ namespace ErikwnkWFUI.Controls
             label.Margin = new Padding(0);
             ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundMedium);
 
+            // A label whose text does not fit its row is cut: the whole text is its tooltip (asked when the pointer comes, so a change of the
+            // width, the text or the font is followed).
+            FullTextToolTip toolTip = new FullTextToolTip(label);
+            label.MouseEnter += (sender, e) => toolTip.Update(label.Text, IsCut(label));
+            label.Disposed += (sender, e) => toolTip.Dispose();
+
             return label;
+        }
+
+        internal static bool IsCut(ScrollingLabel label)
+        {
+            Size room = new Size(label.ClientSize.Width - label.Padding.Horizontal, label.ClientSize.Height - label.Padding.Vertical);
+
+            if (room.Width <= 0 || label.Text.Length == 0)
+                return false;
+
+            // The label cuts its single line with an ellipsis (the text is measured without a limit) or wraps it (cut when it needs more lines than fit).
+            TextFormatFlags flags = label.GetTextFormatFlags();
+
+            if ((flags & TextFormatFlags.WordBreak) == 0)
+                return TextRenderer.MeasureText(label.Text, label.Font, new Size(int.MaxValue, int.MaxValue), flags).Width > room.Width;
+
+            return TextRenderer.MeasureText(label.Text, label.Font, new Size(room.Width, int.MaxValue), flags).Height > room.Height;
         }
 
         private Label CreateSectionLabel(string title)
