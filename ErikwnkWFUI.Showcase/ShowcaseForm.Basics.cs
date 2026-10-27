@@ -344,6 +344,14 @@ namespace ErikwnkWFUI.Showcase
                 Framed(UIStyles.TextBoxes.CreateStandard("", "MediumPurple", System.Drawing.Color.MediumPurple)),
                 Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", "", System.Drawing.Color.MediumPurple))));
 
+            // The text can be read, selected and copied, only not changed: the background is set apart (less than a disabled one).
+            TextBox readOnly = UIStyles.TextBoxes.CreateStandard("ReadOnly = true", "");
+            readOnly.ReadOnly = true;
+            TextBox readOnlyDisabled = UIStyles.TextBoxes.CreateStandard("Disabled", "");
+            readOnlyDisabled.ReadOnly = true;
+            readOnlyDisabled.Enabled = false;
+            AddTwoColumnRow(table, "ReadOnly = true", Framed(readOnly), Framed(readOnlyDisabled));
+
             // A text that is given stays; the placeholder stands in only for an empty box.
             AddTwoColumnRow(table, "text and placeholder",
                 Framed(UIStyles.TextBoxes.CreateStandard("A text that is given", "Placeholder")),

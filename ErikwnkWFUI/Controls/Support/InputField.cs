@@ -34,8 +34,18 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
+        /// The background of a text box that is read-only: set apart from an editable one, but less than a disabled one (half as far): the text
+        /// can be read, selected and copied, only not changed.
+        /// </summary>
+        public static Color GetReadOnlyBackground(Color enabled)
+        {
+            return UIColors.Darken(enabled, UIColors.IsLight(enabled) ? 0.03 : 0.15);
+        }
+
+        /// <summary>
         /// Keeps the background of the field the one of its state: the field background when enabled, the dimmed one
-        /// when disabled, taken anew on a change of the theme. A color set by hand stays.
+        /// when disabled (a text box that is read-only has a slightly dimmed one), taken anew on a change of the theme. A color set by
+        /// hand stays.
         /// </summary>
         public static void FollowBackground(Control control)
         {
@@ -52,12 +62,23 @@ namespace ErikwnkWFUI.Controls
             };
 
             control.EnabledChanged += (sender, e) => refresh();
+
+            TextBoxBase textBox = control as TextBoxBase;
+
+            if (textBox != null)
+                textBox.ReadOnlyChanged += (sender, e) => refresh();
+
             ThemeWatcher.Attach(control, refresh);
         }
 
         private static Color Resolve(Control control)
         {
-            return control.Enabled ? Background : GetDisabledBackground(Background);
+            if (!control.Enabled)
+                return GetDisabledBackground(Background);
+
+            TextBoxBase textBox = control as TextBoxBase;
+
+            return textBox != null && textBox.ReadOnly ? GetReadOnlyBackground(Background) : Background;
         }
 
         /// <summary>The color of the page a control stands on: the first opaque background of its parents.</summary>
