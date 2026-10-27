@@ -24,7 +24,7 @@ public class TextBoxFactoryTests : IDisposable
     }
 
     [Fact]
-    public void ATextThatIsGiven_StaysWhenThereIsAPlaceholder_AndWithoutOneThePlaceholderStandsIn()
+    public void ATextThatIsGiven_IsTheText_AndThePlaceholderIsNeverTheText()
     {
         using TextBox given = UIStyles.TextBoxes.CreateStandard("my text", "type here");
         using TextBox empty = UIStyles.TextBoxes.CreateStandard("", "type here");
@@ -32,8 +32,8 @@ public class TextBoxFactoryTests : IDisposable
 
         Assert.Equal("my text", given.Text);
         Assert.Equal("my text", borderless.Text);
-        Assert.Equal("type here", empty.Text);
-        Assert.NotEqual(given.ForeColor, empty.ForeColor);
+        Assert.Equal(string.Empty, empty.Text);
+        Assert.Equal("type here", ((ErikwnkWFUI.Controls.TextBox)empty).Placeholder);
     }
 
     [Fact]

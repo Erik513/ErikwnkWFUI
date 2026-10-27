@@ -59,12 +59,10 @@ namespace ErikwnkWFUI.Factories
             return textBox;
         }
 
-        // The fill and the text follow the theme as long as they still are the colors the factory gave. The text is
-        // the main color, or the muted one while the placeholder is shown.
-        private static void Follow(TextBox textBox)
+        // The fill and the text follow the theme as long as they still are the colors the factory gave.
+        private static void Follow(Controls.TextBox textBox)
         {
             System.Drawing.Color primary = UIColors.TextPrimary;
-            System.Drawing.Color muted = UIColors.TextMuted;
             textBox.ForeColor = primary;
 
             Controls.InputField.FollowBackground(textBox);
@@ -74,51 +72,20 @@ namespace ErikwnkWFUI.Factories
 
             Controls.ThemeWatcher.Attach(textBox, () =>
             {
-                System.Drawing.Color current = textBox.ForeColor;
-
-                if (current == primary)
+                if (textBox.ForeColor == primary)
                     textBox.ForeColor = UIColors.TextPrimary;
-                else if (current == muted)
-                    textBox.ForeColor = UIColors.TextMuted;
 
                 primary = UIColors.TextPrimary;
-                muted = UIColors.TextMuted;
             });
         }
 
+        // The hint is painted by the box while it is empty and has not the focus (it is not its Text).
         private static void SetPlaceholder(
-            TextBox textBox,
+            Controls.TextBox textBox,
             string placeholder)
         {
-            if (textBox == null)
-                return;
-
-            string placeholderText = placeholder ?? "";
-
-            // A text that was given stays; the placeholder stands in only where there is none.
-            if (string.IsNullOrEmpty(textBox.Text))
-            {
-                textBox.Text = placeholderText;
-                textBox.ForeColor = UIColors.TextMuted;
-            }
-
-            textBox.GotFocus += delegate
-            {
-                if (textBox.Text != placeholderText)
-                    return;
-
-                textBox.Text = "";
-                textBox.ForeColor = UIColors.TextPrimary;
-            };
-
-            textBox.LostFocus += delegate
-            {
-                if (!string.IsNullOrWhiteSpace(textBox.Text))
-                    return;
-
-                textBox.Text = placeholderText;
-                textBox.ForeColor = UIColors.TextMuted;
-            };
+            if (textBox != null)
+                textBox.Placeholder = placeholder;
         }
     }
 }

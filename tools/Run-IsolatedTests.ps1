@@ -77,6 +77,11 @@ public static class IsolatedDesktop
 
                 if (wait != 0)
                 {
+                    // The whole tree (cmd, dotnet, the test host): a test host that is left behind keeps the test DLL locked.
+                    System.Diagnostics.ProcessStartInfo kill = new System.Diagnostics.ProcessStartInfo("taskkill", "/PID " + process.dwProcessId + " /T /F");
+                    kill.CreateNoWindow = true;
+                    kill.UseShellExecute = false;
+                    System.Diagnostics.Process.Start(kill).WaitForExit();
                     TerminateProcess(process.hProcess, 1);
                     return -1;
                 }
