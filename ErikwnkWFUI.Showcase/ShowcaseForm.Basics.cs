@@ -294,6 +294,15 @@ namespace ErikwnkWFUI.Showcase
                 UIStyles.ToggleSwitches.CreatePrimary(true, "On", "Off", new Size(55, 30)),
                 UIStyles.ToggleSwitches.CreatePrimary(false, "On", "Off", new Size(55, 30)),
                 largeDisabled);
+
+            // The event: raised for every change, by the user and by code alike (as on a standard check box).
+            ToggleSwitch live = UIStyles.ToggleSwitches.CreatePrimary(false, "On", "Off");
+            Label shown = UIStyles.Labels.CreateStandard("Checked = False");
+            shown.AutoSize = true;
+            live.CheckedChanged += delegate { shown.Text = "Checked = " + live.Checked; };
+            table.AddRow("CheckedChanged",
+                UIColumn.Percent(live, UniformColumnPercent),
+                UIColumn.Percent(shown, UniformColumnPercent * 2));
         }
 
         private void AddTextBoxesSection(PropertyTable table)
