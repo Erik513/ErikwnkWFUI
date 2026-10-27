@@ -358,6 +358,11 @@ namespace ErikwnkWFUI.Showcase
                 Framed(UIStyles.TextBoxes.CreateLockable("Playlist name")),
                 Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled"))));
 
+            // Unlocked at the start, with the colors of a set: the check mark and the frame while the box has the focus.
+            AddTwoColumnRow(table, "locked: false, colors: Yellow",
+                Framed(UIStyles.TextBoxes.CreateLockable("Unlocked", "", false, UIStyles.Colors.Sets.Yellow)),
+                Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled", "", false, UIStyles.Colors.Sets.Yellow))));
+
             LockableTextBox events = UIStyles.TextBoxes.CreateLockable("Edit me");
             Label eventText = UIStyles.Labels.CreateStandard("locked");
             eventText.AutoSize = true;
@@ -370,6 +375,10 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "CreatePassword",
                 Framed(UIStyles.TextBoxes.CreatePassword("secret", "Password")),
                 Framed(Disabled(UIStyles.TextBoxes.CreatePassword("secret", ""))));
+
+            AddTwoColumnRow(table, "CreatePassword(colors: Yellow)",
+                Framed(UIStyles.TextBoxes.CreatePassword("", "Password", UIStyles.Colors.Sets.Yellow)),
+                Framed(Disabled(UIStyles.TextBoxes.CreatePassword("secret", "", UIStyles.Colors.Sets.Yellow))));
 
             // A text that is wider than the box is the tooltip of the box (hover over it); ToolTipWhenCut = false switches it off.
             TextBox cut = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box shows itself in a tooltip");
