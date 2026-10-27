@@ -98,6 +98,29 @@ The text moves smoothly on the beat of the display, back and forth stands still 
 keeps the room of the label), and not at
 all where Windows has the animations switched off.
 
+## Text boxes
+
+`UIStyles.TextBoxes` makes the standard `TextBox`, with a quiet frame of the library: `CreateStandard` (the frame has the text color while the box has the
+focus), `CreatePrimary` (the accent), `CreateStandard(colors: ...)` (a color set or a single color) and `CreateBorderless` (no frame). The fill and the
+text follow the theme; a box that is `ReadOnly` has a slightly dimmed fill (less than a disabled one). A placeholder is passed to the factory
+(`CreateStandard("", "Search")`); it is painted over the box and never is its `Text`, so a `PasswordChar` does not mask it and no `TextChanged`
+comes for it (the `PlaceholderText` of .NET 5 and later is the same placeholder). A text that is wider than the box is the tooltip of the box
+(`ToolTipWhenCut` of the `TextField`, on by default).
+
+Two boxes have a button inside the frame, at the right end:
+
+- `CreateLockable` is locked (read-only) until the pencil is used - it unlocks the box, gives it the focus and selects the text; the check mark or the
+  Enter key accepts the text and locks it again, Escape gives the old text back, F2 or Enter on the locked box start the editing. It makes a
+  `LockableTextBox` with `IsLocked`, `LockedChanged`, `EditAccepted`, `EditCancelled` and `BeginEdit()`, `AcceptEdit()`, `CancelEdit()`.
+- `CreatePassword` hides what is typed; the eye shows the password with a click (or Alt+F8) and hides it again with the next one.
+
+```csharp
+var name = UIStyles.TextBoxes.CreateLockable("My playlist");
+name.EditAccepted += (s, e) => Save(name.Text);
+
+var password = UIStyles.TextBoxes.CreatePassword(placeholder: "Password", colors: UIStyles.Colors.Sets.Green);
+```
+
 ## Panels
 
 `UIStyles.Panels` are the surfaces a layout is built from: `CreateStandard` (the usual
