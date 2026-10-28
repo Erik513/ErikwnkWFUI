@@ -268,6 +268,9 @@ namespace ErikwnkWFUI.Forms
             if (disposing && _titleBar != null && _titleBar.Parent == null)
                 _titleBar.Dispose();
 
+            if (disposing && _openMenu != null)
+                _openMenu.Dispose();
+
             base.Dispose(disposing);
         }
 

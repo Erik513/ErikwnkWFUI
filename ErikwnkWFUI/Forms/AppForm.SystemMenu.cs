@@ -14,6 +14,7 @@ namespace ErikwnkWFUI.Forms
         private bool _canMaximize;
         private bool _isFixedSize;
         private Func<UIColorSet> _menuColors;
+        private LibraryMenu _openMenu;
 
         // Right-click on the title bar, or Alt+Space (the keys of the native one).
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -34,10 +35,20 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public void ShowSystemMenu(Point screenPosition)
         {
-            LibraryMenu menu = CreateSystemMenu();
+            _openMenu?.Dispose();
 
-            // Gone with the window or when it closes (not while its own click handler still runs).
-            menu.Closed += (sender, e) => BeginInvoke(new Action(menu.Dispose));
+            LibraryMenu menu = CreateSystemMenu();
+            _openMenu = menu;
+
+            // Gone when it closes - but not while its own click handler still runs, and not through a window that is gone (an entry that
+            // closes the window disposes the menu with it).
+            menu.Closed += (sender, e) =>
+            {
+                if (IsDisposed || !IsHandleCreated)
+                    menu.Dispose();
+                else
+                    BeginInvoke(new Action(menu.Dispose));
+            };
             menu.Show(screenPosition);
         }
 
