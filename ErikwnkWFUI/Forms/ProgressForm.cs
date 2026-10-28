@@ -61,6 +61,7 @@ namespace ErikwnkWFUI.Forms
         private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer { Interval = 500 };
         private readonly Stopwatch _stopwatch = new Stopwatch();
         private readonly FormSizeOption _size;
+        private readonly bool _defaultTitle;
         private readonly object _lock = new object();
         private int _dpiOverride;
         private int _percent;
@@ -87,6 +88,9 @@ namespace ErikwnkWFUI.Forms
         {
             _size = size ?? FormSize.Medium;
             _status = status ?? "";
+
+            // The title of the library ("Please wait") follows the language; a title that was given stays.
+            _defaultTitle = options == null || options.Title == UIStrings.Get("ProgressForm.Title");
 
             ShowInTaskbar = false;
 
@@ -506,6 +510,9 @@ namespace ErikwnkWFUI.Forms
 
             UpdateButton();
             UpdateTime();
+
+            if (_defaultTitle)
+                FormTitle = UIStrings.Get("ProgressForm.Title");
         }
 
         protected override void Dispose(bool disposing)

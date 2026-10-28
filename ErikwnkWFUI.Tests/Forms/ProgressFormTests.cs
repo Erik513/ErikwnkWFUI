@@ -751,6 +751,71 @@ public class ProgressFormTests : IDisposable
         Assert.False(shownBefore);
         Assert.True(showTimeInTask);
     }
+    // ---- language
+
+    [Fact]
+    public void TheTitleOfTheLibrary_FollowsTheLanguage_ATitleThatWasGivenStays()
+    {
+        ProgressForm plain = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        ProgressForm primary = _host.Show(UIStyles.Forms.CreateProgressPrimary("x"));
+        ProgressForm titled = _host.Show(UIStyles.Forms.CreateProgressStandard("x", "Update"));
+
+        UIStrings.Language = UILanguage.German;
+
+        Assert.Equal("Bitte warten", plain.Text);
+        Assert.Equal("Bitte warten", primary.Text);
+        Assert.Equal("Update", titled.Text);
+
+        UIStrings.Language = UILanguage.English;
+        Assert.Equal("Please wait", plain.Text);
+    }
+
+    [Fact]
+    public void EveryTextOfTheWindow_ExistsInBothLanguages()
+    {
+        foreach (UILanguage language in new[] { UILanguage.English, UILanguage.German })
+        {
+            UIStrings.Language = language;
+
+            foreach (string key in new[] { "Title", "Cancel", "Close", "Elapsed", "ElapsedLeft" })
+                Assert.NotEqual("ProgressForm." + key, UIStrings.Get("ProgressForm." + key));
+        }
+
+        UIStrings.Language = UILanguage.German;
+        Assert.Equal("Schlie\u00DFen", UIStrings.Get("ProgressForm.Close"));
+        Assert.Equal("Abbrechen", UIStrings.Get("ProgressForm.Cancel"));
+    }
+
+    [Theory]
+    [InlineData(UILanguage.English)]
+    [InlineData(UILanguage.German)]
+    public void TheTextsFitIntoTheirPlaces_InBothLanguages(UILanguage language)
+    {
+        UIStrings.Language = language;
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x", cancelable: true, size: FormSize.Small));
+        form.Clock = () => TimeSpan.FromSeconds(3725);
+        form.ShowTime = true;
+        form.Percent = 3;
+
+        // The button, running (Cancel) and ended (Close).
+        foreach (bool ended in new[] { false, true })
+        {
+            if (ended)
+                form.Succeed();
+
+            int needed = TextRenderer.MeasureText(CancelButton(form).Text, CancelButton(form).Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+            Assert.True(needed + 16 <= CancelButton(form).Width, language + ": '" + CancelButton(form).Text + "' needs " + needed + " px of " + CancelButton(form).Width);
+        }
+
+        // The longest time line (hours, and the time that is left) is one line in the narrowest window.
+        ProgressForm timed = _host.Show(UIStyles.Forms.CreateProgressStandard("x", size: FormSize.Small));
+        timed.Clock = () => TimeSpan.FromSeconds(3725);
+        timed.ShowTime = true;
+        timed.Percent = 3;
+
+        int line = TextRenderer.MeasureText(TimeLabel(timed).Text, TimeLabel(timed).Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+        Assert.True(line <= TimeLabel(timed).Width, language + ": '" + TimeLabel(timed).Text + "' needs " + line + " px of " + TimeLabel(timed).Width);
+    }
     // ---- both themes
 
     [Theory]
