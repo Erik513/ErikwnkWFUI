@@ -43,7 +43,7 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
         public bool AllowWindowSnapAndMaximize { get; set; } = true;
 
-        /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the title bar and the version strip, <see cref="BorderColor"/> the thin edge around the window.</summary>
+        /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the title bar (and its text and buttons), <see cref="BorderColor"/> the thin edge around the window.</summary>
         public Color? TitleBarBackColor { get; set; }
 
         /// <summary>
@@ -74,9 +74,10 @@ namespace ErikwnkWFUI.Forms
         private UIColorSet _colors;
 
         /// <summary>
-        /// A color set for the title bar (the text and the three buttons take the colors of the set; the symbols look as in every other window) and
-        /// the version strip: both are in the basic color of the set. The edge around the window (<see cref="BorderColor"/>) and the content stay as they are. Null (the default) is the normal
-        /// dark frame. <see cref="CreatePrimary"/> makes one that follows the accent. Not for a color set that is replaced while the window is shown.
+        /// A color set for the title bar: the bar is in the basic color of the set, its text and its three buttons take the colors of the set (the
+        /// symbols look as in every other window). The edge around the window (<see cref="BorderColor"/>), the content and the version strip (a darker
+        /// gray than the content in every window) stay as they are. Null (the default) is the normal dark title bar. <see cref="CreatePrimary"/>
+        /// makes one that follows the accent. Not for a color set that is replaced while the window is shown.
         /// </summary>
         public UIColorSet Colors
         {
@@ -89,7 +90,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        // What AppForm reads: the set (asked again each time) and the color of the title bar and the strip - for the primary look the same very dark shade of
+        // What AppForm reads: the set (asked again each time) and the color of the title bar - for the primary look the same very dark shade of
         // the accent as the primary panels, not the basic color of the set.
         internal Func<UIColorSet> ColorSource { get; set; }
         internal Func<Color> BarSource { get; set; }

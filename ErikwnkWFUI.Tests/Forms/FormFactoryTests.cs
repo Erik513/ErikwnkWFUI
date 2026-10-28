@@ -59,14 +59,44 @@ public class FormFactoryTests : IDisposable
     }
 
     [Fact]
-    public void ASet_ColorsTheTitleBarAndTheVersionStrip_WithTheBasicColor_NotTheEdgeAroundTheWindow()
+    public void ASet_ColorsTheTitleBar_WithTheBasicColor_NotTheEdgeAroundTheWindow_AndNotTheVersionStrip()
     {
         AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("Settings", UIStyles.Colors.Sets.Yellow));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundMedium.ToArgb(), form.ContentPanel.BackColor.ToArgb());
+    }
+
+    [Fact]
+    public void TheVersionStrip_IsADarkerGrayThanTheContent_InAllThreeKinds_AndNotTheColorOfTheTitleBar()
+    {
+        AppForm[] forms =
+        {
+            Own(UIStyles.Forms.CreateSettingsStandard("Standard")),
+            Own(UIStyles.Forms.CreateSettingsPrimary("Primary")),
+            Own(UIStyles.Forms.CreateSettingsStandard("Yellow", UIStyles.Colors.Sets.Yellow)),
+        };
+
+        foreach (AppForm form in forms)
+        {
+            Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+            Assert.NotEqual(form.ContentPanel.BackColor.ToArgb(), form.VersionStrip.BackColor.ToArgb());
+            Assert.True(form.VersionStrip.BackColor.GetBrightness() < form.ContentPanel.BackColor.GetBrightness());
+        }
+
+        Assert.NotEqual(forms[2].TitleBar.BackColor.ToArgb(), forms[2].VersionStrip!.BackColor.ToArgb());
+        Assert.NotEqual(forms[1].TitleBar.BackColor.ToArgb(), forms[1].VersionStrip!.BackColor.ToArgb());
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        foreach (AppForm form in forms)
+        {
+            Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+            Assert.True(form.VersionStrip.BackColor.GetBrightness() < form.ContentPanel.BackColor.GetBrightness());
+        }
     }
 
     [Fact]
@@ -99,7 +129,7 @@ public class FormFactoryTests : IDisposable
         AppForm form = Own(UIStyles.Forms.CreateSettingsPrimary("Primary"));
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
-        Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
         Color before = form.TitleBar.BackColor;
 
         UIColors.SetAccent(Color.OrangeRed);
@@ -107,7 +137,7 @@ public class FormFactoryTests : IDisposable
 
         Assert.NotEqual(before.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
-        Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
     }
 

@@ -250,6 +250,16 @@ public class AppFormEdgeCaseTests : IDisposable
 
         Assert.Equal("v1.2.3", form.VersionLabel.Text);
         Assert.True(update.Left < form.VersionLabel.Left);
+
+        // Whatever is in the strip stands in the middle of its height: the text, a 20 px button, and a 24 px one.
+        Button symbolButton = new Button { Size = new Size(22, 20), Margin = new Padding(6, 0, 0, 9) };
+        form.VersionStrip.Controls.Add(symbolButton);
+        form.VersionStrip.PerformLayout();
+        TestPictures.Pump(100);
+
+        foreach (Control inStrip in form.VersionStrip.Controls.Cast<Control>())
+            Assert.Equal((form.VersionStrip.ClientSize.Height - inStrip.Height) / 2, inStrip.Top);
+
         Assert.Null(Show(UIStyles.Forms.CreateStandard("Plain")).VersionStrip);
 
         options.VersionText = "";

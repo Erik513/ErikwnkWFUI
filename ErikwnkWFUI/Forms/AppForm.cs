@@ -235,7 +235,12 @@ namespace ErikwnkWFUI.Forms
                     // FlowLayoutPanel's default gray SystemColors.Control
                     // instead of matching the rest of the window.
                 };
-                ThemeWatcher.FollowBackColor(_versionStrip, bar);
+                // Not the color of the title bar: a darker gray than the content, the same in every window.
+                ThemeWatcher.FollowBackColor(_versionStrip, () => UIColors.BackgroundDark);
+
+                // Whatever is put into the strip (the update button, say) stands in the middle of its height, as the version text does.
+                _versionStrip.Layout += (sender, e) => CenterVersionStripControls();
+                _versionStrip.ControlAdded += (sender, e) => e.Control.SizeChanged += (changed, args) => QueueVersionStripLayout();
                 _versionStrip.Controls.Add(_versionLabel);
             }
 
@@ -318,6 +323,39 @@ namespace ErikwnkWFUI.Forms
             public NativePoint MaxPosition;
             public NativePoint MinTrackSize;
             public NativePoint MaxTrackSize;
+        }
+
+        // A control that changes its size while the strip is laid out (the text getting its font) asks for the layout again afterwards: a margin that
+        // changes in the middle of a layout does not start one.
+        private bool _versionStripLayoutQueued;
+
+        private void QueueVersionStripLayout()
+        {
+            if (_versionStripLayoutQueued || !IsHandleCreated || IsDisposed)
+                return;
+
+            _versionStripLayoutQueued = true;
+
+            BeginInvoke(new Action(() =>
+            {
+                _versionStripLayoutQueued = false;
+
+                if (!IsDisposed)
+                    _versionStrip.PerformLayout();
+            }));
+        }
+
+        // A flow panel puts its controls at the top: the margins are worked out so that each one is centered in the strip (the layout is
+        // started again only when one of them changes).
+        private void CenterVersionStripControls()
+        {
+            foreach (Control control in _versionStrip.Controls)
+            {
+                int top = Math.Max(0, (_versionStrip.ClientSize.Height - control.Height) / 2);
+
+                if (control.Margin.Top != top || control.Margin.Bottom != 0)
+                    control.Margin = new Padding(control.Margin.Left, top, control.Margin.Right, 0);
+            }
         }
 
         protected override void WndProc(ref Message m)

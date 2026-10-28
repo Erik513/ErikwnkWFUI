@@ -33,7 +33,15 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("VersionStrip: what is added stands left of the text", CreateFormButton(() =>
             {
                 AppForm form = UIStyles.Forms.CreateSettingsStandard("VersionStrip");
-                form.VersionStrip.Controls.Add(UIStyles.Buttons.CreatePrimary("Update", size: new Size(80, 20)));
+
+                // The update button of the library (AppUpdater.CreateUpdateAvailableButton): always the update symbol, never a text.
+                Button update = UIStyles.Buttons.CreateSymbol(
+                    UIStyles.Symbols.Update,
+                    "An update is available",
+                    new Size(22, 20),
+                    UIStyles.Colors.Sets.Green);
+                update.Margin = new Padding(6, 2, 0, 2);
+                form.VersionStrip.Controls.Add(update);
 
                 return form;
             }));
