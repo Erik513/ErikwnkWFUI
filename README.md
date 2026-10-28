@@ -378,14 +378,26 @@ independent of the two calls above.
 ## Localization
 
 ```csharp
-UIStyles.Language = UILanguage.German;
+UIStyles.Language = UILanguage.German;   // or UIStyles.SetLanguage(AppLanguage.German), or AppLocalization.Language = AppLanguage.German
 ```
 
-Switches the text ErikwnkWFUI's own built-in dialogs ship (title bar
-tooltips, the update-available prompt, message box buttons, ...) between
-English (default) and German. Same "set before building UI" caveat as
-theming - already-built dialogs won't relabel themselves, except the title
-bar's tooltips, which do update live.
+There is ONE language setting. It switches the text ErikwnkWFUI's own built-in dialogs ship (title bar tooltips, the update-available prompt,
+message box buttons, the options window ...) between English (default) and German, and it is the same setting as `AppLocalization.Language` of
+`ErikwnkCore` (the texts of your own program): set either one and the other follows. `UIStyles.LanguageChanged` is raised when it changes,
+whichever way it was set.
+
+Your own texts follow the language when you give them as a function instead of a fixed text:
+
+```csharp
+AppLocalization.Register(AppLanguage.German, new Dictionary<string, string> { ["deck.mode"] = "Deck-Modus" });   // once, at startup
+
+table.AddRow(() => AppLocalization.Get("deck.mode"), combo);            // a row of a property table (also AddSection(() => ...))
+UIStyles.Localize(label, () => AppLocalization.Get("deck.mode"));       // any control: its Text now and at every change
+UIStyles.Localize(button, b => b.AccessibleName = Loc.S("deck.tip"));   // anything else it shows
+```
+
+The function can ask any source (`AppLocalization.Get`, a class of your own, ...). The table and the control listen themselves and stop when they
+are disposed. A text that is given as a fixed string stays as it is.
 
 ## Icons/logo
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using ErikwnkCore;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Localization
@@ -17,6 +18,25 @@ namespace ErikwnkWFUI.Localization
     {
         private static UILanguage _language = UILanguage.English;
 
+        // The language of the library and the language of the program's own texts (AppLocalization) are ONE setting: whichever is set, the
+        // other follows, so nobody has to remember to set both. The library adopts what AppLocalization already has when it is first used.
+        static UIStrings()
+        {
+            _language = ToUILanguage(AppLocalization.Language);
+            AppLocalization.LanguageChanged += (sender, e) =>
+            {
+                UILanguage language = ToUILanguage(AppLocalization.Language);
+
+                if (_language != language)
+                    Language = language;
+            };
+        }
+
+        private static UILanguage ToUILanguage(AppLanguage language)
+        {
+            return language == AppLanguage.German ? UILanguage.German : UILanguage.English;
+        }
+
         public static UILanguage Language
         {
             get { return _language; }
@@ -26,6 +46,7 @@ namespace ErikwnkWFUI.Localization
                     return;
 
                 _language = value;
+                AppLocalization.Language = value == UILanguage.German ? AppLanguage.German : AppLanguage.English;
                 LanguageChanged?.Invoke(null, EventArgs.Empty);
             }
         }

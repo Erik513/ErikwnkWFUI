@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkCore;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
 using Button = System.Windows.Forms.Button;
@@ -25,9 +26,34 @@ namespace ErikwnkWFUI.Showcase
         private ToggleSwitch _optionButtons;
         private ToggleSwitch _optionOwnRows;
 
+        // The program's own texts (here: the own rows of the options window) are registered once, in one place, for both languages; the label
+        // of a row is given as a function, so it follows the language that the options window (or anything else) sets.
+        private static bool _optionTextsRegistered;
+
+        private static void RegisterOptionTexts()
+        {
+            if (_optionTextsRegistered)
+                return;
+
+            AppLocalization.Register(AppLanguage.English, new Dictionary<string, string>
+            {
+                ["showcase.ownRows"] = "Own rows",
+                ["showcase.name"] = "Name",
+                ["showcase.notifications"] = "Notifications"
+            });
+            AppLocalization.Register(AppLanguage.German, new Dictionary<string, string>
+            {
+                ["showcase.ownRows"] = "Eigene Zeilen",
+                ["showcase.name"] = "Name",
+                ["showcase.notifications"] = "Benachrichtigungen"
+            });
+            _optionTextsRegistered = true;
+        }
+
         private void AddOptionsFormSection(PropertyTable table)
         {
             CloseOptionsForm();
+            RegisterOptionTexts();
 
             table.AddSection("OptionsForm: a settings window with ready-made options (one window, it is reopened in place)");
 
@@ -121,9 +147,10 @@ namespace ErikwnkWFUI.Showcase
 
             if (_optionOwnRows.Checked)
             {
-                form.PropertyTable.AddSection("Own rows");
-                form.PropertyTable.AddRow("Name", UIStyles.TextBoxes.CreateStandard("My app"));
-                form.PropertyTable.AddRow("Notifications", UIStyles.ToggleSwitches.CreateStandard());
+                // Own rows with their texts as functions: they change with the language, like the rows of the library.
+                form.PropertyTable.AddSection(() => AppLocalization.Get("showcase.ownRows"));
+                form.PropertyTable.AddRow(() => AppLocalization.Get("showcase.name"), UIStyles.TextBoxes.CreateStandard("My app"));
+                form.PropertyTable.AddRow(() => AppLocalization.Get("showcase.notifications"), UIStyles.ToggleSwitches.CreateStandard());
             }
 
             // What the program does when the settings are saved: it keeps them (SelectedTheme, SelectedAccentColor, SelectedLanguage and

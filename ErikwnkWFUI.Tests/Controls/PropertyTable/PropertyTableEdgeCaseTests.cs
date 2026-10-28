@@ -135,8 +135,8 @@ public class PropertyTableEdgeCaseTests : IDisposable
     {
         PropertyTable table = _host.Show(new PropertyTable());
 
-        table.AddSection(null!);
-        table.AddRow(null!, new Button());
+        table.AddSection((string)null!);
+        table.AddRow((string)null!, new Button());
         Relayout(table);
 
         Assert.All(AllLabels(table), label => Assert.Equal("", label.Text));

@@ -1,4 +1,5 @@
-﻿using ErikwnkCore;
+﻿using System;
+using ErikwnkCore;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 
@@ -22,9 +23,8 @@ namespace ErikwnkWFUI
         /// Language used by built-in dialogs/controls that ship their own text
         /// (update prompt, title bar tooltips). Set once at startup, before any
         /// ErikwnkWFUI form is created, to switch away from the English default.
-        /// Separate from <see cref="ErikwnkCore.AppLocalization"/>.Language (a
-        /// consuming app's OWN strings) - see <see cref="SetLanguage"/> to set
-        /// both together, which is what most apps actually want.
+        /// The same setting as <see cref="ErikwnkCore.AppLocalization"/>.Language (the language of a consuming app's OWN texts): set either
+        /// one and the other follows, and <see cref="LanguageChanged"/> tells everything that is already built.
         /// </summary>
         public static UILanguage Language
         {
@@ -33,23 +33,23 @@ namespace ErikwnkWFUI
         }
 
         /// <summary>
-        /// Sets this library's own <see cref="Language"/> and a consuming
-        /// app's <see cref="ErikwnkCore.AppLocalization"/>.Language together,
-        /// from one <see cref="ErikwnkCore.AppLanguage"/> value. The two are
-        /// separate properties, in separate assemblies with separate enums,
-        /// because AppLocalization has no WinForms dependency at all and
-        /// doesn't know this library exists - but almost every app that uses
-        /// both wants them switched in lockstep, and forgetting to set one of
-        /// the two is an easy way to end up with the app's own text in one
-        /// language and ErikwnkWFUI's built-in dialogs (update prompt, title
-        /// bar tooltips) in another. Prefer this over setting
-        /// <see cref="Language"/> and AppLocalization.Language individually
-        /// unless an app specifically wants them to diverge.
+        /// Sets the language from one <see cref="ErikwnkCore.AppLanguage"/> value. It is the same as setting <see cref="Language"/> or
+        /// <see cref="ErikwnkCore.AppLocalization"/>.Language - they are one setting - and is kept for the programs that call it.
         /// </summary>
         public static void SetLanguage(AppLanguage language)
         {
             AppLocalization.Language = language;
-            Language = language == AppLanguage.German ? UILanguage.German : UILanguage.English;
+        }
+
+        /// <summary>
+        /// Raised when the language changes, whichever way it was set (<see cref="Language"/>, <see cref="SetLanguage"/>,
+        /// <see cref="ErikwnkCore.AppLocalization"/>.Language). The one event for everything that shows a text of its own: a table of an
+        /// options window and the controls bound with <see cref="Localize{T}(T, System.Func{string})"/> listen to it themselves.
+        /// </summary>
+        public static event EventHandler LanguageChanged
+        {
+            add { UIStrings.LanguageChanged += value; }
+            remove { UIStrings.LanguageChanged -= value; }
         }
     }
 }

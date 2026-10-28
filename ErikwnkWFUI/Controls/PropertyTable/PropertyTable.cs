@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
@@ -12,7 +13,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// A two-column "label: editor" table, grouped into optional labeled
     /// sections - typical use is a settings/options panel. Build it up with
-    /// <see cref="AddSection"/> and <see cref="AddRow(string,Control[])"/>;
+    /// <see cref="AddSection(string)"/> and <see cref="AddRow(string,Control[])"/>;
     /// a row can hold more than one editor control side by side via the
     /// <see cref="PropertyColumn"/>-based overloads. Both return a
     /// <see cref="PropertyRow"/> to hide or disable the row later. The width of the
@@ -34,6 +35,7 @@ namespace ErikwnkWFUI.Controls
         private readonly List<Label> _sectionLabels = new List<Label>();
         private readonly List<PropertyRow> _rows = new List<PropertyRow>();
         private int _labelWidth = DefaultLabelWidth96;
+        private bool _listensToLanguage;
         private int _dpiOverride;
 
         public PropertyTable()
@@ -144,6 +146,92 @@ namespace ErikwnkWFUI.Controls
             _layout.RowCount = 0;
         }
 
+        /// <summary>
+        /// A section whose title follows the language: <paramref name="title"/> is asked now and again each time the language changes
+        /// (<see cref="UIStyles.LanguageChanged"/>) - for a program's own texts.
+        /// </summary>
+        public PropertyRow AddSection(Func<string> title)
+        {
+            return FollowLanguage(AddSection(title == null ? "" : title()), title);
+        }
+
+        /// <summary>A row whose label follows the language (as <see cref="AddSection(Func{string})"/>), with editors that share the width.</summary>
+        public PropertyRow AddRow(Func<string> labelText, params Control[] controls)
+        {
+            return FollowLanguage(AddRow(labelText == null ? "" : labelText(), controls), labelText);
+        }
+
+        /// <inheritdoc cref="AddRow(Func{string},Control[])"/>
+        public PropertyRow AddRow(Func<string> labelText, int rowHeight, params Control[] controls)
+        {
+            return FollowLanguage(AddRow(labelText == null ? "" : labelText(), rowHeight, controls), labelText);
+        }
+
+        /// <inheritdoc cref="AddRow(Func{string},Control[])"/>
+        public PropertyRow AddRow(Func<string> labelText, params PropertyColumn[] columns)
+        {
+            return FollowLanguage(AddRow(labelText == null ? "" : labelText(), columns), labelText);
+        }
+
+        /// <inheritdoc cref="AddRow(Func{string},Control[])"/>
+        public PropertyRow AddRow(Func<string> labelText, int rowHeight, params PropertyColumn[] columns)
+        {
+            return FollowLanguage(AddRow(labelText == null ? "" : labelText(), rowHeight, columns), labelText);
+        }
+
+        // The table listens for a change of the language once it has a row with a text source, and gives each such row the new text.
+        private PropertyRow FollowLanguage(PropertyRow row, Func<string> source)
+        {
+            row.TextSource = source;
+
+            return row;
+        }
+
+        private void ListenToLanguage()
+        {
+            if (_listensToLanguage)
+                return;
+
+            _listensToLanguage = true;
+            UIStrings.LanguageChanged += OnLanguageChanged;
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (IsDisposed)
+                return;
+
+            if (InvokeRequired)
+            {
+                if (IsHandleCreated)
+                    BeginInvoke(new Action(RefreshTexts));
+
+                return;
+            }
+
+            RefreshTexts();
+        }
+
+        private void RefreshTexts()
+        {
+            if (IsDisposed)
+                return;
+
+            foreach (PropertyRow row in _rows.ToList())
+                row.RefreshText();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && _listensToLanguage)
+            {
+                _listensToLanguage = false;
+                UIStrings.LanguageChanged -= OnLanguageChanged;
+            }
+
+            base.Dispose(disposing);
+        }
+
         /// <summary>Adds a full-width section header row; the handle can hide or disable it.</summary>
         public PropertyRow AddSection(string title)
         {
@@ -228,6 +316,7 @@ namespace ErikwnkWFUI.Controls
         private PropertyRow AddHandle(PropertyRow row)
         {
             _rows.Add(row);
+            row.SourceAssigned = ListenToLanguage;
 
             return row;
         }
