@@ -355,6 +355,40 @@ public class ProgressFormTests : IDisposable
         Assert.InRange(Bar(form).Value, 0, 100);
         Assert.Equal(form.Percent, Bar(form).Value);
     }
+    // ---- found while looking for bugs
+
+    [Fact]
+    public void AFloodOfReportsFromAnotherThread_IsPutOnTheControlsInAFewRuns_AndTheLastOneWins()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        int before = form.AppliedCount;
+
+        Task.Run(() =>
+        {
+            for (int i = 1; i <= 20000; i++)
+                form.Report(i % 101, "Step " + i);
+
+            form.Report(77, "The last one.");
+        }).Wait();
+
+        TestPictures.Pump(400);
+
+        Assert.True(form.AppliedCount - before < 2000, "applied " + (form.AppliedCount - before) + " times for 20001 reports");
+        Assert.Equal(77, Bar(form).Value);
+        Assert.Equal("The last one.", StatusLabel(form).Text);
+    }
+
+    [Fact]
+    public void TheTimeThatPassed_CountsFromTheMomentTheWindowIsShown_EvenWhenTheLineIsSwitchedOnLater()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        System.Diagnostics.Stopwatch? clock = form.GetPrivateField<System.Diagnostics.Stopwatch>("_stopwatch");
+
+        Assert.True(clock!.IsRunning, "the clock runs although the line is not shown");
+
+        form.Succeed();
+        Assert.False(clock.IsRunning);
+    }
     // ---- edge cases
 
     [Fact]

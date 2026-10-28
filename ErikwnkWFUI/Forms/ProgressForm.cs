@@ -64,6 +64,8 @@ namespace ErikwnkWFUI.Forms
         private readonly bool _defaultTitle;
         private readonly object _lock = new object();
         private int _dpiOverride;
+        private int _applyQueued;
+        private bool _layoutWanted;
         private int _percent;
         private string _status;
         private bool _indeterminate;
@@ -75,6 +77,9 @@ namespace ErikwnkWFUI.Forms
 
         // The time that has passed; the seam of the tests (null: the clock of the window).
         internal Func<TimeSpan> Clock;
+
+        // How often the state was put on the controls; the tests see that a flood of reports is put on them in a few runs.
+        internal int AppliedCount;
 
         /// <summary>Raised (on the thread of the window) when the user asks to stop: the Cancel button or Escape. <see cref="IsCancelled"/> is true then.</summary>
         public event EventHandler CancelRequested;
@@ -344,7 +349,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         // The state is kept in fields and put on the controls on the thread of the window: a task may report before the window has a handle,
-        // from any thread, even when the window has been closed already.
+        // from any thread, even when the window has been closed already. Reports from another thread are put on the controls in one run
+        // for all that came in the meantime - a download that reports thousands of times a second does not flood the message queue.
         private void PushState(bool layout)
         {
             if (IsDisposed || !IsHandleCreated)
@@ -352,10 +358,18 @@ namespace ErikwnkWFUI.Forms
 
             try
             {
-                if (InvokeRequired)
-                    BeginInvoke(new Action(() => ApplyState(layout)));
-                else
+                if (!InvokeRequired)
+                {
                     ApplyState(layout);
+
+                    return;
+                }
+
+                lock (_lock)
+                    _layoutWanted |= layout;
+
+                if (Interlocked.Exchange(ref _applyQueued, 1) == 0)
+                    BeginInvoke(new Action(ApplyQueued));
             }
             catch (ObjectDisposedException)
             {
@@ -365,10 +379,28 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        private void ApplyQueued()
+        {
+            // Open for the next report first: whatever comes after the state is read below gets a run of its own.
+            Interlocked.Exchange(ref _applyQueued, 0);
+
+            bool layout;
+
+            lock (_lock)
+            {
+                layout = _layoutWanted;
+                _layoutWanted = false;
+            }
+
+            ApplyState(layout);
+        }
+
         private void ApplyState(bool layout = true)
         {
             if (IsDisposed)
                 return;
+
+            AppliedCount++;
 
             string status;
             int percent;
@@ -440,18 +472,14 @@ namespace ErikwnkWFUI.Forms
             return Clock != null ? Clock() : _stopwatch.Elapsed;
         }
 
-        // Runs while the window is shown, the time is wanted and the task has not ended.
+        // The clock of the window runs from the moment the window is shown until the task ends, whether the time is shown or not (it can be
+        // switched on later and still tells the truth); the timer that refreshes the line runs only while the line is wanted.
         private void UpdateTimerState()
         {
-            bool run = _showTime && IsHandleCreated && State == ProgressState.Running;
-
-            if (run && !_stopwatch.IsRunning)
-                _stopwatch.Start();
-
-            if (!run && _stopwatch.IsRunning && State != ProgressState.Running)
+            if (_stopwatch.IsRunning && State != ProgressState.Running)
                 _stopwatch.Stop();
 
-            _timer.Enabled = run;
+            _timer.Enabled = _showTime && IsHandleCreated && State == ProgressState.Running;
         }
 
         private void UpdateTime()
@@ -500,6 +528,10 @@ namespace ErikwnkWFUI.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+
+            if (!_stopwatch.IsRunning && State == ProgressState.Running)
+                _stopwatch.Start();
+
             ApplyState();
         }
 
