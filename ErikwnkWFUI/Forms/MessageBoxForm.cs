@@ -68,25 +68,22 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>Shows the dialog modally and returns which button was clicked (or the safe default - Cancel/No/OK - if the dialog is closed without clicking one).</summary>
         /// <param name="message">The text of the dialog.</param>
-        /// <param name="title">The title of the window.</param>
+        /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
         /// <param name="buttons">Which buttons it has.</param>
         /// <param name="icon">The icon in the title bar.</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
         /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>; in pixels as they are, not scaled to the screen.</param>
+        /// <param name="colors">A color set for the title bar (one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or a <see cref="Color"/>); null is the normal dark one.</param>
         public static DialogResult Show(
             string message,
-            string title = "Notice",
+            string title = null,
             MessageBoxButtons buttons = MessageBoxButtons.OK,
             MessageBoxIcon icon = MessageBoxIcon.Info,
             Form owner = null,
-            FormSizeOption? size = null)
+            FormSizeOption? size = null,
+            UIColorSet colors = null)
         {
-            MessageBoxForm form = new MessageBoxForm(
-                message,
-                title,
-                buttons,
-                icon,
-                size);
+            MessageBoxForm form = UIStyles.Forms.CreateMessageStandard(message, title, buttons, icon, colors, size);
 
             try
             {
@@ -137,10 +134,21 @@ namespace ErikwnkWFUI.Forms
             MessageBoxButtons buttons,
             MessageBoxIcon icon,
             FormSizeOption? size = null)
-            : base(FormOptions.CreateDialog(
-                title: title,
-                titleTextAlign: ContentAlignment.MiddleLeft,
-                icon: GetTitleBarIcon(icon)))
+            : this(
+                FormOptions.CreateDialog(
+                    title: title ?? UIStrings.Get("MessageBox.Title"),
+                    titleTextAlign: ContentAlignment.MiddleLeft,
+                    icon: GetTitleBarIcon(icon)),
+                message,
+                buttons,
+                size)
+        {
+        }
+
+        // The window with the options it is given (a dialog made by FormOptions, with the color set or the accent of the title bar): what
+        // UIStyles.Forms.CreateMessageStandard / CreateMessagePrimary make.
+        internal MessageBoxForm(FormOptions options, string message, MessageBoxButtons buttons, FormSizeOption? size)
+            : base(options)
         {
             _message = message ?? "";
             _buttons = buttons;
@@ -169,6 +177,9 @@ namespace ErikwnkWFUI.Forms
             EnsureDialogResult();
             base.OnFormClosing(e);
         }
+
+        // Whether one of the buttons ended the dialog (and not the close button, Alt+F4 or Close()).
+        private bool _buttonClicked;
 
         private MessageBoxPreset GetPreset()
         {
@@ -376,6 +387,7 @@ namespace ErikwnkWFUI.Forms
             if (button == null)
                 return;
 
+            _buttonClicked = true;
             DialogResult = button.DialogResult;
             Close();
         }
@@ -420,9 +432,11 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        // A dialog that is closed without a button has the result that is safe for its buttons - not the Cancel that a closed dialog has by
+        // itself, which a box with Yes and No does not even have: No for Yes/No, Cancel where there is a Cancel button, OK for OK.
         private void EnsureDialogResult()
         {
-            if (DialogResult != DialogResult.None)
+            if (_buttonClicked)
                 return;
 
             DialogResult = GetDefaultDialogResult();
@@ -442,6 +456,12 @@ namespace ErikwnkWFUI.Forms
                 default:
                     return DialogResult.OK;
             }
+        }
+
+        // (For the factories, which make the options of the window before the window.)
+        internal static Image GetTitleBarIconOf(MessageBoxIcon icon)
+        {
+            return GetTitleBarIcon(icon);
         }
 
         private static Image GetTitleBarIcon(MessageBoxIcon icon)

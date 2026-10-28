@@ -116,6 +116,7 @@ namespace ErikwnkWFUI.Localization
             ["Update.DownloadFailedMessage"] = "The update download failed. Opening the release page instead.",
             ["Update.AvailableTooltip"] = "A new version is available - click to update",
 
+            ["MessageBox.Title"] = "Notice",
             ["MessageBox.Cancel"] = "Cancel",
 
             ["TabControl.AddTab"] = "Add tab",
@@ -237,6 +238,7 @@ namespace ErikwnkWFUI.Localization
             ["Update.DownloadFailedMessage"] = "Der Update-Download ist fehlgeschlagen. Die Release-Seite wird stattdessen geöffnet.",
             ["Update.AvailableTooltip"] = "Eine neue Version ist verfügbar - zum Aktualisieren klicken",
 
+            ["MessageBox.Title"] = "Hinweis",
             ["MessageBox.Cancel"] = "Abbrechen",
 
             ["TabControl.AddTab"] = "Tab hinzufügen",

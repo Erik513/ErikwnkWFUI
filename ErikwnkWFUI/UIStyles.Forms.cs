@@ -116,6 +116,43 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// A message box (<see cref="ErikwnkWFUI.Forms.MessageBoxForm"/>): a dialog with a text, an icon in the title bar and buttons. Show it
+            /// with <c>ShowDialog</c> and read <c>DialogResult</c>; <c>MessageBox.Show</c> does all of it in one call.
+            /// </summary>
+            /// <param name="message">The text of the dialog.</param>
+            /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
+            /// <param name="buttons">Which buttons it has.</param>
+            /// <param name="icon">The icon in the title bar.</param>
+            /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
+            /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
+            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessageStandard(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateMessage(MessageOptions(title, icon, false), colors, message, buttons, size);
+            }
+
+            /// <summary>A message box with the title bar in a very dark shade of the accent.</summary>
+            /// <param name="message">The text of the dialog.</param>
+            /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
+            /// <param name="buttons">Which buttons it has.</param>
+            /// <param name="icon">The icon in the title bar.</param>
+            /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
+            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessagePrimary(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateMessage(MessageOptions(title, icon, true), null, message, buttons, size);
+            }
+
+            // The options of a message box: a dialog (the Primary one with the accent in the title bar), the icon of the kind of message in the bar.
+            private static ErikwnkWFUI.Forms.FormOptions MessageOptions(string title, ErikwnkWFUI.Forms.MessageBoxIcon icon, bool primary)
+            {
+                string text = title ?? Localization.UIStrings.Get("MessageBox.Title");
+                System.Drawing.Image barIcon = ErikwnkWFUI.Forms.MessageBoxForm.GetTitleBarIconOf(icon);
+
+                return primary
+                    ? ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(text, ContentAlignment.MiddleLeft, barIcon)
+                    : ErikwnkWFUI.Forms.FormOptions.CreateDialog(text, ContentAlignment.MiddleLeft, null, barIcon);
+            }
+
+            /// <summary>
             /// A progress dialog (<see cref="ErikwnkWFUI.Forms.ProgressForm"/>): a text and a progress bar, which the task fills with <c>Report</c> (from
             /// any thread). The user cannot close it; the program does, when the task is done. <see cref="ErikwnkWFUI.Forms.ProgressBox.Run"/> does all
             /// of it in one call.
