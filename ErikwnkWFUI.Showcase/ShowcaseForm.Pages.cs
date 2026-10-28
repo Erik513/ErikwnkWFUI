@@ -53,8 +53,8 @@ namespace ErikwnkWFUI.Showcase
                  AddDataGridSection),
 
                 ("Forms",
-                 "The window of the library with its own title bar (AppForm), made by UIStyles.Forms: CreateStandard is a resizable window (it has a least size), CreateDialogStandard a fixed-size one with only the close button that Escape closes, CreateSettingsStandard a dialog with the version of the program in a strip at the bottom (VersionStrip). Standard has the usual dark title bar, Primary a very dark shade of the accent, and with colors: a color set (see the Buttons tab) the title bar takes its color; the version strip is a darker gray than the content in every window. The three buttons of the title bar take the colors of the set (the symbols look as in every window), and the thin edge around the window is black in all of them (BorderColor sets another color). There is one sample window: open it, then change the kind, the colors and the properties of FormOptions in the rows below - the window closes and opens again in the same place with the new options, and says in itself what the change does. Right-click its title bar or press Alt+Space for the system menu; a maximized window keeps clear of the taskbar. FormTitle sets the title of the window and of the bar at once. The last part is the OptionsForm: a settings window around a property table with ready-made options (AddOption: theme, accent color, language, always on top - applied as they are chosen, taken back by Cancel; start with Windows - written on Save; a reset button), Save and Cancel (ShowButtons), and the table as a card in the middle; open it and try it, it works on this window. Saving also writes the appearance (theme, accent color, language) when the program called UIStyles.RememberAppearance() at startup; UIAppearance keeps it in the program's own settings instead. The size row sets one of the three sizes of the kind of window (FormSize) or an own Size. The last part is the InputBox: a small modal dialog with a prompt, one text box (password: with an eye to show it) and OK / Cancel, made by UIStyles.Forms.CreateInputStandard / CreateInputPrimary (colors: a color set for the title bar) or in one line by InputBox.Show, which returns the text or null when cancelled. Hint is a gray note under the prompt, ErrorText a red line over the box that goes when the user types, Validator checks the text when OK is clicked (a message keeps the box open and selects the text), TrimValue cuts the spaces at the ends, MaxLength limits the box, AllowEmpty lets OK take an empty text. The switches say what the box has; the line Result shows what came back.",
-                 AddFormsSection),
+                 "Every kind of window of the library has a page of its own: turn the pages with the arrows (or the keys) above. Each page has the same build - a text on top, the sample first, the settings below.",
+                 null),
 
                 ("InfoPopupForm",
                  "A small popup with extra info next to a control or the mouse. Its content is blocks of an optional header and an optional text; the text is white, or black on a light background, and every header and text can have its own color. The popup is sized to its content (long text wraps) or keeps one fixed size for a single short value that changes while it is shown (the percentage over a slider), and is opaque or slightly, clearly (the default) or strongly transparent. It hides itself after a short, medium (the default) or long time; every show call starts the time again, so it stays while the mouse moves over its control. For a hover popup the wait before it appears is none, short, medium (the default) or long. Standard is neutral gray, Primary follows the accent color, and with colors: a color set (see the Buttons tab) any other color does. AttachTo makes it the tooltip of any control (one popup serves many controls). Press the buttons to see the popups; the last four show the places: next to the control, at the mouse (move over the button), centered above, and at the mouse after a delay.",
@@ -131,9 +131,12 @@ namespace ErikwnkWFUI.Showcase
 
             foreach ((string title, string description, Action<PropertyTable> fill) in GetPages())
             {
+                // The Forms tab is not one table but a book of pages, one for each kind of window.
                 TabPage page = new TabPage(title)
                 {
-                    Tag = new PageInfo { Description = description, Fill = fill }
+                    Tag = title == "Forms"
+                        ? new PageInfo { Custom = () => CreateFormsPage() }
+                        : new PageInfo { Description = description, Fill = fill }
                 };
 
                 tabs.TabPages.Add(page);
