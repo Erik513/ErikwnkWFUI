@@ -22,7 +22,7 @@ public class TextBoxToolTipTests : IDisposable
 
     private static string ToolTipOf(TextBox box)
     {
-        return box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box) ?? string.Empty;
+        return ((TextField)box).ToolTipTextNow;
     }
 
     [Fact]
@@ -63,5 +63,62 @@ public class TextBoxToolTipTests : IDisposable
         TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword(LongText, ""), 150);
 
         Assert.Equal(string.Empty, ToolTipOf(box));
+    }
+
+    // ---- the tooltip of the cut text is there before the mouse is: its text is always the text, Popup decides
+
+    private static ToolTip CutToolTip(TextBox box)
+    {
+        return box.GetPrivateField<ToolTip>("_cutToolTip")!;
+    }
+
+    private static bool PopupIsCancelled(TextBox box)
+    {
+        PopupEventArgs e = new PopupEventArgs(box, box, false, new Size(100, 20));
+        ((TextField)box).RaiseCutToolTipPopup(e);
+
+        return e.Cancel;
+    }
+
+    [Fact]
+    public void TheTextOfTheTooltip_IsAlwaysTheTextOfTheBox_ThePopupDecidesWhetherItShows()
+    {
+        TextBox cut = _host.Show(UIStyles.TextBoxes.CreateStandard(LongText), 150);
+        TextBox fits = _host.Show(UIStyles.TextBoxes.CreateStandard("short"), 150);
+
+        Assert.Equal(LongText, CutToolTip(cut).GetToolTip(cut));
+        Assert.Equal("short", CutToolTip(fits).GetToolTip(fits));
+        Assert.False(PopupIsCancelled(cut), "a cut text pops up");
+        Assert.True(PopupIsCancelled(fits), "a text that fits does not");
+    }
+
+    [Fact]
+    public void TheTextOfTheTooltip_FollowsTheTextOfTheBox_AndIsNoneWhereItIsNeverShown()
+    {
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("one"), 150);
+        box.Text = LongText;
+        Assert.Equal(LongText, CutToolTip(box).GetToolTip(box));
+
+        ((TextField)box).ToolTipWhenCut = false;
+        Assert.Equal(string.Empty, CutToolTip(box).GetToolTip(box));
+
+        TextBox password = _host.Show(UIStyles.TextBoxes.CreatePassword(LongText, ""), 150);
+        Assert.Equal(string.Empty, CutToolTip(password).GetToolTip(password));
+    }
+
+    [Fact]
+    public void OverTheButtonInTheBox_TheTooltipOfTheCutTextDoesNotPopUp_ThatOfTheButtonDoes()
+    {
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateLockable(LongText), 150);
+        System.Reflection.FieldInfo hot = typeof(TextField).GetField("_innerHot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+
+        Assert.False(PopupIsCancelled(box), "over the text");
+
+        hot.SetValue(box, true);
+        Assert.True(PopupIsCancelled(box), "over the pencil: the tooltip of the pencil speaks");
+        Assert.Equal(box.GetPrivateField<string>("_innerToolTip"), ((TextField)box).ToolTipTextNow);
+
+        hot.SetValue(box, false);
+        Assert.False(PopupIsCancelled(box));
     }
 }

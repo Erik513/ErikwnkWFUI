@@ -54,9 +54,8 @@ public class TextBoxInnerButtonTests : IDisposable
 
     private static string ToolTipOf(TextBox box)
     {
-        ToolTip tip = box.GetPrivateField<ToolTip>("_toolTip")!;
-
-        return tip.GetToolTip(box) ?? string.Empty;
+        // What the tooltips say now (the button in the box, or the cut text).
+        return ((ErikwnkWFUI.Controls.TextField)box).ToolTipTextNow;
     }
 
     // ---- the box that is locked ----

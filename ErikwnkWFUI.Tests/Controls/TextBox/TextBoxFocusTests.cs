@@ -134,4 +134,60 @@ public class TextBoxFocusTests : IDisposable
         Assert.False(box.Focused);
         Assert.False(box.IsLocked, "losing the focus is not accepting or cancelling");
     }
+
+    // ---- the system paints a box directly after a click, a key or a change of the focus: the symbol in the box is put back
+
+    private static bool GlyphInk(TextBox box)
+    {
+        using Bitmap picture = TestPictures.Draw(box);
+
+        for (int x = box.Width - 22; x < box.Width - 3; x++)
+            for (int y = 5; y < box.Height - 5; y++)
+                if (picture.GetPixel(x, y).ToArgb() != box.BackColor.ToArgb())
+                    return true;
+
+        return false;
+    }
+
+    [Fact]
+    public void TheMessagesThatMakeTheSystemPaintDirectly_AskForAPaintOfTheRightEndOfTheBox()
+    {
+        foreach (int message in new[] { 0x0007, 0x0008, 0x000C, 0x0100, 0x0102, 0x0201, 0x0202, 0x0203, 0x00B1, 0x0300, 0x0301, 0x0302, 0x0303, 0x0304 })
+            Assert.True(Paints(message, IntPtr.Zero), "message " + message.ToString("X"));
+
+        Assert.False(Paints(0x0200, IntPtr.Zero), "a mouse move without a button paints nothing");
+        Assert.True(Paints(0x0200, (IntPtr)1), "a mouse move with the left button down drags the selection");
+        Assert.False(Paints(0x0020, IntPtr.Zero), "WM_SETCURSOR is not one");
+    }
+
+    private static bool Paints(int message, IntPtr wParam)
+    {
+        System.Reflection.MethodInfo method = typeof(ErikwnkWFUI.Controls.TextField).GetMethod("PaintsDirectly", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!;
+
+        return (bool)method.Invoke(null, new object[] { Message.Create(IntPtr.Zero, message, wParam, IntPtr.Zero) })!;
+    }
+
+    [Fact]
+    public void ThePencilAndTheEye_AreStillThere_AfterAClickInTheBoxThatHasTheFocus()
+    {
+        foreach (TextBox box in new TextBox[] { UIStyles.TextBoxes.CreatePassword("secret", ""), UIStyles.TextBoxes.CreateLockable("Playlist", "", false) })
+        {
+            var shown = Show(box);
+            Assert.True(box.Focused);
+            Assert.True(GlyphInk(box), box.GetType().Name + ": the symbol is there to begin with");
+
+            // A click inside the box (not on the symbol), the way the mouse sends it.
+            IntPtr position = (IntPtr)((8 << 16) | 20);
+            PostMessage(box.Handle, 0x0201, (IntPtr)1, position);
+            PostMessage(box.Handle, 0x0202, IntPtr.Zero, position);
+
+            for (int i = 0; i < 8; i++)
+            {
+                Application.DoEvents();
+                Thread.Sleep(15);
+            }
+
+            Assert.True(GlyphInk(box), box.GetType().Name + ": the symbol is gone after the click");
+        }
+    }
 }

@@ -36,6 +36,8 @@ namespace ErikwnkWFUI.Controls
                 () => InputField.GetTextTopInset(this));
 
             _toolTip = UIToolTipFactory.CreateHoverToolTip(this);
+            _cutToolTip = UIToolTipFactory.CreateHoverToolTip(this);
+            _cutToolTip.Popup += OnCutToolTipPopup;
         }
 
         /// <summary>
@@ -135,6 +137,12 @@ namespace ErikwnkWFUI.Controls
                     _toolTip = null;
                 }
 
+                if (_cutToolTip != null)
+                {
+                    _cutToolTip.Dispose();
+                    _cutToolTip = null;
+                }
+
                 if (_innerFont != null)
                 {
                     _innerFont.Dispose();
@@ -166,6 +174,9 @@ namespace ErikwnkWFUI.Controls
 
             if (m.Msg == WM_MOUSEMOVE)
                 UpdateInnerHot(GetPoint(m.LParam));
+
+            if (PaintsDirectly(m))
+                InvalidateOver();
 
             // (Only a paint message matters - and the question below asks the window for its text length, so it must not be asked for every
             // message. Most boxes have nothing to paint over: no window context is asked for then.)

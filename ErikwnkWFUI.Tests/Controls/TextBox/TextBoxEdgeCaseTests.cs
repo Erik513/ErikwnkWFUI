@@ -281,13 +281,13 @@ public class TextBoxEdgeCaseTests : IDisposable
     public void ABiggerFont_KeepsTheButtonAtTheRight_AndTheTooltipIsWorkedOutAgain()
     {
         TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard("a text that fits nicely in the box"), 260);
-        string? tip = box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box);
+        string? tip = ((ErikwnkWFUI.Controls.TextField)box).ToolTipTextNow;
         Assert.Equal(string.Empty, tip);
 
         box.Font = new Font("Segoe UI", 18);
         Application.DoEvents();
 
-        Assert.Equal("a text that fits nicely in the box", box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box));
+        Assert.Equal("a text that fits nicely in the box", ((ErikwnkWFUI.Controls.TextField)box).ToolTipTextNow);
     }
 
     [Fact]
@@ -354,7 +354,7 @@ public class TextBoxEdgeCaseTests : IDisposable
 
         box.Text = text;
 
-        Assert.Equal(text, box.GetPrivateField<ToolTip>("_toolTip")!.GetToolTip(box));
+        Assert.Equal(text, ((ErikwnkWFUI.Controls.TextField)box).ToolTipTextNow);
     }
 
     [Fact]

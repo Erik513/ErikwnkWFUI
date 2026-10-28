@@ -72,6 +72,35 @@ namespace ErikwnkWFUI.Controls
             get { return !Multiline && BorderStyle != BorderStyle.None && TextLength > 0; }
         }
 
+        // The system does not paint a single line only in answer to WM_PAINT: after a click, a key, a change of the selection or of the focus it
+        // paints the line (and the background around it) at once, over the symbol in the box and over the edge at the right. Those messages ask
+        // for a paint of the right end of the box, which paints what belongs there again.
+        private static readonly int[] DirectPaintMessages =
+        {
+            0x0007, 0x0008, 0x000C, 0x0100, 0x0102, 0x0201, 0x0202, 0x0203, 0x00B1, 0x0300, 0x0301, 0x0302, 0x0303, 0x0304
+        };
+
+        private static bool PaintsDirectly(Message m)
+        {
+            // (WM_SETFOCUS, WM_KILLFOCUS, WM_SETTEXT, WM_KEYDOWN, WM_CHAR, the left button down, up and double click, EM_SETSEL, and cut, copy,
+            // paste, clear, undo; a mouse move only while the left button is down: the selection is dragged.)
+            if (m.Msg == 0x0200)
+                return ((long)m.WParam & 0x0001) != 0;
+
+            return Array.IndexOf(DirectPaintMessages, m.Msg) >= 0;
+        }
+
+        private void InvalidateOver()
+        {
+            if (!IsHandleCreated || (_innerGlyph == null && !HasRightEdge))
+                return;
+
+            int width = Math.Max(InnerWidth, Dpi.Scale(this, RightEdge96));
+            Rectangle client = ClientRectangle;
+
+            Invalidate(new Rectangle(client.Right - width, client.Top, width, client.Height));
+        }
+
         private void PaintRightEdge(Graphics graphics)
         {
             if (!HasRightEdge)
