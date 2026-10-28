@@ -130,7 +130,7 @@ public class FormBehaviorTests
     {
         using MessageForm window = new MessageForm(FormOptions.CreateStandard("Window"));
         using MessageForm dialog = new MessageForm(FormOptions.CreateDialog("Dialog"));
-        using MessageForm primary = new MessageForm(FormOptions.CreatePrimarySettings("Settings"));
+        using MessageForm primary = new MessageForm(FormOptions.CreateSettingsPrimary("Settings"));
 
         Assert.NotEqual(0, window.Style & WsMinimizeBox);
         Assert.Equal(0, dialog.Style & WsMinimizeBox);

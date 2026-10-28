@@ -21,7 +21,7 @@ together.
 using ErikwnkWFUI;
 using ErikwnkWFUI.Forms;
 
-// A resizable window with ErikwnkWFUI's own title bar (UIStyles.Forms.CreateDialog and CreateSettings make dialogs).
+// A resizable window with ErikwnkWFUI's own title bar (UIStyles.Forms.CreateDialogStandard and CreateSettingsStandard make dialogs).
 using (var form = UIStyles.Forms.CreateStandard("My App"))
 {
     var button = UIStyles.Buttons.CreatePrimary("Click me");

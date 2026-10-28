@@ -45,7 +45,7 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateDialog(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            public static ErikwnkWFUI.Forms.AppForm CreateDialogStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
             {
                 return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title, titleTextAlign, null, icon, windowIcon), colors);
             }
@@ -55,18 +55,18 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreatePrimaryDialog(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            public static ErikwnkWFUI.Forms.AppForm CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreatePrimaryDialog(title, titleTextAlign, icon, windowIcon), null);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title, titleTextAlign, icon, windowIcon), null);
             }
 
-            /// <summary>A dialog like <see cref="CreateDialog"/> with the version of the program (the entry assembly) in a strip at the bottom.</summary>
+            /// <summary>A dialog like <see cref="CreateDialogStandard"/> with the version of the program (the entry assembly) in a strip at the bottom.</summary>
             /// <param name="title">The title of the window.</param>
             /// <param name="colors">A color set for the title bar and the version strip; null (the default) is the normal dark one.</param>
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateSettings(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+            public static ErikwnkWFUI.Forms.AppForm CreateSettingsStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
             {
                 return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title, titleTextAlign, null, icon, windowIcon), colors);
             }
@@ -76,9 +76,9 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreatePrimarySettings(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+            public static ErikwnkWFUI.Forms.AppForm CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreatePrimarySettings(title, titleTextAlign, icon, windowIcon), null);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title, titleTextAlign, icon, windowIcon), null);
             }
         }
     }

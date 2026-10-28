@@ -42,8 +42,8 @@ public class FormFactoryTests : IDisposable
     public void TheThreeKinds_AreAResizableWindow_ADialogWithOnlyClose_AndASettingsWindowWithAVersion()
     {
         AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialog("Dialog"));
-        AppForm settings = Own(UIStyles.Forms.CreateSettings("Settings"));
+        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
+        AppForm settings = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
 
         Assert.Equal("Window", window.FormTitle);
         Assert.True(window.TitleBar.ShowMinimizeButton && window.TitleBar.ShowMaximizeButton && window.TitleBar.ShowCloseButton);
@@ -61,7 +61,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ASet_ColorsTheTitleBarAndTheVersionStrip_WithTheBasicColor_NotTheEdgeAroundTheWindow()
     {
-        AppForm form = Own(UIStyles.Forms.CreateSettings("Settings", UIStyles.Colors.Sets.Yellow));
+        AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("Settings", UIStyles.Colors.Sets.Yellow));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
@@ -96,7 +96,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ThePrimaryFrame_IsAVeryDarkShadeOfTheAccent_AndFollowsAChangeOfTheAccent()
     {
-        AppForm form = Own(UIStyles.Forms.CreatePrimarySettings("Primary"));
+        AppForm form = Own(UIStyles.Forms.CreateSettingsPrimary("Primary"));
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
@@ -168,7 +168,7 @@ public class FormFactoryTests : IDisposable
     public void AResizableWindow_HasALeastSize_ADialogHasNone_AndTheOptionsOrTheWindowCanChangeIt()
     {
         AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialog("Dialog"));
+        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
         FormOptions options = FormOptions.CreateStandard("Own");
         options.MinimumSize = new Size(400, 300);
         AppForm own = Own(new AppForm(options));
@@ -315,7 +315,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ALeftAlignedTitle_AlsoKeepsClearOfTheButtons()
     {
-        AppForm form = Own(UIStyles.Forms.CreateSettings("A rather long title of a window"));
+        AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("A rather long title of a window"));
         Label title = TitleLabel(form);
 
         form.ClientSize = new Size(260, 200);
@@ -329,8 +329,8 @@ public class FormFactoryTests : IDisposable
     public void EveryWindow_OpensInTheMiddleOfTheScreen_ByDefault()
     {
         Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateStandard("a")).StartPosition);
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateDialog("b")).StartPosition);
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateSettings("c")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateDialogStandard("b")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateSettingsStandard("c")).StartPosition);
         Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(new AppForm()).StartPosition);
     }
 
@@ -343,7 +343,7 @@ public class FormFactoryTests : IDisposable
         owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
         owner.Show();
 
-        AppForm child = OwnHidden(UIStyles.Forms.CreateDialog("Child"));
+        AppForm child = OwnHidden(UIStyles.Forms.CreateDialogStandard("Child"));
         child.Size = new Size(200, 120);
         child.Show(owner);
 
@@ -360,7 +360,7 @@ public class FormFactoryTests : IDisposable
         owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
         owner.Show();
 
-        AppForm child = OwnHidden(UIStyles.Forms.CreateDialog("Child"));
+        AppForm child = OwnHidden(UIStyles.Forms.CreateDialogStandard("Child"));
         child.StartPosition = FormStartPosition.Manual;
         child.Bounds = new Rectangle(area.X + 10, area.Y + 10, 200, 120);
         child.Show(owner);
@@ -405,12 +405,12 @@ public class FormFactoryTests : IDisposable
         {
             foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
-                AppForm form = Own(UIStyles.Forms.CreateSettings("Settings", set));
+                AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("Settings", set));
                 ErikwnkWFUI.Controls.ScrollingLabel version = (ErikwnkWFUI.Controls.ScrollingLabel)form.VersionLabel;
                 Check(shortfalls, "version, " + name, version.GetTextColor(), form.VersionStrip!.BackColor, 3.0);
             }
 
-            AppForm primary = Own(UIStyles.Forms.CreatePrimarySettings("Settings"));
+            AppForm primary = Own(UIStyles.Forms.CreateSettingsPrimary("Settings"));
             Check(shortfalls, "version, primary", ((ErikwnkWFUI.Controls.ScrollingLabel)primary.VersionLabel).GetTextColor(), primary.VersionStrip!.BackColor, 3.0);
         });
     }

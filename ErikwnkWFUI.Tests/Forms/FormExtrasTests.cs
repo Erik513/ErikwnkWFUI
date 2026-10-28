@@ -69,7 +69,7 @@ public class FormExtrasTests : IDisposable
     public void TheSystemMenu_OffersWhatTheWindowCanDoNow()
     {
         AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialog("Dialog"));
+        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
 
         using (LibraryMenu normal = window.CreateSystemMenu())
             Assert.Equal(new[] { UIStrings.Get("TitleBar.Minimize"), UIStrings.Get("TitleBar.Maximize"), UIStrings.Get("TitleBar.Close") }, Texts(normal.Items));
@@ -290,14 +290,14 @@ public class FormExtrasTests : IDisposable
     public void AFixedSizeWindow_RemembersOnlyItsPosition()
     {
         Rectangle bounds = InsideTheScreen();
-        AppForm first = Own(UIStyles.Forms.CreateSettings("Settings"));
+        AppForm first = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
         first.RememberBoundsKey = "settings";
         first.StartPosition = FormStartPosition.Manual;
         first.Bounds = bounds;
         first.Show();
         first.Close();
 
-        AppForm second = Own(UIStyles.Forms.CreateSettings("Settings"));
+        AppForm second = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
         second.RememberBoundsKey = "settings";
         second.Size = new Size(333, 222);
         second.Show();

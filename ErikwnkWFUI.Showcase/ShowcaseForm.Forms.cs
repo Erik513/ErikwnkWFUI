@@ -21,18 +21,18 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("UIStyles.Forms - a dialog (fixed size, only the close button, Escape closes it)");
 
-            table.AddRow("CreateDialog", CreateFormButton(() => UIStyles.Forms.CreateDialog("CreateDialog")));
-            table.AddRow("CreatePrimaryDialog", CreateFormButton(() => UIStyles.Forms.CreatePrimaryDialog("CreatePrimaryDialog")));
-            table.AddRow("CreateDialog(colors: Yellow)", CreateFormButton(() => UIStyles.Forms.CreateDialog("colors: Yellow", UIStyles.Colors.Sets.Yellow)));
+            table.AddRow("CreateDialogStandard", CreateFormButton(() => UIStyles.Forms.CreateDialogStandard("CreateDialogStandard")));
+            table.AddRow("CreateDialogPrimary", CreateFormButton(() => UIStyles.Forms.CreateDialogPrimary("CreateDialogPrimary")));
+            table.AddRow("CreateDialogStandard(colors: Yellow)", CreateFormButton(() => UIStyles.Forms.CreateDialogStandard("colors: Yellow", UIStyles.Colors.Sets.Yellow)));
 
             table.AddSection("UIStyles.Forms - a settings window (a dialog with the version of the program)");
 
-            table.AddRow("CreateSettings", CreateFormButton(() => UIStyles.Forms.CreateSettings("CreateSettings")));
-            table.AddRow("CreatePrimarySettings", CreateFormButton(() => UIStyles.Forms.CreatePrimarySettings("CreatePrimarySettings")));
-            table.AddRow("CreateSettings(colors: Yellow)", CreateFormButton(() => UIStyles.Forms.CreateSettings("colors: Yellow", UIStyles.Colors.Sets.Yellow)));
+            table.AddRow("CreateSettingsStandard", CreateFormButton(() => UIStyles.Forms.CreateSettingsStandard("CreateSettingsStandard")));
+            table.AddRow("CreateSettingsPrimary", CreateFormButton(() => UIStyles.Forms.CreateSettingsPrimary("CreateSettingsPrimary")));
+            table.AddRow("CreateSettingsStandard(colors: Yellow)", CreateFormButton(() => UIStyles.Forms.CreateSettingsStandard("colors: Yellow", UIStyles.Colors.Sets.Yellow)));
             table.AddRow("VersionStrip: what is added stands left of the text", CreateFormButton(() =>
             {
-                AppForm form = UIStyles.Forms.CreateSettings("VersionStrip");
+                AppForm form = UIStyles.Forms.CreateSettingsStandard("VersionStrip");
                 form.VersionStrip.Controls.Add(UIStyles.Buttons.CreatePrimary("Update", size: new Size(80, 20)));
 
                 return form;

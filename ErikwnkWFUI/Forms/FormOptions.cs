@@ -169,13 +169,13 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>A fixed-size dialog with the frame in a very dark shade of the accent.</summary>
-        public static FormOptions CreatePrimaryDialog(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+        public static FormOptions CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
         {
             return MakePrimary(CreateDialog(title, titleTextAlign, null, icon, windowIcon));
         }
 
         /// <summary>A settings window (see <see cref="CreateSettings"/>) with the frame in a very dark shade of the accent.</summary>
-        public static FormOptions CreatePrimarySettings(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+        public static FormOptions CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
         {
             return MakePrimary(CreateSettings(title, titleTextAlign, null, icon, windowIcon));
         }

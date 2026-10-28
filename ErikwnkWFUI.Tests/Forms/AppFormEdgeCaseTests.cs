@@ -200,7 +200,7 @@ public class AppFormEdgeCaseTests : IDisposable
     public void ADoubleClickOnTheBar_MaximizesAWindow_ButNotADialog()
     {
         AppForm window = Show(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Show(UIStyles.Forms.CreateDialog("Dialog"));
+        AppForm dialog = Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
 
         foreach (AppForm form in new[] { window, dialog })
             form.TitleBar.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 2, 50, 10, 0));
@@ -301,7 +301,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void DisposingTwice_AndDisposingAFormThatWasNeverShown_AreFine()
     {
-        AppForm never = UIStyles.Forms.CreateSettings("Never shown");
+        AppForm never = UIStyles.Forms.CreateSettingsStandard("Never shown");
         AppForm shown = Show(UIStyles.Forms.CreateStandard("Shown"));
 
         Assert.Null(Record.Exception(() => never.Dispose()));
