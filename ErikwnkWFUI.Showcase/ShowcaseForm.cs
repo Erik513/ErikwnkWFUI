@@ -56,7 +56,6 @@ namespace ErikwnkWFUI.Showcase
         };
 
         private Panel _toolbar;
-        private Panel _popupsHost;
         private Control _pageTabs;
         private int _selectedPageIndex;
         private readonly List<InfoPopupForm> _infoPopups = new List<InfoPopupForm>();
@@ -140,8 +139,6 @@ namespace ErikwnkWFUI.Showcase
                 _toolbar.Dispose();
             if (_pageTabs != null)
                 _pageTabs.Dispose();
-            if (_popupsHost != null)
-                _popupsHost.Dispose();
 
             _toolbar = BuildToolbar();
 
@@ -151,12 +148,10 @@ namespace ErikwnkWFUI.Showcase
             _progressBarAnimationSetters.Clear();
 
             _pageTabs = BuildPages();
-            _popupsHost = BuildPopupsHost();
 
             // Docked last-added-first: the pages fill what the toolbar (top)
-            // and the popups column (right) leave over.
+            // leaves over.
             ContentPanel.Controls.Add(_pageTabs);
-            ContentPanel.Controls.Add(_popupsHost);
             ContentPanel.Controls.Add(_toolbar);
             ContentPanel.ResumeLayout();
 

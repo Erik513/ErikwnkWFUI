@@ -9,8 +9,7 @@ using Panel = System.Windows.Forms.Panel;
 namespace ErikwnkWFUI.Showcase
 {
     // The page frame: one tab per control, an explanation on top and the
-    // variants below. The popup buttons stay outside, in a column on the
-    // right.
+    // variants below.
     public partial class ShowcaseForm
     {
         // What a tab needs to build its content when it is first opened.
@@ -231,20 +230,5 @@ namespace ErikwnkWFUI.Showcase
                 strip.Height = height;
         }
 
-        // The buttons that open a popup (MessageBox, ToastForm, ...). They
-        // belong to no single control, so they stay out of the tabs.
-        private Panel BuildPopupsHost()
-        {
-            Panel host = UIStyles.Panels.CreateMedium();
-            host.Dock = DockStyle.Right;
-            host.Width = 380;
-
-            PropertyTable table = UIStyles.PropertyTables.CreateStandard();
-            table.Dock = DockStyle.Top;
-            AddPopupsSection(table);
-            host.Controls.Add(table);
-
-            return host;
-        }
     }
 }
