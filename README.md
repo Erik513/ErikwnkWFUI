@@ -399,6 +399,24 @@ UIStyles.Localize(button, b => b.AccessibleName = Loc.S("deck.tip"));   // anyth
 The function can ask any source (`AppLocalization.Get`, a class of your own, ...). The table and the control listen themselves and stop when they
 are disposed. A text that is given as a fixed string stays as it is.
 
+## Remembering the appearance
+
+The theme, the accent color and the language the user chose are kept in a `UIAppearance`. Two ways to keep it:
+
+```csharp
+// 1. The one line, for a program with no settings of its own: loads and applies the saved appearance now, and the options window writes it
+//    to %AppData%\ErikwnkWFUI\<program>\appearance.json when the user saves. Call it at startup, before the first window is made.
+UIStyles.RememberAppearance();
+UIStyles.SaveAppearance();                       // writes it at once, when the program wants to (a closing window, say)
+
+// 2. The program keeps its settings itself: UIAppearance has only plain values, so it is a member of the settings class.
+settings.Look = UIAppearance.Capture();          // what is applied now
+settings.Look.Apply();                           // at startup: theme, accent color, language (and the language of your own texts)
+settings.Look.Save(path); UIAppearance.Load(path);   // or in a file of its own (a small JSON object)
+```
+
+Nothing is written at every change: an options window takes back what was only tried, so the appearance is written when the user saves.
+
 ## Icons/logo
 
 Load your own app's icon or logo from an embedded resource rather than a

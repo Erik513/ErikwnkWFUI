@@ -155,6 +155,7 @@ namespace ErikwnkWFUI.Forms
 
                 ApplyStartWithWindows();
                 SaveClicked?.Invoke(this, EventArgs.Empty);
+                UIStyles.SaveAppearance();
                 ShowSavedToast();
                 DialogResult = DialogResult.OK;
                 Close();
