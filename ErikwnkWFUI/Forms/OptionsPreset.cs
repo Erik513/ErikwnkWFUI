@@ -13,7 +13,7 @@
         /// <summary>The accent color of the whole program (one of <c>UIAccentColors</c>).</summary>
         AccentColor,
 
-        /// <summary>The language of the library and of the program's own texts (<c>UIStyles.SetLanguage</c>): English or German.</summary>
+        /// <summary>The language of the library and of the program's own texts (<c>UIStyles.Language</c>, one setting): English or German.</summary>
         Language,
 
         /// <summary>Whether the window that owns the options window (the main window of the program) stays above all other windows.</summary>

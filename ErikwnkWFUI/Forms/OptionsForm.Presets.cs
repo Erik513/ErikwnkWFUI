@@ -32,10 +32,14 @@ namespace ErikwnkWFUI.Forms
         private Button _resetButton;
         private bool _originalStartWithWindows;
 
+        // True while the items of the choices are filled: setting them is no choice of the user and applies nothing.
+        private bool _loadingOptions;
+
+        // Whether the user chose anything, so that closing without Save has something to take back.
+        private bool _optionsChanged;
+
         // How a toast is shown (the message and the window it stands over); the seam of the tests.
         internal Action<string, Form> ShowToast = (message, owner) => UIStyles.Toasts.ShowPrimary(message, owner, icon: ToastIcon.Success);
-        private bool _loadingOptions;
-        private bool _optionsChanged;
 
         // What was applied when the window was made, to give it back when the window is closed without Save.
         private UIColorTheme _originalTheme;
@@ -159,7 +163,7 @@ namespace ErikwnkWFUI.Forms
                     row = _propertyTable.AddRow(GetOptionText(preset), _resetButton);
                     break;
 
-                default:
+                default: // OptionsPreset.AlwaysOnTop
                     _topMostSwitch = UIStyles.ToggleSwitches.CreateStandard(false);
                     row = _propertyTable.AddRow(GetOptionText(preset), _topMostSwitch);
                     _topMostSwitch.CheckedChanged += (s, e) => ApplyOption(ApplyAlwaysOnTop);
@@ -200,6 +204,7 @@ namespace ErikwnkWFUI.Forms
             apply();
         }
 
+        // The window that always-on-top acts on: the one it was applied to, else the owner, else the first other open window of the program.
         private Form ResolveTopMostTarget()
         {
             return _topMostTarget ?? Owner ?? Application.OpenForms.Cast<Form>().FirstOrDefault(form => form != this && !form.IsDisposed);
@@ -280,7 +285,7 @@ namespace ErikwnkWFUI.Forms
                 ShowToast(UIStrings.Get("OptionsForm.Saved"), Owner);
         }
 
-        // The owner is known when the window opens.
+        // The owner (the window the always-on-top switch acts on) is only known when the window is shown, not when it is made.
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);

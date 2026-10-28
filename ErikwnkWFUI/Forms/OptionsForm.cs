@@ -9,13 +9,16 @@ using Panel = System.Windows.Forms.Panel;
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A settings window built around a <see cref="PropertyTable"/>: add rows to <see cref="PropertyTable"/> (and use <see cref="AppForm.VersionStrip"/> for
-    /// an update button), then call <see cref="FitToContent"/> so the window sizes itself to what was added instead of guessing a size. It is a
-    /// settings window of <see cref="UIStyles.Forms"/> (the version of the program in a strip at the bottom) with the buttons Save and
-    /// Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a window that
-    /// applies every change at once. The table is a card in the middle of the window, and it scrolls when the rows are more than the screen has
-    /// room for (the buttons and the version strip stay). It starts with the ready-made options of the library - theme, accent color, language and
-    /// always on top (<see cref="OptionsPreset"/>; more are there - start with Windows, reset to defaults - and all are added in any selection with <see cref="AddOption"/>). Make one with
+    /// A settings window built around a <see cref="PropertyTable"/>: add your own rows to <see cref="PropertyTable"/>, then call
+    /// <see cref="FitToContent"/> so the window sizes itself to what was added instead of guessing a size. It is a settings window of
+    /// <see cref="UIStyles.Forms"/> (the version of the program in a strip at the bottom, <see cref="AppForm.VersionStrip"/>) with the buttons
+    /// Save and Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a
+    /// window that applies every change at once. The table is a card in the middle of the window, and it scrolls when the rows are more than the
+    /// screen has room for (the buttons and the version strip stay).
+    /// It starts with the ready-made options of the library - theme, accent color, language and always on top (<see cref="OptionsPreset"/>; more
+    /// are there - start with Windows, reset to defaults - and any selection is added with <see cref="AddOption"/>). They are applied as they are
+    /// chosen and taken back when the window is closed without Save. Saving also writes the appearance when the program called
+    /// <see cref="UIStyles.RememberAppearance"/>, and tells the user by a toast (<see cref="ShowToasts"/>). Make one with
     /// <c>UIStyles.Forms.CreateOptionsStandard</c> or <c>CreateOptionsPrimary</c>.
     /// </summary>
     public partial class OptionsForm : AppForm
@@ -93,7 +96,9 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Raised when the save button is clicked and every editor has accepted its value (<c>Validating</c> did not cancel), before
-        /// the dialog closes with DialogResult.OK - read whatever the option controls added to PropertyTable are currently set to here.
+        /// the dialog closes with DialogResult.OK - read whatever the option controls added to PropertyTable are currently set to here, and the
+        /// options of the library from <see cref="SelectedTheme"/>, <see cref="SelectedAccentColor"/>, <see cref="SelectedLanguage"/> ...
+        /// (the start with Windows is written before, the remembered appearance after this event).
         /// </summary>
         public event EventHandler SaveClicked;
 
@@ -164,8 +169,8 @@ namespace ErikwnkWFUI.Forms
             _buttonBar.Controls.Add(_cancelButton);
             _buttonBar.Controls.Add(_saveButton);
 
-            // Fill (the scrolling table) added before the bottom-docked bar, so the bar reliably keeps its band - see BuildCard in
-            // DealOrNoDeal.cs for the same Dock-order reasoning.
+            // Fill (the scrolling table) is added before the bottom-docked bar: the docking runs from the last control to the first, so the
+            // bar takes its band first and the table gets what is left.
             ContentPanel.Controls.Add(_scrollHost);
             ContentPanel.Controls.Add(_buttonBar);
 
@@ -258,9 +263,9 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// Sizes the window to exactly fit the rows currently in
-        /// PropertyTable plus the button bar and the version strip - at most as high as the screen allows (then the table scrolls) - call once after populating
-        /// PropertyTable, instead of guessing a fixed window size.
+        /// Sizes the window to exactly fit the rows currently in <see cref="PropertyTable"/> plus the button bar and the version strip - at most
+        /// as high as the screen allows (then the table scrolls) - call it after the rows are added, instead of guessing a fixed window size.
+        /// <paramref name="extraWidth"/> and <paramref name="extraHeight"/> are room (for 96 dpi) added to the width and the height.
         /// </summary>
         public void FitToContent(int extraWidth = 16, int extraHeight = 16)
         {
