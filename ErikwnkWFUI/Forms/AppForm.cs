@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Factories;
@@ -69,11 +70,19 @@ namespace ErikwnkWFUI.Forms
             get { return _titleBar; }
         }
 
-        /// <summary>Shorthand for <c>TitleBar.Title</c>.</summary>
+        /// <summary>The title of the window: the <see cref="Form.Text"/> (taskbar, Alt-Tab) and the title bar show the same text, whichever of the two is set. <c>TitleBar.Title</c> changes the bar alone.</summary>
         public string FormTitle
         {
-            get { return _titleBar.Title; }
-            set { _titleBar.Title = value ?? ""; }
+            get { return Text; }
+            set { Text = value ?? ""; }
+        }
+
+        protected override void OnTextChanged(EventArgs e)
+        {
+            base.OnTextChanged(e);
+
+            if (_titleBar != null)
+                _titleBar.Title = Text;
         }
 
         /// <summary>Shorthand for <c>TitleBar.IconImage</c> - the small logo shown at the top-left of the title bar, not the OS-level icon (see <see cref="FormOptions.WindowIcon"/> for that).</summary>
@@ -189,12 +198,55 @@ namespace ErikwnkWFUI.Forms
                 _resizeHandler = new BorderlessResizeHandler(this);
         }
 
+        private const int WmGetMinMaxInfo = 0x24;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativePoint
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MinMaxInfo
+        {
+            public NativePoint Reserved;
+            public NativePoint MaxSize;
+            public NativePoint MaxPosition;
+            public NativePoint MinTrackSize;
+            public NativePoint MaxTrackSize;
+        }
+
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
 
+            if (m.Msg == WmGetMinMaxInfo && FormBorderStyle == FormBorderStyle.None && MaximumSize.IsEmpty)
+                FitMaximizedToWorkArea(m.LParam);
+
             if (_resizeHandler != null)
                 _resizeHandler.TryHandleMessage(ref m);
+        }
+
+        // A form without a frame is as big as the whole screen when it is maximized - over the taskbar. It is given the work area of its
+        // screen instead (a MaximumSize of the form stays what it was: the system takes that into account itself).
+        private void FitMaximizedToWorkArea(IntPtr minMaxInfo)
+        {
+            Screen screen = IsHandleCreated ? Screen.FromControl(this) : Screen.PrimaryScreen;
+            Rectangle position;
+
+            GetMaximizedPlacement(screen.WorkingArea, screen.Bounds, out position);
+
+            MinMaxInfo info = (MinMaxInfo)Marshal.PtrToStructure(minMaxInfo, typeof(MinMaxInfo));
+            info.MaxPosition = new NativePoint { X = position.X, Y = position.Y };
+            info.MaxSize = new NativePoint { X = position.Width, Y = position.Height };
+            Marshal.StructureToPtr(info, minMaxInfo, false);
+        }
+
+        /// <summary>Where a maximized frameless window goes: the work area of the screen, with the position relative to the top left corner of the screen (as the system asks for it).</summary>
+        internal static void GetMaximizedPlacement(Rectangle workingArea, Rectangle screenBounds, out Rectangle placement)
+        {
+            placement = new Rectangle(workingArea.X - screenBounds.X, workingArea.Y - screenBounds.Y, workingArea.Width, workingArea.Height);
         }
     }
 }
