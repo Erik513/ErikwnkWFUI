@@ -23,6 +23,14 @@ public class FormFactoryTests : IDisposable
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
+    // A window that is not shown (the test shows it itself, over an owner or at a place of its own).
+    private AppForm OwnHidden(AppForm form)
+    {
+        _forms.Add(form);
+
+        return form;
+    }
+
     private AppForm Own(AppForm form)
     {
         _forms.Add(form);
@@ -185,25 +193,159 @@ public class FormFactoryTests : IDisposable
         Assert.True(window.Width >= window.MinimumSize.Width && window.Height >= window.MinimumSize.Height);
     }
 
+    private static Button CaptionButton(AppForm form, string field)
+    {
+        return form.TitleBar.GetPrivateField<Button>(field)!;
+    }
+
     [Fact]
-    public void TheButtonsOfTheTitleBar_LookTheSameInEveryKindOfWindow()
+    public void TheButtonsOfTheTitleBar_AreFlatInTheColorOfTheBar_WithTheSameSymbolsInEveryWindow()
     {
         AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
-        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
         AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
 
         foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
         {
-            Button reference = standard.TitleBar.GetPrivateField<Button>(field)!;
+            Button reference = CaptionButton(standard, field);
 
-            foreach (AppForm other in new[] { primary, yellow })
+            foreach (AppForm form in new[] { standard, yellow, primary })
             {
-                Button button = other.TitleBar.GetPrivateField<Button>(field)!;
-                Assert.Equal(reference.BackColor.ToArgb(), button.BackColor.ToArgb());
-                Assert.Equal(reference.ForeColor.ToArgb(), button.ForeColor.ToArgb());
-                Assert.Equal(reference.FlatAppearance.BorderColor.ToArgb(), button.FlatAppearance.BorderColor.ToArgb());
+                Button button = CaptionButton(form, field);
+
+                // flat: no outline, no fill of its own - the bar shows through
+                Assert.Equal(form.TitleBar.BackColor.ToArgb(), button.BackColor.ToArgb());
+                Assert.Equal(0, button.FlatAppearance.BorderSize);
+
+                // the symbol is drawn the same way everywhere
+                Assert.Equal(reference.GetType(), button.GetType());
+                Assert.Equal(reference.Text, button.Text);
+                Assert.Equal(reference.Font, button.Font);
             }
         }
+    }
+
+    [Fact]
+    public void TheButtonsOfTheTitleBar_ShowAQuietFillUnderTheMouse_AndTheCloseButtonTurnsRed()
+    {
+        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        Button minimize = CaptionButton(yellow, "_minimizeButton");
+        Button close = CaptionButton(yellow, "_closeButton");
+
+        Assert.NotEqual(yellow.TitleBar.BackColor.ToArgb(), minimize.FlatAppearance.MouseOverBackColor.ToArgb());
+        Assert.NotEqual(minimize.FlatAppearance.MouseOverBackColor.ToArgb(), minimize.FlatAppearance.MouseDownBackColor.ToArgb());
+        Assert.True(close.FlatAppearance.MouseOverBackColor.R > 150 && close.FlatAppearance.MouseOverBackColor.G < 80);
+    }
+
+    [Fact]
+    public void TheButtonsOfTheTitleBar_FollowAChangeOfTheTheme()
+    {
+        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        UIColors.SetAccent(Color.OrangeRed);
+        Application.DoEvents();
+
+        foreach (AppForm form in new[] { standard, primary })
+            foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+                Assert.Equal(form.TitleBar.BackColor.ToArgb(), CaptionButton(form, field).BackColor.ToArgb());
+    }
+
+    [Theory]
+    [MemberData(nameof(Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void TheSymbolsOfTheTitleBar_CanBeSeenOnTheBarOfEverySetAndOfThePrimaryOne_InBothThemes(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
+            {
+                AppForm form = Own(UIStyles.Forms.CreateStandard("Title", set));
+                Check(shortfalls, "symbol, " + name, CaptionButton(form, "_minimizeButton").ForeColor, form.TitleBar.BackColor, 4.5);
+            }
+
+            AppForm primary = Own(UIStyles.Forms.CreatePrimary("Title"));
+            Check(shortfalls, "symbol, primary", CaptionButton(primary, "_minimizeButton").ForeColor, primary.TitleBar.BackColor, 4.5);
+        });
+    }
+
+    [Fact]
+    public void TheTitle_StaysInTheMiddleOfTheBar_AndKeepsClearOfTheButtonsWhenTheWindowIsNarrow()
+    {
+        AppForm form = Own(UIStyles.Forms.CreateStandard("A rather long title of a window"));
+        Label title = TitleLabel(form);
+        Button minimize = CaptionButton(form, "_minimizeButton");
+
+        // (A window cannot be narrower than its least size: the narrowest bar is that of a window of 260 px.)
+        foreach (int width in new[] { 600, 400, 300, 260 })
+        {
+            form.ClientSize = new Size(width, 200);
+            Application.DoEvents();
+            form.TitleBar.InvokePrivate("UpdateLayout");
+
+            Assert.True(title.Right <= minimize.Left, "the title goes under the buttons at " + width);
+            Assert.True(title.Left >= 0, "the title goes out of the bar at " + width);
+
+            // Room enough: the same margin on both sides, so that it is in the middle of the bar.
+            if (width >= 400)
+                Assert.Equal(title.Left, form.TitleBar.Width - title.Right);
+        }
+    }
+
+    [Fact]
+    public void ALeftAlignedTitle_AlsoKeepsClearOfTheButtons()
+    {
+        AppForm form = Own(UIStyles.Forms.CreateSettings("A rather long title of a window"));
+        Label title = TitleLabel(form);
+
+        form.ClientSize = new Size(260, 200);
+        Application.DoEvents();
+        form.TitleBar.InvokePrivate("UpdateLayout");
+
+        Assert.True(title.Right <= CaptionButton(form, "_closeButton").Left);
+    }
+
+    [Fact]
+    public void EveryWindow_OpensInTheMiddleOfTheScreen_ByDefault()
+    {
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateStandard("a")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateDialog("b")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateSettings("c")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(new AppForm()).StartPosition);
+    }
+
+    [Fact]
+    public void AWindowThatOpensOverAnOwner_IsCenteredOverIt()
+    {
+        Rectangle area = Screen.PrimaryScreen!.WorkingArea;
+        AppForm owner = OwnHidden(UIStyles.Forms.CreateStandard("Owner"));
+        owner.StartPosition = FormStartPosition.Manual;
+        owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
+        owner.Show();
+
+        AppForm child = OwnHidden(UIStyles.Forms.CreateDialog("Child"));
+        child.Size = new Size(200, 120);
+        child.Show(owner);
+
+        Assert.Equal(owner.Left + (owner.Width - child.Width) / 2, child.Left);
+        Assert.Equal(owner.Top + (owner.Height - child.Height) / 2, child.Top);
+    }
+
+    [Fact]
+    public void AWindowWhoseStartPositionWasChanged_IsLeftWhereItWasPut()
+    {
+        Rectangle area = Screen.PrimaryScreen!.WorkingArea;
+        AppForm owner = OwnHidden(UIStyles.Forms.CreateStandard("Owner"));
+        owner.StartPosition = FormStartPosition.Manual;
+        owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
+        owner.Show();
+
+        AppForm child = OwnHidden(UIStyles.Forms.CreateDialog("Child"));
+        child.StartPosition = FormStartPosition.Manual;
+        child.Bounds = new Rectangle(area.X + 10, area.Y + 10, 200, 120);
+        child.Show(owner);
+
+        Assert.Equal(new Point(area.X + 10, area.Y + 10), child.Location);
     }
 
     [Fact]

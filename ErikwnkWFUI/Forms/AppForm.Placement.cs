@@ -20,12 +20,35 @@ namespace ErikwnkWFUI.Forms
         {
             base.OnLoad(e);
 
-            if (string.IsNullOrEmpty(RememberBoundsKey))
+            if (!string.IsNullOrEmpty(RememberBoundsKey)
+                && WindowPlacementStore.TryLoad(RememberBoundsKey, WindowPlacementStore.GetWorkingAreas(), out WindowPlacementStore.Placement placement))
+            {
+                RestorePlacement(placement);
+
+                return;
+            }
+
+            CenterOverOwner();
+        }
+
+        // A window that opens over another one (Show(owner), ShowDialog(owner)) is centred over it, not on the screen.
+        private void CenterOverOwner()
+        {
+            if (Owner == null || StartPosition != FormStartPosition.CenterScreen || Owner.WindowState == FormWindowState.Minimized)
                 return;
 
-            if (!WindowPlacementStore.TryLoad(RememberBoundsKey, WindowPlacementStore.GetWorkingAreas(), out WindowPlacementStore.Placement placement))
-                return;
+            Rectangle area = Screen.FromControl(Owner).WorkingArea;
+            Rectangle owner = Owner.Bounds;
+            int x = owner.X + (owner.Width - Width) / 2;
+            int y = owner.Y + (owner.Height - Height) / 2;
 
+            Location = new Point(
+                Math.Max(area.Left, Math.Min(x, area.Right - Width)),
+                Math.Max(area.Top, Math.Min(y, area.Bottom - Height)));
+        }
+
+        private void RestorePlacement(WindowPlacementStore.Placement placement)
+        {
             Rectangle bounds = placement.Bounds;
 
             StartPosition = FormStartPosition.Manual;

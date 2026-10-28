@@ -17,7 +17,8 @@ namespace ErikwnkWFUI.Forms
     /// is maximized. This is the base class every ErikwnkWFUI window is built on - make one with <c>UIStyles.Forms.CreateStandard</c>,
     /// <c>CreateDialog</c> or <c>CreateSettings</c>, or derive from it and hand <see cref="FormOptions"/> to the constructor, the way
     /// <see cref="MessageBoxForm"/> and <see cref="UpdateAvailableForm"/> do. Add your own controls to <see cref="ContentPanel"/>, not
-    /// directly to the form - the title bar occupies the top of the form's own <see cref="Control.Controls"/>. <see cref="FormTitle"/> sets
+    /// directly to the form - the title bar occupies the top of the form's own <see cref="Control.Controls"/>. It opens in the middle of the
+    /// screen, or over its owner when it has one (<c>StartPosition</c> can be changed). <see cref="FormTitle"/> sets
     /// the title of the window and of the bar at once; <see cref="RememberBoundsKey"/> makes the window come back where it was.
     /// </summary>
     public partial class AppForm : Form
@@ -151,6 +152,9 @@ namespace ErikwnkWFUI.Forms
             _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
             _shadow = options.Borderless && options.Shadow;
             _closeOnEscape = options.CloseOnEscape;
+
+            // Opens in the middle of the screen - or over its owner (see OnLoad); a window of its own can change StartPosition.
+            StartPosition = FormStartPosition.CenterScreen;
 
             // A window that can be resized has a least size (the title bar with its buttons and a little content), as a normal form has.
             if (options.Resizable)

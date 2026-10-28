@@ -74,7 +74,7 @@ namespace ErikwnkWFUI.Forms
         private UIColorSet _colors;
 
         /// <summary>
-        /// A color set for the title bar (the text takes the colors of the set; the three buttons keep the look of every other window) and
+        /// A color set for the title bar (the text and the three buttons take the colors of the set; the symbols look as in every other window) and
         /// the version strip: both are in the basic color of the set. The edge around the window (<see cref="BorderColor"/>) and the content stay as they are. Null (the default) is the normal
         /// dark frame. <see cref="CreatePrimary"/> makes one that follows the accent. Not for a color set that is replaced while the window is shown.
         /// </summary>

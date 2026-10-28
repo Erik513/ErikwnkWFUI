@@ -12,8 +12,8 @@ namespace ErikwnkWFUI
         /// (<see cref="ErikwnkWFUI.Forms.FormOptions"/>) in its constructor. Standard windows can be resized, minimized and maximized; a dialog has only the
         /// close button and a fixed size; a settings window is a dialog with the version of the program in a strip at the bottom. The title
         /// bar and the strip are the darkest background of the theme, in the basic color of a color set (<c>colors:</c>) or, with
-        /// <c>CreatePrimary...</c>, in a very dark shade of the accent that follows a change of the accent; the three buttons of the title bar look the
-        /// same in every window. The thin edge around the window is black in all of them (<c>AppForm.BorderColor</c> changes it). A window that can
+        /// <c>CreatePrimary...</c>, in a very dark shade of the accent that follows a change of the accent; the three buttons of the title bar have the
+        /// colors of the set (the symbols look as in every window). The thin edge around the window is black in all of them (<c>AppForm.BorderColor</c> changes it). A window that can
         /// be resized has a least size (<c>FormOptions.MinimumSize</c>).
         /// </summary>
         public static class Forms

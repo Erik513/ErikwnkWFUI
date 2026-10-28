@@ -21,11 +21,12 @@ namespace ErikwnkWFUI.Controls
     {
         private const int TitleBarHeight = 30;
         private const double TitleTextContrast = 4.5;
+        private const int MinimumCenteredTitleWidth = 60;
         private const int IconSize = TitleBarHeight;
         private const int IconLeftMargin = 0;
         private const int TitleHorizontalPadding = 10;
 
-        private static readonly Size ButtonSize = new Size(30, 30);
+        private static readonly Size ButtonSize = new Size(42, 30);
 
         private readonly bool _allowWindowSnapAndMaximize;
 
@@ -136,7 +137,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The form hands over what its color set (or the primary look) makes of the bar: the background (asked again each time, so a change of the
-        // theme or of the accent is followed - unless a color was given by hand), and the set the title takes its colors from.
+        // theme or of the accent is followed - unless a color was given by hand), and the set the title and the buttons take their colors from.
         internal TitleBarControl(
             Image icon,
             string title,
@@ -155,14 +156,20 @@ namespace ErikwnkWFUI.Controls
 
             ConfigureControl(resolvedBackColor);
 
+            // What the buttons are read against: the bar's color, worked out apart from the bar so that a change of the theme cannot show them
+            // the old one.
+            Func<Color> barColor = backColor.HasValue
+                ? (Func<Color>)(() => backColor.Value)
+                : (backSource ?? (() => UIColors.BackgroundBlack));
+
             _titleLabel = CreateTitleLabel(
                 title,
                 titleTextAlign,
                 resolvedBackColor);
             _iconPictureBox = CreateIconPictureBox(icon);
-            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton);
-            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton);
-            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton);
+            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton, barColor, colors, false);
+            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton, barColor, colors, false);
+            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton, barColor, colors, true);
 
             if (backSource != null && !backColor.HasValue)
             {
@@ -314,10 +321,10 @@ namespace ErikwnkWFUI.Controls
             };
         }
 
-        private Button CreateTitleBarButton(string text, string tooltip, bool visible)
+        private Button CreateTitleBarButton(string text, string tooltip, bool visible, Func<Color> barColor, Func<UIColorSet> colors, bool isClose)
         {
-            // The same look in every window, whatever color the bar has.
-            Button button = UIButtonFactory.CreateCaptionButton(text, tooltip, ButtonSize);
+            // Flat and in the color of the bar; the same symbols in every window.
+            Button button = UIButtonFactory.CreateCaptionButton(text, tooltip, ButtonSize, barColor, colors, isClose);
             button.Visible = visible;
 
             // Shows only a symbol: named by its tooltip for a screen reader.
@@ -440,8 +447,21 @@ namespace ErikwnkWFUI.Controls
             }
             else
             {
-                labelLeft = 0;
-                labelWidth = Width;
+                // Centred in the room the buttons and the logo leave, as far as the bar allows: the same margin on both sides, the larger of
+                // the two, so that the title stays in the middle of the bar - and never goes under a button when the window is narrow.
+                int margin = Math.Max(leftLimit, Width - rightLimit);
+
+                if (Width - 2 * margin >= MinimumCenteredTitleWidth)
+                {
+                    labelLeft = margin;
+                    labelWidth = Width - 2 * margin;
+                }
+                else
+                {
+                    // Too narrow for that: the title takes whatever room the logo and the buttons leave (it is still centred in it).
+                    labelLeft = leftLimit;
+                    labelWidth = Math.Max(0, rightLimit - leftLimit);
+                }
             }
 
             _titleLabel.Bounds = new Rectangle(

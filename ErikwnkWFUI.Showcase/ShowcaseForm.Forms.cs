@@ -84,7 +84,6 @@ namespace ErikwnkWFUI.Showcase
             form.ContentPanel.Controls.Add(text);
 
             form.ClientSize = new Size(440, 180);
-            form.StartPosition = FormStartPosition.CenterParent;
             form.Show(this);
         }
     }

@@ -28,14 +28,47 @@ namespace ErikwnkWFUI.Factories
             return CreateButton<Button>(text, tooltip, size, isIcon, GetStandardLook);
         }
 
-        // A button of the title bar of a window: the standard look, but - like the buttons of a native title bar - never given the focus (a click
-        // would leave it with the thick focus border), and not reached by the Tab key.
-        public static Button CreateCaptionButton(string text, string tooltip, Size? size = null)
+        // A button of the title bar of a window, as in a modern window: flat, in the color of the bar (no fill and no outline of its own), with the
+        // symbol in the color of the title, and a quiet lighter or darker fill only under the mouse; the close button turns red then. The symbol is the
+        // text of a plain button, drawn as on every standard button (not by the SymbolButton). Like the buttons of a native title bar it is never
+        // given the focus (a click would leave it with the thick focus border) and not reached by the Tab key. The bar is asked again each time, so a
+        // change of the theme or of the accent is followed.
+        public static Button CreateCaptionButton(string text, string tooltip, Size size, Func<Color> bar, Func<UIColorSet> colors, bool isClose)
         {
-            Button button = CreateButton<CaptionButton>(text, tooltip, size, false, GetStandardLook);
+            Button button = CreateButton<CaptionButton>(text, tooltip, size, false, GetCaptionLook(bar, colors, isClose));
             button.TabStop = false;
+            button.Padding = new Padding(0);
+
+            // The symbols are drawn in the symbol font (the same for all three, whatever the text font can show: the minimize and maximize
+            // symbols are not in it, and a plain button would show a box).
+            button.Font = new Font(UIStyles.Symbols.GetFontName(text), CaptionSymbolPoints);
 
             return button;
+        }
+
+        private const float CaptionSymbolPoints = 10f;
+        private const double CaptionHoverBlend = 0.16;
+        private const double CaptionPressedBlend = 0.30;
+        private const double CaptionTextContrast = 4.5;
+
+        private static readonly Color CaptionCloseHover = Color.FromArgb(196, 43, 28);
+        private static readonly Color CaptionClosePressed = Color.FromArgb(160, 34, 22);
+
+        private static Func<ButtonLook> GetCaptionLook(Func<Color> bar, Func<UIColorSet> getColors, bool isClose)
+        {
+            return () =>
+            {
+                Color back = bar();
+                Color text = UIColors.EnsureContrast(getColors != null ? getColors().BasicText : UIColors.TextPrimary, back, CaptionTextContrast);
+
+                if (isClose)
+                    return new ButtonLook(back, text, back, 0, CaptionCloseHover, CaptionClosePressed, hoverForeColor: Color.White, pressedForeColor: Color.White);
+
+                return new ButtonLook(
+                    back, text, back, 0,
+                    UIColors.BlendToward(back, text, CaptionHoverBlend), UIColors.BlendToward(back, text, CaptionPressedBlend),
+                    hoverForeColor: text, pressedForeColor: text);
+            };
         }
 
         // The neutral look: it follows the theme, so it is read again whenever the theme changes.
