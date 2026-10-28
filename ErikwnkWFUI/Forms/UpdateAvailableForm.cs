@@ -8,7 +8,6 @@ using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 using FlowLayoutPanel = System.Windows.Forms.FlowLayoutPanel;
 using Panel = System.Windows.Forms.Panel;
-using ProgressBar = System.Windows.Forms.ProgressBar;
 using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Forms
@@ -27,10 +26,10 @@ namespace ErikwnkWFUI.Forms
     public static class UpdatePrompt
     {
         /// <summary>
-        /// Shows a standardized "a new version is available" dialog. If the user
-        /// clicks "Update now", the same window switches to a progress view and calls
-        /// applyUpdateAsync, reporting its progress back into that view. Returns how
-        /// the dialog ended.
+        /// Shows a standardized "a new version is available" dialog. If the user clicks "Update now", the dialog closes and a
+        /// <see cref="ProgressForm"/> takes its place while applyUpdateAsync runs (on another thread), reporting its progress into the bar; the
+        /// user cannot close that window. Returns how it ended: <see cref="UpdateOutcome.Declined"/> (Later, or the dialog was closed),
+        /// <see cref="UpdateOutcome.Applied"/> or <see cref="UpdateOutcome.Failed"/> (applyUpdateAsync returned false or threw).
         /// </summary>
         public static Task<UpdateOutcome> ShowUpdateAvailableAsync(
             string currentVersion,
@@ -44,26 +43,6 @@ namespace ErikwnkWFUI.Forms
                 latestVersion,
                 title ?? UIStrings.Get("UpdateAvailable.Title")))
             {
-                UpdateOutcome outcome = UpdateOutcome.Declined;
-
-                form.UpdateRequested += async (sender, e) =>
-                {
-                    form.ShowProgressState();
-                    Progress<int> progress = new Progress<int>(form.SetProgress);
-
-                    try
-                    {
-                        bool applied = await applyUpdateAsync(progress);
-                        outcome = applied ? UpdateOutcome.Applied : UpdateOutcome.Failed;
-                    }
-                    catch
-                    {
-                        outcome = UpdateOutcome.Failed;
-                    }
-
-                    form.Close();
-                };
-
                 if (owner != null)
                 {
                     form.ShowDialog(owner);
@@ -73,12 +52,33 @@ namespace ErikwnkWFUI.Forms
                     form.ShowDialog();
                 }
 
-                return Task.FromResult(outcome);
+                if (!form.UpdateChosen)
+                {
+                    return Task.FromResult(UpdateOutcome.Declined);
+                }
             }
+
+            bool applied = false;
+
+            try
+            {
+                ProgressBox.Run(
+                    title ?? UIStrings.Get("UpdateAvailable.Title"),
+                    async (progress, token) => applied = await applyUpdateAsync(progress),
+                    UIStrings.Get("UpdateAvailable.Downloading"),
+                    cancelable: false,
+                    owner: owner);
+            }
+            catch
+            {
+                applied = false;
+            }
+
+            return Task.FromResult(applied ? UpdateOutcome.Applied : UpdateOutcome.Failed);
         }
     }
 
-    /// <summary>The dialog behind <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> - prefer calling that over constructing this directly, it handles wiring <see cref="UpdateRequested"/> up to your download logic and reporting the outcome.</summary>
+    /// <summary>The dialog behind <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> - prefer calling that over constructing this directly: it shows this dialog and then, when the user chose to update, the progress of the download. After <c>ShowDialog</c> <see cref="UpdateChosen"/> says whether "Update now" was clicked.</summary>
     public class UpdateAvailableForm : AppForm
     {
         private static readonly Size DialogSize = new Size(420, 190);
@@ -88,13 +88,9 @@ namespace ErikwnkWFUI.Forms
 
         private Control _promptContent;
         private Control _buttonPanel;
-        private Control _progressContent;
-        private Label _progressStatusLabel;
-        private ProgressBar _progressBar;
-        private bool _updateRequested;
 
-        /// <summary>Raised when "Update now" is clicked - call <see cref="ShowProgressState"/> and start downloading.</summary>
-        public event EventHandler UpdateRequested;
+        /// <summary>Whether the user clicked "Update now" (the dialog is closed with <c>DialogResult.Yes</c> then); false for Later and for closing it.</summary>
+        public bool UpdateChosen { get; private set; }
 
         public UpdateAvailableForm(
             string currentVersion,
@@ -110,38 +106,6 @@ namespace ErikwnkWFUI.Forms
 
             ConfigureForm();
             BuildLayout();
-        }
-
-        /// <summary>
-        /// Switches the window from the prompt (headline + buttons) to a progress
-        /// view (status text + progress bar), without opening a second window.
-        /// </summary>
-        public void ShowProgressState()
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action(ShowProgressState));
-                return;
-            }
-
-            ControlBox = false;
-            _promptContent.Visible = false;
-            _buttonPanel.Visible = false;
-            _progressContent.Visible = true;
-        }
-
-        /// <summary>Updates the progress bar/status text - safe to call from a background download thread, marshals to the UI thread itself.</summary>
-        public void SetProgress(int percent)
-        {
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action<int>(SetProgress), percent);
-                return;
-            }
-
-            int clamped = Math.Max(0, Math.Min(100, percent));
-            _progressBar.Value = clamped;
-            _progressStatusLabel.Text = string.Format(UIStrings.Get("UpdateAvailable.Downloading"), clamped);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -178,10 +142,6 @@ namespace ErikwnkWFUI.Forms
             };
 
             _promptContent = CreatePromptContent();
-            _progressContent = CreateProgressContent();
-            _progressContent.Visible = false;
-
-            contentHost.Controls.Add(_progressContent);
             contentHost.Controls.Add(_promptContent);
 
             _buttonPanel = CreateButtonPanel();
@@ -237,34 +197,6 @@ namespace ErikwnkWFUI.Forms
             return panel;
         }
 
-        private Control CreateProgressContent()
-        {
-            FlowLayoutPanel layout;
-            Panel panel = CreateContentPanel(out layout);
-
-            _progressStatusLabel = UILabelFactory.CreateStandard(string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 0));
-            _progressStatusLabel.AutoSize = true;
-            _progressStatusLabel.Font = UIFonts.Normal;
-            ThemeWatcher.FollowForeColor(_progressStatusLabel, () => UIColors.TextPrimary);
-            _progressStatusLabel.Margin = new Padding(0, 6, 0, 14);
-
-            _progressBar = new ProgressBar
-            {
-                Width = DialogSize.Width - 24 - 24 - 24,
-                Height = 18,
-                Minimum = 0,
-                Maximum = 100,
-                Value = 0,
-                Style = ProgressBarStyle.Continuous
-            };
-
-            layout.Controls.Add(_progressStatusLabel);
-            layout.Controls.Add(_progressBar);
-            panel.Controls.Add(layout);
-
-            return panel;
-        }
-
         private Control CreateButtonPanel()
         {
             TableLayoutPanel buttonPanel = UITableLayoutPanelFactory.CreateStandard(3, 1);
@@ -312,18 +244,10 @@ namespace ErikwnkWFUI.Forms
 
         private void OnUpdateButtonClick(object sender, EventArgs e)
         {
-            if (_updateRequested)
-            {
-                return;
-            }
-
-            _updateRequested = true;
-
-            EventHandler handler = UpdateRequested;
-            if (handler != null)
-            {
-                handler(this, EventArgs.Empty);
-            }
+            // The dialog ends; what comes next (the download) is shown by a ProgressForm.
+            UpdateChosen = true;
+            DialogResult = DialogResult.Yes;
+            Close();
         }
     }
 }

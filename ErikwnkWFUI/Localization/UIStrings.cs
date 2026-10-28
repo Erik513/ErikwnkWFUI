@@ -110,7 +110,7 @@ namespace ErikwnkWFUI.Localization
             ["UpdateAvailable.Message"] = "A new version is available.",
             ["UpdateAvailable.Later"] = "Later",
             ["UpdateAvailable.UpdateNow"] = "Update now",
-            ["UpdateAvailable.Downloading"] = "Downloading update... {0}%",
+            ["UpdateAvailable.Downloading"] = "Downloading update...",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "The update download failed. Opening the release page instead.",
@@ -231,7 +231,7 @@ namespace ErikwnkWFUI.Localization
             ["UpdateAvailable.Message"] = "Eine neue Version ist verfügbar.",
             ["UpdateAvailable.Later"] = "Später",
             ["UpdateAvailable.UpdateNow"] = "Jetzt aktualisieren",
-            ["UpdateAvailable.Downloading"] = "Update wird heruntergeladen... {0} %",
+            ["UpdateAvailable.Downloading"] = "Update wird heruntergeladen...",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "Der Update-Download ist fehlgeschlagen. Die Release-Seite wird stattdessen geöffnet.",

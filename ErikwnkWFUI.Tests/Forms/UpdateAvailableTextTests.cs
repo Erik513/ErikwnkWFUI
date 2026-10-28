@@ -5,20 +5,22 @@ using ErikwnkWFUI.Tests.Infrastructure;
 
 namespace ErikwnkWFUI.Tests.Forms;
 
-/// <summary>The progress text of the update dialog writes the percentage as the progress bars do. [Collection]: the language is static state of the process.</summary>
+/// <summary>The progress text of the update download is only the text: the percentage stands on the bar of the progress dialog. [Collection]: the language is static state of the process.</summary>
 [Collection(LanguageTestCollection.Name)]
 public class UpdateAvailableTextTests
 {
     [Fact]
-    public void TheDownloadText_EndsWithThePercentage_AsTheProgressBarsWriteIt_InEveryLanguage()
+    public void TheDownloadText_HasNoPercentage_InEveryLanguage_BecauseTheBarWritesIt()
     {
         foreach (UILanguage language in LanguageTestHelper.AllLanguages)
         {
             LanguageTestHelper.RunWithLanguage(language, () =>
             {
-                string text = string.Format(UIStrings.Get("UpdateAvailable.Downloading"), 42);
+                string text = UIStrings.Get("UpdateAvailable.Downloading");
 
-                Assert.EndsWith(ProgressBarPainting.GetPercentText(0, 100, 42), text);
+                Assert.False(string.IsNullOrWhiteSpace(text));
+                Assert.DoesNotContain("{0}", text);
+                Assert.DoesNotContain("%", text);
             });
         }
     }
