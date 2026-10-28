@@ -205,8 +205,10 @@ namespace ErikwnkWFUI.Forms
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
                 UIStrings.LanguageChanged -= OnLanguageChanged;
                 UIColors.ThemeChanged -= OnThemeChanged;
+            }
 
             base.Dispose(disposing);
         }

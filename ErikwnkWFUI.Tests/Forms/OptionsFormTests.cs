@@ -808,6 +808,31 @@ public class OptionsFormTests : IDisposable
         Assert.True(form.ContentPanel.Controls.IndexOf(host) < form.ContentPanel.Controls.IndexOf(bar), "the buttons come before the table in the tab order");
     }
 
+    // ---- cleaning up
+
+    private static int Listeners(Type type, string eventName)
+    {
+        FieldInfo? field = type.GetField(eventName, BindingFlags.NonPublic | BindingFlags.Static);
+
+        return ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0;
+    }
+
+    [Fact]
+    public void ADisposedWindow_ListensToNeitherTheThemeNorTheLanguageAnyMore()
+    {
+        int themeBefore = Listeners(typeof(UIColors), "ThemeChanged");
+        int languageBefore = Listeners(typeof(UIStrings), "LanguageChanged");
+
+        OptionsForm form = UIStyles.Forms.CreateOptionsStandard(presets: AllPresets);
+        Assert.True(Listeners(typeof(UIColors), "ThemeChanged") > themeBefore);
+        Assert.True(Listeners(typeof(UIStrings), "LanguageChanged") > languageBefore);
+
+        form.Dispose();
+
+        Assert.Equal(themeBefore, Listeners(typeof(UIColors), "ThemeChanged"));
+        Assert.Equal(languageBefore, Listeners(typeof(UIStrings), "LanguageChanged"));
+        Assert.Null(Record.Exception(() => UIColors.ApplyTheme(UIThemes.Light)));
+    }
     // ---- language
 
     [Theory]
