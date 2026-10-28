@@ -67,10 +67,10 @@ namespace ErikwnkWFUI.Showcase
 
             blocks.Add(Heading("Windows and dialogs"));
             blocks.Add(Paragraph(
-                "StyledForm is the base of every window: borderless, with the library's own title bar, resizable and draggable. MessageBox, ToastForm " +
+                "AppForm is the base of every window: borderless, with the library's own title bar, resizable and draggable. MessageBox, ToastForm " +
                 "and InfoPopupForm are the matching dialogs and popups - try MessageBox with the button on the right, ToastForm and InfoPopupForm on their own tabs."));
             blocks.Add(Code(
-                "using (var form = new StyledForm(\"My App\"))\n" +
+                "using (var form = new AppForm(\"My App\"))\n" +
                 "{\n" +
                 "    form.ContentPanel.Controls.Add(save);\n" +
                 "    Application.Run(form);\n" +

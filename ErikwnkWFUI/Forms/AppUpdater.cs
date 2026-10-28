@@ -120,7 +120,7 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// A small, ready-styled green button (with an update glyph and a
-        /// tooltip) for <see cref="StyledForm.VersionStrip"/> - clicking it shows
+        /// tooltip) for <see cref="AppForm.VersionStrip"/> - clicking it shows
         /// the same prompt <see cref="ShowUpdatePromptAsync"/> does. Add it once
         /// you know an update is available (e.g. after
         /// <see cref="CheckForUpdateAsync(Version, TimeSpan)"/> returned a

@@ -25,7 +25,7 @@ namespace ErikwnkWFUI.Showcase
     // one-off layout scheme) that keeps every row's label/editor evenly
     // aligned. The theme/accent toolbar and the popup buttons belong to no
     // single control and stay outside the tabs.
-    public partial class ShowcaseForm : StyledForm
+    public partial class ShowcaseForm : AppForm
     {
         // Gray is here for anyone who just wants a neutral look without
         // knowing CreateStandard already defaults to gray - see
@@ -80,7 +80,7 @@ namespace ErikwnkWFUI.Showcase
         private int _progressBarAnimationPercent;
 
         public ShowcaseForm()
-            : base(StyledFormOptions.CreateStandard("ErikwnkWFUI Showcase"))
+            : base(FormOptions.CreateStandard("ErikwnkWFUI Showcase"))
         {
             StartPosition = FormStartPosition.CenterScreen;
             Size = new Size(1320, 900);

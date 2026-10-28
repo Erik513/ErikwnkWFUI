@@ -12,10 +12,10 @@ namespace ErikwnkWFUI.Controls
     /// A custom-drawn window title bar: logo, title text, minimize/maximize/
     /// close buttons, and window dragging (including drag-to-maximize and
     /// double-click-to-maximize) - all reimplemented in managed code since it
-    /// replaces the native one. <see cref="ErikwnkWFUI.Forms.StyledForm"/> already creates and
+    /// replaces the native one. <see cref="ErikwnkWFUI.Forms.AppForm"/> already creates and
     /// docks one of these for you; construct it directly only if you're
     /// building a custom top-level window from scratch instead of deriving
-    /// from StyledForm.
+    /// from AppForm.
     /// </summary>
     public class TitleBarControl : System.Windows.Forms.Panel
     {

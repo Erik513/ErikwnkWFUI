@@ -8,10 +8,10 @@ namespace ErikwnkWFUI.Helpers
     /// Restores edge/corner resize cursors and dragging for a borderless
     /// (<see cref="FormBorderStyle.None"/>) form, which loses that
     /// automatically along with its native frame.
-    /// <see cref="ErikwnkWFUI.Forms.StyledForm"/> already wires this up for
+    /// <see cref="ErikwnkWFUI.Forms.AppForm"/> already wires this up for
     /// you when its Borderless/Resizable options are both true - construct
     /// one directly only if you're building a borderless window from
-    /// scratch instead of deriving from StyledForm.
+    /// scratch instead of deriving from AppForm.
     /// </summary>
     public class BorderlessResizeHandler
     {

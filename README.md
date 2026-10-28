@@ -22,7 +22,7 @@ using ErikwnkWFUI;
 using ErikwnkWFUI.Forms;
 
 // A borderless, resizable window with ErikwnkWFUI's own title bar.
-using (var form = new StyledForm("My App"))
+using (var form = new AppForm("My App"))
 {
     var button = UIStyles.Buttons.CreatePrimary("Click me");
     button.Location = new Point(20, 20);
@@ -49,9 +49,9 @@ one-line summary of what it's for.
   an event, or a property `UIStyles` doesn't proxy). In sub folders by kind:
   `Inputs`, `Labels`, `Lists`, `Panels`, `Progress`, `PropertyTable`, `Tables`,
   `Tabs`, `Support`.
-- **`Forms/`** - `StyledForm` (the base every ErikwnkWFUI window builds on),
+- **`Forms/`** - `AppForm` (the base every ErikwnkWFUI window builds on),
   plus ready-made dialogs and popups (`MessageBoxForm`, `ToastForm`,
-  `InfoPopupForm`, `UpdateAvailableForm`, `StyledOptionsForm`).
+  `InfoPopupForm`, `UpdateAvailableForm`, `OptionsForm`).
 - **`Factories/`** - internal. `UIStyles` is the only supported public
   entry point to these; if you're referencing anything under
   `ErikwnkWFUI.Factories` directly, use the equivalent `UIStyles.*` instead.
@@ -368,7 +368,7 @@ Image logo = UIIcons.LoadEmbedded(Assembly.GetExecutingAssembly(), "MyApp.Assets
 ```
 
 (Requires the image's Build Action set to `Embedded Resource` in your
-project.) Pass the result to `StyledFormOptions.Icon` or
+project.) Pass the result to `FormOptions.Icon` or
 `TitleBarControl.IconImage`.
 
 ## Known limitations

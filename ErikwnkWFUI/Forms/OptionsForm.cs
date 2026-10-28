@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Forms
     /// sizes itself to exactly fit whatever was added, instead of guessing
     /// a fixed size up front.
     /// </summary>
-    public class StyledOptionsForm : StyledForm
+    public class OptionsForm : AppForm
     {
         private readonly PropertyTable _propertyTable;
         private readonly Panel _buttonBar;
@@ -52,8 +52,8 @@ namespace ErikwnkWFUI.Forms
         public event EventHandler SaveClicked;
 
         /// <summary>Add rows to <see cref="PropertyTable"/> and call <see cref="FitToContent"/> after construction.</summary>
-        public StyledOptionsForm(string title = "Options")
-            : base(StyledFormOptions.CreateDialog(title))
+        public OptionsForm(string title = "Options")
+            : base(FormOptions.CreateDialog(title))
         {
             StartPosition = FormStartPosition.CenterScreen;
             MinimumSize = new Size(340, 160);

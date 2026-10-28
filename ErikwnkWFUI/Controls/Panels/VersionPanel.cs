@@ -12,7 +12,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// A narrow strip with the version of the program at its right end and - while an update is known - a small green button
     /// next to it that leads to the update. It is the version strip of a settings window as an element of its own, made by
-    /// <c>UIStyles.VersionPanels</c>: it can be put in any window or page, not only in <c>StyledForm</c>.
+    /// <c>UIStyles.VersionPanels</c>: it can be put in any window or page, not only in <c>AppForm</c>.
     /// </summary>
     /// <remarks>
     /// The version is the one of the program (the entry assembly, like "v1.2.3"; <see cref="VersionText"/> changes it). The button is not

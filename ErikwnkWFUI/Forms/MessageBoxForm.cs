@@ -87,7 +87,7 @@ namespace ErikwnkWFUI.Forms
         }
     }
 
-    public class MessageBoxForm : StyledForm
+    public class MessageBoxForm : AppForm
     {
         private readonly string _message;
         private readonly MessageBoxButtons _buttons;
@@ -110,7 +110,7 @@ namespace ErikwnkWFUI.Forms
             MessageBoxButtons buttons,
             MessageBoxIcon icon,
             MessageBoxSize size = MessageBoxSize.Medium)
-            : base(StyledFormOptions.CreateDialog(
+            : base(FormOptions.CreateDialog(
                 title: title,
                 titleTextAlign: ContentAlignment.MiddleLeft,
                 icon: GetTitleBarIcon(icon)))
@@ -302,7 +302,7 @@ namespace ErikwnkWFUI.Forms
 
         private Button CreateDialogButton(string text, DialogResult result)
         {
-            Button button = CreateStyledButton(text, result);
+            Button button = CreateButton(text, result);
 
             button.Dock = DockStyle.Fill;
             button.Margin = new Padding(6, 0, 0, 0);
@@ -314,7 +314,7 @@ namespace ErikwnkWFUI.Forms
             return button;
         }
 
-        private Button CreateStyledButton(string text, DialogResult result)
+        private Button CreateButton(string text, DialogResult result)
         {
             MessageBoxPreset preset = GetPreset();
 

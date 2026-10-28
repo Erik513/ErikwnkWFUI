@@ -79,7 +79,7 @@ namespace ErikwnkWFUI.Forms
     }
 
     /// <summary>The dialog behind <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> - prefer calling that over constructing this directly, it handles wiring <see cref="UpdateRequested"/> up to your download logic and reporting the outcome.</summary>
-    public class UpdateAvailableForm : StyledForm
+    public class UpdateAvailableForm : AppForm
     {
         private static readonly Size DialogSize = new Size(420, 190);
 
@@ -100,7 +100,7 @@ namespace ErikwnkWFUI.Forms
             string currentVersion,
             string latestVersion,
             string title = null)
-            : base(StyledFormOptions.CreateDialog(
+            : base(FormOptions.CreateDialog(
                 title: title ?? UIStrings.Get("UpdateAvailable.Title"),
                 titleTextAlign: ContentAlignment.MiddleLeft,
                 icon: SystemIcons.Information.ToBitmap()))

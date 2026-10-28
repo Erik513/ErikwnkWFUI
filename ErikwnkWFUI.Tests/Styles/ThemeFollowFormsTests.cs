@@ -71,9 +71,9 @@ public class ThemeFollowFormsTests : IDisposable
         return table;
     }
 
-    private static StyledForm MakeStyledForm(bool withTable)
+    private static AppForm MakeAppForm(bool withTable)
     {
-        StyledForm form = new StyledForm(StyledFormOptions.CreateStandard("Title"));
+        AppForm form = new AppForm(FormOptions.CreateStandard("Title"));
 
         if (withTable)
             form.ContentPanel.Controls.Add(MakeTable());
@@ -85,14 +85,14 @@ public class ThemeFollowFormsTests : IDisposable
     {
         foreach (var entry in new (string, Func<Form>)[]
         {
-            ("StyledForm", () => MakeStyledForm(true)),
+            ("AppForm", () => MakeAppForm(true)),
             ("MessageBoxForm", () => new MessageBoxForm("Message", "Title", ErikwnkWFUI.Forms.MessageBoxButtons.OKCancel, ErikwnkWFUI.Forms.MessageBoxIcon.Info)),
-            ("StyledOptionsForm", () => MakeOptionsForm()),
+            ("OptionsForm", () => MakeOptionsForm()),
         })
             yield return new object[] { entry.Item1, entry.Item2 };
     }
 
-    private static Form MakeOptionsForm() => MakeStyledForm(true);
+    private static Form MakeOptionsForm() => MakeAppForm(true);
 
     [Theory]
     [MemberData(nameof(Forms))]
@@ -155,7 +155,7 @@ public class ThemeFollowFormsTests : IDisposable
     [Fact]
     public void ATitleBarColorGivenByHand_Stays()
     {
-        StyledForm form = Open(new StyledForm(StyledFormOptions.CreateStandard("Title", backColor: Color.Navy)));
+        AppForm form = Open(new AppForm(FormOptions.CreateStandard("Title", backColor: Color.Navy)));
 
         UIColors.ApplyTheme(UIThemes.Light);
         Application.DoEvents();
