@@ -6,10 +6,12 @@ using System.Linq;
 using System.Windows.Forms;
 using ErikwnkCore;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using Button = System.Windows.Forms.Button;
+using Panel = System.Windows.Forms.Panel;
 using ComboBox = System.Windows.Forms.ComboBox;
 
 namespace ErikwnkWFUI.Forms
@@ -24,7 +26,8 @@ namespace ErikwnkWFUI.Forms
 
         private readonly Dictionary<OptionsPreset, PropertyRow> _presetRows = new Dictionary<OptionsPreset, PropertyRow>();
         private PropertyRow _optionsSection;
-        private ComboBox _themeBox;
+        private Panel _themeStrip;
+        private Button _themeButton;
         private ComboBox _accentBox;
         private ComboBox _languageBox;
         private ToggleSwitch _topMostSwitch;
@@ -104,7 +107,8 @@ namespace ErikwnkWFUI.Forms
         /// Puts a ready-made option into the table (under the section "General", which is made with the first one): the row, its choice, and
         /// what applying it does. The program keeps the result where it keeps its settings: read <see cref="SelectedTheme"/>,
         /// <see cref="SelectedAccentColor"/>, <see cref="SelectedLanguage"/> and <see cref="SelectedAlwaysOnTop"/> in <see cref="SaveClicked"/>.
-        /// An option that is there already is not added twice: its row is returned.
+        /// An option that is there already is not added twice: its row is returned. The theme has no row (it is a button in the top right corner
+        /// of the window), so <see cref="OptionsPreset.Theme"/> returns null.
         /// </summary>
         public PropertyRow AddOption(OptionsPreset preset)
         {
@@ -113,6 +117,14 @@ namespace ErikwnkWFUI.Forms
             if (_presetRows.TryGetValue(preset, out existing))
                 return existing;
 
+            // The theme is no row of the table: a button in the top right corner of the window switches between dark and light.
+            if (preset == OptionsPreset.Theme)
+            {
+                AddThemeButton();
+
+                return null;
+            }
+
             if (_optionsSection == null)
                 _optionsSection = _propertyTable.AddSection(UIStrings.Get("OptionsForm.General"));
 
@@ -120,12 +132,6 @@ namespace ErikwnkWFUI.Forms
 
             switch (preset)
             {
-                case OptionsPreset.Theme:
-                    _themeBox = CreateOptionChoice();
-                    row = _propertyTable.AddRow(GetOptionText(preset), _themeBox);
-                    _themeBox.SelectedIndexChanged += (s, e) => ApplyOption(() => UIColors.ApplyTheme(_themeBox.SelectedIndex == 1 ? UIThemes.Light : UIThemes.Dark));
-                    break;
-
                 case OptionsPreset.AccentColor:
                     _accentBox = CreateOptionChoice();
                     row = _propertyTable.AddRow(GetOptionText(preset), _accentBox);
@@ -257,8 +263,8 @@ namespace ErikwnkWFUI.Forms
         // The defaults of the options of the library (as the choices say): dark, blue, the language of Windows, not on top.
         private void RestoreDefaults()
         {
-            if (_themeBox != null)
-                _themeBox.SelectedIndex = 0;
+            if (_themeButton != null && SelectedTheme != UIThemes.Dark)
+                ApplyOption(() => UIColors.ApplyTheme(UIThemes.Dark));
 
             if (_accentBox != null)
                 _accentBox.SelectedIndex = Array.FindIndex(UIAccentColors.All, color => color.ToArgb() == UIAccentColors.Blue.ToArgb());
@@ -328,8 +334,6 @@ namespace ErikwnkWFUI.Forms
         {
             switch (preset)
             {
-                case OptionsPreset.Theme:
-                    return UIStrings.Get("OptionsForm.Theme");
                 case OptionsPreset.AccentColor:
                     return UIStrings.Get("OptionsForm.AccentColor");
                 case OptionsPreset.Language:
@@ -351,14 +355,6 @@ namespace ErikwnkWFUI.Forms
 
             try
             {
-                if (_themeBox != null)
-                {
-                    _themeBox.Items.Clear();
-                    _themeBox.Items.Add(UIStrings.Get("OptionsForm.ThemeDark"));
-                    _themeBox.Items.Add(UIStrings.Get("OptionsForm.ThemeLight"));
-                    _themeBox.SelectedIndex = SelectedTheme == UIThemes.Light ? 1 : 0;
-                }
-
                 if (_accentBox != null)
                 {
                     _accentBox.Items.Clear();
@@ -383,9 +379,61 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        // ---- the theme button
+
+        private void AddThemeButton()
+        {
+            if (_themeButton != null)
+                return;
+
+            _themeStrip = UIStyles.Panels.CreateMedium();
+            _themeStrip.Dock = DockStyle.Top;
+            _themeStrip.Resize += (s, e) => PositionThemeButton();
+
+            // The look of a symbol button without colors; it shows the theme it switches to and takes no focus (like a tool bar button).
+            _themeButton = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Sun, "");
+            ((SymbolButton)_themeButton).TakeNoFocus();
+            _themeButton.Click += (s, e) => ApplyOption(() => UIColors.ApplyTheme(SelectedTheme == UIThemes.Light ? UIThemes.Dark : UIThemes.Light));
+
+            _themeStrip.Controls.Add(_themeButton);
+            ContentPanel.Controls.Add(_themeStrip);
+
+            UIColors.ThemeChanged += OnThemeChanged;
+            UpdateThemeButton();
+            ApplyScale();
+        }
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            if (!IsDisposed)
+                UpdateThemeButton();
+        }
+
+        // The symbol and the tooltip say what a click does: the sun switches to the light theme, the moon to the dark one.
+        private void UpdateThemeButton()
+        {
+            if (_themeButton == null)
+                return;
+
+            bool toLight = SelectedTheme != UIThemes.Light;
+            string tooltip = UIStrings.Get(toLight ? "OptionsForm.SwitchToLight" : "OptionsForm.SwitchToDark");
+
+            _themeButton.Text = toLight ? UIStyles.Symbols.Sun : UIStyles.Symbols.Moon;
+            _themeButton.AccessibleName = tooltip;
+            UIButtonFactory.UpdateTooltip(_themeButton, tooltip);
+        }
+
+        private void PositionThemeButton()
+        {
+            if (_themeButton != null)
+                _themeButton.Location = new Point(_themeStrip.ClientSize.Width - _themeButton.Width, (_themeStrip.ClientSize.Height - _themeButton.Height) / 2);
+        }
+
         // After a switch of the language: the names of the rows and the items.
         private void RefreshOptionTexts()
         {
+            UpdateThemeButton();
+
             if (_optionsSection == null)
                 return;
 

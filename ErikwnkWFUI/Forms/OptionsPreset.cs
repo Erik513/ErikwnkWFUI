@@ -7,7 +7,10 @@
     /// </summary>
     public enum OptionsPreset
     {
-        /// <summary>Dark or light theme of the whole program.</summary>
+        /// <summary>
+        /// Dark or light theme of the whole program. It is no row of the table: a button in the top right corner of the window switches between
+        /// the two (the symbol shows the theme a click leads to - the sun for the light one, the moon for the dark one).
+        /// </summary>
         Theme,
 
         /// <summary>The accent color of the whole program (one of <c>UIAccentColors</c>).</summary>

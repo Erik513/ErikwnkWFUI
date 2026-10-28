@@ -22,7 +22,7 @@ namespace ErikwnkWFUI.Showcase
             ("Status", new[] { "Info", "Warning", "Error", "Help" }),
             ("Window", new[] { "Minimize", "Maximize", "Restore", "Close" }),
             ("People, security", new[] { "User", "Logout", "Lock", "Unlock", "Power" }),
-            ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye", "Lightning", "Heart" })
+            ("Things", new[] { "Mail", "Calendar", "Clock", "Bell", "Link", "Pin", "Globe", "Eye", "Sun", "Moon", "Lightning", "Heart" })
         };
 
         private const int SymbolCellWidth = 92;

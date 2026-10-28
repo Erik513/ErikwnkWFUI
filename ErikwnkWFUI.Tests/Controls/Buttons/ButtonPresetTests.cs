@@ -133,6 +133,8 @@ public class ButtonPresetTests
             ("Maximize", UIStyles.Symbols.Maximize, UIStyles.Colors.Sets.Dark),
             ("Restore", UIStyles.Symbols.Restore, UIStyles.Colors.Sets.Dark),
             ("Eye", UIStyles.Symbols.Eye, UIStyles.Colors.Sets.Dark),
+            ("Sun", UIStyles.Symbols.Sun, UIStyles.Colors.Sets.Orange),
+            ("Moon", UIStyles.Symbols.Moon, UIStyles.Colors.Sets.Dark),
         };
 
         // The table covers every preset - a new preset has to be added here with its meaning.

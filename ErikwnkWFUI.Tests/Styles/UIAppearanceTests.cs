@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using ErikwnkCore;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Localization;
@@ -250,7 +250,7 @@ public class UIAppearanceTests : IDisposable
     {
         UIStyles.RememberAppearance();
         OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme, OptionsPreset.Language }));
-        form.GetPrivateField<System.Windows.Forms.ComboBox>("_themeBox")!.SelectedIndex = 1;
+        form.GetPrivateField<System.Windows.Forms.Button>("_themeButton")!.InvokePrivate("OnClick", EventArgs.Empty);
         form.GetPrivateField<System.Windows.Forms.ComboBox>("_languageBox")!.SelectedIndex = 1;
 
         Assert.False(File.Exists(FilePath));
@@ -267,7 +267,7 @@ public class UIAppearanceTests : IDisposable
     {
         UIStyles.RememberAppearance();
         OptionsForm cancelled = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
-        cancelled.GetPrivateField<System.Windows.Forms.ComboBox>("_themeBox")!.SelectedIndex = 1;
+        cancelled.GetPrivateField<System.Windows.Forms.Button>("_themeButton")!.InvokePrivate("OnClick", EventArgs.Empty);
         cancelled.GetPrivateField<System.Windows.Forms.Button>("_cancelButton")!.PerformClick();
 
         Assert.False(File.Exists(FilePath));

@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
+using ErikwnkWFUI.Styles;
 using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Forms
@@ -15,7 +16,7 @@ namespace ErikwnkWFUI.Forms
     /// Save and Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a
     /// window that applies every change at once. The table is a card in the middle of the window, and it scrolls when the rows are more than the
     /// screen has room for (the buttons and the version strip stay).
-    /// It starts with the ready-made options of the library - theme, accent color, language and always on top (<see cref="OptionsPreset"/>; more
+    /// It starts with the ready-made options of the library - theme (a button in the top right corner), accent color, language and always on top (<see cref="OptionsPreset"/>; more
     /// are there - start with Windows, reset to defaults - and any selection is added with <see cref="AddOption"/>). They are applied as they are
     /// chosen and taken back when the window is closed without Save. Saving also writes the appearance when the program called
     /// <see cref="UIStyles.RememberAppearance"/>, and tells the user by a toast (<see cref="ShowToasts"/>). Make one with
@@ -205,6 +206,7 @@ namespace ErikwnkWFUI.Forms
         {
             if (disposing)
                 UIStrings.LanguageChanged -= OnLanguageChanged;
+                UIColors.ThemeChanged -= OnThemeChanged;
 
             base.Dispose(disposing);
         }
@@ -239,6 +241,13 @@ namespace ErikwnkWFUI.Forms
             ContentPanel.Padding = new Padding(Scale(20));
             _buttonBar.Height = Scale(56);
 
+            if (_themeStrip != null)
+            {
+                _themeStrip.Height = Scale(40);
+                _themeButton.Size = new Size(Scale(32), Scale(32));
+                PositionThemeButton();
+            }
+
             Size buttonSize = new Size(Scale(100), Scale(32));
             _cancelButton.Size = buttonSize;
             _saveButton.Size = buttonSize;
@@ -271,7 +280,7 @@ namespace ErikwnkWFUI.Forms
         {
             Size preferred = _propertyTable.PreferredSize;
 
-            int chrome = TitleBar.Height + (_showButtons ? _buttonBar.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
+            int chrome = TitleBar.Height + (_showButtons ? _buttonBar.Height : 0) + (_themeStrip != null ? _themeStrip.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
                 + Scale(extraHeight) + Padding.Vertical + ContentPanel.Padding.Vertical;
             int height = preferred.Height + chrome;
 

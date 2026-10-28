@@ -292,6 +292,10 @@ namespace ErikwnkWFUI
             public const string Globe = "\uE774";
             /// <summary>An eye.</summary>
             public const string Eye = "\U0001F441";
+            /// <summary>A sun (brightness), from the Windows icon font: the light theme.</summary>
+            public const string Sun = "";
+            /// <summary>A crescent moon (quiet hours), from the Windows icon font: the dark theme.</summary>
+            public const string Moon = "";
         }
     }
 }

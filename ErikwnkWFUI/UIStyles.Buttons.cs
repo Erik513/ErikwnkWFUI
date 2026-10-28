@@ -461,6 +461,12 @@ namespace ErikwnkWFUI
                 /// <summary>Showing or watching: an eye, on dark gray.</summary>
                 public static UIButtonPreset Eye { get; } = new UIButtonPreset(Symbols.Eye, WhiteOn(Colors.Sets.Dark));
 
+                /// <summary>The light theme: a sun, on orange.</summary>
+                public static UIButtonPreset Sun { get; } = new UIButtonPreset(Symbols.Sun, WhiteOn(Colors.Sets.Orange));
+
+                /// <summary>The dark theme: a moon, on dark gray.</summary>
+                public static UIButtonPreset Moon { get; } = new UIButtonPreset(Symbols.Moon, WhiteOn(Colors.Sets.Dark));
+
                 /// <summary>Minimizing a window: a bar at the bottom, on dark gray.</summary>
                 public static UIButtonPreset Minimize { get; } = new UIButtonPreset(Symbols.Minimize, WhiteOn(Colors.Sets.Dark));
 

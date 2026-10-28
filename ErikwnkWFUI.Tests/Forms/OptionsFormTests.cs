@@ -250,6 +250,17 @@ public class OptionsFormTests : IDisposable
 
     // ---- the basic settings
 
+    private static Button ThemeButton(OptionsForm form)
+    {
+        return Find(form, "_themeButton");
+    }
+
+    // The button takes no focus (like a tool bar button), so PerformClick - which needs a button that can be selected - does nothing.
+    private static void ClickTheme(OptionsForm form)
+    {
+        ThemeButton(form).InvokePrivate("OnClick", EventArgs.Empty);
+    }
+
     private static System.Windows.Forms.ComboBox Box(OptionsForm form, string field)
     {
         return form.GetPrivateField<System.Windows.Forms.ComboBox>(field)!;
@@ -265,11 +276,10 @@ public class OptionsFormTests : IDisposable
     {
         OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
 
-        Assert.Equal(new[] { "General", "Theme", "Accent color", "Language", "Always on top" }, RowLabels(form));
-        Assert.Equal(0, Box(form, "_themeBox").SelectedIndex);
+        Assert.Equal(new[] { "General", "Accent color", "Language", "Always on top" }, RowLabels(form));
+        Assert.Equal(UIStyles.Symbols.Sun, ThemeButton(form).Text);
         Assert.Equal(0, Box(form, "_accentBox").SelectedIndex);
         Assert.Equal(0, Box(form, "_languageBox").SelectedIndex);
-        Assert.Equal(new object[] { "Dark", "Light" }, Box(form, "_themeBox").Items.Cast<object>().ToArray());
         Assert.Equal(15, Box(form, "_accentBox").Items.Count);
         Assert.Equal(new object[] { "English", "Deutsch" }, Box(form, "_languageBox").Items.Cast<object>().ToArray());
         Assert.Same(UIThemes.Dark, form.SelectedTheme);
@@ -282,7 +292,7 @@ public class OptionsFormTests : IDisposable
     {
         OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
 
-        Box(form, "_themeBox").SelectedIndex = 1;
+        ClickTheme(form);
         Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
         Assert.Same(UIThemes.Light, form.SelectedTheme);
 
@@ -302,8 +312,8 @@ public class OptionsFormTests : IDisposable
 
         Box(form, "_languageBox").SelectedIndex = 1;
 
-        Assert.Equal(new[] { "Allgemein", "Design", "Akzentfarbe", "Sprache", "Immer im Vordergrund" }, RowLabels(form));
-        Assert.Equal(new object[] { "Dunkel", "Hell" }, Box(form, "_themeBox").Items.Cast<object>().ToArray());
+        Assert.Equal(new[] { "Allgemein", "Akzentfarbe", "Sprache", "Immer im Vordergrund" }, RowLabels(form));
+        Assert.Equal("Zum hellen Design wechseln", ThemeButton(form).AccessibleName);
         Assert.Equal("Rot", Box(form, "_accentBox").Items[1]);
         Assert.Equal(1, Box(form, "_languageBox").SelectedIndex);
         Assert.Equal("Speichern", form.SaveButtonText);
@@ -313,7 +323,7 @@ public class OptionsFormTests : IDisposable
     public void ClosedWithoutSave_WhatWasChosenIsTakenBack_ClosedWithSaveItStays()
     {
         OptionsForm cancelled = _host.Show(UIStyles.Forms.CreateOptionsStandard());
-        Box(cancelled, "_themeBox").SelectedIndex = 1;
+        ClickTheme(cancelled);
         Box(cancelled, "_accentBox").SelectedIndex = 3;
         Box(cancelled, "_languageBox").SelectedIndex = 1;
 
@@ -325,7 +335,7 @@ public class OptionsFormTests : IDisposable
         Assert.Equal(AppLanguage.English, AppLocalization.Language);
 
         OptionsForm saved = _host.Show(UIStyles.Forms.CreateOptionsStandard());
-        Box(saved, "_themeBox").SelectedIndex = 1;
+        ClickTheme(saved);
 
         Find(saved, "_saveButton").PerformClick();
 
@@ -336,13 +346,13 @@ public class OptionsFormTests : IDisposable
     public void ClosedByTheCloseButtonOrEscape_WithoutSave_AlsoTakesItBack_AndWithoutTheButtonsNothingIsTakenBack()
     {
         OptionsForm closed = _host.Show(UIStyles.Forms.CreateOptionsStandard());
-        Box(closed, "_themeBox").SelectedIndex = 1;
+        ClickTheme(closed);
         closed.Close();
         Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
 
         OptionsForm direct = _host.Show(UIStyles.Forms.CreateOptionsStandard());
         direct.ShowButtons = false;
-        Box(direct, "_themeBox").SelectedIndex = 1;
+        ClickTheme(direct);
         direct.Close();
         Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
     }
@@ -356,15 +366,19 @@ public class OptionsFormTests : IDisposable
 
         Assert.Empty(RowLabels(none));
         Assert.Equal(new[] { "General", "Language" }, RowLabels(some));
-        Assert.Equal(5, RowLabels(all).Length);
+        Assert.Equal(4, RowLabels(all).Length);
 
-        ErikwnkWFUI.Controls.PropertyRow theme = none.AddOption(OptionsPreset.Theme);
+        // The theme is no row: a button in the corner, there once.
+        Assert.Null(none.AddOption(OptionsPreset.Theme));
+        Assert.Empty(RowLabels(none));
+        Button corner = ThemeButton(none);
         none.AddOption(OptionsPreset.AlwaysOnTop);
-        Assert.Same(theme, none.AddOption(OptionsPreset.Theme));
-        Assert.Equal(new[] { "General", "Theme", "Always on top" }, RowLabels(none));
+        Assert.Null(none.AddOption(OptionsPreset.Theme));
+        Assert.Same(corner, ThemeButton(none));
+        Assert.Equal(new[] { "General", "Always on top" }, RowLabels(none));
 
         none.AddOptions(OptionsPreset.AccentColor, OptionsPreset.Language, OptionsPreset.Theme);
-        Assert.Equal(new[] { "General", "Theme", "Always on top", "Accent color", "Language" }, RowLabels(none));
+        Assert.Equal(new[] { "General", "Always on top", "Accent color", "Language" }, RowLabels(none));
     }
 
     [Fact]
@@ -374,7 +388,7 @@ public class OptionsFormTests : IDisposable
         form.PropertyTable.AddRow("Own", new Button());
         form.AddOption(OptionsPreset.Language);
 
-        Assert.Equal(new[] { "General", "Theme", "Own", "Language" }, RowLabels(form));
+        Assert.Equal(new[] { "Own", "General", "Language" }, RowLabels(form));
     }
 
     [Fact]
@@ -652,7 +666,7 @@ public class OptionsFormTests : IDisposable
         OptionsForm entered = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
         int saved = 0;
         entered.SaveClicked += (sender, e) => saved++;
-        Box(entered, "_themeBox").SelectedIndex = 1;
+        ClickTheme(entered);
 
         Assert.True(entered.InvokePrivate<bool>("ProcessDialogKey", Keys.Enter));
 
@@ -662,7 +676,7 @@ public class OptionsFormTests : IDisposable
 
         UIColors.ApplyTheme(UIThemes.Dark);
         OptionsForm escaped = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
-        Box(escaped, "_themeBox").SelectedIndex = 1;
+        ClickTheme(escaped);
 
         Assert.True(escaped.InvokePrivate<bool>("ProcessDialogKey", Keys.Escape));
 
@@ -721,7 +735,7 @@ public class OptionsFormTests : IDisposable
         form.FitToContent();
         TestPictures.Pump(60);
 
-        Assert.Equal(new[] { "General", "Theme", "Language" }, RowLabels(form));
+        Assert.Equal(new[] { "General", "Language" }, RowLabels(form));
         Assert.True(form.ClientSize.Height > before);
     }
 
@@ -757,13 +771,13 @@ public class OptionsFormTests : IDisposable
     public void AChangeThatIsTakenBackDoesNotTakeBackWhatWasChosenInAnotherWindowInTheMeantime()
     {
         OptionsForm first = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
-        Box(first, "_themeBox").SelectedIndex = 1;
+        ClickTheme(first);
         Find(first, "_saveButton").PerformClick();
         Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
 
         // A second window starts from what is applied now (light) and takes back only what it changed itself.
         OptionsForm second = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
-        Assert.Equal(1, Box(second, "_themeBox").SelectedIndex);
+        Assert.Equal(UIStyles.Symbols.Moon, ThemeButton(second).Text);
         Find(second, "_cancelButton").PerformClick();
 
         Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
@@ -794,6 +808,94 @@ public class OptionsFormTests : IDisposable
         Assert.True(form.ContentPanel.Controls.IndexOf(host) < form.ContentPanel.Controls.IndexOf(bar), "the buttons come before the table in the tab order");
     }
 
+    // ---- the theme button in the corner
+
+    [Fact]
+    public void TheTheme_IsAButtonInTheTopRightCorner_AndNotARowOfTheTable()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Button button = ThemeButton(form);
+        Control strip = button.Parent!;
+
+        Assert.Empty(RowLabels(form));
+        Assert.Equal(DockStyle.Top, strip.Dock);
+        Assert.Equal(strip.ClientSize.Width, button.Right);
+        Assert.True(strip.Top < ScrollHost(form).Top, "the corner is above the table");
+        Assert.False(button.TabStop);
+    }
+
+    [Fact]
+    public void WithoutTheThemeOption_ThereIsNoCornerAndNoSpaceForIt()
+    {
+        OptionsForm with = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language }));
+        OptionsForm without = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language }));
+        OptionsForm corner = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language, OptionsPreset.Theme }));
+        with.FitToContent();
+        corner.FitToContent();
+
+        Assert.Null(with.GetPrivateField<Button>("_themeButton"));
+        Assert.True(corner.ClientSize.Height > with.ClientSize.Height);
+        Assert.Null(without.GetPrivateField<Button>("_themeStrip"));
+    }
+
+    [Fact]
+    public void TheButtonShowsTheThemeItSwitchesTo_WhoeverChangedTheTheme()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Assert.Equal(UIStyles.Symbols.Sun, ThemeButton(form).Text);
+        Assert.Equal("Switch to light theme", ThemeButton(form).AccessibleName);
+
+        ClickTheme(form);
+
+        Assert.Equal(UIStyles.Symbols.Moon, ThemeButton(form).Text);
+        Assert.Equal("Switch to dark theme", ThemeButton(form).AccessibleName);
+
+        // Changed from outside (a toolbar of the program): the button follows.
+        UIColors.ApplyTheme(UIThemes.Dark);
+        Assert.Equal(UIStyles.Symbols.Sun, ThemeButton(form).Text);
+
+        UIStrings.Language = UILanguage.German;
+        Assert.Equal("Zum hellen Design wechseln", ThemeButton(form).AccessibleName);
+    }
+
+    [Fact]
+    public void ClickingTwice_GoesBack_AndCancelTakesTheThemeBack_AndResetGoesToDark()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme, OptionsPreset.ResetToDefaults }));
+
+        ClickTheme(form);
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+        ClickTheme(form);
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+
+        ClickTheme(form);
+        Find(form, "_resetButton").PerformClick();
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+
+        ClickTheme(form);
+        Find(form, "_cancelButton").PerformClick();
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+    }
+
+    [Fact]
+    public void TheButton_StaysInTheCornerWhenTheWindowIsResized_AndOnAnotherDpi()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Button button = ThemeButton(form);
+        int size96 = button.Height;
+
+        form.ClientSize = new Size(form.ClientSize.Width + 120, form.ClientSize.Height);
+        Application.DoEvents();
+
+        Assert.Equal(button.Parent!.ClientSize.Width, button.Right);
+
+        form.DpiOverride = 192;
+        Application.DoEvents();
+
+        Assert.Equal(size96 * 2, button.Height);
+        Assert.Equal(button.Parent.ClientSize.Width, button.Right);
+        Assert.Equal((button.Parent.ClientSize.Height - button.Height) / 2, button.Top);
+    }
     // ---- both themes
 
     [Theory]
@@ -816,14 +918,14 @@ public class OptionsFormTests : IDisposable
                     ColorContrastTestSupport.Check(shortfalls, window + ", label '" + label.Text + "'", label.ForeColor, back, 4.5);
                 }
 
-                foreach (string field in new[] { "_themeBox", "_accentBox", "_languageBox" })
+                foreach (string field in new[] { "_accentBox", "_languageBox" })
                 {
                     System.Windows.Forms.ComboBox box = Box(form, field);
                     ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " text", box.ForeColor, box.BackColor, 4.5);
                     ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " against the card", box.BackColor, card, 1.1);
                 }
 
-                foreach (string field in new[] { "_saveButton", "_cancelButton", "_resetButton" })
+                foreach (string field in new[] { "_saveButton", "_cancelButton", "_resetButton", "_themeButton" })
                     ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " text", Find(form, field).ForeColor, Find(form, field).BackColor, 4.5);
 
                 ColorContrastTestSupport.Check(shortfalls, window + ", the card against the window", card, ScrollHost(form).BackColor, 1.03);
