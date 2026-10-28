@@ -1,172 +1,307 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Styles;
 using Button = System.Windows.Forms.Button;
+using ComboBox = System.Windows.Forms.ComboBox;
 
 namespace ErikwnkWFUI.Showcase
 {
-    // The AppForm tab: the left column names what is shown, the buttons open a small sample window; what the window demonstrates is
-    // written in the window itself.
+    // The AppForm tab: ONE sample window and the controls that set its options. Every change closes the window and opens it again in the
+    // same place with the new options, so there is never more than one window; what the change does is written in the window itself.
     public partial class ShowcaseForm
     {
+        private AppForm _sampleForm;
+        private ComboBox _formKind;
+        private ComboBox _formLook;
+        private ComboBox _formAlign;
+        private ComboBox _formBorder;
+        private ComboBox _formBar;
+        private ToggleSwitch _formMinimize;
+        private ToggleSwitch _formMaximize;
+        private ToggleSwitch _formClose;
+        private ToggleSwitch _formShadow;
+        private ToggleSwitch _formResizable;
+        private ToggleSwitch _formBorderless;
+        private ToggleSwitch _formEscape;
+        private ToggleSwitch _formVersion;
+        private ToggleSwitch _formRemember;
+        private bool _syncingFormControls;
+
+        private const string FormDefaultChoice = "default";
+        private const string FormOwnVersionText = "v9.9 (own text)";
+
         private void AddFormsSection(PropertyTable table)
         {
-            table.AddSection("UIStyles.Forms: Standard | Primary | colors: Yellow");
+            CloseSampleForm();
 
-            AddFormKindRow(table, "Window", "A resizable window: minimize, maximize and close, and a least size.",
-                (title, colors) => UIStyles.Forms.CreateStandard(title, colors),
-                title => UIStyles.Forms.CreatePrimary(title),
-                "CreateStandard", "CreatePrimary");
-            AddFormKindRow(table, "Dialog", "A dialog: fixed size, only the close button, and Escape closes it.",
-                (title, colors) => UIStyles.Forms.CreateDialogStandard(title, colors),
-                title => UIStyles.Forms.CreateDialogPrimary(title),
-                "CreateDialogStandard", "CreateDialogPrimary");
-            AddFormKindRow(table, "Settings", "A settings window: a dialog with the version of the program in the strip at the bottom.",
-                (title, colors) => UIStyles.Forms.CreateSettingsStandard(title, colors),
-                title => UIStyles.Forms.CreateSettingsPrimary(title),
-                "CreateSettingsStandard", "CreateSettingsPrimary");
+            table.AddSection("One sample window - change a property and it shows in the window at once");
 
-            table.AddRow("VersionStrip", CreateFormButton("Open", () =>
-            {
-                AppForm form = UIStyles.Forms.CreateSettingsStandard("VersionStrip");
+            Button open = UIStyles.Buttons.CreateStandard("Open", size: new Size(110, 32));
+            Button close = UIStyles.Buttons.CreateStandard("Close", size: new Size(110, 32));
+            open.Click += (sender, e) => ReopenSampleForm("Change the kind, the colors and the properties of the window in the Showcase: this window changes in place.");
+            close.Click += (sender, e) => CloseSampleForm();
+            table.AddRow("Sample window", open, close);
 
-                // The update button of the library (AppUpdater.CreateUpdateAvailableButton): always the update symbol, never a text.
-                Button update = UIStyles.Buttons.CreateSymbol(
-                    UIStyles.Symbols.Update,
-                    "An update is available",
-                    new Size(22, 20),
-                    UIStyles.Colors.Sets.Green);
-                update.Margin = new Padding(6, 2, 0, 2);
-                form.VersionStrip.Controls.Add(update);
+            _formKind = CreateFormChoice("Window", "Dialog", "Settings");
+            _formLook = CreateFormChoice("Standard", "Primary", "colors: Yellow");
+            _formKind.SelectedIndexChanged += (sender, e) => OnFormPresetChanged("The kind of window: a Window can be resized, minimized and maximized; a Dialog has only the close button, a fixed size, and Escape closes it; Settings is a Dialog with the version of the program in the strip below.");
+            _formLook.SelectedIndexChanged += (sender, e) => OnFormPresetChanged("The colors: Standard is the usual dark title bar, Primary a very dark shade of the accent, and with colors a color set colors the title bar.");
+            table.AddRow("UIStyles.Forms", _formKind, _formLook);
 
-                return form;
-            }, "What is put into the strip stands left of the version text, in the middle of the strip's height (here: the update button, which is always a symbol)."));
+            _formAlign = CreateFormChoice("MiddleLeft", "MiddleCenter", "MiddleRight");
+            _formBorder = CreateFormChoice(FormDefaultChoice, "Crimson", "Teal");
+            _formBar = CreateFormChoice(FormDefaultChoice, "DarkGreen", "SteelBlue");
+            _formAlign.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("TitleTextAlign: where the title stands. In the middle it keeps clear of the buttons when the window gets narrow.");
+            _formBorder.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("BorderColor: the thin edge around the window (black by default). It has no effect with the native frame.");
+            _formBar.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("TitleBarBackColor: a color of the bar alone, which does not follow the theme.");
+            table.AddRow("Appearance",
+                FormName("TitleTextAlign"), PropertyColumn.Percent(_formAlign, 33f),
+                FormName("BorderColor"), PropertyColumn.Percent(_formBorder, 33f),
+                FormName("TitleBarBackColor"), PropertyColumn.Percent(_formBar, 33f));
 
-            table.AddSection("FormOptions: one property, its values side by side");
+            _formMinimize = CreateFormSwitch("ShowMinimizeButton: without it the taskbar and the system menu cannot minimize the window either.");
+            _formMaximize = CreateFormSwitch("ShowMaximizeButton: the maximize button of the title bar.");
+            _formClose = CreateFormSwitch("ShowCloseButton: without it close the window with Alt+F4 or from the system menu (right-click the title bar).");
+            table.AddRow("Title bar buttons",
+                FormSwitch(_formMinimize), FormName("ShowMinimizeButton"),
+                FormSwitch(_formMaximize), FormName("ShowMaximizeButton"),
+                FormSwitch(_formClose), FormName("ShowCloseButton"));
 
-            AddOptionRow(table, "TitleTextAlign",
-                Option("MiddleLeft", "The title at the left, next to the logo.", o => o.TitleTextAlign = ContentAlignment.MiddleLeft),
-                Option("MiddleCenter", "The title in the middle of the bar (the default for a window). It keeps clear of the buttons when the window gets narrow.", o => o.TitleTextAlign = ContentAlignment.MiddleCenter),
-                Option("MiddleRight", "The title at the right, left of the buttons.", o => o.TitleTextAlign = ContentAlignment.MiddleRight));
+            _formShadow = CreateFormSwitch("Shadow: the drop shadow around a window without a frame.");
+            _formResizable = CreateFormSwitch("Resizable: whether the window can be resized by its edges.");
+            _formBorderless = CreateFormSwitch("Borderless = false: the native frame of Windows, and no title bar of the library (BorderColor and Shadow have nothing to show then).");
+            table.AddRow("Frame",
+                FormSwitch(_formShadow), FormName("Shadow"),
+                FormSwitch(_formResizable), FormName("Resizable"),
+                FormSwitch(_formBorderless), FormName("Borderless"));
 
-            AddOptionRow(table, "BorderColor",
-                Option("default (black)", "The thin edge around the window is black, whatever color the title bar has.", o => { }),
-                Option("Crimson", "The edge around the window in Crimson. Look at the window's edge.", o => o.BorderColor = Color.Crimson),
-                Option("Teal", "The edge around the window in Teal. Look at the window's edge.", o => o.BorderColor = Color.Teal));
+            _formEscape = CreateFormSwitch("CloseOnEscape: Escape closes the window, as it does in every dialog.");
+            _formVersion = CreateFormSwitch("VersionText: the strip at the bottom shows this text instead of the version of the program (without it a Window has no strip).");
+            _formRemember = CreateFormSwitch("RememberBoundsKey: move this window, resize it, close it with Close and open it again: it comes back where it was.");
+            table.AddRow("Behavior",
+                FormSwitch(_formEscape), FormName("CloseOnEscape"),
+                FormSwitch(_formVersion), FormName("VersionText = own text"),
+                FormSwitch(_formRemember), FormName("RememberBoundsKey"));
 
-            AddOptionRow(table, "TitleBarBackColor",
-                Option("default", "The title bar has the usual dark color.", o => { }),
-                Option("DarkGreen", "A color of the bar alone (it does not follow the theme); the buttons and the title keep readable.", o => o.TitleBarBackColor = Color.DarkGreen),
-                Option("SteelBlue", "A color of the bar alone.", o => o.TitleBarBackColor = Color.SteelBlue));
-
-            AddOptionRow(table, "Shadow",
-                Option("true", "The window has a drop shadow (the default).", o => o.Shadow = true),
-                Option("false", "No drop shadow around the window.", o => o.Shadow = false));
-
-            AddOptionRow(table, "ShowMinimizeButton",
-                Option("true", "The title bar has the minimize button.", o => o.ShowMinimizeButton = true),
-                Option("false", "No minimize button (the taskbar and the system menu cannot minimize the window either).", o => o.ShowMinimizeButton = false));
-
-            AddOptionRow(table, "ShowMaximizeButton",
-                Option("true", "The title bar has the maximize button.", o => o.ShowMaximizeButton = true),
-                Option("false", "No maximize button.", o => o.ShowMaximizeButton = false));
-
-            AddOptionRow(table, "ShowCloseButton",
-                Option("true", "The title bar has the close button.", o => o.ShowCloseButton = true),
-                Option("false", "No close button: close this window with Alt+F4 or from the system menu (right-click the title bar).", o => o.ShowCloseButton = false));
-
-            AddOptionRow(table, "Resizable",
-                Option("true", "The window can be resized by its edges.", o => o.Resizable = true),
-                Option("false", "A fixed size: no resizing by the edges.", o => o.Resizable = false));
-
-            AddOptionRow(table, "CloseOnEscape",
-                Option("false", "Escape does nothing in a standard window.", o => o.CloseOnEscape = false),
-                Option("true", "Escape closes this window, as it does in every dialog.", o => o.CloseOnEscape = true));
-
-            AddOptionRow(table, "VersionText",
-                Option("null", "No version strip (the default for a window).", o => o.VersionText = null),
-                Option("\"v9.9 (own text)\"", "The strip at the bottom shows this text instead of the version of the program.", o => o.VersionText = "v9.9 (own text)"));
-
-            AddOptionRow(table, "Borderless",
-                Option("true", "The window has the title bar of the library (the default).", o => o.Borderless = true),
-                Option("false", "The native frame of Windows, and no title bar of the library. (BorderColor and Shadow have nothing to show here: there is no edge of the library.)", o => o.Borderless = false));
-
-            AddOptionRow(table, "RememberBoundsKey",
-                Option("null", "The window remembers nothing.", o => o.RememberBoundsKey = null),
-                Option("\"Showcase.Sample\"", "Move this window, resize it, close it and open it again: it comes back where it was.", o => o.RememberBoundsKey = "Showcase.Sample"));
+            SyncFormControlsToPreset();
         }
 
-        // One kind of window in three columns: Standard, Primary and Standard with the color set Yellow.
-        private void AddFormKindRow(
-            PropertyTable table,
-            string kind,
-            string description,
-            Func<string, UIColorSet, AppForm> standard,
-            Func<string, AppForm> primary,
-            string standardName,
-            string primaryName)
-        {
-            Button first = CreateFormButton(standardName, () => standard(standardName, null), description);
-            Button second = CreateFormButton(primaryName, () => primary(primaryName), description + " The title bar is in a very dark shade of the accent.");
-            Button third = CreateFormButton(standardName + "(colors: Yellow)", () => standard("colors: Yellow", UIStyles.Colors.Sets.Yellow), description + " The title bar takes the color of the set; the strip stays a darker gray.");
+        // ---- the controls
 
-            table.AddRow(kind,
-                PropertyColumn.Percent(first, 100f / 3),
-                PropertyColumn.Percent(second, 100f / 3),
-                PropertyColumn.Percent(third, 100f / 3));
+        private ComboBox CreateFormChoice(params string[] items)
+        {
+            ComboBox combo = UIStyles.ComboBoxes.CreateStandard();
+            combo.DropDownStyle = ComboBoxStyle.DropDownList;
+            combo.Items.AddRange(items);
+            combo.SelectedIndex = 0;
+
+            return combo;
         }
 
-        // A property with its values: the left column only names it, each value is a button that opens a standard window with that value.
-        private void AddOptionRow(PropertyTable table, string property, params (string Value, string Description, Action<FormOptions> Change)[] values)
+        private ToggleSwitch CreateFormSwitch(string description)
         {
-            PropertyColumn[] columns = new PropertyColumn[values.Length];
+            ToggleSwitch toggle = UIStyles.ToggleSwitches.CreateStandard(true);
+            toggle.CheckedChanged += (sender, e) => ReopenSampleFormIfOpen(description);
 
-            for (int i = 0; i < values.Length; i++)
+            return toggle;
+        }
+
+        // The name of a property in front of its control, in a column as wide as the text.
+        private static PropertyColumn FormName(string name)
+        {
+            Label label = UIStyles.Labels.CreateStandard(name);
+            label.AutoSize = false;
+            label.TextAlign = ContentAlignment.MiddleLeft;
+
+            return PropertyColumn.Absolute(label, TextRenderer.MeasureText(name, label.Font).Width + 24);
+        }
+
+        private static PropertyColumn FormSwitch(ToggleSwitch toggle)
+        {
+            return PropertyColumn.Absolute(toggle, 56);
+        }
+
+        // ---- the options of the window, as the controls set them
+
+        private FormOptions CreateFormPreset()
+        {
+            string title = "Sample window";
+            bool primary = (string)_formLook.SelectedItem == "Primary";
+
+            switch ((string)_formKind.SelectedItem)
             {
-                (string value, string description, Action<FormOptions> change) = values[i];
-                string title = property + " = " + value;
+                case "Dialog":
+                    return primary ? FormOptions.CreateDialogPrimary(title) : FormOptions.CreateDialog(title);
+                case "Settings":
+                    return primary ? FormOptions.CreateSettingsPrimary(title) : FormOptions.CreateSettings(title);
+                default:
+                    return primary ? FormOptions.CreatePrimary(title) : FormOptions.CreateStandard(title);
+            }
+        }
 
-                columns[i] = PropertyColumn.Percent(CreateFormButton(value, () =>
-                {
-                    FormOptions options = FormOptions.CreateStandard(title);
-                    change(options);
+        private static Color? FormColorOf(ComboBox combo)
+        {
+            string name = (string)combo.SelectedItem;
 
-                    return new AppForm(options);
-                }, description), 100f / values.Length);
+            return name == FormDefaultChoice ? (Color?)null : Color.FromName(name);
+        }
+
+        private FormOptions CreateFormOptions()
+        {
+            FormOptions options = CreateFormPreset();
+
+            if ((string)_formLook.SelectedItem == "colors: Yellow")
+                options.Colors = UIStyles.Colors.Sets.Yellow;
+
+            options.TitleTextAlign = (ContentAlignment)Enum.Parse(typeof(ContentAlignment), (string)_formAlign.SelectedItem);
+            options.BorderColor = FormColorOf(_formBorder);
+            options.TitleBarBackColor = FormColorOf(_formBar);
+            options.ShowMinimizeButton = _formMinimize.Checked;
+            options.ShowMaximizeButton = _formMaximize.Checked;
+            options.ShowCloseButton = _formClose.Checked;
+            options.Shadow = _formShadow.Checked;
+            options.Resizable = _formResizable.Checked;
+            options.Borderless = _formBorderless.Checked;
+            options.CloseOnEscape = _formEscape.Checked;
+
+            if (_formVersion.Checked)
+                options.VersionText = FormOwnVersionText;
+
+            if (_formRemember.Checked)
+                options.RememberBoundsKey = "Showcase.Sample";
+
+            return options;
+        }
+
+        // A new kind or new colors start from that preset: the controls show what it has.
+        private void SyncFormControlsToPreset()
+        {
+            FormOptions preset = CreateFormPreset();
+            _syncingFormControls = true;
+
+            try
+            {
+                _formAlign.SelectedItem = preset.TitleTextAlign.ToString();
+                _formBorder.SelectedItem = FormDefaultChoice;
+                _formBar.SelectedItem = FormDefaultChoice;
+                _formMinimize.Checked = preset.ShowMinimizeButton;
+                _formMaximize.Checked = preset.ShowMaximizeButton;
+                _formClose.Checked = preset.ShowCloseButton;
+                _formShadow.Checked = preset.Shadow;
+                _formResizable.Checked = preset.Resizable;
+                _formBorderless.Checked = preset.Borderless;
+                _formEscape.Checked = preset.CloseOnEscape;
+                _formVersion.Checked = false;
+                _formRemember.Checked = false;
+            }
+            finally
+            {
+                _syncingFormControls = false;
+            }
+        }
+
+        private void OnFormPresetChanged(string description)
+        {
+            if (_syncingFormControls)
+                return;
+
+            SyncFormControlsToPreset();
+            ReopenSampleFormIfOpen(description);
+        }
+
+        // What differs from the preset: the properties that were changed.
+        private string DescribeFormChanges()
+        {
+            FormOptions preset = CreateFormPreset();
+            FormOptions now = CreateFormOptions();
+            List<string> changes = new List<string>();
+
+            if ((string)_formLook.SelectedItem == "colors: Yellow")
+                changes.Add("Colors = Sets.Yellow");
+
+            if (now.TitleTextAlign != preset.TitleTextAlign) changes.Add("TitleTextAlign = " + now.TitleTextAlign);
+            if (now.BorderColor != null) changes.Add("BorderColor = " + now.BorderColor.Value.Name);
+            if (now.TitleBarBackColor != null) changes.Add("TitleBarBackColor = " + now.TitleBarBackColor.Value.Name);
+            if (now.ShowMinimizeButton != preset.ShowMinimizeButton) changes.Add("ShowMinimizeButton = " + now.ShowMinimizeButton);
+            if (now.ShowMaximizeButton != preset.ShowMaximizeButton) changes.Add("ShowMaximizeButton = " + now.ShowMaximizeButton);
+            if (now.ShowCloseButton != preset.ShowCloseButton) changes.Add("ShowCloseButton = " + now.ShowCloseButton);
+            if (now.Shadow != preset.Shadow) changes.Add("Shadow = " + now.Shadow);
+            if (now.Resizable != preset.Resizable) changes.Add("Resizable = " + now.Resizable);
+            if (now.Borderless != preset.Borderless) changes.Add("Borderless = " + now.Borderless);
+            if (now.CloseOnEscape != preset.CloseOnEscape) changes.Add("CloseOnEscape = " + now.CloseOnEscape);
+            if (now.VersionText != preset.VersionText) changes.Add("VersionText = \"" + now.VersionText + "\"");
+            if (now.RememberBoundsKey != null) changes.Add("RememberBoundsKey = \"" + now.RememberBoundsKey + "\"");
+
+            return changes.Count == 0 ? "The preset as it is." : "Changed from the preset: " + string.Join(", ", changes) + ".";
+        }
+
+        // ---- the one window
+
+        private void ReopenSampleFormIfOpen(string description)
+        {
+            if (_syncingFormControls || _sampleForm == null || _sampleForm.IsDisposed)
+                return;
+
+            ReopenSampleForm(description);
+        }
+
+        private void ReopenSampleForm(string description)
+        {
+            Rectangle? old = null;
+            bool wasResizable = false;
+
+            if (_sampleForm != null && !_sampleForm.IsDisposed)
+            {
+                old = _sampleForm.Bounds;
+                wasResizable = _sampleForm.MinimumSize != Size.Empty;
+                _sampleForm.Close();
             }
 
-            table.AddRow(property, columns);
-        }
+            FormOptions options = CreateFormOptions();
+            AppForm form = new AppForm(options);
 
-        private static (string Value, string Description, Action<FormOptions> Change) Option(string value, string description, Action<FormOptions> change)
-        {
-            return (value, description, change);
-        }
-
-        private Button CreateFormButton(string text, Func<AppForm> create, string description)
-        {
-            Button button = UIStyles.Buttons.CreateStandard(text, size: new Size(160, 32));
-            button.AutoSize = true;
-            button.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            button.Click += (sender, e) => OpenSampleForm(create(), description);
-
-            return button;
-        }
-
-        private void OpenSampleForm(AppForm form, string description)
-        {
-            Label text = UIStyles.Labels.CreateStandard(description + "\r\n\r\nRight-click the title bar, or press Alt+Space, for the system menu.");
+            Label text = UIStyles.Labels.CreateStandard(description + "\r\n\r\n" + DescribeFormChanges() + "\r\n\r\nRight-click the title bar, or press Alt+Space, for the system menu.");
             text.AutoSize = false;
             text.Dock = DockStyle.Fill;
             text.Padding = new Padding(16);
             text.AutoEllipsis = false;
             form.ContentPanel.Controls.Add(text);
 
-            form.ClientSize = new Size(460, 190);
+            form.ClientSize = new Size(520, 230);
+
+            // The same place (and the size the user gave it) as the window before.
+            if (old != null)
+            {
+                form.StartPosition = FormStartPosition.Manual;
+                form.Location = old.Value.Location;
+
+                if (wasResizable && options.Resizable)
+                    form.Size = old.Value.Size;
+            }
+
+            form.FormClosed += (sender, e) =>
+            {
+                if (ReferenceEquals(_sampleForm, form))
+                    _sampleForm = null;
+            };
+
+            _sampleForm = form;
             form.Show(this);
+
+            // The controls that were changed stay in front: the sample window does not take the keyboard from them.
+            Activate();
+        }
+
+        private void CloseSampleForm()
+        {
+            if (_sampleForm != null && !_sampleForm.IsDisposed)
+                _sampleForm.Close();
+
+            _sampleForm = null;
         }
     }
 }
