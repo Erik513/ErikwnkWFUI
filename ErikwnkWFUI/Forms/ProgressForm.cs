@@ -128,13 +128,21 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 lock (_lock)
+                {
+                    if (_state != ProgressState.Running)
+                        return;
+
                     _status = value ?? "";
+                }
 
                 PushState(layout: true);
             }
         }
 
-        /// <summary>How far the task has come, 0 to 100 (a value outside is cut to it); setting it turns <see cref="IsIndeterminate"/> off. Can be set from any thread.</summary>
+        /// <summary>
+        /// How far the task has come, 0 to 100 (a value outside is cut to it); setting it turns <see cref="IsIndeterminate"/> off. Can be set from
+        /// any thread. Once the task has ended (<see cref="Succeed"/>, <see cref="Fail"/>) nothing changes any more: late reports are ignored.
+        /// </summary>
         public int Percent
         {
             get { lock (_lock) return _percent; }
@@ -142,6 +150,9 @@ namespace ErikwnkWFUI.Forms
             {
                 lock (_lock)
                 {
+                    if (_state != ProgressState.Running)
+                        return;
+
                     _percent = Math.Max(0, Math.Min(100, value));
                     _indeterminate = false;
                 }
@@ -157,7 +168,12 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 lock (_lock)
+                {
+                    if (_state != ProgressState.Running)
+                        return;
+
                     _indeterminate = value;
+                }
 
                 PushState(layout: false);
             }
@@ -247,6 +263,9 @@ namespace ErikwnkWFUI.Forms
         {
             lock (_lock)
             {
+                if (_state != ProgressState.Running)
+                    return;
+
                 _percent = Math.Max(0, Math.Min(100, percent));
                 _indeterminate = false;
                 _status = status ?? "";
@@ -279,6 +298,10 @@ namespace ErikwnkWFUI.Forms
         {
             lock (_lock)
             {
+                // The end is final: a task that reports late, or fails after it has succeeded, does not change what the window says.
+                if (_state != ProgressState.Running)
+                    return;
+
                 _state = state;
                 _indeterminate = false;
 

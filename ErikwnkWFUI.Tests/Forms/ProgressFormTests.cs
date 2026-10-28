@@ -305,6 +305,56 @@ public class ProgressFormTests : IDisposable
         Assert.Equal(before, ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0);
     }
 
+    // ---- the end is final
+
+    [Fact]
+    public void OnceTheTaskHasEnded_LateReportsAndAnotherEndChangeNothing()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        form.Succeed("Done.");
+
+        form.Report(10, "Late.");
+        form.Percent = 20;
+        form.Status = "Later.";
+        form.IsIndeterminate = true;
+        form.Fail("Too late.");
+
+        Assert.Equal(ProgressState.Succeeded, form.State);
+        Assert.Equal(100, Bar(form).Value);
+        Assert.Equal("Done.", StatusLabel(form).Text);
+        Assert.Equal(ProgressBarStyle.Continuous, Bar(form).Style);
+        Assert.Equal(UIStyles.Colors.Sets.Green.Basic.ToArgb(), Bar(form).ForeColor.ToArgb());
+
+        ProgressForm failed = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        failed.Percent = 35;
+        failed.Fail("No.");
+        failed.Succeed("Yes.");
+        failed.Report(90);
+
+        Assert.Equal(ProgressState.Failed, failed.State);
+        Assert.Equal(35, Bar(failed).Value);
+        Assert.Equal("No.", StatusLabel(failed).Text);
+    }
+
+    [Fact]
+    public void ManyThreadsReportingAtOnce_NeverBreakTheWindow()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+
+        Assert.Null(Record.Exception(() =>
+        {
+            Parallel.For(0, 400, i =>
+            {
+                form.Report(i % 120, "Step " + i);
+                form.Percent = (i * 7) % 100;
+            });
+        }));
+
+        TestPictures.Pump(300);
+
+        Assert.InRange(Bar(form).Value, 0, 100);
+        Assert.Equal(form.Percent, Bar(form).Value);
+    }
     // ---- edge cases
 
     [Fact]
