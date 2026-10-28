@@ -29,11 +29,13 @@ namespace ErikwnkWFUI.Forms
     /// A small dialog that shows how far a task has come: a text (<see cref="Status"/>) and a progress bar with the percentage on it, or a
     /// bar that just moves (<see cref="IsIndeterminate"/>) when the end cannot be told. The task reports with <see cref="Report(int)"/> - from any
     /// thread - and the window is also an <see cref="IProgress{T}"/>, so it can be handed to a task that wants one. The user cannot close it (the
-    /// close button is greyed out): the program closes it when the task is done. With <see cref="Cancelable"/> there is a Cancel button (Escape
+    /// close button is greyed out): the program closes it when the task is done, or ends it with <see cref="Succeed"/> or <see cref="Fail"/> (see
+    /// below). With <see cref="Cancelable"/> there is a Cancel button (Escape
     /// does the same) that asks the task to stop through <see cref="CancellationToken"/>; the window stays until the program closes it.
-    /// <see cref="ShowTime"/> adds the time that has passed and the time that is left (an estimate). <see cref="Succeed"/> and
+    /// <see cref="State"/> says where it is, and once the task has ended nothing changes any more (late reports are ignored). <see cref="ShowTime"/> adds the time that has passed and the time that is left (an estimate). <see cref="Succeed"/> and
     /// <see cref="Fail"/> end the task in the window itself: the bar turns green or red, the text says how it ended, and the user closes the
-    /// window with the button (now "Close") - so a message can still be read. Make one with
+    /// window with the button (now "Close") - so a message can still be read. It is for a task that blocks the program for a while; the
+    /// reports and the end can come from any thread. Make one with
     /// <c>UIStyles.Forms.CreateProgressStandard</c> / <c>CreateProgressPrimary</c>, or let <see cref="ProgressBox.Run"/> do it all.
     /// </summary>
     public class ProgressForm : AppForm, IProgress<int>
@@ -192,7 +194,7 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Whether a gray line under the bar says how much time has passed and - when the percentage is known and the task has been running for
-        /// a moment - how much is left, as an estimate ("0:12 passed - about 0:35 left"). Off by default.
+        /// a moment - how much is left, as an estimate ("0:12 elapsed · about 0:35 left"). Off by default.
         /// </summary>
         public bool ShowTime
         {
