@@ -71,6 +71,9 @@ namespace ErikwnkWFUI.Localization
 
             ["ProgressForm.Title"] = "Please wait",
             ["ProgressForm.Cancel"] = "Cancel",
+            ["ProgressForm.Close"] = "Close",
+            ["ProgressForm.Elapsed"] = "{0} elapsed",
+            ["ProgressForm.ElapsedLeft"] = "{0} elapsed \u00B7 about {1} left",
             ["InputBox.Title"] = "Input",
             ["InputBox.Ok"] = "OK",
             ["InputBox.Cancel"] = "Cancel",
@@ -189,6 +192,9 @@ namespace ErikwnkWFUI.Localization
 
             ["ProgressForm.Title"] = "Bitte warten",
             ["ProgressForm.Cancel"] = "Abbrechen",
+            ["ProgressForm.Close"] = "Schlie\u00DFen",
+            ["ProgressForm.Elapsed"] = "{0} vergangen",
+            ["ProgressForm.ElapsedLeft"] = "{0} vergangen \u00B7 noch ca. {1}",
             ["InputBox.Title"] = "Eingabe",
             ["InputBox.Ok"] = "OK",
             ["InputBox.Cancel"] = "Abbrechen",

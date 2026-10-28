@@ -437,6 +437,244 @@ public class ProgressFormTests : IDisposable
         Assert.Equal(Scaled(owner, new Size(640, 0)).Width, seen.Value.Width);
     }
 
+    // ---- the time
+
+    private static Label TimeLabel(ProgressForm form)
+    {
+        return form.GetPrivateField<Label>("_timeLabel")!;
+    }
+
+    [Fact]
+    public void ADurationIsWrittenAsMinutesAndSeconds_AndWithHoursFromAnHourOn()
+    {
+        Assert.Equal("0:05", ProgressForm.FormatDuration(TimeSpan.FromSeconds(5)));
+        Assert.Equal("1:05", ProgressForm.FormatDuration(TimeSpan.FromSeconds(65)));
+        Assert.Equal("59:59", ProgressForm.FormatDuration(TimeSpan.FromSeconds(3599)));
+        Assert.Equal("1:02:03", ProgressForm.FormatDuration(new TimeSpan(1, 2, 3)));
+        Assert.Equal("26:00:00", ProgressForm.FormatDuration(TimeSpan.FromHours(26)));
+        Assert.Equal("0:00", ProgressForm.FormatDuration(TimeSpan.FromSeconds(-4)));
+    }
+
+    [Fact]
+    public void TheTimeLeftIsAnEstimate_OnlyWhenThePercentIsKnown_AndTheTaskHasRunForAMoment()
+    {
+        TimeSpan ten = TimeSpan.FromSeconds(10);
+
+        Assert.Equal("0:10 elapsed \u00B7 about 0:10 left", ProgressForm.FormatTime(ten, 50, false, ProgressState.Running));
+        Assert.Equal("0:10 elapsed \u00B7 about 0:30 left", ProgressForm.FormatTime(ten, 25, false, ProgressState.Running));
+
+        // Too early, no progress yet, nothing left, a bar without an end, or already ended: only what has passed.
+        Assert.Equal("0:01 elapsed", ProgressForm.FormatTime(TimeSpan.FromSeconds(1), 50, false, ProgressState.Running));
+        Assert.Equal("0:10 elapsed", ProgressForm.FormatTime(ten, 0, false, ProgressState.Running));
+        Assert.Equal("0:10 elapsed", ProgressForm.FormatTime(ten, 100, false, ProgressState.Running));
+        Assert.Equal("0:10 elapsed", ProgressForm.FormatTime(ten, 50, true, ProgressState.Running));
+        Assert.Equal("0:10 elapsed", ProgressForm.FormatTime(ten, 50, false, ProgressState.Succeeded));
+        Assert.Equal("0:10 elapsed", ProgressForm.FormatTime(ten, 50, false, ProgressState.Failed));
+
+        UIStrings.Language = UILanguage.German;
+        Assert.Equal("0:10 vergangen \u00B7 noch ca. 0:10", ProgressForm.FormatTime(ten, 50, false, ProgressState.Running));
+        Assert.Equal("0:10 vergangen", ProgressForm.FormatTime(ten, 0, false, ProgressState.Running));
+    }
+
+    [Fact]
+    public void ShowTime_AddsAGrayLineUnderTheBar_AndTheWindowGrows()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        int before = form.Height;
+        Assert.False(TimeLabel(form).Visible);
+        Assert.False(form.ShowTime);
+
+        form.Clock = () => TimeSpan.FromSeconds(12);
+        form.ShowTime = true;
+        form.Percent = 25;
+
+        Assert.True(TimeLabel(form).Visible);
+        Assert.Equal("0:12 elapsed \u00B7 about 0:36 left", TimeLabel(form).Text);
+        Assert.True(TimeLabel(form).Top >= Bar(form).Bottom);
+        Assert.True(form.Height > before);
+
+        form.ShowTime = false;
+        Assert.False(TimeLabel(form).Visible);
+        Assert.Equal(before, form.Height);
+    }
+
+    [Fact]
+    public void TheTimeLineChangesWithThePercent_AndTheLanguage()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        form.Clock = () => TimeSpan.FromSeconds(20);
+        form.ShowTime = true;
+
+        form.Percent = 50;
+        Assert.Equal("0:20 elapsed \u00B7 about 0:20 left", TimeLabel(form).Text);
+
+        form.Percent = 80;
+        Assert.Equal("0:20 elapsed \u00B7 about 0:05 left", TimeLabel(form).Text);
+
+        form.IsIndeterminate = true;
+        Assert.Equal("0:20 elapsed", TimeLabel(form).Text);
+    }
+
+    [Fact]
+    public void TheClockRunsWhileTheTimeIsWantedAndTheTaskRuns_AndStopsWhenItEnds()
+    {
+        System.Windows.Forms.Timer Timer(ProgressForm f) => f.GetPrivateField<System.Windows.Forms.Timer>("_timer")!;
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        Assert.False(Timer(form).Enabled);
+
+        form.ShowTime = true;
+        Assert.True(Timer(form).Enabled);
+
+        form.Succeed("Done.");
+        Assert.False(Timer(form).Enabled);
+
+        ProgressForm other = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        other.ShowTime = true;
+        other.Fail("Failed.");
+        Assert.False(Timer(other).Enabled);
+
+        ProgressForm never = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        never.ShowTime = true;
+        never.ShowTime = false;
+        Assert.False(Timer(never).Enabled);
+    }
+
+    // ---- Succeed and Fail
+
+    [Fact]
+    public void Succeed_FillsTheBar_MakesItGreen_SetsTheText_AndAllowsTheUserToClose()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        int before = form.Height;
+        form.Percent = 30;
+        Assert.False(form.CloseEnabled);
+        Assert.Equal(ProgressState.Running, form.State);
+
+        form.Succeed("All done.");
+
+        Assert.Equal(ProgressState.Succeeded, form.State);
+        Assert.Equal(100, Bar(form).Value);
+        Assert.Equal(UIStyles.Colors.Sets.Green.Basic.ToArgb(), Bar(form).ForeColor.ToArgb());
+        Assert.Equal("All done.", StatusLabel(form).Text);
+        Assert.True(form.CloseEnabled);
+        Assert.True(CancelButton(form).Visible);
+        Assert.Equal("Close", CancelButton(form).Text);
+        Assert.True(form.Height > before, "room for the button");
+    }
+
+    [Fact]
+    public void Fail_KeepsTheBarWhereItWas_MakesItRed_AndShowsWhatWentWrong()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        form.Percent = 40;
+
+        form.Fail("The server did not answer.");
+
+        Assert.Equal(ProgressState.Failed, form.State);
+        Assert.Equal(40, Bar(form).Value);
+        Assert.Equal(UIStyles.Colors.Sets.Red.Basic.ToArgb(), Bar(form).ForeColor.ToArgb());
+        Assert.Equal("The server did not answer.", StatusLabel(form).Text);
+        Assert.True(form.CloseEnabled);
+        Assert.Equal("Close", CancelButton(form).Text);
+    }
+
+    [Fact]
+    public void WithoutAText_TheTextStaysAsItWas()
+    {
+        ProgressForm succeeded = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        succeeded.Succeed();
+        Assert.Equal("Loading", StatusLabel(succeeded).Text);
+
+        ProgressForm failed = _host.Show(UIStyles.Forms.CreateProgressStandard("Loading"));
+        failed.Fail();
+        Assert.Equal("Loading", StatusLabel(failed).Text);
+    }
+
+    [Fact]
+    public void TheButtonClosesTheWindowOnceTheTaskHasEnded_AndEscapeDoesToo()
+    {
+        ProgressForm byButton = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        byButton.Succeed();
+        CancelButton(byButton).InvokePrivate("OnClick", EventArgs.Empty);
+        Assert.True(byButton.IsDisposed);
+        Assert.False(byButton.IsCancelled);
+
+        ProgressForm byEscape = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        byEscape.Fail("No.");
+        Assert.True(byEscape.InvokePrivate<bool>("ProcessDialogKey", Keys.Escape));
+        Assert.True(byEscape.IsDisposed);
+    }
+
+    [Fact]
+    public void ACancelledWindowThatEnds_GetsItsButtonBackAsClose()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x", cancelable: true));
+        CancelButton(form).InvokePrivate("OnClick", EventArgs.Empty);
+        Assert.False(CancelButton(form).Enabled);
+
+        form.Fail("Stopped.");
+
+        Assert.True(CancelButton(form).Enabled);
+        Assert.Equal("Close", CancelButton(form).Text);
+    }
+
+    [Fact]
+    public void CloseTextFollowsTheLanguage_AndSucceedFromAnotherThreadOrBeforeTheWindowIsShownWorks()
+    {
+        ProgressForm form = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        form.Succeed();
+        UIStrings.Language = UILanguage.German;
+        Assert.Equal("Schlie\u00DFen", CancelButton(form).Text);
+
+        UIStrings.Language = UILanguage.English;
+        ProgressForm thread = _host.Show(UIStyles.Forms.CreateProgressStandard("x"));
+        Task.Run(() => thread.Fail("From a thread.")).Wait();
+        TestPictures.Pump(200);
+        Assert.Equal(ProgressState.Failed, thread.State);
+        Assert.Equal("From a thread.", StatusLabel(thread).Text);
+        Assert.True(thread.CloseEnabled);
+
+        ProgressForm early = UIStyles.Forms.CreateProgressStandard("x");
+        early.Succeed("Early.");
+        _host.Show(early);
+        Assert.Equal(100, Bar(early).Value);
+        Assert.Equal("Early.", StatusLabel(early).Text);
+        Assert.True(early.CloseEnabled);
+    }
+
+    [Fact]
+    public void Run_WithShowResult_LeavesTheMessageInTheWindowUntilTheUserClosesIt_AndThenThrows()
+    {
+        ProgressState? state = null;
+        string? message = null;
+        bool? closeEnabled = null;
+
+        using System.Windows.Forms.Timer timer = ActOnOpenForm(form =>
+        {
+            // The task has failed by now: the window says so and stays.
+            System.Windows.Forms.Timer wait = new System.Windows.Forms.Timer { Interval = 100 };
+            wait.Tick += (sender, e) =>
+            {
+                if (form.State != ProgressState.Failed)
+                    return;
+
+                wait.Stop();
+                state = form.State;
+                message = StatusLabel(form).Text;
+                closeEnabled = form.CloseEnabled;
+                CancelButton(form).InvokePrivate("OnClick", EventArgs.Empty);
+            };
+            wait.Start();
+        });
+
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+            ProgressBox.Run("Loading", (progress, token) => throw new InvalidOperationException("The task failed."), showResult: true));
+
+        Assert.Equal("The task failed.", error.Message);
+        Assert.Equal(ProgressState.Failed, state);
+        Assert.Equal("The task failed.", message);
+        Assert.True(closeEnabled);
+    }
     // ---- both themes
 
     [Theory]
@@ -449,6 +687,7 @@ public class ProgressFormTests : IDisposable
             {
                 ProgressForm form = _host.Show(primary ? UIStyles.Forms.CreateProgressPrimary("Loading the update", cancelable: true) : UIStyles.Forms.CreateProgressStandard("Loading the update", cancelable: true));
                 form.Percent = 45;
+                form.ShowTime = true;
                 string window = primary ? "primary" : "standard";
                 Label status = StatusLabel(form);
                 Color back = status.BackColor.A == 0 ? form.ContentPanel.BackColor : status.BackColor;
@@ -456,6 +695,13 @@ public class ProgressFormTests : IDisposable
                 ColorContrastTestSupport.Check(shortfalls, window + ", status", status.ForeColor, back, 4.5);
                 ColorContrastTestSupport.Check(shortfalls, window + ", Cancel", CancelButton(form).ForeColor, CancelButton(form).BackColor, 4.5);
                 ColorContrastTestSupport.Check(shortfalls, window + ", the bar against the window", Bar(form).ForeColor, form.ContentPanel.BackColor, 1.5);
+                ColorContrastTestSupport.Check(shortfalls, window + ", the time", TimeLabel(form).ForeColor, back, 3.0);
+
+                form.Succeed("Done.");
+                ColorContrastTestSupport.Check(shortfalls, window + ", the green bar against the window", Bar(form).ForeColor, form.ContentPanel.BackColor, 1.5);
+                form.Fail("Failed.");
+                ColorContrastTestSupport.Check(shortfalls, window + ", the red bar against the window", Bar(form).ForeColor, form.ContentPanel.BackColor, 1.5);
+                ColorContrastTestSupport.Check(shortfalls, window + ", Close", CancelButton(form).ForeColor, CancelButton(form).BackColor, 4.5);
             }
         });
     }

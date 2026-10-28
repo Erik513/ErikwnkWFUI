@@ -34,13 +34,15 @@ namespace ErikwnkWFUI.Forms
         /// <param name="cancelable">Whether the window has a Cancel button.</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
         /// <param name="size">One of the three widths (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>.</param>
+        /// <param name="showResult">Whether a task that failed leaves the window open with its message (<see cref="ProgressForm.Fail"/>) until the user closes it; the exception is thrown after that. By default the window closes at once.</param>
         public static ProgressOutcome Run(
             string title,
             Func<IProgress<int>, CancellationToken, Task> work,
             string status = "",
             bool cancelable = false,
             Form owner = null,
-            FormSizeOption? size = null)
+            FormSizeOption? size = null,
+            bool showResult = false)
         {
             if (work == null)
                 throw new ArgumentNullException(nameof(work));
@@ -64,6 +66,14 @@ namespace ErikwnkWFUI.Forms
                     catch (Exception exception)
                     {
                         error = exception;
+
+                        // The message stays in the window: the user reads it and closes it with the button.
+                        if (showResult)
+                        {
+                            form.Fail(exception.Message);
+
+                            return;
+                        }
                     }
 
                     form.Close();

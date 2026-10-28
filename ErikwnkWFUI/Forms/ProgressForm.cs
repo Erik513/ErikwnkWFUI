@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -11,13 +12,29 @@ using ProgressBar = ErikwnkWFUI.Controls.ProgressBar;
 
 namespace ErikwnkWFUI.Forms
 {
+    /// <summary>Where a <see cref="ProgressForm"/> is: still working, or finished with <see cref="ProgressForm.Succeed"/> or <see cref="ProgressForm.Fail"/>.</summary>
+    public enum ProgressState
+    {
+        /// <summary>The task is running.</summary>
+        Running,
+
+        /// <summary>The task is done (<see cref="ProgressForm.Succeed"/>): the bar is full and green.</summary>
+        Succeeded,
+
+        /// <summary>The task failed (<see cref="ProgressForm.Fail"/>): the bar stands still and is red.</summary>
+        Failed
+    }
+
     /// <summary>
     /// A small dialog that shows how far a task has come: a text (<see cref="Status"/>) and a progress bar with the percentage on it, or a
     /// bar that just moves (<see cref="IsIndeterminate"/>) when the end cannot be told. The task reports with <see cref="Report(int)"/> - from any
     /// thread - and the window is also an <see cref="IProgress{T}"/>, so it can be handed to a task that wants one. The user cannot close it (the
     /// close button is greyed out): the program closes it when the task is done. With <see cref="Cancelable"/> there is a Cancel button (Escape
     /// does the same) that asks the task to stop through <see cref="CancellationToken"/>; the window stays until the program closes it.
-    /// Make one with <c>UIStyles.Forms.CreateProgressStandard</c> / <c>CreateProgressPrimary</c>, or let <see cref="ProgressBox.Run"/> do it all.
+    /// <see cref="ShowTime"/> adds the time that has passed and the time that is left (an estimate). <see cref="Succeed"/> and
+    /// <see cref="Fail"/> end the task in the window itself: the bar turns green or red, the text says how it ended, and the user closes the
+    /// window with the button (now "Close") - so a message can still be read. Make one with
+    /// <c>UIStyles.Forms.CreateProgressStandard</c> / <c>CreateProgressPrimary</c>, or let <see cref="ProgressBox.Run"/> do it all.
     /// </summary>
     public class ProgressForm : AppForm, IProgress<int>
     {
@@ -25,15 +42,22 @@ namespace ErikwnkWFUI.Forms
         private const int Margin96 = 24;
         private const int GapBeforeBar96 = 14;
         private const int BarHeight96 = 24;
+        private const int GapBeforeTime96 = 8;
         private const int GapBeforeButton96 = 20;
         private const int ButtonWidth96 = 100;
         private const int ButtonHeight96 = 32;
         private const int ScreenMargin96 = 40;
 
+        // Not an estimate before this much has passed and the task has begun: the first seconds say nothing about the rest.
+        private static readonly TimeSpan LeastTimeForEstimate = TimeSpan.FromSeconds(2);
+
         private readonly Label _statusLabel;
+        private readonly Label _timeLabel;
         private readonly ProgressBar _bar;
         private readonly Button _cancelButton;
         private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private readonly System.Windows.Forms.Timer _timer = new System.Windows.Forms.Timer { Interval = 500 };
+        private readonly Stopwatch _stopwatch = new Stopwatch();
         private readonly FormSizeOption _size;
         private readonly object _lock = new object();
         private int _dpiOverride;
@@ -41,8 +65,13 @@ namespace ErikwnkWFUI.Forms
         private string _status;
         private bool _indeterminate;
         private bool _showPercentage = true;
+        private bool _showTime;
         private bool _cancelable;
+        private ProgressState _state;
         private string _cancelText;
+
+        // The time that has passed; the seam of the tests (null: the clock of the window).
+        internal Func<TimeSpan> Clock;
 
         /// <summary>Raised (on the thread of the window) when the user asks to stop: the Cancel button or Escape. <see cref="IsCancelled"/> is true then.</summary>
         public event EventHandler CancelRequested;
@@ -59,7 +88,7 @@ namespace ErikwnkWFUI.Forms
 
             ShowInTaskbar = false;
 
-            // The user cannot close it: the task ends it. (The program can: Close() works.)
+            // The user cannot close it: the task ends it (or Succeed / Fail, and then the button). The program can: Close() works.
             CloseEnabled = false;
 
             _statusLabel = UIStyles.Labels.CreateStandard(_status);
@@ -73,12 +102,19 @@ namespace ErikwnkWFUI.Forms
             _bar.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             _bar.ShowPercentage = true;
 
+            _timeLabel = UIStyles.Labels.CreateMuted();
+            _timeLabel.AutoEllipsis = false;
+            _timeLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            _timeLabel.TextAlign = ContentAlignment.TopLeft;
+
             _cancelButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("ProgressForm.Cancel"));
             _cancelButton.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            _cancelButton.Click += (sender, e) => RequestCancel();
+            _cancelButton.Click += (sender, e) => OnButtonClick();
             _cancelButton.Visible = false;
 
-            ContentPanel.Controls.AddRange(new Control[] { _statusLabel, _bar, _cancelButton });
+            ContentPanel.Controls.AddRange(new Control[] { _statusLabel, _bar, _timeLabel, _cancelButton });
+
+            _timer.Tick += (sender, e) => UpdateTime();
 
             Cancelable = cancelable;
             ApplyState();
@@ -139,6 +175,21 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
+        /// Whether a gray line under the bar says how much time has passed and - when the percentage is known and the task has been running for
+        /// a moment - how much is left, as an estimate ("0:12 passed - about 0:35 left"). Off by default.
+        /// </summary>
+        public bool ShowTime
+        {
+            get { return _showTime; }
+            set
+            {
+                _showTime = value;
+                UpdateTimerState();
+                PushState(layout: true);
+            }
+        }
+
+        /// <summary>
         /// Whether the window has a Cancel button, which Escape presses too. Cancelling only asks: <see cref="IsCancelled"/> and
         /// <see cref="CancellationToken"/> say so, and the task stops and the program closes the window.
         /// </summary>
@@ -148,20 +199,22 @@ namespace ErikwnkWFUI.Forms
             set
             {
                 _cancelable = value;
-                _cancelButton.Visible = value;
-                CancelButton = value ? _cancelButton : null;
+                UpdateButton();
                 LayoutContent();
             }
         }
 
-        /// <summary>The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library.</summary>
+        /// <summary>
+        /// The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library. When the task has ended
+        /// (<see cref="Succeed"/>, <see cref="Fail"/>) the button says "Close" whatever this is.
+        /// </summary>
         public string CancelButtonText
         {
-            get { return _cancelButton.Text; }
+            get { return _cancelText ?? UIStrings.Get("ProgressForm.Cancel"); }
             set
             {
                 _cancelText = value;
-                _cancelButton.Text = value ?? UIStrings.Get("ProgressForm.Cancel");
+                UpdateButton();
             }
         }
 
@@ -175,6 +228,12 @@ namespace ErikwnkWFUI.Forms
         public CancellationToken CancellationToken
         {
             get { return _cancellation.Token; }
+        }
+
+        /// <summary>Whether the task is still running or has ended with <see cref="Succeed"/> or <see cref="Fail"/>.</summary>
+        public ProgressState State
+        {
+            get { lock (_lock) return _state; }
         }
 
         /// <summary>Reports how far the task has come (<see cref="Percent"/>). From any thread; also what <see cref="IProgress{T}"/> asks for.</summary>
@@ -196,8 +255,53 @@ namespace ErikwnkWFUI.Forms
             PushState(layout: true);
         }
 
-        private void RequestCancel()
+        /// <summary>
+        /// Ends the task in the window: the bar is full and green, the text (when there is one) says how it went, and the time stops. The
+        /// button now says "Close" and closes the window - the user can close it from now on (the close button, Escape). From any thread.
+        /// </summary>
+        /// <param name="text">What the window says now; null keeps the text it has.</param>
+        public void Succeed(string text = null)
         {
+            Finish(ProgressState.Succeeded, text, 100);
+        }
+
+        /// <summary>
+        /// Ends the task in the window as a failure: the bar stands where it was and is red, the text says what went wrong (so that it can still
+        /// be read), and the time stops. The button says "Close"; the user can close the window from now on. From any thread.
+        /// </summary>
+        /// <param name="text">What went wrong; null keeps the text the window has.</param>
+        public void Fail(string text = null)
+        {
+            Finish(ProgressState.Failed, text, null);
+        }
+
+        private void Finish(ProgressState state, string text, int? percent)
+        {
+            lock (_lock)
+            {
+                _state = state;
+                _indeterminate = false;
+
+                if (percent.HasValue)
+                    _percent = percent.Value;
+
+                if (text != null)
+                    _status = text;
+            }
+
+            PushState(layout: true);
+        }
+
+        // The button cancels while the task runs, and closes the window once it has ended.
+        private void OnButtonClick()
+        {
+            if (State != ProgressState.Running)
+            {
+                Close();
+
+                return;
+            }
+
             if (_cancellation.IsCancellationRequested)
                 return;
 
@@ -240,12 +344,14 @@ namespace ErikwnkWFUI.Forms
             string status;
             int percent;
             bool indeterminate;
+            ProgressState state;
 
             lock (_lock)
             {
                 status = _status;
                 percent = _percent;
                 indeterminate = _indeterminate;
+                state = _state;
             }
 
             _bar.Style = indeterminate ? ProgressBarStyle.Marquee : ProgressBarStyle.Continuous;
@@ -255,14 +361,111 @@ namespace ErikwnkWFUI.Forms
 
             _bar.ShowPercentage = _showPercentage && !indeterminate;
 
+            // Green or red once it has ended; before that the color the bar was made with.
+            if (state != ProgressState.Running)
+            {
+                UIColorSet set = state == ProgressState.Succeeded ? UIStyles.Colors.Sets.Green : UIStyles.Colors.Sets.Red;
+                _bar.ForeColor = set.Basic;
+            }
+
             if (_statusLabel.Text != status)
             {
                 _statusLabel.Text = status;
                 layout = true;
             }
 
+            // The user may close the window once the task has ended.
+            CloseEnabled = state != ProgressState.Running;
+            UpdateButton();
+            UpdateTimerState();
+            UpdateTime();
+
             if (layout)
                 LayoutContent();
+        }
+
+        // ---- the button
+
+        // Visible while the window can be cancelled and once the task has ended (then it closes); its text says which.
+        private bool ButtonShown
+        {
+            get { return _cancelable || State != ProgressState.Running; }
+        }
+
+        private void UpdateButton()
+        {
+            bool ended = State != ProgressState.Running;
+
+            _cancelButton.Visible = ButtonShown;
+            CancelButton = ButtonShown ? _cancelButton : null;
+            _cancelButton.Text = ended ? UIStrings.Get("ProgressForm.Close") : CancelButtonText;
+
+            // Cancelling asked once: the button is dead until the task has ended and it closes the window.
+            _cancelButton.Enabled = ended || !_cancellation.IsCancellationRequested;
+        }
+
+        // ---- the time
+
+        private TimeSpan GetElapsed()
+        {
+            return Clock != null ? Clock() : _stopwatch.Elapsed;
+        }
+
+        // Runs while the window is shown, the time is wanted and the task has not ended.
+        private void UpdateTimerState()
+        {
+            bool run = _showTime && IsHandleCreated && State == ProgressState.Running;
+
+            if (run && !_stopwatch.IsRunning)
+                _stopwatch.Start();
+
+            if (!run && _stopwatch.IsRunning && State != ProgressState.Running)
+                _stopwatch.Stop();
+
+            _timer.Enabled = run;
+        }
+
+        private void UpdateTime()
+        {
+            if (IsDisposed)
+                return;
+
+            string text = _showTime ? FormatTime(GetElapsed(), Percent, IsIndeterminate, State) : "";
+
+            if (_timeLabel.Text != text)
+            {
+                bool layoutNeeded = (text.Length == 0) != (_timeLabel.Text.Length == 0);
+                _timeLabel.Text = text;
+
+                if (layoutNeeded)
+                    LayoutContent();
+            }
+        }
+
+        /// <summary>The line of the time: what has passed, and - when the percentage is known and the task has run for a moment - about what is left.</summary>
+        internal static string FormatTime(TimeSpan elapsed, int percent, bool indeterminate, ProgressState state)
+        {
+            string passed = FormatDuration(elapsed);
+
+            if (state != ProgressState.Running || indeterminate || percent <= 0 || percent >= 100 || elapsed < LeastTimeForEstimate)
+                return string.Format(UIStrings.Get("ProgressForm.Elapsed"), passed);
+
+            TimeSpan left = TimeSpan.FromTicks((long)(elapsed.Ticks * (100 - percent) / (double)percent));
+
+            return string.Format(UIStrings.Get("ProgressForm.ElapsedLeft"), passed, FormatDuration(left));
+        }
+
+        // m:ss, and h:mm:ss from an hour on.
+        internal static string FormatDuration(TimeSpan duration)
+        {
+            if (duration < TimeSpan.Zero)
+                duration = TimeSpan.Zero;
+
+            int hours = (int)duration.TotalHours;
+
+            return hours > 0
+                ? string.Format("{0}:{1:00}:{2:00}", hours, duration.Minutes, duration.Seconds)
+                : string.Format("{0}:{1:00}", duration.Minutes, duration.Seconds);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -276,8 +479,8 @@ namespace ErikwnkWFUI.Forms
             if (IsDisposed)
                 return;
 
-            if (_cancelText == null)
-                _cancelButton.Text = UIStrings.Get("ProgressForm.Cancel");
+            UpdateButton();
+            UpdateTime();
         }
 
         protected override void Dispose(bool disposing)
@@ -285,6 +488,7 @@ namespace ErikwnkWFUI.Forms
             if (disposing)
             {
                 UIStrings.LanguageChanged -= OnLanguageChanged;
+                _timer.Dispose();
                 _cancellation.Dispose();
             }
 
@@ -314,7 +518,7 @@ namespace ErikwnkWFUI.Forms
             LayoutContent();
         }
 
-        // The text, the bar and (when it is there) the Cancel button one below the other; the height of the window follows the (wrapped) text.
+        // The text, the bar, the time and (when it is there) the button one below the other; the height of the window follows the (wrapped) text.
         private void LayoutContent()
         {
             if (_cancelButton == null)
@@ -328,12 +532,19 @@ namespace ErikwnkWFUI.Forms
             ClientSize = new Size(width, ClientSize.Height);
             int inner = ContentPanel.ClientSize.Width - 2 * margin;
 
+            bool timeShown = _showTime && _timeLabel.Text.Length > 0;
+            int timeHeight = timeShown
+                ? TextRenderer.MeasureText(_timeLabel.Text, _timeLabel.Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height
+                : 0;
+
             int textHeight = _statusLabel.Text.Length == 0
                 ? 0
                 : TextRenderer.MeasureText(_statusLabel.Text, _statusLabel.Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
 
             // Never higher than the screen: a text that is longer than what fits is cut at its end (the bar and the button stay).
-            int below = Scale(BarHeight96) + margin + (_cancelable ? Scale(GapBeforeButton96) + Scale(ButtonHeight96) : 0);
+            int below = Scale(BarHeight96) + margin
+                + (timeShown ? Scale(GapBeforeTime96) + timeHeight : 0)
+                + (ButtonShown ? Scale(GapBeforeButton96) + Scale(ButtonHeight96) : 0);
             int outside = ClientSize.Height - ContentPanel.ClientSize.Height;
             int room = Screen.FromControl(this).WorkingArea.Height - Scale(ScreenMargin96) - outside - margin - below - Scale(GapBeforeBar96);
             textHeight = Math.Max(0, Math.Min(textHeight, room));
@@ -346,7 +557,16 @@ namespace ErikwnkWFUI.Forms
             _bar.SetBounds(margin, y, inner, Scale(BarHeight96));
             y += Scale(BarHeight96);
 
-            if (_cancelable)
+            _timeLabel.Visible = timeShown;
+
+            if (timeShown)
+            {
+                y += Scale(GapBeforeTime96);
+                _timeLabel.SetBounds(margin, y, inner, timeHeight);
+                y += timeHeight;
+            }
+
+            if (ButtonShown)
             {
                 y += Scale(GapBeforeButton96);
                 Size button = new Size(Scale(ButtonWidth96), Scale(ButtonHeight96));
