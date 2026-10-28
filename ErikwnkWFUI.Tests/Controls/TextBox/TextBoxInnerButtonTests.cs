@@ -286,18 +286,18 @@ public class TextBoxInnerButtonTests : IDisposable
     {
         TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("secret"));
 
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
         Assert.Equal("secret", box.Text);
         Assert.Equal("\U0001F441", box.GetPrivateField<string>("_innerGlyph"));
         Assert.False(box.GetPrivateField<bool>("_innerActive"));
 
         ClickInner(box);
-        Assert.False(box.UseSystemPasswordChar);
+        Assert.False(PasswordProbe.Hides(box));
         Assert.True(box.GetPrivateField<bool>("_innerActive"));
         Assert.Equal("secret", box.Text);
 
         ClickInner(box);
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
         Assert.False(box.GetPrivateField<bool>("_innerActive"));
     }
 
@@ -307,19 +307,19 @@ public class TextBoxInnerButtonTests : IDisposable
         TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         Assert.True(Key(box, Keys.Alt | Keys.F8));
-        Assert.False(box.UseSystemPasswordChar);
+        Assert.False(PasswordProbe.Hides(box));
         Assert.True(box.GetPrivateField<bool>("_innerActive"));
 
         Assert.False(Key(box, Keys.F8));
         Assert.False(Key(box, Keys.Alt | Keys.F7));
-        Assert.False(box.UseSystemPasswordChar);
+        Assert.False(PasswordProbe.Hides(box));
 
         Assert.True(Key(box, Keys.Alt | Keys.F8));
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
 
         box.Enabled = false;
         Key(box, Keys.Alt | Keys.F8);
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
     }
 
     [Fact]

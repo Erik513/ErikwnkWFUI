@@ -5,15 +5,22 @@ using ErikwnkWFUI.Localization;
 namespace ErikwnkWFUI.Controls
 {
     /// <summary>
-    /// A text box for a password: what is typed is hidden (the system's dots), and an eye in the box, at its right end, shows it while it
-    /// is switched on (a click on the eye, or the keys Alt+F8, show the password, the next one hides it again). Make one with
+    /// A text box for a password: what is typed is hidden (dots), and an eye in the box, at its right end, shows it while it
+    /// is switched on (a click on the eye, or the keys Alt+F8, show the password, the next one hides it again). The hiding is the
+    /// <c>PasswordChar</c> of the box, which the system changes with a message: the window stays the one it is (with <c>UseSystemPasswordChar</c>
+    /// every switch makes a new window, and the text, the caret and the focus have to be carried over to it). Make one with
     /// <c>UIStyles.TextBoxes.CreatePassword</c>, which gives the standard type; the class itself is not public.
     /// </summary>
     internal sealed class PasswordTextBox : TextField
     {
+        // The dot that hides a letter (the one that the system uses for its own password boxes).
+        private const char Dot = '\u25CF';
+
+        private bool _shown;
+
         public PasswordTextBox()
         {
-            UseSystemPasswordChar = true;
+            PasswordChar = Dot;
             InnerGlyph = "\U0001F441";
             ShowEyeState();
             UIStrings.LanguageChanged += OnLanguageChanged;
@@ -22,10 +29,11 @@ namespace ErikwnkWFUI.Controls
         /// <summary>Whether the password is shown in plain text (false by default).</summary>
         public bool IsPasswordShown
         {
-            get { return !UseSystemPasswordChar; }
+            get { return _shown; }
             set
             {
-                UseSystemPasswordChar = !value;
+                _shown = value;
+                PasswordChar = value ? '\0' : Dot;
                 ShowEyeState();
             }
         }

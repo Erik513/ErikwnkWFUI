@@ -74,8 +74,8 @@ public class InputBoxTests : IDisposable
 
         Assert.Equal("Erik", form.InputTextBox.Text);
         Assert.Equal("Erik", form.InputTextBox.SelectedText);
-        Assert.True(secret.InputTextBox.UseSystemPasswordChar);
-        Assert.False(form.InputTextBox.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(secret.InputTextBox));
+        Assert.False(PasswordProbe.Hides(form.InputTextBox));
     }
 
     // ---- OK and Cancel
@@ -395,7 +395,7 @@ public class InputBoxTests : IDisposable
             {
                 title = form.Text;
                 hint = form.Hint;
-                password = form.InputTextBox.UseSystemPasswordChar;
+                password = PasswordProbe.Hides(form.InputTextBox);
                 maxLength = form.MaxLength;
 
                 form.InputTextBox.Text = "  12  ";

@@ -165,12 +165,12 @@ public class TextBoxEdgeCaseTests : IDisposable
         TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
 
         Click(box);
-        Assert.False(box.UseSystemPasswordChar);
+        Assert.False(PasswordProbe.Hides(box));
 
         Press(box, WM_LBUTTONDBLCLK);
         Release(box);
 
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
     }
 
     [Fact]
@@ -188,7 +188,7 @@ public class TextBoxEdgeCaseTests : IDisposable
 
         Assert.False(box.GetPrivateField<bool>("_innerPressed"));
         Release(box);
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public class TextBoxEdgeCaseTests : IDisposable
 
         Click(box);
 
-        Assert.True(box.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(box));
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public class TextBoxEdgeCaseTests : IDisposable
         Click(empty);
         Click(filled);
 
-        Assert.True(empty.UseSystemPasswordChar);
+        Assert.True(PasswordProbe.Hides(empty));
         Assert.Equal(2, filled.SelectionStart);
         Assert.Equal(3, filled.SelectionLength);
         Assert.Equal("abcdef", filled.Text);
