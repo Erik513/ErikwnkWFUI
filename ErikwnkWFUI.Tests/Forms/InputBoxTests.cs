@@ -134,6 +134,164 @@ public class InputBoxTests : IDisposable
         Assert.Equal(DialogResult.Cancel, escaped.DialogResult);
     }
 
+    // ---- hint, message, validation
+
+    private static Label LabelOf(InputBoxForm form, string field)
+    {
+        return form.GetPrivateField<Label>(field)!;
+    }
+
+    [Fact]
+    public void TheHint_IsSmallGrayText_UnderThePrompt_AndTakesNoRoomWhenThereIsNone()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Password?"));
+        int without = form.Height;
+        Label hint = LabelOf(form, "_hintLabel");
+        Assert.False(hint.Visible);
+
+        form.Hint = "It was sent to you by mail.";
+
+        Assert.True(hint.Visible);
+        Assert.True(form.Height > without);
+        Assert.True(hint.Top >= LabelOf(form, "_promptLabel").Bottom);
+        Assert.True(hint.Bottom <= form.InputTextBox.Top);
+        Assert.Equal("It was sent to you by mail.", form.Hint);
+
+        form.Hint = null;
+        Assert.False(hint.Visible);
+        Assert.Equal(without, form.Height);
+    }
+
+    [Fact]
+    public void TheErrorText_IsRed_OverTheBox_AndGoesWhenTheUserTypes()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Password?"));
+        int without = form.Height;
+        Label error = LabelOf(form, "_errorLabel");
+
+        form.ErrorText = "Wrong password.";
+
+        Assert.True(error.Visible);
+        Assert.True(form.Height > without);
+        Assert.True(error.Bottom <= form.InputTextBox.Top);
+        Assert.True(error.ForeColor.R > error.ForeColor.G + 40, "red");
+
+        form.InputTextBox.Text = "x";
+
+        Assert.Equal("", form.ErrorText);
+        Assert.False(error.Visible);
+        Assert.Equal(without, form.Height);
+    }
+
+    [Fact]
+    public void WithHintAndErrorAndAPrompt_NothingOverlaps_AndEverythingIsInsideTheWindow()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard(string.Join(" ", Enumerable.Repeat("A prompt that needs more than one line.", 4))));
+        form.Hint = string.Join(" ", Enumerable.Repeat("A hint that wraps too.", 5));
+        form.ErrorText = string.Join(" ", Enumerable.Repeat("An error that wraps as well.", 4));
+
+        Control[] order = { LabelOf(form, "_promptLabel"), LabelOf(form, "_hintLabel"), LabelOf(form, "_errorLabel"), form.InputTextBox, OkButton(form) };
+
+        for (int i = 1; i < order.Length; i++)
+            Assert.True(order[i].Top >= order[i - 1].Bottom, order[i].GetType().Name + " overlaps the one above");
+
+        Assert.True(form.ContentPanel.ClientRectangle.Contains(OkButton(form).Bounds));
+    }
+
+    [Fact]
+    public void TheValidator_AcceptsOrRejectsWithAMessage_TheWindowStaysOpen_AndTheTextIsSelected()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        form.Validator = text => text.Length == 6 ? null : "The code has 6 digits.";
+        form.InputTextBox.Text = "123";
+
+        OkButton(form).PerformClick();
+
+        Assert.NotEqual(DialogResult.OK, form.DialogResult);
+        Assert.Equal("The code has 6 digits.", form.ErrorText);
+        Assert.Equal("123", form.InputTextBox.SelectedText);
+        Assert.Equal("", form.Value);
+
+        form.InputTextBox.Text = "123456";
+        Assert.Equal("", form.ErrorText);
+        OkButton(form).PerformClick();
+
+        Assert.Equal(DialogResult.OK, form.DialogResult);
+        Assert.Equal("123456", form.Value);
+    }
+
+    [Fact]
+    public void TheValidator_IsNotAskedForAnEmptyText_UnlessItIsAllowed_AndAnEmptyMessageCountsAsAccepted()
+    {
+        int asked = 0;
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        form.Validator = text => { asked++; return ""; };
+
+        OkButton(form).PerformClick();
+        Assert.Equal(0, asked);
+
+        form.InputTextBox.Text = "a";
+        OkButton(form).PerformClick();
+
+        Assert.Equal(1, asked);
+        Assert.Equal(DialogResult.OK, form.DialogResult);
+    }
+
+    [Fact]
+    public void TrimValue_CutsTheSpaces_ForTheValueAndTheValidator_AndSpacesAloneAreEmpty()
+    {
+        string? seen = null;
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        form.TrimValue = true;
+        form.Validator = text => { seen = text; return null; };
+
+        form.InputTextBox.Text = "    ";
+        OkButton(form).PerformClick();
+        Assert.Null(seen);
+        Assert.NotEqual(DialogResult.OK, form.DialogResult);
+
+        form.InputTextBox.Text = "  12345 ";
+        OkButton(form).PerformClick();
+
+        Assert.Equal("12345", seen);
+        Assert.Equal("12345", form.Value);
+    }
+
+    [Fact]
+    public void WithoutTrim_ThePasswordKeepsItsSpaces()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Password?", password: true));
+        form.InputTextBox.Text = " pass word ";
+
+        OkButton(form).PerformClick();
+
+        Assert.Equal(" pass word ", form.Value);
+    }
+
+    [Fact]
+    public void MaxLength_LimitsTheBox_AndZeroIsNoLimit()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        Assert.Equal(0, form.MaxLength);
+
+        form.MaxLength = 6;
+        Assert.Equal(6, form.InputTextBox.MaxLength);
+        Assert.Equal(6, form.MaxLength);
+
+        form.MaxLength = 0;
+        Assert.Equal(0, form.MaxLength);
+        Assert.True(form.InputTextBox.MaxLength > 100);
+    }
+
+    [Fact]
+    public void ThePlaceholder_IsHandedToTheBox()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?", placeholder: "12345"));
+        InputBoxForm primary = _host.Show(UIStyles.Forms.CreateInputPrimary("Code?", placeholder: "12345"));
+
+        foreach (InputBoxForm shown in new[] { form, primary })
+            Assert.Equal("12345", ((ErikwnkWFUI.Controls.TextField)shown.InputTextBox).Placeholder);
+    }
     // ---- layout
 
     [Fact]
@@ -233,10 +391,14 @@ public class InputBoxTests : IDisposable
             {
                 InputBoxForm form = _host.Show(primary ? UIStyles.Forms.CreateInputPrimary("Name?", text: "Erik") : UIStyles.Forms.CreateInputStandard("Name?", text: "Erik"));
                 string window = primary ? "primary" : "standard";
+                form.Hint = "A hint";
+                form.ErrorText = "An error";
                 Label prompt = form.GetPrivateField<Label>("_promptLabel")!;
                 Color back = prompt.BackColor.A == 0 ? form.ContentPanel.BackColor : prompt.BackColor;
 
                 ColorContrastTestSupport.Check(shortfalls, window + ", prompt", prompt.ForeColor, back, 4.5);
+                ColorContrastTestSupport.Check(shortfalls, window + ", hint", LabelOf(form, "_hintLabel").ForeColor, back, 3.0);
+                ColorContrastTestSupport.Check(shortfalls, window + ", error", LabelOf(form, "_errorLabel").ForeColor, back, 4.5);
                 ColorContrastTestSupport.Check(shortfalls, window + ", text", form.InputTextBox.ForeColor, form.InputTextBox.BackColor, 4.5);
                 ColorContrastTestSupport.Check(shortfalls, window + ", OK", OkButton(form).ForeColor, OkButton(form).BackColor, 4.5);
                 ColorContrastTestSupport.Check(shortfalls, window + ", Cancel", CancelButton(form).ForeColor, CancelButton(form).BackColor, 4.5);

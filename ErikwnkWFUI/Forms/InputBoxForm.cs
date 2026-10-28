@@ -14,14 +14,16 @@ namespace ErikwnkWFUI.Forms
     /// The themed replacement for the input box of Visual Basic: a small dialog with a prompt, one text box (or a password box) and the buttons OK and
     /// Cancel. Make one with <c>UIStyles.Forms.CreateInputStandard</c> / <c>CreateInputPrimary</c> and show it with <c>ShowDialog</c>, or just call
     /// <see cref="InputBox.Show"/>. After <c>DialogResult.OK</c> the text is in <see cref="Value"/>. Enter confirms, Escape cancels.
-    /// The texts of the buttons and the default title follow the language of the library.
+    /// Under the prompt there can be a gray <see cref="Hint"/>, and a red <see cref="ErrorText"/> over the box (set it for a wrong
+    /// entry, or let <see cref="Validator"/> do it). The texts of the buttons and the default title follow the language of the library.
     /// </summary>
     public class InputBoxForm : AppForm
     {
         // The sizes are given for 96 dpi and scaled to the screen.
         private const int ClientWidth96 = 400;
         private const int Margin96 = 24;
-        private const int GapAfterPrompt96 = 12;
+        private const int GapBeforeBox96 = 12;
+        private const int GapBetweenTexts96 = 6;
         private const int GapBeforeButtons96 = 20;
         private const int TextBoxHeight96 = 30;
         private const int ButtonWidth96 = 100;
@@ -29,17 +31,18 @@ namespace ErikwnkWFUI.Forms
         private const int ButtonGap96 = 8;
 
         private readonly Label _promptLabel;
+        private readonly Label _hintLabel;
+        private readonly Label _errorLabel;
         private readonly TextBox _textBox;
         private readonly Button _okButton;
         private readonly Button _cancelButton;
         private readonly bool _defaultTitle;
         private int _dpiOverride;
-        private string _prompt;
 
         /// <summary>The text that was entered, once the dialog was closed with OK (what the user accepted); empty before.</summary>
         public string Value { get; private set; } = "";
 
-        /// <summary>The box the user types into, for what is not covered here (a maximum length, an input filter ...).</summary>
+        /// <summary>The box the user types into, for what is not covered here (an input filter ...).</summary>
         public TextBox InputTextBox
         {
             get { return _textBox; }
@@ -48,14 +51,57 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether OK also accepts an empty text. By default it does not: OK does nothing until something is typed.</summary>
         public bool AllowEmpty { get; set; }
 
+        /// <summary>
+        /// Whether the spaces at the beginning and the end of the text are cut off: <see cref="Value"/> and the text that <see cref="Validator"/> sees
+        /// are without them, and a text of spaces only counts as empty. Off by default (a password may begin with a space).
+        /// </summary>
+        public bool TrimValue { get; set; }
+
+        /// <summary>The most characters the box takes; 0 (the default) is no limit beyond the one of Windows.</summary>
+        public int MaxLength
+        {
+            get { return _textBox.MaxLength == int.MaxValue || _textBox.MaxLength == 32767 ? 0 : _textBox.MaxLength; }
+            set { _textBox.MaxLength = value <= 0 ? 32767 : value; }
+        }
+
+        /// <summary>
+        /// Checks the text when OK is clicked: returns null when it is fine, otherwise the message that is shown in red over the box (the
+        /// window stays open, the text is selected). Null (the default) accepts every text that is not empty.
+        /// </summary>
+        public Func<string, string> Validator { get; set; }
+
         /// <summary>The text above the box; the window grows or shrinks to it.</summary>
         public string Prompt
         {
-            get { return _prompt; }
+            get { return _promptLabel.Text; }
             set
             {
-                _prompt = value ?? "";
-                _promptLabel.Text = _prompt;
+                _promptLabel.Text = value ?? "";
+                LayoutContent();
+            }
+        }
+
+        /// <summary>A short note in small gray letters under the prompt (what is wanted, an example ...); empty (the default) shows none.</summary>
+        public string Hint
+        {
+            get { return _hintLabel.Text; }
+            set
+            {
+                _hintLabel.Text = value ?? "";
+                LayoutContent();
+            }
+        }
+
+        /// <summary>
+        /// A message in red over the box, for an entry that was not right (for instance "wrong password" when the program asks again). It
+        /// is taken away when the user types, and <see cref="Validator"/> sets it. Empty (the default) shows none.
+        /// </summary>
+        public string ErrorText
+        {
+            get { return _errorLabel.Text; }
+            set
+            {
+                _errorLabel.Text = value ?? "";
                 LayoutContent();
             }
         }
@@ -78,21 +124,28 @@ namespace ErikwnkWFUI.Forms
         /// <param name="prompt">The text above the box.</param>
         /// <param name="text">The text the box starts with (selected, so typing replaces it).</param>
         /// <param name="password">Whether the box hides what is typed (with an eye to show it).</param>
-        public InputBoxForm(FormOptions options, string prompt, string text = "", bool password = false)
+        /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
+        public InputBoxForm(FormOptions options, string prompt, string text = "", bool password = false, string placeholder = "")
             : base(options ?? FormOptions.CreateDialog(UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft))
         {
             _defaultTitle = options == null || options.Title == UIStrings.Get("InputBox.Title");
-            _prompt = prompt ?? "";
 
             ShowInTaskbar = false;
 
-            _promptLabel = UIStyles.Labels.CreateStandard(_prompt);
-            // Placed by LayoutContent: it wraps (no ellipsis) and does not follow the size of the window by itself.
-            _promptLabel.AutoEllipsis = false;
-            _promptLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            _promptLabel.TextAlign = ContentAlignment.TopLeft;
+            _promptLabel = CreateWrappingLabel(UIStyles.Labels.CreateStandard(prompt ?? ""));
+            _hintLabel = CreateWrappingLabel(UIStyles.Labels.CreateMuted());
+            _errorLabel = CreateWrappingLabel(UIStyles.Labels.CreateStandard("", UIStyles.Colors.Sets.Red));
 
-            _textBox = password ? UIStyles.TextBoxes.CreatePassword(text ?? "") : UIStyles.TextBoxes.CreateStandard(text ?? "");
+            _textBox = password
+                ? UIStyles.TextBoxes.CreatePassword(text ?? "", placeholder ?? "")
+                : UIStyles.TextBoxes.CreateStandard(text ?? "", placeholder ?? "");
+
+            // Typing takes the message of the last try away: it was about the old text.
+            _textBox.TextChanged += (sender, e) =>
+            {
+                if (_errorLabel.Text.Length > 0)
+                    ErrorText = "";
+            };
 
             _cancelButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("InputBox.Cancel"));
             _cancelButton.DialogResult = DialogResult.Cancel;
@@ -100,7 +153,7 @@ namespace ErikwnkWFUI.Forms
             _okButton = UIStyles.Buttons.CreatePrimary(UIStrings.Get("InputBox.Ok"));
             _okButton.Click += (sender, e) => Accept();
 
-            ContentPanel.Controls.AddRange(new Control[] { _promptLabel, _textBox, _cancelButton, _okButton });
+            ContentPanel.Controls.AddRange(new Control[] { _promptLabel, _hintLabel, _errorLabel, _textBox, _cancelButton, _okButton });
 
             AcceptButton = _okButton;
             CancelButton = _cancelButton;
@@ -110,17 +163,41 @@ namespace ErikwnkWFUI.Forms
             UIStrings.LanguageChanged += OnLanguageChanged;
         }
 
-        // OK takes the text - unless it is empty and an empty text is not wanted: then nothing happens and the box gets the focus.
+        // A label that is placed by LayoutContent: it wraps (no ellipsis) and does not follow the size of the window by itself.
+        private static Label CreateWrappingLabel(Label label)
+        {
+            label.AutoEllipsis = false;
+            label.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            label.TextAlign = ContentAlignment.TopLeft;
+
+            return label;
+        }
+
+        // OK takes the text - unless it is empty and an empty text is not wanted (nothing happens, the box gets the focus), or Validate
+        // does not accept it (its message is shown and the text is selected, so typing replaces it).
         private void Accept()
         {
-            if (_textBox.Text.Length == 0 && !AllowEmpty)
+            string text = TrimValue ? _textBox.Text.Trim() : _textBox.Text;
+
+            if (text.Length == 0 && !AllowEmpty)
             {
                 _textBox.Focus();
 
                 return;
             }
 
-            Value = _textBox.Text;
+            string problem = Validator == null ? null : Validator(text);
+
+            if (!string.IsNullOrEmpty(problem))
+            {
+                ErrorText = problem;
+                _textBox.Focus();
+                _textBox.SelectAll();
+
+                return;
+            }
+
+            Value = text;
             DialogResult = DialogResult.OK;
             Close();
         }
@@ -174,10 +251,11 @@ namespace ErikwnkWFUI.Forms
             LayoutContent();
         }
 
-        // Prompt, box and buttons one below the other; the height of the window follows the height of the (wrapped) prompt.
+        // Prompt, note, message, box and buttons one below the other; the height of the window follows the height of the (wrapped) texts.
+        // A text that is empty is not shown and takes no room.
         private void LayoutContent()
         {
-            if (_promptLabel == null)
+            if (_okButton == null)
                 return;
 
             int margin = Scale(Margin96);
@@ -187,13 +265,23 @@ namespace ErikwnkWFUI.Forms
             ClientSize = new Size(width, ClientSize.Height);
             int inner = ContentPanel.ClientSize.Width - 2 * margin;
 
-            int promptHeight = _prompt.Length == 0
-                ? 0
-                : TextRenderer.MeasureText(_prompt, _promptLabel.Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
-
+            Label[] texts = { _promptLabel, _hintLabel, _errorLabel };
             int y = margin;
-            _promptLabel.SetBounds(margin, y, inner, promptHeight);
-            y += promptHeight + (promptHeight > 0 ? Scale(GapAfterPrompt96) : 0);
+
+            for (int i = 0; i < texts.Length; i++)
+            {
+                Label label = texts[i];
+                bool shown = label.Text.Length > 0;
+                label.Visible = shown;
+
+                // (Not label.Visible: that is false for every label as long as the window itself is not shown.)
+                if (!shown)
+                    continue;
+
+                int height = TextRenderer.MeasureText(label.Text, label.Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
+                label.SetBounds(margin, y, inner, height);
+                y += height + Scale(HasTextAfter(texts, i) ? GapBetweenTexts96 : GapBeforeBox96);
+            }
 
             _textBox.SetBounds(margin, y, inner, Scale(TextBoxHeight96));
             y += Scale(TextBoxHeight96) + Scale(GapBeforeButtons96);
@@ -211,6 +299,17 @@ namespace ErikwnkWFUI.Forms
             MinimumSize = Size;
             MaximumSize = Size;
         }
+
+        private static bool HasTextAfter(Label[] texts, int index)
+        {
+            for (int i = index + 1; i < texts.Length; i++)
+            {
+                if (texts[i].Text.Length > 0)
+                    return true;
+            }
+
+            return false;
+        }
     }
 
     /// <summary>
@@ -226,12 +325,32 @@ namespace ErikwnkWFUI.Forms
         /// <param name="text">The text the box starts with (selected).</param>
         /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
-        public static string Show(string prompt, string title = null, string text = "", bool password = false, Form owner = null)
+        /// <param name="hint">A short note in small gray letters under the prompt (null: none).</param>
+        /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
+        /// <param name="maxLength">The most characters the box takes; 0 is no limit.</param>
+        /// <param name="validate">Checks the text when OK is clicked: null when it is fine, else the message that is shown in red (the dialog stays open).</param>
+        /// <param name="trim">Whether the spaces at the beginning and the end are cut off.</param>
+        public static string Show(
+            string prompt,
+            string title = null,
+            string text = "",
+            bool password = false,
+            Form owner = null,
+            string hint = null,
+            string placeholder = "",
+            int maxLength = 0,
+            Func<string, string> validate = null,
+            bool trim = false)
         {
             FormOptions options = title == null ? null : FormOptions.CreateDialog(title, ContentAlignment.MiddleLeft);
 
-            using (InputBoxForm form = new InputBoxForm(options, prompt, text, password))
+            using (InputBoxForm form = new InputBoxForm(options, prompt, text, password, placeholder))
             {
+                form.Hint = hint;
+                form.MaxLength = maxLength;
+                form.Validator = validate;
+                form.TrimValue = trim;
+
                 DialogResult result = owner != null ? form.ShowDialog(owner) : form.ShowDialog();
 
                 return result == DialogResult.OK ? form.Value : null;

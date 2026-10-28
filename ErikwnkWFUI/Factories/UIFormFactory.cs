@@ -15,12 +15,12 @@ namespace ErikwnkWFUI.Factories
         }
 
         // The input box: the same, made as an InputBoxForm (a dialog; with no title it has the one of the language).
-        public static InputBoxForm CreateInput(FormOptions options, UIColorSet colors, string prompt, string text, bool password)
+        public static InputBoxForm CreateInput(FormOptions options, UIColorSet colors, string prompt, string text, bool password, string placeholder)
         {
             if (colors != null)
                 options.Colors = colors;
 
-            return new InputBoxForm(options, prompt, text, password);
+            return new InputBoxForm(options, prompt, text, password, placeholder);
         }
 
         // The window of the options, with the color set (when there is one) for its frame.

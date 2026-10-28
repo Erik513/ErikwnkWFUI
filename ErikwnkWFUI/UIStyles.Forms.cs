@@ -90,9 +90,10 @@ namespace ErikwnkWFUI
             /// <param name="text">The text the box starts with (selected).</param>
             /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
             /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
-            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null)
+            /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null, string placeholder = "")
             {
-                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), colors, prompt, text, password);
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), colors, prompt, text, password, placeholder);
             }
 
             /// <summary>An input box with the title bar in a very dark shade of the accent.</summary>
@@ -100,9 +101,10 @@ namespace ErikwnkWFUI
             /// <param name="title">The title of the window ("Input" or "Eingabe" when none is given).</param>
             /// <param name="text">The text the box starts with (selected).</param>
             /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
-            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false)
+            /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false, string placeholder = "")
             {
-                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), null, prompt, text, password);
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), null, prompt, text, password, placeholder);
             }
 
             /// <summary>
