@@ -80,6 +80,24 @@ namespace ErikwnkWFUI
             {
                 return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title, titleTextAlign, icon, windowIcon), null);
             }
+
+            /// <summary>
+            /// A settings window around a property table, with the buttons Save and Cancel and the version of the program at the bottom
+            /// (<see cref="ErikwnkWFUI.Forms.OptionsForm"/>): add rows to its <c>PropertyTable</c>, then <c>FitToContent()</c>.
+            /// </summary>
+            /// <param name="title">The title of the window ("Options" or "Optionen" when none is given).</param>
+            /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
+            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsStandard(string title = null, UIColorSet colors = null)
+            {
+                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title ?? Localization.UIStrings.Get("OptionsForm.Title")), colors);
+            }
+
+            /// <summary>An options window with the title bar in a very dark shade of the accent.</summary>
+            /// <param name="title">The title of the window ("Options" or "Optionen" when none is given).</param>
+            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsPrimary(string title = null)
+            {
+                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title ?? Localization.UIStrings.Get("OptionsForm.Title")), null);
+            }
         }
     }
 }

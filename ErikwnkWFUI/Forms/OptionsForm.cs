@@ -2,15 +2,17 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Localization;
 using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A small options/settings dialog built around a PropertyTable:
-    /// add rows to PropertyTable, then call FitToContent() so the window
-    /// sizes itself to exactly fit whatever was added, instead of guessing
-    /// a fixed size up front.
+    /// A settings window built around a <see cref="PropertyTable"/>: add rows to <see cref="PropertyTable"/> (and use <see cref="AppForm.VersionStrip"/> for
+    /// an update button), then call <see cref="FitToContent"/> so the window sizes itself to what was added instead of guessing a size. It is a
+    /// settings window of <see cref="UIStyles.Forms"/> (the version of the program in a strip at the bottom) with the buttons Save and
+    /// Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a window that
+    /// applies every change at once. Make one with <c>UIStyles.Forms.CreateOptionsStandard</c> or <c>CreateOptionsPrimary</c>.
     /// </summary>
     public class OptionsForm : AppForm
     {
@@ -18,6 +20,9 @@ namespace ErikwnkWFUI.Forms
         private readonly Panel _buttonBar;
         private readonly Button _saveButton;
         private readonly Button _cancelButton;
+        private bool _showButtons = true;
+        private string _saveText;
+        private string _cancelText;
 
         /// <summary>Add your option rows here, then call <see cref="FitToContent"/>.</summary>
         public PropertyTable PropertyTable
@@ -26,22 +31,44 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// "Save"/"Cancel" by default - this class has no notion of the
-        /// consuming app's language, so callers that localize their own UI
-        /// (e.g. via AppLocalization) need to set these explicitly, or the
-        /// buttons stay stuck in English regardless of the app's language.
+        /// The text of the Save button: "Save" or "Speichern", by the language of the library (it follows a change of the language while the
+        /// window is open). A text set here is shown as it is; null goes back to the language of the library.
         /// </summary>
         public string SaveButtonText
         {
             get { return _saveButton.Text; }
-            set { _saveButton.Text = value; }
+            set
+            {
+                _saveText = value;
+                _saveButton.Text = value ?? UIStrings.Get("OptionsForm.Save");
+            }
         }
 
-        /// <inheritdoc cref="SaveButtonText"/>
+        /// <summary>The text of the Cancel button, as <see cref="SaveButtonText"/>.</summary>
         public string CancelButtonText
         {
             get { return _cancelButton.Text; }
-            set { _cancelButton.Text = value; }
+            set
+            {
+                _cancelText = value;
+                _cancelButton.Text = value ?? UIStrings.Get("OptionsForm.Cancel");
+            }
+        }
+
+        /// <summary>
+        /// Whether the window has the buttons Save and Cancel (the default). Without them it is for settings that are applied at once: the user
+        /// closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons.
+        /// </summary>
+        public bool ShowButtons
+        {
+            get { return _showButtons; }
+            set
+            {
+                _showButtons = value;
+                _buttonBar.Visible = value;
+                AcceptButton = value ? _saveButton : null;
+                CancelButton = value ? _cancelButton : null;
+            }
         }
 
         /// <summary>
@@ -51,9 +78,15 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public event EventHandler SaveClicked;
 
-        /// <summary>Add rows to <see cref="PropertyTable"/> and call <see cref="FitToContent"/> after construction.</summary>
-        public OptionsForm(string title = "Options")
-            : base(FormOptions.CreateDialog(title))
+        /// <summary>Add rows to <see cref="PropertyTable"/> and call <see cref="FitToContent"/> after construction. The title is "Options" or "Optionen" when none is given.</summary>
+        public OptionsForm(string title = null)
+            : this(FormOptions.CreateSettings(title ?? UIStrings.Get("OptionsForm.Title")))
+        {
+        }
+
+        /// <summary>The same with the options of the window (a color set or the accent for the title bar, a logo ...); start from <see cref="FormOptions.CreateSettings"/> or <see cref="FormOptions.CreateSettingsPrimary"/>.</summary>
+        public OptionsForm(FormOptions options)
+            : base(options ?? FormOptions.CreateSettings(UIStrings.Get("OptionsForm.Title")))
         {
             MinimumSize = new Size(340, 160);
 
@@ -77,13 +110,13 @@ namespace ErikwnkWFUI.Forms
             _buttonBar.Dock = DockStyle.Bottom;
             _buttonBar.Height = 56;
 
-            _cancelButton = UIStyles.Buttons.CreateStandard("Cancel", size: new Size(100, 32));
+            _cancelButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("OptionsForm.Cancel"), size: new Size(100, 32));
             _cancelButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _cancelButton.Location = new Point(_buttonBar.Width - 220, 12);
             _cancelButton.DialogResult = DialogResult.Cancel;
             _cancelButton.Click += (s, e) => Close();
 
-            _saveButton = UIStyles.Buttons.CreatePrimary("Save", size: new Size(100, 32));
+            _saveButton = UIStyles.Buttons.CreatePrimary(UIStrings.Get("OptionsForm.Save"), size: new Size(100, 32));
             _saveButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _saveButton.Location = new Point(_buttonBar.Width - 112, 12);
             _saveButton.Click += (s, e) =>
@@ -113,6 +146,26 @@ namespace ErikwnkWFUI.Forms
 
             Resize += (s, e) => RepositionButtons();
             RepositionButtons();
+
+            UIStrings.LanguageChanged += OnLanguageChanged;
+        }
+
+        // The buttons that have no text of their own follow the language.
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (_saveText == null)
+                _saveButton.Text = UIStrings.Get("OptionsForm.Save");
+
+            if (_cancelText == null)
+                _cancelButton.Text = UIStrings.Get("OptionsForm.Cancel");
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                UIStrings.LanguageChanged -= OnLanguageChanged;
+
+            base.Dispose(disposing);
         }
 
         private void RepositionButtons()
@@ -123,7 +176,7 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Sizes the window to exactly fit the rows currently in
-        /// PropertyTable plus the button bar - call once after populating
+        /// PropertyTable plus the button bar and the version strip - call once after populating
         /// PropertyTable, instead of guessing a fixed window size.
         /// </summary>
         public void FitToContent(int extraWidth = 16, int extraHeight = 16)
@@ -132,8 +185,8 @@ namespace ErikwnkWFUI.Forms
 
             int width = Math.Max(MinimumSize.Width,
                 preferred.Width + extraWidth + Padding.Horizontal + ContentPanel.Padding.Horizontal);
-            int height = TitleBar.Height + preferred.Height + _buttonBar.Height + extraHeight
-                + Padding.Vertical + ContentPanel.Padding.Vertical;
+            int height = TitleBar.Height + preferred.Height + (_showButtons ? _buttonBar.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
+                + extraHeight + Padding.Vertical + ContentPanel.Padding.Vertical;
 
             ClientSize = new Size(width, Math.Max(MinimumSize.Height, height));
         }

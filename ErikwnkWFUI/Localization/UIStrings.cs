@@ -48,6 +48,10 @@ namespace ErikwnkWFUI.Localization
             ["TitleBar.Restore"] = "Restore",
             ["TitleBar.Close"] = "Close",
 
+            ["OptionsForm.Title"] = "Options",
+            ["OptionsForm.Save"] = "Save",
+            ["OptionsForm.Cancel"] = "Cancel",
+
             ["UpdateAvailable.Title"] = "Update available",
             ["UpdateAvailable.Message"] = "A new version is available.",
             ["UpdateAvailable.Later"] = "Later",
@@ -131,6 +135,10 @@ namespace ErikwnkWFUI.Localization
             ["TitleBar.Maximize"] = "Maximieren",
             ["TitleBar.Restore"] = "Wiederherstellen",
             ["TitleBar.Close"] = "Schließen",
+
+            ["OptionsForm.Title"] = "Optionen",
+            ["OptionsForm.Save"] = "Speichern",
+            ["OptionsForm.Cancel"] = "Abbrechen",
 
             ["UpdateAvailable.Title"] = "Update verfügbar",
             ["UpdateAvailable.Message"] = "Eine neue Version ist verfügbar.",
