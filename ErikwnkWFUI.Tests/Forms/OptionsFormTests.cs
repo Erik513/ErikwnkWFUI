@@ -808,6 +808,56 @@ public class OptionsFormTests : IDisposable
         Assert.True(form.ContentPanel.Controls.IndexOf(host) < form.ContentPanel.Controls.IndexOf(bar), "the buttons come before the table in the tab order");
     }
 
+    // ---- language
+
+    [Theory]
+    [InlineData(UILanguage.English)]
+    [InlineData(UILanguage.German)]
+    public void EveryText_FitsInItsPlace_InBothLanguages(UILanguage language)
+    {
+        UIStrings.Language = language;
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: AllPresets));
+        form.FitToContent();
+        TestPictures.Pump(60);
+
+        foreach (Label label in PropertyTableHost.AllLabels(form.PropertyTable))
+        {
+            int needed = TextRenderer.MeasureText(label.Text, label.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+            Assert.True(needed <= label.Width, language + ": '" + label.Text + "' needs " + needed + " px of " + label.Width);
+        }
+
+        foreach (string field in new[] { "_saveButton", "_cancelButton", "_resetButton" })
+        {
+            Button button = Find(form, field);
+            int needed = TextRenderer.MeasureText(button.Text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+            Assert.True(needed <= button.Width, language + ": '" + button.Text + "' needs " + needed + " px of " + button.Width);
+        }
+
+        Assert.True(form.PreferredSize.Width <= form.Width || form.Width >= form.MinimumSize.Width);
+    }
+
+    [Fact]
+    public void EveryTextOfTheWindow_ExistsInBothLanguages()
+    {
+        string[] keys = { "Title", "Save", "Cancel", "General", "AccentColor", "Language", "AlwaysOnTop", "StartWithWindows", "ResetToDefaults", "Saved", "DefaultsRestored", "SwitchToLight", "SwitchToDark" };
+
+        foreach (UILanguage language in new[] { UILanguage.English, UILanguage.German })
+        {
+            UIStrings.Language = language;
+
+            foreach (string key in keys)
+                Assert.False(string.IsNullOrWhiteSpace(UIStrings.Get("OptionsForm." + key)) || UIStrings.Get("OptionsForm." + key) == "OptionsForm." + key, language + ": " + key);
+        }
+
+        foreach (string accent in new[] { "Blue", "Red", "Orange", "Amber", "Yellow", "Green", "Teal", "Cyan", "Indigo", "Purple", "Magenta", "Pink", "Brown", "Gray", "BlackOrWhite" })
+        {
+            UIStrings.Language = UILanguage.German;
+            Assert.NotEqual("OptionsForm.Accent." + accent, UIStrings.Get("OptionsForm.Accent." + accent));
+        }
+
+        UIStrings.Language = UILanguage.German;
+        Assert.NotEqual("Save", UIStrings.Get("OptionsForm.Save"));
+    }
     // ---- the theme button in the corner
 
     [Fact]
