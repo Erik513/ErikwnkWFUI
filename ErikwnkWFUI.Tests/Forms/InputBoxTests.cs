@@ -578,6 +578,36 @@ public class InputBoxTests : IDisposable
         Assert.Equal(before, ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0);
     }
 
+    [Theory]
+    [InlineData(UILanguage.English)]
+    [InlineData(UILanguage.German)]
+    public void TheButtonTexts_FitIntoTheirButtons_InBothLanguages(UILanguage language)
+    {
+        UIStrings.Language = language;
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Name?"));
+
+        foreach (Button button in new[] { OkButton(form), CancelButton(form) })
+        {
+            int needed = TextRenderer.MeasureText(button.Text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+            Assert.True(needed + 16 <= button.Width, language + ": '" + button.Text + "' needs " + needed + " px of " + button.Width);
+        }
+    }
+
+    [Fact]
+    public void EveryTextOfTheWindow_ExistsInBothLanguages()
+    {
+        foreach (UILanguage language in new[] { UILanguage.English, UILanguage.German })
+        {
+            UIStrings.Language = language;
+
+            foreach (string key in new[] { "Title", "Ok", "Cancel" })
+                Assert.NotEqual("InputBox." + key, UIStrings.Get("InputBox." + key));
+        }
+
+        UIStrings.Language = UILanguage.German;
+        Assert.Equal("Eingabe", UIStrings.Get("InputBox.Title"));
+        Assert.Equal("Abbrechen", UIStrings.Get("InputBox.Cancel"));
+    }
     // ---- both themes
 
     [Theory]
