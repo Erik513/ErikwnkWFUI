@@ -82,6 +82,30 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// An input box (<see cref="ErikwnkWFUI.Forms.InputBoxForm"/>): a small dialog with a prompt, one text box and OK / Cancel. Show it with
+            /// <c>ShowDialog</c>; after OK the text is in <c>Value</c>. <see cref="ErikwnkWFUI.Forms.InputBox.Show"/> does all of it in one call.
+            /// </summary>
+            /// <param name="prompt">The text above the box.</param>
+            /// <param name="title">The title of the window ("Input" or "Eingabe" when none is given).</param>
+            /// <param name="text">The text the box starts with (selected).</param>
+            /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
+            /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null)
+            {
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), colors, prompt, text, password);
+            }
+
+            /// <summary>An input box with the title bar in a very dark shade of the accent.</summary>
+            /// <param name="prompt">The text above the box.</param>
+            /// <param name="title">The title of the window ("Input" or "Eingabe" when none is given).</param>
+            /// <param name="text">The text the box starts with (selected).</param>
+            /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false)
+            {
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), null, prompt, text, password);
+            }
+
+            /// <summary>
             /// A settings window around a property table, with the buttons Save and Cancel and the version of the program at the bottom
             /// (<see cref="ErikwnkWFUI.Forms.OptionsForm"/>): it starts with the ready-made options of the library (theme, accent color, language,
             /// always on top), then add rows to its <c>PropertyTable</c> and call <c>FitToContent()</c>.
