@@ -159,6 +159,43 @@ public class AppFormEdgeCaseTests : IDisposable
         Assert.Same(inContent, form.ActiveControl);
     }
 
+    // The row in which the first mark of the title is drawn (the label as a picture).
+    private static int FirstInkRow(Label title)
+    {
+        using Bitmap picture = new Bitmap(title.Width, title.Height);
+        title.DrawToBitmap(picture, new Rectangle(Point.Empty, title.Size));
+
+        for (int y = 0; y < picture.Height; y++)
+        {
+            for (int x = 0; x < picture.Width; x++)
+            {
+                if (picture.GetPixel(x, y).ToArgb() != title.BackColor.ToArgb())
+                    return y;
+            }
+        }
+
+        return -1;
+    }
+
+    [Fact]
+    public void TheTitle_StaysOnTheSameLine_WhetherOrNotItIsCutShortWithDots()
+    {
+        AppForm form = Show(UIStyles.Forms.CreateStandard("A rather long title of a window that has to be cut"));
+        Label title = form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
+
+        form.ClientSize = new Size(900, 200);
+        Application.DoEvents();
+        int whole = FirstInkRow(title);
+
+        foreach (int width in new[] { 500, 400, 320, 270 })
+        {
+            form.ClientSize = new Size(width, 200);
+            Application.DoEvents();
+
+            Assert.Equal(whole, FirstInkRow(title));
+        }
+    }
+
     [Fact]
     public void ADoubleClickOnTheBar_MaximizesAWindow_ButNotADialog()
     {

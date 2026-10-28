@@ -272,12 +272,13 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheTitle_StaysInTheMiddleOfTheBar_AndKeepsClearOfTheButtonsWhenTheWindowIsNarrow()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("A rather long title of a window"));
+        AppForm form = Own(UIStyles.Forms.CreateStandard("A title of a window"));
         Label title = TitleLabel(form);
         Button minimize = CaptionButton(form, "_minimizeButton");
+        int needed = TextRenderer.MeasureText(title.Text, title.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + title.Padding.Horizontal;
 
         // (A window cannot be narrower than its least size: the narrowest bar is that of a window of 260 px.)
-        foreach (int width in new[] { 600, 400, 300, 260 })
+        foreach (int width in new[] { 800, 600, 400, 300, 260 })
         {
             form.ClientSize = new Size(width, 200);
             Application.DoEvents();
@@ -286,9 +287,28 @@ public class FormFactoryTests : IDisposable
             Assert.True(title.Right <= minimize.Left, "the title goes under the buttons at " + width);
             Assert.True(title.Left >= 0, "the title goes out of the bar at " + width);
 
-            // Room enough: the same margin on both sides, so that it is in the middle of the bar.
-            if (width >= 400)
+            // Room enough on both sides: the same margin, so that it is in the middle of the bar.
+            if (form.TitleBar.Width - 2 * (form.TitleBar.Width - minimize.Left) >= needed)
                 Assert.Equal(title.Left, form.TitleBar.Width - title.Right);
+        }
+    }
+
+    [Fact]
+    public void TheTitle_IsNotCutWithDots_AsLongAsItFitsLeftOfTheButtons()
+    {
+        AppForm form = Own(UIStyles.Forms.CreateStandard("A rather long title of a window"));
+        Label title = TitleLabel(form);
+        Button minimize = CaptionButton(form, "_minimizeButton");
+        int needed = TextRenderer.MeasureText(title.Text, title.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + title.Padding.Horizontal;
+
+        foreach (int width in new[] { 800, 600, 500, 420, 380, 340 })
+        {
+            form.ClientSize = new Size(width, 200);
+            Application.DoEvents();
+            form.TitleBar.InvokePrivate("UpdateLayout");
+
+            if (minimize.Left >= needed)
+                Assert.True(title.Width >= needed, "the title is cut with dots at " + width + " though it fits");
         }
     }
 

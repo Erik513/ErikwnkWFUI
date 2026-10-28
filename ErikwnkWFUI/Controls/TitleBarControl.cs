@@ -21,7 +21,6 @@ namespace ErikwnkWFUI.Controls
     {
         private const int TitleBarHeight = 30;
         private const double TitleTextContrast = 4.5;
-        private const int MinimumCenteredTitleWidth = 60;
         private const int IconSize = TitleBarHeight;
         private const int IconLeftMargin = 0;
         private const int TitleHorizontalPadding = 10;
@@ -56,7 +55,11 @@ namespace ErikwnkWFUI.Controls
         public string Title
         {
             get { return _titleLabel.Text; }
-            set { _titleLabel.Text = value ?? ""; }
+            set
+            {
+                _titleLabel.Text = value ?? "";
+                UpdateLayout();
+            }
         }
 
         /// <summary>The small logo at the top-left, or null to hide it entirely (default). See ErikwnkWFUI/README.md for how to load this from your own embedded resources.</summary>
@@ -295,7 +298,7 @@ namespace ErikwnkWFUI.Controls
             ContentAlignment textAlign,
             Color backColor)
         {
-            return new Label
+            return new TitleLabel
             {
                 Text = title ?? "",
                 AutoSize = false,
@@ -307,6 +310,38 @@ namespace ErikwnkWFUI.Controls
                 AutoEllipsis = true,
                 UseMnemonic = false
             };
+        }
+
+        // The label of the title. The plain label lays its text out again when the text has to be cut with dots: it is a line higher or lower
+        // than the whole text was, and the title jumps at the width where that starts. This one draws the text itself, as one line and always in
+        // the same way.
+        private sealed class TitleLabel : Label
+        {
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                Rectangle area = new Rectangle(Padding.Left, Padding.Top, Math.Max(0, ClientSize.Width - Padding.Horizontal), Math.Max(0, ClientSize.Height - Padding.Vertical));
+
+                TextRenderer.DrawText(e.Graphics, Text, Font, area, ForeColor, GetFlags());
+            }
+
+            private TextFormatFlags GetFlags()
+            {
+                TextFormatFlags flags = TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix | TextFormatFlags.VerticalCenter;
+
+                switch (TextAlign)
+                {
+                    case ContentAlignment.TopLeft:
+                    case ContentAlignment.MiddleLeft:
+                    case ContentAlignment.BottomLeft:
+                        return flags | TextFormatFlags.Left;
+                    case ContentAlignment.TopRight:
+                    case ContentAlignment.MiddleRight:
+                    case ContentAlignment.BottomRight:
+                        return flags | TextFormatFlags.Right;
+                    default:
+                        return flags | TextFormatFlags.HorizontalCenter;
+                }
+            }
         }
 
         private PictureBox CreateIconPictureBox(Image icon)
@@ -450,15 +485,18 @@ namespace ErikwnkWFUI.Controls
                 // Centred in the room the buttons and the logo leave, as far as the bar allows: the same margin on both sides, the larger of
                 // the two, so that the title stays in the middle of the bar - and never goes under a button when the window is narrow.
                 int margin = Math.Max(leftLimit, Width - rightLimit);
+                int needed = TextRenderer.MeasureText(_titleLabel.Text, _titleLabel.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width
+                    + _titleLabel.Padding.Horizontal;
 
-                if (Width - 2 * margin >= MinimumCenteredTitleWidth)
+                if (Width - 2 * margin >= needed)
                 {
                     labelLeft = margin;
                     labelWidth = Width - 2 * margin;
                 }
                 else
                 {
-                    // Too narrow for that: the title takes whatever room the logo and the buttons leave (it is still centred in it).
+                    // The title would be cut with dots in the middle of the bar, while there is room left of the buttons: it takes all the
+                    // room the logo and the buttons leave (and moves a little off the middle) and is cut only when that is not enough.
                     labelLeft = leftLimit;
                     labelWidth = Math.Max(0, rightLimit - leftLimit);
                 }
