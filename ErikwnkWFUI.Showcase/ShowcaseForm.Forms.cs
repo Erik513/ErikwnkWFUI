@@ -95,6 +95,7 @@ namespace ErikwnkWFUI.Showcase
             SyncFormControlsToPreset();
 
             AddOptionsFormSection(table);
+            AddInputBoxSection(table);
         }
 
         // ---- the controls
