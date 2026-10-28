@@ -343,6 +343,205 @@ public class InputBoxTests : IDisposable
         Assert.Equal(button96 * 2, OkButton(form).Height);
     }
 
+    // ---- InputBox.Show, all the way
+
+    // Shows the box modally and lets the code act on it once it is open (a timer inside the message loop of ShowDialog).
+    private static string? ShowAndAct(Action<InputBoxForm> act, Func<string?> show)
+    {
+        System.Windows.Forms.Timer timer = new System.Windows.Forms.Timer { Interval = 30 };
+        timer.Tick += (sender, e) =>
+        {
+            InputBoxForm? open = Application.OpenForms.OfType<InputBoxForm>().FirstOrDefault();
+
+            if (open == null)
+                return;
+
+            timer.Stop();
+            act(open);
+        };
+        timer.Start();
+
+        try
+        {
+            return show();
+        }
+        finally
+        {
+            timer.Dispose();
+        }
+    }
+
+    [Fact]
+    public void Show_ReturnsTheText_OnOK_AndNullOnCancelEscapeOrTheCloseButton()
+    {
+        Assert.Equal("Anna", ShowAndAct(form => { form.InputTextBox.Text = "Anna"; OkButton(form).PerformClick(); }, () => InputBox.Show("Name?")));
+        Assert.Null(ShowAndAct(form => CancelButton(form).PerformClick(), () => InputBox.Show("Name?")));
+        Assert.Null(ShowAndAct(form => form.InvokePrivate<bool>("ProcessDialogKey", Keys.Escape), () => InputBox.Show("Name?", text: "Erik")));
+        Assert.Null(ShowAndAct(form => form.Close(), () => InputBox.Show("Name?", text: "Erik")));
+        Assert.Equal("Erik", ShowAndAct(form => OkButton(form).PerformClick(), () => InputBox.Show("Name?", text: "Erik")));
+    }
+
+    [Fact]
+    public void Show_HandsOverAllTheOptions_AndAskAgainUntilTheValidatorAccepts()
+    {
+        string? title = null;
+        string? hint = null;
+        bool password = false;
+        int maxLength = -1;
+        int tries = 0;
+
+        string? result = ShowAndAct(
+            form =>
+            {
+                title = form.Text;
+                hint = form.Hint;
+                password = form.InputTextBox.UseSystemPasswordChar;
+                maxLength = form.MaxLength;
+
+                form.InputTextBox.Text = "  12  ";
+                OkButton(form).PerformClick();
+                Assert.Equal("The code has 5 digits.", form.ErrorText);
+
+                form.InputTextBox.Text = " 12345 ";
+                OkButton(form).PerformClick();
+            },
+            () => InputBox.Show("Code?", "Login", password: true, hint: "By mail.", maxLength: 6, trim: true,
+                validate: text => { tries++; return text.Length == 5 ? null : "The code has 5 digits."; }));
+
+        Assert.Equal("12345", result);
+        Assert.Equal(2, tries);
+        Assert.Equal("Login", title);
+        Assert.Equal("By mail.", hint);
+        Assert.True(password);
+        Assert.Equal(6, maxLength);
+    }
+
+    [Fact]
+    public void Show_WithAnOwner_StandsOverIt()
+    {
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main"));
+        owner.Bounds = new Rectangle(100, 100, 700, 500);
+        Rectangle? found = null;
+
+        ShowAndAct(form => { found = form.Bounds; form.Close(); }, () => InputBox.Show("Name?", owner: owner));
+
+        Assert.NotNull(found);
+        Assert.True(owner.Bounds.Contains(found!.Value), "the box " + found + " is not over the window " + owner.Bounds);
+    }
+
+    // ---- edge cases
+
+    [Fact]
+    public void NoPrompt_ANullText_AndEmptyOptions_AreNoProblem()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard(null!, text: null!, placeholder: null!));
+
+        form.Hint = null;
+        form.ErrorText = null;
+        form.Prompt = null;
+
+        Assert.Equal("", form.Prompt);
+        Assert.Equal("", form.InputTextBox.Text);
+        Assert.True(form.ContentPanel.ClientRectangle.Contains(OkButton(form).Bounds));
+        Assert.True(form.InputTextBox.Top < OkButton(form).Top);
+    }
+
+    [Fact]
+    public void ThePromptKeepsItsLineBreaks()
+    {
+        InputBoxForm one = _host.Show(UIStyles.Forms.CreateInputStandard("Line one"));
+        InputBoxForm three = _host.Show(UIStyles.Forms.CreateInputStandard("Line one\nLine two\nLine three"));
+
+        Assert.True(three.Height >= one.Height + 2 * 14, "three lines: " + three.Height + ", one line: " + one.Height);
+    }
+
+    [Fact]
+    public void AVeryLongPromptOrAWordWithoutSpaces_NeverMakesTheWindowHigherThanTheScreen_AndTheButtonsStayReachable()
+    {
+        int room = Screen.PrimaryScreen!.WorkingArea.Height;
+        InputBoxForm longText = _host.Show(UIStyles.Forms.CreateInputStandard(string.Join(" ", Enumerable.Repeat("A very long text that goes on and on.", 400))));
+        InputBoxForm longWord = _host.Show(UIStyles.Forms.CreateInputStandard(new string('W', 3000)));
+
+        foreach (InputBoxForm form in new[] { longText, longWord })
+        {
+            Assert.True(form.Height <= room, "the window is " + form.Height + " high, the screen has " + room);
+            Assert.True(form.ContentPanel.ClientRectangle.Contains(OkButton(form).Bounds));
+            Assert.True(form.InputTextBox.Bottom <= OkButton(form).Top);
+        }
+    }
+
+    [Fact]
+    public void ClickingOKTwice_AfterTheWindowClosed_AndDisposingInBetween_DoNotThrow()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Name?", text: "Erik"));
+
+        Assert.Null(Record.Exception(() =>
+        {
+            OkButton(form).PerformClick();
+            OkButton(form).PerformClick();
+            form.Dispose();
+            form.Dispose();
+        }));
+        Assert.Equal("Erik", form.Value);
+    }
+
+    [Fact]
+    public void AMaxLengthSmallerThanTheStartText_KeepsTheStartText_ButNothingCanBeAdded()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?", text: "123456"));
+
+        form.MaxLength = 3;
+
+        Assert.Equal("123456", form.InputTextBox.Text);
+        Assert.Equal(3, form.MaxLength);
+    }
+
+    [Fact]
+    public void AllowEmpty_AsksTheValidatorForAnEmptyText_Too()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Name?"));
+        form.AllowEmpty = true;
+        form.Validator = text => text.Length == 0 ? "Please type something, or cancel." : null;
+
+        OkButton(form).PerformClick();
+
+        Assert.NotEqual(DialogResult.OK, form.DialogResult);
+        Assert.Equal("Please type something, or cancel.", form.ErrorText);
+    }
+
+    [Fact]
+    public void EscapeCancels_EvenWithAnErrorShown_AndEnterAfterAFailedTryTriesAgain()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        form.Validator = text => text == "ok" ? null : "No.";
+        form.InputTextBox.Text = "bad";
+
+        Assert.True(form.InvokePrivate<bool>("ProcessDialogKey", Keys.Enter));
+        Assert.Equal("No.", form.ErrorText);
+
+        form.InputTextBox.Text = "ok";
+        Assert.True(form.InvokePrivate<bool>("ProcessDialogKey", Keys.Enter));
+        Assert.Equal(DialogResult.OK, form.DialogResult);
+
+        InputBoxForm other = _host.Show(UIStyles.Forms.CreateInputStandard("Code?"));
+        other.ErrorText = "Wrong.";
+        Assert.True(other.InvokePrivate<bool>("ProcessDialogKey", Keys.Escape));
+        Assert.Equal(DialogResult.Cancel, other.DialogResult);
+    }
+
+    [Fact]
+    public void TheWindow_FollowsAChangeOfTheTheme()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Name?"));
+        form.ErrorText = "Wrong.";
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        Assert.Equal(UIColors.BackgroundMedium.ToArgb(), form.ContentPanel.BackColor.ToArgb());
+        Assert.Equal(UIColors.IsLight(UIColors.BackgroundMedium), UIColors.IsLight(form.ContentPanel.BackColor));
+        Assert.True(ColorContrastHelper.GetContrastRatio(LabelOf(form, "_errorLabel").ForeColor, form.ContentPanel.BackColor) >= 4.5);
+    }
     // ---- language
 
     [Fact]

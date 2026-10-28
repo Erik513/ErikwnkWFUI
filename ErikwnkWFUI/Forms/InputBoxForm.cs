@@ -29,6 +29,7 @@ namespace ErikwnkWFUI.Forms
         private const int ButtonWidth96 = 100;
         private const int ButtonHeight96 = 32;
         private const int ButtonGap96 = 8;
+        private const int ScreenMargin96 = 40;
 
         private readonly Label _promptLabel;
         private readonly Label _hintLabel;
@@ -268,6 +269,26 @@ namespace ErikwnkWFUI.Forms
             Label[] texts = { _promptLabel, _hintLabel, _errorLabel };
             int y = margin;
 
+            int[] heights = new int[texts.Length];
+            int textsHeight = 0;
+
+            for (int i = 0; i < texts.Length; i++)
+            {
+                if (texts[i].Text.Length == 0)
+                    continue;
+
+                heights[i] = TextRenderer.MeasureText(texts[i].Text, texts[i].Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
+                textsHeight += heights[i] + Scale(HasTextAfter(texts, i) ? GapBetweenTexts96 : GapBeforeBox96);
+            }
+
+            // Never higher than the screen: a prompt that is longer than what fits is cut at its end (the box and the buttons stay).
+            int below = Scale(TextBoxHeight96) + Scale(GapBeforeButtons96) + Scale(ButtonHeight96) + margin;
+            int outside = ClientSize.Height - ContentPanel.ClientSize.Height;
+            int room = Screen.FromControl(this).WorkingArea.Height - Scale(ScreenMargin96) - outside - margin - below;
+
+            if (textsHeight > room)
+                heights[0] = Math.Max(0, heights[0] - (textsHeight - room));
+
             for (int i = 0; i < texts.Length; i++)
             {
                 Label label = texts[i];
@@ -278,9 +299,8 @@ namespace ErikwnkWFUI.Forms
                 if (!shown)
                     continue;
 
-                int height = TextRenderer.MeasureText(label.Text, label.Font, new Size(inner, int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
-                label.SetBounds(margin, y, inner, height);
-                y += height + Scale(HasTextAfter(texts, i) ? GapBetweenTexts96 : GapBeforeBox96);
+                label.SetBounds(margin, y, inner, heights[i]);
+                y += heights[i] + Scale(HasTextAfter(texts, i) ? GapBetweenTexts96 : GapBeforeBox96);
             }
 
             _textBox.SetBounds(margin, y, inner, Scale(TextBoxHeight96));
