@@ -241,6 +241,11 @@ namespace ErikwnkWFUI.Showcase
             Rectangle? old = null;
             bool wasResizable = false;
 
+            // The page is not to jump: closing and opening windows gives the focus back to the first control of the page, which scrolls
+            // it to the top. Where it was scrolled to is put back afterwards.
+            ScrollableControl scrollHost = FindScrollHost(_formKind);
+            Point scrolled = scrollHost == null ? Point.Empty : new Point(-scrollHost.AutoScrollPosition.X, -scrollHost.AutoScrollPosition.Y);
+
             if (_sampleForm != null && !_sampleForm.IsDisposed)
             {
                 old = _sampleForm.Bounds;
@@ -281,6 +286,28 @@ namespace ErikwnkWFUI.Showcase
 
             // The controls that were changed stay in front: the sample window does not take the keyboard from them.
             Activate();
+
+            RestoreScroll(scrollHost, scrolled);
+
+            if (scrollHost != null)
+                BeginInvoke(new Action(() => RestoreScroll(scrollHost, scrolled)));
+        }
+
+        private static ScrollableControl FindScrollHost(Control control)
+        {
+            for (Control parent = control == null ? null : control.Parent; parent != null; parent = parent.Parent)
+            {
+                if (parent is ScrollableControl scrollable && scrollable.AutoScroll)
+                    return scrollable;
+            }
+
+            return null;
+        }
+
+        private static void RestoreScroll(ScrollableControl host, Point position)
+        {
+            if (host != null && !host.IsDisposed && -host.AutoScrollPosition.Y != position.Y)
+                host.AutoScrollPosition = position;
         }
 
         private void CloseSampleForm()
