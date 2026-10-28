@@ -9,6 +9,18 @@ namespace ErikwnkWFUI.Tests.Infrastructure;
 /// </summary>
 public static class OffscreenForm
 {
+    /// <summary>Shows a form that was made by the code under test (a window of the library) off-screen: not in the taskbar, out of the way, its messages handled.</summary>
+    public static T Place<T>(T form) where T : Form
+    {
+        form.ShowInTaskbar = false;
+        form.StartPosition = FormStartPosition.Manual;
+        form.Location = new Point(-3000, 0);
+        form.Show();
+        Application.DoEvents();
+
+        return form;
+    }
+
     public static Form Create(Size clientSize, Color? backColor = null)
     {
         Form form = new Form

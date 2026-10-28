@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Factories;
@@ -121,7 +122,8 @@ namespace ErikwnkWFUI.Forms
                 FormBorderStyle = FormBorderStyle.None;
 
             DoubleBuffered = true;
-            ThemeWatcher.FollowBackColor(this, () => UIColors.BackgroundBlack);
+            Func<Color> frame = options.FrameSource ?? (() => UIColors.BackgroundBlack);
+            ThemeWatcher.FollowBackColor(this, frame);
 
             int borderSize = 0;
             if (options.Borderless)
@@ -136,7 +138,9 @@ namespace ErikwnkWFUI.Forms
                 options.ShowMaximizeButton,
                 options.ShowCloseButton,
                 options.AllowWindowSnapAndMaximize,
-                options.TitleBarBackColor);
+                options.TitleBarBackColor,
+                frame,
+                options.ColorSource);
 
             _contentPanel = new Panel
             {
@@ -171,7 +175,7 @@ namespace ErikwnkWFUI.Forms
                     // FlowLayoutPanel's default gray SystemColors.Control
                     // instead of matching the rest of the window.
                 };
-                ThemeWatcher.FollowBackColor(_versionStrip, () => UIColors.BackgroundBlack);
+                ThemeWatcher.FollowBackColor(_versionStrip, frame);
                 _versionStrip.Controls.Add(_versionLabel);
             }
 

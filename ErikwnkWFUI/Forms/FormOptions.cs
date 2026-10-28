@@ -1,6 +1,9 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -34,7 +37,31 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
         public bool AllowWindowSnapAndMaximize { get; set; } = true;
 
+        /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the whole frame of the window.</summary>
         public Color? TitleBarBackColor { get; set; }
+
+        private UIColorSet _colors;
+
+        /// <summary>
+        /// A color set for the frame of the window: the edge around the content, the title bar (its text and its buttons take the colors of
+        /// the set) and the version strip are in the basic color of the set; the content stays as it is. Null (the default) is the normal
+        /// dark frame. <see cref="CreatePrimary"/> makes one that follows the accent. Not for a color set that is replaced while the window is shown.
+        /// </summary>
+        public UIColorSet Colors
+        {
+            get { return _colors; }
+            set
+            {
+                _colors = value;
+                ColorSource = ColorSetSource.Of(value);
+                FrameSource = value == null ? (Func<Color>)null : () => value.Basic;
+            }
+        }
+
+        // What AppForm reads: the set (asked again each time) and the color of the frame - for the primary look the same very dark shade of
+        // the accent as the primary panels, not the basic color of the set.
+        internal Func<UIColorSet> ColorSource { get; set; }
+        internal Func<Color> FrameSource { get; set; }
 
         /// <summary>The OS-level icon (taskbar, Alt-Tab, system menu) - not the title bar logo, see <see cref="Icon"/> for that. Falls back to the running exe's own icon when left null.</summary>
         public Icon WindowIcon { get; set; } = null;
@@ -100,6 +127,32 @@ namespace ErikwnkWFUI.Forms
         {
             FormOptions options = CreateDialog(title, titleTextAlign, backColor, icon, windowIcon);
             options.VersionText = EntryAssemblyVersion.GetText();
+            return options;
+        }
+
+        /// <summary>A normal window with the frame in a very dark shade of the accent (follows a change of the accent).</summary>
+        public static FormOptions CreatePrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+        {
+            return MakePrimary(CreateStandard(title, titleTextAlign, null, icon, windowIcon));
+        }
+
+        /// <summary>A fixed-size dialog with the frame in a very dark shade of the accent.</summary>
+        public static FormOptions CreatePrimaryDialog(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+        {
+            return MakePrimary(CreateDialog(title, titleTextAlign, null, icon, windowIcon));
+        }
+
+        /// <summary>A settings window (see <see cref="CreateSettings"/>) with the frame in a very dark shade of the accent.</summary>
+        public static FormOptions CreatePrimarySettings(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+        {
+            return MakePrimary(CreateSettings(title, titleTextAlign, null, icon, windowIcon));
+        }
+
+        private static FormOptions MakePrimary(FormOptions options)
+        {
+            options.ColorSource = () => UIColors.PrimarySet;
+            options.FrameSource = () => UIColors.PrimaryDarkDark;
+
             return options;
         }
     }

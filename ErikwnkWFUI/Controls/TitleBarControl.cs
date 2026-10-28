@@ -20,6 +20,7 @@ namespace ErikwnkWFUI.Controls
     public class TitleBarControl : System.Windows.Forms.Panel
     {
         private const int TitleBarHeight = 30;
+        private const double TitleTextContrast = 4.5;
         private const int IconSize = TitleBarHeight;
         private const int IconLeftMargin = 0;
         private const int TitleHorizontalPadding = 10;
@@ -121,9 +122,26 @@ namespace ErikwnkWFUI.Controls
             bool showCloseButton = true,
             bool allowWindowSnapAndMaximize = true,
             Color? backColor = null)
+            : this(icon, title, titleTextAlign, showMinimizeButton, showMaximizeButton, showCloseButton, allowWindowSnapAndMaximize, backColor, null, null)
         {
-            Color resolvedBackColor = backColor ?? UIColors.BackgroundBlack;
-            _backColorWasGiven = backColor.HasValue;
+        }
+
+        // The form hands over what its color set (or the primary look) makes of the bar: the background (asked again each time, so a change of the
+        // theme or of the accent is followed - unless a color was given by hand), and the set the title and the buttons take their colors from.
+        internal TitleBarControl(
+            Image icon,
+            string title,
+            ContentAlignment titleTextAlign,
+            bool showMinimizeButton,
+            bool showMaximizeButton,
+            bool showCloseButton,
+            bool allowWindowSnapAndMaximize,
+            Color? backColor,
+            Func<Color> backSource,
+            Func<UIColorSet> colors)
+        {
+            Color resolvedBackColor = backColor ?? (backSource != null ? backSource() : UIColors.BackgroundBlack);
+            _backColorWasGiven = backColor.HasValue || backSource != null;
             _allowWindowSnapAndMaximize = allowWindowSnapAndMaximize;
 
             ConfigureControl(resolvedBackColor);
@@ -133,9 +151,22 @@ namespace ErikwnkWFUI.Controls
                 titleTextAlign,
                 resolvedBackColor);
             _iconPictureBox = CreateIconPictureBox(icon);
-            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton);
-            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton);
-            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton);
+            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton, colors);
+            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton, colors);
+            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton, colors);
+
+            if (backSource != null && !backColor.HasValue)
+            {
+                ThemeWatcher.FollowBackColor(this, backSource);
+                ThemeWatcher.FollowBackColor(_titleLabel, backSource);
+            }
+
+            // The text of the set, brought to where it reads on the bar (the bar's color is looked at each time).
+            if (colors != null)
+            {
+                _titleForeColorWasSet = true;
+                ThemeWatcher.FollowForeColor(_titleLabel, () => UIColors.EnsureContrast(colors().BasicText, BackColor, TitleTextContrast));
+            }
 
             AddControls();
             CreateDragHandles();
@@ -274,9 +305,11 @@ namespace ErikwnkWFUI.Controls
             };
         }
 
-        private Button CreateTitleBarButton(string text, string tooltip, bool visible)
+        private Button CreateTitleBarButton(string text, string tooltip, bool visible, Func<UIColorSet> colors)
         {
-            Button button = UIButtonFactory.CreateStandard(text, tooltip, ButtonSize);
+            Button button = colors == null
+                ? UIButtonFactory.CreateStandard(text, tooltip, ButtonSize)
+                : UIButtonFactory.CreateSymbol(text, tooltip, ButtonSize, colors);
             button.Visible = visible;
 
             // Shows only a symbol: named by its tooltip for a screen reader.
