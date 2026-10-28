@@ -23,7 +23,7 @@ public class FormExtrasTests : IDisposable
     private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "wfui_placement_" + Guid.NewGuid().ToString("N"));
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly AppFormHost _host = new AppFormHost();
 
     public FormExtrasTests()
     {
@@ -32,8 +32,7 @@ public class FormExtrasTests : IDisposable
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         WindowPlacementStore.Directory = null;
 
@@ -57,13 +56,6 @@ public class FormExtrasTests : IDisposable
         public int ClassStyle => CreateParams.ClassStyle;
     }
 
-    private T Own<T>(T form) where T : Form
-    {
-        _forms.Add(form);
-
-        return form;
-    }
-
     private static string[] Texts(ToolStripItemCollection items)
     {
         return items.Cast<ToolStripItem>().Where(i => i is ToolStripMenuItem).Select(i => i.Text ?? "").ToArray();
@@ -74,8 +66,8 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void TheSystemMenu_OffersWhatTheWindowCanDoNow()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
+        AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = _host.Add(UIStyles.Forms.CreateDialogStandard("Dialog"));
 
         using (LibraryMenu normal = window.CreateSystemMenu())
             Assert.Equal(new[] { UIStrings.Get("TitleBar.Minimize"), UIStrings.Get("TitleBar.Maximize"), UIStrings.Get("TitleBar.Close") }, Texts(normal.Items));
@@ -90,7 +82,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void AMaximizedWindow_CanBeRestored_AndNotMaximizedAgain()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Window"));
         OffscreenForm.Place(window);
         window.WindowState = FormWindowState.Maximized;
 
@@ -102,7 +94,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void TheEntriesOfTheSystemMenu_DoWhatTheyName()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Window"));
         OffscreenForm.Place(window);
 
         using (LibraryMenu menu = window.CreateSystemMenu())
@@ -125,7 +117,7 @@ public class FormExtrasTests : IDisposable
         {
             LanguageTestHelper.RunWithLanguage(language, () =>
             {
-                AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+                AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Window"));
 
                 using LibraryMenu menu = window.CreateSystemMenu();
                 Assert.Contains(UIStrings.Get("TitleBar.Close"), Texts(menu.Items));
@@ -136,7 +128,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void TheSystemMenu_IsInGerman_WithTheRealTexts_AndFollowsALanguageSwitchWhileTheWindowIsOpen()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Window"));
         OffscreenForm.Place(window);
 
         using (LibraryMenu english = window.CreateSystemMenu())
@@ -180,8 +172,8 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void Escape_ClosesADialogWithoutACancelButton_ButNotAStandardWindow()
     {
-        KeyForm dialog = Own(new KeyForm(FormOptions.CreateDialog("Dialog")));
-        KeyForm window = Own(new KeyForm(FormOptions.CreateStandard("Window")));
+        KeyForm dialog = _host.Add(new KeyForm(FormOptions.CreateDialog("Dialog")));
+        KeyForm window = _host.Add(new KeyForm(FormOptions.CreateStandard("Window")));
         bool dialogClosed = false;
         bool windowClosed = false;
         dialog.FormClosed += (sender, e) => dialogClosed = true;
@@ -199,7 +191,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void Escape_InADialogWithACancelButton_IsLeftToTheButton()
     {
-        KeyForm dialog = Own(new KeyForm(FormOptions.CreateDialog("Dialog")));
+        KeyForm dialog = _host.Add(new KeyForm(FormOptions.CreateDialog("Dialog")));
         Button cancel = new Button();
         int clicks = 0;
         cancel.Click += (sender, e) => clicks++;
@@ -220,7 +212,7 @@ public class FormExtrasTests : IDisposable
     {
         FormOptions options = FormOptions.CreateDialog("Busy");
         options.CloseEnabled = false;
-        KeyForm form = Own(new KeyForm(options));
+        KeyForm form = _host.Add(new KeyForm(options));
         OffscreenForm.Place(form);
 
         // What the user does (Alt+F4, the taskbar, the system menu) is the close command of the system.
@@ -239,7 +231,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void WhenClosingIsNotEnabled_TheButtonAndTheMenuEntryAreGreyedOut_AndItCanBeTurnedOnAgain()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("Busy"));
+        AppForm form = _host.Add(UIStyles.Forms.CreateStandard("Busy"));
         OffscreenForm.Place(form);
         System.Windows.Forms.Button close = form.TitleBar.GetPrivateField<System.Windows.Forms.Button>("_closeButton")!;
 
@@ -267,7 +259,7 @@ public class FormExtrasTests : IDisposable
     {
         FormOptions options = FormOptions.CreateStandard("Busy");
         options.CloseEnabled = false;
-        AppForm form = Own(new AppForm(options));
+        AppForm form = _host.Add(new AppForm(options));
         OffscreenForm.Place(form);
 
         SendMessage(form.Handle, WmClose, IntPtr.Zero, IntPtr.Zero);
@@ -282,10 +274,10 @@ public class FormExtrasTests : IDisposable
         FormOptions options = FormOptions.CreateStandard("Window");
 
         Assert.True(options.CloseEnabled);
-        Assert.True(Own(new AppForm(options)).CloseEnabled);
+        Assert.True(_host.Add(new AppForm(options)).CloseEnabled);
 
         options.CloseEnabled = false;
-        Assert.False(Own(new AppForm(options)).CloseEnabled);
+        Assert.False(_host.Add(new AppForm(options)).CloseEnabled);
     }
 
     // ---- shadow
@@ -293,13 +285,13 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void AFramelessWindow_HasAShadow_UnlessSwitchedOff_AndTheNativeFrameHasItsOwn()
     {
-        KeyForm normal = Own(new KeyForm(FormOptions.CreateStandard("Window")));
+        KeyForm normal = _host.Add(new KeyForm(FormOptions.CreateStandard("Window")));
         FormOptions noShadow = FormOptions.CreateStandard("No shadow");
         noShadow.Shadow = false;
-        KeyForm plain = Own(new KeyForm(noShadow));
+        KeyForm plain = _host.Add(new KeyForm(noShadow));
         FormOptions native = FormOptions.CreateStandard("Native");
         native.Borderless = false;
-        KeyForm framed = Own(new KeyForm(native));
+        KeyForm framed = _host.Add(new KeyForm(native));
 
         Assert.NotEqual(0, normal.ClassStyle & ClassStyleDropShadow);
         Assert.Equal(0, plain.ClassStyle & ClassStyleDropShadow);
@@ -356,7 +348,7 @@ public class FormExtrasTests : IDisposable
     public void AWindowWithAKey_RemembersItsPlaceAndSize_AndGetsThemBackNextTime()
     {
         Rectangle bounds = InsideTheScreen();
-        AppForm first = Own(UIStyles.Forms.CreateStandard("Main"));
+        AppForm first = _host.Add(UIStyles.Forms.CreateStandard("Main"));
         first.RememberBoundsKey = "main";
         first.StartPosition = FormStartPosition.Manual;
         first.Bounds = bounds;
@@ -365,7 +357,7 @@ public class FormExtrasTests : IDisposable
         Rectangle expected = first.Bounds;
         first.Close();
 
-        AppForm second = Own(UIStyles.Forms.CreateStandard("Main"));
+        AppForm second = _host.Add(UIStyles.Forms.CreateStandard("Main"));
         second.RememberBoundsKey = "main";
         second.Show();
 
@@ -379,14 +371,14 @@ public class FormExtrasTests : IDisposable
         Rectangle bounds = InsideTheScreen();
         FormOptions options = FormOptions.CreateStandard("Main");
         options.RememberBoundsKey = "maximized";
-        AppForm first = Own(new AppForm(options));
+        AppForm first = _host.Add(new AppForm(options));
         first.StartPosition = FormStartPosition.Manual;
         first.Bounds = bounds;
         first.Show();
         first.WindowState = FormWindowState.Maximized;
         first.Close();
 
-        AppForm second = Own(new AppForm(options));
+        AppForm second = _host.Add(new AppForm(options));
         second.Show();
 
         Assert.Equal(FormWindowState.Maximized, second.WindowState);
@@ -397,14 +389,14 @@ public class FormExtrasTests : IDisposable
     public void AFixedSizeWindow_RemembersOnlyItsPosition()
     {
         Rectangle bounds = InsideTheScreen();
-        AppForm first = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
+        AppForm first = _host.Add(UIStyles.Forms.CreateSettingsStandard("Settings"));
         first.RememberBoundsKey = "settings";
         first.StartPosition = FormStartPosition.Manual;
         first.Bounds = bounds;
         first.Show();
         first.Close();
 
-        AppForm second = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
+        AppForm second = _host.Add(UIStyles.Forms.CreateSettingsStandard("Settings"));
         second.RememberBoundsKey = "settings";
         second.Size = new Size(333, 222);
         second.Show();
@@ -416,7 +408,7 @@ public class FormExtrasTests : IDisposable
     [Fact]
     public void AWindowWithoutAKey_RemembersNothing()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Main"));
+        AppForm window = _host.Add(UIStyles.Forms.CreateStandard("Main"));
         OffscreenForm.Place(window);
         window.Close();
 
@@ -429,7 +421,7 @@ public class FormExtrasTests : IDisposable
         FormOptions options = FormOptions.CreateDialog("Dialog");
         options.RememberBoundsKey = "dialog";
 
-        Assert.Equal("dialog", Own(new AppForm(options)).RememberBoundsKey);
+        Assert.Equal("dialog", _host.Add(new AppForm(options)).RememberBoundsKey);
         Assert.True(options.CloseOnEscape);
         Assert.False(FormOptions.CreateStandard("Window").CloseOnEscape);
     }

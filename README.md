@@ -151,6 +151,36 @@ details.Visible = false;
 advanced.CheckedChanged += (s, e) => details.Visible = advanced.Checked;
 ```
 
+## Windows
+
+`AppForm` is the window of the library: its own title bar instead of the native one, no frame, resizable by its edges, a drop shadow, and the
+work area of the screen when it is maximized. `UIStyles.Forms` makes one: `CreateStandard` (resizable, with minimize, maximize and close),
+`CreateDialogStandard` (a fixed size, only the close button, Escape closes it) and `CreateSettingsStandard` (a dialog with the version of the
+program in a strip at the bottom); each also as `...Primary` (the title bar in a very dark shade of the accent) and, for the Standard ones, with
+`colors:` (the title bar in a color set). Put the content into `ContentPanel`; a window of your own derives from `AppForm` and hands
+`FormOptions` to the constructor.
+
+- A window opens in the middle of the screen, or over its owner (`Show(owner)`, `ShowDialog(owner)`); a resizable one has a least size
+  (`FormOptions.MinimumSize`, 260 x 140 at 96 dpi). `StartPosition` can be changed.
+- The thin edge around the window is black (`BorderColor` changes it), the version strip is a darker gray than the content. `TitleBarBackColor`
+  colors the bar alone; `TitleTextAlign`, `ShowMinimizeButton`, `ShowMaximizeButton` and `ShowCloseButton` shape the bar. The title keeps clear of the
+  buttons when the window gets narrow. `FormTitle` sets the title of the window and of the bar at once.
+- Right-click the title bar, or press Alt+Space, for the system menu (`ShowSystemMenu` shows it from code).
+- `RememberBoundsKey` makes a window come back where it was (position, size, maximized), as long as that is still on a screen; a fixed-size window
+  remembers only its position. `CloseEnabled = false` greys out the close button and keeps the user from closing the window (Alt+F4, the taskbar,
+  Escape) while the program can still close it - for an update that is being installed.
+- `Borderless = false` keeps the native frame of Windows (and has no title bar of the library, no edge, no shadow).
+
+```csharp
+using var form = UIStyles.Forms.CreateSettingsStandard("Settings");
+form.ContentPanel.Controls.Add(UIStyles.Labels.CreateStandard("Hello"));
+form.RememberBoundsKey = "Settings";
+form.Show(owner);
+```
+
+The old names `StyledForm`, `StyledFormOptions`, `StyledFormType` and `StyledOptionsForm` still work but are obsolete: they are `AppForm`, `FormOptions`
+(its presets `CreateStandard`, `CreateDialog` and `CreateSettings` are the same) and `OptionsForm`; the type is not needed any more.
+
 ## Panels
 
 `UIStyles.Panels` are the surfaces a layout is built from: `CreateStandard` (the usual

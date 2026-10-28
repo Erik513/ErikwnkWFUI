@@ -151,7 +151,6 @@ namespace ErikwnkWFUI.Forms
 
         private void ConfigureForm()
         {
-            StartPosition = FormStartPosition.CenterScreen;
             ShowInTaskbar = false;
 
             Size = DialogSize;

@@ -12,38 +12,22 @@ namespace ErikwnkWFUI.Tests.Forms;
 [Collection(AccentColorTestCollection.Name)]
 public class FormFactoryTests : IDisposable
 {
-    private readonly List<AppForm> _forms = new List<AppForm>();
+    private readonly AppFormHost _host = new AppFormHost();
 
     public void Dispose()
     {
-        foreach (AppForm form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
         UIColors.SetAccent(UIAccentColors.Blue);
     }
 
-    // A window that is not shown (the test shows it itself, over an owner or at a place of its own).
-    private AppForm OwnHidden(AppForm form)
-    {
-        _forms.Add(form);
-
-        return form;
-    }
-
-    private AppForm Own(AppForm form)
-    {
-        _forms.Add(form);
-
-        return OffscreenForm.Place(form);
-    }
-
     [Fact]
     public void TheThreeKinds_AreAResizableWindow_ADialogWithOnlyClose_AndASettingsWindowWithAVersion()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
-        AppForm settings = Own(UIStyles.Forms.CreateSettingsStandard("Settings"));
+        AppForm window = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = _host.Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
+        AppForm settings = _host.Show(UIStyles.Forms.CreateSettingsStandard("Settings"));
 
         Assert.Equal("Window", window.FormTitle);
         Assert.True(window.TitleBar.ShowMinimizeButton && window.TitleBar.ShowMaximizeButton && window.TitleBar.ShowCloseButton);
@@ -61,7 +45,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ASet_ColorsTheTitleBar_WithTheBasicColor_NotTheEdgeAroundTheWindow_AndNotTheVersionStrip()
     {
-        AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("Settings", UIStyles.Colors.Sets.Yellow));
+        AppForm form = _host.Show(UIStyles.Forms.CreateSettingsStandard("Settings", UIStyles.Colors.Sets.Yellow));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
@@ -74,9 +58,9 @@ public class FormFactoryTests : IDisposable
     {
         AppForm[] forms =
         {
-            Own(UIStyles.Forms.CreateSettingsStandard("Standard")),
-            Own(UIStyles.Forms.CreateSettingsPrimary("Primary")),
-            Own(UIStyles.Forms.CreateSettingsStandard("Yellow", UIStyles.Colors.Sets.Yellow)),
+            _host.Show(UIStyles.Forms.CreateSettingsStandard("Standard")),
+            _host.Show(UIStyles.Forms.CreateSettingsPrimary("Primary")),
+            _host.Show(UIStyles.Forms.CreateSettingsStandard("Yellow", UIStyles.Colors.Sets.Yellow)),
         };
 
         foreach (AppForm form in forms)
@@ -102,7 +86,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ASingleColor_IsTakenAsTheBasicColorOfASet()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("Purple", Color.MediumPurple));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Purple", Color.MediumPurple));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.NotEqual(UIColors.BackgroundBlack.ToArgb(), form.TitleBar.BackColor.ToArgb());
@@ -111,7 +95,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void WithoutASet_TheBarAndTheEdgeAreTheDarkestBackground()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.TitleBar.BackColor.ToArgb());
@@ -126,7 +110,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ThePrimaryFrame_IsAVeryDarkShadeOfTheAccent_AndFollowsAChangeOfTheAccent()
     {
-        AppForm form = Own(UIStyles.Forms.CreateSettingsPrimary("Primary"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateSettingsPrimary("Primary"));
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
@@ -146,7 +130,7 @@ public class FormFactoryTests : IDisposable
     {
         FormOptions options = FormOptions.CreateStandard("Window", backColor: Color.DarkGreen);
         options.Colors = UIStyles.Colors.Sets.Yellow;
-        AppForm form = Own(new AppForm(options));
+        AppForm form = _host.Show(new AppForm(options));
 
         Assert.Equal(Color.DarkGreen.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
@@ -155,9 +139,9 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheEdgeAroundTheWindow_IsBlackInAllThreeKinds_AndFollowsTheTheme()
     {
-        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
-        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
-        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm standard = _host.Show(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm yellow = _host.Show(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
 
         foreach (AppForm form in new[] { standard, primary, yellow })
             Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BorderColor.ToArgb());
@@ -178,7 +162,7 @@ public class FormFactoryTests : IDisposable
         FormOptions options = FormOptions.CreateStandard("Window");
         options.Colors = UIStyles.Colors.Sets.Yellow;
         options.BorderColor = Color.Crimson;
-        AppForm form = Own(new AppForm(options));
+        AppForm form = _host.Show(new AppForm(options));
 
         Assert.Equal(Color.Crimson.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
@@ -197,11 +181,11 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void AResizableWindow_HasALeastSize_ADialogHasNone_AndTheOptionsOrTheWindowCanChangeIt()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Own(UIStyles.Forms.CreateDialogStandard("Dialog"));
+        AppForm window = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = _host.Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
         FormOptions options = FormOptions.CreateStandard("Own");
         options.MinimumSize = new Size(400, 300);
-        AppForm own = Own(new AppForm(options));
+        AppForm own = _host.Show(new AppForm(options));
 
         Assert.Equal(Dpi.Scale(260, window.DeviceDpi), window.MinimumSize.Width);
         Assert.Equal(Dpi.Scale(140, window.DeviceDpi), window.MinimumSize.Height);
@@ -215,7 +199,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ASizeBelowTheLeastSize_IsRaisedToIt()
     {
-        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm window = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         OffscreenForm.Place(window);
 
         window.Size = new Size(50, 50);
@@ -231,9 +215,9 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheButtonsOfTheTitleBar_AreFlatInTheColorOfTheBar_WithTheSameSymbolsInEveryWindow()
     {
-        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
-        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
-        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm standard = _host.Show(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm yellow = _host.Show(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Primary"));
 
         foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
         {
@@ -258,7 +242,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheButtonsOfTheTitleBar_ShowAQuietFillUnderTheMouse_AndTheCloseButtonTurnsRed()
     {
-        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm yellow = _host.Show(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
         Button minimize = CaptionButton(yellow, "_minimizeButton");
         Button close = CaptionButton(yellow, "_closeButton");
 
@@ -270,8 +254,8 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheButtonsOfTheTitleBar_FollowAChangeOfTheTheme()
     {
-        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
-        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm standard = _host.Show(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Primary"));
 
         UIColors.ApplyTheme(UIThemes.Light);
         UIColors.SetAccent(Color.OrangeRed);
@@ -290,11 +274,11 @@ public class FormFactoryTests : IDisposable
         {
             foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
-                AppForm form = Own(UIStyles.Forms.CreateStandard("Title", set));
+                AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Title", set));
                 Check(shortfalls, "symbol, " + name, CaptionButton(form, "_minimizeButton").ForeColor, form.TitleBar.BackColor, 4.5);
             }
 
-            AppForm primary = Own(UIStyles.Forms.CreatePrimary("Title"));
+            AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Title"));
             Check(shortfalls, "symbol, primary", CaptionButton(primary, "_minimizeButton").ForeColor, primary.TitleBar.BackColor, 4.5);
         });
     }
@@ -302,7 +286,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheTitle_StaysInTheMiddleOfTheBar_AndKeepsClearOfTheButtonsWhenTheWindowIsNarrow()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("A title of a window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("A title of a window"));
         Label title = TitleLabel(form);
         Button minimize = CaptionButton(form, "_minimizeButton");
         int needed = TextRenderer.MeasureText(title.Text, title.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + title.Padding.Horizontal;
@@ -326,7 +310,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheTitle_IsNotCutWithDots_AsLongAsItFitsLeftOfTheButtons()
     {
-        AppForm form = Own(UIStyles.Forms.CreateStandard("A rather long title of a window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("A rather long title of a window"));
         Label title = TitleLabel(form);
         Button minimize = CaptionButton(form, "_minimizeButton");
         int needed = TextRenderer.MeasureText(title.Text, title.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + title.Padding.Horizontal;
@@ -345,7 +329,7 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void ALeftAlignedTitle_AlsoKeepsClearOfTheButtons()
     {
-        AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("A rather long title of a window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateSettingsStandard("A rather long title of a window"));
         Label title = TitleLabel(form);
 
         form.ClientSize = new Size(260, 200);
@@ -358,22 +342,22 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void EveryWindow_OpensInTheMiddleOfTheScreen_ByDefault()
     {
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateStandard("a")).StartPosition);
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateDialogStandard("b")).StartPosition);
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(UIStyles.Forms.CreateSettingsStandard("c")).StartPosition);
-        Assert.Equal(FormStartPosition.CenterScreen, OwnHidden(new AppForm()).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, _host.Add(UIStyles.Forms.CreateStandard("a")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, _host.Add(UIStyles.Forms.CreateDialogStandard("b")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, _host.Add(UIStyles.Forms.CreateSettingsStandard("c")).StartPosition);
+        Assert.Equal(FormStartPosition.CenterScreen, _host.Add(new AppForm()).StartPosition);
     }
 
     [Fact]
     public void AWindowThatOpensOverAnOwner_IsCenteredOverIt()
     {
         Rectangle area = Screen.PrimaryScreen!.WorkingArea;
-        AppForm owner = OwnHidden(UIStyles.Forms.CreateStandard("Owner"));
+        AppForm owner = _host.Add(UIStyles.Forms.CreateStandard("Owner"));
         owner.StartPosition = FormStartPosition.Manual;
         owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
         owner.Show();
 
-        AppForm child = OwnHidden(UIStyles.Forms.CreateDialogStandard("Child"));
+        AppForm child = _host.Add(UIStyles.Forms.CreateDialogStandard("Child"));
         child.Size = new Size(200, 120);
         child.Show(owner);
 
@@ -385,12 +369,12 @@ public class FormFactoryTests : IDisposable
     public void AWindowWhoseStartPositionWasChanged_IsLeftWhereItWasPut()
     {
         Rectangle area = Screen.PrimaryScreen!.WorkingArea;
-        AppForm owner = OwnHidden(UIStyles.Forms.CreateStandard("Owner"));
+        AppForm owner = _host.Add(UIStyles.Forms.CreateStandard("Owner"));
         owner.StartPosition = FormStartPosition.Manual;
         owner.Bounds = new Rectangle(area.X + 100, area.Y + 80, 500, 300);
         owner.Show();
 
-        AppForm child = OwnHidden(UIStyles.Forms.CreateDialogStandard("Child"));
+        AppForm child = _host.Add(UIStyles.Forms.CreateDialogStandard("Child"));
         child.StartPosition = FormStartPosition.Manual;
         child.Bounds = new Rectangle(area.X + 10, area.Y + 10, 200, 120);
         child.Show(owner);
@@ -404,7 +388,7 @@ public class FormFactoryTests : IDisposable
         FormOptions options = FormOptions.CreateStandard("Window");
         options.Colors = UIStyles.Colors.Sets.Red;
         options.Colors = null;
-        AppForm form = Own(new AppForm(options));
+        AppForm form = _host.Show(new AppForm(options));
 
         Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
     }
@@ -417,12 +401,12 @@ public class FormFactoryTests : IDisposable
         {
             foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
-                AppForm form = Own(UIStyles.Forms.CreateStandard("Title", set));
+                AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Title", set));
                 Label title = TitleLabel(form);
                 Check(shortfalls, "title, " + name, title.ForeColor, title.BackColor, 4.5);
             }
 
-            AppForm primary = Own(UIStyles.Forms.CreatePrimary("Title"));
+            AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Title"));
             Check(shortfalls, "title, primary", TitleLabel(primary).ForeColor, TitleLabel(primary).BackColor, 4.5);
         });
     }
@@ -435,12 +419,12 @@ public class FormFactoryTests : IDisposable
         {
             foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
             {
-                AppForm form = Own(UIStyles.Forms.CreateSettingsStandard("Settings", set));
+                AppForm form = _host.Show(UIStyles.Forms.CreateSettingsStandard("Settings", set));
                 ErikwnkWFUI.Controls.ScrollingLabel version = (ErikwnkWFUI.Controls.ScrollingLabel)form.VersionLabel;
                 Check(shortfalls, "version, " + name, version.GetTextColor(), form.VersionStrip!.BackColor, 3.0);
             }
 
-            AppForm primary = Own(UIStyles.Forms.CreateSettingsPrimary("Settings"));
+            AppForm primary = _host.Show(UIStyles.Forms.CreateSettingsPrimary("Settings"));
             Check(shortfalls, "version, primary", ((ErikwnkWFUI.Controls.ScrollingLabel)primary.VersionLabel).GetTextColor(), primary.VersionStrip!.BackColor, 3.0);
         });
     }
@@ -448,9 +432,9 @@ public class FormFactoryTests : IDisposable
     [Fact]
     public void TheSystemMenu_TakesTheColorsOfTheFrame_OrIsNeutral()
     {
-        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
-        AppForm plain = Own(UIStyles.Forms.CreateStandard("Plain"));
-        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm yellow = _host.Show(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm plain = _host.Show(UIStyles.Forms.CreateStandard("Plain"));
+        AppForm primary = _host.Show(UIStyles.Forms.CreatePrimary("Primary"));
 
         using (ErikwnkWFUI.Controls.ContextMenuStrip menu = yellow.CreateSystemMenu())
             Assert.Equal(UIStyles.Colors.Sets.Yellow.Hover.ToArgb(), menu.Colors.Hover.ToArgb());

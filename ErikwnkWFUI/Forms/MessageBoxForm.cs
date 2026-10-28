@@ -72,12 +72,6 @@ namespace ErikwnkWFUI.Forms
                 if (owner != null)
                     return form.ShowDialog(owner);
 
-                // The constructor sets StartPosition = CenterParent, which
-                // only actually centers when ShowDialog is given an owner -
-                // called without one (e.g. a "this app is already running"
-                // notice shown before any main form exists to own it), it
-                // falls back to the top-left corner instead of the screen.
-                form.StartPosition = FormStartPosition.CenterScreen;
                 return form.ShowDialog();
             }
             finally
@@ -189,7 +183,6 @@ namespace ErikwnkWFUI.Forms
         {
             MessageBoxPreset preset = GetPreset();
 
-            StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
 
             Size = preset.FormSize;

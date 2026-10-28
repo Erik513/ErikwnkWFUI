@@ -20,12 +20,11 @@ public class AppFormEdgeCaseTests : IDisposable
     private const int HtTopLeft = 13;
     private const int HtBottomRight = 17;
 
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly AppFormHost _host = new AppFormHost(60);
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
     }
 
     // Lets the tests ask where a point of the window leads (what the mouse is over at the edges).
@@ -47,15 +46,6 @@ public class AppFormEdgeCaseTests : IDisposable
         }
     }
 
-    private T Show<T>(T form) where T : Form
-    {
-        _forms.Add(form);
-        OffscreenForm.Place(form);
-        TestPictures.Pump(60);
-
-        return form;
-    }
-
     // (The buttons of the title bar take no focus, so PerformClick does nothing: they are clicked by the mouse.)
     private static void Click(Button button)
     {
@@ -70,8 +60,8 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void WithoutOptions_TheFormIsAStandardWindow()
     {
-        AppForm none = Show(new AppForm());
-        AppForm nothing = Show(new AppForm(null));
+        AppForm none = _host.Show(new AppForm());
+        AppForm nothing = _host.Show(new AppForm(null));
 
         Assert.Equal("", none.Text);
         Assert.True(none.TitleBar.ShowMinimizeButton && none.TitleBar.ShowMaximizeButton && none.TitleBar.ShowCloseButton);
@@ -82,7 +72,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void AnAmpersandInTheTitle_IsShownAsItIs()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Save & exit"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Save & exit"));
         Label title = form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
 
         Assert.Equal("Save & exit", title.Text);
@@ -95,7 +85,7 @@ public class AppFormEdgeCaseTests : IDisposable
         using Icon icon = SystemIcons.Information;
         using Bitmap logo = new Bitmap(16, 16);
         FormOptions options = FormOptions.CreateStandard("Window", icon: logo, windowIcon: icon);
-        AppForm form = Show(new AppForm(options));
+        AppForm form = _host.Show(new AppForm(options));
 
         Assert.True(form.ShowIcon);
         Assert.Equal(icon.Handle, form.Icon!.Handle);
@@ -108,7 +98,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void TheButtonsOfTheBar_MinimizeMaximizeRestoreAndClose()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         bool closed = false;
         form.FormClosed += (sender, e) => closed = true;
 
@@ -136,7 +126,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void TheButtonsOfTheBar_NeverTakeTheFocus_SoNoThickFocusBorderStaysAfterAClick()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         Button inContent = new Button { Text = "In the content" };
         form.ContentPanel.Controls.Add(inContent);
         form.ActiveControl = inContent;
@@ -180,7 +170,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void TheTitle_StaysOnTheSameLine_WhetherOrNotItIsCutShortWithDots()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("A rather long title of a window that has to be cut"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("A rather long title of a window that has to be cut"));
         Label title = form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
 
         form.ClientSize = new Size(900, 200);
@@ -199,7 +189,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void TheButtonsOfTheBar_AreInThePictureOfTheWholeWindow()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         form.Size = new Size(420, 160);
         TestPictures.Pump(100);
 
@@ -228,8 +218,8 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void ADoubleClickOnTheBar_MaximizesAWindow_ButNotADialog()
     {
-        AppForm window = Show(UIStyles.Forms.CreateStandard("Window"));
-        AppForm dialog = Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
+        AppForm window = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = _host.Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
 
         foreach (AppForm form in new[] { window, dialog })
             form.TitleBar.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 2, 50, 10, 0));
@@ -243,7 +233,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void TheEdgesOfAResizableWindow_LeadToTheResizeCursors_TheMiddleDoesNot()
     {
-        HitForm form = Show(new HitForm(FormOptions.CreateStandard("Window")));
+        HitForm form = _host.Show(new HitForm(FormOptions.CreateStandard("Window")));
         form.ClientSize = new Size(400, 300);
         Application.DoEvents();
 
@@ -256,8 +246,8 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void ADialog_AndAMaximizedWindow_HaveNoEdgesToResizeBy()
     {
-        HitForm dialog = Show(new HitForm(FormOptions.CreateDialog("Dialog")));
-        HitForm window = Show(new HitForm(FormOptions.CreateStandard("Window")));
+        HitForm dialog = _host.Show(new HitForm(FormOptions.CreateDialog("Dialog")));
+        HitForm window = _host.Show(new HitForm(FormOptions.CreateStandard("Window")));
         window.WindowState = FormWindowState.Maximized;
         TestPictures.Pump(60);
 
@@ -270,7 +260,7 @@ public class AppFormEdgeCaseTests : IDisposable
     {
         FormOptions options = FormOptions.CreateStandard("Window");
         options.VersionText = "v1.2.3";
-        AppForm form = Show(new AppForm(options));
+        AppForm form = _host.Show(new AppForm(options));
         Button update = new Button { Text = "Update", AutoSize = true };
 
         form.VersionStrip!.Controls.Add(update);
@@ -289,10 +279,10 @@ public class AppFormEdgeCaseTests : IDisposable
         foreach (Control inStrip in form.VersionStrip.Controls.Cast<Control>())
             Assert.Equal((form.VersionStrip.ClientSize.Height - inStrip.Height) / 2, inStrip.Top);
 
-        Assert.Null(Show(UIStyles.Forms.CreateStandard("Plain")).VersionStrip);
+        Assert.Null(_host.Show(UIStyles.Forms.CreateStandard("Plain")).VersionStrip);
 
         options.VersionText = "";
-        Assert.Null(Show(new AppForm(options)).VersionStrip);
+        Assert.Null(_host.Show(new AppForm(options)).VersionStrip);
     }
 
     [Fact]
@@ -302,7 +292,7 @@ public class AppFormEdgeCaseTests : IDisposable
         int Listeners() => ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0;
         int before = Listeners();
 
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         Assert.True(Listeners() > before);
 
         form.Dispose();
@@ -313,7 +303,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void ACloseEntryOfTheSystemMenu_ClosesTheWindow_AndTheOpenMenuGoesWithIt()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
         form.ShowSystemMenu(new Point(100, 100));
         LibraryMenu menu = form.GetPrivateField<LibraryMenu>("_openMenu")!;
         ToolStripMenuItem close = menu.Items.Cast<ToolStripItem>().OfType<ToolStripMenuItem>().Last();
@@ -327,7 +317,7 @@ public class AppFormEdgeCaseTests : IDisposable
     [Fact]
     public void OpeningTheSystemMenuTwice_LeavesOnlyTheNewOne()
     {
-        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
 
         form.ShowSystemMenu(new Point(100, 100));
         LibraryMenu first = form.GetPrivateField<LibraryMenu>("_openMenu")!;
@@ -359,7 +349,7 @@ public class AppFormEdgeCaseTests : IDisposable
     public void DisposingTwice_AndDisposingAFormThatWasNeverShown_AreFine()
     {
         AppForm never = UIStyles.Forms.CreateSettingsStandard("Never shown");
-        AppForm shown = Show(UIStyles.Forms.CreateStandard("Shown"));
+        AppForm shown = _host.Show(UIStyles.Forms.CreateStandard("Shown"));
 
         Assert.Null(Record.Exception(() => never.Dispose()));
         Assert.Null(Record.Exception(() => shown.Dispose()));

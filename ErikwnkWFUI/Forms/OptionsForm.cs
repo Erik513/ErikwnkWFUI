@@ -55,7 +55,6 @@ namespace ErikwnkWFUI.Forms
         public OptionsForm(string title = "Options")
             : base(FormOptions.CreateDialog(title))
         {
-            StartPosition = FormStartPosition.CenterScreen;
             MinimumSize = new Size(340, 160);
 
             // Free space between the form's edges and the property
