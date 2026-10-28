@@ -197,8 +197,10 @@ namespace ErikwnkWFUI.Controls
                 {
                     Inset(m);
                 }
-                else if (m.Msg == WM_NCPAINT)
+                else if (m.Msg == WM_NCPAINT || m.Msg == WM_PAINT)
                 {
+                    // Also after the paint of the client area: the system draws a line of its own in the strip that the inset makes, and not
+                    // only with the paint of the frame - on the screen it was there again after the client area had been painted.
                     IntPtr hdc = GetWindowDC(Handle);
 
                     if (hdc == IntPtr.Zero)

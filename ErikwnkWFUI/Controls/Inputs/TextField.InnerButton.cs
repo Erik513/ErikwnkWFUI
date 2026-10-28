@@ -13,7 +13,10 @@ namespace ErikwnkWFUI.Controls
     public partial class TextField
     {
         private const int EM_SETMARGINS = 0x00D3;
+        private const int EC_LEFTMARGIN = 0x0001;
         private const int EC_RIGHTMARGIN = 0x0002;
+        private const int EC_USEFONTINFO = 0xFFFF;
+        private const int LeftMargin96 = 6;
         private const int WM_LBUTTONDBLCLK = 0x0203;
         private const int InnerWidth96 = 24;
         private const float InnerFontSize96 = 10f;
@@ -83,13 +86,23 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The text keeps away from the button: the right margin of the box.
+        // The text keeps away from the button: the right margin of the box. And a box with a frame has room between the frame and the
+        // text at the left (the system leaves one or two pixels, which looked as if the text touched the frame); one without a frame keeps
+        // the narrow margin of the font.
         private void ApplyInnerMargin()
         {
             if (!IsHandleCreated)
                 return;
 
-            SendMessage(Handle, EM_SETMARGINS, (IntPtr)EC_RIGHTMARGIN, (IntPtr)(InnerWidth << 16));
+            int left = BorderStyle == BorderStyle.None ? EC_USEFONTINFO : Dpi.Scale(this, LeftMargin96);
+
+            SendMessage(Handle, EM_SETMARGINS, (IntPtr)(EC_LEFTMARGIN | EC_RIGHTMARGIN), (IntPtr)((InnerWidth << 16) | left));
+        }
+
+        protected override void OnBorderStyleChanged(EventArgs e)
+        {
+            base.OnBorderStyleChanged(e);
+            ApplyInnerMargin();
         }
 
         private static Point GetPoint(IntPtr lParam)
