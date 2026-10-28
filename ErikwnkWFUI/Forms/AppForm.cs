@@ -30,6 +30,7 @@ namespace ErikwnkWFUI.Forms
         private readonly bool _allowMinimizeFromTaskbar;
         private readonly bool _shadow;
         private readonly bool _closeOnEscape;
+        private Color _borderColor;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
         public Panel ContentPanel
@@ -68,6 +69,26 @@ namespace ErikwnkWFUI.Forms
         public TitleBarControl TitleBar
         {
             get { return _titleBar; }
+        }
+
+        /// <summary>
+        /// The color of the thin edge around the window (a window with the native frame has none): black - the darkest background of the theme,
+        /// which follows a change of the theme - for every window until a color is set; <see cref="Color.Empty"/> goes back to that. The title
+        /// bar and the version strip have their own colors (<see cref="FormOptions.Colors"/>).
+        /// </summary>
+        public Color BorderColor
+        {
+            get { return ResolveBorderColor(); }
+            set
+            {
+                _borderColor = value;
+                BackColor = ResolveBorderColor();
+            }
+        }
+
+        private Color ResolveBorderColor()
+        {
+            return _borderColor.IsEmpty ? UIColors.BackgroundBlack : _borderColor;
         }
 
         /// <summary>The title of the window: the <see cref="Form.Text"/> (taskbar, Alt-Tab) and the title bar show the same text, whichever of the two is set. <c>TitleBar.Title</c> changes the bar alone.</summary>
@@ -130,6 +151,10 @@ namespace ErikwnkWFUI.Forms
             _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
             _shadow = options.Borderless && options.Shadow;
             _closeOnEscape = options.CloseOnEscape;
+
+            // A window that can be resized has a least size (the title bar with its buttons and a little content), as a normal form has.
+            if (options.Resizable)
+                MinimumSize = new Size(Dpi.Scale(options.MinimumSize.Width, DeviceDpi), Dpi.Scale(options.MinimumSize.Height, DeviceDpi));
             _canMinimize = options.ShowMinimizeButton;
             _canMaximize = options.ShowMaximizeButton;
             _isFixedSize = !options.Resizable;
@@ -150,8 +175,11 @@ namespace ErikwnkWFUI.Forms
             }
 
             DoubleBuffered = true;
-            Func<Color> frame = options.FrameSource ?? (() => UIColors.BackgroundBlack);
-            ThemeWatcher.FollowBackColor(this, frame);
+            // The edge around the window is black (the darkest background of the theme) unless a color was asked for; the title bar and the strip
+            // are in the color of the set.
+            _borderColor = options.BorderColor ?? Color.Empty;
+            ThemeWatcher.FollowBackColor(this, ResolveBorderColor);
+            Func<Color> bar = options.BarSource ?? (() => UIColors.BackgroundBlack);
 
             int borderSize = 0;
             if (options.Borderless)
@@ -167,7 +195,7 @@ namespace ErikwnkWFUI.Forms
                 options.ShowCloseButton,
                 options.AllowWindowSnapAndMaximize,
                 options.TitleBarBackColor,
-                frame,
+                bar,
                 options.ColorSource);
 
             _contentPanel = new Panel
@@ -203,7 +231,7 @@ namespace ErikwnkWFUI.Forms
                     // FlowLayoutPanel's default gray SystemColors.Control
                     // instead of matching the rest of the window.
                 };
-                ThemeWatcher.FollowBackColor(_versionStrip, frame);
+                ThemeWatcher.FollowBackColor(_versionStrip, bar);
                 _versionStrip.Controls.Add(_versionLabel);
             }
 

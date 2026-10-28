@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Forms;
@@ -55,6 +56,12 @@ public class AppFormEdgeCaseTests : IDisposable
         return form;
     }
 
+    // (The buttons of the title bar take no focus, so PerformClick does nothing: they are clicked by the mouse.)
+    private static void Click(Button button)
+    {
+        button.InvokePrivate("OnClick", EventArgs.Empty);
+    }
+
     private static Button BarButton(AppForm form, string field)
     {
         return form.TitleBar.GetPrivateField<Button>(field)!;
@@ -105,22 +112,51 @@ public class AppFormEdgeCaseTests : IDisposable
         bool closed = false;
         form.FormClosed += (sender, e) => closed = true;
 
-        BarButton(form, "_maximizeButton").PerformClick();
+        Click(BarButton(form, "_maximizeButton"));
         TestPictures.Pump(60);
         Assert.Equal(FormWindowState.Maximized, form.WindowState);
         Assert.Equal(UIStyles.Symbols.Restore, BarButton(form, "_maximizeButton").Text);
 
-        BarButton(form, "_maximizeButton").PerformClick();
+        Click(BarButton(form, "_maximizeButton"));
         TestPictures.Pump(60);
         Assert.Equal(FormWindowState.Normal, form.WindowState);
         Assert.Equal(UIStyles.Symbols.Maximize, BarButton(form, "_maximizeButton").Text);
 
-        BarButton(form, "_minimizeButton").PerformClick();
+        Click(BarButton(form, "_minimizeButton"));
         Assert.Equal(FormWindowState.Minimized, form.WindowState);
 
         form.WindowState = FormWindowState.Normal;
-        BarButton(form, "_closeButton").PerformClick();
+        Click(BarButton(form, "_closeButton"));
         Assert.True(closed);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [Fact]
+    public void TheButtonsOfTheBar_NeverTakeTheFocus_SoNoThickFocusBorderStaysAfterAClick()
+    {
+        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        Button inContent = new Button { Text = "In the content" };
+        form.ContentPanel.Controls.Add(inContent);
+        form.ActiveControl = inContent;
+
+        foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+        {
+            Assert.False(BarButton(form, field).CanSelect);
+            Assert.False(BarButton(form, field).TabStop);
+        }
+
+        // A click with the mouse: the system sends the button the press and the release.
+        Button maximize = BarButton(form, "_maximizeButton");
+        SendMessage(maximize.Handle, 0x0201, (IntPtr)1, (IntPtr)((5 << 16) | 5));
+        SendMessage(maximize.Handle, 0x0202, IntPtr.Zero, (IntPtr)((5 << 16) | 5));
+        TestPictures.Pump(100);
+
+        Assert.Equal(FormWindowState.Maximized, form.WindowState);
+        Assert.False(maximize.Focused);
+        Assert.NotSame(maximize, form.ActiveControl);
+        Assert.Same(inContent, form.ActiveControl);
     }
 
     [Fact]

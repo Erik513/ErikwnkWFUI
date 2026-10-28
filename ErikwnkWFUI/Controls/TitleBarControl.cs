@@ -136,7 +136,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The form hands over what its color set (or the primary look) makes of the bar: the background (asked again each time, so a change of the
-        // theme or of the accent is followed - unless a color was given by hand), and the set the title and the buttons take their colors from.
+        // theme or of the accent is followed - unless a color was given by hand), and the set the title takes its colors from.
         internal TitleBarControl(
             Image icon,
             string title,
@@ -160,9 +160,9 @@ namespace ErikwnkWFUI.Controls
                 titleTextAlign,
                 resolvedBackColor);
             _iconPictureBox = CreateIconPictureBox(icon);
-            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton, colors);
-            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton, colors);
-            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton, colors);
+            _minimizeButton = CreateTitleBarButton(UIStyles.Symbols.Minimize, UIStrings.Get("TitleBar.Minimize"), showMinimizeButton);
+            _maximizeButton = CreateTitleBarButton(UIStyles.Symbols.Maximize, UIStrings.Get("TitleBar.Maximize"), showMaximizeButton);
+            _closeButton = CreateTitleBarButton(UIStyles.Symbols.Close, UIStrings.Get("TitleBar.Close"), showCloseButton);
 
             if (backSource != null && !backColor.HasValue)
             {
@@ -314,11 +314,10 @@ namespace ErikwnkWFUI.Controls
             };
         }
 
-        private Button CreateTitleBarButton(string text, string tooltip, bool visible, Func<UIColorSet> colors)
+        private Button CreateTitleBarButton(string text, string tooltip, bool visible)
         {
-            Button button = colors == null
-                ? UIButtonFactory.CreateStandard(text, tooltip, ButtonSize)
-                : UIButtonFactory.CreateSymbol(text, tooltip, ButtonSize, colors);
+            // The same look in every window, whatever color the bar has.
+            Button button = UIButtonFactory.CreateCaptionButton(text, tooltip, ButtonSize);
             button.Visible = visible;
 
             // Shows only a symbol: named by its tooltip for a screen reader.

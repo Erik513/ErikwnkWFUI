@@ -43,8 +43,20 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
         public bool AllowWindowSnapAndMaximize { get; set; } = true;
 
-        /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the whole frame of the window.</summary>
+        /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the title bar and the version strip, <see cref="BorderColor"/> the thin edge around the window.</summary>
         public Color? TitleBarBackColor { get; set; }
+
+        /// <summary>
+        /// The color of the thin edge around a window without a frame (1 px, 2 px when the window can be resized). Null (the default) is the
+        /// darkest background of the theme - black in the dark theme - for every window, whatever <see cref="Colors"/> the title bar has.
+        /// </summary>
+        public Color? BorderColor { get; set; }
+
+        /// <summary>
+        /// The least size a window that can be resized can be dragged to, for 96 dpi (scaled to the screen); the default keeps the title bar
+        /// with its buttons and a little content. A window of its own can set <c>MinimumSize</c> after the constructor. Not used for a fixed-size window.
+        /// </summary>
+        public Size MinimumSize { get; set; } = new Size(260, 140);
 
         /// <summary>Whether a window without a frame has a drop shadow (the default). Has no meaning with the native frame, which has its own.</summary>
         public bool Shadow { get; set; } = true;
@@ -62,8 +74,8 @@ namespace ErikwnkWFUI.Forms
         private UIColorSet _colors;
 
         /// <summary>
-        /// A color set for the frame of the window: the edge around the content, the title bar (its text and its buttons take the colors of
-        /// the set) and the version strip are in the basic color of the set; the content stays as it is. Null (the default) is the normal
+        /// A color set for the title bar (the text takes the colors of the set; the three buttons keep the look of every other window) and
+        /// the version strip: both are in the basic color of the set. The edge around the window (<see cref="BorderColor"/>) and the content stay as they are. Null (the default) is the normal
         /// dark frame. <see cref="CreatePrimary"/> makes one that follows the accent. Not for a color set that is replaced while the window is shown.
         /// </summary>
         public UIColorSet Colors
@@ -73,14 +85,14 @@ namespace ErikwnkWFUI.Forms
             {
                 _colors = value;
                 ColorSource = ColorSetSource.Of(value);
-                FrameSource = value == null ? (Func<Color>)null : () => value.Basic;
+                BarSource = value == null ? (Func<Color>)null : () => value.Basic;
             }
         }
 
-        // What AppForm reads: the set (asked again each time) and the color of the frame - for the primary look the same very dark shade of
+        // What AppForm reads: the set (asked again each time) and the color of the title bar and the strip - for the primary look the same very dark shade of
         // the accent as the primary panels, not the basic color of the set.
         internal Func<UIColorSet> ColorSource { get; set; }
-        internal Func<Color> FrameSource { get; set; }
+        internal Func<Color> BarSource { get; set; }
 
         /// <summary>The OS-level icon (taskbar, Alt-Tab, system menu) - not the title bar logo, see <see cref="Icon"/> for that. Falls back to the running exe's own icon when left null.</summary>
         public Icon WindowIcon { get; set; } = null;
@@ -171,7 +183,7 @@ namespace ErikwnkWFUI.Forms
         private static FormOptions MakePrimary(FormOptions options)
         {
             options.ColorSource = () => UIColors.PrimarySet;
-            options.FrameSource = () => UIColors.PrimaryDarkDark;
+            options.BarSource = () => UIColors.PrimaryDarkDark;
 
             return options;
         }

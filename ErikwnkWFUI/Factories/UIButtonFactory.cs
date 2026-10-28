@@ -28,6 +28,16 @@ namespace ErikwnkWFUI.Factories
             return CreateButton<Button>(text, tooltip, size, isIcon, GetStandardLook);
         }
 
+        // A button of the title bar of a window: the standard look, but - like the buttons of a native title bar - never given the focus (a click
+        // would leave it with the thick focus border), and not reached by the Tab key.
+        public static Button CreateCaptionButton(string text, string tooltip, Size? size = null)
+        {
+            Button button = CreateButton<CaptionButton>(text, tooltip, size, false, GetStandardLook);
+            button.TabStop = false;
+
+            return button;
+        }
+
         // The neutral look: it follows the theme, so it is read again whenever the theme changes.
         private static ButtonLook GetStandardLook()
         {

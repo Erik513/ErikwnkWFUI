@@ -1,6 +1,7 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
@@ -50,11 +51,11 @@ public class FormFactoryTests : IDisposable
     }
 
     [Fact]
-    public void ASet_ColorsTheEdge_TheTitleBar_AndTheVersionStrip_WithTheBasicColor()
+    public void ASet_ColorsTheTitleBarAndTheVersionStrip_WithTheBasicColor_NotTheEdgeAroundTheWindow()
     {
         AppForm form = Own(UIStyles.Forms.CreateSettings("Settings", UIStyles.Colors.Sets.Yellow));
 
-        Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
         Assert.Equal(UIColors.BackgroundMedium.ToArgb(), form.ContentPanel.BackColor.ToArgb());
@@ -65,8 +66,8 @@ public class FormFactoryTests : IDisposable
     {
         AppForm form = Own(UIStyles.Forms.CreateStandard("Purple", Color.MediumPurple));
 
-        Assert.NotEqual(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
-        Assert.Equal(form.BackColor.ToArgb(), form.TitleBar.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
+        Assert.NotEqual(UIColors.BackgroundBlack.ToArgb(), form.TitleBar.BackColor.ToArgb());
     }
 
     [Fact]
@@ -88,17 +89,18 @@ public class FormFactoryTests : IDisposable
     public void ThePrimaryFrame_IsAVeryDarkShadeOfTheAccent_AndFollowsAChangeOfTheAccent()
     {
         AppForm form = Own(UIStyles.Forms.CreatePrimarySettings("Primary"));
-        Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
-        Color before = form.BackColor;
+        Color before = form.TitleBar.BackColor;
 
         UIColors.SetAccent(Color.OrangeRed);
         Application.DoEvents();
 
-        Assert.NotEqual(before.ToArgb(), form.BackColor.ToArgb());
-        Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.BackColor.ToArgb());
+        Assert.NotEqual(before.ToArgb(), form.TitleBar.BackColor.ToArgb());
         Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.TitleBar.BackColor.ToArgb());
+        Assert.Equal(UIColors.PrimaryDarkDark.ToArgb(), form.VersionStrip!.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
     }
 
     [Fact]
@@ -109,7 +111,99 @@ public class FormFactoryTests : IDisposable
         AppForm form = Own(new AppForm(options));
 
         Assert.Equal(Color.DarkGreen.ToArgb(), form.TitleBar.BackColor.ToArgb());
-        Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
+    }
+
+    [Fact]
+    public void TheEdgeAroundTheWindow_IsBlackInAllThreeKinds_AndFollowsTheTheme()
+    {
+        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+
+        foreach (AppForm form in new[] { standard, primary, yellow })
+            Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BorderColor.ToArgb());
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        foreach (AppForm form in new[] { standard, primary, yellow })
+        {
+            Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
+            Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BorderColor.ToArgb());
+        }
+    }
+
+    [Fact]
+    public void TheBorderColor_CanBeSet_ByTheOptionsOrLater_AndEmptyGoesBackToBlack()
+    {
+        FormOptions options = FormOptions.CreateStandard("Window");
+        options.Colors = UIStyles.Colors.Sets.Yellow;
+        options.BorderColor = Color.Crimson;
+        AppForm form = Own(new AppForm(options));
+
+        Assert.Equal(Color.Crimson.ToArgb(), form.BackColor.ToArgb());
+        Assert.Equal(UIStyles.Colors.Sets.Yellow.Basic.ToArgb(), form.TitleBar.BackColor.ToArgb());
+
+        form.BorderColor = Color.Teal;
+        Assert.Equal(Color.Teal.ToArgb(), form.BackColor.ToArgb());
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+        Assert.Equal(Color.Teal.ToArgb(), form.BackColor.ToArgb());
+
+        form.BorderColor = Color.Empty;
+        Assert.Equal(UIColors.BackgroundBlack.ToArgb(), form.BackColor.ToArgb());
+    }
+
+    [Fact]
+    public void AResizableWindow_HasALeastSize_ADialogHasNone_AndTheOptionsOrTheWindowCanChangeIt()
+    {
+        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = Own(UIStyles.Forms.CreateDialog("Dialog"));
+        FormOptions options = FormOptions.CreateStandard("Own");
+        options.MinimumSize = new Size(400, 300);
+        AppForm own = Own(new AppForm(options));
+
+        Assert.Equal(Dpi.Scale(260, window.DeviceDpi), window.MinimumSize.Width);
+        Assert.Equal(Dpi.Scale(140, window.DeviceDpi), window.MinimumSize.Height);
+        Assert.Equal(Size.Empty, dialog.MinimumSize);
+        Assert.Equal(Dpi.Scale(400, own.DeviceDpi), own.MinimumSize.Width);
+
+        window.MinimumSize = new Size(500, 500);
+        Assert.Equal(new Size(500, 500), window.MinimumSize);
+    }
+
+    [Fact]
+    public void ASizeBelowTheLeastSize_IsRaisedToIt()
+    {
+        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        OffscreenForm.Place(window);
+
+        window.Size = new Size(50, 50);
+
+        Assert.True(window.Width >= window.MinimumSize.Width && window.Height >= window.MinimumSize.Height);
+    }
+
+    [Fact]
+    public void TheButtonsOfTheTitleBar_LookTheSameInEveryKindOfWindow()
+    {
+        AppForm standard = Own(UIStyles.Forms.CreateStandard("Standard"));
+        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+
+        foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+        {
+            Button reference = standard.TitleBar.GetPrivateField<Button>(field)!;
+
+            foreach (AppForm other in new[] { primary, yellow })
+            {
+                Button button = other.TitleBar.GetPrivateField<Button>(field)!;
+                Assert.Equal(reference.BackColor.ToArgb(), button.BackColor.ToArgb());
+                Assert.Equal(reference.ForeColor.ToArgb(), button.ForeColor.ToArgb());
+                Assert.Equal(reference.FlatAppearance.BorderColor.ToArgb(), button.FlatAppearance.BorderColor.ToArgb());
+            }
+        }
     }
 
     [Fact]
