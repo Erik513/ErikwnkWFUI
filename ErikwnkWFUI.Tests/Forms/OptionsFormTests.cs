@@ -794,6 +794,49 @@ public class OptionsFormTests : IDisposable
         Assert.True(form.ContentPanel.Controls.IndexOf(host) < form.ContentPanel.Controls.IndexOf(bar), "the buttons come before the table in the tab order");
     }
 
+    // ---- both themes
+
+    [Theory]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void EverythingInTheWindow_CanBeReadAndSeen_InBothThemes(bool lightTheme)
+    {
+        ColorContrastTestSupport.Run(lightTheme, shortfalls =>
+        {
+            foreach (bool primary in new[] { false, true })
+            {
+                OptionsForm form = _host.Show(primary
+                    ? UIStyles.Forms.CreateOptionsPrimary(presets: AllPresets)
+                    : UIStyles.Forms.CreateOptionsStandard(presets: AllPresets));
+                string window = primary ? "primary" : "standard";
+                Color card = form.PropertyTable.BackColor;
+
+                foreach (Label label in PropertyTableHost.AllLabels(form.PropertyTable))
+                {
+                    Color back = label.BackColor.A == 0 ? card : label.BackColor;
+                    ColorContrastTestSupport.Check(shortfalls, window + ", label '" + label.Text + "'", label.ForeColor, back, 4.5);
+                }
+
+                foreach (string field in new[] { "_themeBox", "_accentBox", "_languageBox" })
+                {
+                    System.Windows.Forms.ComboBox box = Box(form, field);
+                    ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " text", box.ForeColor, box.BackColor, 4.5);
+                    ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " against the card", box.BackColor, card, 1.1);
+                }
+
+                foreach (string field in new[] { "_saveButton", "_cancelButton", "_resetButton" })
+                    ColorContrastTestSupport.Check(shortfalls, window + ", " + field + " text", Find(form, field).ForeColor, Find(form, field).BackColor, 4.5);
+
+                ColorContrastTestSupport.Check(shortfalls, window + ", the card against the window", card, ScrollHost(form).BackColor, 1.03);
+                ColorContrastTestSupport.Check(shortfalls, window + ", the button bar against the card", form.GetPrivateField<Panel>("_buttonBar")!.BackColor, card, 1.03);
+            }
+        });
+    }
+
+    private static readonly OptionsPreset[] AllPresets =
+    {
+        OptionsPreset.Theme, OptionsPreset.AccentColor, OptionsPreset.Language, OptionsPreset.AlwaysOnTop, OptionsPreset.StartWithWindows, OptionsPreset.ResetToDefaults
+    };
+
     [Fact]
     public void TheFactories_TakeAColorSetOrTheAccent_ForTheTitleBar()
     {
