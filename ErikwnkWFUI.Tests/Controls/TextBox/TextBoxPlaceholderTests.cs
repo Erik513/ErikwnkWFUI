@@ -140,7 +140,8 @@ public class TextBoxPlaceholderTests : IDisposable
         using Bitmap picture = Draw(box);
         int minX = int.MaxValue, minY = int.MaxValue, maxX = -1, maxY = -1;
 
-        for (int x = 3; x < box.Width - 3; x++)
+        // From the second column: the first one is the frame - a placeholder that touches it (instead of standing where a text would) is seen.
+        for (int x = 1; x < box.Width - 3; x++)
         {
             for (int y = 3; y < box.Height - 3; y++)
             {
@@ -176,6 +177,7 @@ public class TextBoxPlaceholderTests : IDisposable
 
         string where = "text " + text + ", placeholder " + placeholder;
         Assert.True(Math.Abs(text.X - placeholder.X) <= 1, "left: " + where);
+        Assert.True(placeholder.X >= 2, "the placeholder touches the frame: " + where);
         Assert.True(Math.Abs(text.Y - placeholder.Y) <= 1, "top: " + where);
     }
 
@@ -213,6 +215,60 @@ public class TextBoxPlaceholderTests : IDisposable
         Assert.Equal(string.Empty, box.PlaceholderText);
     }
 
+    // A box that notes what the standard box asks it for while it paints (WM_PAINT).
+    private sealed class ProbeField : ErikwnkWFUI.Controls.TextField
+    {
+        public readonly List<string> AskedWhilePainting = new List<string>();
+        private bool _painting;
+
+        public override string PlaceholderText
+        {
+            get
+            {
+                string value = base.PlaceholderText;
+
+                if (_painting)
+                    AskedWhilePainting.Add(value);
+
+                return value;
+            }
+            set { base.PlaceholderText = value; }
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            _painting = m.Msg == 0x000F;
+
+            try
+            {
+                base.WndProc(ref m);
+            }
+            finally
+            {
+                _painting = false;
+            }
+        }
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wParam, IntPtr lParam);
+
+    // The standard box paints a placeholder of its own as soon as its PlaceholderText says there is one (on the screen, in WM_PAINT): on
+    // top of the one of the library there were two texts. What it asks for while it paints is empty; from outside the property still says it.
+    [Fact]
+    public void WhileTheStandardBoxPaints_ItIsToldThereIsNoPlaceholder_SoItPaintsNoneOfItsOwn()
+    {
+        ProbeField box = new ProbeField();
+        box.Placeholder = "Type here";
+        _host.Show(box);
+
+        SendMessage(box.Handle, 0x000F, IntPtr.Zero, IntPtr.Zero);
+        SendMessage(box.Handle, 0x000F, IntPtr.Zero, IntPtr.Zero);
+
+        Assert.All(box.AskedWhilePainting, value => Assert.Equal(string.Empty, value));
+        Assert.Equal("Type here", box.PlaceholderText);
+        Assert.Equal("Type here", box.Placeholder);
+    }
     // The hint that the system keeps for the box (EM_GETCUEBANNER): none, as the library paints the placeholder itself.
     private static IntPtr SystemHint(TextBox box)
     {

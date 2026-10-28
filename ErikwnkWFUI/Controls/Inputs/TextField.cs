@@ -141,7 +141,17 @@ namespace ErikwnkWFUI.Controls
             if (HandleInnerButtonMessage(ref m))
                 return;
 
-            base.WndProc(ref m);
+            bool wasPainting = _baseIsPainting;
+            _baseIsPainting = true;
+
+            try
+            {
+                base.WndProc(ref m);
+            }
+            finally
+            {
+                _baseIsPainting = wasPainting;
+            }
 
             if (m.Msg == WM_MOUSEMOVE)
                 UpdateInnerHot(GetPoint(m.LParam));

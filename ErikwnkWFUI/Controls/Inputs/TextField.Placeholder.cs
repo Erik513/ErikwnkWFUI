@@ -14,6 +14,9 @@ namespace ErikwnkWFUI.Controls
     {
         private string _placeholder = "";
 
+        // True while the standard box handles a message: what it asks the PlaceholderText for it must not get (.NET 5 and later, see there).
+        private bool _baseIsPainting;
+
         /// <summary>
         /// A hint that is shown in the muted color while the box is empty and has not the focus (as the placeholder of a web page); it is
         /// painted over the box and never is its <see cref="TextBoxBase.Text"/>. Empty (the default) is none.
@@ -39,7 +42,9 @@ namespace ErikwnkWFUI.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override string PlaceholderText
         {
-            get { return _placeholder; }
+            // (While the window procedure of the standard box runs it is empty: that box paints a placeholder of its own as soon as this
+            // property says there is one - two texts one over the other. The library paints it itself, see PaintPlaceholder.)
+            get { return _baseIsPainting ? string.Empty : _placeholder; }
             set { Placeholder = value; }
         }
 #endif
@@ -78,22 +83,20 @@ namespace ErikwnkWFUI.Controls
             return new Rectangle(format.Left, format.Top, Math.Max(1, format.Right - format.Left), Math.Max(1, format.Bottom - format.Top));
         }
 
-        // Where a text would stand: the formatting rectangle (the single line is also moved down by the inset of the frame), so that the
-        // placeholder stands exactly where a text would - and not under the button in the box.
+        // Where a text would stand: the formatting rectangle (a single line is also moved down by the inset of the frame), so that the
+        // placeholder stands exactly where a text would - and not under the button in the box. (It once was moved two pixels to the left for a
+        // single line, which put its first letter on the frame: the picture of the test did not look at the two columns at the left.)
         private Rectangle GetPlaceholderArea()
         {
             RECT format = new RECT();
             SendMessage(Handle, EM_GETRECT, IntPtr.Zero, ref format);
 
-            int left = format.Left - (Multiline ? 0 : SingleLineLeftOffset);
+            int left = format.Left;
             int top = format.Top + (Multiline ? 0 : InputField.GetTextTopInset(this));
             Rectangle client = ClientRectangle;
 
             return new Rectangle(left, top, Math.Max(1, client.Width - InnerWidth - left), Math.Max(1, client.Height - top));
         }
-
-        // (The line of a single-line box is drawn two pixels left of where the formatting rectangle says; a multiline box draws at it.)
-        private const int SingleLineLeftOffset = 2;
 
         private const int EM_GETRECT = 0x00B2;
 
