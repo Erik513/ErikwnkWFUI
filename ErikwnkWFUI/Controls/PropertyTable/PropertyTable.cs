@@ -6,7 +6,6 @@ using System.Linq;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
-using static ErikwnkWFUI.UIStyles;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -458,7 +457,7 @@ namespace ErikwnkWFUI.Controls
 
         private Label CreateRowLabel(string text)
         {
-            ScrollingLabel label = Labels.CreateStandard(text ?? "");
+            ScrollingLabel label = UIStyles.Labels.CreateStandard(text ?? "");
 
             // A long text wraps onto more lines (the row has room for two or three); only what does not fit then is cut, with the tooltip below.
             label.AutoEllipsis = false;
@@ -496,7 +495,7 @@ namespace ErikwnkWFUI.Controls
 
         private Label CreateSectionLabel(string title)
         {
-            Label label = Labels.CreateTitle(title ?? "");
+            Label label = UIStyles.Labels.CreateTitle(title ?? "");
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;

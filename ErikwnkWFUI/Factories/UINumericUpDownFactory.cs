@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
-using static ErikwnkWFUI.UIStyles;
 
 namespace ErikwnkWFUI.Factories
 {
@@ -44,13 +43,13 @@ namespace ErikwnkWFUI.Factories
                 Maximum = maximum,
                 Increment = increment,
                 Value = Math.Min(maximum, Math.Max(minimum, value)),
-                Font = Fonts.Normal,
+                Font = UIStyles.Fonts.Normal,
                 BorderStyle = BorderStyle.FixedSingle,
                 TextAlign = HorizontalAlignment.Center
             };
 
             Controls.InputField.FollowBackground(numericUpDown);
-            Controls.ThemeWatcher.FollowForeColor(numericUpDown, () => Colors.TextPrimary);
+            Controls.ThemeWatcher.FollowForeColor(numericUpDown, () => UIStyles.Colors.TextPrimary);
 
             return numericUpDown;
         }

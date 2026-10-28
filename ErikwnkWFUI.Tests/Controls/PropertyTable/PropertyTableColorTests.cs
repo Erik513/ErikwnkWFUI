@@ -4,6 +4,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.PropertyTableHost;
 using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
 using PropertyTable = ErikwnkWFUI.Controls.PropertyTable;
 
@@ -13,12 +14,11 @@ namespace ErikwnkWFUI.Tests.Controls.PropertyTables;
 [Collection(AccentColorTestCollection.Name)]
 public class PropertyTableColorTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly PropertyTableHost _host = new PropertyTableHost(new Size(500, 200));
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
     }
 
     private PropertyTable Show()
@@ -26,39 +26,8 @@ public class PropertyTableColorTests : IDisposable
         PropertyTable table = new PropertyTable();
         table.AddSection("Section");
         table.AddRow("Row", new Button());
-        Form form = OffscreenForm.Create(new Size(500, 200), UIColors.BackgroundMedium);
-        table.Dock = DockStyle.Top;
-        form.Controls.Add(table);
-        form.Show();
-        form.PerformLayout();
-        Application.DoEvents();
-        _forms.Add(form);
 
-        return table;
-    }
-
-    private static IEnumerable<Button> AllButtons(Control parent)
-    {
-        foreach (Control child in parent.Controls)
-        {
-            if (child is Button button)
-                yield return button;
-
-            foreach (Button inner in AllButtons(child))
-                yield return inner;
-        }
-    }
-
-    private static IEnumerable<Label> AllLabels(Control parent)
-    {
-        foreach (Control child in parent.Controls)
-        {
-            if (child is Label label)
-                yield return label;
-
-            foreach (Label inner in AllLabels(child))
-                yield return inner;
-        }
+        return _host.Show(table);
     }
 
     [Theory]

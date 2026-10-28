@@ -5,6 +5,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.PropertyTableHost;
 using static ErikwnkWFUI.Tests.Infrastructure.ColorContrastTestSupport;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 using PropertyTable = ErikwnkWFUI.Controls.PropertyTable;
@@ -15,12 +16,11 @@ namespace ErikwnkWFUI.Tests.Controls.PropertyTables;
 [Collection(AccentColorTestCollection.Name)]
 public class PropertyTableFactoryTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly PropertyTableHost _host = new PropertyTableHost(new Size(400, 120));
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
         UIColors.SetAccent(UIAccentColors.Blue);
@@ -30,15 +30,8 @@ public class PropertyTableFactoryTests : IDisposable
     {
         table.AddSection("Section");
         table.AddRow("Label", new Button { Text = "x" });
-        Form form = OffscreenForm.Create(new Size(400, 120), UIColors.BackgroundMedium);
-        table.Dock = DockStyle.Top;
-        form.Controls.Add(table);
-        form.Show();
-        form.PerformLayout();
-        Application.DoEvents();
-        _forms.Add(form);
 
-        return table;
+        return _host.Show(table);
     }
 
     // The color of the header at its left edge (where the line is) and a little inside (where it never is).
@@ -166,18 +159,6 @@ public class PropertyTableFactoryTests : IDisposable
         Assert.NotNull(table.Colors);
         Assert.Null(Record.Exception(() => table.Colors = UIStyles.Colors.Sets.Red));
         Assert.Null(Record.Exception(() => table.ClearRows()));
-    }
-
-    private static IEnumerable<Label> AllLabels(Control parent)
-    {
-        foreach (Control child in parent.Controls)
-        {
-            if (child is Label label)
-                yield return label;
-
-            foreach (Label inner in AllLabels(child))
-                yield return inner;
-        }
     }
 
     [Fact]

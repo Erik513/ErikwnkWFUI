@@ -121,6 +121,36 @@ name.EditAccepted += (s, e) => Save(name.Text);
 var password = UIStyles.TextBoxes.CreatePassword(placeholder: "Password", colors: UIStyles.Colors.Sets.Green);
 ```
 
+## Property table
+
+`UIStyles.PropertyTables` makes a table of "label: editor" rows, grouped into sections - the usual shape of a settings page: `CreateStandard`
+(no line at the section headers), `CreatePrimary` (a line in the accent color at the left edge of each header) and `CreateStandard(colors: ...)`
+(a color set or a single color). `AddSection(title)` adds a header; `AddRow(label, editors...)` adds a row whose editors share the width, or
+`AddRow(label, PropertyColumn.Absolute(a, 120), PropertyColumn.Percent(b, 30f), PropertyColumn.Auto(c))` for widths of your own (the old name
+`UIColumn` still works, but is obsolete). The editors are placed by their kind: a button, check box, toggle switch, spinner or volume control keeps
+its size at the left, a number box is as wide as it is, and the others (text box, combo box, track bar, panel ...) fill the cell.
+
+- A row is 42 px high, or as high as its highest editor needs (`AddRow(label, rowHeight, ...)` gives a minimum). Row heights, the label column and
+  the room around the editors are given for 96 dpi and scaled to the screen.
+- `LabelWidth` sets the width of the label column (130 by default). A longer label wraps onto a second line; what still does not fit is the tooltip
+  of the label.
+- `AddRow` and `AddSection` return a `PropertyRow`: `Visible = false` hides the row (the rows below move up), `Enabled = false` locks it - for an
+  option that depends on another one.
+- `ClearRows()` removes all rows. The editors are only detached, not disposed, so they keep their state and can be added again - this is how a table
+  is rebuilt after a language switch.
+
+```csharp
+var table = UIStyles.PropertyTables.CreatePrimary();
+table.LabelWidth = 160;
+table.AddSection("General");
+table.AddRow("Name", UIStyles.TextBoxes.CreateStandard("My playlist"));
+var advanced = UIStyles.ToggleSwitches.CreateStandard(isChecked: false);
+table.AddRow("Advanced", advanced);
+PropertyRow details = table.AddRow("Details", UIStyles.TextBoxes.CreateStandard());
+details.Visible = false;
+advanced.CheckedChanged += (s, e) => details.Visible = advanced.Checked;
+```
+
 ## Panels
 
 `UIStyles.Panels` are the surfaces a layout is built from: `CreateStandard` (the usual

@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.PropertyTableHost;
 using PropertyTable = ErikwnkWFUI.Controls.PropertyTable;
 
 namespace ErikwnkWFUI.Tests.Controls.PropertyTables;
@@ -11,38 +12,19 @@ namespace ErikwnkWFUI.Tests.Controls.PropertyTables;
 [Collection(AccentColorTestCollection.Name)]
 public class PropertyTableEdgeCaseTests : IDisposable
 {
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly PropertyTableHost _host = new PropertyTableHost(new Size(600, 500));
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
+        _host.Dispose();
 
         UIColors.ApplyTheme(UIThemes.Dark);
-    }
-
-    private PropertyTable Show(PropertyTable table)
-    {
-        Form form = OffscreenForm.Create(new Size(600, 500), UIColors.BackgroundMedium);
-        table.Dock = DockStyle.Top;
-        form.Controls.Add(table);
-        form.Show();
-        Relayout(table);
-        _forms.Add(form);
-
-        return table;
-    }
-
-    private static void Relayout(PropertyTable table)
-    {
-        table.Parent!.PerformLayout();
-        Application.DoEvents();
     }
 
     [Fact]
     public void TheEditors_AreLeftAnchoredOrFilled_ByTheirKind()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         Button button = new Button();
         System.Windows.Forms.CheckBox check = new System.Windows.Forms.CheckBox();
         ToggleSwitch toggle = new ToggleSwitch();
@@ -71,7 +53,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void ARowHasTheDefaultHeight_OrTheOneThatWasGiven()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddRow("Default", new Button());
         table.AddRow("Tall", 90, new Button());
         Relayout(table);
@@ -86,7 +68,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void AnEditorHigherThanTheRow_MakesTheRowHigher_AndIsNotCutOff()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         System.Windows.Forms.Panel tall = new System.Windows.Forms.Panel { Height = 150 };
         System.Windows.Forms.Panel tallInFixedRow = new System.Windows.Forms.Panel { Height = 120 };
         table.AddRow("First", new Button());
@@ -106,7 +88,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void ARowOfNormalEditors_KeepsTheDefaultHeight()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddRow("Row", new Button(), UIStyles.TextBoxes.CreateStandard("t"), new System.Windows.Forms.ComboBox());
         Relayout(table);
 
@@ -116,7 +98,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void TheColumnsOfARow_TakeTheirWidthsAsGiven()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         Button fixedWidth = new Button();
         Button rest = new Button();
         table.AddRow("Row", PropertyColumn.Absolute(fixedWidth, 150), PropertyColumn.Percent(rest, 100f));
@@ -132,7 +114,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void ARowWithoutEditors_OrWithNull_IsStillARow()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
 
         PropertyRow none = table.AddRow("None", new Control[0]);
         PropertyRow nullArray = table.AddRow("Null", (Control[])null!);
@@ -151,7 +133,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void NullTextsOfLabelsAndSections_AreEmptyTexts()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
 
         table.AddSection(null!);
         table.AddRow(null!, new Button());
@@ -164,7 +146,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void TheEditorsOfClearedRows_CanBePutInAgain_WithTheirStateKept()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         System.Windows.Forms.TextBox box = new System.Windows.Forms.TextBox { Text = "typed" };
         table.AddRow("Old", box);
         Relayout(table);
@@ -183,7 +165,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void ManyRebuilds_DoNotLeaveWrappersBehind()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         Button keep = new Button();
 
         for (int round = 0; round < 20; round++)
@@ -202,7 +184,7 @@ public class PropertyTableEdgeCaseTests : IDisposable
     [Fact]
     public void TheTable_FollowsAChangeOfTheTheme_InItsLabelsAndCells()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddSection("Section");
         table.AddRow("Row", new Button());
         Relayout(table);
@@ -233,31 +215,4 @@ public class PropertyTableEdgeCaseTests : IDisposable
         Assert.Null(Record.Exception(() => UIColors.ApplyTheme(UIThemes.Light)));
     }
 
-    // How many controls of a kind below the parent match.
-    private static int CountOf<T>(Control parent, Func<T, bool> match) where T : Control
-    {
-        int count = 0;
-
-        foreach (Control child in parent.Controls)
-        {
-            if (child is T typed && match(typed))
-                count++;
-
-            count += CountOf(child, match);
-        }
-
-        return count;
-    }
-
-    private static IEnumerable<Label> AllLabels(Control parent)
-    {
-        foreach (Control child in parent.Controls)
-        {
-            if (child is Label label)
-                yield return label;
-
-            foreach (Label inner in AllLabels(child))
-                yield return inner;
-        }
-    }
 }

@@ -4,6 +4,7 @@ using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using static ErikwnkWFUI.Tests.Infrastructure.PropertyTableHost;
 using PropertyTable = ErikwnkWFUI.Controls.PropertyTable;
 
 namespace ErikwnkWFUI.Tests.Controls.PropertyTables;
@@ -14,54 +15,17 @@ public class PropertyTableRowTests : IDisposable
 {
     private const string LongText = "A very long name of a setting that needs more than the label column has room for in two lines";
 
-    private readonly List<Form> _forms = new List<Form>();
+    private readonly PropertyTableHost _host = new PropertyTableHost(new Size(1200, 400));
 
     public void Dispose()
     {
-        foreach (Form form in _forms)
-            form.Dispose();
-    }
-
-    private PropertyTable Show(PropertyTable table)
-    {
-        Form form = OffscreenForm.Create(new Size(1200, 400), UIColors.BackgroundMedium);
-        table.Dock = DockStyle.Top;
-        form.Controls.Add(table);
-        form.Show();
-        form.PerformLayout();
-        Application.DoEvents();
-        _forms.Add(form);
-
-        return table;
-    }
-
-    private static void Relayout(PropertyTable table)
-    {
-        table.Parent!.PerformLayout();
-        Application.DoEvents();
-    }
-
-    private static Label LabelOf(PropertyTable table, string text)
-    {
-        return AllLabels(table).First(l => l.Text == text);
-    }
-
-    private static IEnumerable<Label> AllLabels(Control parent)
-    {
-        foreach (Control child in parent.Controls)
-        {
-            if (child is Label label)
-                yield return label;
-
-            foreach (Label inner in AllLabels(child))
-                yield return inner;
-        }
+        _host.Dispose();
     }
 
     [Fact]
     public void AHiddenRow_TakesNoRoom_TheRowsBelowMoveUp_AndShowingItBringsItBack()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         Button first = new Button { Text = "a" };
         Button second = new Button { Text = "b" };
         PropertyRow row = table.AddRow("First", first);
@@ -90,7 +54,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void ADisabledRow_LocksTheEditors_ButTheyKeepTheirOwnEnabled()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         Button free = new Button();
         Button locked = new Button { Enabled = false };
         PropertyRow row = table.AddRow("Row", free, locked);
@@ -112,7 +76,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void ASectionCanBeHiddenToo_AndAHandleOfClearedRowsDoesNothing()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         PropertyRow section = table.AddSection("Section");
         PropertyRow row = table.AddRow("Row", new Button());
         Relayout(table);
@@ -130,7 +94,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void TheLabelWidth_IsScaledToTheScreen_AndFollowedByTheRowsThatAreThere()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddRow("Row", new Button());
         Relayout(table);
 
@@ -147,7 +111,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void ALabelIsCutOnlyWhenItsTextDoesNotFitTheRow_AndAWiderColumnHoldsIt()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddRow("Short", new Button());
         table.AddRow(LongText, new Button());
         Relayout(table);
@@ -164,7 +128,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void ALongLabel_WrapsOntoMoreLines_AndIsNotCutWhileTheLinesFitTheRow()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         string twoLines = "Name of the folder for the files";
         table.AddRow(twoLines, new Button());
         Relayout(table);
@@ -181,7 +145,7 @@ public class PropertyTableRowTests : IDisposable
     [Fact]
     public void ThePointerOverALabel_DoesNotBreakWhenTheLabelIsCutOrNot()
     {
-        PropertyTable table = Show(new PropertyTable());
+        PropertyTable table = _host.Show(new PropertyTable());
         table.AddRow("Short", new Button());
         table.AddRow(LongText, new Button());
         Relayout(table);
