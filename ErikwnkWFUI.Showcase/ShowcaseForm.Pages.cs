@@ -177,6 +177,9 @@ namespace ErikwnkWFUI.Showcase
 
             PropertyTable table = UIStyles.PropertyTables.CreateStandard();
             table.Dock = DockStyle.Top;
+
+            // The names of the rows (property and factory names) need more than the usual width of the label column.
+            table.LabelWidth = 200;
             info.Fill(table);
             scrollHost.Controls.Add(table);
 

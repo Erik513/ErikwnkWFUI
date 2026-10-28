@@ -23,6 +23,7 @@ namespace ErikwnkWFUI.Showcase
         private ToggleSwitch _formMinimize;
         private ToggleSwitch _formMaximize;
         private ToggleSwitch _formClose;
+        private ToggleSwitch _formCloseEnabled;
         private ToggleSwitch _formShadow;
         private ToggleSwitch _formResizable;
         private ToggleSwitch _formBorderless;
@@ -68,10 +69,12 @@ namespace ErikwnkWFUI.Showcase
             _formMinimize = CreateFormSwitch("ShowMinimizeButton: without it the taskbar and the system menu cannot minimize the window either.");
             _formMaximize = CreateFormSwitch("ShowMaximizeButton: the maximize button of the title bar.");
             _formClose = CreateFormSwitch("ShowCloseButton: without it close the window with Alt+F4 or from the system menu (right-click the title bar).");
+            _formCloseEnabled = CreateFormSwitch("CloseEnabled = false: the close button is greyed out and Alt+F4, the system menu, the taskbar and Escape cannot close the window (for a window that has to finish first). Use Close in the Showcase to close it.");
             table.AddSection("FormOptions: title bar buttons");
             table.AddRow("ShowMinimizeButton", _formMinimize);
             table.AddRow("ShowMaximizeButton", _formMaximize);
             table.AddRow("ShowCloseButton", _formClose);
+            table.AddRow("CloseEnabled", _formCloseEnabled);
 
             _formShadow = CreateFormSwitch("Shadow: the drop shadow around a window without a frame.");
             _formResizable = CreateFormSwitch("Resizable: whether the window can be resized by its edges.");
@@ -150,6 +153,7 @@ namespace ErikwnkWFUI.Showcase
             options.ShowMinimizeButton = _formMinimize.Checked;
             options.ShowMaximizeButton = _formMaximize.Checked;
             options.ShowCloseButton = _formClose.Checked;
+            options.CloseEnabled = _formCloseEnabled.Checked;
             options.Shadow = _formShadow.Checked;
             options.Resizable = _formResizable.Checked;
             options.Borderless = _formBorderless.Checked;
@@ -178,6 +182,7 @@ namespace ErikwnkWFUI.Showcase
                 _formMinimize.Checked = preset.ShowMinimizeButton;
                 _formMaximize.Checked = preset.ShowMaximizeButton;
                 _formClose.Checked = preset.ShowCloseButton;
+                _formCloseEnabled.Checked = preset.CloseEnabled;
                 _formShadow.Checked = preset.Shadow;
                 _formResizable.Checked = preset.Resizable;
                 _formBorderless.Checked = preset.Borderless;
@@ -216,6 +221,7 @@ namespace ErikwnkWFUI.Showcase
             if (now.ShowMinimizeButton != preset.ShowMinimizeButton) changes.Add("ShowMinimizeButton = " + now.ShowMinimizeButton);
             if (now.ShowMaximizeButton != preset.ShowMaximizeButton) changes.Add("ShowMaximizeButton = " + now.ShowMaximizeButton);
             if (now.ShowCloseButton != preset.ShowCloseButton) changes.Add("ShowCloseButton = " + now.ShowCloseButton);
+            if (now.CloseEnabled != preset.CloseEnabled) changes.Add("CloseEnabled = " + now.CloseEnabled);
             if (now.Shadow != preset.Shadow) changes.Add("Shadow = " + now.Shadow);
             if (now.Resizable != preset.Resizable) changes.Add("Resizable = " + now.Resizable);
             if (now.Borderless != preset.Borderless) changes.Add("Borderless = " + now.Borderless);

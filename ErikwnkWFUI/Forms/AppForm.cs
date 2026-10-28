@@ -31,6 +31,7 @@ namespace ErikwnkWFUI.Forms
         private readonly bool _allowMinimizeFromTaskbar;
         private readonly bool _shadow;
         private readonly bool _closeOnEscape;
+        private bool _closeEnabled = true;
         private Color _borderColor;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
@@ -152,6 +153,7 @@ namespace ErikwnkWFUI.Forms
             _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
             _shadow = options.Borderless && options.Shadow;
             _closeOnEscape = options.CloseOnEscape;
+            _closeEnabled = options.CloseEnabled;
 
             // Opens in the middle of the screen - or over its owner (see OnLoad); a window of its own can change StartPosition.
             StartPosition = FormStartPosition.CenterScreen;
@@ -248,6 +250,8 @@ namespace ErikwnkWFUI.Forms
 
             // With the native frame there is only one title bar. The bar of the library is not in the window then (TitleBar, FormTitle and
             // FormIcon stay there to be used, but show nothing).
+            _titleBar.CloseButtonEnabled = _closeEnabled;
+
             if (options.Borderless)
             {
                 Controls.Add(_titleBar);
@@ -283,10 +287,27 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        /// <summary>
+        /// Whether the user can close the window (<see cref="FormOptions.CloseEnabled"/>): with false the close button is greyed out, the entry of
+        /// the system menu is too, and Alt+F4, the taskbar and Escape do not close it. <c>Close()</c> of the program still does (and so does
+        /// a plain close message, as "End task" sends it). Can be changed
+        /// while the window is open (a window that has finished its work lets the user close it). The native frame cannot grey out its button:
+        /// there the click is only without effect.
+        /// </summary>
+        public bool CloseEnabled
+        {
+            get { return _closeEnabled; }
+            set
+            {
+                _closeEnabled = value;
+                _titleBar.CloseButtonEnabled = value;
+            }
+        }
+
         // Escape closes a dialog that has no cancel button of its own (a text box that is being edited, or a list that is open, takes the key first).
         protected override bool ProcessDialogKey(Keys keyData)
         {
-            if (keyData == Keys.Escape && _closeOnEscape && CancelButton == null)
+            if (keyData == Keys.Escape && _closeOnEscape && _closeEnabled && CancelButton == null)
             {
                 Close();
 
@@ -358,8 +379,16 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        private const int WmSysCommand = 0x0112;
+        private const int ScClose = 0xF060;
+
         protected override void WndProc(ref Message m)
         {
+            // What the user does to close the window (Alt+F4, the taskbar, the system menu) comes as this command; it is not carried out while
+            // closing is not enabled. A close of the program (Close()) and a plain WM_CLOSE (End task) are not this command and go through.
+            if (m.Msg == WmSysCommand && ((int)m.WParam & 0xFFF0) == ScClose && !_closeEnabled)
+                return;
+
             base.WndProc(ref m);
 
             if (m.Msg == WmGetMinMaxInfo && FormBorderStyle == FormBorderStyle.None && MaximumSize.IsEmpty)

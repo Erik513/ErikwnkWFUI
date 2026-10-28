@@ -15,6 +15,12 @@ namespace ErikwnkWFUI.Tests.Forms;
 public class FormExtrasTests : IDisposable
 {
     private const int ClassStyleDropShadow = 0x00020000;
+    private const int WmClose = 0x0010;
+    private const int WmSysCommand = 0x0112;
+    private const int ScClose = 0xF060;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
 
     private readonly string _folder = Path.Combine(Path.GetTempPath(), "wfui_placement_" + Guid.NewGuid().ToString("N"));
     private readonly List<Form> _forms = new List<Form>();
@@ -179,6 +185,81 @@ public class FormExtrasTests : IDisposable
 
         Assert.Equal(1, clicks);
         Assert.False(dialog.IsDisposed);
+    }
+
+    // ---- closing can be switched off
+
+    [Fact]
+    public void WhenClosingIsNotEnabled_TheUserCannotCloseTheWindow_ButTheProgramCan()
+    {
+        FormOptions options = FormOptions.CreateDialog("Busy");
+        options.CloseEnabled = false;
+        KeyForm form = Own(new KeyForm(options));
+        OffscreenForm.Place(form);
+
+        // What the user does (Alt+F4, the taskbar, the system menu) is the close command of the system.
+        SendMessage(form.Handle, WmSysCommand, (IntPtr)ScClose, IntPtr.Zero);
+        Application.DoEvents();
+        Assert.False(form.IsDisposed);
+        Assert.True(form.Visible);
+
+        Assert.False(form.PressEscape());
+        Assert.True(form.Visible);
+
+        form.Close();
+        Assert.True(form.IsDisposed);
+    }
+
+    [Fact]
+    public void WhenClosingIsNotEnabled_TheButtonAndTheMenuEntryAreGreyedOut_AndItCanBeTurnedOnAgain()
+    {
+        AppForm form = Own(UIStyles.Forms.CreateStandard("Busy"));
+        OffscreenForm.Place(form);
+        System.Windows.Forms.Button close = form.TitleBar.GetPrivateField<System.Windows.Forms.Button>("_closeButton")!;
+
+        Assert.True(close.Enabled);
+
+        form.CloseEnabled = false;
+        Assert.False(close.Enabled);
+
+        using (LibraryMenu menu = form.CreateSystemMenu())
+            Assert.False(menu.Items.Cast<ToolStripItem>().OfType<ToolStripMenuItem>().Last().Enabled);
+
+        form.CloseEnabled = true;
+        Assert.True(close.Enabled);
+
+        using (LibraryMenu menu = form.CreateSystemMenu())
+            Assert.True(menu.Items.Cast<ToolStripItem>().OfType<ToolStripMenuItem>().Last().Enabled);
+
+        SendMessage(form.Handle, WmSysCommand, (IntPtr)ScClose, IntPtr.Zero);
+        Application.DoEvents();
+        Assert.True(form.IsDisposed);
+    }
+
+    [Fact]
+    public void APlainCloseMessage_AsEndTaskSendsIt_StillClosesAWindowThatTheUserCannotClose()
+    {
+        FormOptions options = FormOptions.CreateStandard("Busy");
+        options.CloseEnabled = false;
+        AppForm form = Own(new AppForm(options));
+        OffscreenForm.Place(form);
+
+        SendMessage(form.Handle, WmClose, IntPtr.Zero, IntPtr.Zero);
+        Application.DoEvents();
+
+        Assert.True(form.IsDisposed);
+    }
+
+    [Fact]
+    public void TheOptionsCloseEnabled_IsTakenByTheWindow_AndIsOnByDefault()
+    {
+        FormOptions options = FormOptions.CreateStandard("Window");
+
+        Assert.True(options.CloseEnabled);
+        Assert.True(Own(new AppForm(options)).CloseEnabled);
+
+        options.CloseEnabled = false;
+        Assert.False(Own(new AppForm(options)).CloseEnabled);
     }
 
     // ---- shadow

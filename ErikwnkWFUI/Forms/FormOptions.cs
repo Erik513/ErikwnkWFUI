@@ -40,6 +40,13 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether the title bar has the close button.</summary>
         public bool ShowCloseButton { get; set; } = true;
 
+        /// <summary>
+        /// Whether the user can close the window (the default): false shows the close button greyed out and does not let Alt+F4, the system menu,
+        /// the taskbar or Escape close it - for a window that has to finish first, like an update that is being installed. The program can still
+        /// close it with <c>Close()</c> (and "End task" can too); <see cref="AppForm.CloseEnabled"/> turns it on again while the window is open.
+        /// </summary>
+        public bool CloseEnabled { get; set; } = true;
+
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
         public bool AllowWindowSnapAndMaximize { get; set; } = true;
 

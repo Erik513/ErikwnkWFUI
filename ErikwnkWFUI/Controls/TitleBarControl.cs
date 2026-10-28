@@ -42,6 +42,13 @@ namespace ErikwnkWFUI.Controls
 
         private Form _parentForm;
 
+        /// <summary>Whether the close button can be used; false shows it greyed out.</summary>
+        internal bool CloseButtonEnabled
+        {
+            get { return _closeButton.Enabled; }
+            set { _closeButton.Enabled = value; }
+        }
+
         /// <summary>Raised with the position on the screen when the bar (its title, its logo) is right-clicked: the window shows its system menu.</summary>
         internal event EventHandler<Point> SystemMenuRequested;
 

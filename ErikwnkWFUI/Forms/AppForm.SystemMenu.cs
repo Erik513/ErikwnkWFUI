@@ -75,7 +75,9 @@ namespace ErikwnkWFUI.Forms
             if (menu.Items.Count > 0)
                 menu.Items.Add(new ToolStripSeparator());
 
-            menu.Items.Add(CreateItem(UIStrings.Get("TitleBar.Close"), "Alt+F4", Close));
+            ToolStripMenuItem close = CreateItem(UIStrings.Get("TitleBar.Close"), "Alt+F4", Close);
+            close.Enabled = _closeEnabled;
+            menu.Items.Add(close);
 
             return menu;
         }
