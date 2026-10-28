@@ -33,7 +33,9 @@ namespace ErikwnkWFUI.Controls
         // The editors the caller gave (they are detached, not disposed, by ClearRows) and the section headers (they paint the line).
         private readonly List<Control> _editors = new List<Control>();
         private readonly List<Label> _sectionLabels = new List<Label>();
+        private readonly List<PropertyRow> _rows = new List<PropertyRow>();
         private int _labelWidth = DefaultLabelWidth96;
+        private int _dpiOverride;
 
         public PropertyTable()
         {
@@ -70,13 +72,44 @@ namespace ErikwnkWFUI.Controls
 
         private void ApplyLabelWidth()
         {
-            _layout.ColumnStyles[0].Width = Dpi.Scale(this, _labelWidth);
+            _layout.ColumnStyles[0].Width = Scale(_labelWidth);
+        }
+
+        // The sizes the table lays out (label column, rows, the room around the editors) are given for 96 dpi and scaled to the screen; the
+        // test seam pretends another screen.
+        internal int DpiOverride
+        {
+            get { return _dpiOverride; }
+            set
+            {
+                _dpiOverride = value;
+                ApplyScale();
+            }
+        }
+
+        private int Dpi96
+        {
+            get { return _dpiOverride > 0 ? _dpiOverride : DeviceDpi; }
+        }
+
+        private int Scale(int value96)
+        {
+            return Dpi.Scale(this, value96, _dpiOverride);
+        }
+
+        // The label column and the heights of the rows that are there follow a change of the screen (the room around the editors is set when a row is made).
+        private void ApplyScale()
+        {
+            ApplyLabelWidth();
+
+            foreach (PropertyRow row in _rows)
+                row.Rescale(Scale);
         }
 
         protected override void OnDpiChangedAfterParent(EventArgs e)
         {
             base.OnDpiChangedAfterParent(e);
-            ApplyLabelWidth();
+            ApplyScale();
         }
 
         /// <summary>
@@ -95,6 +128,7 @@ namespace ErikwnkWFUI.Controls
         public void ClearRows()
         {
             _sectionLabels.Clear();
+            _rows.Clear();
 
             // The editors belong to the caller and stay alive (they can be added again); everything the table built around them
             // is disposed, so that it does not stay registered at the theme.
@@ -123,7 +157,7 @@ namespace ErikwnkWFUI.Controls
             _layout.Controls.Add(label, 0, row);
             _layout.SetColumnSpan(label, 2);
 
-            return new PropertyRow(_layout.RowStyles[row], label);
+            return AddHandle(new PropertyRow(_layout.RowStyles[row], DefaultSectionHeight, label));
         }
 
         /// <summary>
@@ -177,7 +211,8 @@ namespace ErikwnkWFUI.Controls
             int rowHeight,
             params PropertyColumn[] columns)
         {
-            int row = AddRowStyle(Math.Max(rowHeight, GetRequiredRowHeight(columns)));
+            int height = Math.Max(rowHeight, GetRequiredRowHeight(columns));
+            int row = AddRowStyle(height);
 
             Label label = CreateRowLabel(labelText);
             System.Windows.Forms.Panel editorArea = CreateEditorAreaPanel();
@@ -188,14 +223,25 @@ namespace ErikwnkWFUI.Controls
             _layout.Controls.Add(label, 0, row);
             _layout.Controls.Add(editorArea, 1, row);
 
-            return new PropertyRow(_layout.RowStyles[row], label, editorArea);
+            return AddHandle(new PropertyRow(_layout.RowStyles[row], height, label, editorArea));
+        }
+
+        private PropertyRow AddHandle(PropertyRow row)
+        {
+            _rows.Add(row);
+
+            return row;
         }
 
         // The room a cell takes around its editor: the margins of the cell panel (2 above and below) and its padding (1 on each side, the frame).
-        private const int CellChromeHeight = 6;
+        private int CellChromeHeight
+        {
+            get { return 2 * Scale(2) + 2 * Scale(1); }
+        }
 
-        // The row is as high as the highest editor needs (the height it has when it is added) - an editor is never cut off by the row.
-        private static int GetRequiredRowHeight(PropertyColumn[] columns)
+        // The row (in 96 dpi) is as high as the highest editor needs (the height it has when it is added, in the pixels of the screen) - an
+        // editor is never cut off by the row.
+        private int GetRequiredRowHeight(PropertyColumn[] columns)
         {
             int required = 0;
 
@@ -208,7 +254,7 @@ namespace ErikwnkWFUI.Controls
                 }
             }
 
-            return required;
+            return (int)Math.Ceiling(required * 96.0 / Dpi96);
         }
 
         private PropertyColumn[] CreateAutoColumns(Control[] controls)
@@ -321,7 +367,7 @@ namespace ErikwnkWFUI.Controls
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                Padding = new Padding(6, 0, 8, 0),
+                Padding = new Padding(Scale(6), 0, Scale(8), 0),
                 // (A Dock=Fill child in a Panel ignores its Margin: the room for the
                 // border of the cell panel is the Padding of that panel, see
                 // CreateEditorCellPanel.)
@@ -357,7 +403,7 @@ namespace ErikwnkWFUI.Controls
             _layout.RowStyles.Add(
                 new RowStyle(
                     SizeType.Absolute,
-                    height));
+                    Scale(height)));
 
             return row;
         }
@@ -419,7 +465,7 @@ namespace ErikwnkWFUI.Controls
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;
-            label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
+            label.Padding = new Padding(Scale(LabelLeftPadding), 0, 0, 0);
             label.Margin = new Padding(0);
             ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundMedium);
 
@@ -454,7 +500,7 @@ namespace ErikwnkWFUI.Controls
 
             label.Dock = DockStyle.Fill;
             label.TextAlign = ContentAlignment.MiddleLeft;
-            label.Padding = new Padding(LabelLeftPadding, 0, 0, 0);
+            label.Padding = new Padding(Scale(LabelLeftPadding), 0, 0, 0);
             label.Margin = new Padding(0);
             ThemeWatcher.FollowBackColor(label, () => UIStyles.Colors.BackgroundDark);
 
@@ -482,13 +528,13 @@ namespace ErikwnkWFUI.Controls
                 Dock = DockStyle.Fill,
                 // 1px all around: the room for the border painted below. Without it the wrapper (Dock=Fill) covers the
                 // whole cell, and the border was never seen.
-                Padding = new Padding(1),
+                Padding = new Padding(Scale(1)),
                 // Right margin matches the existing top/bottom margin, so
                 // the table's own background shows as a border on all three
                 // sides - previously only 0 on the right, so each editor
                 // cell ran flush to the table's right edge with no border
                 // there.
-                Margin = new Padding(0, 2, 2, 2)
+                Margin = new Padding(0, Scale(2), Scale(2), Scale(2))
             };
 
             ThemeWatcher.FollowBackColor(panel, () => UIStyles.Colors.BackgroundLight);

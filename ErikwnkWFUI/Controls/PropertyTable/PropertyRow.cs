@@ -10,15 +10,26 @@ namespace ErikwnkWFUI.Controls
     public sealed class PropertyRow
     {
         private readonly RowStyle _style;
-        private readonly float _height;
+        private readonly int _height96;
         private readonly Control[] _parts;
+        private float _height;
         private bool _visible = true;
 
-        internal PropertyRow(RowStyle style, params Control[] parts)
+        // The row style has the height in the pixels of the screen already; height96 is the same for 96 dpi, to scale it again when the screen changes.
+        internal PropertyRow(RowStyle style, int height96, params Control[] parts)
         {
             _style = style;
+            _height96 = height96;
             _height = style.Height;
             _parts = parts;
+        }
+
+        internal void Rescale(System.Func<int, int> scale)
+        {
+            _height = scale(_height96);
+
+            if (_visible)
+                _style.Height = _height;
         }
 
         /// <summary>Whether the row is shown (the default). Hidden, it takes no room: the rows below move up.</summary>
