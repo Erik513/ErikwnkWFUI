@@ -131,8 +131,8 @@ namespace ErikwnkWFUI.Controls
         /// sharing the remaining width equally on the right (each gets
         /// <see cref="PropertyColumn.Auto"/> sizing). Use the
         /// <see cref="AddRow(string,PropertyColumn[])"/> overload instead if the
-        /// controls need different widths. The row is 42 pixels high; a longer
-        /// label wraps onto a second line. Returns the handle of the row.
+        /// controls need different widths. The row is 42 pixels high (the
+        /// overloads with a row height: that high at least), or as high as its highest editor needs; a longer label wraps onto a second line. Returns the handle of the row.
         /// </summary>
         public PropertyRow AddRow(
             string labelText,
@@ -177,7 +177,7 @@ namespace ErikwnkWFUI.Controls
             int rowHeight,
             params PropertyColumn[] columns)
         {
-            int row = AddRowStyle(rowHeight);
+            int row = AddRowStyle(Math.Max(rowHeight, GetRequiredRowHeight(columns)));
 
             Label label = CreateRowLabel(labelText);
             System.Windows.Forms.Panel editorArea = CreateEditorAreaPanel();
@@ -189,6 +189,26 @@ namespace ErikwnkWFUI.Controls
             _layout.Controls.Add(editorArea, 1, row);
 
             return new PropertyRow(_layout.RowStyles[row], label, editorArea);
+        }
+
+        // The room a cell takes around its editor: the margins of the cell panel (2 above and below) and its padding (1 on each side, the frame).
+        private const int CellChromeHeight = 6;
+
+        // The row is as high as the highest editor needs (the height it has when it is added) - an editor is never cut off by the row.
+        private static int GetRequiredRowHeight(PropertyColumn[] columns)
+        {
+            int required = 0;
+
+            if (columns != null)
+            {
+                foreach (PropertyColumn column in columns)
+                {
+                    if (column != null && column.Control != null)
+                        required = Math.Max(required, column.Control.Height + CellChromeHeight);
+                }
+            }
+
+            return required;
         }
 
         private PropertyColumn[] CreateAutoColumns(Control[] controls)

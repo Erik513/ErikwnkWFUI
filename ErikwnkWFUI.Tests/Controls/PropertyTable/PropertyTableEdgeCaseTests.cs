@@ -84,6 +84,36 @@ public class PropertyTableEdgeCaseTests : IDisposable
     }
 
     [Fact]
+    public void AnEditorHigherThanTheRow_MakesTheRowHigher_AndIsNotCutOff()
+    {
+        PropertyTable table = Show(new PropertyTable());
+        System.Windows.Forms.Panel tall = new System.Windows.Forms.Panel { Height = 150 };
+        System.Windows.Forms.Panel tallInFixedRow = new System.Windows.Forms.Panel { Height = 120 };
+        table.AddRow("First", new Button());
+        table.AddRow("Tall", tall);
+        table.AddRow("Tall, row height given", 42, tallInFixedRow);
+        table.AddRow("Last", new Button());
+        Relayout(table);
+
+        Assert.Equal(150, tall.Height);
+        Assert.True(tall.Parent!.Parent!.Height >= 150, "the cell is lower than the editor");
+        Assert.Equal(120, tallInFixedRow.Height);
+        Assert.True(tallInFixedRow.Parent!.Parent!.Height >= 120);
+        Assert.True(table.Height >= 42 + 156 + 126 + 42, "the rows were not made higher");
+        Assert.True(AllLabels(table).First(l => l.Text == "Last").Top >= 42 + 156 + 126);
+    }
+
+    [Fact]
+    public void ARowOfNormalEditors_KeepsTheDefaultHeight()
+    {
+        PropertyTable table = Show(new PropertyTable());
+        table.AddRow("Row", new Button(), UIStyles.TextBoxes.CreateStandard("t"), new System.Windows.Forms.ComboBox());
+        Relayout(table);
+
+        Assert.Equal(42, AllLabels(table).First(l => l.Text == "Row").Height);
+    }
+
+    [Fact]
     public void TheColumnsOfARow_TakeTheirWidthsAsGiven()
     {
         PropertyTable table = Show(new PropertyTable());
