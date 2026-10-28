@@ -15,6 +15,7 @@ namespace ErikwnkWFUI.Showcase
     {
         private ComboBox _inputLook;
         private ComboBox _inputMaxLength;
+        private ComboBox _inputSize;
         private ToggleSwitch _inputPassword;
         private ToggleSwitch _inputHint;
         private ToggleSwitch _inputPlaceholder;
@@ -40,6 +41,9 @@ namespace ErikwnkWFUI.Showcase
 
             _inputLook = CreateFormChoice("Standard", "Primary", "colors: Yellow");
             table.AddRow("Colors (CreateInputStandard / CreateInputPrimary)", _inputLook);
+
+            _inputSize = CreateFormChoice(SizeChoiceDefault, "Small", "Medium", "Large", SizeChoiceOwn);
+            table.AddRow("size (width of the box)", _inputSize);
 
             _inputPassword = UIStyles.ToggleSwitches.CreateStandard(false);
             _inputStartText = UIStyles.ToggleSwitches.CreateStandard(false);
@@ -84,8 +88,8 @@ namespace ErikwnkWFUI.Showcase
             string text = _inputStartText.Checked ? InputStartText : "";
 
             using (InputBoxForm form = look == "Primary"
-                ? UIStyles.Forms.CreateInputPrimary(InputPrompt, "Code", text, _inputPassword.Checked, placeholder)
-                : UIStyles.Forms.CreateInputStandard(InputPrompt, "Code", text, _inputPassword.Checked, look == "colors: Yellow" ? UIStyles.Colors.Sets.Yellow : null, placeholder))
+                ? UIStyles.Forms.CreateInputPrimary(InputPrompt, "Code", text, _inputPassword.Checked, placeholder, ParseSizeChoice(_inputSize))
+                : UIStyles.Forms.CreateInputStandard(InputPrompt, "Code", text, _inputPassword.Checked, look == "colors: Yellow" ? UIStyles.Colors.Sets.Yellow : null, placeholder, ParseSizeChoice(_inputSize)))
             {
                 if (_inputHint.Checked)
                     form.Hint = "It is the one in the message from the service.";
@@ -117,7 +121,8 @@ namespace ErikwnkWFUI.Showcase
                 _inputPlaceholder.Checked ? "12345" : "",
                 int.Parse(((string)_inputMaxLength.SelectedItem).Split(' ')[0]),
                 _inputValidator.Checked ? (Func<string, string>)CheckInputCode : null,
-                _inputTrim.Checked);
+                _inputTrim.Checked,
+                ParseSizeChoice(_inputSize));
 
             _inputResult.Text = value == null ? "null (cancelled)" : "\"" + value + "\"";
         }

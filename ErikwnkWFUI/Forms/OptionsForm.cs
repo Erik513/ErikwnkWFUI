@@ -24,8 +24,7 @@ namespace ErikwnkWFUI.Forms
     /// </summary>
     public partial class OptionsForm : AppForm
     {
-        // The card in the middle of the window: this wide (96 dpi), with the same room at both sides.
-        private const int TableWidth96 = 520;
+        // The card in the middle of the window: as wide as the size says (96 dpi), with the same room at both sides.
         private const int WindowSideMargin96 = 40;
 
         // What is left free of the work area of the screen when the window is as high as it can be.
@@ -42,6 +41,7 @@ namespace ErikwnkWFUI.Forms
         private readonly Panel _buttonBar;
         private readonly Button _saveButton;
         private readonly Button _cancelButton;
+        private readonly FormSizeOption _size;
         private int _dpiOverride;
         private bool _showButtons = true;
         private string _saveText;
@@ -119,9 +119,14 @@ namespace ErikwnkWFUI.Forms
         /// The same with the options of the library to start with: exactly <paramref name="presets"/> (none for an empty array), null is the default
         /// selection (theme, accent color, language, always on top). <see cref="AddOption"/> adds more later.
         /// </summary>
-        public OptionsForm(FormOptions options, OptionsPreset[] presets)
+        /// <param name="options">The options of the window.</param>
+        /// <param name="presets">The ready-made options to start with (null: the default selection).</param>
+        /// <param name="size">One of the three widths of the card (<see cref="FormSize.Medium"/> by default) or an own <see cref="System.Drawing.Size"/>: its width, and its height as the least height of the window.</param>
+        public OptionsForm(FormOptions options, OptionsPreset[] presets, FormSizeOption? size = null)
             : base(options ?? FormOptions.CreateSettings(UIStrings.Get("OptionsForm.Title")))
         {
+            _size = size ?? FormSize.Medium;
+
             // The sizes are given for 96 dpi and set by ApplyScale.
             _propertyTable = UIStyles.PropertyTables.CreateStandard();
             _propertyTable.Dock = DockStyle.Top;
@@ -267,7 +272,7 @@ namespace ErikwnkWFUI.Forms
         // The same room left and right of the card, whatever the width of the window.
         private void CenterTable()
         {
-            int margin = Math.Max(0, (_scrollHost.ClientSize.Width - Scale(TableWidth96)) / 2);
+            int margin = Math.Max(0, (_scrollHost.ClientSize.Width - Scale(_size.Resolve(FormKind.Options).Width)) / 2);
 
             if (_tableHolder.Padding.Left != margin)
                 _tableHolder.Padding = new Padding(margin, 0, margin, 0);
@@ -284,11 +289,12 @@ namespace ErikwnkWFUI.Forms
 
             int chrome = TitleBar.Height + (_showButtons ? _buttonBar.Height : 0) + (_themeStrip != null ? _themeStrip.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
                 + Scale(extraHeight) + Padding.Vertical + ContentPanel.Padding.Vertical;
-            int height = preferred.Height + chrome;
+            // An own size gives the least height of the window; the rows decide when they need more.
+            int height = Math.Max(preferred.Height + chrome, Scale(_size.Resolve(FormKind.Options).Height));
 
             // More rows than the screen has room for: the window is as high as the screen allows, and the table scrolls (with room for its bar).
             int room = Screen.FromControl(this).WorkingArea.Height - Scale(ScreenMargin96);
-            int width = Math.Max(Scale(TableWidth96), preferred.Width) + 2 * Scale(WindowSideMargin96) + Scale(extraWidth)
+            int width = Math.Max(Scale(_size.Resolve(FormKind.Options).Width), preferred.Width) + 2 * Scale(WindowSideMargin96) + Scale(extraWidth)
                 + Padding.Horizontal + ContentPanel.Padding.Horizontal;
 
             if (height > room)

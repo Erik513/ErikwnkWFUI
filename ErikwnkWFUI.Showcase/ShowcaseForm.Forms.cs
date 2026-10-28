@@ -17,6 +17,7 @@ namespace ErikwnkWFUI.Showcase
         private AppForm _sampleForm;
         private ComboBox _formKind;
         private ComboBox _formLook;
+        private ComboBox _formSizeChoice;
         private ComboBox _formAlign;
         private ComboBox _formBorder;
         private ComboBox _formBar;
@@ -54,6 +55,10 @@ namespace ErikwnkWFUI.Showcase
             table.AddSection("UIStyles.Forms");
             table.AddRow("Kind", _formKind);
             table.AddRow("Colors", _formLook);
+
+            _formSizeChoice = CreateFormChoice(SizeChoiceDefault, "Small", "Medium", "Large", SizeChoiceOwn);
+            _formSizeChoice.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("The size: the three sizes of the kind of window (a Dialog is smaller than a Window), or an own Size - the size: parameter of UIStyles.Forms.Create... . Without one the window has the size it has by itself.");
+            table.AddRow("size (FormSize or own Size)", _formSizeChoice);
 
             _formAlign = CreateFormChoice("MiddleLeft", "MiddleCenter", "MiddleRight");
             _formBorder = CreateFormChoice(FormDefaultChoice, "Crimson", "Teal");
@@ -274,13 +279,19 @@ namespace ErikwnkWFUI.Showcase
 
             form.ClientSize = new Size(520, 230);
 
+            // A size that was chosen is the size of the window (the three sizes of its kind, or an own one).
+            Size? chosen = GetSampleFormSize();
+
+            if (chosen != null)
+                form.Size = chosen.Value;
+
             // The same place (and the size the user gave it) as the window before.
             if (old != null)
             {
                 form.StartPosition = FormStartPosition.Manual;
                 form.Location = old.Value.Location;
 
-                if (wasResizable && options.Resizable)
+                if (wasResizable && options.Resizable && chosen == null)
                     form.Size = old.Value.Size;
             }
 
@@ -300,6 +311,40 @@ namespace ErikwnkWFUI.Showcase
 
             if (scrollHost != null)
                 BeginInvoke(new Action(() => RestoreScroll(scrollHost, scrolled)));
+        }
+
+        // The size the choice gives to the sample window: made by the factory of its kind, so it is the real size of that kind of window.
+        private Size? GetSampleFormSize()
+        {
+            FormSizeOption? size = ParseSizeChoice(_formSizeChoice);
+
+            if (size == null)
+                return null;
+
+            string kind = (string)_formKind.SelectedItem;
+
+            using (AppForm probe = kind == "Dialog"
+                ? UIStyles.Forms.CreateDialogStandard("", size: size)
+                : kind == "Settings" ? UIStyles.Forms.CreateSettingsStandard("", size: size) : UIStyles.Forms.CreateStandard("", size: size))
+            {
+                return probe.Size;
+            }
+        }
+
+        private const string SizeChoiceDefault = "default";
+        private const string SizeChoiceOwn = "own: 640 x 400";
+
+        // What a "size" combo says: nothing (the default of the window), one of the three sizes, or an own one.
+        private static FormSizeOption? ParseSizeChoice(ComboBox combo)
+        {
+            switch ((string)combo.SelectedItem)
+            {
+                case "Small": return FormSize.Small;
+                case "Medium": return FormSize.Medium;
+                case "Large": return FormSize.Large;
+                case SizeChoiceOwn: return new Size(640, 400);
+                default: return null;
+            }
         }
 
         private static ScrollableControl FindScrollHost(Control control)

@@ -17,6 +17,7 @@ namespace ErikwnkWFUI.Showcase
     {
         private OptionsForm _optionsForm;
         private ComboBox _optionsLook;
+        private ComboBox _optionsSize;
         private ToggleSwitch _optionTheme;
         private ToggleSwitch _optionAccent;
         private ToggleSwitch _optionLanguage;
@@ -67,6 +68,10 @@ namespace ErikwnkWFUI.Showcase
             _optionsLook = CreateFormChoice("Standard", "Primary", "colors: Yellow");
             _optionsLook.SelectedIndexChanged += (sender, e) => ReopenOptionsFormIfOpen();
             table.AddRow("Colors", _optionsLook);
+
+            _optionsSize = CreateFormChoice(SizeChoiceDefault, "Small", "Medium", "Large", SizeChoiceOwn);
+            _optionsSize.SelectedIndexChanged += (sender, e) => ReopenOptionsFormIfOpen();
+            table.AddRow("size (width of the card)", _optionsSize);
 
             table.AddSection("AddOption(OptionsPreset...)");
 
@@ -136,13 +141,13 @@ namespace ErikwnkWFUI.Showcase
             switch ((string)_optionsLook.SelectedItem)
             {
                 case "Primary":
-                    form = UIStyles.Forms.CreateOptionsPrimary(presets: presets.ToArray());
+                    form = UIStyles.Forms.CreateOptionsPrimary(presets: presets.ToArray(), size: ParseSizeChoice(_optionsSize));
                     break;
                 case "colors: Yellow":
-                    form = UIStyles.Forms.CreateOptionsStandard(colors: UIStyles.Colors.Sets.Yellow, presets: presets.ToArray());
+                    form = UIStyles.Forms.CreateOptionsStandard(colors: UIStyles.Colors.Sets.Yellow, presets: presets.ToArray(), size: ParseSizeChoice(_optionsSize));
                     break;
                 default:
-                    form = UIStyles.Forms.CreateOptionsStandard(presets: presets.ToArray());
+                    form = UIStyles.Forms.CreateOptionsStandard(presets: presets.ToArray(), size: ParseSizeChoice(_optionsSize));
                     break;
             }
 

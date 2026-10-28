@@ -190,6 +190,19 @@ options.FitToContent();
 options.ShowDialog(this);
 ```
 
+Every window and dialog of the library can be given one of three sizes - `FormSize.Small`, `Medium`, `Large` - or an own `Size`, with the same
+`size:` parameter (`UIStyles.Forms.Create...`, `InputBox.Show`, `MessageBox.Show`, `OptionsForm`). What a size means depends on the kind of window:
+a normal window is larger than a dialog, and an input box or progress dialog gets its width from the size while its height follows the content
+(an own size is then the width and the least height). The sizes are for 96 dpi and scaled to the screen (the message box takes pixels as they are).
+Without a `size:` a window keeps the size it has by itself.
+
+```csharp
+var window = UIStyles.Forms.CreateStandard("Main", size: FormSize.Large);          // 1200 x 800 at 96 dpi
+var dialog = UIStyles.Forms.CreateDialogStandard("Notice", size: new Size(500, 300));
+string name = InputBox.Show("Name?", size: FormSize.Small);
+MessageBox.Show("Done.", size: FormSize.Small);                                    // was MessageBoxSize.Small (now obsolete)
+```
+
 The old names `StyledForm`, `StyledFormOptions`, `StyledFormType` and `StyledOptionsForm` still work but are obsolete: they are `AppForm`, `FormOptions`
 (its presets `CreateStandard`, `CreateDialog` and `CreateSettings` are the same) and `OptionsForm`; the type is not needed any more.
 

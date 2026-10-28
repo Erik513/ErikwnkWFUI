@@ -22,7 +22,6 @@ namespace ErikwnkWFUI.Forms
     public class InputBoxForm : AppForm
     {
         // The sizes are given for 96 dpi and scaled to the screen.
-        private const int ClientWidth96 = 400;
         private const int Margin96 = 24;
         private const int GapBeforeBox96 = 12;
         private const int GapBetweenTexts96 = 6;
@@ -40,6 +39,7 @@ namespace ErikwnkWFUI.Forms
         private readonly Button _okButton;
         private readonly Button _cancelButton;
         private readonly bool _defaultTitle;
+        private readonly FormSizeOption _size;
         private int _dpiOverride;
         private string _okText;
         private string _cancelText;
@@ -140,9 +140,11 @@ namespace ErikwnkWFUI.Forms
         /// <param name="text">The text the box starts with (selected, so typing replaces it).</param>
         /// <param name="password">Whether the box hides what is typed (with an eye to show it).</param>
         /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
-        public InputBoxForm(FormOptions options, string prompt, string text = "", bool password = false, string placeholder = "")
+        /// <param name="size">One of the three widths (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>: its width, and its height as the least height (the texts decide when they need more).</param>
+        public InputBoxForm(FormOptions options, string prompt, string text = "", bool password = false, string placeholder = "", FormSizeOption? size = null)
             : base(options ?? FormOptions.CreateDialog(UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft))
         {
+            _size = size ?? FormSize.Medium;
             _defaultTitle = options == null || options.Title == UIStrings.Get("InputBox.Title");
 
             ShowInTaskbar = false;
@@ -278,7 +280,8 @@ namespace ErikwnkWFUI.Forms
                 return;
 
             int margin = Scale(Margin96);
-            int width = Scale(ClientWidth96);
+            Size wanted = _size.Resolve(FormKind.Input);
+            int width = Scale(wanted.Width);
 
             // The window has an edge around it: the content is as wide as the client area minus that (measured, not assumed).
             ClientSize = new Size(width, ClientSize.Height);
@@ -323,6 +326,13 @@ namespace ErikwnkWFUI.Forms
 
             _textBox.SetBounds(margin, y, inner, Scale(TextBoxHeight96));
             y += Scale(TextBoxHeight96) + Scale(GapBeforeButtons96);
+
+            // An own height that is more than the texts need: the buttons go down to the bottom edge.
+            int leastHeight = Scale(wanted.Height) - (ClientSize.Height - ContentPanel.ClientSize.Height);
+            int bottom = y + Scale(ButtonHeight96) + margin;
+
+            if (bottom < leastHeight)
+                y += leastHeight - bottom;
 
             Size button = new Size(Scale(ButtonWidth96), Scale(ButtonHeight96));
             _okButton.SetBounds(ContentPanel.ClientSize.Width - margin - button.Width, y, button.Width, button.Height);
@@ -369,6 +379,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="maxLength">The most characters the box takes; 0 is no limit.</param>
         /// <param name="validate">Checks the text when OK is clicked: null when it is fine, else the message that is shown in red (the dialog stays open).</param>
         /// <param name="trim">Whether the spaces at the beginning and the end are cut off.</param>
+        /// <param name="size">One of the three widths (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/> (its width, and its height as the least height).</param>
         public static string Show(
             string prompt,
             string title = null,
@@ -379,11 +390,12 @@ namespace ErikwnkWFUI.Forms
             string placeholder = "",
             int maxLength = 0,
             Func<string, string> validate = null,
-            bool trim = false)
+            bool trim = false,
+            FormSizeOption? size = null)
         {
             FormOptions options = title == null ? null : FormOptions.CreateDialog(title, ContentAlignment.MiddleLeft);
 
-            using (InputBoxForm form = new InputBoxForm(options, prompt, text, password, placeholder))
+            using (InputBoxForm form = new InputBoxForm(options, prompt, text, password, placeholder, size))
             {
                 form.Hint = hint;
                 form.MaxLength = maxLength;

@@ -24,9 +24,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreateStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateStandard(title, titleTextAlign, null, icon, windowIcon), colors);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateStandard(title, titleTextAlign, null, icon, windowIcon), colors, size, ErikwnkWFUI.Forms.FormKind.Window);
             }
 
             /// <summary>A resizable window with the title bar in a very dark shade of the accent.</summary>
@@ -34,9 +35,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreatePrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreatePrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreatePrimary(title, titleTextAlign, icon, windowIcon), null);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreatePrimary(title, titleTextAlign, icon, windowIcon), null, size, ErikwnkWFUI.Forms.FormKind.Window);
             }
 
             /// <summary>A fixed-size dialog: only the close button, and it cannot be maximized by dragging.</summary>
@@ -45,9 +47,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateDialogStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreateDialogStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title, titleTextAlign, null, icon, windowIcon), colors);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title, titleTextAlign, null, icon, windowIcon), colors, size, ErikwnkWFUI.Forms.FormKind.Dialog);
             }
 
             /// <summary>A fixed-size dialog with the title bar in a very dark shade of the accent.</summary>
@@ -55,9 +58,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleCenter, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title, titleTextAlign, icon, windowIcon), null);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title, titleTextAlign, icon, windowIcon), null, size, ErikwnkWFUI.Forms.FormKind.Dialog);
             }
 
             /// <summary>A dialog like <see cref="CreateDialogStandard"/> with the version of the program (the entry assembly) in a strip at the bottom.</summary>
@@ -66,9 +70,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateSettingsStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreateSettingsStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title, titleTextAlign, null, icon, windowIcon), colors);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title, titleTextAlign, null, icon, windowIcon), colors, size, ErikwnkWFUI.Forms.FormKind.Settings);
             }
 
             /// <summary>A settings window with the title bar in a very dark shade of the accent.</summary>
@@ -76,9 +81,10 @@ namespace ErikwnkWFUI
             /// <param name="titleTextAlign">Where the title stands in the title bar.</param>
             /// <param name="icon">The small logo at the left of the title bar (null: none).</param>
             /// <param name="windowIcon">The icon of the window in the taskbar and Alt-Tab (null: the icon of the program).</param>
-            public static ErikwnkWFUI.Forms.AppForm CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the size a window has by itself.</param>
+            public static ErikwnkWFUI.Forms.AppForm CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = ContentAlignment.MiddleLeft, Image icon = null, Icon windowIcon = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title, titleTextAlign, icon, windowIcon), null);
+                return UIFormFactory.Create(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title, titleTextAlign, icon, windowIcon), null, size, ErikwnkWFUI.Forms.FormKind.Settings);
             }
 
             /// <summary>
@@ -91,9 +97,10 @@ namespace ErikwnkWFUI
             /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
             /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
             /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
-            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null, string placeholder = "")
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the usual width and the height that the content needs.</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null, string placeholder = "", ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), colors, prompt, text, password, placeholder);
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), colors, prompt, text, password, placeholder, size);
             }
 
             /// <summary>An input box with the title bar in a very dark shade of the accent.</summary>
@@ -102,9 +109,10 @@ namespace ErikwnkWFUI
             /// <param name="text">The text the box starts with (selected).</param>
             /// <param name="password">Whether what is typed is hidden (with an eye to show it).</param>
             /// <param name="placeholder">A hint in the empty box that has not the focus.</param>
-            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false, string placeholder = "")
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the usual width and the height that the content needs.</param>
+            public static ErikwnkWFUI.Forms.InputBoxForm CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false, string placeholder = "", ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), null, prompt, text, password, placeholder);
+                return UIFormFactory.CreateInput(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("InputBox.Title"), ContentAlignment.MiddleLeft), null, prompt, text, password, placeholder, size);
             }
 
             /// <summary>
@@ -115,17 +123,19 @@ namespace ErikwnkWFUI
             /// <param name="title">The title of the window ("Options" or "Optionen" when none is given).</param>
             /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
             /// <param name="presets">The ready-made options to start with, in this order; null (the default) is all four, an empty array none (<c>AddOption</c> adds them later).</param>
-            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsStandard(string title = null, UIColorSet colors = null, ErikwnkWFUI.Forms.OptionsPreset[] presets = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the usual width and the height that the content needs.</param>
+            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsStandard(string title = null, UIColorSet colors = null, ErikwnkWFUI.Forms.OptionsPreset[] presets = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title ?? Localization.UIStrings.Get("OptionsForm.Title")), colors, presets);
+                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettings(title ?? Localization.UIStrings.Get("OptionsForm.Title")), colors, presets, size);
             }
 
             /// <summary>An options window with the title bar in a very dark shade of the accent.</summary>
             /// <param name="title">The title of the window ("Options" or "Optionen" when none is given).</param>
             /// <param name="presets">The ready-made options to start with; null (the default) is all four, an empty array none.</param>
-            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsPrimary(string title = null, ErikwnkWFUI.Forms.OptionsPreset[] presets = null)
+            /// <param name="size">The size: one of the three (<c>FormSize.Small</c>, <c>Medium</c>, <c>Large</c>) or an own <c>Size</c> (for 96 dpi); each kind of window has sizes of its own. Null (the default) leaves the usual width and the height that the content needs.</param>
+            public static ErikwnkWFUI.Forms.OptionsForm CreateOptionsPrimary(string title = null, ErikwnkWFUI.Forms.OptionsPreset[] presets = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
             {
-                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title ?? Localization.UIStrings.Get("OptionsForm.Title")), null, presets);
+                return UIFormFactory.CreateOptions(ErikwnkWFUI.Forms.FormOptions.CreateSettingsPrimary(title ?? Localization.UIStrings.Get("OptionsForm.Title")), null, presets, size);
             }
         }
     }

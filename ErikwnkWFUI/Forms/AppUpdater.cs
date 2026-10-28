@@ -110,7 +110,7 @@ namespace ErikwnkWFUI.Forms
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning,
                     owner,
-                    MessageBoxSize.Small);
+                    FormSize.Small);
 
                 OpenReleasePage(result.ReleaseUrl);
             }

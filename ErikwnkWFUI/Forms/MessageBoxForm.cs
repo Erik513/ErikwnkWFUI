@@ -30,7 +30,8 @@ namespace ErikwnkWFUI.Forms
         Success
     }
 
-    /// <summary>Overall size preset for a <see cref="MessageBox"/>.</summary>
+    /// <summary>Overall size preset for a <see cref="MessageBox"/>. Use <see cref="FormSize"/>, the one size setting of all the windows.</summary>
+    [Obsolete("Use FormSize (the same three sizes, for every window and dialog of the library).")]
     public enum MessageBoxSize
     {
         Small,
@@ -40,25 +41,45 @@ namespace ErikwnkWFUI.Forms
 
     /// <summary>
     /// ErikwnkWFUI's themed replacement for
-    /// <see cref="System.Windows.Forms.MessageBox"/> - call <see cref="Show"/>.
+    /// <see cref="System.Windows.Forms.MessageBox"/> - call <c>Show</c>.
     /// </summary>
     /// <remarks>
     /// Named the same as the native dialog it replaces, same as
     /// <see cref="Controls.ListView"/> and friends - callers never need to
     /// spell out <c>ErikwnkWFUI.Forms.MessageBox</c> themselves as long as
     /// they don't also have <c>using System.Windows.Forms;</c> in scope
-    /// wherever they call <see cref="Show"/>.
+    /// wherever they call <c>Show</c>.
     /// </remarks>
     public static class MessageBox
     {
+        /// <summary>The old way to give the size, with <see cref="MessageBoxSize"/>.</summary>
+        [Obsolete("Use the size: FormSize (or an own Size) of Show.")]
+        public static DialogResult Show(string message, string title, MessageBoxButtons buttons, MessageBoxIcon icon, Form owner, MessageBoxSize size)
+        {
+            return Show(message, title, buttons, icon, owner, (FormSize)(int)size);
+        }
+
+        /// <summary>The old way to give the size, with <see cref="MessageBoxSize"/> and no owner.</summary>
+        [Obsolete("Use the size: FormSize (or an own Size) of Show.")]
+        public static DialogResult Show(string message, string title, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxSize size)
+        {
+            return Show(message, title, buttons, icon, null, (FormSize)(int)size);
+        }
+
         /// <summary>Shows the dialog modally and returns which button was clicked (or the safe default - Cancel/No/OK - if the dialog is closed without clicking one).</summary>
+        /// <param name="message">The text of the dialog.</param>
+        /// <param name="title">The title of the window.</param>
+        /// <param name="buttons">Which buttons it has.</param>
+        /// <param name="icon">The icon in the title bar.</param>
+        /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
+        /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>; in pixels as they are, not scaled to the screen.</param>
         public static DialogResult Show(
             string message,
             string title = "Notice",
             MessageBoxButtons buttons = MessageBoxButtons.OK,
             MessageBoxIcon icon = MessageBoxIcon.Info,
             Form owner = null,
-            MessageBoxSize size = MessageBoxSize.Medium)
+            FormSizeOption? size = null)
         {
             MessageBoxForm form = new MessageBoxForm(
                 message,
@@ -85,7 +106,7 @@ namespace ErikwnkWFUI.Forms
     {
         private readonly string _message;
         private readonly MessageBoxButtons _buttons;
-        private readonly MessageBoxSize _size;
+        private readonly FormSizeOption _size;
 
         private sealed class MessageBoxPreset
         {
@@ -98,12 +119,24 @@ namespace ErikwnkWFUI.Forms
             public Padding ButtonPanelPadding { get; set; }
         }
 
+        /// <summary>The old way to give the size, with <see cref="MessageBoxSize"/>.</summary>
+        [Obsolete("Use the size: FormSize (or an own Size).")]
+        public MessageBoxForm(string message, string title, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxSize size)
+            : this(message, title, buttons, icon, (FormSize)(int)size)
+        {
+        }
+
+        /// <param name="message">The text of the dialog.</param>
+        /// <param name="title">The title of the window.</param>
+        /// <param name="buttons">Which buttons it has.</param>
+        /// <param name="icon">The icon in the title bar.</param>
+        /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/> (pixels as they are).</param>
         public MessageBoxForm(
             string message,
             string title,
             MessageBoxButtons buttons,
             MessageBoxIcon icon,
-            MessageBoxSize size = MessageBoxSize.Medium)
+            FormSizeOption? size = null)
             : base(FormOptions.CreateDialog(
                 title: title,
                 titleTextAlign: ContentAlignment.MiddleLeft,
@@ -111,7 +144,7 @@ namespace ErikwnkWFUI.Forms
         {
             _message = message ?? "";
             _buttons = buttons;
-            _size = size;
+            _size = size ?? FormSize.Medium;
 
             ConfigureForm();
             BuildLayout();
@@ -139,12 +172,15 @@ namespace ErikwnkWFUI.Forms
 
         private MessageBoxPreset GetPreset()
         {
-            switch (_size)
+            // The size of the window comes from the common table (or is the own one); the rest of the layout follows the ready-made size.
+            Size formSize = _size.Resolve(FormKind.MessageBox);
+
+            switch (_size.Preset)
             {
-                case MessageBoxSize.Small:
+                case FormSize.Small:
                     return new MessageBoxPreset
                     {
-                        FormSize = new Size(380, 160),
+                        FormSize = formSize,
                         ButtonPanelHeight = 52,
                         ButtonColumnWidth = 78,
                         ButtonWidth = 72,
@@ -153,10 +189,10 @@ namespace ErikwnkWFUI.Forms
                         ButtonPanelPadding = new Padding(8, 8, 18, 12)
                     };
 
-                case MessageBoxSize.Large:
+                case FormSize.Large:
                     return new MessageBoxPreset
                     {
-                        FormSize = new Size(700, 320),
+                        FormSize = formSize,
                         ButtonPanelHeight = 80,
                         ButtonColumnWidth = 140,
                         ButtonWidth = 130,
@@ -168,7 +204,7 @@ namespace ErikwnkWFUI.Forms
                 default:
                     return new MessageBoxPreset
                     {
-                        FormSize = new Size(500, 220),
+                        FormSize = formSize,
                         ButtonPanelHeight = 70,
                         ButtonColumnWidth = 125,
                         ButtonWidth = 120,
