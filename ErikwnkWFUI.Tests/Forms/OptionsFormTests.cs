@@ -644,6 +644,156 @@ public class OptionsFormTests : IDisposable
         Assert.Contains("Auf Standard zurücksetzen", PropertyTableHost.AllButtons(form.PropertyTable).Select(b => b.Text));
     }
 
+    // ---- edge cases
+
+    [Fact]
+    public void EnterSavesAndEscapeCancels_AsInEveryDialog()
+    {
+        OptionsForm entered = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        int saved = 0;
+        entered.SaveClicked += (sender, e) => saved++;
+        Box(entered, "_themeBox").SelectedIndex = 1;
+
+        Assert.True(entered.InvokePrivate<bool>("ProcessDialogKey", Keys.Enter));
+
+        Assert.Equal(1, saved);
+        Assert.Equal(DialogResult.OK, entered.DialogResult);
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+
+        UIColors.ApplyTheme(UIThemes.Dark);
+        OptionsForm escaped = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Box(escaped, "_themeBox").SelectedIndex = 1;
+
+        Assert.True(escaped.InvokePrivate<bool>("ProcessDialogKey", Keys.Escape));
+
+        Assert.Equal(DialogResult.Cancel, escaped.DialogResult);
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+    }
+
+    [Fact]
+    public void ClickingSaveTwice_AndDisposingTwice_DoNotThrow()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+
+        Assert.Null(Record.Exception(() =>
+        {
+            Find(form, "_saveButton").PerformClick();
+            Find(form, "_saveButton").PerformClick();
+            form.Dispose();
+            form.Dispose();
+        }));
+    }
+
+    [Fact]
+    public void AWindowThatWasNeverShown_CanBeFittedAndDisposed()
+    {
+        OptionsForm form = UIStyles.Forms.CreateOptionsStandard();
+
+        Assert.Null(Record.Exception(() =>
+        {
+            form.FitToContent();
+            form.FitToContent();
+            form.Dispose();
+        }));
+    }
+
+    [Fact]
+    public void WithNoRowsAtAll_TheWindowIsAsLowAsItsLeastSize_AndFittingTwiceGivesTheSameSize()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new OptionsPreset[0]));
+
+        form.FitToContent();
+        Size first = form.ClientSize;
+        form.FitToContent();
+
+        Assert.Equal(first, form.ClientSize);
+        Assert.True(form.ClientSize.Width >= form.MinimumSize.Width && form.ClientSize.Height >= form.MinimumSize.Height);
+    }
+
+    [Fact]
+    public void AnOptionAddedWhileTheWindowIsOpen_IsThere_AndTheWindowCanBeFittedAgain()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        form.FitToContent();
+        int before = form.ClientSize.Height;
+
+        form.AddOption(OptionsPreset.Language);
+        form.FitToContent();
+        TestPictures.Pump(60);
+
+        Assert.Equal(new[] { "General", "Theme", "Language" }, RowLabels(form));
+        Assert.True(form.ClientSize.Height > before);
+    }
+
+    [Fact]
+    public void AnAccentColorThatIsNotInTheList_ShowsNoChoice_AndCancelGivesItBack()
+    {
+        Color custom = Color.FromArgb(12, 200, 99);
+        UIColors.SetAccent(custom);
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.AccentColor, OptionsPreset.Theme }));
+
+        Assert.Equal(-1, Box(form, "_accentBox").SelectedIndex);
+        Assert.Equal(custom.ToArgb(), form.SelectedAccentColor.ToArgb());
+
+        Box(form, "_accentBox").SelectedIndex = 2;
+        Assert.NotEqual(custom.ToArgb(), UIColors.Primary.ToArgb());
+
+        Find(form, "_cancelButton").PerformClick();
+        Assert.Equal(custom.ToArgb(), UIColors.Primary.ToArgb());
+    }
+
+    [Fact]
+    public void WhenWindowsDoesNotLetTheAutoStartBeWritten_SaveStillClosesTheWindow()
+    {
+        WindowsAutoStart.RunKeyPath = new string('x', 300);
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        Switch(form, "_startSwitch").Checked = true;
+
+        Assert.Null(Record.Exception(() => Find(form, "_saveButton").PerformClick()));
+        Assert.Equal(DialogResult.OK, form.DialogResult);
+    }
+
+    [Fact]
+    public void AChangeThatIsTakenBackDoesNotTakeBackWhatWasChosenInAnotherWindowInTheMeantime()
+    {
+        OptionsForm first = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Box(first, "_themeBox").SelectedIndex = 1;
+        Find(first, "_saveButton").PerformClick();
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+
+        // A second window starts from what is applied now (light) and takes back only what it changed itself.
+        OptionsForm second = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Assert.Equal(1, Box(second, "_themeBox").SelectedIndex);
+        Find(second, "_cancelButton").PerformClick();
+
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+    }
+
+    [Fact]
+    public void TheWindow_FollowsAChangeOfTheTheme_InItsCardTheHostAndTheButtonBar()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        Panel bar = form.GetPrivateField<Panel>("_buttonBar")!;
+
+        UIColors.ApplyTheme(UIThemes.Light);
+        Application.DoEvents();
+
+        Assert.Equal(UIColors.BackgroundDark.ToArgb(), form.PropertyTable.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundMedium.ToArgb(), ScrollHost(form).BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundMedium.ToArgb(), bar.BackColor.ToArgb());
+        Assert.Equal(UIColors.BackgroundMedium.ToArgb(), form.ContentPanel.BackColor.ToArgb());
+    }
+
+    [Fact]
+    public void TheTabOrder_GoesThroughTheTableFirst_AndThenTheButtons()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        Panel bar = form.GetPrivateField<Panel>("_buttonBar")!;
+        Panel host = ScrollHost(form);
+
+        Assert.True(form.ContentPanel.Controls.IndexOf(host) < form.ContentPanel.Controls.IndexOf(bar), "the buttons come before the table in the tab order");
+    }
+
     [Fact]
     public void TheFactories_TakeAColorSetOrTheAccent_ForTheTitleBar()
     {
