@@ -178,6 +178,18 @@ form.RememberBoundsKey = "Settings";
 form.Show(owner);
 ```
 
+`OptionsForm` is a settings window around a property table: it starts with ready-made options (a sun/moon button in the top right corner for the
+theme, accent color, language, always on top; start with Windows and a reset button on request), applies them as they are chosen, takes them back
+when the window is closed without Save, and tells the user by a toast that the settings were saved. Dispose it (`using`) after `ShowDialog`: it
+listens to the theme and the language while it exists, and a modal window is not disposed by closing it.
+
+```csharp
+using var options = UIStyles.Forms.CreateOptionsStandard();
+options.PropertyTable.AddRow("Notifications", UIStyles.ToggleSwitches.CreateStandard());
+options.FitToContent();
+options.ShowDialog(this);
+```
+
 The old names `StyledForm`, `StyledFormOptions`, `StyledFormType` and `StyledOptionsForm` still work but are obsolete: they are `AppForm`, `FormOptions`
 (its presets `CreateStandard`, `CreateDialog` and `CreateSettings` are the same) and `OptionsForm`; the type is not needed any more.
 
