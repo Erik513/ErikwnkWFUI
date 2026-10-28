@@ -141,6 +141,41 @@ public class FormFactoryTests : IDisposable
         });
     }
 
+    [Theory]
+    [MemberData(nameof(Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void TheVersionText_CanBeRead_OnTheStripOfEverySetAndOfThePrimaryOne_InBothThemes(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            foreach ((string name, UIColorSet? set) in AllSets(includeDark: true))
+            {
+                AppForm form = Own(UIStyles.Forms.CreateSettings("Settings", set));
+                ErikwnkWFUI.Controls.ScrollingLabel version = (ErikwnkWFUI.Controls.ScrollingLabel)form.VersionLabel;
+                Check(shortfalls, "version, " + name, version.GetTextColor(), form.VersionStrip!.BackColor, 3.0);
+            }
+
+            AppForm primary = Own(UIStyles.Forms.CreatePrimarySettings("Settings"));
+            Check(shortfalls, "version, primary", ((ErikwnkWFUI.Controls.ScrollingLabel)primary.VersionLabel).GetTextColor(), primary.VersionStrip!.BackColor, 3.0);
+        });
+    }
+
+    [Fact]
+    public void TheSystemMenu_TakesTheColorsOfTheFrame_OrIsNeutral()
+    {
+        AppForm yellow = Own(UIStyles.Forms.CreateStandard("Yellow", UIStyles.Colors.Sets.Yellow));
+        AppForm plain = Own(UIStyles.Forms.CreateStandard("Plain"));
+        AppForm primary = Own(UIStyles.Forms.CreatePrimary("Primary"));
+
+        using (ErikwnkWFUI.Controls.ContextMenuStrip menu = yellow.CreateSystemMenu())
+            Assert.Equal(UIStyles.Colors.Sets.Yellow.Hover.ToArgb(), menu.Colors.Hover.ToArgb());
+
+        using (ErikwnkWFUI.Controls.ContextMenuStrip menu = plain.CreateSystemMenu())
+            Assert.Null(menu.Colors);
+
+        using (ErikwnkWFUI.Controls.ContextMenuStrip menu = primary.CreateSystemMenu())
+            Assert.Equal(UIColors.PrimarySet.Hover.ToArgb(), menu.Colors.Hover.ToArgb());
+    }
+
     private static Label TitleLabel(AppForm form)
     {
         return form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
