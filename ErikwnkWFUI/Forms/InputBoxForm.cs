@@ -15,7 +15,9 @@ namespace ErikwnkWFUI.Forms
     /// Cancel. Make one with <c>UIStyles.Forms.CreateInputStandard</c> / <c>CreateInputPrimary</c> and show it with <c>ShowDialog</c>, or just call
     /// <see cref="InputBox.Show"/>. After <c>DialogResult.OK</c> the text is in <see cref="Value"/>. Enter confirms, Escape cancels.
     /// Under the prompt there can be a gray <see cref="Hint"/>, and a red <see cref="ErrorText"/> over the box (set it for a wrong
-    /// entry, or let <see cref="Validator"/> do it). The texts of the buttons and the default title follow the language of the library.
+    /// entry, or let <see cref="Validator"/> do it). The window has a fixed width and is as high as its texts need, but never higher than the
+    /// screen (a prompt that is too long is cut at its end). The texts of the buttons and the default title follow the language of the library.
+    /// Dispose it after <c>ShowDialog</c> (<see cref="InputBox.Show"/> does).
     /// </summary>
     public class InputBoxForm : AppForm
     {
@@ -61,13 +63,15 @@ namespace ErikwnkWFUI.Forms
         /// <summary>The most characters the box takes; 0 (the default) is no limit beyond the one of Windows.</summary>
         public int MaxLength
         {
-            get { return _textBox.MaxLength == int.MaxValue || _textBox.MaxLength == 32767 ? 0 : _textBox.MaxLength; }
+            // 32767 is the limit that a single-line text box has by itself.
+            get { return _textBox.MaxLength == 32767 ? 0 : _textBox.MaxLength; }
             set { _textBox.MaxLength = value <= 0 ? 32767 : value; }
         }
 
         /// <summary>
         /// Checks the text when OK is clicked: returns null when it is fine, otherwise the message that is shown in red over the box (the
-        /// window stays open, the text is selected). Null (the default) accepts every text that is not empty.
+        /// window stays open, the text is selected). Null (the default) accepts every text that is not empty. It is not asked for an empty text
+        /// unless <see cref="AllowEmpty"/> is set, and it gets the trimmed text when <see cref="TrimValue"/> is set. An exception in it is not caught.
         /// </summary>
         public Func<string, string> Validator { get; set; }
 
@@ -338,7 +342,8 @@ namespace ErikwnkWFUI.Forms
     public static class InputBox
     {
         /// <summary>
-        /// Asks the user for a text. Returns what was entered, or null when the dialog was cancelled (Cancel, Escape, the close button).
+        /// Asks the user for a text in a modal dialog and disposes it. Returns what was entered, or null when the dialog was cancelled (Cancel,
+        /// Escape, the close button). An empty text is not accepted (OK does nothing until something is typed).
         /// </summary>
         /// <param name="prompt">The text above the box.</param>
         /// <param name="title">The title of the window ("Input" or "Eingabe" when none is given).</param>
