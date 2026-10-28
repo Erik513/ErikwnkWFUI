@@ -197,6 +197,35 @@ public class AppFormEdgeCaseTests : IDisposable
     }
 
     [Fact]
+    public void TheButtonsOfTheBar_AreInThePictureOfTheWholeWindow()
+    {
+        AppForm form = Show(UIStyles.Forms.CreateStandard("Window"));
+        form.Size = new Size(420, 160);
+        TestPictures.Pump(100);
+
+        using Bitmap picture = new Bitmap(form.Width, form.Height);
+        form.DrawToBitmap(picture, new Rectangle(Point.Empty, form.Size));
+
+        foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+        {
+            Button button = BarButton(form, field);
+            Rectangle area = form.RectangleToClient(button.RectangleToScreen(button.ClientRectangle));
+            int marks = 0;
+
+            for (int y = area.Top; y < area.Bottom; y++)
+            {
+                for (int x = area.Left; x < area.Right; x++)
+                {
+                    if (picture.GetPixel(x, y).ToArgb() != form.TitleBar.BackColor.ToArgb())
+                        marks++;
+                }
+            }
+
+            Assert.True(marks > 5, "nothing of the " + field + " is in the picture of the window");
+        }
+    }
+
+    [Fact]
     public void ADoubleClickOnTheBar_MaximizesAWindow_ButNotADialog()
     {
         AppForm window = Show(UIStyles.Forms.CreateStandard("Window"));
@@ -306,6 +335,24 @@ public class AppFormEdgeCaseTests : IDisposable
 
         Assert.True(first.IsDisposed);
         Assert.False(form.GetPrivateField<LibraryMenu>("_openMenu")!.IsDisposed);
+    }
+
+    [Fact]
+    public void TheIconThatTheWindowTookFromTheProgram_IsDisposedWithIt_ButAGivenIconIsNot()
+    {
+        AppForm own = UIStyles.Forms.CreateStandard("Own icon");
+        Icon? extracted = own.GetPrivateField<Icon>("_ownIcon");
+
+        own.Dispose();
+
+        if (extracted != null)
+            Assert.Throws<ObjectDisposedException>(() => extracted.Handle);
+
+        using Icon given = (Icon)SystemIcons.Information.Clone();
+        AppForm withGiven = new AppForm(FormOptions.CreateStandard("Given", windowIcon: given));
+        withGiven.Dispose();
+
+        Assert.True(given.Handle != IntPtr.Zero);
     }
 
     [Fact]

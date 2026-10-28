@@ -33,6 +33,7 @@ namespace ErikwnkWFUI.Forms
         private readonly bool _closeOnEscape;
         private bool _closeEnabled = true;
         private Color _borderColor;
+        private Icon _ownIcon;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
         public Panel ContentPanel
@@ -127,70 +128,24 @@ namespace ErikwnkWFUI.Forms
 
             Text = options.Title;
 
-            if (options.WindowIcon != null)
-            {
-                Icon = options.WindowIcon;
-                ShowIcon = true;
-            }
-            else
-            {
-                try
-                {
-                    Icon extractedIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-
-                    if (extractedIcon != null)
-                    {
-                        Icon = extractedIcon;
-                        ShowIcon = true;
-                    }
-                }
-                catch
-                {
-                    // No icon can be read from the executable: the window simply has none.
-                }
-            }
-
             _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
             _shadow = options.Borderless && options.Shadow;
             _closeOnEscape = options.CloseOnEscape;
             _closeEnabled = options.CloseEnabled;
-
-            // Opens in the middle of the screen - or over its owner (see OnLoad); a window of its own can change StartPosition.
-            StartPosition = FormStartPosition.CenterScreen;
-
-            // A window that can be resized has a least size (the title bar with its buttons and a little content), as a normal form has.
-            if (options.Resizable)
-                MinimumSize = new Size(Dpi.Scale(options.MinimumSize.Width, DeviceDpi), Dpi.Scale(options.MinimumSize.Height, DeviceDpi));
             _canMinimize = options.ShowMinimizeButton;
             _canMaximize = options.ShowMaximizeButton;
             _isFixedSize = !options.Resizable;
             _menuColors = options.ColorSource;
             RememberBoundsKey = options.RememberBoundsKey;
-
-            if (options.Borderless)
-            {
-                FormBorderStyle = FormBorderStyle.None;
-            }
-            else
-            {
-                // The native frame has the title bar and its buttons: they are the ones of the form.
-                FormBorderStyle = options.Resizable ? FormBorderStyle.Sizable : FormBorderStyle.FixedDialog;
-                MinimizeBox = options.ShowMinimizeButton;
-                MaximizeBox = options.ShowMaximizeButton && options.Resizable;
-                ControlBox = options.ShowCloseButton || MinimizeBox || MaximizeBox;
-            }
-
             DoubleBuffered = true;
-            // The edge around the window is black (the darkest background of the theme) unless a color was asked for; the title bar and the strip
-            // are in the color of the set.
+
+            ApplyWindowIcon(options.WindowIcon);
+            ApplyFrame(options);
+
+            // The edge around the window is black (the darkest background of the theme) unless a color was asked for; the title bar is in the
+            // color of the set, and the version strip is a darker gray than the content in every window.
             _borderColor = options.BorderColor ?? Color.Empty;
             ThemeWatcher.FollowBackColor(this, ResolveBorderColor);
-            Func<Color> bar = options.BarSource ?? (() => UIColors.BackgroundBlack);
-
-            int borderSize = 0;
-            if (options.Borderless)
-                borderSize = options.Resizable ? 2 : 1;
-            Padding = new Padding(borderSize);
 
             _titleBar = new TitleBarControl(
                 options.Icon,
@@ -201,8 +156,9 @@ namespace ErikwnkWFUI.Forms
                 options.ShowCloseButton,
                 options.AllowWindowSnapAndMaximize,
                 options.TitleBarBackColor,
-                bar,
+                options.BarSource ?? (() => UIColors.BackgroundBlack),
                 options.ColorSource);
+            _titleBar.CloseButtonEnabled = _closeEnabled;
 
             _contentPanel = new Panel
             {
@@ -213,45 +169,18 @@ namespace ErikwnkWFUI.Forms
 
             ThemeWatcher.FollowBackColor(_contentPanel, () => UIColors.BackgroundMedium);
 
-            string versionText = options.VersionText;
-
-            if (!string.IsNullOrEmpty(versionText))
+            if (!string.IsNullOrEmpty(options.VersionText))
             {
-                _versionLabel = UILabelFactory.CreateMuted(versionText);
+                _versionLabel = UILabelFactory.CreateMuted(options.VersionText);
                 _versionLabel.AutoSize = true;
                 _versionLabel.TextAlign = ContentAlignment.MiddleRight;
-                _versionLabel.Margin = new Padding(0, 4, 0, 0);
-
-                _versionStrip = new FlowLayoutPanel
-                {
-                    Dock = DockStyle.Bottom,
-                    Height = 24,
-                    FlowDirection = FlowDirection.RightToLeft,
-                    WrapContents = false,
-                    AutoSize = false,
-                    Margin = new Padding(0),
-                    Padding = new Padding(0, 0, 10, 0)
-                    // Explicit, not left to the transparent background of the
-                    // label - the strip's own edges (outside the label's now
-                    // AutoSize width) would otherwise show through with the
-                    // FlowLayoutPanel's default gray SystemColors.Control
-                    // instead of matching the rest of the window.
-                };
-                // Not the color of the title bar: a darker gray than the content, the same in every window.
-                ThemeWatcher.FollowBackColor(_versionStrip, () => UIColors.BackgroundDark);
-
-                // Whatever is put into the strip (the update button, say) stands in the middle of its height, as the version text does.
-                _versionStrip.Layout += (sender, e) => CenterVersionStripControls();
-                _versionStrip.ControlAdded += (sender, e) => e.Control.SizeChanged += (changed, args) => QueueVersionStripLayout();
-                _versionStrip.Controls.Add(_versionLabel);
+                _versionStrip = CreateVersionStrip(_versionLabel);
             }
 
             Controls.Add(_contentPanel);
 
-            // With the native frame there is only one title bar. The bar of the library is not in the window then (TitleBar, FormTitle and
+            // With the native frame there is only one title bar: the bar of the library is not in the window then (TitleBar, FormTitle and
             // FormIcon stay there to be used, but show nothing).
-            _titleBar.CloseButtonEnabled = _closeEnabled;
-
             if (options.Borderless)
             {
                 Controls.Add(_titleBar);
@@ -263,6 +192,87 @@ namespace ErikwnkWFUI.Forms
 
             if (options.Borderless && options.Resizable)
                 _resizeHandler = new BorderlessResizeHandler(this);
+        }
+
+        // The icon of the window (taskbar, Alt-Tab): the one that was given, or the icon of the program.
+        private void ApplyWindowIcon(Icon given)
+        {
+            if (given != null)
+            {
+                Icon = given;
+                ShowIcon = true;
+
+                return;
+            }
+
+            try
+            {
+                // Made here, so it is disposed with the window.
+                _ownIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+
+                if (_ownIcon != null)
+                {
+                    Icon = _ownIcon;
+                    ShowIcon = true;
+                }
+            }
+            catch
+            {
+                // No icon can be read from the executable: the window simply has none.
+            }
+        }
+
+        // The frame: the native one, or none (the title bar of the library, the edge, the least size and the place on the screen).
+        private void ApplyFrame(FormOptions options)
+        {
+            // Opens in the middle of the screen - or over its owner (see OnLoad); a window of its own can change StartPosition.
+            StartPosition = FormStartPosition.CenterScreen;
+
+            // A window that can be resized has a least size (the title bar with its buttons and a little content), as a normal form has.
+            if (options.Resizable)
+                MinimumSize = new Size(Dpi.Scale(options.MinimumSize.Width, DeviceDpi), Dpi.Scale(options.MinimumSize.Height, DeviceDpi));
+
+            if (options.Borderless)
+            {
+                FormBorderStyle = FormBorderStyle.None;
+                Padding = new Padding(options.Resizable ? 2 : 1);
+
+                return;
+            }
+
+            // The native frame has the title bar and its buttons: they are the ones of the form.
+            FormBorderStyle = options.Resizable ? FormBorderStyle.Sizable : FormBorderStyle.FixedDialog;
+            MinimizeBox = options.ShowMinimizeButton;
+            MaximizeBox = options.ShowMaximizeButton && options.Resizable;
+            ControlBox = options.ShowCloseButton || MinimizeBox || MaximizeBox;
+            Padding = new Padding(0);
+        }
+
+        // The strip at the bottom: the controls in it flow from the right (the version text at the very end), stand in the middle of its height,
+        // and it is a darker gray than the content, not the color of the title bar.
+        private FlowLayoutPanel CreateVersionStrip(Label versionLabel)
+        {
+            FlowLayoutPanel strip = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 24,
+                FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false,
+                AutoSize = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0, 0, 10, 0)
+            };
+
+            // Explicit, not left to the transparent background of the label: the edges of the strip outside the label would show the gray of the
+            // FlowLayoutPanel instead of matching the rest of the window.
+            ThemeWatcher.FollowBackColor(strip, () => UIColors.BackgroundDark);
+
+            // Whatever is put into the strip (the update button, say) stands in the middle of its height, as the version text does.
+            strip.Layout += (sender, e) => CenterStripControls(strip);
+            strip.ControlAdded += (sender, e) => e.Control.SizeChanged += (changed, args) => QueueStripLayout(strip);
+            strip.Controls.Add(versionLabel);
+
+            return strip;
         }
 
         private const int WmGetMinMaxInfo = 0x24;
@@ -327,6 +337,10 @@ namespace ErikwnkWFUI.Forms
                 _openMenu.Dispose();
 
             base.Dispose(disposing);
+
+            // After the base class: the form has let go of its icon by then.
+            if (disposing && _ownIcon != null)
+                _ownIcon.Dispose();
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -350,9 +364,9 @@ namespace ErikwnkWFUI.Forms
         // changes in the middle of a layout does not start one.
         private bool _versionStripLayoutQueued;
 
-        private void QueueVersionStripLayout()
+        private void QueueStripLayout(FlowLayoutPanel strip)
         {
-            if (_versionStripLayoutQueued || !IsHandleCreated || IsDisposed)
+            if (_versionStripLayoutQueued || !IsHandleCreated || IsDisposed || Disposing)
                 return;
 
             _versionStripLayoutQueued = true;
@@ -361,18 +375,18 @@ namespace ErikwnkWFUI.Forms
             {
                 _versionStripLayoutQueued = false;
 
-                if (!IsDisposed)
-                    _versionStrip.PerformLayout();
+                if (!IsDisposed && !Disposing)
+                    strip.PerformLayout();
             }));
         }
 
         // A flow panel puts its controls at the top: the margins are worked out so that each one is centered in the strip (the layout is
         // started again only when one of them changes).
-        private void CenterVersionStripControls()
+        private static void CenterStripControls(FlowLayoutPanel strip)
         {
-            foreach (Control control in _versionStrip.Controls)
+            foreach (Control control in strip.Controls)
             {
-                int top = Math.Max(0, (_versionStrip.ClientSize.Height - control.Height) / 2);
+                int top = Math.Max(0, (strip.ClientSize.Height - control.Height) / 2);
 
                 if (control.Margin.Top != top || control.Margin.Bottom != 0)
                     control.Margin = new Padding(control.Margin.Left, top, control.Margin.Right, 0);
