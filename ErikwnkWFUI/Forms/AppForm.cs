@@ -12,16 +12,13 @@ using Panel = System.Windows.Forms.Panel;
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// A <see cref="Form"/> with ErikwnkWFUI's own custom-drawn title bar
-    /// (<see cref="TitleBar"/>) instead of the native Windows one, and
-    /// optional borderless resizing. This is the base class every ErikwnkWFUI
-    /// window is built on - either use it directly (<c>UIStyles.Forms.CreateStandard(title)</c>
-    /// for a quick window, or the <see cref="FormOptions"/> constructor
-    /// for full control), or derive from it the way
-    /// <see cref="MessageBoxForm"/> and <see cref="UpdateAvailableForm"/>
-    /// do. Add your own controls to <see cref="ContentPanel"/>, not directly
-    /// to the form - the title bar already occupies the top of the form's
-    /// own <see cref="Control.Controls"/> collection.
+    /// A <see cref="Form"/> with ErikwnkWFUI's own title bar (<see cref="TitleBar"/>) instead of the native Windows one: no frame, resizable
+    /// by its edges, with a system menu (right-click on the title bar, Alt+Space), a drop shadow, and the work area of the screen when it
+    /// is maximized. This is the base class every ErikwnkWFUI window is built on - make one with <c>UIStyles.Forms.CreateStandard</c>,
+    /// <c>CreateDialog</c> or <c>CreateSettings</c>, or derive from it and hand <see cref="FormOptions"/> to the constructor, the way
+    /// <see cref="MessageBoxForm"/> and <see cref="UpdateAvailableForm"/> do. Add your own controls to <see cref="ContentPanel"/>, not
+    /// directly to the form - the title bar occupies the top of the form's own <see cref="Control.Controls"/>. <see cref="FormTitle"/> sets
+    /// the title of the window and of the bar at once; <see cref="RememberBoundsKey"/> makes the window come back where it was.
     /// </summary>
     public partial class AppForm : Form
     {

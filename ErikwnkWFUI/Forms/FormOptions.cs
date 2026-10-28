@@ -8,30 +8,36 @@ using ErikwnkWFUI.Styles;
 namespace ErikwnkWFUI.Forms
 {
     /// <summary>
-    /// Full set of knobs for a <see cref="AppForm"/>. Build one with
-    /// <see cref="CreateStandard"/> or <see cref="CreateDialog"/> and tweak
-    /// individual properties from there, rather than constructing it with
-    /// <c>new FormOptions { ... }</c> directly - the two factory
-    /// methods keep related properties in sync (e.g. a dialog has no
-    /// maximize button AND can't be snapped/maximized by dragging).
+    /// Everything that can be set for an <see cref="AppForm"/>. Start from one of the factory methods and change single properties from
+    /// there, rather than writing <c>new FormOptions { ... }</c>: the presets keep related properties together (a dialog has no maximize
+    /// button AND cannot be maximized by dragging, and closes with Escape). <see cref="CreateStandard"/> is a resizable window,
+    /// <see cref="CreateDialog"/> a fixed-size one with only the close button, <see cref="CreateSettings"/> a dialog with the version of the
+    /// program; the <c>CreatePrimary...</c> ones have the frame in the accent. <c>UIStyles.Forms</c> makes the window itself from such options.
     /// </summary>
     public class FormOptions
     {
         /// <summary>True (the default) removes the native Windows title bar/frame in favor of ErikwnkWFUI's own <see cref="TitleBarControl"/>. False keeps the native frame (and has no title bar of the library): <see cref="Resizable"/>, the three buttons and <see cref="Title"/> then are the ones of the native window.</summary>
         public bool Borderless { get; set; } = true;
-        public int BorderSize { get; set; } = 1;
         /// <summary>Whether the window can be resized by dragging its edges - only meaningful when <see cref="Borderless"/> is true.</summary>
         public bool Resizable { get; set; } = true;
 
+        /// <summary>The title of the window: in the title bar, the taskbar and Alt-Tab.</summary>
         public string Title { get; set; } = "";
+
+        /// <summary>Where the title stands in the title bar (a title aligned to the left or right keeps clear of the logo and the buttons).</summary>
         public ContentAlignment TitleTextAlign { get; set; } =
             ContentAlignment.MiddleCenter;
 
         /// <summary>The small logo shown at the top-left of the title bar. See <see cref="AppForm.FormIcon"/> for the equivalent post-construction property.</summary>
         public Image Icon { get; set; } = null;
 
+        /// <summary>Whether the title bar has the minimize button (the window then can also be minimized from the taskbar and the system menu).</summary>
         public bool ShowMinimizeButton { get; set; } = true;
+
+        /// <summary>Whether the title bar has the maximize button (and the system menu the entry).</summary>
         public bool ShowMaximizeButton { get; set; } = true;
+
+        /// <summary>Whether the title bar has the close button.</summary>
         public bool ShowCloseButton { get; set; } = true;
 
         /// <summary>Whether double-clicking the title bar or dragging it to the top of the screen maximizes the window - independent of <see cref="ShowMaximizeButton"/>, but the two built-in presets always keep them in sync.</summary>
