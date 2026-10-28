@@ -24,6 +24,7 @@ namespace ErikwnkWFUI.Showcase
         private ToggleSwitch _optionStart;
         private ToggleSwitch _optionReset;
         private ToggleSwitch _optionButtons;
+        private ToggleSwitch _optionToasts;
         private ToggleSwitch _optionOwnRows;
 
         // The program's own texts (here: the own rows of the options window) are registered once, in one place, for both languages; the label
@@ -88,7 +89,9 @@ namespace ErikwnkWFUI.Showcase
 
             _optionButtons = CreateOptionSwitch();
             _optionOwnRows = CreateOptionSwitch();
+            _optionToasts = CreateOptionSwitch();
             table.AddRow("ShowButtons", _optionButtons);
+            table.AddRow("ShowToasts (\"Settings saved\" / \"Defaults restored\")", _optionToasts);
             table.AddRow("Own rows in the table", _optionOwnRows);
         }
 
@@ -153,10 +156,10 @@ namespace ErikwnkWFUI.Showcase
                 form.PropertyTable.AddRow(() => AppLocalization.Get("showcase.notifications"), UIStyles.ToggleSwitches.CreateStandard());
             }
 
-            // What the program does when the settings are saved: it keeps them (SelectedTheme, SelectedAccentColor, SelectedLanguage and
-            // SelectedAlwaysOnTop say what was chosen) and tells the user.
             // The window tells the user itself (in the language of the library) that the settings were saved and that the defaults were restored;
-            // what the program keeps is read in SaveClicked from SelectedTheme, SelectedAccentColor, SelectedLanguage and SelectedAlwaysOnTop.
+            // what the program keeps is read in SaveClicked from SelectedTheme, SelectedAccentColor, SelectedLanguage and SelectedAlwaysOnTop
+            // (or UIStyles.RememberAppearance() keeps the look for it).
+            form.ShowToasts = _optionToasts.Checked;
 
             form.FitToContent();
 

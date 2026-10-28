@@ -99,12 +99,16 @@ namespace ErikwnkWFUI.Showcase
             _progressBarAnimationTimer.Start();
 
             BuildUi();
+
+            // The theme can also be changed from outside the toolbar (the options window of the Forms tab): the marker follows.
+            UIStyles.Colors.ThemeChanged += OnThemeChanged;
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
+                UIStyles.Colors.ThemeChanged -= OnThemeChanged;
                 DisposeInfoPopups();
 
                 if (_progressBarAnimationTimer != null)
@@ -190,6 +194,12 @@ namespace ErikwnkWFUI.Showcase
         // Theme and accent change live: every control follows by itself, nothing is rebuilt. Only the marker on the
         // theme buttons (a border in the accent) is the showcase's own.
         private readonly List<Button> _themeButtons = new List<Button>();
+
+        private void OnThemeChanged(object sender, EventArgs e)
+        {
+            _isLightTheme = UIColors.IsLight(UIColors.BackgroundMedium);
+            MarkSelectedTheme();
+        }
 
         private void MarkSelectedTheme()
         {
