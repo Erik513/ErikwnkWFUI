@@ -72,9 +72,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// Raised when the save button is clicked, before the dialog closes
-        /// with DialogResult.OK - read whatever the option controls added
-        /// to PropertyTable are currently set to here.
+        /// Raised when the save button is clicked and every editor has accepted its value (<c>Validating</c> did not cancel), before
+        /// the dialog closes with DialogResult.OK - read whatever the option controls added to PropertyTable are currently set to here.
         /// </summary>
         public event EventHandler SaveClicked;
 
@@ -121,6 +120,11 @@ namespace ErikwnkWFUI.Forms
             _saveButton.Location = new Point(_buttonBar.Width - 112, 12);
             _saveButton.Click += (s, e) =>
             {
+                // As the OK button of any dialog: the editors are validated first (their Validating events), and a value that is not
+                // accepted keeps the window open.
+                if (!ValidateChildren())
+                    return;
+
                 SaveClicked?.Invoke(this, EventArgs.Empty);
                 DialogResult = DialogResult.OK;
                 Close();

@@ -94,6 +94,29 @@ public class OptionsFormTests : IDisposable
     }
 
     [Fact]
+    public void SaveWaitsForTheEditorsToAcceptTheirValues_ALockedWindowStaysOpen()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        System.Windows.Forms.TextBox name = new System.Windows.Forms.TextBox();
+        form.PropertyTable.AddRow("Name", name);
+        int saved = 0;
+        form.SaveClicked += (sender, e) => saved++;
+        name.Validating += (sender, e) => e.Cancel = name.Text.Length == 0;
+
+        Find(form, "_saveButton").PerformClick();
+
+        Assert.Equal(0, saved);
+        Assert.False(form.IsDisposed);
+        Assert.NotEqual(DialogResult.OK, form.DialogResult);
+
+        name.Text = "ready";
+        Find(form, "_saveButton").PerformClick();
+
+        Assert.Equal(1, saved);
+        Assert.Equal(DialogResult.OK, form.DialogResult);
+    }
+
+    [Fact]
     public void WithoutTheButtons_TheBarIsGone_EnterAndEscapeAreNotTheirs_AndTheWindowIsLower()
     {
         OptionsForm with = _host.Add(UIStyles.Forms.CreateOptionsStandard());
