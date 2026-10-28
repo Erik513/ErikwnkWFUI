@@ -32,6 +32,20 @@ namespace ErikwnkWFUI.Controls
                 _style.Height = _height;
         }
 
+        /// <summary>
+        /// The text of the label of the row (of a section: its title), to change it later - after a switch of the language, say - without
+        /// building the table anew.
+        /// </summary>
+        public string Text
+        {
+            get { return _parts.Length > 0 ? _parts[0].Text : ""; }
+            set
+            {
+                if (_parts.Length > 0 && !IsGone)
+                    _parts[0].Text = value ?? "";
+            }
+        }
+
         /// <summary>Whether the row is shown (the default). Hidden, it takes no room: the rows below move up.</summary>
         public bool Visible
         {

@@ -93,6 +93,8 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("RememberBoundsKey", _formRemember);
 
             SyncFormControlsToPreset();
+
+            AddOptionsFormSection(table);
         }
 
         // ---- the controls

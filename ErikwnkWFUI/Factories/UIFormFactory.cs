@@ -6,12 +6,12 @@ namespace ErikwnkWFUI.Factories
     internal static class UIFormFactory
     {
         // The options window: the same, made as an OptionsForm (it brings its table and its buttons).
-        public static OptionsForm CreateOptions(FormOptions options, UIColorSet colors)
+        public static OptionsForm CreateOptions(FormOptions options, UIColorSet colors, OptionsPreset[] presets)
         {
             if (colors != null)
                 options.Colors = colors;
 
-            return new OptionsForm(options);
+            return new OptionsForm(options, presets);
         }
 
         // The window of the options, with the color set (when there is one) for its frame.

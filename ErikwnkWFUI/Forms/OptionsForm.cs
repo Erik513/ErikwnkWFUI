@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using Panel = System.Windows.Forms.Panel;
 
@@ -12,14 +13,32 @@ namespace ErikwnkWFUI.Forms
     /// an update button), then call <see cref="FitToContent"/> so the window sizes itself to what was added instead of guessing a size. It is a
     /// settings window of <see cref="UIStyles.Forms"/> (the version of the program in a strip at the bottom) with the buttons Save and
     /// Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a window that
-    /// applies every change at once. Make one with <c>UIStyles.Forms.CreateOptionsStandard</c> or <c>CreateOptionsPrimary</c>.
+    /// applies every change at once. The table is a card in the middle of the window, and it scrolls when the rows are more than the screen has
+    /// room for (the buttons and the version strip stay). It starts with the ready-made options of the library - theme, accent color, language and
+    /// always on top (<see cref="OptionsPreset"/>, added again or in another selection with <see cref="AddOption"/>). Make one with
+    /// <c>UIStyles.Forms.CreateOptionsStandard</c> or <c>CreateOptionsPrimary</c>.
     /// </summary>
-    public class OptionsForm : AppForm
+    public partial class OptionsForm : AppForm
     {
+        // The card in the middle of the window: this wide (96 dpi), with the same room at both sides.
+        private const int TableWidth96 = 520;
+        private const int WindowSideMargin96 = 40;
+
+        // What is left free of the work area of the screen when the window is as high as it can be.
+        private const int ScreenMargin96 = 40;
+
+        private static readonly OptionsPreset[] DefaultPresets =
+        {
+            OptionsPreset.Theme, OptionsPreset.AccentColor, OptionsPreset.Language, OptionsPreset.AlwaysOnTop
+        };
+
         private readonly PropertyTable _propertyTable;
+        private readonly Panel _tableHolder;
+        private readonly Panel _scrollHost;
         private readonly Panel _buttonBar;
         private readonly Button _saveButton;
         private readonly Button _cancelButton;
+        private int _dpiOverride;
         private bool _showButtons = true;
         private string _saveText;
         private string _cancelText;
@@ -57,7 +76,8 @@ namespace ErikwnkWFUI.Forms
 
         /// <summary>
         /// Whether the window has the buttons Save and Cancel (the default). Without them it is for settings that are applied at once: the user
-        /// closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons.
+        /// closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons. The options of the
+        /// library that were chosen stay then.
         /// </summary>
         public bool ShowButtons
         {
@@ -77,47 +97,55 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public event EventHandler SaveClicked;
 
-        /// <summary>Add rows to <see cref="PropertyTable"/> and call <see cref="FitToContent"/> after construction. The title is "Options" or "Optionen" when none is given.</summary>
+        /// <summary>Add rows to <see cref="PropertyTable"/> and call <see cref="FitToContent"/> after construction. The title is "Options" or "Optionen" when none is given. The table starts with the default options of the library.</summary>
         public OptionsForm(string title = null)
-            : this(FormOptions.CreateSettings(title ?? UIStrings.Get("OptionsForm.Title")))
+            : this(FormOptions.CreateSettings(title ?? UIStrings.Get("OptionsForm.Title")), null)
         {
         }
 
         /// <summary>The same with the options of the window (a color set or the accent for the title bar, a logo ...); start from <see cref="FormOptions.CreateSettings"/> or <see cref="FormOptions.CreateSettingsPrimary"/>.</summary>
         public OptionsForm(FormOptions options)
+            : this(options, null)
+        {
+        }
+
+        /// <summary>
+        /// The same with the options of the library to start with: exactly <paramref name="presets"/> (none for an empty array), null is the default
+        /// selection (theme, accent color, language, always on top). <see cref="AddOption"/> adds more later.
+        /// </summary>
+        public OptionsForm(FormOptions options, OptionsPreset[] presets)
             : base(options ?? FormOptions.CreateSettings(UIStrings.Get("OptionsForm.Title")))
         {
-            MinimumSize = new Size(340, 160);
-
-            // Free space between the form's edges and the property
-            // table/button bar - previously they were docked flush against
-            // ContentPanel, so the table's own (darker) background filled
-            // the whole window edge-to-edge instead of reading as a card.
-            ContentPanel.Padding = new Padding(20);
-
+            // The sizes are given for 96 dpi and set by ApplyScale.
             _propertyTable = UIStyles.PropertyTables.CreateStandard();
             _propertyTable.Dock = DockStyle.Top;
-            // The table's default background matches ContentPanel's
-            // BackgroundMedium, so its (transparent) label column blended
-            // straight into the form - darker tone makes it read as its
-            // own card.
+            // The table's default background matches ContentPanel's BackgroundMedium, so its (transparent) label column blended straight into
+            // the form - a darker tone makes it read as its own card.
             ThemeWatcher.FollowBackColor(_propertyTable, () => UIStyles.Colors.BackgroundDark);
 
-            // Same BackgroundMedium as ContentPanel - so the form reads as
-            // one consistent color, with only the property table set apart.
+            // The card is in the middle of the window: the holder puts the same room at both sides of it.
+            _tableHolder = new Panel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Margin = new Padding(0) };
+            ThemeWatcher.FollowBackColor(_tableHolder, () => UIStyles.Colors.BackgroundMedium);
+            _tableHolder.Controls.Add(_propertyTable);
+
+            // It sits in a host that scrolls when the rows are more than the window has room for.
+            _scrollHost = UIStyles.Panels.CreateMedium();
+            _scrollHost.Dock = DockStyle.Fill;
+            _scrollHost.AutoScroll = true;
+            _scrollHost.Controls.Add(_tableHolder);
+            _scrollHost.ClientSizeChanged += (s, e) => CenterTable();
+
+            // Same BackgroundMedium as ContentPanel - so the form reads as one consistent color, with only the property table set apart.
             _buttonBar = UIStyles.Panels.CreateMedium();
             _buttonBar.Dock = DockStyle.Bottom;
-            _buttonBar.Height = 56;
 
-            _cancelButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("OptionsForm.Cancel"), size: new Size(100, 32));
+            _cancelButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("OptionsForm.Cancel"));
             _cancelButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _cancelButton.Location = new Point(_buttonBar.Width - 220, 12);
             _cancelButton.DialogResult = DialogResult.Cancel;
             _cancelButton.Click += (s, e) => Close();
 
-            _saveButton = UIStyles.Buttons.CreatePrimary(UIStrings.Get("OptionsForm.Save"), size: new Size(100, 32));
+            _saveButton = UIStyles.Buttons.CreatePrimary(UIStrings.Get("OptionsForm.Save"));
             _saveButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            _saveButton.Location = new Point(_buttonBar.Width - 112, 12);
             _saveButton.Click += (s, e) =>
             {
                 // As the OK button of any dialog: the editors are validated first (their Validating events), and a value that is not
@@ -133,28 +161,27 @@ namespace ErikwnkWFUI.Forms
             _buttonBar.Controls.Add(_cancelButton);
             _buttonBar.Controls.Add(_saveButton);
 
-            // Fill (property table) added before the bottom-docked bar, so
-            // the bar reliably keeps its band - see BuildCard in
+            // Fill (the scrolling table) added before the bottom-docked bar, so the bar reliably keeps its band - see BuildCard in
             // DealOrNoDeal.cs for the same Dock-order reasoning.
-            ContentPanel.Controls.Add(_propertyTable);
+            ContentPanel.Controls.Add(_scrollHost);
             ContentPanel.Controls.Add(_buttonBar);
 
-            // Each button's own DialogResult only fires on an actual click -
-            // it does nothing for the Enter/Escape keys on its own. Wiring
-            // the form's AcceptButton/CancelButton is what makes Enter (in
-            // any child control that doesn't itself consume it, e.g. a
-            // single-line TextBox) submit and Escape cancel, matching every
-            // other ErikwnkWFUI dialog convention.
+            // Each button's own DialogResult only fires on an actual click - it does nothing for the Enter/Escape keys on its own. Wiring
+            // the form's AcceptButton/CancelButton is what makes Enter (in any child control that doesn't itself consume it, e.g. a
+            // single-line TextBox) submit and Escape cancel, matching every other ErikwnkWFUI dialog convention.
             AcceptButton = _saveButton;
             CancelButton = _cancelButton;
 
             Resize += (s, e) => RepositionButtons();
-            RepositionButtons();
+            ApplyScale();
+
+            RememberOriginalSettings();
+            AddOptions(presets ?? DefaultPresets);
 
             UIStrings.LanguageChanged += OnLanguageChanged;
         }
 
-        // The buttons that have no text of their own follow the language.
+        // The buttons that have no text of their own follow the language, and so do the options.
         private void OnLanguageChanged(object sender, EventArgs e)
         {
             if (_saveText == null)
@@ -162,6 +189,8 @@ namespace ErikwnkWFUI.Forms
 
             if (_cancelText == null)
                 _cancelButton.Text = UIStrings.Get("OptionsForm.Cancel");
+
+            RefreshOptionTexts();
         }
 
         protected override void Dispose(bool disposing)
@@ -172,27 +201,84 @@ namespace ErikwnkWFUI.Forms
             base.Dispose(disposing);
         }
 
+        // ---- sizes
+
+        // The sizes are given for 96 dpi and scaled to the screen; the test seam pretends another one.
+        internal int DpiOverride
+        {
+            get { return _dpiOverride; }
+            set
+            {
+                _dpiOverride = value;
+                ApplyScale();
+            }
+        }
+
+        private int Scale(int value96)
+        {
+            return Dpi.Scale(this, value96, _dpiOverride);
+        }
+
+        protected override void OnDpiChanged(DpiChangedEventArgs e)
+        {
+            base.OnDpiChanged(e);
+            ApplyScale();
+        }
+
+        private void ApplyScale()
+        {
+            MinimumSize = new Size(Scale(340), Scale(160));
+            ContentPanel.Padding = new Padding(Scale(20));
+            _buttonBar.Height = Scale(56);
+
+            Size buttonSize = new Size(Scale(100), Scale(32));
+            _cancelButton.Size = buttonSize;
+            _saveButton.Size = buttonSize;
+
+            RepositionButtons();
+            CenterTable();
+        }
+
         private void RepositionButtons()
         {
-            _cancelButton.Location = new Point(_buttonBar.Width - 220, 12);
-            _saveButton.Location = new Point(_buttonBar.Width - 112, 12);
+            _cancelButton.Location = new Point(_buttonBar.Width - Scale(220), Scale(12));
+            _saveButton.Location = new Point(_buttonBar.Width - Scale(112), Scale(12));
+        }
+
+        // The same room left and right of the card, whatever the width of the window.
+        private void CenterTable()
+        {
+            int margin = Math.Max(0, (_scrollHost.ClientSize.Width - Scale(TableWidth96)) / 2);
+
+            if (_tableHolder.Padding.Left != margin)
+                _tableHolder.Padding = new Padding(margin, 0, margin, 0);
         }
 
         /// <summary>
         /// Sizes the window to exactly fit the rows currently in
-        /// PropertyTable plus the button bar and the version strip - call once after populating
+        /// PropertyTable plus the button bar and the version strip - at most as high as the screen allows (then the table scrolls) - call once after populating
         /// PropertyTable, instead of guessing a fixed window size.
         /// </summary>
         public void FitToContent(int extraWidth = 16, int extraHeight = 16)
         {
             Size preferred = _propertyTable.PreferredSize;
 
-            int width = Math.Max(MinimumSize.Width,
-                preferred.Width + extraWidth + Padding.Horizontal + ContentPanel.Padding.Horizontal);
-            int height = TitleBar.Height + preferred.Height + (_showButtons ? _buttonBar.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
-                + extraHeight + Padding.Vertical + ContentPanel.Padding.Vertical;
+            int chrome = TitleBar.Height + (_showButtons ? _buttonBar.Height : 0) + (VersionStrip != null ? VersionStrip.Height : 0)
+                + Scale(extraHeight) + Padding.Vertical + ContentPanel.Padding.Vertical;
+            int height = preferred.Height + chrome;
 
-            ClientSize = new Size(width, Math.Max(MinimumSize.Height, height));
+            // More rows than the screen has room for: the window is as high as the screen allows, and the table scrolls (with room for its bar).
+            int room = Screen.FromControl(this).WorkingArea.Height - Scale(ScreenMargin96);
+            int width = Math.Max(Scale(TableWidth96), preferred.Width) + 2 * Scale(WindowSideMargin96) + Scale(extraWidth)
+                + Padding.Horizontal + ContentPanel.Padding.Horizontal;
+
+            if (height > room)
+            {
+                height = room;
+                width += SystemInformation.VerticalScrollBarWidth;
+            }
+
+            ClientSize = new Size(Math.Max(MinimumSize.Width, width), Math.Max(MinimumSize.Height, height));
         }
     }
 }

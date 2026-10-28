@@ -1,7 +1,9 @@
 ﻿using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
+using ErikwnkCore;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -18,6 +20,7 @@ public class OptionsFormTests : IDisposable
     {
         _host.Dispose();
         UIStrings.Language = UILanguage.English;
+        AppLocalization.Language = AppLanguage.English;
         UIColors.ApplyTheme(UIThemes.Dark);
         UIColors.SetAccent(UIAccentColors.Blue);
     }
@@ -162,6 +165,285 @@ public class OptionsFormTests : IDisposable
 
         int rows = form.PropertyTable.PreferredSize.Height;
         Assert.True(form.ClientSize.Height >= form.TitleBar.Height + rows + 56 + form.VersionStrip!.Height);
+    }
+
+    private static Panel ScrollHost(OptionsForm form)
+    {
+        return form.GetPrivateField<Panel>("_scrollHost")!;
+    }
+
+    [Fact]
+    public void ManyRows_MakeTheWindowAsHighAsTheScreenAllows_AndTheTableScrolls_TheButtonsAndTheStripStay()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+
+        for (int i = 0; i < 80; i++)
+            form.PropertyTable.AddRow("Row " + i, new Button());
+
+        form.FitToContent();
+        _host.Show(form);
+        TestPictures.Pump(100);
+
+        Rectangle area = Screen.FromControl(form).WorkingArea;
+        Panel host = ScrollHost(form);
+        Panel bar = form.GetPrivateField<Panel>("_buttonBar")!;
+
+        Assert.True(form.Height <= area.Height, "the window is higher than the screen");
+        Assert.True(host.DisplayRectangle.Height > host.ClientRectangle.Height, "the table does not scroll");
+        Assert.True(bar.Bottom <= form.ContentPanel.ClientRectangle.Bottom + 1, "the buttons are pushed out of the window");
+        Assert.True(form.VersionStrip!.Visible);
+        Assert.True(bar.Visible);
+    }
+
+    [Fact]
+    public void FewRows_NeedNoScrolling_AndTheWindowIsNotCapped()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        form.PropertyTable.AddSection("Section");
+        form.PropertyTable.AddRow("Row", new Button());
+
+        form.FitToContent();
+        _host.Show(form);
+        TestPictures.Pump(100);
+
+        Panel host = ScrollHost(form);
+        Assert.True(host.DisplayRectangle.Height <= host.ClientRectangle.Height, "a table that fits scrolls");
+        Assert.True(form.Height < Screen.FromControl(form).WorkingArea.Height / 2);
+    }
+
+    [Fact]
+    public void TheSizes_AreGivenFor96Dpi_AndScaledToTheScreen()
+    {
+        OptionsForm normal = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        OptionsForm big = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        big.DpiOverride = 144;
+        Panel normalBar = normal.GetPrivateField<Panel>("_buttonBar")!;
+        Panel bigBar = big.GetPrivateField<Panel>("_buttonBar")!;
+
+        Assert.Equal(Dpi.Scale(56, normal.DeviceDpi), normalBar.Height);
+        Assert.Equal(new Size(Dpi.Scale(340, normal.DeviceDpi), Dpi.Scale(160, normal.DeviceDpi)), normal.MinimumSize);
+
+        Assert.Equal(84, bigBar.Height);
+        Assert.Equal(new Size(510, 240), big.MinimumSize);
+        Assert.Equal(new Padding(30), big.ContentPanel.Padding);
+        Assert.Equal(new Size(150, 48), Find(big, "_saveButton").Size);
+        Assert.Equal(new Size(150, 48), Find(big, "_cancelButton").Size);
+    }
+
+    // ---- the basic settings
+
+    private static System.Windows.Forms.ComboBox Box(OptionsForm form, string field)
+    {
+        return form.GetPrivateField<System.Windows.Forms.ComboBox>(field)!;
+    }
+
+    private static string[] RowLabels(OptionsForm form)
+    {
+        return PropertyTableHost.AllLabels(form.PropertyTable).Select(l => l.Text).ToArray();
+    }
+
+    [Fact]
+    public void TheTable_StartsWithTheReadyMadeOptions_ThemeAccentColorLanguageAndAlwaysOnTop_WhichShowWhatIsApplied()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+
+        Assert.Equal(new[] { "General", "Theme", "Accent color", "Language", "Always on top" }, RowLabels(form));
+        Assert.Equal(0, Box(form, "_themeBox").SelectedIndex);
+        Assert.Equal(0, Box(form, "_accentBox").SelectedIndex);
+        Assert.Equal(0, Box(form, "_languageBox").SelectedIndex);
+        Assert.Equal(new object[] { "Dark", "Light" }, Box(form, "_themeBox").Items.Cast<object>().ToArray());
+        Assert.Equal(15, Box(form, "_accentBox").Items.Count);
+        Assert.Equal(new object[] { "English", "Deutsch" }, Box(form, "_languageBox").Items.Cast<object>().ToArray());
+        Assert.Same(UIThemes.Dark, form.SelectedTheme);
+        Assert.Equal(UIAccentColors.Blue.ToArgb(), form.SelectedAccentColor.ToArgb());
+        Assert.Equal(UILanguage.English, form.SelectedLanguage);
+    }
+
+    [Fact]
+    public void ChoosingATheme_AnAccentColor_OrALanguage_AppliesItAtOnce()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+
+        Box(form, "_themeBox").SelectedIndex = 1;
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+        Assert.Same(UIThemes.Light, form.SelectedTheme);
+
+        Box(form, "_accentBox").SelectedIndex = 3;
+        Assert.Equal(UIAccentColors.Amber.ToArgb(), UIColors.Primary.ToArgb());
+
+        Box(form, "_languageBox").SelectedIndex = 1;
+        Assert.Equal(UILanguage.German, UIStrings.Language);
+        Assert.Equal(AppLanguage.German, AppLocalization.Language);
+        Assert.Equal(UILanguage.German, form.SelectedLanguage);
+    }
+
+    [Fact]
+    public void AfterALanguageSwitch_TheNamesOfTheRowsAndTheItemsAreInTheNewLanguage()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+
+        Box(form, "_languageBox").SelectedIndex = 1;
+
+        Assert.Equal(new[] { "Allgemein", "Design", "Akzentfarbe", "Sprache", "Immer im Vordergrund" }, RowLabels(form));
+        Assert.Equal(new object[] { "Dunkel", "Hell" }, Box(form, "_themeBox").Items.Cast<object>().ToArray());
+        Assert.Equal("Rot", Box(form, "_accentBox").Items[1]);
+        Assert.Equal(1, Box(form, "_languageBox").SelectedIndex);
+        Assert.Equal("Speichern", form.SaveButtonText);
+    }
+
+    [Fact]
+    public void ClosedWithoutSave_WhatWasChosenIsTakenBack_ClosedWithSaveItStays()
+    {
+        OptionsForm cancelled = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        Box(cancelled, "_themeBox").SelectedIndex = 1;
+        Box(cancelled, "_accentBox").SelectedIndex = 3;
+        Box(cancelled, "_languageBox").SelectedIndex = 1;
+
+        Find(cancelled, "_cancelButton").PerformClick();
+
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+        Assert.Equal(UIAccentColors.Blue.ToArgb(), UIColors.Primary.ToArgb());
+        Assert.Equal(UILanguage.English, UIStrings.Language);
+        Assert.Equal(AppLanguage.English, AppLocalization.Language);
+
+        OptionsForm saved = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        Box(saved, "_themeBox").SelectedIndex = 1;
+
+        Find(saved, "_saveButton").PerformClick();
+
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+    }
+
+    [Fact]
+    public void ClosedByTheCloseButtonOrEscape_WithoutSave_AlsoTakesItBack_AndWithoutTheButtonsNothingIsTakenBack()
+    {
+        OptionsForm closed = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        Box(closed, "_themeBox").SelectedIndex = 1;
+        closed.Close();
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+
+        OptionsForm direct = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        direct.ShowButtons = false;
+        Box(direct, "_themeBox").SelectedIndex = 1;
+        direct.Close();
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+    }
+
+    [Fact]
+    public void WithAnEmptySelection_TheTableHasNoOptions_AndAddOptionPutsThemInOneByOne_NeverTwice()
+    {
+        OptionsForm none = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new OptionsPreset[0]));
+        OptionsForm some = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language }));
+        OptionsForm all = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+
+        Assert.Empty(RowLabels(none));
+        Assert.Equal(new[] { "General", "Language" }, RowLabels(some));
+        Assert.Equal(5, RowLabels(all).Length);
+
+        ErikwnkWFUI.Controls.PropertyRow theme = none.AddOption(OptionsPreset.Theme);
+        none.AddOption(OptionsPreset.AlwaysOnTop);
+        Assert.Same(theme, none.AddOption(OptionsPreset.Theme));
+        Assert.Equal(new[] { "General", "Theme", "Always on top" }, RowLabels(none));
+
+        none.AddOptions(OptionsPreset.AccentColor, OptionsPreset.Language, OptionsPreset.Theme);
+        Assert.Equal(new[] { "General", "Theme", "Always on top", "Accent color", "Language" }, RowLabels(none));
+    }
+
+    [Fact]
+    public void TheOptionsOfTheLibrary_CanBeMixedWithOwnRows_AndAnOptionAddedLaterStandsBelow()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Theme }));
+        form.PropertyTable.AddRow("Own", new Button());
+        form.AddOption(OptionsPreset.Language);
+
+        Assert.Equal(new[] { "General", "Theme", "Own", "Language" }, RowLabels(form));
+    }
+
+    [Fact]
+    public void TheTableIsACardInTheMiddleOfTheWindow_WithTheSameRoomAtBothSides()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        form.PropertyTable.AddRow("Own", new Button());
+        form.FitToContent();
+        _host.Show(form);
+        TestPictures.Pump(100);
+
+        Panel host = ScrollHost(form);
+        int tableWidth = form.PropertyTable.Width;
+
+        Assert.Equal(Dpi.Scale(520, form.DeviceDpi), tableWidth);
+        Assert.True(form.PropertyTable.Left > 0, "the table fills the window to its edge");
+        Assert.Equal(form.PropertyTable.Left, host.ClientSize.Width - form.PropertyTable.Right);
+    }
+
+    [Fact]
+    public void AWiderWindow_KeepsTheCardInTheMiddle()
+    {
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new OptionsPreset[0]));
+        form.PropertyTable.AddRow("Own", new Button());
+        form.ClientSize = new Size(1000, 400);
+        _host.Show(form);
+        TestPictures.Pump(100);
+
+        Panel host = ScrollHost(form);
+
+        Assert.True(form.PropertyTable.Left > 100);
+        Assert.Equal(form.PropertyTable.Left, host.ClientSize.Width - form.PropertyTable.Right);
+    }
+
+    [Fact]
+    public void AlwaysOnTop_ActsOnTheWindowThatOwnsTheOptions_AndIsTakenBackWithoutSave()
+    {
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main window"));
+        OptionsForm cancelled = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        cancelled.Show(owner);
+
+        ErikwnkWFUI.Controls.ToggleSwitch toggle = cancelled.GetPrivateField<ErikwnkWFUI.Controls.ToggleSwitch>("_topMostSwitch")!;
+        Assert.False(toggle.Checked);
+
+        toggle.Checked = true;
+        Assert.True(owner.TopMost);
+        Assert.True(cancelled.SelectedAlwaysOnTop);
+
+        Find(cancelled, "_cancelButton").PerformClick();
+        Assert.False(owner.TopMost);
+
+        OptionsForm saved = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        saved.Show(owner);
+        saved.GetPrivateField<ErikwnkWFUI.Controls.ToggleSwitch>("_topMostSwitch")!.Checked = true;
+        Find(saved, "_saveButton").PerformClick();
+        Assert.True(owner.TopMost);
+    }
+
+    [Fact]
+    public void TheAlwaysOnTopSwitch_ShowsWhetherTheOwnerIsOnTopAlready()
+    {
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main window"));
+        owner.TopMost = true;
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+
+        form.Show(owner);
+
+        Assert.True(form.GetPrivateField<ErikwnkWFUI.Controls.ToggleSwitch>("_topMostSwitch")!.Checked);
+        Assert.True(owner.TopMost);
+    }
+
+    [Fact]
+    public void TheRowOfAnyTable_CanChangeItsText_AfterwardsWithoutBuildingTheTableAnew()
+    {
+        using ErikwnkWFUI.Controls.PropertyTable table = new ErikwnkWFUI.Controls.PropertyTable();
+        ErikwnkWFUI.Controls.PropertyRow section = table.AddSection("Old section");
+        ErikwnkWFUI.Controls.PropertyRow row = table.AddRow("Old row", new Button());
+
+        section.Text = "New section";
+        row.Text = "New row";
+
+        Assert.Equal("New section", section.Text);
+        Assert.Equal("New row", row.Text);
+        Assert.Equal(new[] { "New section", "New row" }, PropertyTableHost.AllLabels(table).Select(l => l.Text).ToArray());
+
+        table.ClearRows();
+        Assert.Null(Record.Exception(() => row.Text = "Gone"));
     }
 
     [Fact]
