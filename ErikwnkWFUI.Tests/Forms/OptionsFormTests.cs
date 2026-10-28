@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Globalization;
 using System.Reflection;
 using System.Windows.Forms;
 using ErikwnkCore;
@@ -7,6 +8,7 @@ using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
+using Microsoft.Win32;
 
 namespace ErikwnkWFUI.Tests.Forms;
 
@@ -15,10 +17,26 @@ namespace ErikwnkWFUI.Tests.Forms;
 public class OptionsFormTests : IDisposable
 {
     private readonly AppFormHost _host = new AppFormHost();
+    private readonly string _keyPath = @"Software\ErikwnkWFUI.Tests\OptionsRun_" + Guid.NewGuid().ToString("N");
+    private readonly string _originalKeyPath = WindowsAutoStart.RunKeyPath;
+    private readonly Func<string> _originalPath = WindowsAutoStart.ExecutablePath;
+    private readonly CultureInfo _originalCulture = CultureInfo.CurrentUICulture;
+
+    public OptionsFormTests()
+    {
+        // Starting with Windows is tried in a key of the tests, never in the real one.
+        WindowsAutoStart.RunKeyPath = _keyPath;
+        WindowsAutoStart.ExecutablePath = () => @"C:\Programs\Test App\TestApp.exe";
+    }
 
     public void Dispose()
     {
         _host.Dispose();
+        WindowsAutoStart.RunKeyPath = _originalKeyPath;
+        WindowsAutoStart.ExecutablePath = _originalPath;
+        CultureInfo.CurrentUICulture = _originalCulture;
+        Registry.CurrentUser.DeleteSubKeyTree(_keyPath, false);
+        Registry.CurrentUser.DeleteSubKey(@"Software\ErikwnkWFUI.Tests", false);
         UIStrings.Language = UILanguage.English;
         AppLocalization.Language = AppLanguage.English;
         UIColors.ApplyTheme(UIThemes.Dark);
@@ -444,6 +462,186 @@ public class OptionsFormTests : IDisposable
 
         table.ClearRows();
         Assert.Null(Record.Exception(() => row.Text = "Gone"));
+    }
+
+    // ---- start with Windows, reset to defaults, the toasts
+
+    private static ErikwnkWFUI.Controls.ToggleSwitch Switch(OptionsForm form, string field)
+    {
+        return form.GetPrivateField<ErikwnkWFUI.Controls.ToggleSwitch>(field)!;
+    }
+
+    private string? RunEntry()
+    {
+        using RegistryKey? key = Registry.CurrentUser.OpenSubKey(_keyPath);
+
+        return key?.GetValue(WindowsAutoStart.ApplicationName) as string;
+    }
+
+    [Fact]
+    public void StartWithWindows_ShowsWhatWindowsHas_AndIsWrittenOnlyWhenTheUserSaves()
+    {
+        WindowsAutoStart.Set(true);
+        OptionsForm on = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        Assert.True(Switch(on, "_startSwitch").Checked);
+        Assert.Contains("Start with Windows", RowLabels(on));
+
+        Switch(on, "_startSwitch").Checked = false;
+        Assert.NotNull(RunEntry());
+        Assert.False(on.SelectedStartWithWindows);
+
+        Find(on, "_cancelButton").PerformClick();
+        Assert.NotNull(RunEntry());
+
+        OptionsForm save = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        Switch(save, "_startSwitch").Checked = false;
+        Find(save, "_saveButton").PerformClick();
+
+        Assert.Null(RunEntry());
+        Assert.False(WindowsAutoStart.IsEnabled());
+
+        OptionsForm enable = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        Switch(enable, "_startSwitch").Checked = true;
+        Find(enable, "_saveButton").PerformClick();
+
+        Assert.True(WindowsAutoStart.IsEnabled());
+    }
+
+    [Fact]
+    public void WithoutTheButtons_StartWithWindowsIsWrittenAtOnce()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        form.ShowButtons = false;
+
+        Switch(form, "_startSwitch").Checked = true;
+
+        Assert.True(WindowsAutoStart.IsEnabled());
+    }
+
+    [Fact]
+    public void TheButtonReset_PutsTheOptionsBackToTheirDefaults_TellsTheProgram_AndCancelTakesItBackToWhatWasThere()
+    {
+        CultureInfo.CurrentUICulture = new CultureInfo("en-US");
+        UIColors.ApplyTheme(UIThemes.Light);
+        UIColors.SetAccent(UIAccentColors.Purple);
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main window"));
+        owner.TopMost = true;
+
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new[]
+        {
+            OptionsPreset.Theme, OptionsPreset.AccentColor, OptionsPreset.Language, OptionsPreset.AlwaysOnTop,
+            OptionsPreset.StartWithWindows, OptionsPreset.ResetToDefaults
+        }));
+        form.Show(owner);
+        Switch(form, "_startSwitch").Checked = true;
+        Box(form, "_languageBox").SelectedIndex = 1;
+        int told = 0;
+        form.DefaultsRestored += (sender, e) => told++;
+
+        Find(form, "_resetButton").PerformClick();
+
+        Assert.Equal(1, told);
+        Assert.False(UIColors.IsLight(UIColors.BackgroundMedium));
+        Assert.Equal(UIAccentColors.Blue.ToArgb(), UIColors.Primary.ToArgb());
+        Assert.Equal(UILanguage.English, UIStrings.Language);
+        Assert.False(owner.TopMost);
+        Assert.False(Switch(form, "_startSwitch").Checked);
+        Assert.Contains("Defaults", RowLabels(form));
+
+        Find(form, "_cancelButton").PerformClick();
+
+        Assert.True(UIColors.IsLight(UIColors.BackgroundMedium));
+        Assert.Equal(UIAccentColors.Purple.ToArgb(), UIColors.Primary.ToArgb());
+        Assert.True(owner.TopMost);
+    }
+
+    [Fact]
+    public void StartWithWindows_CanStartTheProgramWithArguments_SoItCanTellThatWindowsStartedIt()
+    {
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.StartWithWindows }));
+        form.StartWithWindowsArguments = "--autostart";
+        Switch(form, "_startSwitch").Checked = true;
+
+        Find(form, "_saveButton").PerformClick();
+
+        Assert.Equal("\"C:\\Programs\\Test App\\TestApp.exe\" --autostart", RunEntry());
+    }
+
+    private static List<(string Message, Form? Owner)> CaptureToasts(OptionsForm form)
+    {
+        List<(string, Form?)> toasts = new List<(string, Form?)>();
+        form.ShowToast = (message, owner) => toasts.Add((message, owner));
+
+        return toasts;
+    }
+
+    [Fact]
+    public void SavingTellsTheUserByAToast_InTheLanguageOfTheLibrary_OverTheWindowThatOwnsTheOptions()
+    {
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main window"));
+        OptionsForm form = _host.Add(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language }));
+        List<(string Message, Form? Owner)> toasts = CaptureToasts(form);
+        form.Show(owner);
+
+        Find(form, "_saveButton").PerformClick();
+
+        Assert.Equal(("Settings saved", (Form?)owner), toasts.Single());
+
+        UIStrings.Language = UILanguage.German;
+        OptionsForm german = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        List<(string Message, Form? Owner)> germanToasts = CaptureToasts(german);
+        german.Show(owner);
+        Find(german, "_saveButton").PerformClick();
+
+        Assert.Equal("Einstellungen gespeichert", germanToasts.Single().Message);
+    }
+
+    [Fact]
+    public void WithoutAnOwner_OrWithToastsSwitchedOff_NothingIsShown_AndCancelShowsNoToast()
+    {
+        OptionsForm noOwner = _host.Show(UIStyles.Forms.CreateOptionsStandard());
+        List<(string Message, Form? Owner)> none = CaptureToasts(noOwner);
+        Find(noOwner, "_saveButton").PerformClick();
+        Assert.Empty(none);
+
+        AppForm owner = _host.Show(UIStyles.Forms.CreateStandard("Main window"));
+        OptionsForm off = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        off.ShowToasts = false;
+        List<(string Message, Form? Owner)> silent = CaptureToasts(off);
+        off.Show(owner);
+        Find(off, "_saveButton").PerformClick();
+        Assert.Empty(silent);
+
+        OptionsForm cancelled = _host.Add(UIStyles.Forms.CreateOptionsStandard());
+        List<(string Message, Form? Owner)> cancelledToasts = CaptureToasts(cancelled);
+        cancelled.Show(owner);
+        Find(cancelled, "_cancelButton").PerformClick();
+        Assert.Empty(cancelledToasts);
+    }
+
+    [Fact]
+    public void ResettingTellsTheUserByAToast_InTheLanguageThatTheDefaultsHave()
+    {
+        CultureInfo.CurrentUICulture = new CultureInfo("de-DE");
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language, OptionsPreset.ResetToDefaults }));
+        List<(string Message, Form? Owner)> toasts = CaptureToasts(form);
+
+        Find(form, "_resetButton").PerformClick();
+
+        // The defaults are German here, and the toast is in the language they brought, not in the one before.
+        Assert.Equal(("Standardwerte wiederhergestellt", (Form?)form), toasts.Single());
+    }
+
+    [Fact]
+    public void TheDefaultLanguage_IsTheLanguageOfWindows_GermanForAGermanOne()
+    {
+        CultureInfo.CurrentUICulture = new CultureInfo("de-DE");
+        OptionsForm form = _host.Show(UIStyles.Forms.CreateOptionsStandard(presets: new[] { OptionsPreset.Language, OptionsPreset.ResetToDefaults }));
+
+        Find(form, "_resetButton").PerformClick();
+
+        Assert.Equal(UILanguage.German, UIStrings.Language);
+        Assert.Contains("Auf Standard zurücksetzen", PropertyTableHost.AllButtons(form.PropertyTable).Select(b => b.Text));
     }
 
     [Fact]

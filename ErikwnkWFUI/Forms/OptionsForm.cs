@@ -15,7 +15,7 @@ namespace ErikwnkWFUI.Forms
     /// Cancel, which close it with <c>DialogResult.OK</c> and <c>Cancel</c>; <see cref="ShowButtons"/> = false leaves them out for a window that
     /// applies every change at once. The table is a card in the middle of the window, and it scrolls when the rows are more than the screen has
     /// room for (the buttons and the version strip stay). It starts with the ready-made options of the library - theme, accent color, language and
-    /// always on top (<see cref="OptionsPreset"/>, added again or in another selection with <see cref="AddOption"/>). Make one with
+    /// always on top (<see cref="OptionsPreset"/>; more are there - start with Windows, reset to defaults - and all are added in any selection with <see cref="AddOption"/>). Make one with
     /// <c>UIStyles.Forms.CreateOptionsStandard</c> or <c>CreateOptionsPrimary</c>.
     /// </summary>
     public partial class OptionsForm : AppForm
@@ -153,7 +153,9 @@ namespace ErikwnkWFUI.Forms
                 if (!ValidateChildren())
                     return;
 
+                ApplyStartWithWindows();
                 SaveClicked?.Invoke(this, EventArgs.Empty);
+                ShowSavedToast();
                 DialogResult = DialogResult.OK;
                 Close();
             };

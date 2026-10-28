@@ -17,6 +17,19 @@
         Language,
 
         /// <summary>Whether the window that owns the options window (the main window of the program) stays above all other windows.</summary>
-        AlwaysOnTop
+        AlwaysOnTop,
+
+        /// <summary>
+        /// Whether the program starts with Windows (<see cref="ErikwnkWFUI.Helpers.WindowsAutoStart"/>). This one is written when the user
+        /// saves (or at once without the buttons), not as it is chosen: nothing is changed in Windows by a click that is cancelled.
+        /// </summary>
+        StartWithWindows,
+
+        /// <summary>
+        /// A button that puts the other options of the library back to their defaults (dark theme, blue accent color, the language of Windows,
+        /// not on top, not started with Windows). Like any choice it is taken back by Cancel; the event
+        /// <see cref="OptionsForm.DefaultsRestored"/> lets the program reset its own rows.
+        /// </summary>
+        ResetToDefaults
     }
 }

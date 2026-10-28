@@ -20,6 +20,8 @@ namespace ErikwnkWFUI.Showcase
         private ToggleSwitch _optionAccent;
         private ToggleSwitch _optionLanguage;
         private ToggleSwitch _optionTop;
+        private ToggleSwitch _optionStart;
+        private ToggleSwitch _optionReset;
         private ToggleSwitch _optionButtons;
         private ToggleSwitch _optionOwnRows;
 
@@ -49,6 +51,12 @@ namespace ErikwnkWFUI.Showcase
             table.AddRow("OptionsPreset.AccentColor", _optionAccent);
             table.AddRow("OptionsPreset.Language", _optionLanguage);
             table.AddRow("OptionsPreset.AlwaysOnTop", _optionTop);
+
+            _optionStart = CreateOptionSwitch();
+            _optionStart.Checked = false; // it writes the Run key of Windows when the user saves
+            _optionReset = CreateOptionSwitch();
+            table.AddRow("OptionsPreset.StartWithWindows (writes on Save)", _optionStart);
+            table.AddRow("OptionsPreset.ResetToDefaults", _optionReset);
 
             table.AddSection("OptionsForm");
 
@@ -91,6 +99,8 @@ namespace ErikwnkWFUI.Showcase
             if (_optionAccent.Checked) presets.Add(OptionsPreset.AccentColor);
             if (_optionLanguage.Checked) presets.Add(OptionsPreset.Language);
             if (_optionTop.Checked) presets.Add(OptionsPreset.AlwaysOnTop);
+            if (_optionStart.Checked) presets.Add(OptionsPreset.StartWithWindows);
+            if (_optionReset.Checked) presets.Add(OptionsPreset.ResetToDefaults);
 
             OptionsForm form;
 
@@ -118,7 +128,8 @@ namespace ErikwnkWFUI.Showcase
 
             // What the program does when the settings are saved: it keeps them (SelectedTheme, SelectedAccentColor, SelectedLanguage and
             // SelectedAlwaysOnTop say what was chosen) and tells the user.
-            form.SaveClicked += (sender, e) => UIStyles.Toasts.ShowPrimary("Settings saved", this, icon: ToastIcon.Success);
+            // The window tells the user itself (in the language of the library) that the settings were saved and that the defaults were restored;
+            // what the program keeps is read in SaveClicked from SelectedTheme, SelectedAccentColor, SelectedLanguage and SelectedAlwaysOnTop.
 
             form.FitToContent();
 

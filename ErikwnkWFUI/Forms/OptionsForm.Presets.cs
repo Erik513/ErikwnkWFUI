@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using ErikwnkCore;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
+using Button = System.Windows.Forms.Button;
 using ComboBox = System.Windows.Forms.ComboBox;
 
 namespace ErikwnkWFUI.Forms
@@ -25,6 +28,12 @@ namespace ErikwnkWFUI.Forms
         private ComboBox _accentBox;
         private ComboBox _languageBox;
         private ToggleSwitch _topMostSwitch;
+        private ToggleSwitch _startSwitch;
+        private Button _resetButton;
+        private bool _originalStartWithWindows;
+
+        // How a toast is shown (the message and the window it stands over); the seam of the tests.
+        internal Action<string, Form> ShowToast = (message, owner) => UIStyles.Toasts.ShowPrimary(message, owner, icon: ToastIcon.Success);
         private bool _loadingOptions;
         private bool _optionsChanged;
 
@@ -54,6 +63,27 @@ namespace ErikwnkWFUI.Forms
         {
             get { return UIStrings.Language; }
         }
+
+        /// <summary>Whether the program is to start with Windows: what the switch says (written when the user saves), or - without that option - what Windows has.</summary>
+        public bool SelectedStartWithWindows
+        {
+            get { return _startSwitch != null ? _startSwitch.Checked : WindowsAutoStart.IsEnabled(); }
+        }
+
+        /// <summary>
+        /// Arguments the program is started with when it starts with Windows (null: none), so it can tell that it was not started by the user
+        /// - to stay in the tray, say. Used when <see cref="OptionsPreset.StartWithWindows"/> is saved.
+        /// </summary>
+        public string StartWithWindowsArguments { get; set; }
+
+        /// <summary>
+        /// Whether the window tells the user by a toast, in the language of the library, that the settings were saved ("Settings saved", over the
+        /// window that owns this one - none without an owner) and that the defaults were restored (over this window). The default.
+        /// </summary>
+        public bool ShowToasts { get; set; } = true;
+
+        /// <summary>Raised after the button of <see cref="OptionsPreset.ResetToDefaults"/> has put the options of the library back: reset your own rows here.</summary>
+        public event EventHandler DefaultsRestored;
 
         /// <summary>Whether the window that owns this one (the main window) is always on top now.</summary>
         public bool SelectedAlwaysOnTop
@@ -106,6 +136,27 @@ namespace ErikwnkWFUI.Forms
                     _languageBox = CreateOptionChoice();
                     row = _propertyTable.AddRow(GetOptionText(preset), _languageBox);
                     _languageBox.SelectedIndexChanged += (s, e) => ApplyOption(() => UIStyles.SetLanguage(_languageBox.SelectedIndex == 1 ? AppLanguage.German : AppLanguage.English));
+                    break;
+
+                case OptionsPreset.StartWithWindows:
+                    _originalStartWithWindows = WindowsAutoStart.IsEnabled();
+                    _startSwitch = UIStyles.ToggleSwitches.CreateStandard(_originalStartWithWindows);
+
+                    // Written when the user saves; without the buttons there is no save, so at once.
+                    _startSwitch.CheckedChanged += (s, e) =>
+                    {
+                        if (!_showButtons && !_loadingOptions)
+                            WindowsAutoStart.Set(_startSwitch.Checked, StartWithWindowsArguments);
+                    };
+                    row = _propertyTable.AddRow(GetOptionText(preset), _startSwitch);
+                    break;
+
+                case OptionsPreset.ResetToDefaults:
+                    _resetButton = UIStyles.Buttons.CreateStandard(UIStrings.Get("OptionsForm.ResetToDefaults"));
+                    _resetButton.AutoSize = true;
+                    _resetButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+                    _resetButton.Click += (s, e) => RestoreDefaults();
+                    row = _propertyTable.AddRow(GetOptionText(preset), _resetButton);
                     break;
 
                 default:
@@ -191,6 +242,44 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        // What the user chose for Windows is written when the user saves: only when it differs from what Windows has now.
+        private void ApplyStartWithWindows()
+        {
+            if (_startSwitch != null && _startSwitch.Checked != _originalStartWithWindows)
+                WindowsAutoStart.Set(_startSwitch.Checked, StartWithWindowsArguments);
+        }
+
+        // The defaults of the options of the library (as the choices say): dark, blue, the language of Windows, not on top.
+        private void RestoreDefaults()
+        {
+            if (_themeBox != null)
+                _themeBox.SelectedIndex = 0;
+
+            if (_accentBox != null)
+                _accentBox.SelectedIndex = Array.FindIndex(UIAccentColors.All, color => color.ToArgb() == UIAccentColors.Blue.ToArgb());
+
+            if (_languageBox != null)
+                _languageBox.SelectedIndex = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "de" ? 1 : 0;
+
+            if (_topMostSwitch != null)
+                _topMostSwitch.Checked = false;
+
+            if (_startSwitch != null)
+                _startSwitch.Checked = false;
+
+            DefaultsRestored?.Invoke(this, EventArgs.Empty);
+
+            if (ShowToasts)
+                ShowToast(UIStrings.Get("OptionsForm.DefaultsRestored"), this);
+        }
+
+        // "Settings saved" over the window that owns this one (it stays when this one is closed).
+        private void ShowSavedToast()
+        {
+            if (ShowToasts && Owner != null && !Owner.IsDisposed)
+                ShowToast(UIStrings.Get("OptionsForm.Saved"), Owner);
+        }
+
         // The owner is known when the window opens.
         protected override void OnLoad(EventArgs e)
         {
@@ -240,6 +329,10 @@ namespace ErikwnkWFUI.Forms
                     return UIStrings.Get("OptionsForm.AccentColor");
                 case OptionsPreset.Language:
                     return UIStrings.Get("OptionsForm.Language");
+                case OptionsPreset.StartWithWindows:
+                    return UIStrings.Get("OptionsForm.StartWithWindows");
+                case OptionsPreset.ResetToDefaults:
+                    return UIStrings.Get("OptionsForm.Defaults");
                 default:
                     return UIStrings.Get("OptionsForm.AlwaysOnTop");
             }
@@ -295,6 +388,9 @@ namespace ErikwnkWFUI.Forms
 
             foreach (KeyValuePair<OptionsPreset, PropertyRow> pair in _presetRows)
                 pair.Value.Text = GetOptionText(pair.Key);
+
+            if (_resetButton != null)
+                _resetButton.Text = UIStrings.Get("OptionsForm.ResetToDefaults");
 
             FillOptionItems();
         }
