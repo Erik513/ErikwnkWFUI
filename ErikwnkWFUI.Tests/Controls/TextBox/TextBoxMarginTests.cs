@@ -44,8 +44,8 @@ public class TextBoxMarginTests : IDisposable
         int withFrame = FirstInkColumn(framed);
         int without = FirstInkColumn(borderless);
 
-        Assert.True(withFrame >= 6, "the text starts at column " + withFrame);
-        Assert.True(withFrame - without >= 4, "framed " + withFrame + ", borderless " + without);
+        Assert.True(withFrame >= 5, "the text starts at column " + withFrame);
+        Assert.True(withFrame - without >= 2, "framed " + withFrame + ", borderless " + without);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public class TextBoxMarginTests : IDisposable
         box.BorderStyle = BorderStyle.FixedSingle;
         int back = FirstInkColumn(box);
 
-        Assert.True(framed - none >= 4, "framed " + framed + ", none " + none);
+        Assert.True(framed - none >= 2, "framed " + framed + ", none " + none);
         Assert.Equal(framed, back);
     }
 
@@ -81,5 +81,99 @@ public class TextBoxMarginTests : IDisposable
 
             Assert.True(Math.Abs(FirstInkColumn(typed) - FirstInkColumn(hint)) <= 2, typed.GetType().Name + ": text " + FirstInkColumn(typed) + ", placeholder " + FirstInkColumn(hint));
         }
+    }
+
+    [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+    private struct Rect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr handle, int message, IntPtr wParam, ref Rect rect);
+
+    // How much room the text has at each side of the box: client area minus the formatting rectangle of the text.
+    private static (int Left, int Right) Room(TextBox box)
+    {
+        Rect format = new Rect();
+        SendMessage(box.Handle, 0x00B2, IntPtr.Zero, ref format);
+
+        return (format.Left, box.ClientSize.Width - format.Right);
+    }
+
+    [Fact]
+    public void TheTextHasRoomAtTheRightToo_ASmallOneWithoutAButton_AndTheButtonWithOne()
+    {
+        TextBox plain = _host.Show(UIStyles.TextBoxes.CreateStandard("Place", ""));
+        TextBox password = _host.Show(UIStyles.TextBoxes.CreatePassword("Place", ""));
+        TextBox borderless = _host.Show(UIStyles.TextBoxes.CreateBorderless("Place", ""));
+
+        Assert.True(Room(plain).Right >= 5, "right room " + Room(plain).Right);
+        Assert.True(Room(plain).Left >= 4, "left room " + Room(plain).Left);
+        Assert.True(Room(password).Right >= 24, "the text keeps away from the eye: " + Room(password).Right);
+        Assert.True(Room(borderless).Right < Room(plain).Right, "a box without a frame keeps the narrow margin");
+    }
+
+    [Fact]
+    public void ALongTextEndsBeforeTheRightEdge_NotAtIt()
+    {
+        TextBox box = _host.Show(UIStyles.TextBoxes.CreateStandard(string.Join(" ", Enumerable.Repeat("a long text that does not fit", 4)), ""));
+
+        using Bitmap picture = Draw(box);
+        bool inkAtTheEdge = false;
+
+        // The five columns before the frame at the right (the last column): nothing of the text may be painted there - the same room as at
+        // the left, where the first letter begins five columns after the frame.
+        for (int x = box.Width - 6; x < box.Width - 1 && !inkAtTheEdge; x++)
+            for (int y = 4; y < box.Height - 4 && !inkAtTheEdge; y++)
+                inkAtTheEdge = picture.GetPixel(x, y).ToArgb() != box.BackColor.ToArgb();
+
+        Assert.False(inkAtTheEdge, "text touches the frame at the right");
+    }
+
+    // ---- the symbol in the box has the color of the set - the pencil as well as the check mark
+
+    private static bool HasTint(TextBox box)
+    {
+        using Bitmap picture = Draw(box);
+        int yellow = 0;
+
+        for (int x = box.Width - 26; x < box.Width - 2; x++)
+            for (int y = 4; y < box.Height - 4; y++)
+            {
+                Color c = picture.GetPixel(x, y);
+
+                // (Yellow: red and green high, blue low. The colored fringes that the text smoothing leaves at the edges of gray letters are not.)
+                if (c.R > 180 && c.G > 140 && c.B < 90)
+                    yellow++;
+            }
+
+        // (A handful of pixels can be colored fringes of the text smoothing; a yellow symbol has many.)
+        return yellow >= 10;
+    }
+
+    [Fact]
+    public void WithAColorSet_ThePencilHasTheColorOfTheSet_LikeTheCheckMark_WithoutOneItIsGray()
+    {
+        ErikwnkWFUI.Controls.LockableTextBox yellowLocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", true, UIStyles.Colors.Sets.Yellow));
+        ErikwnkWFUI.Controls.LockableTextBox yellowUnlocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", false, UIStyles.Colors.Sets.Yellow));
+        ErikwnkWFUI.Controls.LockableTextBox plainLocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text"));
+        ErikwnkWFUI.Controls.LockableTextBox plainUnlocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", false));
+
+        Assert.True(yellowLocked.IsLocked && !yellowUnlocked.IsLocked);
+        Assert.True(HasTint(yellowUnlocked), "the check mark is yellow");
+        Assert.True(HasTint(yellowLocked), "the pencil is yellow too");
+        Assert.False(HasTint(plainLocked), "without a set the pencil is gray");
+        Assert.False(HasTint(plainUnlocked), "without a set the check mark is in the text color");
+    }
+
+    [Fact]
+    public void ThePasswordEye_HasTheColorOfTheSet_Too()
+    {
+        TextBox yellow = _host.Show(UIStyles.TextBoxes.CreatePassword("secret", "", UIStyles.Colors.Sets.Yellow));
+        TextBox plain = _host.Show(UIStyles.TextBoxes.CreatePassword("secret", ""));
+
+        Assert.True(HasTint(yellow));
+        Assert.False(HasTint(plain));
     }
 }

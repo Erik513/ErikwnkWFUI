@@ -49,17 +49,39 @@ namespace ErikwnkWFUI.Controls
         }
 #endif
 
-        // Whether there is anything to paint over what the system painted: a button in the box, or a placeholder that is shown.
+        // Whether there is anything to paint over what the system painted: a button in the box, a placeholder that is shown, or the edge at
+        // the right of a text.
         private bool HasPaintOver
         {
-            get { return _innerGlyph != null || (_placeholder.Length > 0 && TextLength == 0 && !Focused); }
+            get { return _innerGlyph != null || (_placeholder.Length > 0 && TextLength == 0 && !Focused) || HasRightEdge; }
         }
 
-        // What is painted over what the system painted: the placeholder, and the button in the box.
+        // What is painted over what the system painted: the edge at the right, the placeholder, and the button in the box.
         private void PaintOver(Graphics graphics)
         {
+            PaintRightEdge(graphics);
             PaintPlaceholder(graphics);
             PaintInnerButton(graphics);
+        }
+
+        // A single line that is longer than the box is drawn by the system right up to the frame (the margin at the right keeps the caret and
+        // the scrolling away from it, not the letters): the last pixels at the right are painted in the color of the box, so that the text
+        // ends before the frame - with as much room between it and the frame as there is at the left - and not under the button in the box.
+        private bool HasRightEdge
+        {
+            get { return !Multiline && BorderStyle != BorderStyle.None && TextLength > 0; }
+        }
+
+        private void PaintRightEdge(Graphics graphics)
+        {
+            if (!HasRightEdge)
+                return;
+
+            int width = Math.Max(InnerWidth, Dpi.Scale(this, RightEdge96));
+            Rectangle client = ClientRectangle;
+
+            using (SolidBrush brush = new SolidBrush(BackColor))
+                graphics.FillRectangle(brush, client.Right - width, client.Top, width, client.Height);
         }
 
         private void PaintPlaceholder(Graphics graphics)
@@ -95,7 +117,8 @@ namespace ErikwnkWFUI.Controls
             int top = format.Top + (Multiline ? 0 : InputField.GetTextTopInset(this));
             Rectangle client = ClientRectangle;
 
-            return new Rectangle(left, top, Math.Max(1, client.Width - InnerWidth - left), Math.Max(1, client.Height - top));
+            // (The formatting rectangle ends where the margin at the right begins: not under the button in the box, nor at the frame.)
+            return new Rectangle(left, top, Math.Max(1, format.Right - left), Math.Max(1, client.Height - top));
         }
 
         private const int EM_GETRECT = 0x00B2;

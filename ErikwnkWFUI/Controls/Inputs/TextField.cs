@@ -75,12 +75,14 @@ namespace ErikwnkWFUI.Controls
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
+            StartWatchingClicks();
             Invalidate();
         }
 
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
+            StopWatchingClicks();
             Invalidate();
         }
 
@@ -112,12 +114,21 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnHandleCreated(e);
             ApplyInnerMargin();
+
+            // (The text and the width are there before the window is: the first look at them had no window to measure in.)
+            UpdateToolTip(_innerHot);
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
+                if (_clickWatcher != null)
+                {
+                    _clickWatcher.Dispose();
+                    _clickWatcher = null;
+                }
+
                 if (_toolTip != null)
                 {
                     _toolTip.Dispose();

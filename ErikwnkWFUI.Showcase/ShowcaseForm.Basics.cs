@@ -324,33 +324,30 @@ namespace ErikwnkWFUI.Showcase
             return box;
         }
 
+        // One box in the width of a column (the disabled look is shown once, beside the standard box, and once beside one with a symbol).
+        private void AddSingleRow(PropertyTable table, string label, Control box)
+        {
+            table.AddRow(label, PropertyColumn.Percent(box, TwoColumnPercent));
+        }
+
         private void AddTextBoxesSection(PropertyTable table)
         {
-            // Click into a box to see the frame while it has the focus.
+            // Click into a box to see the frame while it has the focus; a click anywhere else takes the focus out of it again.
             AddTwoColumnRow(table, "CreateStandard",
                 Framed(UIStyles.TextBoxes.CreateStandard("", "Standard")),
                 Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", ""))));
 
-            AddTwoColumnRow(table, "CreatePrimary",
-                Framed(UIStyles.TextBoxes.CreatePrimary("", "Primary")),
-                Framed(Disabled(UIStyles.TextBoxes.CreatePrimary("Disabled", ""))));
+            AddSingleRow(table, "CreatePrimary", Framed(UIStyles.TextBoxes.CreatePrimary("", "Primary")));
 
-            AddTwoColumnRow(table, "CreateStandard(colors: Yellow)",
-                Framed(UIStyles.TextBoxes.CreateStandard("", "Yellow", UIStyles.Colors.Sets.Yellow)),
-                Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", "", UIStyles.Colors.Sets.Yellow))));
+            AddSingleRow(table, "CreateStandard(colors: Yellow)", Framed(UIStyles.TextBoxes.CreateStandard("", "Yellow", UIStyles.Colors.Sets.Yellow)));
 
             // A single color instead of a color set: it is taken as the main color.
-            AddTwoColumnRow(table, "CreateStandard(colors: MediumPurple)",
-                Framed(UIStyles.TextBoxes.CreateStandard("", "MediumPurple", System.Drawing.Color.MediumPurple)),
-                Framed(Disabled(UIStyles.TextBoxes.CreateStandard("Disabled", "", System.Drawing.Color.MediumPurple))));
+            AddSingleRow(table, "CreateStandard(colors: MediumPurple)", Framed(UIStyles.TextBoxes.CreateStandard("", "MediumPurple", System.Drawing.Color.MediumPurple)));
 
             // The text can be read, selected and copied, only not changed: the background is set apart (less than a disabled one).
             TextBox readOnly = UIStyles.TextBoxes.CreateStandard("ReadOnly = true", "");
             readOnly.ReadOnly = true;
-            TextBox readOnlyDisabled = UIStyles.TextBoxes.CreateStandard("Disabled", "");
-            readOnlyDisabled.ReadOnly = true;
-            readOnlyDisabled.Enabled = false;
-            AddTwoColumnRow(table, "ReadOnly = true", Framed(readOnly), Framed(readOnlyDisabled));
+            AddSingleRow(table, "ReadOnly = true", Framed(readOnly));
 
             // A pencil in the box unlocks it (it gets the focus and its text is selected), the check mark or Enter accepts the text, Escape gives the
             // old text back; F2 or Enter on a locked box start the editing too.
@@ -358,10 +355,8 @@ namespace ErikwnkWFUI.Showcase
                 Framed(UIStyles.TextBoxes.CreateLockable("Playlist name")),
                 Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled"))));
 
-            // Unlocked at the start, with the colors of a set: the check mark and the frame while the box has the focus.
-            AddTwoColumnRow(table, "locked: false, colors: Yellow",
-                Framed(UIStyles.TextBoxes.CreateLockable("Unlocked", "", false, UIStyles.Colors.Sets.Yellow)),
-                Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled", "", false, UIStyles.Colors.Sets.Yellow))));
+            // Unlocked at the start, with the colors of a set: the check mark, the pencil (after the text was accepted) and the frame while the box has the focus.
+            AddSingleRow(table, "locked: false, colors: Yellow", Framed(UIStyles.TextBoxes.CreateLockable("Unlocked", "", false, UIStyles.Colors.Sets.Yellow)));
 
             LockableTextBox events = UIStyles.TextBoxes.CreateLockable("Edit me");
             Label eventText = UIStyles.Labels.CreateStandard("locked");
@@ -372,13 +367,9 @@ namespace ErikwnkWFUI.Showcase
             AddTwoColumnRow(table, "Lockable events", Framed(events), eventText);
 
             // What is typed is hidden; the eye in the box shows it, the next click hides it again.
-            AddTwoColumnRow(table, "CreatePassword",
-                Framed(UIStyles.TextBoxes.CreatePassword("secret", "Password")),
-                Framed(Disabled(UIStyles.TextBoxes.CreatePassword("secret", ""))));
+            AddSingleRow(table, "CreatePassword", Framed(UIStyles.TextBoxes.CreatePassword("secret", "Password")));
 
-            AddTwoColumnRow(table, "CreatePassword(colors: Yellow)",
-                Framed(UIStyles.TextBoxes.CreatePassword("", "Password", UIStyles.Colors.Sets.Yellow)),
-                Framed(Disabled(UIStyles.TextBoxes.CreatePassword("secret", "", UIStyles.Colors.Sets.Yellow))));
+            AddSingleRow(table, "CreatePassword(colors: Yellow)", Framed(UIStyles.TextBoxes.CreatePassword("", "Password", UIStyles.Colors.Sets.Yellow)));
 
             // A text that is wider than the box is the tooltip of the box (hover over it); ToolTipWhenCut = false switches it off.
             TextBox cut = UIStyles.TextBoxes.CreateStandard("A text that is much wider than this narrow box shows itself in a tooltip");
@@ -386,18 +377,9 @@ namespace ErikwnkWFUI.Showcase
             ((TextField)noTip).ToolTipWhenCut = false;
             AddTwoColumnRow(table, "ToolTipWhenCut", Framed(cut), Framed(noTip));
 
-            // A text that is given stays; the placeholder stands in only for an empty box.
-            AddTwoColumnRow(table, "text and placeholder",
-                Framed(UIStyles.TextBoxes.CreateStandard("A text that is given", "Placeholder")),
-                Framed(UIStyles.TextBoxes.CreateStandard("", "Placeholder")));
-
             // Without a frame the box blends into the surface behind it (the table shows every box like this).
-            TextBox borderless = UIStyles.TextBoxes.CreateBorderless("Borderless text", "");
-            TextBox borderlessDisabled = UIStyles.TextBoxes.CreateBorderless("Disabled", "");
-            borderlessDisabled.Enabled = false;
-            AddTwoColumnRow(table, "CreateBorderless", borderless, borderlessDisabled);
+            AddSingleRow(table, "CreateBorderless", UIStyles.TextBoxes.CreateBorderless("Borderless text", ""));
         }
-
         private void AddComboBoxesSection(PropertyTable table)
         {
             AddComboBoxRow(table, "CreateStandard", () => UIStyles.ComboBoxes.CreateStandard());

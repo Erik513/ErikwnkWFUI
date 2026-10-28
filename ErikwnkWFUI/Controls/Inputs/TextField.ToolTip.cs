@@ -31,6 +31,14 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Whether the text is cut is looked at again when the mouse comes: the width of the box and the margins may have changed since the
+        // tooltip was set (the box is placed by a layout, after its text was given).
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            UpdateToolTip(_innerHot);
+        }
+
         // A box that hides what is typed shows nothing of it, not even in a tooltip.
         private bool HidesText
         {

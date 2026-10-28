@@ -16,7 +16,13 @@ namespace ErikwnkWFUI.Controls
         private const int EC_LEFTMARGIN = 0x0001;
         private const int EC_RIGHTMARGIN = 0x0002;
         private const int EC_USEFONTINFO = 0xFFFF;
-        private const int LeftMargin96 = 6;
+        private const int LeftMargin96 = 4;
+        // (The frame is painted over the last column of the window, and the text runs up to the margin: five at the right leave as much room
+        // between the text and the frame as four do at the left, where the frame is the first column and the letters have a little room of their own.)
+        private const int RightMargin96 = 5;
+
+        // The width of the edge at the right that no letter reaches (the frame is painted over its last column).
+        private const int RightEdge96 = 6;
         private const int WM_LBUTTONDBLCLK = 0x0203;
         private const int InnerWidth96 = 24;
         private const float InnerFontSize96 = 10f;
@@ -86,17 +92,19 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
-        // The text keeps away from the button: the right margin of the box. And a box with a frame has room between the frame and the
-        // text at the left (the system leaves one or two pixels, which looked as if the text touched the frame); one without a frame keeps
-        // the narrow margin of the font.
+        // The text keeps away from the button: the right margin of the box (without a button a little room, so that the text does not touch
+        // the frame at the right either). And a box with a frame has room between the frame and the text at the left (the system leaves one
+        // or two pixels, which looked as if the text touched the frame); one without a frame keeps the narrow margin of the font.
         private void ApplyInnerMargin()
         {
             if (!IsHandleCreated)
                 return;
 
-            int left = BorderStyle == BorderStyle.None ? EC_USEFONTINFO : Dpi.Scale(this, LeftMargin96);
+            bool framed = BorderStyle != BorderStyle.None;
+            int left = framed ? Dpi.Scale(this, LeftMargin96) : EC_USEFONTINFO;
+            int right = InnerWidth > 0 ? InnerWidth : framed ? Dpi.Scale(this, RightMargin96) : EC_USEFONTINFO;
 
-            SendMessage(Handle, EM_SETMARGINS, (IntPtr)(EC_LEFTMARGIN | EC_RIGHTMARGIN), (IntPtr)((InnerWidth << 16) | left));
+            SendMessage(Handle, EM_SETMARGINS, (IntPtr)(EC_LEFTMARGIN | EC_RIGHTMARGIN), (IntPtr)((right << 16) | left));
         }
 
         protected override void OnBorderStyleChanged(EventArgs e)
@@ -253,8 +261,9 @@ namespace ErikwnkWFUI.Controls
 
             // The symbol: quiet (muted), the text color while the mouse is over it, the color of the frame while it is switched on.
             // (Disabled: fainter than at rest, 2:1 and a little more.)
+            // (A box with a color set: the symbol has the color of the set whichever symbol it is - the pencil as well as the check mark.)
             Color glyph = !Enabled ? UIColors.BlendToward(UIColors.GetBestTextColor(back), back, 0.65)
-                : _innerActive ? InputField.GetFrameColor(this, Colors, true)
+                : _innerActive || Colors != null ? InputField.GetFrameColor(this, Colors, true)
                 : _innerHot || _innerPressed ? fore
                 : UIColors.GetMutedText(back, 0.45, 3.5);
 
