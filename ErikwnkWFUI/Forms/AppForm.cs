@@ -23,7 +23,7 @@ namespace ErikwnkWFUI.Forms
     /// to the form - the title bar already occupies the top of the form's
     /// own <see cref="Control.Controls"/> collection.
     /// </summary>
-    public class AppForm : Form
+    public partial class AppForm : Form
     {
         private readonly TitleBarControl _titleBar;
         private readonly Panel _contentPanel;
@@ -31,6 +31,8 @@ namespace ErikwnkWFUI.Forms
         private readonly Label _versionLabel;
         private readonly BorderlessResizeHandler _resizeHandler;
         private readonly bool _allowMinimizeFromTaskbar;
+        private readonly bool _shadow;
+        private readonly bool _closeOnEscape;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
         public Panel ContentPanel
@@ -129,6 +131,13 @@ namespace ErikwnkWFUI.Forms
             }
 
             _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
+            _shadow = options.Borderless && options.Shadow;
+            _closeOnEscape = options.CloseOnEscape;
+            _canMinimize = options.ShowMinimizeButton;
+            _canMaximize = options.ShowMaximizeButton;
+            _isFixedSize = !options.Resizable;
+            _menuColors = options.ColorSource;
+            RememberBoundsKey = options.RememberBoundsKey;
 
             if (options.Borderless)
             {
@@ -206,7 +215,10 @@ namespace ErikwnkWFUI.Forms
             // With the native frame there is only one title bar. The bar of the library is not in the window then (TitleBar, FormTitle and
             // FormIcon stay there to be used, but show nothing).
             if (options.Borderless)
+            {
                 Controls.Add(_titleBar);
+                _titleBar.SystemMenuRequested += (sender, position) => ShowSystemMenu(position);
+            }
 
             if (_versionStrip != null)
                 Controls.Add(_versionStrip);
@@ -217,6 +229,7 @@ namespace ErikwnkWFUI.Forms
 
         private const int WmGetMinMaxInfo = 0x24;
         private const int WsMinimizeBox = 0x00020000;
+        private const int ClassStyleDropShadow = 0x00020000;
 
         // A window without a frame has no minimize box for the system: a click on its button in the taskbar would not minimize it. The window
         // that has a minimize button of its own gets the style (nothing is drawn for it).
@@ -229,8 +242,24 @@ namespace ErikwnkWFUI.Forms
                 if (_allowMinimizeFromTaskbar)
                     parameters.Style |= WsMinimizeBox;
 
+                if (_shadow)
+                    parameters.ClassStyle |= ClassStyleDropShadow;
+
                 return parameters;
             }
+        }
+
+        // Escape closes a dialog that has no cancel button of its own (a text box that is being edited, or a list that is open, takes the key first).
+        protected override bool ProcessDialogKey(Keys keyData)
+        {
+            if (keyData == Keys.Escape && _closeOnEscape && CancelButton == null)
+            {
+                Close();
+
+                return true;
+            }
+
+            return base.ProcessDialogKey(keyData);
         }
 
         protected override void Dispose(bool disposing)

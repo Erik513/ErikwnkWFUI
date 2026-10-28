@@ -42,6 +42,15 @@ namespace ErikwnkWFUI.Controls
 
         private Form _parentForm;
 
+        /// <summary>Raised with the position on the screen when the bar (its title, its logo) is right-clicked: the window shows its system menu.</summary>
+        internal event EventHandler<Point> SystemMenuRequested;
+
+        private void RaiseSystemMenuOnRightClick(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+                SystemMenuRequested?.Invoke(this, Cursor.Position);
+        }
+
         /// <summary>The window title text.</summary>
         public string Title
         {
@@ -374,6 +383,13 @@ namespace ErikwnkWFUI.Controls
         private void CreateDragHandles()
         {
             DisposeDragHandle();
+
+            MouseUp -= RaiseSystemMenuOnRightClick;
+            MouseUp += RaiseSystemMenuOnRightClick;
+            _titleLabel.MouseUp -= RaiseSystemMenuOnRightClick;
+            _titleLabel.MouseUp += RaiseSystemMenuOnRightClick;
+            _iconPictureBox.MouseUp -= RaiseSystemMenuOnRightClick;
+            _iconPictureBox.MouseUp += RaiseSystemMenuOnRightClick;
 
             _titleBarDragHandle = new FormDragHandle(this, _allowWindowSnapAndMaximize);
             _titleLabelDragHandle = new FormDragHandle(_titleLabel, _allowWindowSnapAndMaximize);

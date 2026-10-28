@@ -40,6 +40,19 @@ namespace ErikwnkWFUI.Forms
         /// <summary>The background of the title bar alone, a color of its own (it does not follow the theme); <see cref="Colors"/> colors the whole frame of the window.</summary>
         public Color? TitleBarBackColor { get; set; }
 
+        /// <summary>Whether a window without a frame has a drop shadow (the default). Has no meaning with the native frame, which has its own.</summary>
+        public bool Shadow { get; set; } = true;
+
+        /// <summary>Whether the Escape key closes the window when it has no <c>CancelButton</c> (as a click on the close button): true for the dialog presets, false for a standard window.</summary>
+        public bool CloseOnEscape { get; set; }
+
+        /// <summary>
+        /// A name under which the window remembers its position and size (and whether it was maximized) between runs: it is saved when the
+        /// window is closed and restored when it opens, if it is still on a screen that is there. Null (the default) remembers nothing.
+        /// Use one name per window of the program. A fixed-size window remembers only its position.
+        /// </summary>
+        public string RememberBoundsKey { get; set; }
+
         private UIColorSet _colors;
 
         /// <summary>
@@ -110,7 +123,8 @@ namespace ErikwnkWFUI.Forms
                 ShowMinimizeButton = false,
                 ShowMaximizeButton = false,
                 ShowCloseButton = true,
-                AllowWindowSnapAndMaximize = false
+                AllowWindowSnapAndMaximize = false,
+                CloseOnEscape = true
             };
         }
 
