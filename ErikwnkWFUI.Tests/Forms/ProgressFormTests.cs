@@ -725,6 +725,32 @@ public class ProgressFormTests : IDisposable
         Assert.Equal("The task failed.", message);
         Assert.True(closeEnabled);
     }
+    [Fact]
+    public void Run_Configure_IsCalledOnTheThreadOfTheWindow_BeforeItIsShown()
+    {
+        int callThread = -1;
+        bool shownBefore = true;
+        bool? showTimeInTask = null;
+
+        ProgressBox.Run(
+            "x",
+            async (progress, token) =>
+            {
+                await Task.Delay(50);
+                showTimeInTask = Application.OpenForms.OfType<ProgressForm>().FirstOrDefault()?.ShowTime;
+            },
+            configure: form =>
+            {
+                callThread = Environment.CurrentManagedThreadId;
+                shownBefore = form.Visible;
+                form.ShowTime = true;
+                form.IsIndeterminate = true;
+            });
+
+        Assert.Equal(Environment.CurrentManagedThreadId, callThread);
+        Assert.False(shownBefore);
+        Assert.True(showTimeInTask);
+    }
     // ---- both themes
 
     [Theory]

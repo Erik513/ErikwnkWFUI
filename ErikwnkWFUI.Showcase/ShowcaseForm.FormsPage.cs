@@ -32,6 +32,10 @@ namespace ErikwnkWFUI.Showcase
                  "A small modal dialog with a prompt, one text box (password: with an eye to show it) and OK / Cancel, made by UIStyles.Forms.CreateInputStandard / CreateInputPrimary (colors: a color set for the title bar) or in one line by InputBox.Show, which returns the text or null when cancelled. Hint is a gray note under the prompt, ErrorText a red line over the box that goes when the user types, Validator checks the text when OK is clicked (a message keeps the box open and selects the text), TrimValue cuts the spaces at the ends, MaxLength limits the box, AllowEmpty lets OK take an empty text. The switches say what the box has; the line Result shows what came back.",
                  AddInputBoxSection),
 
+                ("Progress dialog (ProgressForm)",
+                 "A small dialog that shows how far a task has come: a text and a progress bar with the percentage on it, made by UIStyles.Forms.CreateProgressStandard / CreateProgressPrimary, or - for a task that blocks the program for a while - in one call by ProgressBox.Run, which runs the task and closes the window when it is done. The task reports with Report(percent, status) from any thread; the user cannot close the window, the program does, or the task ends it with Succeed (green) or Fail (red, the message stays) and the user closes it with the button. Cancelable adds a Cancel button (Escape too) that asks the task to stop through CancellationToken; ShowTime adds the time that has passed and an estimate of what is left; IsIndeterminate lets the bar just move. size: sets the width. Open shows the window of the page, ProgressBox.Run the modal one; the line Result says how the task ended.",
+                 AddProgressFormSection),
+
                 ("Message box (MessageBox)",
                  "The themed replacement for the message box of Windows: MessageBox.Show(message, title, buttons, icon, owner, size) returns the button that was clicked (or the safe one when the window is closed: Cancel, No or OK). The icon is shown in the title bar; size: is one of the three sizes or an own Size, in pixels as they are. The rows below set what the sample shows; the line Result says what came back.",
                  AddMessageBoxSection)
@@ -56,6 +60,7 @@ namespace ErikwnkWFUI.Showcase
             {
                 CloseSampleForm();
                 CloseOptionsForm();
+                CloseProgressSample();
                 build(pages.SelectedIndex);
             };
 

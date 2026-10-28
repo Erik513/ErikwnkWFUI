@@ -34,6 +34,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="cancelable">Whether the window has a Cancel button.</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
         /// <param name="size">One of the three widths (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>.</param>
+        /// <param name="configure">Called on the thread of the window before it is shown, to set what <c>Run</c> has no parameter for (<see cref="ProgressForm.ShowTime"/>, <see cref="ProgressForm.IsIndeterminate"/> ...).</param>
         /// <param name="showResult">Whether a task that failed leaves the window open with its message (<see cref="ProgressForm.Fail"/>) until the user closes it; the exception is thrown after that. By default the window closes at once.</param>
         public static ProgressOutcome Run(
             string title,
@@ -42,7 +43,8 @@ namespace ErikwnkWFUI.Forms
             bool cancelable = false,
             Form owner = null,
             FormSizeOption? size = null,
-            bool showResult = false)
+            bool showResult = false,
+            Action<ProgressForm> configure = null)
         {
             if (work == null)
                 throw new ArgumentNullException(nameof(work));
@@ -53,6 +55,9 @@ namespace ErikwnkWFUI.Forms
 
             using (ProgressForm form = new ProgressForm(options, status, cancelable, size))
             {
+                if (configure != null)
+                    configure(form);
+
                 form.Shown += async (sender, e) =>
                 {
                     try
