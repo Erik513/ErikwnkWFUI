@@ -152,28 +152,51 @@ public class TextBoxMarginTests : IDisposable
         return yellow >= 10;
     }
 
+    // The brightest red value in the place of the symbol: how light the symbol is.
+    private static int Lightness(TextBox box)
+    {
+        using Bitmap picture = Draw(box);
+        int lightest = 0;
+
+        for (int x = box.Width - 26; x < box.Width - 2; x++)
+            for (int y = 4; y < box.Height - 4; y++)
+                lightest = Math.Max(lightest, picture.GetPixel(x, y).R);
+
+        return lightest;
+    }
+
     [Fact]
-    public void WithAColorSet_ThePencilHasTheColorOfTheSet_LikeTheCheckMark_WithoutOneItIsGray()
+    public void TheSymbolsAreNeverColored_NotByAColorSetEither_AndTheOneThatIsSwitchedOnIsLighter()
     {
         ErikwnkWFUI.Controls.LockableTextBox yellowLocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", true, UIStyles.Colors.Sets.Yellow));
         ErikwnkWFUI.Controls.LockableTextBox yellowUnlocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", false, UIStyles.Colors.Sets.Yellow));
         ErikwnkWFUI.Controls.LockableTextBox plainLocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text"));
         ErikwnkWFUI.Controls.LockableTextBox plainUnlocked = _host.Show(UIStyles.TextBoxes.CreateLockable("Text", "", false));
 
-        Assert.True(yellowLocked.IsLocked && !yellowUnlocked.IsLocked);
-        Assert.True(HasTint(yellowUnlocked), "the check mark is yellow");
-        Assert.True(HasTint(yellowLocked), "the pencil is yellow too");
-        Assert.False(HasTint(plainLocked), "without a set the pencil is gray");
-        Assert.False(HasTint(plainUnlocked), "without a set the check mark is in the text color");
+        foreach (TextBox box in new TextBox[] { yellowLocked, yellowUnlocked, plainLocked, plainUnlocked })
+            Assert.False(HasTint(box), "the symbol is colored");
+
+        // The check mark of the box that is being edited is lighter than the pencil of the box that is locked - with and without a set, alike.
+        Assert.True(Lightness(yellowUnlocked) > Lightness(yellowLocked), "with a set: " + Lightness(yellowUnlocked) + " against " + Lightness(yellowLocked));
+        Assert.True(Lightness(plainUnlocked) > Lightness(plainLocked), "without: " + Lightness(plainUnlocked) + " against " + Lightness(plainLocked));
+        Assert.Equal(Lightness(plainUnlocked), Lightness(yellowUnlocked));
+        Assert.Equal(Lightness(plainLocked), Lightness(yellowLocked));
     }
 
     [Fact]
-    public void ThePasswordEye_HasTheColorOfTheSet_Too()
+    public void ThePasswordEye_IsNotColored_Either_AndLighterWhileThePasswordIsShown()
     {
-        TextBox yellow = _host.Show(UIStyles.TextBoxes.CreatePassword("secret", "", UIStyles.Colors.Sets.Yellow));
+        ErikwnkWFUI.Controls.TextField yellow = (ErikwnkWFUI.Controls.TextField)_host.Show(UIStyles.TextBoxes.CreatePassword("secret", "", UIStyles.Colors.Sets.Yellow));
         TextBox plain = _host.Show(UIStyles.TextBoxes.CreatePassword("secret", ""));
+        int hidden = Lightness(yellow);
 
-        Assert.True(HasTint(yellow));
+        Assert.False(HasTint(yellow));
         Assert.False(HasTint(plain));
+        Assert.Equal(Lightness(plain), hidden);
+
+        yellow.GetType().GetProperty("IsPasswordShown")!.SetValue(yellow, true);
+
+        Assert.True(Lightness(yellow) > hidden, "the eye of a shown password is lighter");
+        Assert.False(HasTint(yellow));
     }
 }

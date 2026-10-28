@@ -123,7 +123,7 @@ public class TextBoxColorTests : IDisposable
 
     [Theory]
     [MemberData(nameof(Themes), MemberType = typeof(ColorContrastTestSupport))]
-    public void TheEyeOfAShownPassword_AndThePencilOfALockedBox_TakeTheColorOfTheSet(bool lightTheme)
+    public void TheSymbolsInTheBox_AreNotColoredByAColorSet_InBothThemes(bool lightTheme)
     {
         Run(lightTheme, shortfalls =>
         {
@@ -132,8 +132,9 @@ public class TextBoxColorTests : IDisposable
             using Bitmap first = Draw(gray);
             using Bitmap second = Draw(yellow);
 
-            if (SamePixels(first, second))
-                shortfalls.Add("the check mark of a box with the colors of a set looks like the gray one");
+            // (Without the focus the frame is not in the color of the set either: the two boxes look the same.)
+            if (!SamePixels(first, second))
+                shortfalls.Add("the check mark of a box with the colors of a set looks different from the gray one: it is colored");
         });
     }
 }

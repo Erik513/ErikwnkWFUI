@@ -259,12 +259,11 @@ namespace ErikwnkWFUI.Controls
                     graphics.FillRectangle(brush, field);
             }
 
-            // The symbol: quiet (muted), the text color while the mouse is over it, the color of the frame while it is switched on.
-            // (Disabled: fainter than at rest, 2:1 and a little more.)
-            // (A box with a color set: the symbol has the color of the set whichever symbol it is - the pencil as well as the check mark.)
+            // The symbol is never colored - not by a color set either: gray at rest, and the text color (the lightest gray, white in the dark theme)
+            // where it matters: while the mouse is over it, and while it is switched on (the check mark of a box that is being edited, the
+            // eye of a password that is shown). (Disabled: fainter than at rest, 2:1 and a little more.)
             Color glyph = !Enabled ? UIColors.BlendToward(UIColors.GetBestTextColor(back), back, 0.65)
-                : _innerActive || Colors != null ? InputField.GetFrameColor(this, Colors, true)
-                : _innerHot || _innerPressed ? fore
+                : _innerActive || _innerHot || _innerPressed ? UIColors.EnsureContrast(fore, back, 4.5)
                 : UIColors.GetMutedText(back, 0.45, 3.5);
 
             TextRenderer.DrawText(graphics, _innerGlyph, GetInnerFont(), bounds, glyph,

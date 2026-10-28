@@ -355,7 +355,7 @@ namespace ErikwnkWFUI.Showcase
                 Framed(UIStyles.TextBoxes.CreateLockable("Playlist name")),
                 Framed(Disabled(UIStyles.TextBoxes.CreateLockable("Disabled"))));
 
-            // Unlocked at the start, with the colors of a set: the check mark, the pencil (after the text was accepted) and the frame while the box has the focus.
+            // Unlocked at the start, with the colors of a set: the frame while the box has the focus (the symbols are gray or white, never colored).
             AddSingleRow(table, "locked: false, colors: Yellow", Framed(UIStyles.TextBoxes.CreateLockable("Unlocked", "", false, UIStyles.Colors.Sets.Yellow)));
 
             LockableTextBox events = UIStyles.TextBoxes.CreateLockable("Edit me");
