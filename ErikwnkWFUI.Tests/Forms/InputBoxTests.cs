@@ -578,6 +578,20 @@ public class InputBoxTests : IDisposable
         Assert.Equal(before, ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0);
     }
 
+    [Fact]
+    public void AButtonTextThatWasSet_StaysWhenTheLanguageChanges_TheOtherOneFollows()
+    {
+        InputBoxForm form = _host.Show(UIStyles.Forms.CreateInputStandard("Name?"));
+        form.OkButtonText = "Go";
+
+        UIStrings.Language = UILanguage.German;
+
+        Assert.Equal("Go", OkButton(form).Text);
+        Assert.Equal("Abbrechen", CancelButton(form).Text);
+
+        form.OkButtonText = null;
+        Assert.Equal("OK", OkButton(form).Text);
+    }
     [Theory]
     [InlineData(UILanguage.English)]
     [InlineData(UILanguage.German)]

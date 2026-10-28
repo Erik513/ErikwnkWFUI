@@ -41,6 +41,8 @@ namespace ErikwnkWFUI.Forms
         private readonly Button _cancelButton;
         private readonly bool _defaultTitle;
         private int _dpiOverride;
+        private string _okText;
+        private string _cancelText;
 
         /// <summary>The text that was entered, once the dialog was closed with OK (what the user accepted); empty before.</summary>
         public string Value { get; private set; } = "";
@@ -115,14 +117,22 @@ namespace ErikwnkWFUI.Forms
         public string OkButtonText
         {
             get { return _okButton.Text; }
-            set { _okButton.Text = value ?? UIStrings.Get("InputBox.Ok"); }
+            set
+            {
+                _okText = value;
+                _okButton.Text = value ?? UIStrings.Get("InputBox.Ok");
+            }
         }
 
         /// <summary>The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library.</summary>
         public string CancelButtonText
         {
             get { return _cancelButton.Text; }
-            set { _cancelButton.Text = value ?? UIStrings.Get("InputBox.Cancel"); }
+            set
+            {
+                _cancelText = value;
+                _cancelButton.Text = value ?? UIStrings.Get("InputBox.Cancel");
+            }
         }
 
         /// <param name="options">The options of the window (a dialog, as <see cref="FormOptions.CreateDialog"/>).</param>
@@ -178,7 +188,7 @@ namespace ErikwnkWFUI.Forms
             return label;
         }
 
-        // OK takes the text - unless it is empty and an empty text is not wanted (nothing happens, the box gets the focus), or Validate
+        // OK takes the text - unless it is empty and an empty text is not wanted (nothing happens, the box gets the focus), or Validator
         // does not accept it (its message is shown and the text is selected, so typing replaces it).
         private void Accept()
         {
@@ -218,8 +228,12 @@ namespace ErikwnkWFUI.Forms
             if (IsDisposed)
                 return;
 
-            _okButton.Text = UIStrings.Get("InputBox.Ok");
-            _cancelButton.Text = UIStrings.Get("InputBox.Cancel");
+            // A text that was set stays as it is; the others follow the language.
+            if (_okText == null)
+                _okButton.Text = UIStrings.Get("InputBox.Ok");
+
+            if (_cancelText == null)
+                _cancelButton.Text = UIStrings.Get("InputBox.Cancel");
 
             if (_defaultTitle)
                 FormTitle = UIStrings.Get("InputBox.Title");
