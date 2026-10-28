@@ -9,6 +9,8 @@ namespace ErikwnkWFUI.Tests.Forms;
 public class FormBehaviorTests
 {
     private const int WmGetMinMaxInfo = 0x24;
+    private const int WsMinimizeBox = 0x00020000;
+
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint
@@ -34,6 +36,8 @@ public class FormBehaviorTests
             : base(options)
         {
         }
+
+        public int Style => CreateParams.Style;
 
         public MinMaxInfo AskMinMaxInfo()
         {
@@ -118,5 +122,52 @@ public class FormBehaviorTests
         MinMaxInfo info = form.AskMinMaxInfo();
 
         Assert.NotEqual(Screen.FromControl(form).WorkingArea.Width, info.MaxSize.X);
+    }
+
+    // (What the taskbar does with the style cannot be tried here: the system minimizes by a message even without it.)
+    [Fact]
+    public void AFramelessWindowWithAMinimizeButton_HasTheMinimizeStyle_ForTheTaskbar_AndADialogHasNot()
+    {
+        using MessageForm window = new MessageForm(FormOptions.CreateStandard("Window"));
+        using MessageForm dialog = new MessageForm(FormOptions.CreateDialog("Dialog"));
+        using MessageForm primary = new MessageForm(FormOptions.CreatePrimarySettings("Settings"));
+
+        Assert.NotEqual(0, window.Style & WsMinimizeBox);
+        Assert.Equal(0, dialog.Style & WsMinimizeBox);
+        Assert.Equal(0, primary.Style & WsMinimizeBox);
+    }
+
+    [Fact]
+    public void WithTheNativeFrame_ThereIsOneTitleBar_AndTheButtonsAreThoseOfTheForm()
+    {
+        FormOptions options = FormOptions.CreateDialog("Native");
+        options.Borderless = false;
+        using AppForm dialog = new AppForm(options);
+
+        Assert.Equal(FormBorderStyle.FixedDialog, dialog.FormBorderStyle);
+        Assert.False(dialog.MinimizeBox || dialog.MaximizeBox);
+        Assert.True(dialog.ControlBox);
+        Assert.DoesNotContain(dialog.Controls.Cast<Control>(), c => c is ErikwnkWFUI.Controls.TitleBarControl);
+        Assert.Equal("Native", dialog.Text);
+
+        FormOptions window = FormOptions.CreateStandard("Native window");
+        window.Borderless = false;
+        using AppForm resizable = new AppForm(window);
+
+        Assert.Equal(FormBorderStyle.Sizable, resizable.FormBorderStyle);
+        Assert.True(resizable.MinimizeBox && resizable.MaximizeBox);
+    }
+
+    [Fact]
+    public void TheBarOfAnAppFormWithTheNativeFrame_IsDisposedWithTheForm()
+    {
+        FormOptions options = FormOptions.CreateStandard("Native");
+        options.Borderless = false;
+        AppForm form = new AppForm(options);
+        var bar = form.TitleBar;
+
+        form.Dispose();
+
+        Assert.True(bar.IsDisposed);
     }
 }

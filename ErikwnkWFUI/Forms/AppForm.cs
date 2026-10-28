@@ -30,6 +30,7 @@ namespace ErikwnkWFUI.Forms
         private readonly FlowLayoutPanel _versionStrip;
         private readonly Label _versionLabel;
         private readonly BorderlessResizeHandler _resizeHandler;
+        private readonly bool _allowMinimizeFromTaskbar;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
         public Panel ContentPanel
@@ -127,8 +128,20 @@ namespace ErikwnkWFUI.Forms
                 }
             }
 
+            _allowMinimizeFromTaskbar = options.Borderless && options.ShowMinimizeButton;
+
             if (options.Borderless)
+            {
                 FormBorderStyle = FormBorderStyle.None;
+            }
+            else
+            {
+                // The native frame has the title bar and its buttons: they are the ones of the form.
+                FormBorderStyle = options.Resizable ? FormBorderStyle.Sizable : FormBorderStyle.FixedDialog;
+                MinimizeBox = options.ShowMinimizeButton;
+                MaximizeBox = options.ShowMaximizeButton && options.Resizable;
+                ControlBox = options.ShowCloseButton || MinimizeBox || MaximizeBox;
+            }
 
             DoubleBuffered = true;
             Func<Color> frame = options.FrameSource ?? (() => UIColors.BackgroundBlack);
@@ -189,7 +202,11 @@ namespace ErikwnkWFUI.Forms
             }
 
             Controls.Add(_contentPanel);
-            Controls.Add(_titleBar);
+
+            // With the native frame there is only one title bar. The bar of the library is not in the window then (TitleBar, FormTitle and
+            // FormIcon stay there to be used, but show nothing).
+            if (options.Borderless)
+                Controls.Add(_titleBar);
 
             if (_versionStrip != null)
                 Controls.Add(_versionStrip);
@@ -199,6 +216,31 @@ namespace ErikwnkWFUI.Forms
         }
 
         private const int WmGetMinMaxInfo = 0x24;
+        private const int WsMinimizeBox = 0x00020000;
+
+        // A window without a frame has no minimize box for the system: a click on its button in the taskbar would not minimize it. The window
+        // that has a minimize button of its own gets the style (nothing is drawn for it).
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams parameters = base.CreateParams;
+
+                if (_allowMinimizeFromTaskbar)
+                    parameters.Style |= WsMinimizeBox;
+
+                return parameters;
+            }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            // The bar that is not in the window (native frame) is not disposed with the controls.
+            if (disposing && _titleBar != null && _titleBar.Parent == null)
+                _titleBar.Dispose();
+
+            base.Dispose(disposing);
+        }
 
         [StructLayout(LayoutKind.Sequential)]
         private struct NativePoint

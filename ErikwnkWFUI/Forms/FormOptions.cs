@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Forms
     /// </summary>
     public class FormOptions
     {
-        /// <summary>True (the default) removes the native Windows title bar/frame in favor of ErikwnkWFUI's own <see cref="TitleBarControl"/>.</summary>
+        /// <summary>True (the default) removes the native Windows title bar/frame in favor of ErikwnkWFUI's own <see cref="TitleBarControl"/>. False keeps the native frame (and has no title bar of the library): <see cref="Resizable"/>, the three buttons and <see cref="Title"/> then are the ones of the native window.</summary>
         public bool Borderless { get; set; } = true;
         public int BorderSize { get; set; } = 1;
         /// <summary>Whether the window can be resized by dragging its edges - only meaningful when <see cref="Borderless"/> is true.</summary>
