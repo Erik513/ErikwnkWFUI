@@ -134,6 +134,32 @@ public class FormExtrasTests : IDisposable
     }
 
     [Fact]
+    public void TheSystemMenu_IsInGerman_WithTheRealTexts_AndFollowsALanguageSwitchWhileTheWindowIsOpen()
+    {
+        AppForm window = Own(UIStyles.Forms.CreateStandard("Window"));
+        OffscreenForm.Place(window);
+
+        using (LibraryMenu english = window.CreateSystemMenu())
+            Assert.Equal(new[] { "Minimize", "Maximize", "Close" }, Texts(english.Items));
+
+        LanguageTestHelper.RunWithLanguage(UILanguage.German, () =>
+        {
+            using (LibraryMenu german = window.CreateSystemMenu())
+                Assert.Equal(new[] { "Minimieren", "Maximieren", "Schließen" }, Texts(german.Items));
+
+            window.WindowState = FormWindowState.Maximized;
+
+            using (LibraryMenu maximized = window.CreateSystemMenu())
+                Assert.Equal(new[] { "Wiederherstellen", "Minimieren", "Schließen" }, Texts(maximized.Items));
+        });
+
+        window.WindowState = FormWindowState.Normal;
+
+        using (LibraryMenu back = window.CreateSystemMenu())
+            Assert.Equal("Minimize", Texts(back.Items)[0]);
+    }
+
+    [Fact]
     public void ARightClickOnTheTitleBar_AsksForTheSystemMenu_AtTheCursor_AndALeftClickDoesNot()
     {
         using TitleBarControl bar = new TitleBarControl(null, "Title");
