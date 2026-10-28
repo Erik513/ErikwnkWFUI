@@ -116,6 +116,31 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// A progress dialog (<see cref="ErikwnkWFUI.Forms.ProgressForm"/>): a text and a progress bar, which the task fills with <c>Report</c> (from
+            /// any thread). The user cannot close it; the program does, when the task is done. <see cref="ErikwnkWFUI.Forms.ProgressBox.Run"/> does all
+            /// of it in one call.
+            /// </summary>
+            /// <param name="status">The text above the bar.</param>
+            /// <param name="title">The title of the window ("Please wait" or "Bitte warten" when none is given).</param>
+            /// <param name="cancelable">Whether the window has a Cancel button (Escape too), which asks the task to stop through <c>CancellationToken</c>.</param>
+            /// <param name="colors">A color set for the title bar and the bar; null (the default) is the normal dark title bar and a bar in the accent.</param>
+            /// <param name="size">One of the three widths (<c>FormSize.Medium</c> by default) or an own <c>Size</c> (its width, and its height as the least height).</param>
+            public static ErikwnkWFUI.Forms.ProgressForm CreateProgressStandard(string status = "", string title = null, bool cancelable = false, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateProgress(ErikwnkWFUI.Forms.FormOptions.CreateDialog(title ?? Localization.UIStrings.Get("ProgressForm.Title"), ContentAlignment.MiddleLeft), colors, status, cancelable, size);
+            }
+
+            /// <summary>A progress dialog with the title bar in a very dark shade of the accent.</summary>
+            /// <param name="status">The text above the bar.</param>
+            /// <param name="title">The title of the window ("Please wait" or "Bitte warten" when none is given).</param>
+            /// <param name="cancelable">Whether the window has a Cancel button (Escape too).</param>
+            /// <param name="size">One of the three widths (<c>FormSize.Medium</c> by default) or an own <c>Size</c> (its width, and its height as the least height).</param>
+            public static ErikwnkWFUI.Forms.ProgressForm CreateProgressPrimary(string status = "", string title = null, bool cancelable = false, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateProgress(ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(title ?? Localization.UIStrings.Get("ProgressForm.Title"), ContentAlignment.MiddleLeft), null, status, cancelable, size);
+            }
+
+            /// <summary>
             /// A settings window around a property table, with the buttons Save and Cancel and the version of the program at the bottom
             /// (<see cref="ErikwnkWFUI.Forms.OptionsForm"/>): it starts with the ready-made options of the library (theme, accent color, language,
             /// always on top), then add rows to its <c>PropertyTable</c> and call <c>FitToContent()</c>.

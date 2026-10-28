@@ -69,6 +69,8 @@ namespace ErikwnkWFUI.Localization
             ["TitleBar.Restore"] = "Restore",
             ["TitleBar.Close"] = "Close",
 
+            ["ProgressForm.Title"] = "Please wait",
+            ["ProgressForm.Cancel"] = "Cancel",
             ["InputBox.Title"] = "Input",
             ["InputBox.Ok"] = "OK",
             ["InputBox.Cancel"] = "Cancel",
@@ -185,6 +187,8 @@ namespace ErikwnkWFUI.Localization
             ["TitleBar.Restore"] = "Wiederherstellen",
             ["TitleBar.Close"] = "Schließen",
 
+            ["ProgressForm.Title"] = "Bitte warten",
+            ["ProgressForm.Cancel"] = "Abbrechen",
             ["InputBox.Title"] = "Eingabe",
             ["InputBox.Ok"] = "OK",
             ["InputBox.Cancel"] = "Abbrechen",

@@ -25,6 +25,15 @@ namespace ErikwnkWFUI.Factories
             return new InputBoxForm(options, prompt, text, password, placeholder, size);
         }
 
+        // The progress dialog: the same, made as a ProgressForm (a dialog; with no title it has the one of the language).
+        public static ProgressForm CreateProgress(FormOptions options, UIColorSet colors, string status, bool cancelable, FormSizeOption? size)
+        {
+            if (colors != null)
+                options.Colors = colors;
+
+            return new ProgressForm(options, status, cancelable, size);
+        }
+
         // The window of the options, with the color set (when there is one) for its frame.
         // With a size (one of the three of the kind, or an own one) the window has it, scaled to the screen; without one it keeps the
         // size a window has by itself.
