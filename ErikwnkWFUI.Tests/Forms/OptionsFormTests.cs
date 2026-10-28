@@ -546,7 +546,7 @@ public class OptionsFormTests : IDisposable
         Assert.Equal(UILanguage.English, UIStrings.Language);
         Assert.False(owner.TopMost);
         Assert.False(Switch(form, "_startSwitch").Checked);
-        Assert.Contains("Defaults", RowLabels(form));
+        Assert.Equal(new[] { "" }, RowLabels(form).Where(label => label.Length == 0).ToArray()); // the reset row has no label: the button says it all
 
         Find(form, "_cancelButton").PerformClick();
 

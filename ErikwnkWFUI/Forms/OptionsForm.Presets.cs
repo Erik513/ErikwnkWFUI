@@ -337,7 +337,7 @@ namespace ErikwnkWFUI.Forms
                 case OptionsPreset.StartWithWindows:
                     return UIStrings.Get("OptionsForm.StartWithWindows");
                 case OptionsPreset.ResetToDefaults:
-                    return UIStrings.Get("OptionsForm.Defaults");
+                    return ""; // the button says it all
                 default:
                     return UIStrings.Get("OptionsForm.AlwaysOnTop");
             }
