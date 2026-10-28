@@ -38,7 +38,7 @@ namespace ErikwnkWFUI.Showcase
         {
             CloseSampleForm();
 
-            table.AddSection("One sample window - change a property and it shows in the window at once");
+            table.AddSection("Sample window (one window: a change below shows in it at once)");
 
             Button open = UIStyles.Buttons.CreateStandard("Open", size: new Size(110, 32));
             Button close = UIStyles.Buttons.CreateStandard("Close", size: new Size(110, 32));
@@ -50,7 +50,9 @@ namespace ErikwnkWFUI.Showcase
             _formLook = CreateFormChoice("Standard", "Primary", "colors: Yellow");
             _formKind.SelectedIndexChanged += (sender, e) => OnFormPresetChanged("The kind of window: a Window can be resized, minimized and maximized; a Dialog has only the close button, a fixed size, and Escape closes it; Settings is a Dialog with the version of the program in the strip below.");
             _formLook.SelectedIndexChanged += (sender, e) => OnFormPresetChanged("The colors: Standard is the usual dark title bar, Primary a very dark shade of the accent, and with colors a color set colors the title bar.");
-            table.AddRow("UIStyles.Forms", _formKind, _formLook);
+            table.AddSection("UIStyles.Forms");
+            table.AddRow("Kind", _formKind);
+            table.AddRow("Colors", _formLook);
 
             _formAlign = CreateFormChoice("MiddleLeft", "MiddleCenter", "MiddleRight");
             _formBorder = CreateFormChoice(FormDefaultChoice, "Crimson", "Teal");
@@ -58,34 +60,34 @@ namespace ErikwnkWFUI.Showcase
             _formAlign.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("TitleTextAlign: where the title stands. In the middle it keeps clear of the buttons when the window gets narrow.");
             _formBorder.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("BorderColor: the thin edge around the window (black by default). It has no effect with the native frame.");
             _formBar.SelectedIndexChanged += (sender, e) => ReopenSampleFormIfOpen("TitleBarBackColor: a color of the bar alone, which does not follow the theme.");
-            table.AddRow("Appearance",
-                FormName("TitleTextAlign"), PropertyColumn.Percent(_formAlign, 33f),
-                FormName("BorderColor"), PropertyColumn.Percent(_formBorder, 33f),
-                FormName("TitleBarBackColor"), PropertyColumn.Percent(_formBar, 33f));
+            table.AddSection("FormOptions: appearance");
+            table.AddRow("TitleTextAlign", _formAlign);
+            table.AddRow("BorderColor", _formBorder);
+            table.AddRow("TitleBarBackColor", _formBar);
 
             _formMinimize = CreateFormSwitch("ShowMinimizeButton: without it the taskbar and the system menu cannot minimize the window either.");
             _formMaximize = CreateFormSwitch("ShowMaximizeButton: the maximize button of the title bar.");
             _formClose = CreateFormSwitch("ShowCloseButton: without it close the window with Alt+F4 or from the system menu (right-click the title bar).");
-            table.AddRow("Title bar buttons",
-                FormSwitch(_formMinimize), FormName("ShowMinimizeButton"),
-                FormSwitch(_formMaximize), FormName("ShowMaximizeButton"),
-                FormSwitch(_formClose), FormName("ShowCloseButton"));
+            table.AddSection("FormOptions: title bar buttons");
+            table.AddRow("ShowMinimizeButton", _formMinimize);
+            table.AddRow("ShowMaximizeButton", _formMaximize);
+            table.AddRow("ShowCloseButton", _formClose);
 
             _formShadow = CreateFormSwitch("Shadow: the drop shadow around a window without a frame.");
             _formResizable = CreateFormSwitch("Resizable: whether the window can be resized by its edges.");
             _formBorderless = CreateFormSwitch("Borderless = false: the native frame of Windows, and no title bar of the library (BorderColor and Shadow have nothing to show then).");
-            table.AddRow("Frame",
-                FormSwitch(_formShadow), FormName("Shadow"),
-                FormSwitch(_formResizable), FormName("Resizable"),
-                FormSwitch(_formBorderless), FormName("Borderless"));
+            table.AddSection("FormOptions: frame");
+            table.AddRow("Shadow", _formShadow);
+            table.AddRow("Resizable", _formResizable);
+            table.AddRow("Borderless", _formBorderless);
 
             _formEscape = CreateFormSwitch("CloseOnEscape: Escape closes the window, as it does in every dialog.");
             _formVersion = CreateFormSwitch("VersionText: the strip at the bottom shows this text instead of the version of the program (without it a Window has no strip).");
             _formRemember = CreateFormSwitch("RememberBoundsKey: move this window, resize it, close it with Close and open it again: it comes back where it was.");
-            table.AddRow("Behavior",
-                FormSwitch(_formEscape), FormName("CloseOnEscape"),
-                FormSwitch(_formVersion), FormName("VersionText = own text"),
-                FormSwitch(_formRemember), FormName("RememberBoundsKey"));
+            table.AddSection("FormOptions: behavior");
+            table.AddRow("CloseOnEscape", _formEscape);
+            table.AddRow("VersionText (own text)", _formVersion);
+            table.AddRow("RememberBoundsKey", _formRemember);
 
             SyncFormControlsToPreset();
         }
@@ -108,21 +110,6 @@ namespace ErikwnkWFUI.Showcase
             toggle.CheckedChanged += (sender, e) => ReopenSampleFormIfOpen(description);
 
             return toggle;
-        }
-
-        // The name of a property in front of its control, in a column as wide as the text.
-        private static PropertyColumn FormName(string name)
-        {
-            Label label = UIStyles.Labels.CreateStandard(name);
-            label.AutoSize = false;
-            label.TextAlign = ContentAlignment.MiddleLeft;
-
-            return PropertyColumn.Absolute(label, TextRenderer.MeasureText(name, label.Font).Width + 24);
-        }
-
-        private static PropertyColumn FormSwitch(ToggleSwitch toggle)
-        {
-            return PropertyColumn.Absolute(toggle, 56);
         }
 
         // ---- the options of the window, as the controls set them
