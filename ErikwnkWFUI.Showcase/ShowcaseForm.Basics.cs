@@ -55,12 +55,25 @@ namespace ErikwnkWFUI.Showcase
         // requested for the sections that never used the middle slot).
         private const float TwoColumnPercent = 50f;
 
+        // rowHeight: the height of the row at 96 dpi; 0 leaves it to the content (right for one control, too tall for a flow panel of buttons).
         private void AddTwoColumnRow(
             PropertyTable table,
             string labelText,
             Control primary,
-            Control disabled)
+            Control disabled,
+            int rowHeight = 0)
         {
+            if (rowHeight > 0)
+            {
+                table.AddRow(
+                    labelText,
+                    rowHeight,
+                    PropertyColumn.Percent(primary, TwoColumnPercent),
+                    PropertyColumn.Percent(disabled, TwoColumnPercent));
+
+                return;
+            }
+
             table.AddRow(
                 labelText,
                 PropertyColumn.Percent(primary, TwoColumnPercent),
@@ -109,7 +122,8 @@ namespace ErikwnkWFUI.Showcase
                 table,
                 "CreateGreen, CreateRed",
                 CreateShortFormButtons(textButtonSize, enabled: true),
-                CreateShortFormButtons(textButtonSize, enabled: false));
+                CreateShortFormButtons(textButtonSize, enabled: false),
+                rowHeight: 46);
 
             // Ready-made designs: pass a preset to CreateSymbol and it brings the symbol and
             // the colors. All presets of UIStyles.Buttons.Presets, found by reflection so a
@@ -127,9 +141,12 @@ namespace ErikwnkWFUI.Showcase
                 presetLines * 36 + 14,
                 CreatePresetButtons(presets));
 
+            // A symbol of your own (any character), in three sizes: the symbol grows with the height of the button. Neutral, in a color set, and in a plain Color.
+            AddTwoColumnRow(table, "CreateSymbol (symbol, size, colors)", CreateOwnSymbolButtons(enabled: true), CreateOwnSymbolButtons(enabled: false), rowHeight: 64);
+
             // The button that switches the theme by itself: it shows the sun or the moon (the theme a click leads to), switches the theme when
             // it is clicked and follows any other change of the theme and of the language. Click one: all three follow.
-            AddTwoColumnRow(table, "CreateThemeToggleStandard", CreateThemeToggleButtons(enabled: true), CreateThemeToggleButtons(enabled: false));
+            AddTwoColumnRow(table, "CreateThemeToggleStandard", CreateThemeToggleButtons(enabled: true), CreateThemeToggleButtons(enabled: false), rowHeight: 46);
 
             (string Name, UIColorSet Set)[] custom =
             {
@@ -148,12 +165,37 @@ namespace ErikwnkWFUI.Showcase
                 PropertyColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
         }
 
+        private static Control CreateOwnSymbolButtons(bool enabled)
+        {
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
+            flow.FlowDirection = FlowDirection.LeftToRight;
+            flow.WrapContents = true;
+            flow.Height = 54;
+
+            foreach (Button button in new[]
+            {
+                UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Heart, 24 x 24", new Size(24, 24)),
+                UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Heart, 30 x 30"),
+                UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Heart, 48 x 48", new Size(48, 48)),
+                UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Heart, color set", new Size(48, 48), UIStyles.Colors.Sets.Orange),
+                UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Heart, "Heart, a plain Color", new Size(48, 48), Color.HotPink)
+            })
+            {
+                button.Margin = new Padding(0, 0, 6, 6);
+                button.Enabled = enabled;
+                flow.Controls.Add(button);
+            }
+
+            return flow;
+        }
+
         // Standard, Primary and Standard(colors: Yellow), as on every page.
         private static Control CreateThemeToggleButtons(bool enabled)
         {
             FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
+            flow.Height = 34;
 
             foreach (Button button in new[]
             {
@@ -175,6 +217,7 @@ namespace ErikwnkWFUI.Showcase
             FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
             flow.FlowDirection = FlowDirection.LeftToRight;
             flow.WrapContents = true;
+            flow.Height = size.Height + 6;
 
             foreach (Button button in new[]
             {

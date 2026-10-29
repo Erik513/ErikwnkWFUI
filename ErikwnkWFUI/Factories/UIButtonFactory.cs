@@ -43,7 +43,9 @@ namespace ErikwnkWFUI.Factories
 
             // The symbols are drawn in the symbol font (the same for all three, whatever the text font can show: the minimize and maximize
             // symbols are not in it, and a plain button would show a box).
-            button.Font = new Font(UIStyles.Symbols.GetFontName(text), CaptionSymbolPoints);
+            Font font = new Font(UIStyles.Symbols.GetFontName(text), CaptionSymbolPoints);
+            button.Font = font;
+            button.Disposed += delegate { font.Dispose(); };
 
             return button;
         }
@@ -259,12 +261,6 @@ namespace ErikwnkWFUI.Factories
             };
         }
 
-        /// <summary>
-        /// Changes an already-created button's tooltip text - e.g. to
-        /// re-translate it after a language switch. A button that was made
-        /// without a tooltip gets one with the first text that is not empty;
-        /// an empty text for a button without one does nothing.
-        /// </summary>
         // A symbol button that switches the theme: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for
         // the dark one), applies that theme itself, takes no focus (like a tool bar button) and follows a change of the theme - made by itself or
         // by anything else - and of the language (its tooltip and its name for the screen reader say what a click does).
@@ -311,6 +307,12 @@ namespace ErikwnkWFUI.Factories
             UpdateTooltip(button, text);
         }
 
+        /// <summary>
+        /// Changes an already-created button's tooltip text - e.g. to
+        /// re-translate it after a language switch. A button that was made
+        /// without a tooltip gets one with the first text that is not empty;
+        /// an empty text for a button without one does nothing.
+        /// </summary>
         public static void UpdateTooltip(Button button, string tooltip)
         {
             if (button == null)

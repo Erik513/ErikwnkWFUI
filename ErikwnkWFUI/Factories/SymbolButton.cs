@@ -99,8 +99,11 @@ namespace ErikwnkWFUI.Factories
             base.OnEnabledChanged(e);
 
             // A disabled control gets no MouseUp, so a press that was still
-            // going (a click handler that disables the button) would stay.
+            // going (a click handler that disables the button) would stay. Nor does it
+            // get a MouseLeave: whether the mouse is over the button is looked at again
+            // when it is enabled, so it does not look hovered with the mouse elsewhere.
             _isPressed = false;
+            _isHot = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
             Invalidate();
         }
 

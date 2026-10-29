@@ -124,7 +124,9 @@ public class SymbolButtonInputTests : SymbolButtonTestBase
         button.Enabled = false;
         button.Enabled = true;
 
-        Assert.Equal(set.Hover, FillOf(button));
+        // (Not pressed, and not hovered either: the mouse is not over the button when it is enabled again.)
+        Assert.NotEqual(set.Pressed, FillOf(button));
+        Assert.Equal(set.Basic, FillOf(button));
     }
 
     [Fact]
@@ -267,5 +269,20 @@ public class SymbolButtonInputTests : SymbolButtonTestBase
         button.Enabled = false;
         Raise(button, "OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
         Assert.Equal(set.DisabledText, button.ForeColor);
+    }
+
+    [Fact]
+    public void AButtonThatWasHotWhenItWasDisabled_DoesNotLookHoveredWhenItIsEnabledAgain()
+    {
+        // A disabled control gets no MouseLeave, so the mouse may have gone while it was disabled: the position is looked at again on enabling.
+        UIColorSet set = UIStyles.Colors.Sets.Teal;
+        using Button button = CreateTeal();
+        Raise(button, "OnMouseEnter", EventArgs.Empty);
+        Assert.Equal(set.Hover, FillOf(button));
+
+        button.Enabled = false;
+        button.Enabled = true;
+
+        Assert.Equal(set.Basic, FillOf(button));
     }
 }

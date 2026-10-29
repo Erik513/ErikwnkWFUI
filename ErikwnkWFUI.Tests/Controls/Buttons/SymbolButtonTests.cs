@@ -274,4 +274,17 @@ public class SymbolButtonTests : SymbolButtonTestBase
 
         Assert.True(standardChevron.Font.Size < standardOther.Font.Size);
     }
+
+    [Fact]
+    public void TheFontOfACaptionButton_IsReleasedWithTheButton()
+    {
+        Button button = UIButtonFactory.CreateCaptionButton(UIStyles.Symbols.Close, "Close", new Size(46, 32), () => UIColors.BackgroundDark, null!, true);
+        Font own = button.Font;
+
+        Assert.False(IsDisposed(own));
+
+        button.Dispose();
+
+        Assert.True(IsDisposed(own));
+    }
 }
