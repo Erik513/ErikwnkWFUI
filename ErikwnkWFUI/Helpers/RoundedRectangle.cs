@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Drawing2D;
 
 namespace ErikwnkWFUI.Helpers
@@ -8,11 +9,13 @@ namespace ErikwnkWFUI.Helpers
     {
         /// <summary>
         /// The path of <paramref name="rect"/> with corners of the given radius. The caller disposes it. A radius of half the
-        /// height makes a pill; a radius of 0 or less gives a plain rectangle.
+        /// height makes a pill; a radius of 0 or less gives a plain rectangle, and a radius larger than half of the shorter side is
+        /// taken as half of it (the corners would run into each other otherwise).
         /// </summary>
         public static GraphicsPath CreatePath(Rectangle rect, int radius)
         {
             GraphicsPath path = new GraphicsPath();
+            radius = Math.Min(radius, Math.Min(rect.Width, rect.Height) / 2);
 
             // (An arc of no size is not a corner: GDI+ does not take it.)
             if (radius <= 0)
@@ -37,6 +40,7 @@ namespace ErikwnkWFUI.Helpers
         public static GraphicsPath CreatePath(RectangleF rect, float radius)
         {
             GraphicsPath path = new GraphicsPath();
+            radius = Math.Min(radius, Math.Min(rect.Width, rect.Height) / 2);
 
             if (radius <= 0)
             {

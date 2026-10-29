@@ -139,6 +139,8 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
+            bool copied = true;
+
             RunWithSuppressedActionConfirmation(() =>
             {
                 // Widen the selection to the full rows first so the
@@ -159,13 +161,21 @@ namespace ErikwnkWFUI.Controls
 
                 DataObject clipboardContent = GetClipboardContent();
 
-                if (clipboardContent != null)
+                // (A cut whose copy did not work removes nothing: the rows would be gone.)
+                if (clipboardContent != null && !ClipboardAccess.TrySetDataObject(clipboardContent))
                 {
-                    ClipboardAccess.SetDataObject(clipboardContent);
+                    copied = false;
+
+                    return;
                 }
 
                 DeleteRows(rowIndexes);
             });
+
+            if (!copied)
+            {
+                return;
+            }
 
             string message = rowIndexes.Count == 1
                 ? UIStrings.Get("DataGridView.RowCut")

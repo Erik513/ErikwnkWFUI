@@ -334,9 +334,10 @@ public class TextBoxEdgeCaseTests : IDisposable
     [Fact]
     public void ANullTextAndANullPlaceholder_AreAnEmptyOne()
     {
-        TextBox box = UIStyles.TextBoxes.CreateStandard(null!, null!);
-        LockableTextBox lockable = UIStyles.TextBoxes.CreateLockable(null!, null!);
-        TextBox password = UIStyles.TextBoxes.CreatePassword(null!, null!);
+        // (Disposed: a box that stays listens to the language for the rest of the run, and a switch from another thread would then reach its window.)
+        using TextBox box = UIStyles.TextBoxes.CreateStandard(null!, null!);
+        using LockableTextBox lockable = UIStyles.TextBoxes.CreateLockable(null!, null!);
+        using TextBox password = UIStyles.TextBoxes.CreatePassword(null!, null!);
 
         Assert.Equal(string.Empty, box.Text);
         Assert.Equal(string.Empty, lockable.Text);

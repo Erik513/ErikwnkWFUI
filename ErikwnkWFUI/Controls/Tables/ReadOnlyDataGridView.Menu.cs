@@ -364,7 +364,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (content != null)
                 {
-                    ClipboardAccess.SetDataObject(content);
+                    ClipboardAccess.TrySetDataObject(content);
                 }
             }
             finally

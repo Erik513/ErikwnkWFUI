@@ -47,4 +47,37 @@ public class RoundedRectangleTests
         Assert.True(path.IsVisible(50, 10));
         Assert.True(path.IsVisible(30, 1));
     }
+
+    [Fact]
+    public void ARadiusLargerThanHalfTheShorterSide_IsTakenAsHalfOfIt_SoTheCornersDoNotRunIntoEachOther()
+    {
+        Rectangle rect = new Rectangle(0, 0, 40, 20);
+        using GraphicsPath huge = RoundedRectangle.CreatePath(rect, 500);
+        using GraphicsPath pill = RoundedRectangle.CreatePath(rect, 10);
+        using GraphicsPath hugeF = RoundedRectangle.CreatePath(new RectangleF(0, 0, 40, 20), 500f);
+        using GraphicsPath pillF = RoundedRectangle.CreatePath(new RectangleF(0, 0, 40, 20), 10f);
+
+        Assert.Equal(pill.GetBounds(), huge.GetBounds());
+        Assert.Equal(pill.PointCount, huge.PointCount);
+        Assert.Equal(pillF.GetBounds(), hugeF.GetBounds());
+        Assert.Equal(pillF.PointCount, hugeF.PointCount);
+    }
+
+    [Fact]
+    public void ARectangleOfNoSize_GivesAPathWithoutAnException()
+    {
+        Assert.Null(Record.Exception(() => RoundedRectangle.CreatePath(Rectangle.Empty, 6).Dispose()));
+        Assert.Null(Record.Exception(() => RoundedRectangle.CreatePath(RectangleF.Empty, 6f).Dispose()));
+        Assert.Null(Record.Exception(() => RoundedRectangle.CreatePath(new Rectangle(0, 0, 30, 0), 6).Dispose()));
+    }
+
+    [Fact]
+    public void ARadiusOfZeroOrLess_GivesAPlainRectangle_InBothOverloads()
+    {
+        using GraphicsPath path = RoundedRectangle.CreatePath(new Rectangle(0, 0, 40, 20), 0);
+        using GraphicsPath pathF = RoundedRectangle.CreatePath(new RectangleF(0, 0, 40, 20), -3f);
+
+        Assert.True(path.IsVisible(0, 0));
+        Assert.True(pathF.IsVisible(0, 0));
+    }
 }

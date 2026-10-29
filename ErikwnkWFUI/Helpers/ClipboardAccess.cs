@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace ErikwnkWFUI.Helpers
 {
@@ -35,24 +36,55 @@ namespace ErikwnkWFUI.Helpers
     /// The one way the grids and the list view reach the clipboard. It is the system's clipboard;
     /// a test puts one in memory in its place, so it neither depends on what other programs do
     /// with the clipboard at that moment nor overwrites the clipboard of the person running it.
+    /// The clipboard belongs to the whole system and another program (a clipboard manager, a remote
+    /// session) can hold it for a moment: that is never an exception for the caller here.
     /// </summary>
     internal static class ClipboardAccess
     {
         internal static IClipboard Current = new SystemClipboard();
 
-        internal static void SetDataObject(DataObject data, bool copy = false)
+        /// <summary>
+        /// Puts the content on the clipboard. False when another program holds the clipboard (nothing was copied): what must only follow
+        /// a copy that worked - the clearing of a cut - has to ask.
+        /// </summary>
+        internal static bool TrySetDataObject(DataObject data, bool copy = false)
         {
-            Current.SetDataObject(data, copy);
+            try
+            {
+                Current.SetDataObject(data, copy);
+
+                return true;
+            }
+            catch (ExternalException)
+            {
+                return false;
+            }
         }
 
+        /// <summary>Whether there is text; false also when another program holds the clipboard.</summary>
         internal static bool ContainsText()
         {
-            return Current.ContainsText();
+            try
+            {
+                return Current.ContainsText();
+            }
+            catch (ExternalException)
+            {
+                return false;
+            }
         }
 
+        /// <summary>The text; empty also when another program holds the clipboard.</summary>
         internal static string GetText()
         {
-            return Current.GetText();
+            try
+            {
+                return Current.GetText();
+            }
+            catch (ExternalException)
+            {
+                return string.Empty;
+            }
         }
     }
 }

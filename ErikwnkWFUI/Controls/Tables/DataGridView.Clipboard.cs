@@ -100,7 +100,7 @@ namespace ErikwnkWFUI.Controls
 
                 if (copyOnlyContent != null)
                 {
-                    ClipboardAccess.SetDataObject(copyOnlyContent);
+                    ClipboardAccess.TrySetDataObject(copyOnlyContent);
                 }
 
                 return;
@@ -112,9 +112,10 @@ namespace ErikwnkWFUI.Controls
             {
                 DataObject clipboardContent = GetClipboardContent();
 
-                if (clipboardContent != null)
+                // (A cut whose copy did not work clears nothing: the cells would be gone.)
+                if (clipboardContent != null && !ClipboardAccess.TrySetDataObject(clipboardContent))
                 {
-                    ClipboardAccess.SetDataObject(clipboardContent);
+                    return;
                 }
 
                 clearedCount = ClearSelectedCellValues();

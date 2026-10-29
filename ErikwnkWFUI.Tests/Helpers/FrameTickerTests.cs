@@ -124,4 +124,22 @@ public class FrameTickerTests
         ticker.Dispose();
         Assert.Equal(before, AnimationClock.Count);
     }
+
+    [Fact]
+    public void AStepThatWasAskedForAndLostWithTheWindow_IsAskedForAgain_SoTheTickerDoesNotStandStillForEver()
+    {
+        using Control owner = new Control();
+        using Form host = Show(owner);
+        int steps = 0;
+        using FrameTicker ticker = new FrameTicker(owner, step => steps++);
+        ticker.Start();
+
+        // Nothing handles messages for a moment: the beat has posted its step and it waits. The window is made again then (as when the
+        // control moves to another window), which throws the posted message away.
+        Thread.Sleep(150);
+        typeof(Control).GetMethod("RecreateHandle", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.Invoke(owner, null);
+        Pump(1500);
+
+        Assert.True(steps >= 5, "only " + steps + " steps after the window was made again");
+    }
 }

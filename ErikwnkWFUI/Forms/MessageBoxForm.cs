@@ -284,14 +284,8 @@ namespace ErikwnkWFUI.Forms
 
             if (keyData == (Keys.Control | Keys.C) && !selection)
             {
-                try
-                {
-                    ClipboardAccess.SetDataObject(new DataObject(DataFormats.UnicodeText, GetTextForCopy()), true);
-                }
-                catch (System.Runtime.InteropServices.ExternalException)
-                {
-                    // The clipboard is in use by another program: nothing is copied this time.
-                }
+                // (The clipboard may be in use by another program: nothing is copied this time.)
+                ClipboardAccess.TrySetDataObject(new DataObject(DataFormats.UnicodeText, GetTextForCopy()), true);
 
                 return true;
             }

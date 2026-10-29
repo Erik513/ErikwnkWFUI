@@ -91,10 +91,17 @@ public class TextBoxLanguageTests : IDisposable
         int before = Listeners();
         LockableTextBox lockable = UIStyles.TextBoxes.CreateLockable("abc");
         TextBox password = UIStyles.TextBoxes.CreatePassword("abc");
-        Assert.Equal(before + 2, Listeners());
 
-        lockable.Dispose();
-        password.Dispose();
+        try
+        {
+            Assert.Equal(before + 2, Listeners());
+        }
+        finally
+        {
+            // (Also when the assertion fails: boxes that stay would listen to the language for the rest of the run.)
+            lockable.Dispose();
+            password.Dispose();
+        }
 
         Assert.Equal(before, Listeners());
         LanguageTestHelper.RunWithLanguage(UILanguage.German, () => { });

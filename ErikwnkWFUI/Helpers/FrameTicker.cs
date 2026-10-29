@@ -20,6 +20,10 @@ namespace ErikwnkWFUI.Helpers
 
         private const int HiddenPollMilliseconds = 250;
 
+        // A step that was asked for and has not come after this long is taken as lost (its window was destroyed and made again on the way,
+        // which throws away the posted message): the next beat asks again, otherwise the ticker would wait for it for ever.
+        private const int LostStepMilliseconds = 500;
+
         private readonly Control _owner;
         private readonly Action<double> _step;
         private readonly Timer _poll = new Timer { Interval = HiddenPollMilliseconds };
@@ -27,6 +31,7 @@ namespace ErikwnkWFUI.Helpers
         private volatile bool _running;
         private bool _onClock;
         private int _framePending;
+        private long _framePendingSince;
         private long _lastStep;
 
         public FrameTicker(Control owner, Action<double> step)
@@ -73,8 +78,15 @@ namespace ErikwnkWFUI.Helpers
         // Called from the thread of the clock: ask the window for the next step, once.
         void IAnimationClient.RequestFrame()
         {
-            if (!_running || !_owner.IsHandleCreated || Interlocked.Exchange(ref _framePending, 1) == 1)
+            if (!_running || !_owner.IsHandleCreated)
                 return;
+
+            long now = Now();
+
+            if (Interlocked.Exchange(ref _framePending, 1) == 1 && now - Interlocked.Read(ref _framePendingSince) < LostStepMilliseconds)
+                return;
+
+            Interlocked.Exchange(ref _framePendingSince, now);
 
             try
             {
