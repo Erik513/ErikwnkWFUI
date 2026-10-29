@@ -114,6 +114,8 @@ namespace ErikwnkWFUI.Localization
             ["Update.WhatsNew"] = "What's new",
             ["Update.UpdateNow"] = "Update now",
             ["Update.Downloading"] = "Downloading update...",
+            ["Update.Ready"] = "Update completed successfully.",
+            ["Update.ReadyClosing"] = "Update completed successfully - the program closes now.",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "The update download failed. Opening the release page instead.",
@@ -247,6 +249,8 @@ namespace ErikwnkWFUI.Localization
             ["Update.WhatsNew"] = "Neuigkeiten",
             ["Update.UpdateNow"] = "Jetzt aktualisieren",
             ["Update.Downloading"] = "Update wird heruntergeladen...",
+            ["Update.Ready"] = "Update erfolgreich abgeschlossen.",
+            ["Update.ReadyClosing"] = "Update erfolgreich abgeschlossen - das Programm wird jetzt beendet.",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "Der Update-Download ist fehlgeschlagen. Die Release-Seite wird stattdessen geöffnet.",

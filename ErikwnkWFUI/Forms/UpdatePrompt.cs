@@ -13,6 +13,19 @@ namespace ErikwnkWFUI.Forms
     /// </summary>
     public static class UpdatePrompt
     {
+        // A toast over the window of the program: the update is ready. (A toast belongs to a window, so without an owner there is none.)
+        private static void ShowReadyToast(Form owner, string message)
+        {
+            if (owner == null || owner.IsDisposed || message == string.Empty)
+                return;
+
+            UIStyles.Toasts.ShowStandard(
+                message ?? UIStrings.Get("Update.Ready"),
+                owner,
+                UIStyles.Colors.Sets.Green,
+                icon: ToastIcon.Success);
+        }
+
         /// <summary>
         /// Shows a standardized "a new version is available" dialog. If the user clicks "Update now", the dialog closes and a
         /// <see cref="ProgressForm"/> takes its place while applyUpdateAsync runs (on another thread), reporting its progress into the bar; the
@@ -34,6 +47,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="releaseNotes">The text of the release: the question gets a "What's new" button that opens it (null or empty: none).</param>
         /// <param name="allowSkip">Whether the question has a "Skip this version" button (off by default).</param>
         /// <param name="failureMessage">What the progress window says when the update failed ("The update could not be downloaded." when none is given).</param>
+        /// <param name="successMessage">What the toast says over <paramref name="owner"/> when the update is ready ("Update completed successfully." when none is given; an empty text shows no toast - there is none without an owner either).</param>
         public static Task<UpdateOutcome> ShowUpdateAvailableAsync(
             string currentVersion,
             string latestVersion,
@@ -44,7 +58,8 @@ namespace ErikwnkWFUI.Forms
             FormSizeOption? size = null,
             string releaseNotes = null,
             bool allowSkip = false,
-            string failureMessage = null)
+            string failureMessage = null,
+            string successMessage = null)
         {
             if (applyUpdateAsync == null)
                 throw new ArgumentNullException(nameof(applyUpdateAsync));
@@ -60,7 +75,8 @@ namespace ErikwnkWFUI.Forms
                 releaseNotes,
                 allowSkip,
                 false,
-                failureMessage);
+                failureMessage,
+                successMessage);
         }
 
         /// <summary>
@@ -79,6 +95,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="allowSkip">Whether the question has a "Skip this version" button (off by default).</param>
         /// <param name="cancelable">Whether the progress window has a Cancel button (on by default).</param>
         /// <param name="failureMessage">What the progress window says when the update failed ("The update could not be downloaded." when none is given).</param>
+        /// <param name="successMessage">What the toast says over <paramref name="owner"/> when the update is ready ("Update completed successfully." when none is given; an empty text shows no toast - there is none without an owner either).</param>
         public static Task<UpdateOutcome> ShowUpdateAvailableAsync(
             string currentVersion,
             string latestVersion,
@@ -90,7 +107,8 @@ namespace ErikwnkWFUI.Forms
             string releaseNotes = null,
             bool allowSkip = false,
             bool cancelable = true,
-            string failureMessage = null)
+            string failureMessage = null,
+            string successMessage = null)
         {
             if (applyUpdateAsync == null)
                 throw new ArgumentNullException(nameof(applyUpdateAsync));
@@ -158,7 +176,13 @@ namespace ErikwnkWFUI.Forms
                     cancelable: cancelable,
                     owner: owner,
                     showResult: true,
-                    configure: progressForm => progressForm.ShowTime = true);
+                    configure: progressForm =>
+                    {
+                        progressForm.ShowTime = true;
+
+                        // As green as the Update now button of the question.
+                        progressForm.BarColors = UIStyles.Colors.Sets.Green;
+                    });
 
                 if (outcome == ProgressOutcome.Cancelled)
                     return Task.FromResult(UpdateOutcome.Cancelled);
@@ -167,6 +191,9 @@ namespace ErikwnkWFUI.Forms
             {
                 applied = false;
             }
+
+            if (applied)
+                ShowReadyToast(owner, successMessage);
 
             return Task.FromResult(applied ? UpdateOutcome.Applied : UpdateOutcome.Failed);
         }

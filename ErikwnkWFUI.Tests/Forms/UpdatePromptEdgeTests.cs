@@ -182,6 +182,24 @@ public class UpdatePromptEdgeTests : IDisposable
         Assert.Equal(plain, form.Width);
     }
 
+    // ---- the progress window ----
+
+    [Fact]
+    public void TheDownloadBar_IsGreen_LikeTheUpdateNowButton()
+    {
+        Color? bar = null;
+
+        using (System.Windows.Forms.Timer timer = Act(
+            prompt => prompt.AcceptButton!.PerformClick(),
+            progress => bar ??= progress.BarColors != null ? progress.GetPrivateField<ErikwnkWFUI.Controls.ProgressBar>("_bar")!.ForeColor : (Color?)null))
+        {
+            UpdatePrompt.ShowUpdateAvailableAsync("1", "2", async progress => { await Task.Delay(300); return true; }).Wait();
+        }
+
+        Assert.NotNull(bar);
+        Assert.Equal(UIStyles.ProgressBars.CreateGreen().ForeColor.ToArgb(), bar!.Value.ToArgb());
+    }
+
     // ---- the keyboard ----
 
     [Fact]
@@ -200,6 +218,95 @@ public class UpdatePromptEdgeTests : IDisposable
         form.NotesExpanded = false;
         Assert.False(notes.Visible);
         Assert.Same(form.AcceptButton, form.ActiveControl);
+    }
+
+    // ---- the release notes box: its frame and its scroll bar ----
+
+    private static string Lines(int count)
+    {
+        return string.Join("\n", Enumerable.Range(1, count).Select(number => "Line " + number));
+    }
+
+    [Fact]
+    public void TheNotesBox_HasNoFrameOfItsOwn_TheFrameIsThePanelAroundIt_AndItFollowsTheFocus()
+    {
+        UpdateAvailableForm form = _host.Show(new UpdateAvailableForm("1", "2"));
+        TextBox notes = All(form).OfType<TextBox>().First();
+        Control frame = notes.Parent!;
+
+        // (No frame of the box: the system's frame is painted in the area of the scroll bar, which overpaints it when the mouse is over the bar.)
+        Assert.Equal(BorderStyle.None, notes.BorderStyle);
+
+        Color quiet = frame.BackColor;
+        notes.InvokePrivate("OnEnter", EventArgs.Empty);
+        Color focused = frame.BackColor;
+        notes.InvokePrivate("OnLeave", EventArgs.Empty);
+
+        Assert.NotEqual(quiet.ToArgb(), focused.ToArgb());
+        Assert.Equal(quiet.ToArgb(), frame.BackColor.ToArgb());
+    }
+
+    [Fact]
+    public void TheNotesFrame_FollowsTheTheme_AlsoWhileTheNotesAreClosed()
+    {
+        UIColors.ApplyTheme(UIThemes.Dark);
+
+        try
+        {
+            UpdateAvailableForm form = _host.Show(new UpdateAvailableForm("1", "2"));
+            form.ReleaseNotes = "text";
+            Control frame = All(form).OfType<TextBox>().First().Parent!;
+
+            // (The quiet outline is a mid gray that is seen on both pages: 3:1, worked out for the page behind it.)
+            form.NotesExpanded = true;
+            Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMedium).ToArgb(), frame.BackColor.ToArgb());
+
+            // Changed while the notes are open, and while they are closed (the frame has no window then and hears nothing).
+            form.NotesExpanded = false;
+            UIColors.ApplyTheme(UIThemes.Light);
+            Application.DoEvents();
+            form.NotesExpanded = true;
+
+            Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMedium).ToArgb(), frame.BackColor.ToArgb());
+            Assert.True(ColorContrastHelper.GetContrastRatio(frame.BackColor, UIColors.BackgroundMedium) >= 3.0);
+
+            UIColors.ApplyTheme(UIThemes.Dark);
+            Application.DoEvents();
+
+            Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMedium).ToArgb(), frame.BackColor.ToArgb());
+        }
+        finally
+        {
+            UIColors.ApplyTheme(UIThemes.Dark);
+        }
+    }
+    [Fact]
+    public void TheScrollBar_IsThereOnlyWhenTheTextDoesNotFit()
+    {
+        UpdateAvailableForm form = _host.Show(new UpdateAvailableForm("1", "2"));
+        TextBox notes = All(form).OfType<TextBox>().First();
+
+        form.ReleaseNotes = Lines(2);
+        form.NotesExpanded = true;
+        Assert.Equal(ScrollBars.None, notes.ScrollBars);
+
+        form.ReleaseNotes = Lines(60);
+        Assert.Equal(ScrollBars.Vertical, notes.ScrollBars);
+
+        form.ReleaseNotes = Lines(3);
+        Assert.Equal(ScrollBars.None, notes.ScrollBars);
+    }
+
+    [Fact]
+    public void ALongLineThatWraps_AlsoNeedsTheScrollBar()
+    {
+        UpdateAvailableForm form = _host.Show(new UpdateAvailableForm("1", "2"));
+        TextBox notes = All(form).OfType<TextBox>().First();
+
+        form.ReleaseNotes = string.Join(" ", Enumerable.Repeat("a long sentence that has to wrap", 40));
+        form.NotesExpanded = true;
+
+        Assert.Equal(ScrollBars.Vertical, notes.ScrollBars);
     }
 
     // ---- an update that behaves strangely ----

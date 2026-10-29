@@ -19,6 +19,9 @@ namespace ErikwnkWFUI.Forms
     /// </summary>
     public class AppUpdater
     {
+        // How long the program waits for the toast "the update is ready" before it closes (about the time the toast stays for its text).
+        private const int ReadyToastMilliseconds = 4000;
+
         private readonly GitHubUpdateChecker _updateChecker;
         private readonly SelfUpdater _selfUpdater;
 
@@ -103,7 +106,7 @@ namespace ErikwnkWFUI.Forms
         /// internally, just callable on its own (from a one-time startup notice, or
         /// later from an update button click). The question has a "What's new" button when the release has a text, and a
         /// "Skip this version" button with <paramref name="allowSkip"/> (<see cref="UpdateOutcome.Skipped"/>: the program should remember the version and not ask
-        /// again); the download can be cancelled (<see cref="UpdateOutcome.Cancelled"/>). After a successful download the program exits here, so the swap
+        /// again); the download can be cancelled (<see cref="UpdateOutcome.Cancelled"/>). After a successful download a toast over <paramref name="owner"/> says so and the program exits here a few seconds later, so the swap
         /// helper can finish the job; after a failed one the progress window shows the message and, once it is closed, the release page opens.
         /// Returns how the dialog ended.
         /// </summary>
@@ -129,11 +132,18 @@ namespace ErikwnkWFUI.Forms
                 result.ReleaseNotes,
                 allowSkip,
                 true,
-                UIStrings.Get("Update.DownloadFailedMessage"));
+                UIStrings.Get("Update.DownloadFailedMessage"),
+                UIStrings.Get("Update.ReadyClosing"));
 
-            // The update is in place: the program ends here, on the thread of the window, so that the swap helper can finish the job.
+            // The update is in place: the program ends here, on the thread of the window, so that the swap helper can finish the job. The toast
+            // that says so (over the owner) needs a moment to be read first; the window stays responsive meanwhile.
             if (outcome == UpdateOutcome.Applied)
+            {
+                if (owner != null && !owner.IsDisposed)
+                    await Task.Delay(ReadyToastMilliseconds);
+
                 Application.Exit();
+            }
 
             // The progress window has said what went wrong; the release page is the way on.
             if (outcome == UpdateOutcome.Failed)

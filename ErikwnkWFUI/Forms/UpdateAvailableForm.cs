@@ -32,6 +32,8 @@ namespace ErikwnkWFUI.Forms
         private Button _skipButton;
         private Button _updateButton;
         private Panel _notesHost;
+        private Panel _notesFrame;
+        private bool _notesFocused;
         private int _columnsWidth;
         private string _releaseNotes = "";
         private bool _notesExpanded;
@@ -151,8 +153,21 @@ namespace ErikwnkWFUI.Forms
             _notesBox = UIStyles.TextBoxes.CreateStandard("");
             _notesBox.Multiline = true;
             _notesBox.ReadOnly = true;
-            _notesBox.ScrollBars = ScrollBars.Vertical;
             _notesBox.Dock = DockStyle.Fill;
+
+            // The frame is a panel around the box (the box has none): a frame that the system paints as part of the box is overpainted
+            // by its scroll bar, and the bar is shown only when the text does not fit (see UpdateNotesScrollBars).
+            _notesBox.BorderStyle = BorderStyle.None;
+            _notesBox.ScrollBars = ScrollBars.None;
+            _notesBox.Enter += (sender, e) => SetNotesFocused(true);
+            _notesBox.Leave += (sender, e) => SetNotesFocused(false);
+            _notesFrame = new Panel { Dock = DockStyle.Fill, Padding = new Padding(1) };
+            _notesFrame.Controls.Add(_notesBox);
+            ThemeWatcher.Attach(_notesFrame, UpdateNotesFrame);
+
+            // (While the notes are closed the frame has no window and hears nothing of a change of the theme: it is worked out again when it is shown.)
+            _notesFrame.VisibleChanged += (sender, e) => UpdateNotesFrame();
+            UpdateNotesFrame();
 
             // Shown only while the notes are open: closed, the row has no height, and a box that is only clipped away would still be
             // a stop of the Tab key.
@@ -163,7 +178,7 @@ namespace ErikwnkWFUI.Forms
                 Padding = new Padding(24, 0, 24, 8),
                 Visible = false
             };
-            _notesHost.Controls.Add(_notesBox);
+            _notesHost.Controls.Add(_notesFrame);
 
             _buttonPanel = CreateButtonPanel();
 
@@ -217,11 +232,51 @@ namespace ErikwnkWFUI.Forms
 
             _mainLayout.RowStyles[1].Height = notesHeight;
             _notesHost.Visible = _notesExpanded;
+            UpdateNotesScrollBars();
             Size = new Size(width, baseSize.Height + notesHeight);
             MinimumSize = Size;
             MaximumSize = Size;
 
             KeepOnScreen();
+        }
+
+        // The quiet frame of a field; with the keyboard focus in the box the stronger one (as every text box of the library).
+        private void SetNotesFocused(bool focused)
+        {
+            _notesFocused = focused;
+            UpdateNotesFrame();
+        }
+
+        private void UpdateNotesFrame()
+        {
+            // (The page is the one behind the frame: the box stands on the frame itself, whose color is what is being worked out.)
+            _notesFrame.BackColor = _notesFocused
+                ? InputField.GetFrameColor(_notesBox, null, true)
+                : UIColors.GetOutlineColor(InputField.GetPageColor(_notesFrame));
+        }
+
+        // The scroll bar is there only when the text does not fit: it takes room from the text, and a bar that is always there has nothing to
+        // scroll. (Changing ScrollBars makes a new window, so it is done only when it must change; with the bar the lines are wrapped narrower, so
+        // a text that does not fit with it does not fit without it, and one that fits with it fits without.)
+        private void UpdateNotesScrollBars()
+        {
+            if (_notesBox == null || !_notesBox.IsHandleCreated || !_notesExpanded)
+                return;
+
+            _mainLayout.PerformLayout();
+
+            int lines = _notesBox.GetLineFromCharIndex(_notesBox.TextLength) + 1;
+            bool doesNotFit = lines * _notesBox.Font.Height > _notesBox.ClientSize.Height;
+            ScrollBars wanted = doesNotFit ? ScrollBars.Vertical : ScrollBars.None;
+
+            if (_notesBox.ScrollBars != wanted)
+                _notesBox.ScrollBars = wanted;
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            UpdateNotesScrollBars();
         }
 
         private int GetNotesHeight()

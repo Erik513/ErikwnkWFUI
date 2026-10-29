@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
+using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
@@ -74,6 +75,9 @@ namespace ErikwnkWFUI.Forms
         private bool _cancelable;
         private ProgressState _state;
         private string _cancelText;
+        private readonly UIColorSet _windowColors;
+        private UIColorSet _barColors;
+        private Color _barColorApplied;
 
         // The time that has passed; the seam of the tests (null: the clock of the window).
         internal Func<TimeSpan> Clock;
@@ -109,6 +113,7 @@ namespace ErikwnkWFUI.Forms
 
             // The bar is in the accent, or in the color set of the window when it has one.
             UIColorSet colors = options == null ? null : options.Colors;
+            _windowColors = colors;
             _bar = (ProgressBar)(colors == null ? UIStyles.ProgressBars.CreatePrimary() : UIStyles.ProgressBars.CreateStandard(colors));
             _bar.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             _bar.ShowPercentage = true;
@@ -130,6 +135,39 @@ namespace ErikwnkWFUI.Forms
             Cancelable = cancelable;
             ApplyState();
             UIStrings.LanguageChanged += OnLanguageChanged;
+            ErikwnkWFUI.Controls.ThemeWatcher.Attach(this, OnThemeChanged);
+        }
+
+        /// <summary>
+        /// The colors of the bar while the task runs (its main color, as <c>UIStyles.ProgressBars.CreateStandard(colors)</c> uses it): for example
+        /// <c>UIStyles.Colors.Sets.Green</c> for an update, as green as its Update now button. Null (the default) is the color set of the window
+        /// when it has one, else the accent. Once the task has ended the bar is green (<see cref="Succeed"/>) or red (<see cref="Fail"/>) whatever this is.
+        /// Set it on the thread of the window.
+        /// </summary>
+        public UIColorSet BarColors
+        {
+            get { return _barColors; }
+            set
+            {
+                _barColors = value;
+                ApplyBarColors();
+            }
+        }
+
+        private void ApplyBarColors()
+        {
+            if (State != ProgressState.Running)
+                return;
+
+            _barColorApplied = UIProgressBarFactory.FillOf(() => _barColors ?? _windowColors ?? UIColors.PrimarySet)();
+            _bar.ForeColor = _barColorApplied;
+        }
+
+        // The fill follows the theme (and the accent) as long as it is the one that was worked out here.
+        private void OnThemeChanged()
+        {
+            if (_barColors != null && _bar.ForeColor == _barColorApplied)
+                ApplyBarColors();
         }
 
         /// <summary>The text above the bar ("Downloading ..."); the window grows or shrinks to it. Can be set from any thread.</summary>
