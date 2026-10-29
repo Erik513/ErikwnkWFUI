@@ -77,7 +77,6 @@ namespace ErikwnkWFUI.Native
         public const int UDM_GETPOS32 = 0x0472;
         public const int TME_LEAVE = 0x0002;
 
-        // ---- window styles ----
         // ---- tooltips ----
         public const int TTM_SETMAXTIPWIDTH = 0x0418;
         public const int TTM_GETMAXTIPWIDTH = 0x0419;
@@ -85,6 +84,10 @@ namespace ErikwnkWFUI.Native
         public const int GWL_STYLE = -16;
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_STATICEDGE = 0x00020000;
+
+        // GetSystemMetrics: the width of a vertical and the height of a horizontal scroll bar.
+        public const int SM_CXVSCROLL = 2;
+        public const int SM_CYHSCROLL = 3;
         public const int WS_HSCROLL = 0x00100000;
         public const int WS_VSCROLL = 0x00200000;
 
@@ -110,6 +113,10 @@ namespace ErikwnkWFUI.Native
         [DllImport("user32.dll", EntryPoint = "SystemParametersInfoW")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SystemParametersInfo(uint action, uint parameter, ref int value, uint winIni);
+
+        // A measure of Windows for the given dpi (Windows 10, version 1607 and later; before that the entry point is missing).
+        [DllImport("user32.dll")]
+        public static extern int GetSystemMetricsForDpi(int index, uint dpi);
 
         // Puts a message in the queue of the window and returns at once (from any thread).
         [DllImport("user32.dll", EntryPoint = "PostMessageW")]

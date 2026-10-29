@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using static ErikwnkWFUI.Native.NativeMethods;
 
 namespace ErikwnkWFUI.Controls
@@ -166,8 +167,8 @@ namespace ErikwnkWFUI.Controls
                 return new Size(columns, rowsHeight);
 
             Size maximum = MaximumSize;
-            int barWidth = SystemInformation.VerticalScrollBarWidth * DeviceDpi / 96;
-            int barHeight = SystemInformation.HorizontalScrollBarHeight * DeviceDpi / 96;
+            int barWidth = NativeControlTheme.GetScrollBarWidth(DeviceDpi);
+            int barHeight = NativeControlTheme.GetScrollBarHeight(DeviceDpi);
             int width = columns;
             int height = rowsHeight;
             bool vertical = false;

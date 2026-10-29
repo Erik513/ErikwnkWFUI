@@ -17,6 +17,7 @@ namespace ErikwnkWFUI.Helpers
     /// </summary>
     internal static class NativeControlTheme
     {
+        /// <summary>Whether the theme is dark: its medium background is not a light color.</summary>
         public static bool IsDark
         {
             get { return !UIColors.IsLight(UIColors.BackgroundMedium); }
@@ -88,12 +89,42 @@ namespace ErikwnkWFUI.Helpers
             if (!GetWindowRect(control.Handle, out window) || !GetClientRect(control.Handle, out client))
                 return false;
 
-            int barWidth = SystemInformation.VerticalScrollBarWidth * control.DeviceDpi / 96;
-            int barHeight = SystemInformation.HorizontalScrollBarHeight * control.DeviceDpi / 96;
+            int barWidth = GetScrollBarWidth(control.DeviceDpi);
+            int barHeight = GetScrollBarHeight(control.DeviceDpi);
             int border = Math.Max(0, (window.Right - window.Left - client.Right - barWidth) / 2);
             corner = new System.Drawing.Rectangle(border + client.Right, border + client.Bottom, barWidth, barHeight);
 
             return true;
+        }
+
+        /// <summary>The width of a vertical scroll bar on a screen of <paramref name="dpi"/> dots per inch.</summary>
+        public static int GetScrollBarWidth(int dpi)
+        {
+            return GetMetric(SM_CXVSCROLL, dpi, SystemInformation.VerticalScrollBarWidth);
+        }
+
+        /// <summary>The height of a horizontal scroll bar on a screen of <paramref name="dpi"/> dots per inch.</summary>
+        public static int GetScrollBarHeight(int dpi)
+        {
+            return GetMetric(SM_CYHSCROLL, dpi, SystemInformation.HorizontalScrollBarHeight);
+        }
+
+        // The measure for that screen. (SystemInformation answers for the dpi of the system: scaling it again with the dpi of the screen counts the
+        // scaling twice on a program that is aware of the dpi.) Before Windows 10, version 1607 there is only that answer, which is scaled from 96.
+        private static int GetMetric(int index, int dpi, int atTheDpiOfTheSystem)
+        {
+            try
+            {
+                int value = GetSystemMetricsForDpi(index, (uint)dpi);
+
+                if (value > 0)
+                    return value;
+            }
+            catch (EntryPointNotFoundException)
+            {
+            }
+
+            return atTheDpiOfTheSystem * dpi / 96;
         }
 
         /// <summary>Paints that square in the color of the track of the bars. Called after the system has painted the frame (WM_NCPAINT).</summary>

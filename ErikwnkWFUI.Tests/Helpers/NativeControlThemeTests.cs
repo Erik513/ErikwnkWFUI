@@ -114,6 +114,105 @@ public class NativeControlThemeTests : IDisposable
 
         Assert.True(calls >= 2);
     }
+
+    // ---- the square where two scroll bars meet
+
+    // A panel that scrolls both ways (its content is larger than it is): the system gives it both bars.
+    private Panel ShowScrolling(Size content)
+    {
+        Panel panel = new Panel { Bounds = new Rectangle(5, 5, 100, 100), AutoScroll = true, AutoScrollMinSize = content };
+        Form form = OffscreenForm.Create(new Size(120, 120));
+        form.Controls.Add(panel);
+        form.Show();
+        Application.DoEvents();
+        _forms.Add(form);
+
+        return panel;
+    }
+
+    [Fact]
+    public void TheCornerOfTwoDarkScrollBars_IsTheSizeOfABar_AtTheLowerRightOfTheWindow()
+    {
+        Panel panel = ShowScrolling(new Size(500, 500));
+
+        Assert.True(NativeControlTheme.TryGetScrollBarCorner(panel, out Rectangle corner));
+
+        int bar = SystemInformation.VerticalScrollBarWidth * panel.DeviceDpi / 96;
+        Assert.Equal(bar, corner.Width);
+        Assert.Equal(SystemInformation.HorizontalScrollBarHeight * panel.DeviceDpi / 96, corner.Height);
+        Assert.True(corner.Right <= panel.Width + 1 && corner.Bottom <= panel.Height + 1, corner + " in a window of " + panel.Size);
+        Assert.True(corner.Left > panel.Width / 2 && corner.Top > panel.Height / 2, corner + " is not at the lower right");
+    }
+
+    [Fact]
+    public void ThereIsNoCorner_OnTheLightTheme_WithOnlyOneBar_OrWithoutAWindow()
+    {
+        Panel both = ShowScrolling(new Size(500, 500));
+        Panel onlyVertical = ShowScrolling(new Size(10, 500));
+        using Panel noWindow = new Panel { AutoScroll = true, AutoScrollMinSize = new Size(500, 500) };
+
+        Assert.False(NativeControlTheme.TryGetScrollBarCorner(onlyVertical, out _));
+        Assert.False(NativeControlTheme.TryGetScrollBarCorner(noWindow, out _));
+
+        UIColors.ApplyTheme(UIThemes.Light);
+
+        Assert.False(NativeControlTheme.TryGetScrollBarCorner(both, out Rectangle corner));
+        Assert.Equal(Rectangle.Empty, corner);
+    }
+
+    [Fact]
+    public void PaintingTheCorner_NeverThrows_AndWhereThereIsNoneDoesNothing()
+    {
+        Panel both = ShowScrolling(new Size(500, 500));
+        Panel onlyVertical = ShowScrolling(new Size(10, 500));
+
+        Assert.Null(Record.Exception(() => NativeControlTheme.PaintScrollBarCorner(both)));
+        Assert.Null(Record.Exception(() => NativeControlTheme.PaintScrollBarCorner(onlyVertical)));
+
+        UIColors.ApplyTheme(UIThemes.Light);
+
+        Assert.Null(Record.Exception(() => NativeControlTheme.PaintScrollBarCorner(both)));
+    }
+
+    [Fact]
+    public void ApplyToTheScrollBarsAndTheItemsView_AskForTheStyleOfTheTheme_AndNothingForNoWindow()
+    {
+        List<string> styles = new List<string>();
+        Action<IntPtr, string> before = NativeControlTheme.SetStyle;
+        NativeControlTheme.SetStyle = (handle, name) => styles.Add(name);
+
+        try
+        {
+            NativeControlTheme.ApplyToScrollBars((IntPtr)1);
+            NativeControlTheme.ApplyToItemsView((IntPtr)1);
+            NativeControlTheme.ApplyToScrollBars(IntPtr.Zero);
+            NativeControlTheme.ApplyToItemsView(IntPtr.Zero);
+
+            UIColors.ApplyTheme(UIThemes.Light);
+            NativeControlTheme.ApplyToScrollBars((IntPtr)1);
+            NativeControlTheme.ApplyToItemsView((IntPtr)1);
+        }
+        finally
+        {
+            NativeControlTheme.SetStyle = before;
+        }
+
+        Assert.Equal(new[] { "DarkMode_Explorer", "DarkMode_ItemsView", "Explorer", "ItemsView" }, styles);
+    }
+
+    [Fact]
+    public void TheSizeOfAScrollBar_GrowsWithTheScreen_AndIsNotScaledTwice()
+    {
+        int width96 = NativeControlTheme.GetScrollBarWidth(96);
+        int width192 = NativeControlTheme.GetScrollBarWidth(192);
+        int height96 = NativeControlTheme.GetScrollBarHeight(96);
+        int height192 = NativeControlTheme.GetScrollBarHeight(192);
+
+        Assert.InRange(width96, 8, 30);
+        Assert.InRange(height96, 8, 30);
+        Assert.InRange(width192, width96 * 2 - 2, width96 * 2 + 2);
+        Assert.InRange(height192, height96 * 2 - 2, height96 * 2 + 2);
+    }
 }
 
 internal static class ControlTestExtensions
