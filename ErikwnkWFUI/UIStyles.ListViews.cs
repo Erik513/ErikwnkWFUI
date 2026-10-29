@@ -21,6 +21,7 @@ namespace ErikwnkWFUI
                 return UIListViewFactory.CreateStandard(colors);
             }
 
+            /// <summary>Like <see cref="CreateStandard"/>, but the border, the selection, the column drag line and the selection of the context menu follow the accent.</summary>
             public static System.Windows.Forms.ListView CreatePrimary()
             {
                 return UIListViewFactory.CreatePrimary();

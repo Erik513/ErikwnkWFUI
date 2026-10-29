@@ -393,7 +393,7 @@ namespace ErikwnkWFUI.Forms
             // The button of the library that switches the theme by itself, shows the theme it switches to and follows the language and any other
             // change of the theme; here only the note that an option was changed (what is only tried is taken back when the window is closed
             // without Save) is added - its own handler has switched the theme when this one runs.
-            _themeButton = UIStyles.Buttons.CreateThemeToggle();
+            _themeButton = UIStyles.Buttons.CreateThemeToggleStandard();
             _themeButton.Click += (s, e) => { if (!_loadingOptions) _optionsChanged = true; };
 
             _themeStrip.Controls.Add(_themeButton);

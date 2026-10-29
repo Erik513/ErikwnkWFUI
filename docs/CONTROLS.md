@@ -1165,8 +1165,9 @@ Flat, themed `Button`s with a caption: `UIStyles.Buttons.CreateStandard` (neutra
 | `CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false, UIColorSet colors = null)` | The neutral button. |
 | `CreateSymbol(UIButtonPreset preset, string tooltip = "", Size? size = null)` | Makes a symbol button from a ready-made design - the simplest way. The `preset` already says which symbol the button carries and in which colors; you only add what the button is for (the tooltip) and, if the standard 30 x 30 is not what you want, its size. |
 | `CreateSymbol(string symbol, string tooltip = "", Size? size = null, UIColorSet colors = null)` | Makes a symbol button when you want to choose the symbol and the colors yourself: any symbol from `UIStyles.Symbols` (or a symbol of your own), in the neutral look or in the colors of a color set. |
-| `CreateThemeToggle(Size? size = null, UIColorSet colors = null)` | A button that switches the theme, and does all of it by itself: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for the dark one), switches the theme with `UIColors.ApplyTheme` when it is clicked, and shows the new state - also when the theme is changed by anything else (the options window, your own code). Its tooltip and its name for the screen reader say what a click does, in the language of the library, and follow a change of it. It takes no focus, like a button of a tool bar. Add a handler to `Click` (it runs after the theme has been switched) to keep the choice, say `UIAppearance.Capture().Save(path)`. |
-| `CreateThemeTogglePrimary(Size? size = null)` | The button that switches the theme (see `UIStyles.Buttons.CreateThemeToggle`) in the accent color (it follows a change of the accent). |
+| `CreateThemeToggle(Size? size = null, UIColorSet colors = null)` | The old name of `UIStyles.Buttons.CreateThemeToggleStandard`; it is removed once the projects that use it have been changed. |
+| `CreateThemeTogglePrimary(Size? size = null)` | The button that switches the theme (see `UIStyles.Buttons.CreateThemeToggleStandard`) in the accent color (it follows a change of the accent). |
+| `CreateThemeToggleStandard(Size? size = null, UIColorSet colors = null)` | A button that switches the theme, and does all of it by itself: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for the dark one), switches the theme with `UIColors.ApplyTheme` when it is clicked, and shows the new state - also when the theme is changed by anything else (the options window, your own code). Its tooltip and its name for the screen reader say what a click does, in the language of the library, and follow a change of it. It takes no focus, like a button of a tool bar. Add a handler to `Click` (it runs after the theme has been switched) to keep the choice, say `UIAppearance.Capture().Save(path)`. |
 | `UpdateTooltip(Button button, string tooltip)` | Changes the tooltip text of a button made by this class, for example after a language switch. A button created without a tooltip gets one with the first text that is not empty. |
 
 ### UIStyles.CheckBoxes
@@ -1276,7 +1277,7 @@ ErikwnkWFUI's own bundled icons (Web/Folder/Document/Application), plus `UIStyle
 
 | Method | Description |
 |---|---|
-| `LoadEmbedded(Assembly assembly, string resourceName)` |  |
+| `LoadEmbedded(Assembly assembly, string resourceName)` | An image from an embedded resource of an assembly, a copy that belongs to the caller. See `LoadEmbedded` for the exceptions. |
 
 ### UIStyles.InfoPopups
 
@@ -1313,7 +1314,7 @@ A dark-themed, multi-column `ListView` (Details view) with spreadsheet-style cel
 
 | Method | Description |
 |---|---|
-| `CreatePrimary()` |  |
+| `CreatePrimary()` | Like `UIStyles.ListViews.CreateStandard`, but the border, the selection, the column drag line and the selection of the context menu follow the accent. |
 | `CreateStandard(UIColorSet colors = null)` | The themed list view in neutral gray. |
 
 ### UIStyles.MultiPanels
@@ -1334,7 +1335,7 @@ A themed `NumericUpDown`: `UIStyles.NumericUpDowns.CreateStandard` (neutral gray
 | Method | Description |
 |---|---|
 | `CreatePrimary(decimal minimum = 0, decimal maximum = 100, decimal increment = 1, decimal value = 0)` | Like `UIStyles.NumericUpDowns.CreateStandard` but with the arrow fields in the current accent. |
-| `CreateStandard(decimal minimum = 0, decimal maximum = 100, decimal increment = 1, decimal value = 0, UIColorSet colors = null)` |  |
+| `CreateStandard(decimal minimum = 0, decimal maximum = 100, decimal increment = 1, decimal value = 0, UIColorSet colors = null)` | A themed numeric up/down with neutral gray arrow fields, or with those of a color set. |
 
 ### UIStyles.Panels
 
@@ -1488,7 +1489,7 @@ Creates a plain `ToolTip` component - note it isn't owned by any control, so dis
 
 | Method | Description |
 |---|---|
-| `CreateToolTip(string text = "")` |  |
+| `CreateToolTip(string text = "")` | A tooltip in the colors of the theme (they follow a change of it; a color set by hand stays). |
 
 ### UIStyles.TrackBars
 

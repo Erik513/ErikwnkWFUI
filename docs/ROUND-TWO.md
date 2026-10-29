@@ -119,8 +119,7 @@ what is left open.
 
 - `UIStyles.TextBoxes.CreateBorderless(colors:)` (a set can only color the text and the selection of a box without a frame).
 - Other self-drawn controls on the **real screen** paint path (see lesson 4); the 2 px resize zone of `AppForm`; snapping and layouts of `AppForm`;
-  the faint muted gray in the light theme (disabled text); `UILanguage` / `AppLanguage` to unify; `UIStyles.cs` and `UIStyles.Localize.cs` both
-  subscribe to `LanguageChanged` (doubled or two jobs?); one shared helper for "measure the text, let the window grow up to the screen, then scroll"
+  the faint muted gray in the light theme (disabled text); `UILanguage` / `AppLanguage` to unify; `UIStyles.cs` only forwards `LanguageChanged` to `UIStrings` (checked in 1.6: not doubled, `UIStyles.Localize` subscribes per control and lets go on `Disposed`)); one shared helper for "measure the text, let the window grow up to the screen, then scroll"
   that is written three times (`InputBoxForm`, `ProgressForm`, `MessageBoxForm`); a Showcase "playground" whose comboboxes build a factory call, a
   live control and a copy button.
 - The hang of the full run (phases 0.1 and 1.3): a test that makes a control and does not dispose it leaves it on `UIStrings.LanguageChanged`; a later language switch from another test thread touches its window and blocks. Found and fixed so far: InputBoxTests, MessageBoxFactoryTests, ProgressFormTests (0.1), TextBoxEdgeCaseTests (1.3). Rule: every control a test makes is disposed (host or `using`). Proposal still open: `UIStrings` calls the handlers of controls whose window belongs to another thread with `BeginInvoke`, so a switch from any thread is safe and a forgotten control cannot block it.
@@ -138,9 +137,9 @@ what is left open.
 
 ### The `[Obsolete]` aliases (keep until the user says his projects are migrated)
 
-`UIStyles.TextBoxes.CreateBorderstyleNone` (-> `CreateBorderless`), `UIColumn` (-> `PropertyColumn`, file `Controls\PropertyTable\UIColumn.cs`),
+`UIStyles.TextBoxes.CreateBorderstyleNone` (-> `CreateBorderless`), `UIStyles.Buttons.CreateThemeToggle` (-> `CreateThemeToggleStandard`, since 1.6; no other project uses it), `UIColumn` (-> `PropertyColumn`, file `Controls\PropertyTable\UIColumn.cs`),
 `StyledForm` (-> `AppForm`), `StyledFormOptions` (-> `FormOptions`), `StyledFormType`, `StyledOptionsForm` (-> `OptionsForm`) (all four in
-`Forms\ObsoleteNames.cs`). Each has a test that pins the old name (`TextBoxFactoryTests`, `PropertyColumnTests`, `FormNameTests`) that goes away with it.
+`Forms\ObsoleteNames.cs`). Each has a test that pins the old name (`TextBoxFactoryTests`, `ThemeToggleButtonTests`, `PropertyColumnTests`, `FormNameTests`) that goes away with it.
 The user's projects that use them are listed in the memory note `obsolete-aliases-to-remove`. Do not remove an alias before the user says so.
 
 ## The end of round two

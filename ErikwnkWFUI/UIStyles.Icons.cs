@@ -14,11 +14,16 @@ namespace ErikwnkWFUI
         /// </summary>
         public static class Icons
         {
+            /// <summary>An icon of a web page.</summary>
             public static Image Web { get { return UIIcons.Web; } }
+            /// <summary>An icon of a folder.</summary>
             public static Image Folder { get { return UIIcons.Folder; } }
+            /// <summary>An icon of a document.</summary>
             public static Image Document { get { return UIIcons.Document; } }
+            /// <summary>An icon of a program.</summary>
             public static Image Application { get { return UIIcons.Application; } }
 
+            /// <summary>An image from an embedded resource of an assembly, a copy that belongs to the caller. See <see cref="UIIcons.LoadEmbedded"/> for the exceptions.</summary>
             public static Image LoadEmbedded(Assembly assembly, string resourceName)
             {
                 return UIIcons.LoadEmbedded(assembly, resourceName);

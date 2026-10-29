@@ -208,12 +208,19 @@ namespace ErikwnkWFUI
             /// </summary>
             /// <param name="size">The size of the button; the usual one of a symbol button when left out.</param>
             /// <param name="colors">A color set for the look of the button instead of the neutral one: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>.</param>
-            public static Button CreateThemeToggle(Size? size = null, UIColorSet colors = null)
+            public static Button CreateThemeToggleStandard(Size? size = null, UIColorSet colors = null)
             {
                 return UIButtonFactory.CreateThemeToggle(size, ColorSetSource.Of(colors));
             }
 
-            /// <summary>The button that switches the theme (see <see cref="CreateThemeToggle"/>) in the accent color (it follows a change of the accent).</summary>
+            /// <summary>The old name of <see cref="CreateThemeToggleStandard"/>; it is removed once the projects that use it have been changed.</summary>
+            [System.Obsolete("Use CreateThemeToggleStandard (the same button; the name of the standard one, as in every factory).")]
+            public static Button CreateThemeToggle(Size? size = null, UIColorSet colors = null)
+            {
+                return CreateThemeToggleStandard(size, colors);
+            }
+
+            /// <summary>The button that switches the theme (see <see cref="CreateThemeToggleStandard"/>) in the accent color (it follows a change of the accent).</summary>
             /// <param name="size">The size of the button; the usual one of a symbol button when left out.</param>
             public static Button CreateThemeTogglePrimary(Size? size = null)
             {

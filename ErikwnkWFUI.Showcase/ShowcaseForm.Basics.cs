@@ -129,7 +129,7 @@ namespace ErikwnkWFUI.Showcase
 
             // The button that switches the theme by itself: it shows the sun or the moon (the theme a click leads to), switches the theme when
             // it is clicked and follows any other change of the theme and of the language. Click one: all three follow.
-            AddTwoColumnRow(table, "CreateThemeToggle", CreateThemeToggleButtons(enabled: true), CreateThemeToggleButtons(enabled: false));
+            AddTwoColumnRow(table, "CreateThemeToggleStandard", CreateThemeToggleButtons(enabled: true), CreateThemeToggleButtons(enabled: false));
 
             (string Name, UIColorSet Set)[] custom =
             {
@@ -157,9 +157,9 @@ namespace ErikwnkWFUI.Showcase
 
             foreach (Button button in new[]
             {
-                UIStyles.Buttons.CreateThemeToggle(),
+                UIStyles.Buttons.CreateThemeToggleStandard(),
                 UIStyles.Buttons.CreateThemeTogglePrimary(),
-                UIStyles.Buttons.CreateThemeToggle(colors: UIStyles.Colors.Sets.Yellow)
+                UIStyles.Buttons.CreateThemeToggleStandard(colors: UIStyles.Colors.Sets.Yellow)
             })
             {
                 button.Margin = new Padding(0, 0, 6, 6);

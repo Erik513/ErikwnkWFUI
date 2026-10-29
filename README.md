@@ -438,9 +438,9 @@ and its name for the screen reader say what a click does). It takes no focus, li
 a button of a tool bar:
 
 ```csharp
-var toggle = UIStyles.Buttons.CreateThemeToggle();                         // neutral
+var toggle = UIStyles.Buttons.CreateThemeToggleStandard();                 // neutral
 var accent = UIStyles.Buttons.CreateThemeTogglePrimary(new Size(40, 32));  // in the accent
-var yellow = UIStyles.Buttons.CreateThemeToggle(colors: UIStyles.Colors.Sets.Yellow);
+var yellow = UIStyles.Buttons.CreateThemeToggleStandard(colors: UIStyles.Colors.Sets.Yellow);
 
 // To keep the choice, add a handler: it runs after the theme has been switched.
 toggle.Click += (s, e) => UIAppearance.Capture().Save(appearancePath);
