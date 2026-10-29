@@ -37,7 +37,7 @@ namespace ErikwnkWFUI.Showcase
                  AddProgressFormSection),
 
                 ("Message box (MessageBox)",
-                 "The themed replacement for the message box of Windows: MessageBox.Show(message, title, buttons, icon, owner, size) returns the button that was clicked (or the safe one when the window is closed: Cancel, No or OK). The icon is shown in the title bar; size: is one of the three sizes or an own Size, in pixels as they are. The rows below set what the sample shows; the line Result says what came back.",
+                 "The themed replacement for the message box of Windows: MessageBox.Show(message, title, buttons, icon, owner, size) returns the button that was clicked (or the safe one when the window is closed: No, Cancel, Abort or OK). The sample is made with UIStyles.Forms.CreateMessageStandard / CreateMessagePrimary, which also take details (a Details button), the default button, own button texts and playSound; CheckBoxText, ShowHelpButton and HelpClicked are set on the form (MessageBox.ShowWithCheckBox is the one-line way for a check box). Ctrl+C copies the text of the box. The rows below set what the sample shows; the line Result says what came back.",
                  AddMessageBoxSection)
             };
 
