@@ -13,8 +13,10 @@ namespace ErikwnkWFUI.Styles
     /// </summary>
     public static class UIThemes
     {
+        /// <summary>The dark theme: the default palette of the library. Applying it changes nothing unless another theme was applied before.</summary>
         public static readonly UIColorTheme Dark = new UIColorTheme();
 
+        /// <summary>The light theme: a staircase of grays up to white, dark text, light borders.</summary>
         public static readonly UIColorTheme Light = new UIColorTheme
         {
             // A genuine, monotonically increasing staircase toward white,

@@ -125,7 +125,63 @@ public class UIColorsTests
     [Fact]
     public void Darken_ByAShare_ScalesEveryChannel()
     {
-        Assert.Equal(Color.FromArgb(65, 130, 162), UIColors.Darken(Color.FromArgb(100, 200, 250), 0.35));
-        Assert.Equal(Color.FromArgb(0, 0, 0), UIColors.Darken(Color.FromArgb(100, 200, 250), 1.0));
+        Assert.Equal(Color.FromArgb(65, 130, 162), UIColors.DarkenByShare(Color.FromArgb(100, 200, 250), 0.35));
+        Assert.Equal(Color.FromArgb(0, 0, 0), UIColors.DarkenByShare(Color.FromArgb(100, 200, 250), 1.0));
+    }
+
+    [Fact]
+    public void TheOverlays_AreBlackVeils_OfThreeStrengths_NotTransparent()
+    {
+        // (Once built as FromArgb(0, 0, 0, 180): alpha 0 and a blue, so the veil was not there at all.)
+        Assert.Equal(Color.FromArgb(180, 0, 0, 0), UIColors.OverlayDark);
+        Assert.Equal(Color.FromArgb(120, 0, 0, 0), UIColors.OverlayMedium);
+        Assert.Equal(Color.FromArgb(60, 0, 0, 0), UIColors.OverlayLight);
+        Assert.Equal(UIColors.OverlayDark, UIStyles.Colors.OverlayDark);
+    }
+
+    [Fact]
+    public void ApplyTheme_WithNull_ChangesNothing_AndRaisesNoEvent()
+    {
+        Color before = UIColors.BackgroundDark;
+        int raised = 0;
+        EventHandler handler = (sender, e) => raised++;
+        UIColors.ThemeChanged += handler;
+
+        try
+        {
+            UIColors.ApplyTheme(null!);
+
+            Assert.Equal(before, UIColors.BackgroundDark);
+            Assert.Equal(0, raised);
+        }
+        finally
+        {
+            UIColors.ThemeChanged -= handler;
+        }
+    }
+
+    [Fact]
+    public void EnsureContrast_AgainstTwoColors_WhereNoShadeSatisfiesBoth_ReturnsTheBestCompromise()
+    {
+        // 15:1 against white wants nearly black, 15:1 against black wants nearly white: no gray has both.
+        Color gray = Color.FromArgb(128, 128, 128);
+        Color result = UIColors.EnsureContrast(gray, Color.White, 15, Color.Black, 15);
+
+        double Worst(Color color) => Math.Min(UIColors.GetContrastRatio(color, Color.White) / 15, UIColors.GetContrastRatio(color, Color.Black) / 15);
+
+        Assert.True(Worst(result) >= Worst(gray));
+        Assert.True(Worst(result) < 1);
+        Assert.Equal(result.R, result.G);
+        Assert.Equal(result.G, result.B);
+    }
+
+    [Fact]
+    public void IsNeutral_IsTrueForBlackWhiteAndEveryGray_FalseForAColor()
+    {
+        Assert.True(UIColors.IsNeutral(Color.Black));
+        Assert.True(UIColors.IsNeutral(Color.White));
+        Assert.True(UIColors.IsNeutral(Color.FromArgb(90, 90, 90)));
+        Assert.False(UIColors.IsNeutral(Color.FromArgb(90, 90, 91)));
+        Assert.False(UIColors.IsNeutral(UIAccentColors.Blue));
     }
 }

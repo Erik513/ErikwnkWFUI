@@ -226,7 +226,7 @@ public class SymbolButtonTests : SymbolButtonTestBase
     public void TheYellowSet_HasTheLookOfTheOldBrowseButton_InEveryState()
     {
         using Button browse = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Folder, colors: UIStyles.Colors.Sets.Yellow);
-        Color disabled = UIColors.Darken(UIColors.Yellow, 0.35);
+        Color disabled = UIColors.DarkenByShare(UIColors.Yellow, 0.35);
 
         Assert.Equal(UIColors.Yellow, browse.BackColor);
         Assert.Equal(UIColors.White, browse.ForeColor);

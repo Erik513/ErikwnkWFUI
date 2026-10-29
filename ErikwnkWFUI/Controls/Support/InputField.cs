@@ -30,7 +30,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public static Color GetDisabledBackground(Color enabled)
         {
-            return UIColors.Darken(enabled, UIColors.IsLight(enabled) ? 0.06 : 0.30);
+            return UIColors.DarkenByShare(enabled, UIColors.IsLight(enabled) ? 0.06 : 0.30);
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public static Color GetReadOnlyBackground(Color enabled)
         {
-            return UIColors.Darken(enabled, UIColors.IsLight(enabled) ? 0.03 : 0.15);
+            return UIColors.DarkenByShare(enabled, UIColors.IsLight(enabled) ? 0.03 : 0.15);
         }
 
         /// <summary>

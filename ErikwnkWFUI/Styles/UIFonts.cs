@@ -3,6 +3,7 @@
 namespace ErikwnkWFUI.Styles
 {
     /// <summary>The fonts used across ErikwnkWFUI's controls - fixed, not part of the theme system.</summary>
+    /// <remarks>Each font is one object shared by every control and for the whole run of the program: do not dispose it, and do not change it (make a copy with <c>new Font(font, style)</c> for another style).</remarks>
     public static class UIFonts
     {
         /// <summary>Bold, for headings/titles.</summary>

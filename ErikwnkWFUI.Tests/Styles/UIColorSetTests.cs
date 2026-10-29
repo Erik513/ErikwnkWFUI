@@ -348,7 +348,7 @@ public class UIColorSetTests
             // The yellow accent is a gold too, not the olive that a third darker would make of it.
             UIColors.SetAccent(UIAccentColors.Yellow);
             UIColorSet lemon = UIColors.PrimarySet;
-            Assert.True(lemon.Basic.GetBrightness() > UIColors.Darken(UIAccentColors.Yellow, 0.30).GetBrightness());
+            Assert.True(lemon.Basic.GetBrightness() > UIColors.DarkenByShare(UIAccentColors.Yellow, 0.30).GetBrightness());
             Assert.True(Ratio(lemon.BasicText, lemon.Basic) >= 2.3, "white on the resting yellow accent");
 
             // The other accents keep the look they always had: darker at rest, the accent hovered, lighter pressed.

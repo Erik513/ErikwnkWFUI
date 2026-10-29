@@ -210,7 +210,7 @@ namespace ErikwnkWFUI.Controls
         {
             Color row = GetRowBackColor(index);
             Color tint = _selectedBackColor.Value;
-            bool isGray = tint.R == tint.G && tint.G == tint.B;
+            bool isGray = UIColors.IsNeutral(tint);
             double alpha = (isGray ? SelectionAlphaGray : SelectionAlphaColor) / 255.0;
 
             return Color.FromArgb(

@@ -3,8 +3,10 @@ using System.Drawing;
 
 namespace ErikwnkWFUI.Styles
 {
-    public static class UIColors
+    /// <summary>The colors of the library: the base colors of the theme (backgrounds, text, borders), the shades of the accent and the fixed green, yellow and red families. A control reads them when it paints and follows <see cref="ApplyTheme"/> and <see cref="SetAccent"/> by itself (see <see cref="ThemeChanged"/>). The values are static and not locked: change the theme and the accent from the UI thread.</summary>
+    public static partial class UIColors
     {
+        /// <summary>Pure black. Fixed: the same in every theme.</summary>
         public static readonly Color Black = Color.Black;
 
         // Base surface/text/border shades - mutable (unlike the semantic
@@ -12,12 +14,19 @@ namespace ErikwnkWFUI.Styles
         // so ApplyTheme can swap all of them at once. Defaults are exactly
         // today's dark palette, so ApplyTheme is strictly opt-in, same as
         // SetAccent below.
+        /// <summary>The deepest surface of the theme, behind everything else (the page of a window).</summary>
         public static Color BackgroundBlack { get; set; } = Color.FromArgb(10, 10, 10);
+        /// <summary>The usual dark surface of a window or a panel.</summary>
         public static Color BackgroundDark { get; set; } = Color.FromArgb(20, 20, 20);
+        /// <summary>A surface slightly raised from <see cref="BackgroundDark"/>.</summary>
         public static Color BackgroundDarkElevated { get; set; } = Color.FromArgb(25, 25, 25);
+        /// <summary>The surface of the standard control: a text field, a list, a track.</summary>
         public static Color BackgroundMedium { get; set; } = Color.FromArgb(35, 35, 35);
+        /// <summary>A surface slightly raised from <see cref="BackgroundMedium"/>.</summary>
         public static Color BackgroundMediumElevated { get; set; } = Color.FromArgb(40, 40, 40);
+        /// <summary>A raised surface: a hovered control, a header.</summary>
         public static Color BackgroundLight { get; set; } = Color.FromArgb(50, 50, 50);
+        /// <summary>The most raised or active surface of the theme.</summary>
         public static Color BackgroundLighter { get; set; } = Color.FromArgb(60, 60, 60);
 
         // All shades of the app's single "accent" color - blue by default,
@@ -27,30 +36,50 @@ namespace ErikwnkWFUI.Styles
         // instead (e.g. DealOrNoDeal's black/yellow theme). Left untouched,
         // they keep exactly today's values, so calling SetAccent is
         // strictly opt-in and every existing consumer is unaffected.
+        /// <summary>The darkest shade of the accent (a panel in the color of the accent). Follows <see cref="SetAccent"/>.</summary>
         public static Color PrimaryDarkDark { get; set; } = Color.FromArgb(0, 30, 60);
+        /// <summary>The accent, darkened: the resting fill of a primary control. Follows <see cref="SetAccent"/>.</summary>
         public static Color PrimaryDark { get; set; } = Color.FromArgb(0, 50, 90);
+        /// <summary>The accent color itself. Follows <see cref="SetAccent"/>.</summary>
         public static Color Primary { get; set; } = Color.FromArgb(0, 90, 158);
+        /// <summary>The accent, lightened: the pressed fill and highlights. Follows <see cref="SetAccent"/>.</summary>
         public static Color PrimaryLight { get; set; } = Color.FromArgb(0, 120, 215);
 
+        /// <summary>A slightly darker shade of the accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color SecondaryDark { get; set; } = Color.FromArgb(20, 80, 140);
+        /// <summary>A slightly lighter shade of the accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color Secondary { get; set; } = Color.FromArgb(30, 100, 180);
+        /// <summary>A lighter shade of the accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color SecondaryLight { get; set; } = Color.FromArgb(50, 130, 210);
 
+        /// <summary>The dark green of the fixed green family (the same in every theme).</summary>
         public static readonly Color GreenDark = Color.FromArgb(20, 100, 50);
+        /// <summary>The green of the fixed green family (the same in every theme).</summary>
         public static readonly Color Green = Color.FromArgb(30, 150, 70);
+        /// <summary>The light green of the fixed green family (the same in every theme).</summary>
         public static readonly Color GreenLight = Color.FromArgb(40, 180, 90);
+        /// <summary>The lightest green of the fixed green family (the same in every theme).</summary>
         public static readonly Color GreenLighter = Color.FromArgb(50, 210, 110);
 
+        /// <summary>The dark yellow of the fixed yellow family (the same in every theme).</summary>
         public static readonly Color YellowDark = Color.FromArgb(170, 125, 0);
+        /// <summary>The yellow of the fixed yellow family (the same in every theme).</summary>
         public static readonly Color Yellow = Color.FromArgb(200, 150, 0);
+        /// <summary>The light yellow of the fixed yellow family (the same in every theme).</summary>
         public static readonly Color YellowLight = Color.FromArgb(230, 180, 30);
+        /// <summary>The lightest yellow of the fixed yellow family (the same in every theme).</summary>
         public static readonly Color YellowLighter = Color.FromArgb(255, 210, 60);
 
+        /// <summary>The dark red of the fixed red family (the same in every theme).</summary>
         public static readonly Color RedDark = Color.FromArgb(150, 20, 30);
+        /// <summary>The red of the fixed red family (the same in every theme).</summary>
         public static readonly Color Red = Color.FromArgb(180, 40, 50);
+        /// <summary>The light red of the fixed red family (the same in every theme).</summary>
         public static readonly Color RedLight = Color.FromArgb(210, 60, 70);
 
+        /// <summary>Pure white. Fixed: the same in every theme.</summary>
         public static readonly Color White = Color.White;
+        /// <summary>The main text color of the theme.</summary>
         public static Color TextPrimary { get; set; } = Color.FromArgb(240, 240, 240);
         // Fixed dark/light text colors for use against a surface whose shade
         // doesn't follow the current theme - accent shades (PrimaryDark,
@@ -63,7 +92,9 @@ namespace ErikwnkWFUI.Styles
         // near-black, which is exactly wrong here: GetContrastingForeColor
         // needs a text color that stays readable on a fixed-shade surface
         // regardless of which base theme happens to be active.
+        /// <summary>Dark text for a surface whose shade does not follow the theme (an accent, a green button). Fixed: not a theme role.</summary>
         public static readonly Color DarkForeColor = Color.FromArgb(20, 20, 20);
+        /// <summary>Light text for a surface whose shade does not follow the theme (an accent, a green button). Fixed: not a theme role.</summary>
         public static readonly Color LightForeColor = Color.FromArgb(240, 240, 240);
 
         // Same idea as the two above, but for a whole disabled CONTROL
@@ -76,17 +107,28 @@ namespace ErikwnkWFUI.Styles
         // derives from the theme-independent accent, not a theme role). A
         // true middle gray reads with reasonable contrast against both a
         // near-black Dark background and a near-white Light one.
+        /// <summary>The gray of a disabled control surface (a switch track): a middle gray that reads against a dark and a light page alike. Fixed: not a theme role.</summary>
         public static readonly Color DisabledGray = Color.FromArgb(120, 120, 120);
+        /// <summary>The main text color, a little dimmed.</summary>
         public static Color TextPrimaryDim { get; set; } = Color.FromArgb(220, 220, 220);
+        /// <summary>Secondary text: captions, hints.</summary>
         public static Color TextSecondary { get; set; } = Color.FromArgb(180, 180, 180);
+        /// <summary>The quietest regular text.</summary>
         public static Color TextTertiary { get; set; } = Color.FromArgb(140, 140, 140);
+        /// <summary>Text of a disabled control. (On the light theme it is faint: the controls work their own disabled text out with <c>GetDisabledText</c>.)</summary>
         public static Color TextDisabled { get; set; } = Color.FromArgb(110, 110, 110);
+        /// <summary>Muted text: a count, a version.</summary>
         public static Color TextMuted { get; set; } = Color.FromArgb(120, 120, 120);
 
+        /// <summary>The darkest border or line of the theme.</summary>
         public static Color BorderDark { get; set; } = Color.FromArgb(50, 50, 50);
+        /// <summary>The usual border or line of the theme.</summary>
         public static Color BorderMedium { get; set; } = Color.FromArgb(70, 70, 70);
+        /// <summary>The lightest border or line of the theme (a hovered border).</summary>
         public static Color BorderLight { get; set; } = Color.FromArgb(90, 90, 90);
+        /// <summary>The border in the color of the accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color BorderPrimary { get; set; } = Color.FromArgb(0, 100, 180);
+        /// <summary>A red border (an entry that was not right). Fixed: the same in every theme.</summary>
         public static readonly Color BorderRed = Color.FromArgb(180, 40, 50);
 
         // Text/icon color to use on top of an accent-colored surface (e.g.
@@ -94,21 +136,29 @@ namespace ErikwnkWFUI.Styles
         // every existing surface today - SetAccent recomputes it so a
         // bright accent (e.g. yellow) gets dark text instead of white
         // text nobody can read.
+        /// <summary>The text or icon color on an accent-colored surface: white, or dark on a very bright accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color AccentForeColor { get; set; } = Color.FromArgb(240, 240, 240);
 
+        /// <summary>The see-through tint laid over a surface while the mouse is over it.</summary>
         public static Color HoverOverlay { get; set; } = Color.FromArgb(30, 30, 30, 80);
+        /// <summary>The see-through tint laid over a surface while it is pressed.</summary>
         public static Color ActiveOverlay { get; set; } = Color.FromArgb(40, 40, 40, 120);
         // Color.FromArgb(alpha, r, g, b) - this previously had alpha=0
         // (fully transparent, i.e. invisible no matter what it was painted
         // over) because the arguments were in the wrong order for a
         // translucent tint of Primary (0, 90, 158). Fixed to match the same
         // (alpha, r, g, b) pattern as HoverOverlay/ActiveOverlay above.
+        /// <summary>The see-through tint of a selected row, in the color of the accent. Follows <see cref="SetAccent"/>.</summary>
         public static Color Selection { get; set; } = Color.FromArgb(60, 0, 90, 158);
 
+        /// <summary>Fully transparent.</summary>
         public static readonly Color Transparent = Color.Transparent;
-        public static readonly Color OverlayDark = Color.FromArgb(0, 0, 0, 180);
-        public static readonly Color OverlayMedium = Color.FromArgb(0, 0, 0, 120);
-        public static readonly Color OverlayLight = Color.FromArgb(0, 0, 0, 60);
+        /// <summary>A strong black veil (alpha 180), for dimming what lies behind a window.</summary>
+        public static readonly Color OverlayDark = Color.FromArgb(180, 0, 0, 0);
+        /// <summary>A medium black veil (alpha 120).</summary>
+        public static readonly Color OverlayMedium = Color.FromArgb(120, 0, 0, 0);
+        /// <summary>A light black veil (alpha 60).</summary>
+        public static readonly Color OverlayLight = Color.FromArgb(60, 0, 0, 0);
 
         /// <summary>
         /// Replaces every base surface color (backgrounds, text, borders,
@@ -191,18 +241,18 @@ namespace ErikwnkWFUI.Styles
             // Darkening it gentler keeps popups/panels built from these
             // shades closer to the accent's own brightness instead of
             // crushing toward black.
-            bool isNeutralAccent = accent.R == accent.G && accent.G == accent.B;
+            bool isNeutralAccent = IsNeutral(accent);
             double darkDarkAmount = isNeutralAccent ? 0.30 : 0.55;
             double darkAmount = isNeutralAccent ? 0.15 : 0.30;
 
-            PrimaryDarkDark = Darken(accent, darkDarkAmount);
-            PrimaryDark = Darken(accent, darkAmount);
+            PrimaryDarkDark = DarkenByShare(accent, darkDarkAmount);
+            PrimaryDark = DarkenByShare(accent, darkAmount);
             Primary = accent;
-            PrimaryLight = Lighten(accent, 0.35);
+            PrimaryLight = LightenByShare(accent, 0.35);
 
-            SecondaryDark = Darken(accent, 0.10);
-            Secondary = Lighten(accent, 0.10);
-            SecondaryLight = Lighten(accent, 0.25);
+            SecondaryDark = DarkenByShare(accent, 0.10);
+            Secondary = LightenByShare(accent, 0.10);
+            SecondaryLight = LightenByShare(accent, 0.25);
 
             BorderPrimary = accent;
 
@@ -218,55 +268,6 @@ namespace ErikwnkWFUI.Styles
             RaiseThemeChanged();
         }
 
-        // Above this, a white or gray background is bright enough that dark
-        // text wins; at/below it, light text wins. Deliberately above a literal
-        // 50% midpoint (not just "which one contrasts more"): light text on a
-        // saturated blue/green button is the convention. Colors never get dark
-        // text (see UsesDarkText), however bright - this threshold is for the
-        // neutral surfaces: white, the light grays, the light theme.
-        private const double LightBackgroundThreshold = 0.55;
-
-        /// <summary>
-        /// White or near-black, whichever reads better on top of the given
-        /// background - e.g. white text is unreadable on a bright yellow
-        /// accent even though it's fine on the default dark blue. Not the
-        /// current theme's TextPrimary - callers use this specifically for
-        /// surfaces (accent/semantic colors) that don't follow the base
-        /// theme, so the answer must not depend on it either.
-        /// </summary>
-        public static Color GetContrastingForeColor(Color background)
-        {
-            return UsesDarkText(background) ? DarkForeColor : LightForeColor;
-        }
-
-        // Only white - and a neutral light gray - is a surface that takes dark text. A color keeps light text however bright it is: white on a
-        // yellow or an orange is still plainly readable, and a program in which only some of the accent colors had black text would look as if it
-        // had two kinds of buttons. Only a color so bright that white is all but gone on it (a pale lemon yellow, 1.0 to 1.4:1) is a white for
-        // this purpose.
-        private const double ColoredSaturation = 0.35;
-        private const double ColoredMaxLightness = 0.72;
-        internal const double ColoredLightTextMinimum = 1.5;
-
-        /// <summary>Whether a fill is a color (a hue that is clearly seen: yellow, orange, blue ...) and not white, a gray or a pale tint of one (a pale tint is a light surface: it takes dark text).</summary>
-        internal static bool IsColored(Color color)
-        {
-            return color.GetSaturation() > ColoredSaturation && color.GetBrightness() < ColoredMaxLightness;
-        }
-
-        private static bool UsesDarkText(Color fill)
-        {
-            if (IsColored(fill))
-                return GetContrastRatio(LightForeColor, fill) < ColoredLightTextMinimum;
-
-            return IsLight(fill);
-        }
-
-        /// <summary>Whether a color is bright enough that dark text is the one to put on it.</summary>
-        public static bool IsLight(Color color)
-        {
-            return RelativeLuminance(color) > LightBackgroundThreshold;
-        }
-
         /// <summary>
         /// The see-through tint a selected row gets in the given color. A hued
         /// color stands out from a row's own gray even at a low alpha; a
@@ -274,477 +275,7 @@ namespace ErikwnkWFUI.Styles
         /// </summary>
         internal static Color CreateSelectionOverlay(Color accent)
         {
-            bool isNeutral = accent.R == accent.G && accent.G == accent.B;
-
-            return Color.FromArgb(isNeutral ? 130 : 60, accent.R, accent.G, accent.B);
-        }
-
-        // ---- color sets: one color in, every state out ----
-
-        /// <summary>
-        /// The yellow look: white text that stays white in every state and in both
-        /// themes. The disabled yellow is the resting one darkened as far as any
-        /// dark fill gets.
-        /// </summary>
-        internal static readonly UIColorSet YellowSet = CreateYellowSet();
-
-        private static UIColorSet CreateYellowSet()
-        {
-            Color disabled = Darken(Yellow, DisabledDarkenAmount);
-
-            return new UIColorSet(
-                Yellow,
-                YellowLight,
-                YellowLighter,
-                disabled,
-                White,
-                White,
-                White,
-                BlendToward(White, disabled, DisabledTextBlend));
-        }
-
-        /// <summary>
-        /// The look of the accent color: darker at rest, the accent hovered, lighter pressed. A bright, colored accent (yellow, amber) is not
-        /// darkened by a third at rest - that would make it olive - but is the accent itself, darkened only as far as white text needs (2.4:1),
-        /// and gets lighter when hovered and pressed: the look of <c>Sets.Yellow</c>.
-        /// </summary>
-        internal static UIColorSet PrimarySet
-        {
-            get
-            {
-                Color accent = Primary;
-
-                if (IsBrightAccent(accent))
-                {
-                    Color rest = GetReadableFill(accent, LightForeColor, BrightAccentTextRatio);
-
-                    return CreateSet(rest, ShiftLightness(rest, 0.07), ShiftLightness(rest, 0.14));
-                }
-
-                return CreateSet(PrimaryDark, Primary, PrimaryLight);
-            }
-        }
-
-        private const double BrightAccentTextRatio = 2.4;
-
-        private static bool IsBrightAccent(Color accent)
-        {
-            bool isNeutral = accent.R == accent.G && accent.G == accent.B;
-
-            return !isNeutral && IsLight(accent);
-        }
-
-        // How far a disabled fill is darkened: a light fill only dims a
-        // little, a dark one more. Text on it is the best text color blended
-        // this far toward the fill - readable, but visibly muted.
-        private const double DisabledDarkenAmount = 0.35;
-        private const double LightDisabledDarkenAmount = 0.1;
-        private const double DisabledTextBlend = 0.35;
-
-        /// <summary>
-        /// A color set from a color of your choice, in the same style as the
-        /// built-in Primary look: the color is what the control shows while
-        /// hovered, rest is a darker shade of it and pressed a lighter one.
-        /// A light color (yellow, white) keeps its look at rest instead and
-        /// gets darker when hovered and pressed, since a lighter shade would
-        /// vanish. Text and disabled colors are worked out from the fills.
-        /// </summary>
-        internal static UIColorSet CreateSet(Color color)
-        {
-            if (IsLight(color))
-                return CreateSet(color, ShiftLightness(color, -0.08), ShiftLightness(color, -0.16));
-
-            bool isNeutral = color.R == color.G && color.G == color.B;
-
-            return CreateSet(ShiftLightness(color, isNeutral ? -0.06 : -0.12), color, ShiftLightness(color, 0.12));
-        }
-
-        /// <summary>
-        /// A color set from the three fills you want; the text colors (the
-        /// ones that read best on each fill) and the disabled look are worked
-        /// out from them.
-        /// </summary>
-        internal static UIColorSet CreateSet(Color basic, Color hover, Color pressed)
-        {
-            Color disabled = Darken(basic, IsLight(basic) ? LightDisabledDarkenAmount : DisabledDarkenAmount);
-            Color basicText = GetBestTextColor(basic);
-
-            return new UIColorSet(
-                basic,
-                hover,
-                pressed,
-                disabled,
-                basicText,
-                GetTextOn(hover, basicText, KeepTextRatio),
-                GetTextOn(pressed, basicText, PressedKeepTextRatio),
-                BlendToward(GetBestTextColor(disabled), disabled, DisabledTextBlend));
-        }
-
-        /// <summary>
-        /// Like <see cref="CreateSet(Color, Color, Color)"/>, but the text has the
-        /// one color you give in every state (muted when disabled) instead of
-        /// the best one for each fill - for a look whose text color is fixed,
-        /// such as the white symbols of the button presets.
-        /// </summary>
-        internal static UIColorSet CreateSet(Color basic, Color hover, Color pressed, Color text)
-        {
-            Color disabled = Darken(basic, IsLight(basic) ? LightDisabledDarkenAmount : DisabledDarkenAmount);
-
-            return new UIColorSet(
-                basic,
-                hover,
-                pressed,
-                disabled,
-                text,
-                text,
-                text,
-                BlendToward(text, disabled, DisabledTextBlend));
-        }
-
-        /// <summary>
-        /// The same look as <paramref name="set"/>, but with <paramref name="text"/> in
-        /// every state (muted when disabled). With a <paramref name="minimumContrast"/>
-        /// the fills that would not carry that text well enough are darkened until they
-        /// do - a white symbol on a set whose pressed fill is bright, say.
-        /// </summary>
-        internal static UIColorSet WithText(UIColorSet set, Color text, double minimumContrast = 0)
-        {
-            return new UIColorSet(
-                DarkenUntilReadable(set.Basic, text, minimumContrast),
-                DarkenUntilReadable(set.Hover, text, minimumContrast),
-                DarkenUntilReadable(set.Pressed, text, minimumContrast),
-                set.Disabled,
-                text,
-                text,
-                text,
-                BlendToward(text, set.Disabled, DisabledTextBlend));
-        }
-
-        /// <summary>
-        /// <paramref name="fill"/> shifted in lightness just far enough that <paramref name="text"/>
-        /// reads on it (<paramref name="minimum"/>:1) - for a set whose fill is so mid-tone that
-        /// neither light nor dark text gets there. A fill that already carries the text stays as it is.
-        /// </summary>
-        internal static Color GetReadableFill(Color fill, Color text, double minimum = 4.5)
-        {
-            double step = GetContrastRatio(text, Color.White) < GetContrastRatio(text, Color.Black) ? -0.01 : 0.01;
-            Color result = fill;
-
-            for (int i = 0; i < 40 && GetContrastRatio(text, result) < minimum; i++)
-                result = ShiftLightness(result, step);
-
-            return result;
-        }
-
-        private static Color DarkenUntilReadable(Color fill, Color text, double minimumContrast)
-        {
-            Color result = fill;
-
-            for (int step = 0; step < 40 && GetContrastRatio(text, result) < minimumContrast; step++)
-                result = ShiftLightness(result, -0.01);
-
-            return result;
-        }
-
-        /// <summary>
-        /// The outline of a control on <paramref name="page"/>: the best text color for the page,
-        /// moved toward it just far enough to keep 3:1 against it (the bar for the boundary of a
-        /// control), so it stands out on any page color.
-        /// </summary>
-        internal static Color GetOutlineColor(Color page)
-        {
-            Color text = GetBestTextColor(page);
-
-            for (double toward = 0.7; toward > 0; toward -= 0.05)
-            {
-                Color outline = BlendToward(text, page, toward);
-
-                if (GetContrastRatio(outline, page) >= 3.0)
-                    return outline;
-            }
-
-            return text;
-        }
-
-        /// <summary>
-        /// The quiet line of a panel (frame, lines of a table or a card) on <paramref name="surface"/>: the theme's
-        /// <see cref="BorderMedium"/>, moved only as far as needed to keep a ratio of 1.5:1 against the surface - on a color (green,
-        /// accent) the gray of the theme can be as dark as the surface itself.
-        /// </summary>
-        internal static Color GetLineColor(Color surface)
-        {
-            return EnsureContrast(BorderMedium, surface, QuietLineContrast);
-        }
-
-        private const double QuietLineContrast = 1.5;
-
-        /// <summary>
-        /// <paramref name="color"/> moved lighter (on a dark page) or darker (on a light one), in
-        /// small steps, until it has at least <paramref name="minimum"/> contrast against the page.
-        /// </summary>
-        internal static Color EnsureContrast(Color color, Color page, double minimum)
-        {
-            double step = IsLight(page) ? -0.03 : 0.03;
-
-            for (int i = 0; i < 40 && GetContrastRatio(color, page) < minimum; i++)
-                color = ShiftLightness(color, step);
-
-            return color;
-        }
-
-        /// <summary>
-        /// A track for a slider on <paramref name="surface"/>: the surface itself moved lighter (on a dark one) or darker (on a light one)
-        /// until it stands out by the quiet 1.5:1 - and no more, in either theme. (<see cref="GetLineColor"/> keeps the gray of the theme, which
-        /// may lie far from a surface of another brightness: no color would then stand out from both.)
-        /// </summary>
-        internal static Color GetQuietTrackColor(Color surface)
-        {
-            return EnsureContrast(surface, surface, QuietLineContrast);
-        }
-
-        /// <summary>
-        /// The same against two colors at once: the nearest lightness of <paramref name="color"/> (hue and saturation kept) that has at least
-        /// <paramref name="minimum"/> contrast against the page and at least <paramref name="minimumOther"/> against <paramref name="other"/> (a color that lies on the page, such as the
-        /// track of a slider), looking in the direction of the page first (lighter on a dark page, darker on a light one) and then the other way:
-        /// the other color may lie on the far side of the color, and moving it for each of the two in turn would move it back and forth.
-        /// Where no lightness has both, the one whose worse contrast is the best.
-        /// </summary>
-        internal static Color EnsureContrast(Color color, Color page, double minimum, Color other, double minimumOther)
-        {
-            double toward = IsLight(page) ? -0.01 : 0.01;
-            Color best = color;
-            double bestWorst = -1;
-
-            for (int i = 0; i <= 100; i++)
-            {
-                foreach (double direction in new[] { toward, -toward })
-                {
-                    Color candidate = i == 0 ? color : ShiftLightness(color, direction * i);
-                    double onPage = GetContrastRatio(candidate, page);
-                    double onOther = GetContrastRatio(candidate, other);
-
-                    if (onPage >= minimum && onOther >= minimumOther)
-                        return candidate;
-
-                    // (How far short each is, in the share of what it needs: the better of the two worse ones wins.)
-                    double worst = Math.Min(onPage / minimum, onOther / minimumOther);
-
-                    if (worst > bestWorst)
-                    {
-                        bestWorst = worst;
-                        best = candidate;
-                    }
-                }
-            }
-
-            return best;
-        }
-
-        // Text keeps the color it has at rest as long as it stays clearly
-        // readable on the next fill; only when it would not, the better one
-        // takes over. Otherwise the text would flip between light and dark each
-        // time the mouse moves over a button. Hovering can last, so it asks for
-        // 3:1; pressing is a moment, and light text on the bright pressed fills of
-        // green, orange and teal is still plainly readable at about 2.1-2.4:1, so
-        // there 2:1 is enough.
-        private const double KeepTextRatio = 3.0;
-        private const double PressedKeepTextRatio = 2.0;
-
-        private static Color GetTextOn(Color fill, Color preferred, double keepRatio)
-        {
-            return GetContrastRatio(preferred, fill) >= keepRatio ? preferred : GetBestTextColor(fill);
-        }
-
-        /// <summary>
-        /// The text color for a fill. A color (a hue that is clearly seen) always gets the light one, however bright it is; white and the grays get the
-        /// dark or the light one, whichever has the higher WCAG contrast. Unlike <see cref="GetContrastingForeColor"/>
-        /// this is the true ratio for those, not a brightness rule of thumb.
-        /// </summary>
-        internal static Color GetBestTextColor(Color background)
-        {
-            // A color keeps light text (see UsesDarkText); white and the grays get whichever reads better.
-            if (IsColored(background))
-                return UsesDarkText(background) ? DarkForeColor : LightForeColor;
-
-            return GetContrastRatio(LightForeColor, background) >= GetContrastRatio(DarkForeColor, background)
-                ? LightForeColor
-                : DarkForeColor;
-        }
-
-        /// <summary>
-        /// The color with its HSL lightness moved by <paramref name="delta"/>
-        /// (-1 to 1), hue and saturation kept. Unlike blending toward white or
-        /// black this keeps a color saturated, so a lighter blue is still a
-        /// blue and not a pale one.
-        /// </summary>
-        internal static Color ShiftLightness(Color color, double delta)
-        {
-            double hue = color.GetHue();
-            double saturation = color.GetSaturation();
-            double lightness = Math.Max(0, Math.Min(1, color.GetBrightness() + delta));
-
-            double chroma = (1 - Math.Abs(2 * lightness - 1)) * saturation;
-            double x = chroma * (1 - Math.Abs(hue / 60 % 2 - 1));
-            double m = lightness - chroma / 2;
-            double r, g, b;
-
-            if (hue < 60) { r = chroma; g = x; b = 0; }
-            else if (hue < 120) { r = x; g = chroma; b = 0; }
-            else if (hue < 180) { r = 0; g = chroma; b = x; }
-            else if (hue < 240) { r = 0; g = x; b = chroma; }
-            else if (hue < 300) { r = x; g = 0; b = chroma; }
-            else { r = chroma; g = 0; b = x; }
-
-            return Color.FromArgb(
-                color.A,
-                (int)Math.Round((r + m) * 255),
-                (int)Math.Round((g + m) * 255),
-                (int)Math.Round((b + m) * 255));
-        }
-
-        /// <summary>The WCAG 2.1 contrast ratio (1 to 21) between two colors.</summary>
-        internal static double GetContrastRatio(Color first, Color second)
-        {
-            double a = GetWcagLuminance(first);
-            double b = GetWcagLuminance(second);
-
-            return (Math.Max(a, b) + 0.05) / (Math.Min(a, b) + 0.05);
-        }
-
-        private static double GetWcagLuminance(Color color)
-        {
-            return 0.2126 * ToLinear(color.R) + 0.7152 * ToLinear(color.G) + 0.0722 * ToLinear(color.B);
-        }
-
-        private static double ToLinear(int channel)
-        {
-            double value = channel / 255.0;
-
-            return value <= 0.03928 ? value / 12.92 : Math.Pow((value + 0.055) / 1.055, 2.4);
-        }
-
-        private static double RelativeLuminance(Color color)
-        {
-            return (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
-        }
-
-        internal static Color Darken(Color color, double amount)
-        {
-            return Color.FromArgb(
-                (int)(color.R * (1 - amount)),
-                (int)(color.G * (1 - amount)),
-                (int)(color.B * (1 - amount)));
-        }
-
-        // The red -> yellow -> green of a status progress bar. Two segments rather than one
-        // straight blend, which would pass through a muddy brown around the middle instead of a
-        // clear yellow. The breakpoint is not the middle (0.5): green should only dominate near
-        // the top, so red -> yellow gets the larger share (0-65%) and only the last third blends
-        // yellow -> green; a flat 50/50 split turned green too early.
-        private const double YellowBreakpoint = 0.65;
-
-        /// <summary>
-        /// The status color of <paramref name="value"/> between <paramref name="minimum"/> and
-        /// <paramref name="maximum"/>: red at the low end, yellow towards the middle, green at the top.
-        /// </summary>
-        internal static Color GetStatusColor(int value, int minimum, int maximum)
-        {
-            double range = maximum - minimum;
-            double fraction = range > 0 ? (value - minimum) / range : 0;
-            fraction = Math.Max(0, Math.Min(1, fraction));
-
-            if (fraction <= YellowBreakpoint)
-                return Blend(Red, Yellow, fraction / YellowBreakpoint);
-
-            return Blend(Yellow, Green, (fraction - YellowBreakpoint) / (1 - YellowBreakpoint));
-        }
-
-        /// <summary>The color the share <paramref name="t"/> (0-1) of the way from <paramref name="from"/> to <paramref name="to"/>, rounded.</summary>
-        internal static Color Blend(Color from, Color to, double t)
-        {
-            t = Math.Max(0, Math.Min(1, t));
-
-            return Color.FromArgb(
-                (int)Math.Round(from.R + (to.R - from.R) * t),
-                (int)Math.Round(from.G + (to.G - from.G) * t),
-                (int)Math.Round(from.B + (to.B - from.B) * t));
-        }
-
-        /// <summary>
-        /// Text of a disabled control on <paramref name="surface"/>: the best text color blended
-        /// toward the surface, as on the buttons and the check box. The theme's
-        /// <see cref="TextDisabled"/> is too faint on the light theme.
-        /// </summary>
-        internal static Color GetDisabledText(Color surface)
-        {
-            return BlendToward(GetContrastingForeColor(surface), surface, 0.35);
-        }
-
-        /// <summary>
-        /// Quiet text on <paramref name="surface"/> (a count, a version): the best text color blended toward the surface by
-        /// <paramref name="amount"/> (0-1) - but never so far that it falls below <paramref name="minimumContrast"/>, so it stays
-        /// readable on every surface (a fixed blend is too faint on a light one or on a color).
-        /// </summary>
-        internal static Color GetMutedText(Color surface, double amount, double minimumContrast = 4.5)
-        {
-            Color text = GetBestTextColor(surface);
-            Color muted = BlendToward(text, surface, amount);
-
-            for (double reduced = amount; reduced > 0 && GetContrastRatio(muted, surface) < minimumContrast; )
-            {
-                reduced = Math.Max(0, reduced - 0.05);
-                muted = BlendToward(text, surface, reduced);
-            }
-
-            return muted;
-        }
-
-        /// <summary>
-        /// The color a given share (0-1) of the way from <paramref name="color"/>
-        /// to <paramref name="target"/> - for muting a text toward its
-        /// background.
-        /// </summary>
-        internal static Color BlendToward(Color color, Color target, double amount)
-        {
-            amount = Math.Max(0, Math.Min(1, amount));
-
-            return Color.FromArgb(
-                color.A,
-                color.R + (int)((target.R - color.R) * amount),
-                color.G + (int)((target.G - color.G) * amount),
-                color.B + (int)((target.B - color.B) * amount));
-        }
-
-        private static Color Lighten(Color color, double amount)
-        {
-            return Color.FromArgb(
-                color.R + (int)((255 - color.R) * amount),
-                color.G + (int)((255 - color.G) * amount),
-                color.B + (int)((255 - color.B) * amount));
-        }
-
-        // Flat RGB-unit variants - a different blend than the fractional
-        // (0-1 "amount") private overloads just above, which this palette's
-        // own generation uses to derive Primary/Secondary shades from the
-        // accent. These exist for the much smaller "row N alternates with a
-        // slightly darker shade of row N-1" case several controls
-        // (ListBox, ListView, ReadOnlyDataGridView) each used to carry
-        // their own identical copy of - consolidated here since the exact
-        // same formula doesn't belong duplicated three times over.
-        public static Color Darken(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Max(0, color.R - amount),
-                Math.Max(0, color.G - amount),
-                Math.Max(0, color.B - amount));
-        }
-
-        public static Color Lighten(Color color, int amount)
-        {
-            return Color.FromArgb(
-                Math.Min(255, color.R + amount),
-                Math.Min(255, color.G + amount),
-                Math.Min(255, color.B + amount));
+            return Color.FromArgb(IsNeutral(accent) ? 130 : 60, accent.R, accent.G, accent.B);
         }
     }
 }

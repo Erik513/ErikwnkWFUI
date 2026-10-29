@@ -192,7 +192,7 @@ namespace ErikwnkWFUI.Factories
             {
                 bool lightFill = UIColors.IsLight(look.BackColor);
                 disabledBackColor = look.DisabledBackColor
-                    ?? UIColors.Darken(look.BackColor, lightFill ? LightDisabledDarkenAmount : DisabledDarkenAmount);
+                    ?? UIColors.DarkenByShare(look.BackColor, lightFill ? LightDisabledDarkenAmount : DisabledDarkenAmount);
 
                 // The text is the contrasting color blended 35% toward the disabled fill:
                 // still readable, but visibly muted. One fixed gray did not work - on a

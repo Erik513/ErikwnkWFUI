@@ -31,7 +31,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 
 | # | Phase | Unit | Cov. before | Bugs | Refactor | Docs | Showcase | Tests >= 85 % | Table | Commit |
 |---|---|---|---:|---|---|---|---|---|---|---|
-| 1.1 | 1 Foundations | `UIColors`, `UIThemes`, `UIColorSet`, `UIAccentColors`, `UIFonts` | 99.3 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.1 | 1 Foundations | `UIColors`, `UIThemes`, `UIColorSet`, `UIAccentColors`, `UIFonts` | 99.3 % | [x] | [x] | [x] | - | [x] | - | [ ] |
 | 1.2 | 1 | `ThemeWatcher`, `ThemeColor`, `ColorSetHolder`, `SurfaceColor`, `InputField`, `FocusReleaseWatcher`, `OutsideClickFilter` | 97.4 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
 | 1.3 | 1 | Helpers (`Dpi`, `AnimationClock`, `FrameTicker`, `AnimationSettings`, `RoundedRectangle`, `LayeredWindow`, `WindowPlacementStore`, ...) | 72.7 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
 | 1.4 | 1 | Native (`NativeMethods`, `NativeControlTheme`) | 80.3 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
