@@ -1122,7 +1122,7 @@ Helpers, static entry points and the like that are not controls. The enumeration
 
 | Enumeration | Values | Description |
 |---|---|---|
-| `AppCurrency` | `Euro`, `Dollar` |  |
+| `AppCurrency` | `Euro`, `Dollar` | The currencies `AppCurrencyFormatter` writes amounts in. |
 | `CellBorderLines` | `All`, `OuterOnly`, `InnerOnly` | Which lines of a table with `CellBorderStyle.Single` are shown (`CellBorderLines`). |
 | `CopyConfirmationStyle` | `Toast`, `ToolTip`, `None` | How `ListView` confirms a Ctrl+C/Ctrl+Shift+C copy. |
 | `LabelScrollDirection` | `Left`, `Right` | Which way the text of a `ScrollingLabel` moves in the endless mode. |

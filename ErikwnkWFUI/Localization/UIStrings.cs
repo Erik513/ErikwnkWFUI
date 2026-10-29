@@ -330,8 +330,12 @@ namespace ErikwnkWFUI.Localization
             ["DataGridView.ContextMenuInsertRowBelow"] = "Zeile unterhalb hinzufügen",
         };
 
+        /// <summary>The text for the key in the current language; the key itself where there is none, an empty text for no key.</summary>
         public static string Get(string key)
         {
+            if (key == null)
+                return string.Empty;
+
             Dictionary<string, string> table = Language == UILanguage.German ? German : English;
 
             string value;
