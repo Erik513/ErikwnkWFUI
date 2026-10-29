@@ -405,6 +405,21 @@ same in Dark and Light. To draw a symbol yourself (in a label, a menu), use
 for the few symbols that come from the Windows icon font - through a control that
 draws with `TextRenderer`. The Showcase's Symbols tab shows every symbol.
 
+**A button that switches the theme** - one call does all of it: the button shows the
+sun or the moon (the theme a click leads to), switches the theme itself when it is
+clicked, and follows every other change of the theme and of the language (its tooltip
+and its name for the screen reader say what a click does). It takes no focus, like
+a button of a tool bar:
+
+```csharp
+var toggle = UIStyles.Buttons.CreateThemeToggle();                         // neutral
+var accent = UIStyles.Buttons.CreateThemeTogglePrimary(new Size(40, 32));  // in the accent
+var yellow = UIStyles.Buttons.CreateThemeToggle(colors: UIStyles.Colors.Sets.Yellow);
+
+// To keep the choice, add a handler: it runs after the theme has been switched.
+toggle.Click += (s, e) => UIAppearance.Capture().Save(appearancePath);
+```
+
 ## Theming
 
 Two independent knobs. Both can be changed **at any time, also while windows

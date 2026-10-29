@@ -199,6 +199,27 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// A button that switches the theme, and does all of it by itself: it shows the symbol of the theme a click leads to (the sun
+            /// for the light one, the moon for the dark one), switches the theme with <c>UIColors.ApplyTheme</c> when it is clicked, and
+            /// shows the new state - also when the theme is changed by anything else (the options window, your own code). Its tooltip
+            /// and its name for the screen reader say what a click does, in the language of the library, and follow a change of it. It
+            /// takes no focus, like a button of a tool bar. Add a handler to <c>Click</c> (it runs after the theme has been switched) to
+            /// keep the choice, say <c>UIAppearance.Capture().Save(path)</c>.
+            /// </summary>
+            /// <param name="size">The size of the button; the usual one of a symbol button when left out.</param>
+            /// <param name="colors">A color set for the look of the button instead of the neutral one: one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>.</param>
+            public static Button CreateThemeToggle(Size? size = null, UIColorSet colors = null)
+            {
+                return UIButtonFactory.CreateThemeToggle(size, ColorSetSource.Of(colors));
+            }
+
+            /// <summary>The button that switches the theme (see <see cref="CreateThemeToggle"/>) in the accent color (it follows a change of the accent).</summary>
+            /// <param name="size">The size of the button; the usual one of a symbol button when left out.</param>
+            public static Button CreateThemeTogglePrimary(Size? size = null)
+            {
+                return UIButtonFactory.CreateThemeToggle(size, () => UIColors.PrimarySet);
+            }
+            /// <summary>
             /// Ready-made designs - there is one for every symbol of <see cref="Symbols"/>, and the
             /// buttons most programs need (Add, Delete, Save, Browse ...) come first. Each one is a symbol with
             /// its own fixed colors (green to add, save or confirm, red to delete, close or stop, blue to edit, reload

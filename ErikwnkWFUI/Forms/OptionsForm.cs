@@ -212,7 +212,6 @@ namespace ErikwnkWFUI.Forms
             if (disposing)
             {
                 UIStrings.LanguageChanged -= OnLanguageChanged;
-                UIColors.ThemeChanged -= OnThemeChanged;
             }
 
             base.Dispose(disposing);

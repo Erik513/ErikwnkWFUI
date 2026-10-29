@@ -127,6 +127,10 @@ namespace ErikwnkWFUI.Showcase
                 presetLines * 36 + 14,
                 CreatePresetButtons(presets));
 
+            // The button that switches the theme by itself: it shows the sun or the moon (the theme a click leads to), switches the theme when
+            // it is clicked and follows any other change of the theme and of the language. Click one: all three follow.
+            AddTwoColumnRow(table, "CreateThemeToggle", CreateThemeToggleButtons(enabled: true), CreateThemeToggleButtons(enabled: false));
+
             (string Name, UIColorSet Set)[] custom =
             {
                 ("Lime", UIStyles.Colors.CreateSet(Color.FromArgb(120, 200, 40))),
@@ -142,6 +146,28 @@ namespace ErikwnkWFUI.Showcase
                 84,
                 PropertyColumn.Percent(CreateSetButtons(custom, enabled: true), TwoColumnPercent),
                 PropertyColumn.Percent(CreateSetButtons(custom, enabled: false), TwoColumnPercent));
+        }
+
+        // Standard, Primary and Standard(colors: Yellow), as on every page.
+        private static Control CreateThemeToggleButtons(bool enabled)
+        {
+            FlowLayoutPanel flow = UIStyles.FlowLayoutPanels.CreateTransparent();
+            flow.FlowDirection = FlowDirection.LeftToRight;
+            flow.WrapContents = true;
+
+            foreach (Button button in new[]
+            {
+                UIStyles.Buttons.CreateThemeToggle(),
+                UIStyles.Buttons.CreateThemeTogglePrimary(),
+                UIStyles.Buttons.CreateThemeToggle(colors: UIStyles.Colors.Sets.Yellow)
+            })
+            {
+                button.Margin = new Padding(0, 0, 6, 6);
+                button.Enabled = enabled;
+                flow.Controls.Add(button);
+            }
+
+            return flow;
         }
 
         private static Control CreateShortFormButtons(Size size, bool enabled)

@@ -2,7 +2,9 @@
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -263,6 +265,52 @@ namespace ErikwnkWFUI.Factories
         /// without a tooltip gets one with the first text that is not empty;
         /// an empty text for a button without one does nothing.
         /// </summary>
+        // A symbol button that switches the theme: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for
+        // the dark one), applies that theme itself, takes no focus (like a tool bar button) and follows a change of the theme - made by itself or
+        // by anything else - and of the language (its tooltip and its name for the screen reader say what a click does).
+        public static Button CreateThemeToggle(Size? size, Func<UIColorSet> colors)
+        {
+            Button button = CreateSymbol(UIStyles.Symbols.Sun, "", size, colors);
+            ((SymbolButton)button).TakeNoFocus();
+
+            Action update = () => ShowThemeToggleState(button);
+
+            button.Click += (sender, e) =>
+            {
+                UIColors.ApplyTheme(IsLightTheme() ? UIThemes.Dark : UIThemes.Light);
+                update();
+            };
+
+            ThemeWatcher.Attach(button, update);
+
+            EventHandler languageChanged = (sender, e) => update();
+            UIStrings.LanguageChanged += languageChanged;
+            button.Disposed += (sender, e) => UIStrings.LanguageChanged -= languageChanged;
+
+            update();
+
+            return button;
+        }
+
+        private static bool IsLightTheme()
+        {
+            return UIColors.IsLight(UIColors.BackgroundMedium);
+        }
+
+        // The symbol and the tooltip say what a click does: the sun switches to the light theme, the moon to the dark one.
+        private static void ShowThemeToggleState(Button button)
+        {
+            if (button.IsDisposed)
+                return;
+
+            bool toLight = !IsLightTheme();
+            string text = UIStrings.Get(toLight ? "OptionsForm.SwitchToLight" : "OptionsForm.SwitchToDark");
+
+            button.Text = toLight ? UIStyles.Symbols.Sun : UIStyles.Symbols.Moon;
+            button.AccessibleName = text;
+            UpdateTooltip(button, text);
+        }
+
         public static void UpdateTooltip(Button button, string tooltip)
         {
             if (button == null)

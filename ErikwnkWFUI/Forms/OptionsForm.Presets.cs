@@ -390,37 +390,16 @@ namespace ErikwnkWFUI.Forms
             _themeStrip.Dock = DockStyle.Top;
             _themeStrip.Resize += (s, e) => PositionThemeButton();
 
-            // The look of a symbol button without colors; it shows the theme it switches to and takes no focus (like a tool bar button).
-            _themeButton = UIStyles.Buttons.CreateSymbol(UIStyles.Symbols.Sun, "");
-            ((SymbolButton)_themeButton).TakeNoFocus();
-            _themeButton.Click += (s, e) => ApplyOption(() => UIColors.ApplyTheme(SelectedTheme == UIThemes.Light ? UIThemes.Dark : UIThemes.Light));
+            // The button of the library that switches the theme by itself, shows the theme it switches to and follows the language and any other
+            // change of the theme; here only the note that an option was changed (what is only tried is taken back when the window is closed
+            // without Save) is added - its own handler has switched the theme when this one runs.
+            _themeButton = UIStyles.Buttons.CreateThemeToggle();
+            _themeButton.Click += (s, e) => { if (!_loadingOptions) _optionsChanged = true; };
 
             _themeStrip.Controls.Add(_themeButton);
             ContentPanel.Controls.Add(_themeStrip);
 
-            UIColors.ThemeChanged += OnThemeChanged;
-            UpdateThemeButton();
             ApplyScale();
-        }
-
-        private void OnThemeChanged(object sender, EventArgs e)
-        {
-            if (!IsDisposed)
-                UpdateThemeButton();
-        }
-
-        // The symbol and the tooltip say what a click does: the sun switches to the light theme, the moon to the dark one.
-        private void UpdateThemeButton()
-        {
-            if (_themeButton == null)
-                return;
-
-            bool toLight = SelectedTheme != UIThemes.Light;
-            string tooltip = UIStrings.Get(toLight ? "OptionsForm.SwitchToLight" : "OptionsForm.SwitchToDark");
-
-            _themeButton.Text = toLight ? UIStyles.Symbols.Sun : UIStyles.Symbols.Moon;
-            _themeButton.AccessibleName = tooltip;
-            UIButtonFactory.UpdateTooltip(_themeButton, tooltip);
         }
 
         private void PositionThemeButton()
@@ -432,8 +411,6 @@ namespace ErikwnkWFUI.Forms
         // After a switch of the language: the names of the rows and the items.
         private void RefreshOptionTexts()
         {
-            UpdateThemeButton();
-
             if (_optionsSection == null)
                 return;
 
