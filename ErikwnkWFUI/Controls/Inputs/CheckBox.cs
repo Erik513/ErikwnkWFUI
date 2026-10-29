@@ -19,17 +19,19 @@ namespace ErikwnkWFUI.Controls
     /// <remarks>
     /// It keeps everything that is not looks from the standard control: <c>Checked</c>,
     /// <c>CheckState</c>, <c>ThreeState</c>, <c>AutoCheck</c>, the events, the keyboard and
-    /// the mnemonic. Because the library draws the box itself, these properties are
-    /// ignored: <c>TextAlign</c>,
-    /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and
-    /// <c>TextImageRelation</c>, <c>FlatStyle</c> with <c>FlatAppearance</c>, <c>AutoEllipsis</c>,
-    /// <c>Padding</c> and <c>UseVisualStyleBackColor</c>. A double click is two clicks, as on the
-    /// standard box. <c>CheckAlign</c> puts the box on the right when it is one of the right-hand
-    /// alignments (<c>TopRight</c>, <c>MiddleRight</c>, <c>BottomRight</c>) - the label then stays on the
-    /// left and the box sits at the right edge, the way settings lists are often laid out; the box is
-    /// always centered vertically. The factory sets the size for the text and font it is given and leaves
-    /// <c>AutoSize</c> off (a table cell that is laid out several times is steadier with a fixed
+    /// the mnemonic. A double click is two clicks, as on the standard box.
+    /// <para>
+    /// <c>CheckAlign</c> puts the box on the right when it is one of the right-hand alignments (<c>TopRight</c>,
+    /// <c>MiddleRight</c>, <c>BottomRight</c>) - the label then stays on the left and the box sits at the right edge, the way
+    /// settings lists are often laid out; the box is always centered vertically. The factory sets the size for the text and
+    /// font it is given and leaves <c>AutoSize</c> off (a table cell that is laid out several times is steadier with a fixed
     /// size); with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c> by itself.
+    /// </para>
+    /// <para>
+    /// Because the library draws the box itself, these properties are ignored: <c>TextAlign</c>, <c>RightToLeft</c>,
+    /// <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and <c>TextImageRelation</c>, <c>FlatStyle</c> with
+    /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>.
+    /// </para>
     /// <para>
     /// Why the library draws the box itself instead of recoloring the native one: <c>ForeColor</c> drives the native
     /// checkmark as well as the label, the native glyph does not dim when disabled, and drawing over it from a Paint

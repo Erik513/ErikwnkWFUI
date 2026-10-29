@@ -17,14 +17,19 @@ namespace ErikwnkWFUI.Controls
     /// <remarks>
     /// It keeps everything that is not looks from the standard control: <c>Checked</c>, <c>AutoCheck</c>, the events, the keyboard
     /// (arrow keys move within a group), the mnemonic and the grouping - radio buttons with the same parent form one group, so
-    /// selecting one clears the others; put them in a <see cref="Panel"/> or <see cref="GroupBox"/> for separate groups. Because the
-    /// library draws the box itself, these properties are ignored: <c>TextAlign</c>,
-    /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and <c>TextImageRelation</c>, <c>FlatStyle</c> with
-    /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>. The factory sets the size for the
-    /// text and font it is given and leaves <c>AutoSize</c> off; with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c>.
-    /// The box is as large as that of <see cref="CheckBox"/>, so both line up in one column. <c>CheckAlign</c> puts the box on the right
-    /// with one of the right-hand alignments (<c>TopRight</c>, <c>MiddleRight</c>, <c>BottomRight</c>), as on the check box; the box is
-    /// always centered vertically. For a choice that is not tied to one parent, see <see cref="RadioGroup"/>.
+    /// selecting one clears the others; put them in a <see cref="Panel"/> or <see cref="GroupBox"/> for separate groups, or use a
+    /// <see cref="RadioGroup"/> for a choice that is not tied to one parent.
+    /// <para>
+    /// The box is as large as that of <see cref="CheckBox"/>, so both line up in one column. <c>CheckAlign</c> puts the box on the
+    /// right with one of the right-hand alignments (<c>TopRight</c>, <c>MiddleRight</c>, <c>BottomRight</c>), as on the check box;
+    /// the box is always centered vertically. The factory sets the size for the text and font it is given and leaves
+    /// <c>AutoSize</c> off; with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c>.
+    /// </para>
+    /// <para>
+    /// Because the library draws the box itself, these properties are ignored: <c>TextAlign</c>, <c>RightToLeft</c>,
+    /// <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and <c>TextImageRelation</c>, <c>FlatStyle</c> with
+    /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>.
+    /// </para>
     /// </remarks>
     public class RadioButton : System.Windows.Forms.RadioButton
     {
