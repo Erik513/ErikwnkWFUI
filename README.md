@@ -1,4 +1,4 @@
-# ErikwnkWFUI
+﻿# ErikwnkWFUI
 
 A dark-themed WinForms UI control library: borderless windows with a custom
 title bar, styled buttons/labels/lists/tables/dialogs, and a small theming
@@ -44,7 +44,7 @@ one-line summary of what it's for.
   directly. Everything below is effectively an implementation detail behind
   it.
 - **`Controls/`** - the actual custom controls (`ListBox`,
-  `ListView`, `ToggleSwitch`, `MultiPanel`, `TitleBarControl`, ...), for when you
+  `ListView`, `ToggleSwitch`, `RadioButton`, `GroupBox`, `MultiPanel`, `TitleBarControl`, ...), for when you
   need to reach past what a factory method gives you (e.g. subscribing to
   an event, or a property `UIStyles` doesn't proxy). In sub folders by kind:
   `Inputs`, `Labels`, `Lists`, `Panels`, `Progress`, `PropertyTable`, `Tables`,
@@ -120,6 +120,32 @@ name.EditAccepted += (s, e) => Save(name.Text);
 
 var password = UIStyles.TextBoxes.CreatePassword(placeholder: "Password", colors: UIStyles.Colors.Sets.Green);
 ```
+
+## Check boxes, radio buttons and group boxes
+
+`UIStyles.CheckBoxes` and `UIStyles.RadioButtons` make a box that the library draws itself (a rounded box with a check mark, a round one with a dot),
+with the look of a button for hovered, pressed, keyboard focus and disabled: `CreateStandard` is gray when it is checked, `CreatePrimary` follows the
+accent, `colors:` takes a color set or a single color, and `CreateStandardCompact` / `CreatePrimaryCompact` make just the box (25 x 25 at 96 dpi, for table
+cells). Both boxes are as large as each other, so they line up in one column. A check box also has a third state (`ThreeState`, `CheckState.Indeterminate`).
+They keep what is not looks from the standard controls: `Checked`, `AutoCheck`, the events, the keyboard and the mnemonic.
+
+- `CheckAlign` puts the box on the right edge with one of the right-hand values (`MiddleRight` ...), the label staying on the left; the box is always
+  centered vertically. The other properties that only change how the standard control draws (`TextAlign`, `Appearance`, `Image`, `FlatStyle` ...) are ignored.
+- `AutoSize = true` works: the size follows `Text` and `Font`. The factories leave it off and size the control once for the text they are given.
+- Radio buttons with the same parent are one group, as in WinForms: put every group in a panel or a group box of its own. A `RadioGroup` makes one
+  choice of buttons in different parents (for example in the cells of a table): add the buttons, read `SelectedButton` / `SelectedIndex` (-1 clears it) and
+  listen to `SelectionChanged`. It is not a control and draws nothing.
+
+```csharp
+var small = UIStyles.RadioButtons.CreateStandard("Small");
+var large = UIStyles.RadioButtons.CreateStandard("Large", isChecked: true);
+var size = new RadioGroup(small, large);
+size.SelectionChanged += (s, e) => Apply(size.SelectedButton.Text);
+```
+
+`UIStyles.GroupBoxes` is a thin rounded frame with the title in a gap of its upper edge: `CreateStandard` has the quiet line of the theme (or the color of a
+set: `CreateStandard("Options", colors)`), `CreatePrimary` a frame in the accent. `BorderColor` and `TitleColor` set the colors by hand (`Color.Empty` gives the
+theme's back). The surface is the one of the parent, and the children are added and laid out as in a standard group box.
 
 ## Property table
 

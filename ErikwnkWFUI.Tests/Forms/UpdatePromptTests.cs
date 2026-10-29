@@ -1,4 +1,7 @@
-﻿using System.Windows.Forms;
+﻿// The tests wait for ShowUpdateAvailableAsync with .Result / .Wait() on purpose: the prompt is shown as a modal window on the test thread
+// (the timers of Act work inside its message loop), and awaiting would resume somewhere else.
+#pragma warning disable xUnit1031
+using System.Windows.Forms;
 using System.Threading;
 using ErikwnkCore;
 using ErikwnkWFUI.Forms;

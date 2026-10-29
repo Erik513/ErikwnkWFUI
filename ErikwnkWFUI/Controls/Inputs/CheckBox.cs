@@ -368,13 +368,7 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetParentBackColor()
         {
-            for (Control parent = Parent; parent != null; parent = parent.Parent)
-            {
-                if (parent.BackColor.A == 255)
-                    return parent.BackColor;
-            }
-
-            return UIColors.BackgroundMedium;
+            return BoxLabel.GetParentBackColor(this);
         }
 
         private void PaintShapes(Graphics g, Color parentBackColor)
@@ -460,77 +454,14 @@ namespace ErikwnkWFUI.Controls
                 CheckGlyph.DrawDash(g, boxRect, markColor, metrics.Scale(2));
         }
 
-        // A mnemonic ("&Save") shows its underline only once the Alt key was used, as on any
-        // checkbox; without mnemonics the "&" is just a character.
-        private TextFormatFlags GetTextFlags()
-        {
-            TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.VerticalCenter;
-
-            if (!UseMnemonic)
-                flags |= TextFormatFlags.NoPrefix;
-            else if (!ShowKeyboardCues)
-                flags |= TextFormatFlags.HidePrefix;
-
-            return flags;
-        }
-
         private void PaintText(Graphics g, Color parentBackColor)
         {
-            if (string.IsNullOrEmpty(Text))
-                return;
-
-            Metrics metrics = GetMetrics();
-            int glyphColumn = metrics.GlyphColumnWidth;
-            Rectangle textArea = IsBoxOnRight(CheckAlign)
-                ? new Rectangle(metrics.BoxLeftMargin, 0, Width - glyphColumn, Height)
-                : new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
-
-            // Disabled text is the contrasting color blended toward the background, as on
-            // buttons: the fixed DisabledGray of the box is too faint for text on the
-            // light theme.
-            Color textColor = Enabled
-                ? UIColors.TextPrimary
-                : UIColors.BlendToward(UIColors.GetContrastingForeColor(parentBackColor), parentBackColor, 0.35);
-
-            TextRenderer.DrawText(
-                g,
-                Text,
-                Font,
-                textArea,
-                textColor,
-                GetTextFlags());
+            BoxLabel.PaintText(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowKeyboardCues);
         }
 
-        // The dotted frame of the keyboard focus, around the label and the box (or the
-        // box alone when there is no label) - only once the keyboard has been used.
         private void PaintFocus(Graphics g, Color parentBackColor)
         {
-            if (!Focused || !ShowFocusCues)
-                return;
-
-            Metrics metrics = GetMetrics();
-            Rectangle area;
-
-            if (string.IsNullOrEmpty(Text))
-            {
-                int around = metrics.Scale(3);
-                area = new Rectangle(
-                    (Width - metrics.BoxSize) / 2 - around,
-                    (Height - metrics.BoxSize) / 2 - around,
-                    metrics.BoxSize + around * 2,
-                    metrics.BoxSize + around * 2);
-            }
-            else
-            {
-                int textWidth = TextRenderer.MeasureText(Text, Font).Width;
-                int width = IsBoxOnRight(CheckAlign)
-                    ? Width - 2
-                    : System.Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
-                area = new Rectangle(1, 1, width, Height - 2);
-            }
-
-            area.Intersect(new Rectangle(0, 0, Width, Height));
-            ControlPaint.DrawFocusRectangle(g, area, UIColors.TextPrimary, parentBackColor);
+            BoxLabel.PaintFocus(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowFocusCues);
         }
     }
 }

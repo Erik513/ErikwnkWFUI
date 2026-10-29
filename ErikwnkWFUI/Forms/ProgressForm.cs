@@ -373,9 +373,11 @@ namespace ErikwnkWFUI.Forms
             }
             catch (ObjectDisposedException)
             {
+                // The window is gone while the task still reports: nothing is shown any more.
             }
             catch (InvalidOperationException)
             {
+                // The window has no handle (yet or any more): there is nothing to update.
             }
         }
 
