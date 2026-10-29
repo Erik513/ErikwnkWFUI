@@ -196,6 +196,7 @@ namespace ErikwnkWFUI.Forms
         private TextBox _detailsBox;
         private Button _detailsButton;
         private Control _buttonPanel;
+        private int _columnsWidth;
         private string _details = "";
         private bool _detailsExpanded;
         private CheckBox _checkBox;
@@ -340,6 +341,7 @@ namespace ErikwnkWFUI.Forms
             {
                 _helpShown = value;
                 _helpButton.Visible = value;
+                LayoutContent();
             }
         }
 
@@ -552,6 +554,16 @@ namespace ErikwnkWFUI.Forms
 
             MinimumSize = Size.Empty;
             MaximumSize = Size.Empty;
+
+            // The row of buttons keeps its room: a window of one of the three sizes gets wider when the help button, the details button and the
+            // buttons of the set do not fit side by side (an own size is kept).
+            if (!_size.Custom.HasValue)
+            {
+                int left = (_detailsButton.Visible ? _detailsButton.Width : 0) + (_helpButton.Visible ? _helpButton.Width : 0);
+                int frame = Width - ContentPanel.ClientSize.Width;
+                width = Math.Max(width, frame + preset.ButtonPanelPadding.Horizontal + left + _columnsWidth + 8);
+            }
+
             Size = new Size(width, Height);
 
             int contentWidth = ContentPanel.ClientSize.Width;
@@ -661,7 +673,6 @@ namespace ErikwnkWFUI.Forms
             _detailsButton = UIButtonFactory.CreateStandard("", "", new Size(preset.ButtonWidth, preset.ButtonHeight));
             _detailsButton.Dock = DockStyle.Left;
             _detailsButton.Margin = new Padding(0);
-            _detailsButton.Width = preset.ButtonWidth + 10;
             _detailsButton.Visible = _details.Length > 0;
             _detailsButton.Click += (sender, e) => DetailsExpanded = !DetailsExpanded;
 
@@ -692,10 +703,9 @@ namespace ErikwnkWFUI.Forms
                 // The column is as wide as the preset says, and wider where the text would not fit (long words, own texts).
                 int textWidth = TextRenderer.MeasureText(text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
 
-                buttonPanel.ColumnStyles.Add(
-                    new ColumnStyle(
-                        SizeType.Absolute,
-                        Math.Max(preset.ButtonColumnWidth, textWidth + 24 + 6)));
+                int column = Math.Max(preset.ButtonColumnWidth, textWidth + 24 + 6);
+                _columnsWidth += column;
+                buttonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, column));
 
                 // The buttons with a symbol are named for the screen reader and the tooltip - in the language of the library.
                 button.AccessibleName = name;
@@ -709,8 +719,11 @@ namespace ErikwnkWFUI.Forms
 
         private void UpdateDetailsButton()
         {
-            if (_detailsButton != null)
-                _detailsButton.Text = UIStrings.Get("MessageBox.Details") + (_detailsExpanded ? " ▴" : " ▾");
+            if (_detailsButton == null)
+                return;
+
+            _detailsButton.Text = UIStrings.Get("MessageBox.Details") + (_detailsExpanded ? " ▴" : " ▾");
+            _detailsButton.Width = Math.Max(GetPreset().ButtonWidth * 3 / 4, TextRenderer.MeasureText(_detailsButton.Text, _detailsButton.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + 28);
         }
 
         private Button CreateDialogButton(string text, DialogResult result)

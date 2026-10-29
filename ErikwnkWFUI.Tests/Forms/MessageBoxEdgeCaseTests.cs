@@ -196,4 +196,27 @@ public class MessageBoxEdgeCaseTests : IDisposable
         Assert.True(copy.IndexOf("Message") < copy.IndexOf("More"));
         Assert.True(copy.IndexOf("More") < copy.IndexOf("Yes"));
     }
-}
+
+    [Fact]
+    public void TheHelpAndDetailsButtons_AndTheButtonsOfTheSet_AllFit_TheWindowGrowsWhereTheyDoNot()
+    {
+        foreach (UILanguage language in new[] { UILanguage.English, UILanguage.German })
+        foreach (FormSize size in new[] { FormSize.Small, FormSize.Medium, FormSize.Large })
+        {
+            UIStrings.Language = language;
+            MessageBoxForm form = _host.Show(UIStyles.Forms.CreateMessageStandard("x", buttons: MessageBoxButtons.AbortRetryIgnore, details: "d", size: size));
+            form.ShowHelpButton = true;
+            Button details = form.GetPrivateField<Button>("_detailsButton")!;
+            Button help = form.GetPrivateField<Button>("_helpButton")!;
+            Control row = form.GetPrivateField<Control>("_buttonPanel")!;
+            string where = language + ", " + size;
+
+            int needed = TextRenderer.MeasureText(details.Text, details.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+            Assert.True(needed + 8 <= details.Width, where + ": details needs " + needed + " of " + details.Width);
+
+            Rectangle detailsBounds = row.RectangleToClient(details.RectangleToScreen(details.ClientRectangle));
+            Rectangle firstButton = row.RectangleToClient(Buttons(form)[0].RectangleToScreen(Buttons(form)[0].ClientRectangle));
+            Assert.True(detailsBounds.Right <= firstButton.Left, where + ": details " + detailsBounds + ", first button " + firstButton);
+            Assert.True(help.Right <= details.Left + 1, where);
+        }
+    }}
