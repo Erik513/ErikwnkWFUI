@@ -39,16 +39,16 @@ namespace ErikwnkWFUI.Forms
     /// <summary>Which button of a <see cref="MessageBox"/> has the focus first (and answers Enter).</summary>
     public enum MessageBoxDefault
     {
-        /// <summary>The safe one: No for Yes/No, Cancel where there is a Cancel button (the first - the only - one for OK). A stray key press then does no harm.</summary>
+        /// <summary>The safe one: No for Yes/No, Cancel where there is a Cancel button, Abort for Abort/Retry/Ignore, OK for OK. A stray key press then does no harm.</summary>
         Safe,
 
         /// <summary>The first button (the left one: OK or Yes).</summary>
         Button1,
 
-        /// <summary>The second button (No, or Cancel of OK/Cancel).</summary>
+        /// <summary>The second button (No, Cancel of OK/Cancel and Retry/Cancel, Retry of Abort/Retry/Ignore).</summary>
         Button2,
 
-        /// <summary>The third button (Cancel of Yes/No/Cancel).</summary>
+        /// <summary>The third button (Cancel of Yes/No/Cancel, Ignore of Abort/Retry/Ignore).</summary>
         Button3
     }
 
@@ -88,7 +88,7 @@ namespace ErikwnkWFUI.Forms
             return Show(message, title, buttons, icon, null, (FormSize)(int)size);
         }
 
-        /// <summary>Shows the dialog modally and returns which button was clicked (or the safe default - Cancel/No/OK - if the dialog is closed without clicking one).</summary>
+        /// <summary>Shows the dialog modally and returns which button was clicked (or the safe result - No, Cancel, Abort or OK, as the set has it - if the dialog is closed without clicking one).</summary>
         /// <param name="message">The text of the dialog.</param>
         /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
         /// <param name="buttons">Which buttons it has.</param>
@@ -98,7 +98,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="colors">A color set for the title bar (one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or a <see cref="Color"/>); null is the normal dark one.</param>
         /// <param name="details">A text the user can open under the message with a "Details" button, for instance the text of an exception (null: none).</param>
         /// <param name="defaultButton">Which button has the focus first and answers Enter: the safe one (No, Cancel) by default.</param>
-        /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the symbol or the usual text of that button): "Save", "Discard", "Cancel" for Yes/No/Cancel, say.</param>
+        /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the symbol or the usual text of that button): "Save", "Discard", "Cancel" for Yes/No/Cancel, say. An &amp; in a text makes the next letter the access key (&amp;&amp; is an ampersand).</param>
         /// <param name="playSound">Whether the sound of the icon is played when the box opens (the sounds of Windows for information, warning, error and question); off by default.</param>
         public static DialogResult Show(
             string message,
@@ -174,7 +174,7 @@ namespace ErikwnkWFUI.Forms
     /// The dialog behind <see cref="MessageBox"/>: a text (it scrolls when it does not fit), an icon in the title bar, and the buttons.
     /// Make one with <c>UIStyles.Forms.CreateMessageStandard</c> / <c>CreateMessagePrimary</c> and show it with <c>ShowDialog</c>, or call
     /// <c>MessageBox.Show</c>. A window that is closed without a button returns the safe result (No for Yes/No, Cancel where there is a
-    /// Cancel button, OK for OK). Ctrl+C copies the text of the box (as the box of Windows does), <see cref="Details"/> adds a text that
+    /// Cancel button, Abort for Abort/Retry/Ignore, OK for OK). Ctrl+C copies the text of the box (as the box of Windows does), <see cref="Details"/> adds a text that
     /// the user can open under the message, and <see cref="MessageBoxDefault"/> says which button has the focus first.
     /// </summary>
     public class MessageBoxForm : AppForm
@@ -509,8 +509,6 @@ namespace ErikwnkWFUI.Forms
 
         private void BuildLayout()
         {
-            MessageBoxPreset preset = GetPreset();
-
             _messageLabel = UILabelFactory.CreateStandard(_message);
             _messageLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             _messageLabel.TextAlign = ContentAlignment.TopCenter;
@@ -543,7 +541,7 @@ namespace ErikwnkWFUI.Forms
 
         // The message, the details (when they are open) and the buttons one below the other. The window is as high as its size says; a
         // message that needs more makes a window of one of the three sizes higher, up to the height of the screen, and then it scrolls (an own
-        // size is kept: the message scrolls in it). The details add their own height.
+        // size is kept: the message scrolls in it). The details and the check box row add their own height. The window keeps its width.
         private void LayoutContent()
         {
             if (_buttonPanel == null)
