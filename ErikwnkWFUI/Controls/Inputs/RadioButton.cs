@@ -20,8 +20,8 @@ namespace ErikwnkWFUI.Controls
     /// selecting one clears the others; put them in a <see cref="Panel"/> or <see cref="GroupBox"/> for separate groups. Because the
     /// library draws the box itself, these properties are ignored: <c>CheckAlign</c> (the box is always on the left), <c>TextAlign</c>,
     /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and <c>TextImageRelation</c>, <c>FlatStyle</c> with
-    /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>. The size is not automatic: the
-    /// factory sets it for the text and font it is given, so after changing <c>Text</c> or <c>Font</c> set the <c>Size</c> too.
+    /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>. The factory sets the size for the
+    /// text and font it is given and leaves <c>AutoSize</c> off; with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c>.
     /// The box is as large as that of <see cref="CheckBox"/>, so both line up in one column.
     /// </remarks>
     public class RadioButton : System.Windows.Forms.RadioButton
@@ -74,6 +74,13 @@ namespace ErikwnkWFUI.Controls
         internal static Size ComputePreferredSize(string text, Font font, int dpi = 96)
         {
             return CheckBox.ComputePreferredSize(text, font, dpi);
+        }
+
+        // With AutoSize on, the size follows the text and the font (measured as the check box is: the native measuring knows only
+        // the system's round glyph).
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            return ComputePreferredSize(Text, Font, DeviceDpi);
         }
 
         protected override void OnCheckedChanged(System.EventArgs e)

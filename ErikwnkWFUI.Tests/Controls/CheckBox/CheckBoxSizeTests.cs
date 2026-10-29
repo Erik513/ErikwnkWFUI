@@ -17,6 +17,22 @@ public class CheckBoxSizeTests
     }
 
     [Fact]
+    public void WithAutoSizeOn_TheSizeFollowsTheTextAndTheFont()
+    {
+        using Form host = new Form { ShowInTaskbar = false, StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000) };
+        using ErikwnkWFUI.Controls.CheckBox box = new ErikwnkWFUI.Controls.CheckBox { Text = "Short", AutoSize = true };
+        host.Controls.Add(box);
+        host.Show();
+
+        Assert.Equal(ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize("Short", box.Font, box.DeviceDpi), box.Size);
+
+        box.Text = "A much longer label than the first one";
+
+        Assert.Equal(ErikwnkWFUI.Controls.CheckBox.ComputePreferredSize(box.Text, box.Font, box.DeviceDpi), box.Size);
+        Assert.True(box.Width > 100);
+    }
+
+    [Fact]
     public void TheFactoryBoxes_HaveNoAutomaticSizeEither()
     {
         using System.Windows.Forms.CheckBox standard = UIStyles.CheckBoxes.CreateStandard("Label");

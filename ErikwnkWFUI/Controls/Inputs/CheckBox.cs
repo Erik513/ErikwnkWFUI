@@ -24,9 +24,9 @@ namespace ErikwnkWFUI.Controls
     /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and
     /// <c>TextImageRelation</c>, <c>FlatStyle</c> with <c>FlatAppearance</c>, <c>AutoEllipsis</c>,
     /// <c>Padding</c> and <c>UseVisualStyleBackColor</c>. A double click is two clicks, as on the
-    /// standard box. The size is not automatic: the factory sets
-    /// it for the text and font it is given, so after changing <c>Text</c> or <c>Font</c> set
-    /// the <c>Size</c> too.
+    /// standard box. The factory sets the size for the text and font it is given and leaves
+    /// <c>AutoSize</c> off (a table cell that is laid out several times is steadier with a fixed
+    /// size); with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c> by itself.
     /// <para>
     /// Why the library draws the box itself instead of recoloring the native one: <c>ForeColor</c> drives the native
     /// checkmark as well as the label, the native glyph does not dim when disabled, and drawing over it from a Paint
@@ -238,6 +238,13 @@ namespace ErikwnkWFUI.Controls
             int height = System.Math.Max(metrics.BoxSize + 8, font.Height + 8);
 
             return new Size(width, height);
+        }
+
+        // With AutoSize on, the size follows the text and the font: the native measuring knows only the system glyph, so the
+        // box is measured here, with the same measures that it is drawn with.
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            return ComputePreferredSize(Text, Font, DeviceDpi);
         }
 
         // Nothing is painted here: OnPaint erases to the parent's color itself. A
