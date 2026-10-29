@@ -182,6 +182,33 @@ public class UpdatePromptEdgeTests : IDisposable
         Assert.Equal(plain, form.Width);
     }
 
+    [Fact]
+    public void AnOwnerThatIsGone_IsLeftOut_TheWindowsStandInTheMiddleOfTheScreen()
+    {
+        Form owner = new Form();
+        owner.Dispose();
+        UpdateOutcome outcome;
+
+        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.CancelButton!.PerformClick()))
+            outcome = UpdatePrompt.ShowUpdateAvailableAsync("1", "2", progress => Task.FromResult(true), owner).Result;
+
+        Assert.Equal(UpdateOutcome.Declined, outcome);
+    }
+
+    [Fact]
+    public void AfterAnUpdateIsInPlace_AnotherClickOnTheUpdateButtonShowsNothingAndSaysApplied()
+    {
+        using System.Net.Http.HttpClient client = new System.Net.Http.HttpClient();
+        AppUpdater updater = new AppUpdater("owner", "repo", client, client);
+        typeof(AppUpdater).GetField("_updateApplied", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.SetValue(updater, true);
+
+        // (No dialog is opened: the call would not come back from a modal window that nobody closes.)
+        UpdateOutcome outcome = updater.ShowUpdatePromptAsync(new ErikwnkCore.Updater.UpdateCheckResult(new Version(2, 0, 0), "https://example.invalid/app.zip", null), new Version(1, 0, 0), null).Result;
+
+        Assert.Equal(UpdateOutcome.Applied, outcome);
+        Assert.Empty(Application.OpenForms.OfType<UpdateAvailableForm>());
+    }
+
     // ---- the progress window ----
 
     [Fact]

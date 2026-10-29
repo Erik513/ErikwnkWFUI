@@ -22,6 +22,10 @@ namespace ErikwnkWFUI.Forms
         // How long the program waits for the toast "the update is ready" before it closes (about the time the toast stays for its text).
         private const int ReadyToastMilliseconds = 4000;
 
+        // Set once an update is in place and the program is about to close: a second click on the update button during that time
+        // must not start another download.
+        private bool _updateApplied;
+
         private readonly GitHubUpdateChecker _updateChecker;
         private readonly SelfUpdater _selfUpdater;
 
@@ -118,6 +122,9 @@ namespace ErikwnkWFUI.Forms
         /// <param name="size">The size of the question: one of the three or an own <c>Size</c>.</param>
         public async Task<UpdateOutcome> ShowUpdatePromptAsync(UpdateCheckResult result, Version currentVersion, Form owner, bool allowSkip = false, UIColorSet colors = null, FormSizeOption? size = null)
         {
+            if (_updateApplied)
+                return UpdateOutcome.Applied;
+
             string displayedCurrentVersion =
                 currentVersion.Major + "." + currentVersion.Minor + "." + currentVersion.Build;
 
@@ -139,6 +146,8 @@ namespace ErikwnkWFUI.Forms
             // that says so (over the owner) needs a moment to be read first; the window stays responsive meanwhile.
             if (outcome == UpdateOutcome.Applied)
             {
+                _updateApplied = true;
+
                 if (owner != null && !owner.IsDisposed)
                     await Task.Delay(ReadyToastMilliseconds);
 

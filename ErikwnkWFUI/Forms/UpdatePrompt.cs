@@ -113,6 +113,10 @@ namespace ErikwnkWFUI.Forms
             if (applyUpdateAsync == null)
                 throw new ArgumentNullException(nameof(applyUpdateAsync));
 
+            // A window that is gone cannot be stood over (ShowDialog would throw): the windows then stand in the middle of the screen.
+            if (owner != null && owner.IsDisposed)
+                owner = null;
+
             using (UpdateAvailableForm form = UIStyles.Forms.CreateUpdateAvailableStandard(
                 currentVersion,
                 latestVersion,
@@ -189,6 +193,7 @@ namespace ErikwnkWFUI.Forms
             }
             catch (Exception)
             {
+                // The task failed: the window has said so already (showResult) in the words of the library, and the outcome is Failed.
                 applied = false;
             }
 
