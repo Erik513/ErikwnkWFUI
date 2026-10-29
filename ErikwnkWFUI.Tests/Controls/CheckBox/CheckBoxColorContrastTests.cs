@@ -210,4 +210,20 @@ public class CheckBoxColorContrastTests
             }
         });
     }
+
+    [Theory]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void TheLabel_IsReadable_OnAPageOfYourOwn_AndStaysTheTextColorOfTheTheme_OnThePageOfTheTheme(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            using System.Windows.Forms.CheckBox box = UIStyles.CheckBoxes.CreateStandard("x", true);
+
+            // (A panel of your own: bright in the dark theme or dark in the light one, a mid gray, a yellow, a navy.)
+            foreach (Color page in new[] { Color.White, Color.Black, Color.FromArgb(128, 128, 128), Color.FromArgb(230, 190, 20), Color.FromArgb(10, 20, 100) })
+                Check(shortfalls, "label on " + page, global::ErikwnkWFUI.Controls.BoxLabel.GetTextColor(box, page), page, ColorContrastHelper.MinimumRatioNormalText);
+
+            Assert.Equal(UIColors.TextPrimary, global::ErikwnkWFUI.Controls.BoxLabel.GetTextColor(box, UIColors.BackgroundMedium));
+        });
+    }
 }

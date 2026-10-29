@@ -62,6 +62,21 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
+        /// The text color for <paramref name="page"/>: <paramref name="preferred"/> moved lighter or darker as far as it takes to reach <paramref name="minimum"/>
+        /// contrast, and unchanged where it reads already. On a mid-tone page that is not enough (the color is moved one way only, and neither end of that way may
+        /// reach the contrast): black or white, whichever has the higher contrast, which on any page is at least 4.58:1.
+        /// </summary>
+        internal static Color GetReadableText(Color preferred, Color page, double minimum)
+        {
+            Color moved = EnsureContrast(preferred, page, minimum);
+
+            if (GetContrastRatio(moved, page) >= minimum)
+                return moved;
+
+            return GetContrastRatio(Color.Black, page) >= GetContrastRatio(Color.White, page) ? Color.Black : Color.White;
+        }
+
+        /// <summary>
         /// The outline of a control on <paramref name="page"/>: the best text color for the page,
         /// moved toward it just far enough to keep 3:1 against it (the bar for the boundary of a
         /// control), so it stands out on any page color.

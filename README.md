@@ -131,6 +131,7 @@ They keep what is not looks from the standard controls: `Checked`, `AutoCheck`, 
 
 - `CheckAlign` puts the box on the right edge with one of the right-hand values (`MiddleRight` ...), the label staying on the left; the box is always
   centered vertically. The other properties that only change how the standard control draws (`TextAlign`, `Appearance`, `Image`, `FlatStyle` ...) are ignored.
+- `ForeColor` colors the label when you set it (it is then the color as you chose it, dimmed when the box is disabled; `Color.Empty` gives the color of the library back). Without one the label has the color of the theme, moved lighter or darker where the page behind it would leave it unread. The box and its mark keep the colors of the set (`colors:`).
 - `AutoSize = true` works: the size follows `Text` and `Font`. The factories leave it off and size the control once for the text they are given.
 - Radio buttons with the same parent are one group, as in WinForms: put every group in a panel or a group box of its own. A `RadioGroup` makes one
   choice of buttons in different parents (for example in the cells of a table): add the buttons, read `SelectedButton` / `SelectedIndex` (-1 clears it) and

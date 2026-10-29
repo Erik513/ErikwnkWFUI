@@ -184,4 +184,20 @@ public class UIColorsTests
         Assert.False(UIColors.IsNeutral(Color.FromArgb(90, 90, 91)));
         Assert.False(UIColors.IsNeutral(UIAccentColors.Blue));
     }
+
+    [Fact]
+    public void GetReadableText_KeepsAColorThatReadsAlready_AndAlwaysReachesTheContrast_OnAnyPage()
+    {
+        Color text = UIColors.TextPrimary;
+        Color unchanged = UIColors.GetReadableText(text, Color.FromArgb(30, 30, 30), 4.5);
+
+        Assert.Equal(text, unchanged);
+
+        // Every gray, from black to white, and a few colors: the mid-tones are the hard case (moving the light text one way reaches only about 3.9:1).
+        List<Color> pages = Enumerable.Range(0, 52).Select(step => Color.FromArgb(step * 5, step * 5, step * 5)).ToList();
+        pages.AddRange(new[] { Color.Yellow, Color.Red, Color.Navy, Color.Orange, Color.Teal });
+
+        foreach (Color page in pages)
+            Assert.True(UIColors.GetContrastRatio(UIColors.GetReadableText(text, page, 4.5), page) >= 4.5, "unread on " + page);
+    }
 }

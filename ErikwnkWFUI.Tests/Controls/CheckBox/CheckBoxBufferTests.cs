@@ -74,4 +74,16 @@ public class CheckBoxBufferTests
             for (int x = 0; x < empty.Width; x++)
                 Assert.Equal(freshEmpty.GetPixel(x, y).ToArgb(), empty.GetPixel(x, y).ToArgb());
     }
+
+    [Fact]
+    public void ABoxOfNoSize_PaintsNothing_AndMakesNoBitmap()
+    {
+        using System.Windows.Forms.CheckBox box = UIStyles.CheckBoxes.CreateStandard("x", true);
+        box.Size = Size.Empty;
+        using Bitmap picture = new Bitmap(10, 10);
+        using Graphics graphics = Graphics.FromImage(picture);
+
+        Assert.Null(Record.Exception(() => box.InvokePrivate("OnPaint", new PaintEventArgs(graphics, new Rectangle(0, 0, 10, 10)))));
+        Assert.Null(Buffer(box));
+    }
 }

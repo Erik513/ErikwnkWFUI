@@ -84,6 +84,7 @@ CheckAlign puts the box on the right with TopRight, MiddleRight or BottomRight (
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
 | `Colors` | `UIColorSet` | - | get, set | The colors of the filled box: its fill at rest, hovered and pressed, and the mark on each. Left null, the box is filled in the neutral gray (`UIStyles.Colors.Sets.Gray`); `UIStyles.CheckBoxes.CreatePrimary` makes one in the accent color. |
+| `ForeColor` | `Color` | `ControlText` | get, set | The color of the label. Without one that was set (also when the parent has one) the label has the color of the theme, moved lighter or darker where the page behind it would leave it unread, and follows a change of the theme. A color that was set is the label's color as it is (dimmed when the box is disabled); set `Color.Empty` for the color of the library again. The box and its mark have the colors of `Colors`, whatever this says. |
 
 
 ## ComboBox
@@ -409,6 +410,7 @@ Radio buttons with the same parent are one group; use RadioGroup for one choice 
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
 | `Colors` | `UIColorSet` | - | get, set | The colors of the selected box: its fill at rest, hovered and pressed, and the dot on each. Left null, the box is filled in the neutral gray (`UIStyles.Colors.Sets.Gray`); `UIStyles.RadioButtons.CreatePrimary` makes one in the accent color. |
+| `ForeColor` | `Color` | `ControlText` | get, set | The color of the label. Without one that was set (also when the parent has one) the label has the color of the theme, moved lighter or darker where the page behind it would leave it unread, and follows a change of the theme. A color that was set is the label's color as it is (dimmed when the box is disabled); set `Color.Empty` for the color of the library again. The box and its mark have the colors of `Colors`, whatever this says. |
 
 
 ## ReadOnlyDataGridView

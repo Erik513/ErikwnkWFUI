@@ -72,6 +72,32 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        // Whether a ForeColor was set on this box (the label then has that color); without one the label has the color of the theme.
+        private bool _hasOwnForeColor;
+
+        /// <summary>
+        /// The color of the label. Without one that was set (also when the parent has one) the label has the color of the theme, moved lighter or
+        /// darker where the page behind it would leave it unread, and follows a change of the theme. A color that was set is the label's color as
+        /// it is (dimmed when the box is disabled); set <c>Color.Empty</c> for the color of the library again. The box and its mark have the colors of
+        /// <see cref="Colors"/>, whatever this says.
+        /// </summary>
+        public override Color ForeColor
+        {
+            get { return base.ForeColor; }
+            set
+            {
+                _hasOwnForeColor = !value.IsEmpty;
+                base.ForeColor = value;
+                Invalidate();
+            }
+        }
+
+        // The color the label is drawn in when one was set (else none: the color of the theme).
+        private Color? OwnForeColor
+        {
+            get { return _hasOwnForeColor ? base.ForeColor : (Color?)null; }
+        }
+
         private UIColorSet GetColors()
         {
             return _colorSet.Value ?? UIStyles.Colors.Sets.Gray;
@@ -373,12 +399,12 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintText(Graphics g, Color parentBackColor)
         {
-            BoxLabel.PaintText(g, this, parentBackColor, CheckBox.IsBoxOnRight(CheckAlign), ShowKeyboardCues);
+            BoxLabel.PaintText(g, this, parentBackColor, CheckBox.IsBoxOnRight(CheckAlign), ShowKeyboardCues, OwnForeColor);
         }
 
         private void PaintFocus(Graphics g, Color parentBackColor)
         {
-            BoxLabel.PaintFocus(g, this, parentBackColor, CheckBox.IsBoxOnRight(CheckAlign), ShowFocusCues);
+            BoxLabel.PaintFocus(g, this, parentBackColor, CheckBox.IsBoxOnRight(CheckAlign), ShowFocusCues, OwnForeColor);
         }
     }
 }

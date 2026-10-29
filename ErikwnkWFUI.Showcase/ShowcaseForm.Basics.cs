@@ -306,6 +306,23 @@ namespace ErikwnkWFUI.Showcase
                 CreateUndetermined(UIStyles.CheckBoxes.CreateStandard("Undetermined", true), enabled: true),
                 CreateUndetermined(UIStyles.CheckBoxes.CreatePrimary("Undetermined", true), enabled: true),
                 CreateUndetermined(UIStyles.CheckBoxes.CreateStandard("Disabled", true), enabled: false));
+
+            // CheckAlign: the box at the right edge, the label at the left, as in many lists of settings (any of the three right-hand values does it).
+            AddUniformRow(
+                table,
+                "CheckAlign = MiddleRight",
+                CreateBoxOnTheRight(UIStyles.CheckBoxes.CreateStandard("Checked", true), enabled: true),
+                CreateBoxOnTheRight(UIStyles.CheckBoxes.CreateStandard("Unchecked", false), enabled: true),
+                CreateBoxOnTheRight(UIStyles.CheckBoxes.CreateStandard("Disabled", true), enabled: false));
+        }
+
+        private static System.Windows.Forms.CheckBox CreateBoxOnTheRight(System.Windows.Forms.CheckBox box, bool enabled)
+        {
+            box.CheckAlign = ContentAlignment.MiddleRight;
+            box.Width = 200;
+            box.Enabled = enabled;
+
+            return box;
         }
 
         private static System.Windows.Forms.CheckBox CreateUndetermined(System.Windows.Forms.CheckBox box, bool enabled)

@@ -36,7 +36,7 @@ namespace ErikwnkWFUI.Showcase
                  AddButtonsSection),
 
                 ("CheckBoxes",
-                 "Check boxes in the theme colors. Standard carries a text, Compact is just the box. The columns show checked, unchecked and disabled.",
+                 "Check boxes in the theme colors. Standard carries a text, Compact is just the box; the third state shows as a dash, and CheckAlign puts the box on the right. The columns show checked, unchecked and disabled.",
                  AddCheckBoxesSection),
 
                 ("ComboBoxes",

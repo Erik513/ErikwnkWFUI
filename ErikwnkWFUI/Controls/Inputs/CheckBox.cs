@@ -19,7 +19,7 @@ namespace ErikwnkWFUI.Controls
     /// <remarks>
     /// It keeps everything that is not looks from the standard control: <c>Checked</c>,
     /// <c>CheckState</c>, <c>ThreeState</c>, <c>AutoCheck</c>, the events, the keyboard and
-    /// the mnemonic. A double click is two clicks, as on the standard box.
+    /// the mnemonic. A double click is two clicks, as on the standard box. <c>ForeColor</c> colors the label, when one was set (see <see cref="ForeColor"/>).
     /// <para>
     /// <c>CheckAlign</c> puts the box on the right when it is one of the right-hand alignments (<c>TopRight</c>,
     /// <c>MiddleRight</c>, <c>BottomRight</c>) - the label then stays on the left and the box sits at the right edge, the way
@@ -82,6 +82,7 @@ namespace ErikwnkWFUI.Controls
             return new Metrics(DeviceDpi);
         }
 
+        /// <summary>A check box in the neutral look. Make one with <see cref="UIStyles.CheckBoxes"/>, which also sets the size for the text and the font.</summary>
         public CheckBox()
         {
             // No OptimizedDoubleBuffer / DoubleBuffered: both use WinForms' one shared buffer
@@ -105,6 +106,32 @@ namespace ErikwnkWFUI.Controls
         private bool _isHot;
         private bool _isPressed;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
+
+        // Whether a ForeColor was set on this box (the label then has that color); without one the label has the color of the theme.
+        private bool _hasOwnForeColor;
+
+        /// <summary>
+        /// The color of the label. Without one that was set (also when the parent has one) the label has the color of the theme, moved lighter or
+        /// darker where the page behind it would leave it unread, and follows a change of the theme. A color that was set is the label's color as
+        /// it is (dimmed when the box is disabled); set <c>Color.Empty</c> for the color of the library again. The box and its mark have the colors of
+        /// <see cref="Colors"/>, whatever this says.
+        /// </summary>
+        public override Color ForeColor
+        {
+            get { return base.ForeColor; }
+            set
+            {
+                _hasOwnForeColor = !value.IsEmpty;
+                base.ForeColor = value;
+                Invalidate();
+            }
+        }
+
+        // The color the label is drawn in when one was set (else none: the color of the theme).
+        private Color? OwnForeColor
+        {
+            get { return _hasOwnForeColor ? base.ForeColor : (Color?)null; }
+        }
 
         /// <summary>
         /// The colors of the filled box: its fill at rest, hovered and pressed, and the
@@ -134,6 +161,7 @@ namespace ErikwnkWFUI.Controls
             return _colorSet.Value ?? UIStyles.Colors.Sets.Gray;
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(System.EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -141,6 +169,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(System.EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -149,6 +178,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs mevent)
         {
             base.OnMouseDown(mevent);
@@ -159,6 +189,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseUp(MouseEventArgs mevent)
         {
             base.OnMouseUp(mevent);
@@ -166,6 +197,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -177,6 +209,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnKeyUp(KeyEventArgs e)
         {
             base.OnKeyUp(e);
@@ -188,12 +221,14 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(System.EventArgs e)
         {
             base.OnGotFocus(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnLostFocus(System.EventArgs e)
         {
             base.OnLostFocus(e);
@@ -203,6 +238,7 @@ namespace ErikwnkWFUI.Controls
 
         // The mouse can be taken away without a MouseUp (another window, a dialog opened
         // while pressing): then nothing is pressed any more.
+        /// <inheritdoc/>
         protected override void OnMouseCaptureChanged(System.EventArgs e)
         {
             base.OnMouseCaptureChanged(e);
@@ -211,6 +247,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Hidden, a box gets no MouseLeave: shown again it must not still look hovered.
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(System.EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -222,6 +259,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(System.EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -255,6 +293,7 @@ namespace ErikwnkWFUI.Controls
 
         // With AutoSize on, the size follows the text and the font: the native measuring knows only the system glyph, so the
         // box is measured here, with the same measures that it is drawn with.
+        /// <inheritdoc/>
         public override Size GetPreferredSize(Size proposedSize)
         {
             return ComputePreferredSize(Text, Font, DeviceDpi);
@@ -263,10 +302,12 @@ namespace ErikwnkWFUI.Controls
         // Nothing is painted here: OnPaint erases to the parent's color itself. A
         // transparent BackColor would have WinForms ask the parent to draw what is behind
         // the box, and in a nested table layout that showed stale text of neighboring cells.
+        /// <inheritdoc/>
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             if (Width <= 0 || Height <= 0)
@@ -306,6 +347,7 @@ namespace ErikwnkWFUI.Controls
             return _buffer;
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -427,7 +469,8 @@ namespace ErikwnkWFUI.Controls
                 {
                     fillColor = brighter ? colors.Hover : colors.Basic;
                     markColor = brighter ? colors.HoverText : colors.BasicText;
-                }            }
+                }
+            }
 
             Color borderColor = GetBorderColor(parentBackColor);
 
@@ -456,12 +499,12 @@ namespace ErikwnkWFUI.Controls
 
         private void PaintText(Graphics g, Color parentBackColor)
         {
-            BoxLabel.PaintText(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowKeyboardCues);
+            BoxLabel.PaintText(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowKeyboardCues, OwnForeColor);
         }
 
         private void PaintFocus(Graphics g, Color parentBackColor)
         {
-            BoxLabel.PaintFocus(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowFocusCues);
+            BoxLabel.PaintFocus(g, this, parentBackColor, IsBoxOnRight(CheckAlign), ShowFocusCues, OwnForeColor);
         }
     }
 }
