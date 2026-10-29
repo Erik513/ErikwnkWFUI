@@ -99,12 +99,12 @@ public class MessageBoxEdgeCaseTests : IDisposable
 
     [Theory]
     [InlineData(MessageBoxButtons.OK, DialogResult.OK, DialogResult.OK)]
-    [InlineData(MessageBoxButtons.OKCancel, DialogResult.OK, DialogResult.Cancel)]
-    [InlineData(MessageBoxButtons.YesNo, DialogResult.Yes, DialogResult.No)]
-    [InlineData(MessageBoxButtons.YesNoCancel, DialogResult.Yes, DialogResult.Cancel)]
-    [InlineData(MessageBoxButtons.RetryCancel, DialogResult.Retry, DialogResult.Cancel)]
-    [InlineData(MessageBoxButtons.AbortRetryIgnore, DialogResult.Retry, DialogResult.Abort)]
-    public void EnterAndEscape_AreTheAcceptAndTheCancelButton_OfEverySet(MessageBoxButtons set, DialogResult enter, DialogResult escape)
+    [InlineData(MessageBoxButtons.OKCancel, DialogResult.Cancel, DialogResult.Cancel)]
+    [InlineData(MessageBoxButtons.YesNo, DialogResult.No, DialogResult.No)]
+    [InlineData(MessageBoxButtons.YesNoCancel, DialogResult.Cancel, DialogResult.Cancel)]
+    [InlineData(MessageBoxButtons.RetryCancel, DialogResult.Cancel, DialogResult.Cancel)]
+    [InlineData(MessageBoxButtons.AbortRetryIgnore, DialogResult.Abort, DialogResult.Abort)]
+    public void EnterAndEscape_AreBothTheSafeButton_OfEverySet(MessageBoxButtons set, DialogResult enter, DialogResult escape)
     {
         MessageBoxForm form = _host.Show(UIStyles.Forms.CreateMessageStandard("x", buttons: set));
 

@@ -159,7 +159,7 @@ namespace ErikwnkWFUI
             private static ErikwnkWFUI.Forms.FormOptions MessageOptions(string title, ErikwnkWFUI.Forms.MessageBoxIcon icon, bool primary)
             {
                 string text = title ?? Localization.UIStrings.Get("MessageBox.Title");
-                System.Drawing.Image barIcon = ErikwnkWFUI.Forms.MessageBoxForm.GetTitleBarIconOf(icon);
+                System.Drawing.Image barIcon = ErikwnkWFUI.Forms.MessageBoxForm.GetTitleBarIcon(icon);
 
                 return primary
                     ? ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(text, ContentAlignment.MiddleLeft, barIcon)

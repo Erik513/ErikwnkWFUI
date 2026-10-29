@@ -410,8 +410,13 @@ namespace ErikwnkWFUI.Forms
                 return;
             }
 
-            if (CancelButton is Control cancelControl)
-                ActiveControl = cancelControl;
+            // The safe one: the button that cancels (No, Cancel, Abort, the only OK) has the focus and answers Enter from anywhere in the window,
+            // from the check box and the details too - Enter must never be a Yes that nobody chose.
+            if (CancelButton is Button cancelButton)
+            {
+                ActiveControl = cancelButton;
+                AcceptButton = cancelButton;
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -900,13 +905,8 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
-        // (For the factories, which make the options of the window before the window.)
-        internal static Image GetTitleBarIconOf(MessageBoxIcon icon)
-        {
-            return GetTitleBarIcon(icon);
-        }
-
-        private static Image GetTitleBarIcon(MessageBoxIcon icon)
+        // (Internal for the factories, which make the options of the window before the window.)
+        internal static Image GetTitleBarIcon(MessageBoxIcon icon)
         {
             switch (icon)
             {

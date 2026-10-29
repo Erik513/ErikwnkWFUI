@@ -31,13 +31,13 @@ public class MessageBoxExtrasTests : IDisposable
     // ---- more button sets
 
     [Fact]
-    public void RetryCancel_HasTwoButtons_RetryIsEnter_CancelIsEscape_AndClosingIsCancel()
+    public void RetryCancel_HasTwoButtons_CancelIsEnterAndEscape_AndClosingIsCancel()
     {
         MessageBoxForm form = _host.Show(UIStyles.Forms.CreateMessageStandard("The disk is not ready.", buttons: MessageBoxButtons.RetryCancel, icon: MessageBoxIcon.Error));
 
         Assert.Equal(new[] { DialogResult.Retry, DialogResult.Cancel }, Buttons(form).Select(b => b.DialogResult).ToArray());
         Assert.Equal(new[] { "Retry", "Cancel" }, Buttons(form).Select(b => b.Text).ToArray());
-        Assert.Same(Buttons(form)[0], form.AcceptButton);
+        Assert.Same(Buttons(form)[1], form.AcceptButton);
         Assert.Same(Buttons(form)[1], form.CancelButton);
 
         form.Close();
@@ -50,7 +50,7 @@ public class MessageBoxExtrasTests : IDisposable
         MessageBoxForm form = _host.Show(UIStyles.Forms.CreateMessageStandard("An error.", buttons: MessageBoxButtons.AbortRetryIgnore, icon: MessageBoxIcon.Error));
 
         Assert.Equal(new[] { DialogResult.Abort, DialogResult.Retry, DialogResult.Ignore }, Buttons(form).Select(b => b.DialogResult).ToArray());
-        Assert.Same(Buttons(form)[1], form.AcceptButton);
+        Assert.Same(Buttons(form)[0], form.AcceptButton);
         Assert.Same(Buttons(form)[0], form.CancelButton);
 
         form.Close();
@@ -149,7 +149,7 @@ public class MessageBoxExtrasTests : IDisposable
                 Assert.Equal("Do not ask again", box.Text);
                 Assert.False(box.Checked);
                 box.Checked = true;
-                form.AcceptButton!.PerformClick();
+                Buttons(form)[0].PerformClick();
             },
             () => ErikwnkWFUI.Forms.MessageBox.ShowWithCheckBox("Delete it?", "Do not ask again", ref isChecked, buttons: MessageBoxButtons.YesNo));
 
@@ -229,7 +229,7 @@ public class MessageBoxExtrasTests : IDisposable
     {
         string[]? texts = null;
         DialogResult result = ShowAndAct(
-            form => { texts = Buttons(form).Select(b => b.Text).ToArray(); form.AcceptButton!.PerformClick(); },
+            form => { texts = Buttons(form).Select(b => b.Text).ToArray(); Buttons(form)[0].PerformClick(); },
             () => ErikwnkWFUI.Forms.MessageBox.Show("Save?", null!, MessageBoxButtons.YesNo, buttonTexts: new[] { "Save", "Discard" }));
 
         Assert.Equal(DialogResult.Yes, result);

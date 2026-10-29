@@ -128,7 +128,7 @@ public class MessageBoxFactoryTests : IDisposable
     [Fact]
     public void Show_ReturnsTheButtonThatWasClicked_AndTheSafeOneWhenTheWindowIsClosed()
     {
-        Assert.Equal(DialogResult.Yes, ShowAndAct(form => form.AcceptButton!.PerformClick(), () => ErikwnkWFUI.Forms.MessageBox.Show("x", "t", MessageBoxButtons.YesNo)));
+        Assert.Equal(DialogResult.Yes, ShowAndAct(form => form.GetPrivateField<System.Collections.Generic.List<System.Windows.Forms.Button>>("_dialogButtons")![0].PerformClick(), () => ErikwnkWFUI.Forms.MessageBox.Show("x", "t", MessageBoxButtons.YesNo)));
         Assert.Equal(DialogResult.No, ShowAndAct(form => form.Close(), () => ErikwnkWFUI.Forms.MessageBox.Show("x", "t", MessageBoxButtons.YesNo)));
         Assert.Equal(DialogResult.Cancel, ShowAndAct(form => form.Close(), () => ErikwnkWFUI.Forms.MessageBox.Show("x", "t", MessageBoxButtons.YesNoCancel)));
         Assert.Equal(DialogResult.OK, ShowAndAct(form => form.Close(), () => ErikwnkWFUI.Forms.MessageBox.Show("x")));
