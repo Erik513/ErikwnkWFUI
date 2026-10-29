@@ -252,6 +252,7 @@ namespace ErikwnkWFUI.Forms
                 icon,
                 buttonTexts)
         {
+            UsesDefaultTitle = title == null;
         }
 
         // The window with the options it is given (a dialog made by FormOptions, with the color set or the accent of the title bar): what
@@ -274,6 +275,7 @@ namespace ErikwnkWFUI.Forms
             LayoutContent();
 
             FocusDefaultButton();
+            UIStrings.LanguageChanged += OnLanguageChanged;
         }
 
         /// <summary>A text under the message that the user opens with the "Details" button (the text of an exception, say); empty (the default) has no button.</summary>
@@ -700,10 +702,7 @@ namespace ErikwnkWFUI.Forms
                     text,
                     buttonInfos[i].Result);
 
-                // The column is as wide as the preset says, and wider where the text would not fit (long words, own texts).
-                int textWidth = TextRenderer.MeasureText(text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
-
-                int column = Math.Max(preset.ButtonColumnWidth, textWidth + 24 + 6);
+                int column = ColumnWidthFor(button);
                 _columnsWidth += column;
                 buttonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, column));
 
@@ -715,6 +714,65 @@ namespace ErikwnkWFUI.Forms
                 _buttonNames.Add(name);
                 buttonPanel.Controls.Add(button, i + 1, 0);
             }
+        }
+
+        // The column is as wide as the preset says, and wider where the text would not fit (long words, own texts).
+        private int ColumnWidthFor(Button button)
+        {
+            int textWidth = TextRenderer.MeasureText(button.Text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+
+            return Math.Max(GetPreset().ButtonColumnWidth, textWidth + 24 + 6);
+        }
+
+        // ---- language
+
+        /// <summary>Whether the title is the standard one of the language ("Notice", "Hinweis"): it follows a change of the language while the window is open. A title that was given stays.</summary>
+        internal bool UsesDefaultTitle { get; set; }
+
+        // The texts of the box follow a change of the language while it is open: the title (when it is the standard one), the buttons that have
+        // no text of their own, the help and details buttons. The columns are measured again (a word of the other language may be longer).
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (IsDisposed)
+                return;
+
+            if (UsesDefaultTitle)
+                FormTitle = UIStrings.Get("MessageBox.Title");
+
+            DialogButtonInfo[] infos = GetButtons();
+            TableLayoutPanel row = (TableLayoutPanel)_buttonPanel;
+            _columnsWidth = 0;
+
+            for (int i = 0; i < _dialogButtons.Count; i++)
+            {
+                bool own = _buttonTexts != null && i < _buttonTexts.Length && !string.IsNullOrEmpty(_buttonTexts[i]);
+
+                if (!own)
+                {
+                    _dialogButtons[i].Text = infos[i].Text;
+                    _dialogButtons[i].AccessibleName = infos[i].Name;
+                    UIButtonFactory.UpdateTooltip(_dialogButtons[i], infos[i].Name);
+                    _buttonNames[i] = infos[i].Name;
+                }
+
+                int column = ColumnWidthFor(_dialogButtons[i]);
+                _columnsWidth += column;
+                row.ColumnStyles[i + 1].Width = column;
+            }
+
+            _helpButton.AccessibleName = UIStrings.Get("MessageBox.Help");
+            UIButtonFactory.UpdateTooltip(_helpButton, UIStrings.Get("MessageBox.Help"));
+
+            UpdateDetailsButton();
+            LayoutContent();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                UIStrings.LanguageChanged -= OnLanguageChanged;
+
+            base.Dispose(disposing);
         }
 
         private void UpdateDetailsButton()

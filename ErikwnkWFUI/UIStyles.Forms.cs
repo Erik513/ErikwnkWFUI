@@ -131,7 +131,10 @@ namespace ErikwnkWFUI
             /// <param name="playSound">Whether the sound of the icon is played when the box opens (off by default).</param>
             public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessageStandard(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null, string details = null, ErikwnkWFUI.Forms.MessageBoxDefault defaultButton = ErikwnkWFUI.Forms.MessageBoxDefault.Safe, string[] buttonTexts = null, bool playSound = false)
             {
-                return UIFormFactory.CreateMessage(MessageOptions(title, icon, false), colors, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
+                ErikwnkWFUI.Forms.MessageBoxForm form = UIFormFactory.CreateMessage(MessageOptions(title, icon, false), colors, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
+                form.UsesDefaultTitle = title == null;
+
+                return form;
             }
 
             /// <summary>A message box with the title bar in a very dark shade of the accent.</summary>
@@ -146,7 +149,10 @@ namespace ErikwnkWFUI
             /// <param name="playSound">Whether the sound of the icon is played when the box opens (off by default).</param>
             public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessagePrimary(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, ErikwnkWFUI.Forms.FormSizeOption? size = null, string details = null, ErikwnkWFUI.Forms.MessageBoxDefault defaultButton = ErikwnkWFUI.Forms.MessageBoxDefault.Safe, string[] buttonTexts = null, bool playSound = false)
             {
-                return UIFormFactory.CreateMessage(MessageOptions(title, icon, true), null, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
+                ErikwnkWFUI.Forms.MessageBoxForm form = UIFormFactory.CreateMessage(MessageOptions(title, icon, true), null, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
+                form.UsesDefaultTitle = title == null;
+
+                return form;
             }
 
             // The options of a message box: a dialog (the Primary one with the accent in the title bar), the icon of the kind of message in the bar.
