@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Forms
         /// <see cref="UpdateOutcome.Failed"/> (applyUpdateAsync returned false or threw; the window then stays with the message until the user
         /// closes it). It is not asynchronous in the sense of returning early: the dialogs are modal, the task that comes back is already done.
         /// </summary>
-        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0"; a leading "v" is not doubled).</param>
         /// <param name="latestVersion">The new version.</param>
         /// <param name="applyUpdateAsync">Downloads and prepares the update, reporting 0 to 100; true when it is ready.</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
@@ -61,7 +61,7 @@ namespace ErikwnkWFUI.Forms
         /// in the progress window (a task that stops by an <see cref="OperationCanceledException"/>, or returns false after the token was
         /// cancelled, gives <see cref="UpdateOutcome.Cancelled"/>).
         /// </summary>
-        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0"; a leading "v" is not doubled).</param>
         /// <param name="latestVersion">The new version.</param>
         /// <param name="applyUpdateAsync">Downloads and prepares the update, reporting 0 to 100; true when it is ready.</param>
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>

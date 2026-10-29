@@ -66,8 +66,8 @@ namespace ErikwnkWFUI.Forms
         internal UpdateAvailableForm(FormOptions options, string currentVersion, string latestVersion, FormSizeOption? size)
             : base(options)
         {
-            _currentVersion = currentVersion ?? "";
-            _latestVersion = latestVersion ?? "";
+            _currentVersion = WithoutV(currentVersion);
+            _latestVersion = WithoutV(latestVersion);
             _size = size ?? FormSize.Medium;
 
             ShowInTaskbar = false;
@@ -175,6 +175,12 @@ namespace ErikwnkWFUI.Forms
         }
 
         private const int ButtonRowHeight = 60;
+
+        // The window writes the "v" itself: a version that comes with one (a tag such as "v1.3.0") is not shown with two.
+        private static string WithoutV(string version)
+        {
+            return (version ?? "").Trim().TrimStart('v', 'V');
+        }
 
         // The size of the window: the size that was asked for, higher by the room of the release notes when they are open, and wider when the
         // buttons of the left (What's new, Skip) and the two of the right do not fit side by side (an own size is kept).
