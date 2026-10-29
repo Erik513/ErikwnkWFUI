@@ -6,7 +6,7 @@ namespace ErikwnkWFUI.Tests.Controls.CheckBox;
 /// <summary>Whether the box looks hovered: it follows the mouse, also across being disabled and enabled again.</summary>
 public class CheckBoxHoverTests
 {
-    private static bool IsHot(Control box) => box.GetPrivateField<bool>("_isHot");
+    private static bool IsHot(Control box) => box.IsHot();
 
     [Fact]
     public void AHoveredBox_ThatIsDisabledAndEnabledAgain_DoesNotStillLookHovered()

@@ -21,7 +21,7 @@ namespace ErikwnkWFUI.Controls
         private bool _isChangingSelection;
         private bool _isDisposed;
 
-        /// <summary>Makes a group of these buttons (none, one or several of them may be checked at the start; the first checked one stays).</summary>
+        /// <summary>Makes a group of these buttons (none, one or several of them may be checked at the start; of several the last one added that is checked stays).</summary>
         public RadioGroup(params System.Windows.Forms.RadioButton[] buttons)
         {
             if (buttons == null)

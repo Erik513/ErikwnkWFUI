@@ -207,8 +207,8 @@ public class RadioButtonBehaviorTests : IDisposable
         Click(radios[1]);
 
         Assert.True(radios[1].Checked);
-        Assert.False(radios[1].GetPrivateField<bool>("_isPressed"));
-        Assert.False(radios[1].GetPrivateField<bool>("_isHot"));
+        Assert.False(radios[1].IsPressed());
+        Assert.False(radios[1].IsHot());
     }
 
     [Fact]
@@ -229,15 +229,15 @@ public class RadioButtonBehaviorTests : IDisposable
     {
         var radios = Shown(Make("A"));
         radios[0].InvokePrivate("OnMouseEnter", EventArgs.Empty);
-        Assert.True(radios[0].GetPrivateField<bool>("_isHot"));
+        Assert.True(radios[0].IsHot());
 
         radios[0].Visible = false;
-        Assert.False(radios[0].GetPrivateField<bool>("_isHot"));
+        Assert.False(radios[0].IsHot());
 
         radios[0].Visible = true;
         radios[0].InvokePrivate("OnMouseEnter", EventArgs.Empty);
         radios[0].InvokePrivate("OnMouseLeave", EventArgs.Empty);
-        Assert.False(radios[0].GetPrivateField<bool>("_isHot"));
+        Assert.False(radios[0].IsHot());
     }
 
     [Fact]
@@ -245,11 +245,11 @@ public class RadioButtonBehaviorTests : IDisposable
     {
         var radios = Shown(Make("A"));
         radios[0].InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
-        Assert.True(radios[0].GetPrivateField<bool>("_isPressed"));
+        Assert.True(radios[0].IsPressed());
 
         radios[0].InvokePrivate("OnMouseCaptureChanged", EventArgs.Empty);
 
-        Assert.False(radios[0].GetPrivateField<bool>("_isPressed"));
+        Assert.False(radios[0].IsPressed());
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public class RadioButtonBehaviorTests : IDisposable
 
         radios[0].InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Right, 1, 5, 5, 0));
 
-        Assert.False(radios[0].GetPrivateField<bool>("_isPressed"));
+        Assert.False(radios[0].IsPressed());
     }
 
     // ---- text and size edge cases ----
@@ -365,5 +365,80 @@ public class RadioButtonBehaviorTests : IDisposable
         {
             UIColors.SetAccent(UIAccentColors.Blue);
         }
+    }
+
+    [Fact]
+    public void TheSpaceKey_ShowsThePress_OtherKeysDoNot_AndLosingTheFocusEndsIt()
+    {
+        var radios = Shown(Make("A"));
+
+        radios[0].InvokePrivate("OnKeyDown", new KeyEventArgs(Keys.Enter));
+        Assert.False(radios[0].IsPressed());
+
+        radios[0].InvokePrivate("OnKeyDown", new KeyEventArgs(Keys.Space));
+        Assert.True(radios[0].IsPressed());
+
+        radios[0].InvokePrivate("OnKeyUp", new KeyEventArgs(Keys.Enter));
+        Assert.True(radios[0].IsPressed());
+
+        radios[0].InvokePrivate("OnKeyUp", new KeyEventArgs(Keys.Space));
+        Assert.False(radios[0].IsPressed());
+
+        radios[0].InvokePrivate("OnKeyDown", new KeyEventArgs(Keys.Space));
+        radios[0].InvokePrivate("OnLostFocus", EventArgs.Empty);
+        Assert.False(radios[0].IsPressed());
+    }
+
+    [Fact]
+    public void AButtonThatWasHotWhenItWasDisabled_DoesNotLookHoveredWhenItIsEnabledAgain()
+    {
+        // A disabled control gets no MouseLeave, so the mouse may have gone while it was disabled: the position is looked at again on enabling.
+        var radios = Shown(Make("A"));
+        radios[0].InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        Assert.True(radios[0].IsHot());
+
+        radios[0].Enabled = false;
+        radios[0].Enabled = true;
+
+        Assert.False(radios[0].IsHot());
+    }
+
+    [Fact]
+    public void TheCompactButtons_AreSquare_AndThePrimaryOneFollowsTheAccent()
+    {
+        var radios = Shown(UIStyles.RadioButtons.CreateStandardCompact(true), UIStyles.RadioButtons.CreatePrimaryCompact(true));
+
+        Assert.Equal(radios[0].Width, radios[0].Height);
+        Assert.Equal(radios[0].Size, radios[1].Size);
+        Assert.Equal(string.Empty, radios[1].Text);
+
+        UIColors.SetAccent(UIAccentColors.Red);
+        try
+        {
+            using Bitmap red = Draw(radios[1]);
+            UIColors.SetAccent(UIAccentColors.Blue);
+            using Bitmap blue = Draw(radios[1]);
+
+            Assert.False(SamePixels(red, blue));
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
+
+    [Fact]
+    public void WhereTheDotOfTheSetCannotBeSeenOnTheBrighterFill_TheDarkOrTheLightDotIsTaken()
+    {
+        // On a light page the box takes the next brighter shade of the set; a set whose pressed fill is almost white and whose text is white has no readable dot there.
+        UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(0, 40, 110), Color.FromArgb(0, 80, 180), Color.FromArgb(235, 235, 255), Color.White);
+        var radios = Shown(UIStyles.RadioButtons.CreateStandard("A", true, set));
+        radios[0].InvokePrivate("OnMouseEnter", EventArgs.Empty);
+
+        global::ErikwnkWFUI.Controls.RadioButton radio = (global::ErikwnkWFUI.Controls.RadioButton)radios[0];
+        radio.GetFill(Color.White, out Color fill, out Color dot);
+
+        Assert.Equal(set.Pressed, fill);
+        Assert.True(UIColors.GetContrastRatio(dot, fill) >= 3.0, "the dot " + dot + " cannot be seen on " + fill);
     }
 }

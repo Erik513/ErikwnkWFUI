@@ -33,6 +33,7 @@ namespace ErikwnkWFUI.Controls
     /// </remarks>
     public class RadioButton : System.Windows.Forms.RadioButton
     {
+        /// <summary>A radio button in the neutral look. Make one with <see cref="UIStyles.RadioButtons"/>, which also sets the size for the text and the font.</summary>
         public RadioButton()
         {
             // As the CheckBox: no shared double buffer (OnPaint draws into a private bitmap), no native drawing.
@@ -45,10 +46,16 @@ namespace ErikwnkWFUI.Controls
 
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
+            _state = new BoxState(this);
         }
 
-        private bool _isHot;
-        private bool _isPressed;
+        /// <summary>What the box knows of the mouse and the keyboard (hovered, pressed).</summary>
+        internal BoxState State
+        {
+            get { return _state; }
+        }
+
+        private readonly BoxState _state;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         /// <summary>
@@ -111,119 +118,26 @@ namespace ErikwnkWFUI.Controls
 
         // With AutoSize on, the size follows the text and the font (measured as the check box is: the native measuring knows only
         // the system's round glyph).
+        /// <inheritdoc/>
         public override Size GetPreferredSize(Size proposedSize)
         {
             return ComputePreferredSize(Text, Font, DeviceDpi);
         }
 
+        /// <inheritdoc/>
         protected override void OnCheckedChanged(System.EventArgs e)
         {
             base.OnCheckedChanged(e);
             Invalidate();
         }
 
-        protected override void OnMouseEnter(System.EventArgs e)
-        {
-            base.OnMouseEnter(e);
-            _isHot = true;
-            Invalidate();
-        }
-
-        protected override void OnMouseLeave(System.EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            _isHot = false;
-            _isPressed = false;
-            Invalidate();
-        }
-
-        protected override void OnMouseDown(MouseEventArgs mevent)
-        {
-            base.OnMouseDown(mevent);
-
-            if (mevent.Button == MouseButtons.Left)
-                _isPressed = true;
-
-            Invalidate();
-        }
-
-        protected override void OnMouseUp(MouseEventArgs mevent)
-        {
-            base.OnMouseUp(mevent);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            base.OnKeyDown(e);
-
-            if (e.KeyCode == Keys.Space)
-            {
-                _isPressed = true;
-                Invalidate();
-            }
-        }
-
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            base.OnKeyUp(e);
-
-            if (e.KeyCode == Keys.Space)
-            {
-                _isPressed = false;
-                Invalidate();
-            }
-        }
-
-        protected override void OnGotFocus(System.EventArgs e)
-        {
-            base.OnGotFocus(e);
-            Invalidate();
-        }
-
-        protected override void OnLostFocus(System.EventArgs e)
-        {
-            base.OnLostFocus(e);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        // The mouse can be taken away without a MouseUp (another window, a dialog opened while pressing).
-        protected override void OnMouseCaptureChanged(System.EventArgs e)
-        {
-            base.OnMouseCaptureChanged(e);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        // Hidden, a button gets no MouseLeave: shown again it must not still look hovered.
-        protected override void OnVisibleChanged(System.EventArgs e)
-        {
-            base.OnVisibleChanged(e);
-
-            if (!Visible)
-            {
-                _isHot = false;
-                _isPressed = false;
-            }
-        }
-
-        protected override void OnEnabledChanged(System.EventArgs e)
-        {
-            base.OnEnabledChanged(e);
-
-            // A disabled control gets neither MouseUp nor MouseLeave (see CheckBox): what is hovered is looked at again when it is enabled.
-            _isPressed = false;
-            _isHot = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
-            Invalidate();
-        }
-
         // Nothing is painted here: OnPaint erases to the parent's color itself (a transparent BackColor made stale text of neighbors show).
+        /// <inheritdoc/>
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             if (Width <= 0 || Height <= 0)
@@ -258,6 +172,7 @@ namespace ErikwnkWFUI.Controls
             return _buffer;
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -289,63 +204,13 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBorderColor(Color parentBackColor)
         {
-            if (!Enabled)
-                return UIColors.DisabledGray;
-
-            bool isActive = _isHot || _isPressed;
-
-            if (!isActive || Checked)
-                return UIColors.GetOutlineColor(parentBackColor);
-
-            UIColorSet colors = GetColors();
-
-            return UIColors.EnsureContrast(
-                _isPressed ? colors.Pressed : colors.Hover,
-                parentBackColor,
-                _isPressed ? 6.0 : 4.5);
+            return BoxLook.GetBorderColor(GetColors(), parentBackColor, Enabled, _state.IsHot, _state.IsPressed, Checked);
         }
 
         // The fill of a selected box and the dot on it for the current state: as the check box, so both look alike side by side.
         internal void GetFill(Color parentBackColor, out Color fill, out Color dot)
         {
-            if (!Enabled)
-            {
-                fill = UIColors.DisabledGray;
-                dot = UIColors.GetContrastingForeColor(UIColors.DisabledGray);
-                return;
-            }
-
-            UIColorSet colors = GetColors();
-            bool brighter = UIColors.IsLight(parentBackColor)
-                && UIColors.GetContrastRatio(colors.HoverText, colors.Hover) >= 3.0;
-
-            if (_isPressed)
-            {
-                fill = brighter ? colors.Basic : colors.Pressed;
-                dot = brighter ? colors.BasicText : colors.PressedText;
-            }
-            else if (_isHot)
-            {
-                fill = brighter ? colors.Pressed : colors.Hover;
-                dot = brighter ? ReadableDot(colors.PressedText, colors.Pressed) : colors.HoverText;
-            }
-            else
-            {
-                fill = brighter ? colors.Hover : colors.Basic;
-                dot = brighter ? colors.HoverText : colors.BasicText;
-            }
-        }
-
-        // The dot of the set when it is readable on the fill (3:1), else the dark or the light one that has the higher contrast on it.
-        private static Color ReadableDot(Color setDot, Color fill)
-        {
-            if (UIColors.GetContrastRatio(setDot, fill) >= 3.0)
-                return setDot;
-
-            Color dark = Color.FromArgb(20, 20, 20);
-            Color light = Color.FromArgb(240, 240, 240);
-
-            return UIColors.GetContrastRatio(dark, fill) >= UIColors.GetContrastRatio(light, fill) ? dark : light;
+            BoxLook.GetFill(GetColors(), parentBackColor, Enabled, _state.IsHot, _state.IsPressed, out fill, out dot);
         }
 
         private void PaintShapes(Graphics g, Color parentBackColor)
@@ -364,7 +229,7 @@ namespace ErikwnkWFUI.Controls
             int boxY = (Height - metrics.BoxSize) / 2;
             Rectangle boxRect = new Rectangle(boxX, boxY, metrics.BoxSize, metrics.BoxSize);
 
-            bool isActive = Enabled && (_isHot || _isPressed);
+            bool isActive = Enabled && _state.IsActive;
             Color borderColor = GetBorderColor(parentBackColor);
 
             // The pen is drawn inside the box, so the outline is as wide as that of the check box.
@@ -388,7 +253,7 @@ namespace ErikwnkWFUI.Controls
             {
                 if (isActive)
                 {
-                    using (SolidBrush tintBrush = new SolidBrush(Color.FromArgb(_isPressed ? 60 : 30, GetColors().Basic)))
+                    using (SolidBrush tintBrush = new SolidBrush(Color.FromArgb(_state.IsPressed ? 60 : 30, GetColors().Basic)))
                         g.FillEllipse(tintBrush, ring);
                 }
 

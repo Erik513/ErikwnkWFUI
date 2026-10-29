@@ -101,10 +101,16 @@ namespace ErikwnkWFUI.Controls
 
             // Everything is read while painting: a change of the theme only needs a repaint.
             ThemeWatcher.Attach(this, Invalidate);
+            _state = new BoxState(this);
         }
 
-        private bool _isHot;
-        private bool _isPressed;
+        /// <summary>What the box knows of the mouse and the keyboard (hovered, pressed).</summary>
+        internal BoxState State
+        {
+            get { return _state; }
+        }
+
+        private readonly BoxState _state;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
         // Whether a ForeColor was set on this box (the label then has that color); without one the label has the color of the theme.
@@ -159,118 +165,6 @@ namespace ErikwnkWFUI.Controls
         private UIColorSet GetColors()
         {
             return _colorSet.Value ?? UIStyles.Colors.Sets.Gray;
-        }
-
-        /// <inheritdoc/>
-        protected override void OnMouseEnter(System.EventArgs e)
-        {
-            base.OnMouseEnter(e);
-            _isHot = true;
-            Invalidate();
-        }
-
-        /// <inheritdoc/>
-        protected override void OnMouseLeave(System.EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            _isHot = false;
-            _isPressed = false;
-            Invalidate();
-        }
-
-        /// <inheritdoc/>
-        protected override void OnMouseDown(MouseEventArgs mevent)
-        {
-            base.OnMouseDown(mevent);
-
-            if (mevent.Button == MouseButtons.Left)
-                _isPressed = true;
-
-            Invalidate();
-        }
-
-        /// <inheritdoc/>
-        protected override void OnMouseUp(MouseEventArgs mevent)
-        {
-            base.OnMouseUp(mevent);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        /// <inheritdoc/>
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            base.OnKeyDown(e);
-
-            if (e.KeyCode == Keys.Space)
-            {
-                _isPressed = true;
-                Invalidate();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override void OnKeyUp(KeyEventArgs e)
-        {
-            base.OnKeyUp(e);
-
-            if (e.KeyCode == Keys.Space)
-            {
-                _isPressed = false;
-                Invalidate();
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override void OnGotFocus(System.EventArgs e)
-        {
-            base.OnGotFocus(e);
-            Invalidate();
-        }
-
-        /// <inheritdoc/>
-        protected override void OnLostFocus(System.EventArgs e)
-        {
-            base.OnLostFocus(e);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        // The mouse can be taken away without a MouseUp (another window, a dialog opened
-        // while pressing): then nothing is pressed any more.
-        /// <inheritdoc/>
-        protected override void OnMouseCaptureChanged(System.EventArgs e)
-        {
-            base.OnMouseCaptureChanged(e);
-            _isPressed = false;
-            Invalidate();
-        }
-
-        // Hidden, a box gets no MouseLeave: shown again it must not still look hovered.
-        /// <inheritdoc/>
-        protected override void OnVisibleChanged(System.EventArgs e)
-        {
-            base.OnVisibleChanged(e);
-
-            if (!Visible)
-            {
-                _isHot = false;
-                _isPressed = false;
-            }
-        }
-
-        /// <inheritdoc/>
-        protected override void OnEnabledChanged(System.EventArgs e)
-        {
-            base.OnEnabledChanged(e);
-
-            // A disabled control gets no MouseUp: a press that was still going
-            // (a handler that disables the box) must not outlive it. Nor does it get a
-            // MouseLeave: whether the mouse is over the box is looked at again when it is
-            // enabled, so it does not look hovered with the mouse somewhere else.
-            _isPressed = false;
-            _isHot = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
-            Invalidate();
         }
 
         // The size for a text and font: the 16 px box, the gap and the measured label. The
@@ -380,32 +274,7 @@ namespace ErikwnkWFUI.Controls
 
         private Color GetBorderColor(Color parentBackColor)
         {
-            if (!Enabled)
-                return UIColors.DisabledGray;
-
-            bool isActive = _isHot || _isPressed;
-
-            if (!isActive || CheckState != CheckState.Unchecked)
-                return UIColors.GetOutlineColor(parentBackColor);
-
-            UIColorSet colors = GetColors();
-
-            return UIColors.EnsureContrast(
-                _isPressed ? colors.Pressed : colors.Hover,
-                parentBackColor,
-                _isPressed ? 6.0 : 4.5);
-        }
-
-        // The mark of the set when it is readable on the fill (3:1), else the dark or the light mark that has the higher contrast on it.
-        private static Color ReadableMark(Color setMark, Color fill)
-        {
-            if (UIColors.GetContrastRatio(setMark, fill) >= 3.0)
-                return setMark;
-
-            Color dark = Color.FromArgb(20, 20, 20);
-            Color light = Color.FromArgb(240, 240, 240);
-
-            return UIColors.GetContrastRatio(dark, fill) >= UIColors.GetContrastRatio(light, fill) ? dark : light;
+            return BoxLook.GetBorderColor(GetColors(), parentBackColor, Enabled, _state.IsHot, _state.IsPressed, CheckState != CheckState.Unchecked);
         }
 
         private Color GetParentBackColor()
@@ -436,41 +305,9 @@ namespace ErikwnkWFUI.Controls
             // the same in both themes, like a disabled button or switch.
             UIColorSet colors = GetColors();
             bool isFilled = CheckState != CheckState.Unchecked;
-            bool isActive = Enabled && (_isHot || _isPressed);
+            bool isActive = Enabled && _state.IsActive;
 
-            Color fillColor;
-            Color markColor;
-
-            if (!Enabled)
-            {
-                fillColor = UIColors.DisabledGray;
-                markColor = UIColors.GetContrastingForeColor(UIColors.DisabledGray);
-            }
-            else
-            {
-                // On a light page the set's own fill (dark, made for the dark theme) hardly looks colored - a blue box looks almost gray - so the box
-                // takes the next brighter shade of the set: rest = the set's hover shade, hovered = its pressed shade, pressed = its basic shade.
-                // Only where the mark of the set stays readable on the brighter rest shade. A shade the set has no readable mark for gets the
-                // dark or light mark that reads best.
-                bool brighter = UIColors.IsLight(parentBackColor)
-                    && UIColors.GetContrastRatio(colors.HoverText, colors.Hover) >= 3.0;
-
-                if (_isPressed)
-                {
-                    fillColor = brighter ? colors.Basic : colors.Pressed;
-                    markColor = brighter ? colors.BasicText : colors.PressedText;
-                }
-                else if (_isHot)
-                {
-                    fillColor = brighter ? colors.Pressed : colors.Hover;
-                    markColor = brighter ? ReadableMark(colors.PressedText, colors.Pressed) : colors.HoverText;
-                }
-                else
-                {
-                    fillColor = brighter ? colors.Hover : colors.Basic;
-                    markColor = brighter ? colors.HoverText : colors.BasicText;
-                }
-            }
+            BoxLook.GetFill(colors, parentBackColor, Enabled, _state.IsHot, _state.IsPressed, out Color fillColor, out Color markColor);
 
             Color borderColor = GetBorderColor(parentBackColor);
 
@@ -483,7 +320,7 @@ namespace ErikwnkWFUI.Controls
                 }
                 else if (isActive)
                 {
-                    using (SolidBrush tintBrush = new SolidBrush(Color.FromArgb(_isPressed ? 60 : 30, colors.Basic)))
+                    using (SolidBrush tintBrush = new SolidBrush(Color.FromArgb(_state.IsPressed ? 60 : 30, colors.Basic)))
                         g.FillPath(tintBrush, boxPath);
                 }
 

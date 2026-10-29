@@ -40,7 +40,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 2.1 | 2 Simple controls | Buttons and symbols (`Button` factories, `SymbolButton`, `UIButtonPreset`, `UIStyles.Symbols`, theme toggle) | 98.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
 | 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | 98.7 % | [x] | [ ] | [x] | [x] | [x] | [x] | [ ] |
 | 2.3 | 2 | `CheckBox`, `BoxLabel`, `CheckGlyph` | 91.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
-| 2.4 | 2 | `RadioButton`, `RadioGroup` | 91.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.4 | 2 | `RadioButton`, `RadioGroup` | 91.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
 | 2.5 | 2 | `GroupBox` | 87.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2.6 | 2 | `ToggleSwitch` | 99.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2.7 | 2 | `ProgressBar` | 97.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
