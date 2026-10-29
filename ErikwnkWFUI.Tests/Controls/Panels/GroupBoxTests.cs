@@ -22,7 +22,7 @@ public class GroupBoxTests : IDisposable
 
     private ErikwnkWFUI.Controls.GroupBox Shown(ErikwnkWFUI.Controls.GroupBox box)
     {
-        Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(260, 140) };
+        Form host = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(-4000, -4000), ShowInTaskbar = false, ClientSize = new Size(260, 140), BackColor = UIColors.BackgroundMedium };
         box.SetBounds(10, 10, 220, 110);
         host.Controls.Add(box);
         host.Show();
@@ -74,6 +74,10 @@ public class GroupBoxTests : IDisposable
     public void TheTitleColor_IsSetAndResetLikeTheFrame()
     {
         ErikwnkWFUI.Controls.GroupBox box = (ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("T");
+
+        // (On a page of the theme: the color of the title is read against the surface it stands on.)
+        using Panel page = new Panel { BackColor = UIColors.BackgroundMedium };
+        page.Controls.Add(box);
 
         Assert.Equal(UIColors.TextPrimary, box.TitleColor);
 
@@ -152,9 +156,10 @@ public class GroupBoxTests : IDisposable
         ErikwnkWFUI.Controls.GroupBox plain = Shown((ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard(""));
         Color surface = titled.BackColor;
 
-        // The upper edge of the frame is at half the height of a line of text; the title starts 10 px (at 96 dpi) from the left.
+        // The upper edge of the frame is at half the height of a line of text; the title starts 10 px (at 96 dpi) from the left, and the gap
+        // begins 4 px before it: the pixel is in the gap, left of the first letter.
         int edge = titled.Font.Height / 2;
-        int inside = (int)(titled.DeviceDpi / 96.0 * 10) + 3;
+        int inside = (int)(titled.DeviceDpi / 96.0 * 8);
 
         using Bitmap withTitle = Draw(titled);
         using Bitmap without = Draw(plain);
@@ -193,5 +198,64 @@ public class GroupBoxTests : IDisposable
 
         Assert.True(inside.Checked);
         Assert.True(outside.Checked);
+    }
+
+    [Fact]
+    public void TheTitle_IsReadableOnASurfaceOfYourOwn_IsTheThemeColorOnThePageOfTheTheme_AndAColorThatWasSetStays()
+    {
+        UIColors.ApplyTheme(UIThemes.Dark);
+        ErikwnkWFUI.Controls.GroupBox box = (ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("Title");
+
+        // (A panel of your own: bright in the dark theme, and a mid gray, where light text alone does not reach 4.5:1.)
+        foreach (Color surface in new[] { Color.White, Color.FromArgb(128, 128, 128), Color.FromArgb(230, 190, 20) })
+        {
+            using Panel page = new Panel { BackColor = surface };
+            page.Controls.Add(box);
+
+            Assert.True(UIColors.GetContrastRatio(box.TitleColor, surface) >= 4.5, "the title is not readable on " + surface);
+        }
+
+        using Panel themed = new Panel { BackColor = UIColors.BackgroundMedium };
+        themed.Controls.Add(box);
+        Assert.Equal(UIColors.TextPrimary, box.TitleColor);
+
+        box.TitleColor = Color.Red;
+        Assert.Equal(Color.Red, box.TitleColor);
+        box.Dispose();
+    }
+
+    [Fact]
+    public void TheDesignerAsks_WhetherTheColorsWereSet_AndCanResetThem()
+    {
+        using ErikwnkWFUI.Controls.GroupBox box = (ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("T");
+
+        Assert.False(box.InvokePrivate<bool>("ShouldSerializeTitleColor"));
+        Assert.False(box.InvokePrivate<bool>("ShouldSerializeBorderColor"));
+
+        box.TitleColor = Color.Red;
+        box.BorderColor = Color.Blue;
+        Assert.True(box.InvokePrivate<bool>("ShouldSerializeTitleColor"));
+        Assert.True(box.InvokePrivate<bool>("ShouldSerializeBorderColor"));
+
+        box.InvokePrivate("ResetTitleColor");
+        box.InvokePrivate("ResetBorderColor");
+
+        Assert.False(box.InvokePrivate<bool>("ShouldSerializeTitleColor"));
+        Assert.False(box.InvokePrivate<bool>("ShouldSerializeBorderColor"));
+    }
+
+    [Fact]
+    public void AnotherFont_IsPaintedAtOnce_AsAnotherPicture()
+    {
+        ErikwnkWFUI.Controls.GroupBox box = Shown((ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("Title"));
+        using Bitmap before = Draw(box);
+        Font original = box.Font;
+        using Font big = new Font("Segoe UI", 16f);
+
+        box.Font = big;
+        using Bitmap after = Draw(box);
+        box.Font = original;
+
+        Assert.False(SamePixels(before, after));
     }
 }

@@ -54,17 +54,19 @@ namespace ErikwnkWFUI.Showcase
             Panel surface = UIStyles.Panels.CreateStandard(UIStyles.Colors.Sets.Green);
             surface.Dock = DockStyle.None;
             surface.Size = new Size(220, GroupBoxHeight + 12);
-            // (The title is set to the text color that reads on the panel; the check boxes of the theme would not.)
+            // (The title reads on the panel by itself: the text color of the theme is moved where the surface needs it. So do the labels of check boxes.)
             ErikwnkWFUI.Controls.GroupBox onColor = (ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("On a green panel");
-            onColor.TitleColor = UIColors.GetContrastingForeColor(surface.BackColor);
             onColor.SetBounds(14, 6, 190, GroupBoxHeight - 10);
             surface.Controls.Add(onColor);
             table.AddRow("On a colored panel", GroupBoxHeight + 20, PropertyColumn.Percent(surface, 50f));
 
-            // A long title is cut with an ellipsis.
-            System.Windows.Forms.GroupBox longTitle = Filled(UIStyles.GroupBoxes.CreateStandard(
-                "A title that is so much longer than the box is wide that it cannot be shown whole and has to end in an ellipsis, however wide the window is"));
-            table.AddRow("A long title", GroupBoxHeight + 10, PropertyColumn.Percent(longTitle, 50f));
+            // A long title is cut with an ellipsis (the box is half the width of the window: the title is longer than that at any width the window can have).
+            const string longText = "A title that is so much longer than the box is wide that it cannot be shown whole and has to end in an ellipsis, however wide the window is, "
+                + "and it goes on and on until it cannot be shown in a box of half the width of any window";
+            System.Windows.Forms.GroupBox longTitle = Filled(UIStyles.GroupBoxes.CreateStandard(longText));
+            System.Windows.Forms.GroupBox longTitleDisabled = Filled(UIStyles.GroupBoxes.CreateStandard(longText));
+            longTitleDisabled.Enabled = false;
+            table.AddRow("A long title", GroupBoxHeight + 10, PropertyColumn.Percent(longTitle, 50f), PropertyColumn.Percent(longTitleDisabled, 50f));
         }
     }
 }

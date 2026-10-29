@@ -158,7 +158,7 @@ The surface is the one of the parent; children and layout are those of the stand
 |---|---|---|---|---|
 | `BorderColor` | `Color` | `#464646` | get, set | The color of the frame: the quiet line of the theme (moved until it is seen against the surface) until it is set; `Empty` gives that back. A `Colors` set colors the frame as long as this is not set by hand. |
 | `Colors` | `UIColorSet` | - | get, set | The colors of the frame: the `Hover` color of the set, moved just far enough to be seen against the surface. Null (the default) is the quiet line of the theme; `UIStyles.GroupBoxes.CreatePrimary` makes one that follows the accent. Not written by the designer (a set is code). |
-| `TitleColor` | `Color` | `#F0F0F0` | get, set | The color of the title: the primary text color of the theme until it is set; `Empty` gives that back. (`ForeColor` is not used: it is inherited from the parent and so cannot tell a color chosen for the title from the one of the form.) A disabled box shows it faded. |
+| `TitleColor` | `Color` | `#686868` | get, set | The color of the title: the primary text color of the theme until it is set (moved lighter or darker only where the surface the box stands on would leave it unread); `Empty` gives that back. (`ForeColor` is not used: it is inherited from the parent and so cannot tell a color chosen for the title from the one of the form.) A disabled box shows it faded. |
 
 
 ## ListBox

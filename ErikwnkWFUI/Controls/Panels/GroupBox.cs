@@ -25,11 +25,13 @@ namespace ErikwnkWFUI.Controls
         private const int TitleInset96 = 10;
         private const int TitleGap96 = 4;
         private const double SetFrameContrast = 3.0;
+        private const double TitleContrast = 4.5;
 
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
         private readonly ThemeColor _borderColor;
-        private readonly ThemeColor _titleColor = new ThemeColor(() => UIColors.TextPrimary);
+        private readonly ThemeColor _titleColor;
 
+        /// <summary>A group box in the quiet colors of the theme. Make one with <see cref="UIStyles.GroupBoxes"/>.</summary>
         public GroupBox()
         {
             // Painted as a whole in one go (the standard box flickers), by OnPaint alone.
@@ -41,6 +43,7 @@ namespace ErikwnkWFUI.Controls
                 true);
 
             _borderColor = new ThemeColor(GetDefaultBorderColor);
+            _titleColor = new ThemeColor(GetDefaultTitleColor);
 
             ThemeWatcher.Attach(this, Invalidate);
         }
@@ -64,9 +67,9 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>
-        /// The color of the title: the primary text color of the theme until it is set; <see cref="Color.Empty"/> gives that back.
-        /// (<c>ForeColor</c> is not used: it is inherited from the parent and so cannot tell a color chosen for the title from the
-        /// one of the form.) A disabled box shows it faded.
+        /// The color of the title: the primary text color of the theme until it is set (moved lighter or darker only where the surface the box stands on
+        /// would leave it unread); <see cref="Color.Empty"/> gives that back. (<c>ForeColor</c> is not used: it is inherited from the parent and so cannot
+        /// tell a color chosen for the title from the one of the form.) A disabled box shows it faded.
         /// </summary>
         public Color TitleColor
         {
@@ -136,6 +139,11 @@ namespace ErikwnkWFUI.Controls
                 : UIColors.EnsureContrast(colors.Hover, surface, SetFrameContrast);
         }
 
+        private Color GetDefaultTitleColor()
+        {
+            return UIColors.GetReadableText(UIColors.TextPrimary, SurfaceColor.Of(this), TitleContrast);
+        }
+
         private Color GetFrameColor(Color surface)
         {
             return Enabled
@@ -150,18 +158,21 @@ namespace ErikwnkWFUI.Controls
                 : UIColors.BlendToward(_titleColor.Value, surface, 0.5);
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -179,6 +190,7 @@ namespace ErikwnkWFUI.Controls
             return flags;
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
