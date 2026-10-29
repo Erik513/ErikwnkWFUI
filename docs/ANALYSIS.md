@@ -41,11 +41,11 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | 98.7 % | [x] | [ ] | [x] | [x] | [x] | [x] | [ ] |
 | 2.3 | 2 | `CheckBox`, `BoxLabel`, `CheckGlyph` | 91.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
 | 2.4 | 2 | `RadioButton`, `RadioGroup` | 91.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
-| 2.5 | 2 | `GroupBox` | 87.1 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
-| 2.6 | 2 | `ToggleSwitch` | 99.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.7 | 2 | `ProgressBar` | 97.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.8 | 2 | `SlimProgressBar` | 95.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.9 | 2 | `Spinner` | 98.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.5 | 2 | `GroupBox` | 87.1 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
+| 2.6 | 2 | `ToggleSwitch` | 100 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
+| 2.7 | 2 | `ProgressBar` | 97.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
+| 2.8 | 2 | `SlimProgressBar` | 97.1 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
+| 2.9 | 2 | `Spinner` | 98.3 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3.1 | 3 Input | `TextField`, `LockableTextBox`, `PasswordTextBox` (text boxes) | 94.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3.2 | 3 | `ComboBox` | 96.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3.3 | 3 | `NumericUpDown` | 98.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

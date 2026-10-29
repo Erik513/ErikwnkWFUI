@@ -140,6 +140,36 @@ public class SpinnerBehaviorTests : IDisposable
     }
 
     [Fact]
+    public void AnAccessibleName_SetByHand_WinsOverTheText_AndTheValueCannotBeWritten()
+    {
+        using Spinner spinner = UIStyles.Spinners.CreateProgressStandard();
+        spinner.Text = "Loading";
+        spinner.AccessibleName = "Own";
+        spinner.IsIndeterminate = false;
+
+        spinner.AccessibilityObject.Value = "7%";
+
+        Assert.Equal("Own", spinner.AccessibilityObject.Name);
+        Assert.Equal("0%", spinner.AccessibilityObject.Value);
+    }
+
+    [Fact]
+    public void TheDesignerKnows_TheDefaultsTheSpinnerHas()
+    {
+        using Spinner spinner = new Spinner();
+
+        foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(spinner))
+        {
+            // (A spinner is no stop of the Tab key: TabStop is false, the designer writes that, which is right.)
+            if (property.Name != "TabStop" && property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(spinner)), property.Name + " is not its default");
+        }
+
+        Assert.True(spinner.IsSpinning);
+        Assert.Equal(SpinnerSpeed.Medium, spinner.Speed);
+    }
+
+    [Fact]
     public void AScreenReader_IsToldItIsAProgressBar_WithThePercentageOnlyForAKnownLoad()
     {
         UIStrings.Language = UILanguage.English;

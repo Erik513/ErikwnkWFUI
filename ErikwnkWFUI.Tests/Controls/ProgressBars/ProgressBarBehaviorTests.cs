@@ -290,7 +290,41 @@ public class ProgressBarBehaviorTests : IDisposable
     {
         using SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStandard();
 
-        Assert.Equal(AccessibleRole.ProgressBar, slim.AccessibleRole);
+        Assert.Equal(AccessibleRole.ProgressBar, slim.AccessibilityObject.Role);
+    }
+
+    [Fact]
+    public void TheDefaultsTheDesignerKnows_AreTheOnesTheBarHas()
+    {
+        using SlimProgressBar slim = new SlimProgressBar();
+
+        foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(slim))
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(slim)), property.Name + " is not its default");
+        }
+
+        foreach (string name in new[] { "Minimum", "Maximum", "Value", "Step", "Style", "MarqueeAnimationSpeed", "UseStatusGradient" })
+            Assert.False(System.ComponentModel.TypeDescriptor.GetProperties(slim)[name]!.ShouldSerializeValue(slim), name + " is written by the designer at its default");
+    }
+
+    [Fact]
+    public void AScreenReader_IsToldTheTextAsTheNameAndThePercentAsTheValue_NoneForTheMarquee()
+    {
+        using SlimProgressBar slim = UIStyles.SlimProgressBars.CreateStandard();
+        slim.Text = "Uploading";
+        slim.Value = 42;
+
+        AccessibleObject accessible = slim.AccessibilityObject;
+
+        Assert.Equal("Uploading", accessible.Name);
+        Assert.Contains("42", accessible.Value);
+
+        slim.AccessibleName = "Own";
+        Assert.Equal("Own", accessible.Name);
+
+        slim.Style = ProgressBarStyle.Marquee;
+        Assert.Null(slim.AccessibilityObject.Value);
     }
 
     [Fact]

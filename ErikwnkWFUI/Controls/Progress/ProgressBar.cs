@@ -422,7 +422,7 @@ namespace ErikwnkWFUI.Controls
             base.OnVisibleChanged(e);
 
             // (A bar that is hidden gets no MouseLeave either.)
-            _textScroller.SetHovered(false);
+            _textScroller.RefreshHovered();
             _marquee.Update();
         }
 
@@ -430,8 +430,8 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnEnabledChanged(e);
 
-            // (A bar that is disabled gets no MouseLeave: the mouse is not "on" it any more.)
-            _textScroller.SetHovered(false);
+            // (A bar that is disabled gets no MouseLeave, and one that is enabled no MouseEnter: the mouse is looked at.)
+            _textScroller.RefreshHovered();
             Invalidate();
         }
 
@@ -449,3 +449,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+

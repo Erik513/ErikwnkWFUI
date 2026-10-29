@@ -387,6 +387,45 @@ public class ProgressBarScrollTests : IDisposable
         Assert.True(scroller.Offset > 0);
     }
 
+    [Theory]
+    [MemberData(nameof(BothBars))]
+    public void TheMouseEnterAndLeave_SetTheHover(string which)
+    {
+        Control bar = Make(which, LabelScroll.BackAndForth());
+        using Form host = Host(bar, 300, 26);
+        ProgressTextScroller scroller = Scroller(bar);
+
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+        Assert.True(scroller.IsHovered);
+
+        bar.InvokePrivate("OnMouseLeave", EventArgs.Empty);
+        Assert.False(scroller.IsHovered);
+    }
+
+    [Theory]
+    [MemberData(nameof(BothBars))]
+    public void ABarThatIsEnabledOrShownAgain_LooksAtTheMouse(string which)
+    {
+        Control bar = Make(which, LabelScroll.BackAndForth());
+        using Form host = Host(bar, 300, 26);
+        ProgressTextScroller scroller = Scroller(bar);
+        bar.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+
+        // (The mouse over the bar: it was disabled, so it got no MouseLeave - and it is enabled again with the mouse still there.)
+        scroller.CursorPosition = () => bar.PointToScreen(new Point(10, 5));
+        bar.Enabled = false;
+        Assert.False(scroller.IsHovered);
+        bar.Enabled = true;
+        Assert.True(scroller.IsHovered);
+
+        // (The mouse went elsewhere while it was hidden.)
+        bar.Visible = false;
+        Assert.False(scroller.IsHovered);
+        scroller.CursorPosition = () => new Point(-9000, -9000);
+        bar.Visible = true;
+        Assert.False(scroller.IsHovered);
+    }
+
     // --- The clock ---
 
     [Theory]

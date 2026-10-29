@@ -72,14 +72,12 @@ namespace ErikwnkWFUI.Controls
         private SlimProgressBarTextPosition _textPosition = SlimProgressBarTextPosition.Above;
         private ProgressBarStyle _style = ProgressBarStyle.Continuous;
 
+        /// <summary>Makes a bar 4 pixels high in the default range 0 to 100, at 0, with the colors of the theme; the factories (<c>UIStyles.SlimProgressBars</c>) make the usual ones.</summary>
         public SlimProgressBar()
         {
             SetStyle(ControlStyleSets.OwnerDrawn, true);
 
             Height = DefaultHeight;
-
-            // A screen reader announces it as a progress bar (the value itself is not reported).
-            AccessibleRole = AccessibleRole.ProgressBar;
 
             _trackColor = new ThemeColor(() => UIColors.GetLineColor(GetSurface()));
             _fillColor = new ThemeColor(() => base.ForeColor);
@@ -93,6 +91,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The lower end of the range (0 by default); it may be negative. A <see cref="Value"/> below it is raised to it.</summary>
+        [DefaultValue(0)]
         public int Minimum
         {
             get { return _minimum; }
@@ -105,6 +104,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The upper end of the range (100 by default). A <see cref="Value"/> above it is lowered to it.</summary>
+        [DefaultValue(100)]
         public int Maximum
         {
             get { return _maximum; }
@@ -117,6 +117,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The current value. One outside the range is limited to it instead of throwing (the standard control throws).</summary>
+        [DefaultValue(0)]
         public int Value
         {
             get { return _value; }
@@ -133,6 +134,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>How much <see cref="PerformStep"/> adds to <see cref="Value"/> (10 by default, as in the standard control).</summary>
+        [DefaultValue(10)]
         public int Step
         {
             get { return _step; }
@@ -166,6 +168,7 @@ namespace ErikwnkWFUI.Controls
         /// <see cref="ProgressBarStyle.Marquee"/> - a block that runs through the bar again and again, for an action whose duration
         /// is not known (<see cref="Value"/> does not matter then).
         /// </summary>
+        [DefaultValue(ProgressBarStyle.Continuous)]
         public ProgressBarStyle Style
         {
             get { return _style; }
@@ -181,6 +184,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The time in milliseconds between two steps of the marquee (100 by default); 0 stops it.</summary>
+        [DefaultValue(100)]
         public int MarqueeAnimationSpeed
         {
             get { return _marqueeAnimationSpeed; }
@@ -200,6 +204,7 @@ namespace ErikwnkWFUI.Controls
         /// smoothly between them. For a "status/health" bar where the color
         /// itself communicates good/bad, not just the fill amount.
         /// </summary>
+        [DefaultValue(false)]
         public bool UseStatusGradient
         {
             get { return _useStatusGradient; }
@@ -217,8 +222,8 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnEnabledChanged(e);
 
-            // (A bar that is disabled gets no MouseLeave: the mouse is not "on" it any more.)
-            _textScroller.SetHovered(false);
+            // (A bar that is disabled gets no MouseLeave, and one that is enabled no MouseEnter: the mouse is looked at.)
+            _textScroller.RefreshHovered();
             Invalidate();
         }
 
@@ -245,7 +250,7 @@ namespace ErikwnkWFUI.Controls
             base.OnVisibleChanged(e);
 
             // (A bar that is hidden gets no MouseLeave either.)
-            _textScroller.SetHovered(false);
+            _textScroller.RefreshHovered();
             _marquee.Update();
         }
 
@@ -317,3 +322,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+

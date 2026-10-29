@@ -13,6 +13,7 @@ namespace ErikwnkWFUI.Controls
     // What a screen reader is told about the switch.
     public partial class ToggleSwitch
     {
+        /// <inheritdoc/>
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new ToggleSwitchAccessibleObject(this);

@@ -120,6 +120,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
+        /// <summary>Makes a switch that is off, in the neutral gray set, 45 x 25 at 96 dpi; the factories (<c>UIStyles.ToggleSwitches</c>) make the usual ones.</summary>
         public ToggleSwitch()
         {
             // Everything is read while painting: a change of the theme only needs a repaint.
@@ -129,12 +130,14 @@ namespace ErikwnkWFUI.Controls
             CreateToolTip();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             AnimationSettings.Add(_settings);
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             AnimationSettings.Remove(_settings);
@@ -144,6 +147,7 @@ namespace ErikwnkWFUI.Controls
             base.OnHandleDestroyed(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -172,6 +176,7 @@ namespace ErikwnkWFUI.Controls
             ControlPaint.DrawFocusRectangle(graphics, area, UIColors.TextPrimary, SurfaceColor.Of(this));
         }
 
+        /// <inheritdoc/>
         protected override void OnPaintBackground(PaintEventArgs e)
         {
             if (Parent == null || BackColor != Color.Transparent)
@@ -187,6 +192,7 @@ namespace ErikwnkWFUI.Controls
             });
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

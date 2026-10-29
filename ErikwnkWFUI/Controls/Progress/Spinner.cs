@@ -29,6 +29,7 @@ namespace ErikwnkWFUI.Controls
         private bool _isIndeterminate = true;
         private bool _hideWhenStopped;
 
+        /// <summary>Makes a ring of 24 x 24 pixels that turns, in the neutral gray, on a transparent background; the factories (<c>UIStyles.Spinners</c>) make the usual ones.</summary>
         public Spinner()
         {
             SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
@@ -145,6 +146,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -196,6 +198,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -207,3 +210,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+

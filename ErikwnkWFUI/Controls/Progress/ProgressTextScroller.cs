@@ -123,6 +123,24 @@ namespace ErikwnkWFUI.Controls
             _hovered = hovered;
         }
 
+        /// <summary>Whether the mouse is on the bar.</summary>
+        public bool IsHovered
+        {
+            get { return _hovered; }
+        }
+
+        // Where the mouse is (the tests put it elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+
+        /// <summary>
+        /// Looks at the mouse again: a bar that was disabled or hidden got no MouseLeave (and shown or enabled again gets no MouseEnter
+        /// before the mouse moves), so whether the mouse is on it is asked of the position.
+        /// </summary>
+        public void RefreshHovered()
+        {
+            _hovered = _owner.Enabled && _owner.Visible && _owner.IsHandleCreated && _owner.ClientRectangle.Contains(_owner.PointToClient(CursorPosition()));
+        }
+
         /// <summary>
         /// Tells it how wide the text and its room are now, and whether the text may move. Starts the movement over where
         /// the measures changed, and starts or stops the clock.

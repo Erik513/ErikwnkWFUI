@@ -5,6 +5,7 @@ namespace ErikwnkWFUI.Controls
     // What a screen reader is told about the spinner.
     public partial class Spinner
     {
+        /// <inheritdoc/>
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new SpinnerAccessibleObject(this);
@@ -40,3 +41,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+

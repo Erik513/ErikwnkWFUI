@@ -91,12 +91,14 @@ namespace ErikwnkWFUI.Controls
                 StopClock();
         }
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
             UpdateRunning();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -104,6 +106,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -111,6 +114,7 @@ namespace ErikwnkWFUI.Controls
             UpdateRunning();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             AnimationSettings.Remove(_settings);
@@ -119,3 +123,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+

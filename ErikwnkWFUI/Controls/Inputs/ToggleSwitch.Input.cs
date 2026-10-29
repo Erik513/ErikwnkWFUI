@@ -13,6 +13,7 @@ namespace ErikwnkWFUI.Controls
     // What the switch does with the mouse, the keyboard and the focus.
     public partial class ToggleSwitch
     {
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             _isHovered = true;
@@ -22,6 +23,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseEnter(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             _isHovered = false;
@@ -32,6 +34,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseLeave(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -43,6 +46,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseDown(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -62,6 +66,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The window that takes the mouse away (a dialog that opens on the press) means no release will come: nothing stays pressed.
+        /// <inheritdoc/>
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             base.OnMouseCaptureChanged(e);
@@ -74,6 +79,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The space bar works as on a standard check box: the switch looks pressed while it is down and toggles when it is let go.
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -86,6 +92,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnKeyUp(KeyEventArgs e)
         {
             base.OnKeyUp(e);
@@ -104,6 +111,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
@@ -111,6 +119,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // A press with the space bar that is interrupted by the focus going elsewhere is cancelled (its release would never come).
+        /// <inheritdoc/>
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
@@ -119,6 +128,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // A disabled control gets no MouseLeave: whether the mouse is over it is looked at again, and nothing stays pressed.
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -129,6 +139,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // A control that is hidden under the mouse gets no MouseLeave either.
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);

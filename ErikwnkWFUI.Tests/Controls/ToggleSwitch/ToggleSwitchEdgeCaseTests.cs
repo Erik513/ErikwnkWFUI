@@ -172,6 +172,33 @@ public class ToggleSwitchEdgeCaseTests : IDisposable
         Assert.False(toggle.GetPrivateField<bool>("_isPressed"));
     }
 
+    [Fact]
+    public void ASwitchWithAnOwnBackColor_PaintsItInsteadOfThePage()
+    {
+        using ToggleSwitch toggle = UIStyles.ToggleSwitches.CreateStandard(false);
+        toggle.BackColor = Color.FromArgb(200, 30, 30);
+        using Form form = Show(toggle);
+
+        using Bitmap picture = Draw(toggle);
+
+        Assert.Equal(Color.FromArgb(200, 30, 30), picture.GetPixel(0, 0));
+    }
+
+    [Fact]
+    public void TheTooltipText_SetOnADisposedSwitch_DoesNotThrow()
+    {
+        ToggleSwitch toggle = UIStyles.ToggleSwitches.CreateStandard(false);
+        toggle.Dispose();
+
+        Exception? failure = Record.Exception(() =>
+        {
+            toggle.ToolTipText = "late";
+            toggle.Checked = true;
+        });
+
+        Assert.Null(failure);
+    }
+
     // ---- sizes ----
 
     [Theory]

@@ -50,6 +50,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -164,3 +165,4 @@ namespace ErikwnkWFUI.Controls
         }
     }
 }
+
