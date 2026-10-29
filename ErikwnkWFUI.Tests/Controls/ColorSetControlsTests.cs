@@ -176,9 +176,10 @@ public class ColorSetControlsTests
             using WfuiReadOnlyGrid grid = AsGrid(UIStyles.DataGridViews.CreateReadOnlyStandard(null, color));
 
             Assert.True(
-                ColorContrastHelper.GetContrastRatio(
+                ColorContrastHelper.MeetsMinimumContrast(
                     grid.DefaultCellStyle.SelectionForeColor,
-                    grid.DefaultCellStyle.SelectionBackColor) >= ColorContrastHelper.MinimumRatioLargeTextOrUiComponents,
+                    grid.DefaultCellStyle.SelectionBackColor,
+                    ColorContrastHelper.MinimumRatioLargeTextOrUiComponents),
                 $"selected text on {grid.DefaultCellStyle.SelectionBackColor} (from {color})");
         }
     }

@@ -22,7 +22,7 @@ Coverage before the work: fill in the column from the first full run of `tools\R
 | # | Step | Done |
 |---|---|---|
 | 0.1 | Make the test suite reliable: find the cause of the hanging run of the `ErikwnkWFUI.Tests.Forms` namespace (state shared between tests: message filters, the toast queue, static events) | [x] |
-| 0.2 | One full run of the whole suite on the hidden desktop (announce it first; it is the only full run besides the last one) | [ ] |
+| 0.2 | One full run of the whole suite on the hidden desktop (announce it first; it is the only full run besides the last one) | [x] 3917 of 3918 green in 1 m 35 s (net8.0-windows); the one red test was fixed |
 | 0.3 | One full run of `tools\Run-Coverage.ps1`; write the "before" numbers into the column below | [ ] |
 | 0.4 | Count the warnings of both targets (the library has none; the tests have none) and the files over 500 lines; write both down | [ ] |
 | 0.5 | Look at `CONTROLS.md` once as a whole: is anything missing in the generator (a kind of member, a default that shows `-` but could be shown)? | [ ] |
