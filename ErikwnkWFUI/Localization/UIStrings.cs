@@ -106,11 +106,11 @@ namespace ErikwnkWFUI.Localization
             ["OptionsForm.Accent.Gray"] = "Gray",
             ["OptionsForm.Accent.BlackOrWhite"] = "Black/White",
 
-            ["UpdateAvailable.Title"] = "Update available",
-            ["UpdateAvailable.Message"] = "A new version is available.",
-            ["UpdateAvailable.Later"] = "Later",
-            ["UpdateAvailable.UpdateNow"] = "Update now",
-            ["UpdateAvailable.Downloading"] = "Downloading update...",
+            ["Update.AvailableTitle"] = "Update available",
+            ["Update.AvailableMessage"] = "A new version is available.",
+            ["Update.Later"] = "Later",
+            ["Update.UpdateNow"] = "Update now",
+            ["Update.Downloading"] = "Downloading update...",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "The update download failed. Opening the release page instead.",
@@ -236,11 +236,11 @@ namespace ErikwnkWFUI.Localization
             ["OptionsForm.Accent.Gray"] = "Grau",
             ["OptionsForm.Accent.BlackOrWhite"] = "Schwarz/Weiß",
 
-            ["UpdateAvailable.Title"] = "Update verfügbar",
-            ["UpdateAvailable.Message"] = "Eine neue Version ist verfügbar.",
-            ["UpdateAvailable.Later"] = "Später",
-            ["UpdateAvailable.UpdateNow"] = "Jetzt aktualisieren",
-            ["UpdateAvailable.Downloading"] = "Update wird heruntergeladen...",
+            ["Update.AvailableTitle"] = "Update verfügbar",
+            ["Update.AvailableMessage"] = "Eine neue Version ist verfügbar.",
+            ["Update.Later"] = "Später",
+            ["Update.UpdateNow"] = "Jetzt aktualisieren",
+            ["Update.Downloading"] = "Update wird heruntergeladen...",
 
             ["Update.Title"] = "Update",
             ["Update.DownloadFailedMessage"] = "Der Update-Download ist fehlgeschlagen. Die Release-Seite wird stattdessen geöffnet.",

@@ -16,7 +16,7 @@ public class UpdateAvailableTextTests
         {
             LanguageTestHelper.RunWithLanguage(language, () =>
             {
-                string text = UIStrings.Get("UpdateAvailable.Downloading");
+                string text = UIStrings.Get("Update.Downloading");
 
                 Assert.False(string.IsNullOrWhiteSpace(text));
                 Assert.DoesNotContain("{0}", text);
