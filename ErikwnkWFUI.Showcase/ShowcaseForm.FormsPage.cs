@@ -16,7 +16,7 @@ namespace ErikwnkWFUI.Showcase
         {
             MultiPanel pages = UIStyles.MultiPanels.CreateStandard();
             pages.Dock = DockStyle.Fill;
-            pages.Padding = new Padding(0);
+            // (The padding the panel has when none is given keeps the title and the arrows from the edge of the tab.)
 
             (string Title, string Description, Action<PropertyTable> Fill)[] forms =
             {
