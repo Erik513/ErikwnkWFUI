@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Controls;
 using System.Drawing;
 using System.Windows.Forms;
@@ -7,6 +10,7 @@ using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 using Panel = System.Windows.Forms.Panel;
+using CheckBox = System.Windows.Forms.CheckBox;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -16,7 +20,9 @@ namespace ErikwnkWFUI.Forms
         OK,
         OKCancel,
         YesNo,
-        YesNoCancel
+        YesNoCancel,
+        RetryCancel,
+        AbortRetryIgnore
     }
 
     /// <summary>Which icon a <see cref="MessageBox"/> shows in its title bar.</summary>
@@ -28,6 +34,22 @@ namespace ErikwnkWFUI.Forms
         Error,
         Question,
         Success
+    }
+
+    /// <summary>Which button of a <see cref="MessageBox"/> has the focus first (and answers Enter).</summary>
+    public enum MessageBoxDefault
+    {
+        /// <summary>The safe one: No for Yes/No, Cancel where there is a Cancel button (the first - the only - one for OK). A stray key press then does no harm.</summary>
+        Safe,
+
+        /// <summary>The first button (the left one: OK or Yes).</summary>
+        Button1,
+
+        /// <summary>The second button (No, or Cancel of OK/Cancel).</summary>
+        Button2,
+
+        /// <summary>The third button (Cancel of Yes/No/Cancel).</summary>
+        Button3
     }
 
     /// <summary>Overall size preset for a <see cref="MessageBox"/>. Use <see cref="FormSize"/>, the one size setting of all the windows.</summary>
@@ -74,6 +96,10 @@ namespace ErikwnkWFUI.Forms
         /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
         /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>; in pixels as they are, not scaled to the screen.</param>
         /// <param name="colors">A color set for the title bar (one of <c>UIStyles.Colors.Sets</c>, <c>UIStyles.Colors.CreateSet(color)</c> or a <see cref="Color"/>); null is the normal dark one.</param>
+        /// <param name="details">A text the user can open under the message with a "Details" button, for instance the text of an exception (null: none).</param>
+        /// <param name="defaultButton">Which button has the focus first and answers Enter: the safe one (No, Cancel) by default.</param>
+        /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the symbol or the usual text of that button): "Save", "Discard", "Cancel" for Yes/No/Cancel, say.</param>
+        /// <param name="playSound">Whether the sound of the icon is played when the box opens (the sounds of Windows for information, warning, error and question); off by default.</param>
         public static DialogResult Show(
             string message,
             string title = null,
@@ -81,9 +107,13 @@ namespace ErikwnkWFUI.Forms
             MessageBoxIcon icon = MessageBoxIcon.Info,
             Form owner = null,
             FormSizeOption? size = null,
-            UIColorSet colors = null)
+            UIColorSet colors = null,
+            string details = null,
+            MessageBoxDefault defaultButton = MessageBoxDefault.Safe,
+            string[] buttonTexts = null,
+            bool playSound = false)
         {
-            MessageBoxForm form = UIStyles.Forms.CreateMessageStandard(message, title, buttons, icon, colors, size);
+            MessageBoxForm form = UIStyles.Forms.CreateMessageStandard(message, title, buttons, icon, colors, size, details, defaultButton, buttonTexts, playSound);
 
             try
             {
@@ -97,13 +127,80 @@ namespace ErikwnkWFUI.Forms
                 form.Dispose();
             }
         }
+
+        /// <summary>
+        /// Like <c>Show</c> with a check box under the message ("Do not ask again", "Apply to all"): <paramref name="isChecked"/> is what it
+        /// starts with and what the user left it at (also when the dialog was closed without a button).
+        /// </summary>
+        /// <param name="message">The text of the dialog.</param>
+        /// <param name="checkBoxText">The text of the check box.</param>
+        /// <param name="isChecked">Whether the check box is checked: at the start, and when the dialog has ended.</param>
+        /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
+        /// <param name="buttons">Which buttons it has.</param>
+        /// <param name="icon">The icon in the title bar.</param>
+        /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
+        /// <param name="size">One of the three sizes or an own <see cref="Size"/>.</param>
+        /// <param name="colors">A color set for the title bar; null is the normal dark one.</param>
+        public static DialogResult ShowWithCheckBox(
+            string message,
+            string checkBoxText,
+            ref bool isChecked,
+            string title = null,
+            MessageBoxButtons buttons = MessageBoxButtons.OK,
+            MessageBoxIcon icon = MessageBoxIcon.Info,
+            Form owner = null,
+            FormSizeOption? size = null,
+            UIColorSet colors = null)
+        {
+            MessageBoxForm form = UIStyles.Forms.CreateMessageStandard(message, title, buttons, icon, colors, size);
+            form.CheckBoxText = checkBoxText;
+            form.CheckBoxChecked = isChecked;
+
+            try
+            {
+                DialogResult result = owner != null ? form.ShowDialog(owner) : form.ShowDialog();
+                isChecked = form.CheckBoxChecked;
+
+                return result;
+            }
+            finally
+            {
+                form.Dispose();
+            }
+        }
     }
 
+    /// <summary>
+    /// The dialog behind <see cref="MessageBox"/>: a text (it scrolls when it does not fit), an icon in the title bar, and the buttons.
+    /// Make one with <c>UIStyles.Forms.CreateMessageStandard</c> / <c>CreateMessagePrimary</c> and show it with <c>ShowDialog</c>, or call
+    /// <c>MessageBox.Show</c>. A window that is closed without a button returns the safe result (No for Yes/No, Cancel where there is a
+    /// Cancel button, OK for OK). Ctrl+C copies the text of the box (as the box of Windows does), <see cref="Details"/> adds a text that
+    /// the user can open under the message, and <see cref="MessageBoxDefault"/> says which button has the focus first.
+    /// </summary>
     public class MessageBoxForm : AppForm
     {
+        private const string Separator = "---------------------------";
+        private const int CheckBoxRowHeight = 30;
+
         private readonly string _message;
         private readonly MessageBoxButtons _buttons;
         private readonly FormSizeOption _size;
+        private readonly MessageBoxDefault _defaultButton;
+        private readonly List<Button> _dialogButtons = new List<Button>();
+        private readonly List<string> _buttonNames = new List<string>();
+        private readonly string[] _buttonTexts;
+        private readonly MessageBoxIcon _icon;
+
+        private Panel _messagePanel;
+        private Label _messageLabel;
+        private TextBox _detailsBox;
+        private Button _detailsButton;
+        private Control _buttonPanel;
+        private string _details = "";
+        private bool _detailsExpanded;
+        private CheckBox _checkBox;
+        private Button _helpButton;
+        private bool _helpShown;
 
         private sealed class MessageBoxPreset
         {
@@ -112,6 +209,7 @@ namespace ErikwnkWFUI.Forms
             public int ButtonColumnWidth { get; set; }
             public int ButtonWidth { get; set; }
             public int ButtonHeight { get; set; }
+            public int DetailsHeight { get; set; }
             public Padding ContentPadding { get; set; }
             public Padding ButtonPanelPadding { get; set; }
         }
@@ -124,16 +222,22 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <param name="message">The text of the dialog.</param>
-        /// <param name="title">The title of the window.</param>
+        /// <param name="title">The title of the window ("Notice" or "Hinweis" when none is given).</param>
         /// <param name="buttons">Which buttons it has.</param>
         /// <param name="icon">The icon in the title bar.</param>
         /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/> (pixels as they are).</param>
+        /// <param name="details">A text the user can open under the message (null: none).</param>
+        /// <param name="defaultButton">Which button has the focus first (the safe one by default).</param>
+        /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the usual one).</param>
         public MessageBoxForm(
             string message,
             string title,
             MessageBoxButtons buttons,
             MessageBoxIcon icon,
-            FormSizeOption? size = null)
+            FormSizeOption? size = null,
+            string details = null,
+            MessageBoxDefault defaultButton = MessageBoxDefault.Safe,
+            string[] buttonTexts = null)
             : this(
                 FormOptions.CreateDialog(
                     title: title ?? UIStrings.Get("MessageBox.Title"),
@@ -141,33 +245,167 @@ namespace ErikwnkWFUI.Forms
                     icon: GetTitleBarIcon(icon)),
                 message,
                 buttons,
-                size)
+                size,
+                details,
+                defaultButton,
+                icon,
+                buttonTexts)
         {
         }
 
         // The window with the options it is given (a dialog made by FormOptions, with the color set or the accent of the title bar): what
         // UIStyles.Forms.CreateMessageStandard / CreateMessagePrimary make.
-        internal MessageBoxForm(FormOptions options, string message, MessageBoxButtons buttons, FormSizeOption? size)
+        internal MessageBoxForm(FormOptions options, string message, MessageBoxButtons buttons, FormSizeOption? size, string details = null, MessageBoxDefault defaultButton = MessageBoxDefault.Safe, MessageBoxIcon icon = MessageBoxIcon.None, string[] buttonTexts = null)
             : base(options)
         {
+            _icon = icon;
+            _buttonTexts = buttonTexts;
             _message = message ?? "";
             _buttons = buttons;
             _size = size ?? FormSize.Medium;
+            _defaultButton = defaultButton;
+            _details = details ?? "";
 
-            ConfigureForm();
+            ShowInTaskbar = false;
+            Size = GetPreset().FormSize;
+
             BuildLayout();
+            LayoutContent();
 
-            // Whichever button was added first (Yes, for YesNo) otherwise
-            // silently ends up with the initial keyboard focus via normal
-            // tab order - meaning a stray Space press confirms the
-            // destructive option instead of doing nothing, since Space
-            // activates whatever's focused (unlike Enter, which respects
-            // AcceptButton). Defaulting focus to CancelButton (No/Cancel)
-            // makes an accidental key press safe instead. ActiveControl,
-            // not Control.Focus() - Focus() requires the top-level form to
-            // already be the active window, which isn't guaranteed yet
-            // this early; ActiveControl is the documented way to set a
-            // form's initial focus before it's actually shown.
+            FocusDefaultButton();
+        }
+
+        /// <summary>A text under the message that the user opens with the "Details" button (the text of an exception, say); empty (the default) has no button.</summary>
+        public string Details
+        {
+            get { return _details; }
+            set
+            {
+                _details = value ?? "";
+                _detailsBox.Text = _details;
+                _detailsButton.Visible = _details.Length > 0;
+
+                if (_details.Length == 0)
+                    _detailsExpanded = false;
+
+                UpdateDetailsButton();
+                LayoutContent();
+            }
+        }
+
+        /// <summary>
+        /// A check box under the message ("Do not ask again", "Apply to all"); empty (the default) has none. What the user did with it is
+        /// <see cref="CheckBoxChecked"/> once the dialog has ended.
+        /// </summary>
+        public string CheckBoxText
+        {
+            get { return _checkBox == null ? "" : _checkBox.Text; }
+            set
+            {
+                EnsureCheckBox();
+                _checkBox.Text = value ?? "";
+                LayoutContent();
+            }
+        }
+
+        /// <summary>Whether the check box is checked.</summary>
+        public bool CheckBoxChecked
+        {
+            get { return _checkBox != null && _checkBox.Checked; }
+            set
+            {
+                EnsureCheckBox();
+                _checkBox.Checked = value;
+            }
+        }
+
+        private void EnsureCheckBox()
+        {
+            if (_checkBox != null)
+                return;
+
+            _checkBox = UIStyles.CheckBoxes.CreateStandard();
+            _checkBox.AutoSize = false;
+            ContentPanel.Controls.Add(_checkBox);
+        }
+
+        /// <summary>Whether the sound of the icon is played when the window opens (the sounds of Windows for information, warning, error and question). Off by default.</summary>
+        public bool PlaySound { get; set; }
+
+        /// <summary>Whether the box has a help button (a question mark at the left of the buttons) that raises <see cref="HelpClicked"/>. Off by default.</summary>
+        public bool ShowHelpButton
+        {
+            get { return _helpShown; }
+            set
+            {
+                _helpShown = value;
+                _helpButton.Visible = value;
+            }
+        }
+
+        /// <summary>Raised when the help button is clicked; the dialog stays open.</summary>
+        public event EventHandler HelpClicked;
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+
+            if (PlaySound)
+                PlayIconSound();
+        }
+
+        private void PlayIconSound()
+        {
+            switch (_icon)
+            {
+                case MessageBoxIcon.Info:
+                case MessageBoxIcon.Success:
+                    System.Media.SystemSounds.Asterisk.Play();
+                    break;
+                case MessageBoxIcon.Warning:
+                    System.Media.SystemSounds.Exclamation.Play();
+                    break;
+                case MessageBoxIcon.Error:
+                    System.Media.SystemSounds.Hand.Play();
+                    break;
+                case MessageBoxIcon.Question:
+                    System.Media.SystemSounds.Question.Play();
+                    break;
+            }
+        }
+
+        /// <summary>Whether the text of <see cref="Details"/> is open (the window is higher then). Closed by default.</summary>
+        public bool DetailsExpanded
+        {
+            get { return _detailsExpanded; }
+            set
+            {
+                bool expanded = value && _details.Length > 0;
+
+                if (expanded == _detailsExpanded)
+                    return;
+
+                _detailsExpanded = expanded;
+                UpdateDetailsButton();
+                LayoutContent();
+            }
+        }
+
+        // Which button has the focus when the window opens: the safe one (No, Cancel) unless the caller names another. A stray key press
+        // (Space activates the button that has the focus) then does the safe thing. ActiveControl, not Focus(): Focus() needs the window to be
+        // the active one already, which it is not this early. The chosen button also answers Enter from anywhere in the window.
+        private void FocusDefaultButton()
+        {
+            int index = (int)_defaultButton - 1;
+
+            if (index >= 0 && index < _dialogButtons.Count)
+            {
+                ActiveControl = _dialogButtons[index];
+                AcceptButton = _dialogButtons[index];
+
+                return;
+            }
+
             if (CancelButton is Control cancelControl)
                 ActiveControl = cancelControl;
         }
@@ -180,6 +418,46 @@ namespace ErikwnkWFUI.Forms
 
         // Whether one of the buttons ended the dialog (and not the close button, Alt+F4 or Close()).
         private bool _buttonClicked;
+
+        // ---- the text to copy
+
+        /// <summary>The text that Ctrl+C copies: the title, the message (and the details), and the names of the buttons, in the form the box of Windows uses.</summary>
+        public string GetTextForCopy()
+        {
+            StringBuilder text = new StringBuilder();
+            text.AppendLine(Separator).AppendLine(Text).AppendLine(Separator).AppendLine(_message);
+
+            if (_details.Length > 0)
+                text.AppendLine().AppendLine(_details);
+
+            text.AppendLine(Separator).AppendLine(string.Join("   ", _buttonNames)).AppendLine(Separator);
+
+            return text.ToString();
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // (Text that is selected in the details is copied by the box itself.)
+            bool selection = ActiveControl is TextBoxBase box && box.SelectionLength > 0;
+
+            if (keyData == (Keys.Control | Keys.C) && !selection)
+            {
+                try
+                {
+                    ClipboardAccess.SetDataObject(new DataObject(DataFormats.UnicodeText, GetTextForCopy()), true);
+                }
+                catch (System.Runtime.InteropServices.ExternalException)
+                {
+                    // The clipboard is in use by another program: nothing is copied this time.
+                }
+
+                return true;
+            }
+
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        // ---- size and place
 
         private MessageBoxPreset GetPreset()
         {
@@ -196,6 +474,7 @@ namespace ErikwnkWFUI.Forms
                         ButtonColumnWidth = 78,
                         ButtonWidth = 72,
                         ButtonHeight = 28,
+                        DetailsHeight = 80,
                         ContentPadding = new Padding(18, 12, 18, 8),
                         ButtonPanelPadding = new Padding(8, 8, 18, 12)
                     };
@@ -208,6 +487,7 @@ namespace ErikwnkWFUI.Forms
                         ButtonColumnWidth = 140,
                         ButtonWidth = 130,
                         ButtonHeight = 40,
+                        DetailsHeight = 170,
                         ContentPadding = new Padding(32, 26, 32, 14),
                         ButtonPanelPadding = new Padding(12, 16, 32, 22)
                     };
@@ -220,82 +500,134 @@ namespace ErikwnkWFUI.Forms
                         ButtonColumnWidth = 125,
                         ButtonWidth = 120,
                         ButtonHeight = 35,
+                        DetailsHeight = 120,
                         ContentPadding = new Padding(28, 20, 28, 10),
                         ButtonPanelPadding = new Padding(12, 12, 28, 18)
                     };
             }
         }
 
-        private void ConfigureForm()
-        {
-            MessageBoxPreset preset = GetPreset();
-
-            ShowInTaskbar = false;
-
-            Size = preset.FormSize;
-            MinimumSize = preset.FormSize;
-            MaximumSize = preset.FormSize;
-        }
-
         private void BuildLayout()
         {
-            Panel rootPanel = UIStyles.Panels.CreateMedium();
-            TableLayoutPanel mainLayout = CreateMainLayout();
+            MessageBoxPreset preset = GetPreset();
 
-            mainLayout.Controls.Add(CreateContentPanel(), 0, 0);
-            mainLayout.Controls.Add(CreateButtonPanel(), 0, 1);
+            _messageLabel = UILabelFactory.CreateStandard(_message);
+            _messageLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            _messageLabel.TextAlign = ContentAlignment.TopCenter;
+            ThemeWatcher.FollowForeColor(_messageLabel, () => UIStyles.Colors.TextPrimary);
+            _messageLabel.Font = UIStyles.Fonts.Normal;
+            _messageLabel.BackColor = Color.Transparent;
+            _messageLabel.AutoEllipsis = false;
 
-            rootPanel.Controls.Add(mainLayout);
+            // The message scrolls when it is longer than the window can be.
+            _messagePanel = UIPanelFactory.CreateMedium();
+            _messagePanel.Dock = DockStyle.None;
+            _messagePanel.AutoScroll = true;
+            _messagePanel.Controls.Add(_messageLabel);
+
+            _detailsBox = UIStyles.TextBoxes.CreateStandard(_details);
+            _detailsBox.Multiline = true;
+            _detailsBox.ReadOnly = true;
+            _detailsBox.ScrollBars = ScrollBars.Vertical;
+            _detailsBox.Visible = false;
+
+            _buttonPanel = CreateButtonPanel();
 
             ContentPanel.Controls.Clear();
-            ContentPanel.Controls.Add(rootPanel);
+            ContentPanel.Controls.Add(_messagePanel);
+            ContentPanel.Controls.Add(_detailsBox);
+            ContentPanel.Controls.Add(_buttonPanel);
+
+            UpdateDetailsButton();
         }
 
-        private TableLayoutPanel CreateMainLayout()
+        // The message, the details (when they are open) and the buttons one below the other. The window is as high as its size says; a
+        // message that needs more makes a window of one of the three sizes higher, up to the height of the screen, and then it scrolls (an own
+        // size is kept: the message scrolls in it). The details add their own height.
+        private void LayoutContent()
         {
+            if (_buttonPanel == null)
+                return;
+
             MessageBoxPreset preset = GetPreset();
+            int width = preset.FormSize.Width;
 
-            TableLayoutPanel layout = UITableLayoutPanelFactory.CreateStandard(1, 2);
+            MinimumSize = Size.Empty;
+            MaximumSize = Size.Empty;
+            Size = new Size(width, Height);
 
-            layout.Dock = DockStyle.Fill;
-            ThemeWatcher.FollowBackColor(layout, () => UIStyles.Colors.BackgroundMedium);
-            layout.Padding = new Padding(0);
-            layout.Margin = new Padding(0);
+            int contentWidth = ContentPanel.ClientSize.Width;
+            int outside = Height - ContentPanel.ClientSize.Height;
+            Padding pad = preset.ContentPadding;
+            int detailsHeight = _detailsExpanded ? preset.DetailsHeight : 0;
+            int checkHeight = _checkBox != null && _checkBox.Text.Length > 0 ? CheckBoxRowHeight : 0;
+            int available = preset.FormSize.Height - outside - preset.ButtonPanelHeight - checkHeight;
 
-            layout.RowStyles.Clear();
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, preset.ButtonPanelHeight));
+            // The height of the message at the width it has, and with the scroll bar when it does not fit.
+            int textHeight = MeasureMessage(contentWidth - pad.Horizontal);
+            int needed = textHeight + pad.Vertical;
+            int messageHeight = available;
 
-            return layout;
+            if (!_size.Custom.HasValue)
+            {
+                int room = Screen.FromControl(this).WorkingArea.Height - 40 - outside - preset.ButtonPanelHeight - detailsHeight - checkHeight;
+                messageHeight = Math.Max(available, Math.Min(needed, room));
+            }
+
+            bool scrolls = needed > messageHeight;
+
+            if (scrolls)
+                textHeight = MeasureMessage(contentWidth - pad.Horizontal - SystemInformation.VerticalScrollBarWidth);
+
+            int labelWidth = contentWidth - pad.Horizontal - (scrolls ? SystemInformation.VerticalScrollBarWidth : 0);
+            int labelTop = pad.Top + (scrolls ? 0 : Math.Max(0, (messageHeight - pad.Vertical - textHeight) / 2));
+
+            _messagePanel.SetBounds(0, 0, contentWidth, messageHeight);
+            _messageLabel.SetBounds(pad.Left, labelTop, labelWidth, textHeight);
+            _messagePanel.AutoScrollMinSize = scrolls ? new Size(0, pad.Top + textHeight + pad.Bottom) : Size.Empty;
+
+            _detailsBox.Visible = detailsHeight > 0;
+
+            if (detailsHeight > 0)
+                _detailsBox.SetBounds(pad.Left, messageHeight, contentWidth - pad.Horizontal, detailsHeight - 8);
+
+            if (_checkBox != null)
+            {
+                _checkBox.Visible = checkHeight > 0;
+                _checkBox.SetBounds(pad.Left, messageHeight + detailsHeight, contentWidth - pad.Horizontal, checkHeight);
+            }
+
+            _buttonPanel.SetBounds(0, messageHeight + detailsHeight + checkHeight, contentWidth, preset.ButtonPanelHeight);
+
+            int height = outside + messageHeight + detailsHeight + checkHeight + preset.ButtonPanelHeight;
+            Size = new Size(width, height);
+            MinimumSize = Size;
+            MaximumSize = Size;
+
+            KeepOnScreen();
         }
 
-        private Control CreateContentPanel()
+        private int MeasureMessage(int width)
         {
-            MessageBoxPreset preset = GetPreset();
+            if (_message.Length == 0)
+                return 0;
 
-            Panel panel = UIPanelFactory.CreateMedium();
-            panel.Padding = preset.ContentPadding;
-
-            Label messageLabel = CreateMessageLabel();
-
-            panel.Controls.Add(messageLabel);
-
-            return panel;
+            return TextRenderer.MeasureText(_message, _messageLabel.Font, new Size(Math.Max(1, width), int.MaxValue), TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height;
         }
 
-        private Label CreateMessageLabel()
+        // A window that has become higher (the details were opened) does not reach below the screen.
+        private void KeepOnScreen()
         {
-            Label label = UILabelFactory.CreateStandard(_message);
+            if (!IsHandleCreated || WindowState != FormWindowState.Normal)
+                return;
 
-            label.Dock = DockStyle.Fill;
-            label.TextAlign = ContentAlignment.MiddleCenter;
-            ThemeWatcher.FollowForeColor(label, () => UIStyles.Colors.TextPrimary);
-            label.Font = UIStyles.Fonts.Normal;
-            label.BackColor = Color.Transparent;
-            label.AutoEllipsis = false;
+            Rectangle area = Screen.FromControl(this).WorkingArea;
 
-            return label;
+            if (Bottom > area.Bottom)
+                Top = Math.Max(area.Top, area.Bottom - Height);
         }
+
+        // ---- the buttons
 
         private Control CreateButtonPanel()
         {
@@ -303,7 +635,7 @@ namespace ErikwnkWFUI.Forms
 
             TableLayoutPanel buttonPanel = UITableLayoutPanelFactory.CreateStandard(1, 1);
 
-            buttonPanel.Dock = DockStyle.Fill;
+            buttonPanel.Dock = DockStyle.None;
             ThemeWatcher.FollowBackColor(buttonPanel, () => UIColors.BackgroundMedium);
             buttonPanel.Padding = preset.ButtonPanelPadding;
             buttonPanel.Margin = new Padding(0);
@@ -325,19 +657,62 @@ namespace ErikwnkWFUI.Forms
             buttonPanel.RowStyles.Clear();
             buttonPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
+            // At the left: the help button and the button of the details. Each is there only when it is wanted (details, ShowHelpButton).
+            Panel left = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Margin = new Padding(0) };
+
+            _detailsButton = UIButtonFactory.CreateStandard("", "", new Size(preset.ButtonWidth, preset.ButtonHeight));
+            _detailsButton.Dock = DockStyle.Left;
+            _detailsButton.Margin = new Padding(0);
+            _detailsButton.Width = preset.ButtonWidth + 10;
+            _detailsButton.Visible = _details.Length > 0;
+            _detailsButton.Click += (sender, e) => DetailsExpanded = !DetailsExpanded;
+
+            _helpButton = UIButtonFactory.CreateSymbol(UIStyles.Symbols.Help, UIStrings.Get("MessageBox.Help"), new Size(preset.ButtonHeight, preset.ButtonHeight), (UIColorSet)null);
+            _helpButton.Dock = DockStyle.Left;
+            _helpButton.Margin = new Padding(0);
+            _helpButton.Width = preset.ButtonHeight + 8;
+            _helpButton.AccessibleName = UIStrings.Get("MessageBox.Help");
+            _helpButton.Visible = _helpShown;
+            _helpButton.Click += (sender, e) => { EventHandler handler = HelpClicked; if (handler != null) handler(this, EventArgs.Empty); };
+
+            // (Docked from the last one added: the help button stands at the very left.)
+            left.Controls.Add(_detailsButton);
+            left.Controls.Add(_helpButton);
+            buttonPanel.Controls.Add(left, 0, 0);
+
             for (int i = 0; i < buttonInfos.Length; i++)
             {
+                // An own text for the button replaces the symbol (or the usual text); a null entry keeps it.
+                string own = _buttonTexts != null && i < _buttonTexts.Length && !string.IsNullOrEmpty(_buttonTexts[i]) ? _buttonTexts[i] : null;
+                string name = own ?? buttonInfos[i].Name;
+                string text = own ?? buttonInfos[i].Text;
+
+                Button button = CreateDialogButton(
+                    text,
+                    buttonInfos[i].Result);
+
+                // The column is as wide as the preset says, and wider where the text would not fit (long words, own texts).
+                int textWidth = TextRenderer.MeasureText(text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width;
+
                 buttonPanel.ColumnStyles.Add(
                     new ColumnStyle(
                         SizeType.Absolute,
-                        preset.ButtonColumnWidth));
+                        Math.Max(preset.ButtonColumnWidth, textWidth + 24 + 6)));
 
-                Button button = CreateDialogButton(
-                    buttonInfos[i].Text,
-                    buttonInfos[i].Result);
+                // The buttons with a symbol are named for the screen reader and the tooltip - in the language of the library.
+                button.AccessibleName = name;
+                UIButtonFactory.UpdateTooltip(button, name);
 
+                _dialogButtons.Add(button);
+                _buttonNames.Add(name);
                 buttonPanel.Controls.Add(button, i + 1, 0);
             }
+        }
+
+        private void UpdateDetailsButton()
+        {
+            if (_detailsButton != null)
+                _detailsButton.Text = UIStrings.Get("MessageBox.Details") + (_detailsExpanded ? " ▴" : " ▾");
         }
 
         private Button CreateDialogButton(string text, DialogResult result)
@@ -365,7 +740,7 @@ namespace ErikwnkWFUI.Forms
             if (result == DialogResult.OK || result == DialogResult.Yes)
                 return UIButtonFactory.CreateGreen(text, "", size);
 
-            if (result == DialogResult.No)
+            if (result == DialogResult.No || result == DialogResult.Abort)
                 return UIButtonFactory.CreateRed(text, "", size);
 
             return UIButtonFactory.CreateStandard(text, "", size);
@@ -373,10 +748,10 @@ namespace ErikwnkWFUI.Forms
 
         private void ConfigureAcceptCancelButton(Button button, DialogResult result)
         {
-            if (result == DialogResult.OK || result == DialogResult.Yes)
+            if (result == DialogResult.OK || result == DialogResult.Yes || result == DialogResult.Retry)
                 AcceptButton = button;
 
-            if (result == DialogResult.Cancel || result == DialogResult.No)
+            if (result == DialogResult.Cancel || result == DialogResult.No || result == DialogResult.Abort)
                 CancelButton = button;
         }
 
@@ -394,41 +769,33 @@ namespace ErikwnkWFUI.Forms
 
         private DialogButtonInfo[] GetButtons()
         {
+            DialogButtonInfo ok = new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK, UIStrings.Get("MessageBox.Ok"));
+            DialogButtonInfo yes = new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.Yes, UIStrings.Get("MessageBox.Yes"));
+            DialogButtonInfo no = new DialogButtonInfo(UIStyles.Symbols.Cancel, DialogResult.No, UIStrings.Get("MessageBox.No"));
+            DialogButtonInfo cancel = new DialogButtonInfo(UIStrings.Get("MessageBox.Cancel"), DialogResult.Cancel, UIStrings.Get("MessageBox.Cancel"));
+            DialogButtonInfo retry = new DialogButtonInfo(UIStrings.Get("MessageBox.Retry"), DialogResult.Retry, UIStrings.Get("MessageBox.Retry"));
+            DialogButtonInfo abort = new DialogButtonInfo(UIStrings.Get("MessageBox.Abort"), DialogResult.Abort, UIStrings.Get("MessageBox.Abort"));
+            DialogButtonInfo ignore = new DialogButtonInfo(UIStrings.Get("MessageBox.Ignore"), DialogResult.Ignore, UIStrings.Get("MessageBox.Ignore"));
+
             switch (_buttons)
             {
-                case MessageBoxButtons.OK:
-                    return new[]
-                    {
-                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK)
-                    };
-
                 case MessageBoxButtons.OKCancel:
-                    return new[]
-                    {
-                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK),
-                        new DialogButtonInfo(UIStrings.Get("MessageBox.Cancel"), DialogResult.Cancel)
-                    };
+                    return new[] { ok, cancel };
 
                 case MessageBoxButtons.YesNo:
-                    return new[]
-                    {
-                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.Yes),
-                        new DialogButtonInfo(UIStyles.Symbols.Cancel, DialogResult.No)
-                    };
+                    return new[] { yes, no };
 
                 case MessageBoxButtons.YesNoCancel:
-                    return new[]
-                    {
-                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.Yes),
-                        new DialogButtonInfo(UIStyles.Symbols.Cancel, DialogResult.No),
-                        new DialogButtonInfo(UIStrings.Get("MessageBox.Cancel"), DialogResult.Cancel)
-                    };
+                    return new[] { yes, no, cancel };
+
+                case MessageBoxButtons.RetryCancel:
+                    return new[] { retry, cancel };
+
+                case MessageBoxButtons.AbortRetryIgnore:
+                    return new[] { abort, retry, ignore };
 
                 default:
-                    return new[]
-                    {
-                        new DialogButtonInfo(UIStyles.Symbols.Check, DialogResult.OK)
-                    };
+                    return new[] { ok };
             }
         }
 
@@ -448,10 +815,14 @@ namespace ErikwnkWFUI.Forms
             {
                 case MessageBoxButtons.OKCancel:
                 case MessageBoxButtons.YesNoCancel:
+                case MessageBoxButtons.RetryCancel:
                     return DialogResult.Cancel;
 
                 case MessageBoxButtons.YesNo:
                     return DialogResult.No;
+
+                case MessageBoxButtons.AbortRetryIgnore:
+                    return DialogResult.Abort;
 
                 default:
                     return DialogResult.OK;
@@ -492,11 +863,13 @@ namespace ErikwnkWFUI.Forms
         {
             public readonly string Text;
             public readonly DialogResult Result;
+            public readonly string Name;
 
-            public DialogButtonInfo(string text, DialogResult result)
+            public DialogButtonInfo(string text, DialogResult result, string name)
             {
                 Text = text;
                 Result = result;
+                Name = name;
             }
         }
     }

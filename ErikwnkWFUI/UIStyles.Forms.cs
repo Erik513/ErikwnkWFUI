@@ -125,9 +125,13 @@ namespace ErikwnkWFUI
             /// <param name="icon">The icon in the title bar.</param>
             /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
             /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
-            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessageStandard(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            /// <param name="details">A text the user can open under the message with a "Details" button (null: none).</param>
+            /// <param name="defaultButton">Which button has the focus first and answers Enter (the safe one, No or Cancel, by default).</param>
+            /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the usual one).</param>
+            /// <param name="playSound">Whether the sound of the icon is played when the box opens (off by default).</param>
+            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessageStandard(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null, string details = null, ErikwnkWFUI.Forms.MessageBoxDefault defaultButton = ErikwnkWFUI.Forms.MessageBoxDefault.Safe, string[] buttonTexts = null, bool playSound = false)
             {
-                return UIFormFactory.CreateMessage(MessageOptions(title, icon, false), colors, message, buttons, size);
+                return UIFormFactory.CreateMessage(MessageOptions(title, icon, false), colors, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
             }
 
             /// <summary>A message box with the title bar in a very dark shade of the accent.</summary>
@@ -136,9 +140,13 @@ namespace ErikwnkWFUI
             /// <param name="buttons">Which buttons it has.</param>
             /// <param name="icon">The icon in the title bar.</param>
             /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
-            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessagePrimary(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            /// <param name="details">A text the user can open under the message with a "Details" button (null: none).</param>
+            /// <param name="defaultButton">Which button has the focus first and answers Enter (the safe one by default).</param>
+            /// <param name="buttonTexts">Own texts for the buttons, in their order (a null entry keeps the usual one).</param>
+            /// <param name="playSound">Whether the sound of the icon is played when the box opens (off by default).</param>
+            public static ErikwnkWFUI.Forms.MessageBoxForm CreateMessagePrimary(string message, string title = null, ErikwnkWFUI.Forms.MessageBoxButtons buttons = ErikwnkWFUI.Forms.MessageBoxButtons.OK, ErikwnkWFUI.Forms.MessageBoxIcon icon = ErikwnkWFUI.Forms.MessageBoxIcon.Info, ErikwnkWFUI.Forms.FormSizeOption? size = null, string details = null, ErikwnkWFUI.Forms.MessageBoxDefault defaultButton = ErikwnkWFUI.Forms.MessageBoxDefault.Safe, string[] buttonTexts = null, bool playSound = false)
             {
-                return UIFormFactory.CreateMessage(MessageOptions(title, icon, true), null, message, buttons, size);
+                return UIFormFactory.CreateMessage(MessageOptions(title, icon, true), null, message, buttons, size, details, defaultButton, icon, buttonTexts, playSound);
             }
 
             // The options of a message box: a dialog (the Primary one with the accent in the title bar), the icon of the kind of message in the bar.

@@ -26,12 +26,15 @@ namespace ErikwnkWFUI.Factories
         }
 
         // The message box: the same, made as a MessageBoxForm (a dialog whose title bar has the color set, or the accent for the primary one).
-        public static MessageBoxForm CreateMessage(FormOptions options, UIColorSet colors, string message, MessageBoxButtons buttons, FormSizeOption? size)
+        public static MessageBoxForm CreateMessage(FormOptions options, UIColorSet colors, string message, MessageBoxButtons buttons, FormSizeOption? size, string details, MessageBoxDefault defaultButton, MessageBoxIcon icon, string[] buttonTexts, bool playSound)
         {
             if (colors != null)
                 options.Colors = colors;
 
-            return new MessageBoxForm(options, message, buttons, size);
+            MessageBoxForm form = new MessageBoxForm(options, message, buttons, size, details, defaultButton, icon, buttonTexts);
+            form.PlaySound = playSound;
+
+            return form;
         }
 
         // The progress dialog: the same, made as a ProgressForm (a dialog; with no title it has the one of the language).

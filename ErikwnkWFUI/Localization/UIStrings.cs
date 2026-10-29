@@ -117,6 +117,14 @@ namespace ErikwnkWFUI.Localization
             ["Update.AvailableTooltip"] = "A new version is available - click to update",
 
             ["MessageBox.Title"] = "Notice",
+            ["MessageBox.Ok"] = "OK",
+            ["MessageBox.Yes"] = "Yes",
+            ["MessageBox.No"] = "No",
+            ["MessageBox.Details"] = "Details",
+            ["MessageBox.Retry"] = "Retry",
+            ["MessageBox.Abort"] = "Abort",
+            ["MessageBox.Ignore"] = "Ignore",
+            ["MessageBox.Help"] = "Help",
             ["MessageBox.Cancel"] = "Cancel",
 
             ["TabControl.AddTab"] = "Add tab",
@@ -239,6 +247,14 @@ namespace ErikwnkWFUI.Localization
             ["Update.AvailableTooltip"] = "Eine neue Version ist verfügbar - zum Aktualisieren klicken",
 
             ["MessageBox.Title"] = "Hinweis",
+            ["MessageBox.Ok"] = "OK",
+            ["MessageBox.Yes"] = "Ja",
+            ["MessageBox.No"] = "Nein",
+            ["MessageBox.Details"] = "Details",
+            ["MessageBox.Retry"] = "Wiederholen",
+            ["MessageBox.Abort"] = "Abbrechen",
+            ["MessageBox.Ignore"] = "Ignorieren",
+            ["MessageBox.Help"] = "Hilfe",
             ["MessageBox.Cancel"] = "Abbrechen",
 
             ["TabControl.AddTab"] = "Tab hinzufügen",
