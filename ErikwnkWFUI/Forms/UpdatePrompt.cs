@@ -7,6 +7,10 @@ using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Forms
 {
+    /// <summary>
+    /// The windows of an update: the question "a new version is available" and, after "Update now", the progress of the download. Both are
+    /// modal and have to be shown from the thread of the application's windows (the UI thread).
+    /// </summary>
     public static class UpdatePrompt
     {
         /// <summary>
@@ -15,7 +19,10 @@ namespace ErikwnkWFUI.Forms
         /// user cannot close that window. Returns how it ended: <see cref="UpdateOutcome.Declined"/> (Later, or the dialog was closed),
         /// <see cref="UpdateOutcome.Skipped"/> (with <paramref name="allowSkip"/>), <see cref="UpdateOutcome.Applied"/> or
         /// <see cref="UpdateOutcome.Failed"/> (applyUpdateAsync returned false or threw; the window then stays with the message until the user
-        /// closes it). It is not asynchronous in the sense of returning early: the dialogs are modal, the task that comes back is already done.
+        /// closes it). It is not asynchronous in the sense of returning early: the dialogs are modal, so the call does not come back before the
+        /// user has answered and the update has ended, and the task that comes back is already done. Awaiting it is fine, but nothing else of
+        /// the calling thread runs meanwhile except the message loops of these windows - start it where blocking for that time is wanted
+        /// (not in the middle of a handler that has more to do afterwards).
         /// </summary>
         /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0"; a leading "v" is not doubled).</param>
         /// <param name="latestVersion">The new version.</param>
@@ -59,7 +66,7 @@ namespace ErikwnkWFUI.Forms
         /// <summary>
         /// The same, with an update that can be cancelled: <paramref name="applyUpdateAsync"/> gets a token that says when the user clicked Cancel
         /// in the progress window (a task that stops by an <see cref="OperationCanceledException"/>, or returns false after the token was
-        /// cancelled, gives <see cref="UpdateOutcome.Cancelled"/>).
+        /// cancelled, gives <see cref="UpdateOutcome.Cancelled"/>). Like the overload without a token it blocks until everything has ended.
         /// </summary>
         /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0"; a leading "v" is not doubled).</param>
         /// <param name="latestVersion">The new version.</param>

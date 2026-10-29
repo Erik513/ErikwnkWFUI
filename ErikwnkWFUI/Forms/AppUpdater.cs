@@ -34,8 +34,10 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>
-        /// Best-effort, non-blocking check against GitHub's latest release that
-        /// immediately shows the "update available" prompt if there is one. Never
+        /// Best-effort check against GitHub's latest release that
+        /// immediately shows the "update available" prompt if there is one. The check
+        /// does not block the window (it is awaited); the prompt is modal like every
+        /// <see cref="UpdatePrompt"/> window, so the task ends when its windows are closed. Never
         /// throws; a failed or slow check just means no prompt is shown. On "Update
         /// now", downloads and swaps in the new build and exits the app so the swap
         /// helper can finish the job.
