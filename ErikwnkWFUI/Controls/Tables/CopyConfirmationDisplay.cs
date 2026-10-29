@@ -1,5 +1,6 @@
 ﻿using System.Windows.Forms;
 using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -10,7 +11,7 @@ namespace ErikwnkWFUI.Controls
     // control to carry its own copy of this same switch.
     internal static class CopyConfirmationDisplay
     {
-        public static void Show(CopyConfirmationStyle style, string message, Control owner, ToolTip toolTip)
+        public static void Show(CopyConfirmationStyle style, string message, Control owner, ToolTip toolTip, UIColorSet toastColors = null)
         {
             switch (style)
             {
@@ -25,7 +26,7 @@ namespace ErikwnkWFUI.Controls
                     Form form = owner.FindForm();
                     if (form != null)
                     {
-                        ToastForm.ShowToast(message, form);
+                        ToastForm.ShowToast(message, form, toastColors);
                     }
                     return;
             }

@@ -294,6 +294,13 @@ namespace ErikwnkWFUI.Controls
             return _listBox.IndexFromPoint(point);
         }
 
+        /// <summary>Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default.</summary>
+        public bool DeselectOnOutsideClick
+        {
+            get { return _listBox.DeselectOnOutsideClick; }
+            set { _listBox.DeselectOnOutsideClick = value; }
+        }
+
         public void ClearSelected()
         {
             _listBox.ClearSelected();

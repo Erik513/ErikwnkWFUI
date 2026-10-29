@@ -362,6 +362,19 @@ namespace ErikwnkWFUI.Controls
         /// </summary>
         public CopyConfirmationStyle ActionConfirmation { get; set; } = CopyConfirmationStyle.Toast;
 
+        /// <summary>
+        /// The colors of the toast that confirms an action (<see cref="CopyConfirmationStyle.Toast"/>): a color set (one of <c>UIStyles.Colors.Sets</c>,
+        /// <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>), null for the neutral gray. Until it is set it follows the look of the grid:
+        /// gray for the standard one, the color of the set of the factories' <c>colors</c>, the accent for <c>CreatePrimary</c>.
+        /// </summary>
+        public UIColorSet ToastColors
+        {
+            get { return _toastColors.Value; }
+            set { _toastColors.Value = value; }
+        }
+
+        private readonly ColorSetHolder _toastColors = new ColorSetHolder();
+
 
         private bool _suppressActionConfirmation;
 
@@ -582,6 +595,9 @@ namespace ErikwnkWFUI.Controls
             if (disposing)
             {
                 UIStrings.LanguageChanged -= OnUIStringsLanguageChanged;
+                if (_outsideClickDeselectFilter != null)
+                    _outsideClickDeselectFilter.Stop();
+
                 _copyConfirmationToolTip.Dispose();
                 _headerFont?.Dispose();
                 _headerFont = null;

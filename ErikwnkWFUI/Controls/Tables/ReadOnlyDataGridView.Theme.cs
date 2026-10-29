@@ -43,6 +43,7 @@ namespace ErikwnkWFUI.Controls
             _selectionBackColor.SetDefault(() => colors().Hover);
             _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
             _contextMenuSelectionColor.SetDefault(() => colors().Hover);
+            _toastColors.Follow(colors);
 
             ApplyStyles();
         }

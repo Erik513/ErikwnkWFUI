@@ -45,6 +45,7 @@ namespace ErikwnkWFUI.Controls
             _selectionOverlayColor.SetDefault(() => UIColors.CreateSelectionOverlay(colors().Hover));
             _columnReorderIndicatorColor.SetDefault(() => colors().Hover);
             _contextMenuSelectionColor.SetDefault(() => colors().Hover);
+            _toastColors.Follow(colors);
 
             Invalidate();
         }

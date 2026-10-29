@@ -133,7 +133,7 @@ namespace ErikwnkWFUI.Controls
         // RunWithSuppressedActionConfirmation swallowed.
         protected virtual void OnActionConfirmation(string message)
         {
-            CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip);
+            CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip, ToastColors);
         }
 
 

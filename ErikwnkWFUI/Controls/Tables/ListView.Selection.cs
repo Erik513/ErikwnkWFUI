@@ -276,30 +276,13 @@ namespace ErikwnkWFUI.Controls
         // find it gone.
         private bool IsOutsideClickThatDeselects(System.IntPtr hwnd)
         {
-            if (IsDisposed || !IsHandleCreated || SelectedItems.Count == 0)
+            if (!DeselectOnOutsideClick || IsDisposed || !IsHandleCreated || SelectedItems.Count == 0)
             {
                 return false;
             }
 
-            if (hwnd == Handle)
-            {
-                return false;
-            }
-
-            var headerHandle = HeaderInputSubclass.GetHeaderHandle(Handle);
-            if (headerHandle != System.IntPtr.Zero && hwnd == headerHandle)
-            {
-                return false;
-            }
-
-            var clickedControl = Control.FromChildHandle(hwnd);
-            if (clickedControl == null)
-            {
-                // (A window of another application.)
-                return false;
-            }
-
-            return !(clickedControl is ButtonBase || clickedControl is ToolStrip);
+            // (The header is a window of its own, inside the list.)
+            return SelectionOutsideClick.IsElsewhere(hwnd, this, null, HeaderInputSubclass.GetHeaderHandle(Handle));
         }
 
         private void DeselectAll()

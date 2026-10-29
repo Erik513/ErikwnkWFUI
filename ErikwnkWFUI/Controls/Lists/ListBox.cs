@@ -421,6 +421,7 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnHandleCreated(e);
 
+            StartWatchingOutsideClicks();
             ApplyDefaultItemHeight();
         }
 

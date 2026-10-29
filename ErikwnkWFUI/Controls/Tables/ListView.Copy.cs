@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 
 namespace ErikwnkWFUI.Controls
@@ -15,6 +16,22 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>How a Ctrl+C/Ctrl+Shift+C copy is confirmed. Defaults to <see cref="CopyConfirmationStyle.Toast"/> (unchanged from before this existed).</summary>
         public CopyConfirmationStyle CopyConfirmation { get; set; } = CopyConfirmationStyle.Toast;
+
+        /// <summary>
+        /// The colors of the toast that confirms a copy (<see cref="CopyConfirmationStyle.Toast"/>): a color set (one of <c>UIStyles.Colors.Sets</c>,
+        /// <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>), null for the neutral gray. Until it is set it follows the look of the list:
+        /// gray for the standard one, the color of the set of <c>CreateStandard(colors)</c>, the accent for <c>CreatePrimary</c>.
+        /// </summary>
+        public UIColorSet ToastColors
+        {
+            get { return _toastColors.Value; }
+            set { _toastColors.Value = value; }
+        }
+
+        private readonly ColorSetHolder _toastColors = new ColorSetHolder();
+
+        /// <summary>Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default.</summary>
+        public bool DeselectOnOutsideClick { get; set; } = true;
 
         // The menu has the shape and the wording of the DataGridViews': Copy, Copy with header | Copy all, Copy all with
         // header | Select all. The items are fields, so that OnUIStringsLanguageChanged can set their texts again.
@@ -230,7 +247,7 @@ namespace ErikwnkWFUI.Controls
         // (The tooltip of the cell texts shows the confirmation too.)
         private void ShowCopyToast(string message)
         {
-            CopyConfirmationDisplay.Show(CopyConfirmation, message, this, _cellToolTip);
+            CopyConfirmationDisplay.Show(CopyConfirmation, message, this, _cellToolTip, ToastColors);
         }
     }
 }
