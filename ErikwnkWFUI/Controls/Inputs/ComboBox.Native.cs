@@ -15,6 +15,8 @@ namespace ErikwnkWFUI.Controls
         {
             base.OnHandleCreated(e);
 
+            StartWatchingClicks();
+
             // Even flat, Windows paints a themed focus and hover border in the system's accent
             // around the box; it comes from the visual-styles engine and ignores every color
             // property. Detaching the control from its theme class stops it. The list that
@@ -46,6 +48,7 @@ namespace ErikwnkWFUI.Controls
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _listFrame.ReleaseHandle();
+            StopWatchingClicks();
             base.OnHandleDestroyed(e);
         }
 
