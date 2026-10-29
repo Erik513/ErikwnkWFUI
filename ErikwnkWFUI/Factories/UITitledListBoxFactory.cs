@@ -40,6 +40,7 @@ namespace ErikwnkWFUI.Factories
             TitledListBox control = new TitledListBox(displayMember, allowReorder, showEnumeration, headerTitle, headerTextAlign);
 
             UIListBoxFactory.ApplyColors(control.InnerListBox, colors);
+            control.ApplyBorderColor();
 
             return control;
         }

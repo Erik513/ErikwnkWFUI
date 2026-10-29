@@ -359,9 +359,9 @@ namespace ErikwnkWFUI.Controls
 
             DrawMode = DrawMode.OwnerDrawFixed;
             base.ItemHeight = _itemHeight;
-            base.BackColor = UIColors.BackgroundDark;
+            base.BackColor = UIColors.BackgroundMedium;
             base.ForeColor = ItemForeColor;
-            BorderStyle = BorderStyle.None;
+            BorderStyle = BorderStyle.FixedSingle;
             Font = UIFonts.Normal;
             IntegralHeight = false;
 
@@ -409,11 +409,12 @@ namespace ErikwnkWFUI.Controls
         private void OnThemeChanged()
         {
             if (!_backColorWasSet)
-                base.BackColor = UIColors.BackgroundDark;
+                base.BackColor = UIColors.BackgroundMedium;
 
             if (!_itemForeColor.IsSet)
                 base.ForeColor = _itemForeColor.Value;
 
+            RedrawFrame();
             Invalidate();
         }
 
@@ -471,6 +472,15 @@ namespace ErikwnkWFUI.Controls
             }
 
             base.WndProc(ref m);
+
+            if (m.Msg == WM_NCPAINT)
+            {
+                PaintBorder();
+            }
+            else if (m.Msg == WM_PRINT)
+            {
+                PaintBorderOfPrint(m);
+            }
 
             // The items move under a mouse that stands still: the hover goes with the item that is there now.
             if ((m.Msg == WM_MOUSEWHEEL || m.Msg == WM_VSCROLL) && IsHandleCreated)

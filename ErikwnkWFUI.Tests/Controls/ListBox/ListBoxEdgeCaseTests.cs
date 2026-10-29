@@ -572,15 +572,16 @@ public class ListBoxEdgeCaseTests : IDisposable
         using Bitmap withFocus = new Bitmap(listBox.Width, listBox.Height);
         listBox.DrawToBitmap(withFocus, new Rectangle(0, 0, listBox.Width, listBox.Height));
 
-        // The focus item is the last one set (the third row, y 60 to 89): its first line has a line of the focus
-        // rectangle, the row above has none.
+        // The focus item is the last one set (the third row, y 60 to 89 below the one pixel of the frame): its first line has a line of the
+        // focus rectangle, the row above has none.
+        const int frame = 1;
         bool lineInFocusRow = false;
         bool lineInOtherRow = false;
 
         for (int x = 20; x < 150; x++)
         {
-            lineInFocusRow |= withFocus.GetPixel(x, 2 * ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, 2 * ItemHeight + 4).ToArgb();
-            lineInOtherRow |= withFocus.GetPixel(x, ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, ItemHeight + 4).ToArgb();
+            lineInFocusRow |= withFocus.GetPixel(x, frame + 2 * ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, frame + 2 * ItemHeight + 4).ToArgb();
+            lineInOtherRow |= withFocus.GetPixel(x, frame + ItemHeight + 1).ToArgb() != withFocus.GetPixel(x, frame + ItemHeight + 4).ToArgb();
         }
 
         Assert.True(lineInFocusRow, "no focus rectangle on the item with the focus");

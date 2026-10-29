@@ -69,6 +69,7 @@ namespace ErikwnkWFUI.Controls
 
             Title = headerTitle;
             HeaderTextAlign = headerTextAlign;
+            ApplyBorderColor();
 
             SetStyle(
                 ControlStyles.OptimizedDoubleBuffer |
@@ -120,7 +121,25 @@ namespace ErikwnkWFUI.Controls
         private void OnThemeChanged()
         {
             ApplyHeaderColors();
+            ApplyBorderColor();
             Invalidate(true);
+        }
+
+        /// <summary>The color of the frame around the title and the list: the one of <see cref="InnerListBox"/> (the neutral gray border color in every variant; set it for another color).</summary>
+        public Color BorderColor
+        {
+            get { return _listBox.BorderColor; }
+            set
+            {
+                _listBox.BorderColor = value;
+                ApplyBorderColor();
+            }
+        }
+
+        // The frame is this control's own color behind the title and the list (see ConfigureControl).
+        internal void ApplyBorderColor()
+        {
+            BackColor = _listBox.BorderColor;
         }
 
         private void ApplyHeaderColors()
@@ -199,9 +218,10 @@ namespace ErikwnkWFUI.Controls
         private void ConfigureControl()
         {
             DoubleBuffered = true;
-            BackColor = Color.Transparent;
+            // The frame is the one pixel of this control around the title and the list: its own color shows there.
+            BackColor = UIColors.BorderMedium;
             Margin = new Padding(0);
-            Padding = new Padding(0);
+            Padding = new Padding(1);
         }
 
         private System.Windows.Forms.Panel CreateHeaderPanel()
@@ -245,7 +265,8 @@ namespace ErikwnkWFUI.Controls
                 DisplayMember = displayMember,
                 AllowReorder = allowReorder,
                 ShowEnumeration = showEnumeration,
-                Margin = new Padding(0)
+                Margin = new Padding(0),
+                BorderStyle = BorderStyle.None
             };
         }
 
