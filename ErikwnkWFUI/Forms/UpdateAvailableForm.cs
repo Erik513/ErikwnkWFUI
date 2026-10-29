@@ -31,6 +31,10 @@ namespace ErikwnkWFUI.Forms
         private Button _notesButton;
         private Button _skipButton;
         private Button _updateButton;
+        private Button _laterButton;
+        private Label _headline;
+        private TableLayoutPanel _buttonTable;
+        private readonly bool _defaultTitle;
         private Panel _notesHost;
         private Panel _notesFrame;
         private bool _notesFocused;
@@ -70,6 +74,9 @@ namespace ErikwnkWFUI.Forms
         internal UpdateAvailableForm(FormOptions options, string currentVersion, string latestVersion, FormSizeOption? size)
             : base(options)
         {
+            // The title of the library follows the language while the window is open; a title that was given stays.
+            _defaultTitle = options == null || options.Title == UIStrings.Get("Update.AvailableTitle");
+
             _currentVersion = WithoutV(currentVersion);
             _latestVersion = WithoutV(latestVersion);
             _size = size ?? FormSize.Medium;
@@ -77,6 +84,7 @@ namespace ErikwnkWFUI.Forms
             ShowInTaskbar = false;
             BuildLayout();
             LayoutContent();
+            UIStrings.LanguageChanged += OnLanguageChanged;
         }
 
         /// <summary>The text of the release ("What's new"): with it the window has a "What's new" button that opens the text under the versions. Empty (the default) has no button. Plain text; the Markdown of a GitHub release is shown as it is written.</summary>
@@ -323,6 +331,7 @@ namespace ErikwnkWFUI.Forms
             Panel panel = CreateContentPanel(out layout);
 
             Label headline = UILabelFactory.CreateStandard(UIStrings.Get("Update.AvailableMessage"));
+            _headline = headline;
             headline.AutoSize = true;
             headline.Font = UIFonts.Title;
             ThemeWatcher.FollowForeColor(headline, () => UIColors.TextPrimary);
@@ -355,9 +364,10 @@ namespace ErikwnkWFUI.Forms
             // identical to before.
             string laterText = UIStrings.Get("Update.Later");
             string updateText = UIStrings.Get("Update.UpdateNow");
-            int laterButtonWidth = Math.Max(80, TextRenderer.MeasureText(laterText, UIFonts.Normal).Width + 50);
-            int updateButtonWidth = Math.Max(100, TextRenderer.MeasureText(updateText, UIFonts.Normal).Width + 50);
-            _columnsWidth = laterButtonWidth + updateButtonWidth;
+            int laterButtonWidth;
+            int updateButtonWidth;
+            MeasureColumns(out laterButtonWidth, out updateButtonWidth);
+            _buttonTable = buttonPanel;
 
             buttonPanel.ColumnStyles.Clear();
             buttonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -393,6 +403,7 @@ namespace ErikwnkWFUI.Forms
             laterButton.Margin = new Padding(0, 0, 6, 0);
             laterButton.Click += (sender, e) => Close();
             CancelButton = laterButton;
+            _laterButton = laterButton;
 
             Button updateButton = UIButtonFactory.CreateGreen(
                 updateText, "", new Size(updateButtonWidth, 30));
@@ -407,6 +418,48 @@ namespace ErikwnkWFUI.Forms
             buttonPanel.Controls.Add(updateButton, 2, 0);
 
             return buttonPanel;
+        }
+
+        // The widths of the two columns of the right: as wide as the texts of the language need (the minimums are what English always had).
+        private void MeasureColumns(out int laterWidth, out int updateWidth)
+        {
+            laterWidth = Math.Max(80, TextRenderer.MeasureText(UIStrings.Get("Update.Later"), UIFonts.Normal).Width + 50);
+            updateWidth = Math.Max(100, TextRenderer.MeasureText(UIStrings.Get("Update.UpdateNow"), UIFonts.Normal).Width + 50);
+            _columnsWidth = laterWidth + updateWidth;
+        }
+
+        // The texts follow a change of the language while the window is open: the title (when it is the standard one), the headline and the
+        // buttons. The columns are measured again (a word of the other language may be longer) and the window is laid out anew.
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            if (IsDisposed)
+                return;
+
+            if (_defaultTitle)
+                FormTitle = UIStrings.Get("Update.AvailableTitle");
+
+            _headline.Text = UIStrings.Get("Update.AvailableMessage");
+            _laterButton.Text = UIStrings.Get("Update.Later");
+            _updateButton.Text = UIStrings.Get("Update.UpdateNow");
+            _skipButton.Text = UIStrings.Get("Update.Skip");
+            _skipButton.Width = FitWidth(_skipButton);
+
+            int laterWidth;
+            int updateWidth;
+            MeasureColumns(out laterWidth, out updateWidth);
+            _buttonTable.ColumnStyles[1].Width = laterWidth;
+            _buttonTable.ColumnStyles[2].Width = updateWidth;
+
+            UpdateNotesButton();
+            LayoutContent();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                UIStrings.LanguageChanged -= OnLanguageChanged;
+
+            base.Dispose(disposing);
         }
 
         // A button as wide as its text needs.
