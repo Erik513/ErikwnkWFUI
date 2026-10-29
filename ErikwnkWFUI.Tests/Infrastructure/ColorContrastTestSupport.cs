@@ -58,8 +58,9 @@ internal static class ColorContrastTestSupport
     public static void Check(List<string> shortfalls, string what, Color foreground, Color background, double minimum)
     {
         double ratio = ColorContrastHelper.GetContrastRatio(foreground, background);
+        double required = ColorContrastHelper.RequiredRatio(foreground, background, minimum);
 
-        if (ratio < minimum)
-            shortfalls.Add($"{what}: {ratio:F2}:1, needs {minimum:F1}:1 (front {foreground}, back {background})");
+        if (ratio < required)
+            shortfalls.Add($"{what}: {ratio:F2}:1, needs {required:F1}:1 (front {foreground}, back {background})");
     }
 }

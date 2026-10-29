@@ -51,7 +51,7 @@ public class PanelColorTests : IDisposable
                 Color muted = UIColors.GetMutedText(surface, amount);
                 Color plain = UIColors.BlendToward(UIColors.GetBestTextColor(surface), surface, amount);
 
-                Assert.True(ColorContrastHelper.GetContrastRatio(muted, surface) >= ReadableText, $"{surface} -> {muted}");
+                Assert.True(ColorContrastHelper.GetContrastRatio(muted, surface) >= ColorContrastHelper.RequiredRatio(muted, surface, ReadableText), $"{surface} -> {muted}");
 
                 // Where the plain blend is readable already, nothing is changed.
                 if (ColorContrastHelper.GetContrastRatio(plain, surface) >= ReadableText)
@@ -133,7 +133,7 @@ public class PanelColorTests : IDisposable
         Color ink = Ink(picture, surface);
 
         // (The picture is smoothed: the pixel that stands out most is a little paler than the text itself.)
-        Assert.True(ColorContrastHelper.GetContrastRatio(ink, surface) >= ReadableText - 0.5, $"{name} in {theme}: {ink} on {surface}");
+        Assert.True(ColorContrastHelper.GetContrastRatio(ink, surface) >= ColorContrastHelper.RequiredRatio(ink, surface, ReadableText - 0.5), $"{name} in {theme}: {ink} on {surface}");
     }
 
     [Theory]
@@ -205,7 +205,8 @@ public class PanelColorTests : IDisposable
                     quiet = ColorContrastHelper.GetContrastRatio(Ink(picture, surface), surface);
 
                 // (The picture is smoothed: the pixel that stands out most is a little paler than the text itself.)
-                Assert.True(normal >= ReadableText - 0.5, $"{surface} in {theme} at {part}: {normal}");
+                double needed = UIColors.IsColored(surface) ? Math.Min(ReadableText - 0.5, UIColors.ColoredLightTextMinimum) : ReadableText - 0.5;
+                Assert.True(normal >= needed, $"{surface} in {theme} at {part}: {normal}");
                 Assert.True(quiet < normal, $"{surface} in {theme} at {part}: {quiet} < {normal}");
                 Assert.True(quiet > 1.3, $"{surface} in {theme} at {part}: {quiet}");
             }

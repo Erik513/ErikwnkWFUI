@@ -334,6 +334,18 @@ namespace ErikwnkWFUI.Controls
                 _isPressed ? 6.0 : 4.5);
         }
 
+        // The mark of the set when it is readable on the fill (3:1), else the dark or the light mark that has the higher contrast on it.
+        private static Color ReadableMark(Color setMark, Color fill)
+        {
+            if (UIColors.GetContrastRatio(setMark, fill) >= 3.0)
+                return setMark;
+
+            Color dark = Color.FromArgb(20, 20, 20);
+            Color light = Color.FromArgb(240, 240, 240);
+
+            return UIColors.GetContrastRatio(dark, fill) >= UIColors.GetContrastRatio(light, fill) ? dark : light;
+        }
+
         private Color GetParentBackColor()
         {
             for (Control parent = Parent; parent != null; parent = parent.Parent)
@@ -378,21 +390,30 @@ namespace ErikwnkWFUI.Controls
                 fillColor = UIColors.DisabledGray;
                 markColor = UIColors.GetContrastingForeColor(UIColors.DisabledGray);
             }
-            else if (_isPressed)
-            {
-                fillColor = colors.Pressed;
-                markColor = colors.PressedText;
-            }
-            else if (_isHot)
-            {
-                fillColor = colors.Hover;
-                markColor = colors.HoverText;
-            }
             else
             {
-                fillColor = colors.Basic;
-                markColor = colors.BasicText;
-            }
+                // On a light page the set's own fill (dark, made for the dark theme) hardly looks colored - a blue box looks almost gray - so the box
+                // takes the next brighter shade of the set: rest = the set's hover shade, hovered = its pressed shade, pressed = its basic shade.
+                // Only where the mark of the set stays readable on the brighter rest shade. A shade the set has no readable mark for gets the
+                // dark or light mark that reads best.
+                bool brighter = UIColors.IsLight(parentBackColor)
+                    && UIColors.GetContrastRatio(colors.HoverText, colors.Hover) >= 3.0;
+
+                if (_isPressed)
+                {
+                    fillColor = brighter ? colors.Basic : colors.Pressed;
+                    markColor = brighter ? colors.BasicText : colors.PressedText;
+                }
+                else if (_isHot)
+                {
+                    fillColor = brighter ? colors.Pressed : colors.Hover;
+                    markColor = brighter ? ReadableMark(colors.PressedText, colors.Pressed) : colors.HoverText;
+                }
+                else
+                {
+                    fillColor = brighter ? colors.Hover : colors.Basic;
+                    markColor = brighter ? colors.HoverText : colors.BasicText;
+                }            }
 
             Color borderColor = GetBorderColor(parentBackColor);
 

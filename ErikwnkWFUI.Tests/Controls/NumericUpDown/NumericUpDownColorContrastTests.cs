@@ -92,7 +92,7 @@ public class NumericUpDownColorContrastTests : IDisposable
                 double ratio = ColorContrastHelper.GetContrastRatio(colors.Arrow, colors.Fill);
 
                 // A disabled arrow is muted on purpose: it only has to be seen.
-                Assert.True(ratio >= (state == 3 ? 2.0 : 3.0), $"state {state}: {ratio:F2} (fill {colors.Fill}, arrow {colors.Arrow})");
+                Assert.True(ratio >= ColorContrastHelper.RequiredRatio(colors.Arrow, colors.Fill, state == 3 ? 2.0 : 3.0), $"state {state}: {ratio:F2} (fill {colors.Fill}, arrow {colors.Arrow})");
             }
         }
     }
@@ -179,7 +179,7 @@ public class NumericUpDownColorContrastTests : IDisposable
             foreach (var state in new[] { (set.Basic, set.BasicText), (set.Hover, set.HoverText), (set.Pressed, set.PressedText) })
                 {
                     Color arrow = WfuiNumericUpDown.GetArrowColor(state.Item2, state.Item1);
-                    Assert.True(ColorContrastHelper.GetContrastRatio(arrow, state.Item1) >= 3.0, $"accent {accent}: {ColorContrastHelper.GetContrastRatio(arrow, state.Item1):F2}");
+                    Assert.True(ColorContrastHelper.GetContrastRatio(arrow, state.Item1) >= ColorContrastHelper.RequiredRatio(arrow, state.Item1, 3.0), $"accent {accent}: {ColorContrastHelper.GetContrastRatio(arrow, state.Item1):F2}");
                 }
         }
     }

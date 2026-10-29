@@ -79,9 +79,9 @@ public class ColoredButtonTests
     [Fact]
     public void TheTextFlips_WhenAStateNeedsTheOtherColor()
     {
-        // Light text at rest and hovered, dark on a pressed fill so bright that light
-        // text would be hard to read (see UIColorSetTests).
-        UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(80, 220, 120));
+        // Light text at rest and hovered, dark on a pressed fill that is almost white (light text
+        // would be gone on it, see UIColorSetTests).
+        UIColorSet set = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(170, 255, 200));
         using Button button = UIStyles.Buttons.CreateStandard("Go", colors: set);
 
         Assert.Equal(UIColors.LightForeColor, button.ForeColor);
@@ -109,7 +109,7 @@ public class ColoredButtonTests
         UIColorSet set = UIStyles.Colors.CreateSet(
             Color.FromArgb(20, 20, 80),
             Color.FromArgb(250, 250, 200),
-            Color.FromArgb(200, 200, 150));
+            Color.FromArgb(225, 225, 160));
         using Button button = UIStyles.Buttons.CreateStandard("Go", colors: set);
 
         Assert.Equal(UIColors.LightForeColor, button.ForeColor);
@@ -137,7 +137,7 @@ public class ColoredButtonTests
         Assert.Equal(set.Disabled, button.BackColor);
         Assert.Equal(set.DisabledText, button.ForeColor);
         Assert.True(
-            ColorContrastHelper.GetContrastRatio(button.ForeColor, button.BackColor) >= 3.0,
+            ColorContrastHelper.GetContrastRatio(button.ForeColor, button.BackColor) >= ColorContrastHelper.RequiredRatio(button.ForeColor, button.BackColor, 3.0),
             "disabled text is hard to read on a mid-gray");
     }
 
@@ -263,17 +263,17 @@ public class ColoredButtonTests
                     using Button button = Create(color);
 
                     Assert.True(
-                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.BackColor) >= 4.0,
+                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.BackColor) >= ColorContrastHelper.RequiredRatio(button.ForeColor, button.BackColor, 4.0),
                         $"{sample[0]} text at rest ({(light ? "Light" : "Dark")})");
 
                     Enter(button);
                     Assert.True(
-                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseOverBackColor) >= 3.0,
+                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseOverBackColor) >= ColorContrastHelper.RequiredRatio(button.ForeColor, button.FlatAppearance.MouseOverBackColor, 3.0),
                         $"{sample[0]} text hovered ({(light ? "Light" : "Dark")})");
 
                     Press(button);
                     Assert.True(
-                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseDownBackColor) >= 2.0,
+                        ColorContrastHelper.GetContrastRatio(button.ForeColor, button.FlatAppearance.MouseDownBackColor) >= ColorContrastHelper.RequiredRatio(button.ForeColor, button.FlatAppearance.MouseDownBackColor, 2.0),
                         $"{sample[0]} text pressed ({(light ? "Light" : "Dark")})");
                 }
             }

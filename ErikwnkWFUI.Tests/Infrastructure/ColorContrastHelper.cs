@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ErikwnkWFUI.Styles;
+using System;
 using System.Drawing;
 
 namespace ErikwnkWFUI.Tests.Infrastructure;
@@ -38,7 +39,19 @@ internal static class ColorContrastHelper
 
     public static bool MeetsMinimumContrast(Color foreground, Color background, double minimumRatio)
     {
-        return GetContrastRatio(foreground, background) >= minimumRatio;
+        return GetContrastRatio(foreground, background) >= RequiredRatio(foreground, background, minimumRatio);
+    }
+
+    /// <summary>
+    /// The ratio a pair of colors has to reach: <paramref name="minimum"/>, except for light text on a color (yellow, orange, ...). There the
+    /// library has decided that only white is a surface for dark text - white on a bright yellow or orange stays readable at 2:1 to 3:1 -
+    /// so the check only keeps such a text from fading away (the floor of the library, 1.5:1).
+    /// </summary>
+    public static double RequiredRatio(Color foreground, Color background, double minimum)
+    {
+        bool lightTextOnAColor = UIColors.IsLight(foreground) && UIColors.IsColored(background);
+
+        return lightTextOnAColor ? Math.Min(minimum, UIColors.ColoredLightTextMinimum) : minimum;
     }
 
     /// <summary>

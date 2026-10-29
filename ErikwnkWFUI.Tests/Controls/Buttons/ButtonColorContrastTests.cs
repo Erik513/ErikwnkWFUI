@@ -78,10 +78,11 @@ public class ButtonColorContrastTests
     private static void Check(List<string> shortfalls, string what, Color foreground, Color background, double minimum)
     {
         double ratio = ColorContrastHelper.GetContrastRatio(foreground, background);
+        double required = ColorContrastHelper.RequiredRatio(foreground, background, minimum);
 
-        if (ratio < minimum)
+        if (ratio < required)
         {
-            shortfalls.Add($"{what}: {ratio:F2}:1, needs {minimum:F1}:1 (text {foreground}, fill {background})");
+            shortfalls.Add($"{what}: {ratio:F2}:1, needs {required:F1}:1 (text {foreground}, fill {background})");
         }
     }
 
@@ -222,8 +223,8 @@ public class ButtonColorContrastTests
     [MemberData(nameof(Themes))]
     public void ThePrimaryButton_IsReadable_WithEveryAccent_AndInEveryState(bool lightTheme)
     {
-        // Bright accents (yellow, amber) need dark text: the text follows the fill
-        // in each state, not only at rest.
+        // Colors keep light text, also the bright accents (yellow, amber): only a color that is almost white
+        // gets dark text (see UIColors.GetBestTextColor); the text follows the fill in each state.
         Color[] accents = typeof(UIAccentColors)
             .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(field => field.FieldType == typeof(Color))

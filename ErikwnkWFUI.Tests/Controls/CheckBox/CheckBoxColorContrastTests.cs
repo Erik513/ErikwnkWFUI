@@ -24,7 +24,15 @@ public class CheckBoxColorContrastTests
         using Bitmap bitmap = Draw(box);
         int top = (box.Height - 16) / 2;
 
-        return (bitmap.GetPixel(5, top + 13), bitmap.GetPixel(10, top + 8));
+        // The fill is the color that most pixels of a small area inside the box have (a single pixel next to the edge is mixed with the outline).
+        Color fill = Enumerable.Range(5, 3)
+            .SelectMany(x => Enumerable.Range(top + 11, 3).Select(y => bitmap.GetPixel(x, y)))
+            .GroupBy(color => color.ToArgb())
+            .OrderByDescending(group => group.Count())
+            .First()
+            .First();
+
+        return (fill, bitmap.GetPixel(10, top + 8));
     }
 
     [Theory]
@@ -157,6 +165,48 @@ public class CheckBoxColorContrastTests
 
                 box.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
                 Check(shortfalls, name + " pressed", control.BorderColor, page, 6.0);
+            }
+        });
+    }
+
+    private static bool Close(Color first, Color second)
+    {
+        return Math.Abs(first.R - second.R) <= 3 && Math.Abs(first.G - second.G) <= 3 && Math.Abs(first.B - second.B) <= 3;
+    }
+
+    [Theory]
+    [MemberData(nameof(ColorContrastTestSupport.Themes), MemberType = typeof(ColorContrastTestSupport))]
+    public void OnALightPage_TheCheckedFill_IsTheBrighterShadeOfTheSet_SoTheColorIsSeen_OnADarkPageItStaysTheBasicShade(bool lightTheme)
+    {
+        Run(lightTheme, shortfalls =>
+        {
+            foreach ((string name, UIColorSet? set) in AllSets())
+            {
+                using System.Windows.Forms.CheckBox box = UIStyles.CheckBoxes.CreateStandard("x", true, set);
+                UIColorSet colors = set ?? UIStyles.Colors.Sets.Gray;
+                (Color fill, _) = Probe(box);
+
+                // The yellow keeps its fills (white on anything brighter would not be readable).
+                bool brighter = lightTheme && name != "Yellow";
+                Color expected = brighter ? colors.Hover : colors.Basic;
+
+                if (!Close(fill, expected))
+                    shortfalls.Add(name + ": the checked fill is " + fill + ", expected " + expected);
+
+                // Hovered one shade further, pressed back at the basic shade.
+                box.InvokePrivate("OnMouseEnter", EventArgs.Empty);
+                (fill, _) = Probe(box);
+                Color hovered = brighter ? colors.Pressed : colors.Hover;
+
+                if (!Close(fill, hovered))
+                    shortfalls.Add(name + " hovered: " + fill + ", expected " + hovered);
+
+                box.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 1, 5, 5, 0));
+                (fill, _) = Probe(box);
+                Color pressed = brighter ? colors.Basic : colors.Pressed;
+
+                if (!Close(fill, pressed))
+                    shortfalls.Add(name + " pressed: " + fill + ", expected " + pressed);
             }
         });
     }

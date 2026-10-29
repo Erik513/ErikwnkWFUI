@@ -218,16 +218,12 @@ namespace ErikwnkWFUI.Styles
             RaiseThemeChanged();
         }
 
-        // Above this, background is bright enough that dark text wins;
-        // at/below it, light text wins. Deliberately above a literal 50%
-        // midpoint (not just "which one contrasts more") - button press
-        // colors like PrimaryLight/GreenLight sit right around 50% and
-        // read better with light text by UI convention (light text on a
-        // saturated blue/green button), even on the rare background where
-        // dark text would technically score a marginally higher contrast
-        // ratio. Still comfortably below genuinely bright colors like
-        // Yellow (~0.58) and YellowLighter (~0.81), which correctly keep
-        // dark text.
+        // Above this, a white or gray background is bright enough that dark
+        // text wins; at/below it, light text wins. Deliberately above a literal
+        // 50% midpoint (not just "which one contrasts more"): light text on a
+        // saturated blue/green button is the convention. Colors never get dark
+        // text (see UsesDarkText), however bright - this threshold is for the
+        // neutral surfaces: white, the light grays, the light theme.
         private const double LightBackgroundThreshold = 0.55;
 
         /// <summary>
@@ -240,7 +236,29 @@ namespace ErikwnkWFUI.Styles
         /// </summary>
         public static Color GetContrastingForeColor(Color background)
         {
-            return IsLight(background) ? DarkForeColor : LightForeColor;
+            return UsesDarkText(background) ? DarkForeColor : LightForeColor;
+        }
+
+        // Only white - and a neutral light gray - is a surface that takes dark text. A color keeps light text however bright it is: white on a
+        // yellow or an orange is still plainly readable, and a program in which only some of the accent colors had black text would look as if it
+        // had two kinds of buttons. Only a color so bright that white is all but gone on it (a pale lemon yellow, 1.0 to 1.4:1) is a white for
+        // this purpose.
+        private const double ColoredSaturation = 0.35;
+        private const double ColoredMaxLightness = 0.72;
+        internal const double ColoredLightTextMinimum = 1.5;
+
+        /// <summary>Whether a fill is a color (a hue that is clearly seen: yellow, orange, blue ...) and not white, a gray or a pale tint of one (a pale tint is a light surface: it takes dark text).</summary>
+        internal static bool IsColored(Color color)
+        {
+            return color.GetSaturation() > ColoredSaturation && color.GetBrightness() < ColoredMaxLightness;
+        }
+
+        private static bool UsesDarkText(Color fill)
+        {
+            if (IsColored(fill))
+                return GetContrastRatio(LightForeColor, fill) < ColoredLightTextMinimum;
+
+            return IsLight(fill);
         }
 
         /// <summary>Whether a color is bright enough that dark text is the one to put on it.</summary>
@@ -513,12 +531,16 @@ namespace ErikwnkWFUI.Styles
         }
 
         /// <summary>
-        /// The dark or the light text color, whichever has the higher WCAG
-        /// contrast on the background. Unlike <see cref="GetContrastingForeColor"/>
-        /// this is the true ratio, not a brightness rule of thumb.
+        /// The text color for a fill. A color (a hue that is clearly seen) always gets the light one, however bright it is; white and the grays get the
+        /// dark or the light one, whichever has the higher WCAG contrast. Unlike <see cref="GetContrastingForeColor"/>
+        /// this is the true ratio for those, not a brightness rule of thumb.
         /// </summary>
         internal static Color GetBestTextColor(Color background)
         {
+            // A color keeps light text (see UsesDarkText); white and the grays get whichever reads better.
+            if (IsColored(background))
+                return UsesDarkText(background) ? DarkForeColor : LightForeColor;
+
             return GetContrastRatio(LightForeColor, background) >= GetContrastRatio(DarkForeColor, background)
                 ? LightForeColor
                 : DarkForeColor;

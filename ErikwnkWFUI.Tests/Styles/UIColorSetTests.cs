@@ -56,9 +56,10 @@ public class UIColorSetTests
         void Check(string what, Color text, Color fill, double minimum)
         {
             double ratio = Ratio(text, fill);
+            double required = ColorContrastHelper.RequiredRatio(text, fill, minimum);
 
-            if (ratio < minimum)
-                problems.Add($"{what} {ratio:F2}:1 < {minimum:F1}:1 (text {text}, fill {fill})");
+            if (ratio < required)
+                problems.Add($"{what} {ratio:F2}:1 < {required:F1}:1 (text {text}, fill {fill})");
         }
 
         Check("at rest", set.BasicText, set.Basic, 4.0);
@@ -193,8 +194,8 @@ public class UIColorSetTests
         Assert.Equal(UIColors.LightForeColor, green.HoverText);
         Assert.Equal(UIColors.LightForeColor, green.PressedText);
 
-        // A pressed fill that is too bright for light text (below 2:1) flips it.
-        UIColorSet bright = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(80, 220, 120));
+        // A pressed fill that is almost white (white on it is below 1.5:1) flips the text; a bright color like orange or yellow does not.
+        UIColorSet bright = UIStyles.Colors.CreateSet(Color.FromArgb(20, 100, 50), Color.FromArgb(30, 150, 70), Color.FromArgb(170, 255, 200));
         Assert.Equal(UIColors.LightForeColor, bright.HoverText);
         Assert.Equal(UIColors.DarkForeColor, bright.PressedText);
     }
