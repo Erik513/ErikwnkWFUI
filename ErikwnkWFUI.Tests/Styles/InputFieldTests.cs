@@ -61,11 +61,14 @@ public class InputFieldTests : IDisposable
         using Control dark = make();
         Assert.Equal(UIColors.BackgroundLight, dark.BackColor);
 
+        // (Taken now: a text box follows the theme by itself, so the first box has the new color as well after the switch.)
+        Color darkColor = dark.BackColor;
+
         UIColors.ApplyTheme(UIThemes.Light);
         using Control light = make();
 
         Assert.Equal(UIColors.BackgroundLight, light.BackColor);
-        Assert.NotEqual(dark.BackColor, light.BackColor);
+        Assert.NotEqual(darkColor, light.BackColor);
     }
 
     [Theory]
