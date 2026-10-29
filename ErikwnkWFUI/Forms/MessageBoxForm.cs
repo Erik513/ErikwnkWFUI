@@ -751,7 +751,8 @@ namespace ErikwnkWFUI.Forms
             if (result == DialogResult.OK || result == DialogResult.Yes || result == DialogResult.Retry)
                 AcceptButton = button;
 
-            if (result == DialogResult.Cancel || result == DialogResult.No || result == DialogResult.Abort)
+            // Escape closes a box that has only OK too (as the box of Windows does).
+            if (result == DialogResult.Cancel || result == DialogResult.No || result == DialogResult.Abort || (result == DialogResult.OK && _buttons == MessageBoxButtons.OK))
                 CancelButton = button;
         }
 
@@ -759,7 +760,8 @@ namespace ErikwnkWFUI.Forms
         {
             Button button = sender as Button;
 
-            if (button == null)
+            // A second click (a double click, a queued one) must not change the answer.
+            if (button == null || _buttonClicked)
                 return;
 
             _buttonClicked = true;
