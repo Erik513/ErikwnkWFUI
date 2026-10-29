@@ -1,0 +1,29 @@
+{
+  "CheckBox": {
+    "ignored": ["TextAlign", "RightToLeft", "Appearance", "Image", "ImageAlign", "TextImageRelation", "FlatStyle", "FlatAppearance", "AutoEllipsis", "Padding", "UseVisualStyleBackColor"],
+    "notes": "CheckAlign puts the box on the right with TopRight, MiddleRight or BottomRight (the box is always centered vertically). AutoSize = true makes the size follow Text and Font; the factories leave it off."
+  },
+  "RadioButton": {
+    "ignored": ["TextAlign", "RightToLeft", "Appearance", "Image", "ImageAlign", "TextImageRelation", "FlatStyle", "FlatAppearance", "AutoEllipsis", "Padding", "UseVisualStyleBackColor"],
+    "notes": "Radio buttons with the same parent are one group; use RadioGroup for one choice across parents. CheckAlign puts the box on the right, as on the check box."
+  },
+  "GroupBox": {
+    "ignored": ["FlatStyle", "UseCompatibleTextRendering", "RightToLeft"],
+    "notes": "The surface is the one of the parent; children and layout are those of the standard group box."
+  },
+  "TextField": { "factory": "TextBoxes" },
+  "ScrollingLabel": { "factory": "Labels" },
+  "CardPanel": { "factory": "Panels" },
+  "InfoPopupForm": { "factory": "InfoPopups" },
+  "ToastForm": { "factory": "Toasts" },
+  "LockableTextBox": { "factory": "TextBoxes" },
+  "PasswordTextBox": { "factory": "TextBoxes" },
+  "ReadOnlyDataGridView": { "factory": "DataGridViews" },
+  "ReadOnlyTabControl": { "factory": "TabControls" },
+  "UpdateAvailableForm": { "factory": "Forms" },
+  "ProgressForm": { "factory": "Forms" },
+  "MessageBoxForm": { "factory": "Forms" },
+  "InputBoxForm": { "factory": "Forms" },
+  "OptionsForm": { "factory": "Forms" },
+  "AppForm": { "factory": "Forms" }
+}
