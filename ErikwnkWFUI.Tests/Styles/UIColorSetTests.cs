@@ -326,4 +326,45 @@ public class UIColorSetTests
         Assert.Equal(Color.FromArgb(0, 0, 0), UIColors.ShiftLightness(blue, -5));
         Assert.Equal(Color.FromArgb(151, 151, 151), UIColors.ShiftLightness(Color.FromArgb(128, 128, 128), 0.09));
     }
+
+    [Fact]
+    public void ABrightAccent_IsNotMadeOlive_ItIsTheAccentAtRest_AndTheAmberAccentLooksLikeTheYellowSet()
+    {
+        try
+        {
+            UIColors.SetAccent(UIAccentColors.Amber);
+            UIColorSet amber = UIColors.PrimarySet;
+            UIColorSet yellow = UIStyles.Colors.Sets.Yellow;
+
+            // The amber accent is the yellow of the set: at rest the same gold (the accent, darkened only as far as white text needs 2.4:1) ...
+            Assert.True(Math.Abs(amber.Basic.R - yellow.Basic.R) <= 8 && Math.Abs(amber.Basic.G - yellow.Basic.G) <= 8 && Math.Abs(amber.Basic.B - yellow.Basic.B) <= 8, $"{amber.Basic} against {yellow.Basic}");
+            Assert.True(Ratio(amber.BasicText, amber.Basic) >= 2.3, "white on the resting amber");
+            Assert.Equal(UIColors.LightForeColor, amber.BasicText);
+
+            // ... lighter when hovered and pressed, as the set is.
+            Assert.True(amber.Hover.GetBrightness() > amber.Basic.GetBrightness());
+            Assert.True(amber.Pressed.GetBrightness() > amber.Hover.GetBrightness());
+
+            // The yellow accent is a gold too, not the olive that a third darker would make of it.
+            UIColors.SetAccent(UIAccentColors.Yellow);
+            UIColorSet lemon = UIColors.PrimarySet;
+            Assert.True(lemon.Basic.GetBrightness() > UIColors.Darken(UIAccentColors.Yellow, 0.30).GetBrightness());
+            Assert.True(Ratio(lemon.BasicText, lemon.Basic) >= 2.3, "white on the resting yellow accent");
+
+            // The other accents keep the look they always had: darker at rest, the accent hovered, lighter pressed.
+            foreach (Color accent in new[] { UIAccentColors.Blue, UIAccentColors.Red, UIAccentColors.Orange, UIAccentColors.Green, UIAccentColors.Purple })
+            {
+                UIColors.SetAccent(accent);
+                UIColorSet set = UIColors.PrimarySet;
+
+                Assert.Equal(UIColors.PrimaryDark, set.Basic);
+                Assert.Equal(UIColors.Primary, set.Hover);
+                Assert.Equal(UIColors.PrimaryLight, set.Pressed);
+            }
+        }
+        finally
+        {
+            UIColors.SetAccent(UIAccentColors.Blue);
+        }
+    }
 }

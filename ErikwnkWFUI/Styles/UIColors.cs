@@ -303,10 +303,35 @@ namespace ErikwnkWFUI.Styles
                 BlendToward(White, disabled, DisabledTextBlend));
         }
 
-        /// <summary>The look of the accent color: darker at rest, the accent hovered, lighter pressed.</summary>
+        /// <summary>
+        /// The look of the accent color: darker at rest, the accent hovered, lighter pressed. A bright, colored accent (yellow, amber) is not
+        /// darkened by a third at rest - that would make it olive - but is the accent itself, darkened only as far as white text needs (2.4:1),
+        /// and gets lighter when hovered and pressed: the look of <c>Sets.Yellow</c>.
+        /// </summary>
         internal static UIColorSet PrimarySet
         {
-            get { return CreateSet(PrimaryDark, Primary, PrimaryLight); }
+            get
+            {
+                Color accent = Primary;
+
+                if (IsBrightAccent(accent))
+                {
+                    Color rest = GetReadableFill(accent, LightForeColor, BrightAccentTextRatio);
+
+                    return CreateSet(rest, ShiftLightness(rest, 0.07), ShiftLightness(rest, 0.14));
+                }
+
+                return CreateSet(PrimaryDark, Primary, PrimaryLight);
+            }
+        }
+
+        private const double BrightAccentTextRatio = 2.4;
+
+        private static bool IsBrightAccent(Color accent)
+        {
+            bool isNeutral = accent.R == accent.G && accent.G == accent.B;
+
+            return !isNeutral && IsLight(accent);
         }
 
         // How far a disabled fill is darkened: a light fill only dims a
