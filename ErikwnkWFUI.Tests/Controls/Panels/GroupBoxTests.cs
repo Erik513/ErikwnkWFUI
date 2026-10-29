@@ -146,6 +146,27 @@ public class GroupBoxTests : IDisposable
     }
 
     [Fact]
+    public void TheFrame_HasAGapBehindTheTitle_AndNoneWithoutATitle()
+    {
+        ErikwnkWFUI.Controls.GroupBox titled = Shown((ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard("Title"));
+        ErikwnkWFUI.Controls.GroupBox plain = Shown((ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard(""));
+        Color surface = titled.BackColor;
+
+        // The upper edge of the frame is at half the height of a line of text; the title starts 10 px (at 96 dpi) from the left.
+        int edge = titled.Font.Height / 2;
+        int inside = (int)(titled.DeviceDpi / 96.0 * 10) + 3;
+
+        using Bitmap withTitle = Draw(titled);
+        using Bitmap without = Draw(plain);
+
+        Assert.Equal(surface.ToArgb(), withTitle.GetPixel(inside, edge).ToArgb());
+        Assert.NotEqual(surface.ToArgb(), without.GetPixel(inside, edge).ToArgb());
+
+        // Further right, past the title, the frame is there again.
+        Assert.NotEqual(surface.ToArgb(), withTitle.GetPixel(titled.Width - 30, edge).ToArgb());
+    }
+
+    [Fact]
     public void ATinyBoxOrAVeryLongTitle_DoesNotThrow()
     {
         ErikwnkWFUI.Controls.GroupBox box = Shown((ErikwnkWFUI.Controls.GroupBox)UIStyles.GroupBoxes.CreateStandard(new string('W', 300)));

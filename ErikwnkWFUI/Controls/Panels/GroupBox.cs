@@ -210,23 +210,13 @@ namespace ErikwnkWFUI.Controls
                 using (Pen pen = new Pen(GetFrameColor(surface), Math.Max(1f, Dpi.Scale(10, DeviceDpi) / 10f)))
                 {
                     // The gap for the title: the frame is drawn everywhere but behind the title.
-                    Region previous = g.Clip;
+                    GraphicsState state = g.Save();
 
                     if (titleWidth > 0)
-                    {
-                        using (Region clip = new Region(ClientRectangle))
-                        {
-                            clip.Exclude(new Rectangle(inset - gap, 0, titleWidth + gap * 2, titleHeight));
-                            g.Clip = clip;
-                            g.DrawPath(pen, path);
-                        }
-                    }
-                    else
-                    {
-                        g.DrawPath(pen, path);
-                    }
+                        g.ExcludeClip(new Rectangle(inset - gap, 0, titleWidth + gap * 2, titleHeight));
 
-                    g.Clip = previous;
+                    g.DrawPath(pen, path);
+                    g.Restore(state);
                 }
 
                 g.SmoothingMode = SmoothingMode.Default;
