@@ -18,11 +18,13 @@ namespace ErikwnkWFUI.Controls
     /// It keeps everything that is not looks from the standard control: <c>Checked</c>, <c>AutoCheck</c>, the events, the keyboard
     /// (arrow keys move within a group), the mnemonic and the grouping - radio buttons with the same parent form one group, so
     /// selecting one clears the others; put them in a <see cref="Panel"/> or <see cref="GroupBox"/> for separate groups. Because the
-    /// library draws the box itself, these properties are ignored: <c>CheckAlign</c> (the box is always on the left), <c>TextAlign</c>,
+    /// library draws the box itself, these properties are ignored: <c>TextAlign</c>,
     /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and <c>TextImageRelation</c>, <c>FlatStyle</c> with
     /// <c>FlatAppearance</c>, <c>AutoEllipsis</c>, <c>Padding</c> and <c>UseVisualStyleBackColor</c>. The factory sets the size for the
     /// text and font it is given and leaves <c>AutoSize</c> off; with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c>.
-    /// The box is as large as that of <see cref="CheckBox"/>, so both line up in one column.
+    /// The box is as large as that of <see cref="CheckBox"/>, so both line up in one column. <c>CheckAlign</c> puts the box on the right
+    /// with one of the right-hand alignments (<c>TopRight</c>, <c>MiddleRight</c>, <c>BottomRight</c>), as on the check box; the box is
+    /// always centered vertically. For a choice that is not tied to one parent, see <see cref="RadioGroup"/>.
     /// </remarks>
     public class RadioButton : System.Windows.Forms.RadioButton
     {
@@ -331,7 +333,9 @@ namespace ErikwnkWFUI.Controls
             CheckBox.Metrics metrics = new CheckBox.Metrics(DeviceDpi);
             bool hasText = !string.IsNullOrEmpty(Text);
 
-            int boxX = hasText ? metrics.BoxLeftMargin : (Width - metrics.BoxSize) / 2;
+            int boxX = !hasText
+                ? (Width - metrics.BoxSize) / 2
+                : CheckBox.IsBoxOnRight(CheckAlign) ? Width - metrics.BoxLeftMargin - metrics.BoxSize : metrics.BoxLeftMargin;
             int boxY = (Height - metrics.BoxSize) / 2;
             Rectangle boxRect = new Rectangle(boxX, boxY, metrics.BoxSize, metrics.BoxSize);
 
@@ -385,8 +389,11 @@ namespace ErikwnkWFUI.Controls
             if (string.IsNullOrEmpty(Text))
                 return;
 
-            int glyphColumn = new CheckBox.Metrics(DeviceDpi).GlyphColumnWidth;
-            Rectangle textArea = new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
+            CheckBox.Metrics metrics = new CheckBox.Metrics(DeviceDpi);
+            int glyphColumn = metrics.GlyphColumnWidth;
+            Rectangle textArea = CheckBox.IsBoxOnRight(CheckAlign)
+                ? new Rectangle(metrics.BoxLeftMargin, 0, Width - glyphColumn, Height)
+                : new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
 
             Color textColor = Enabled
                 ? UIColors.TextPrimary
@@ -416,7 +423,9 @@ namespace ErikwnkWFUI.Controls
             else
             {
                 int textWidth = TextRenderer.MeasureText(Text, Font).Width;
-                int width = Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
+                int width = CheckBox.IsBoxOnRight(CheckAlign)
+                    ? Width - 2
+                    : Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
                 area = new Rectangle(1, 1, width, Height - 2);
             }
 

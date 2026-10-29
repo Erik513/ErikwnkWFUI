@@ -20,11 +20,14 @@ namespace ErikwnkWFUI.Controls
     /// It keeps everything that is not looks from the standard control: <c>Checked</c>,
     /// <c>CheckState</c>, <c>ThreeState</c>, <c>AutoCheck</c>, the events, the keyboard and
     /// the mnemonic. Because the library draws the box itself, these properties are
-    /// ignored: <c>CheckAlign</c> (the box is always on the left), <c>TextAlign</c>,
+    /// ignored: <c>TextAlign</c>,
     /// <c>RightToLeft</c>, <c>Appearance</c>, <c>Image</c> with <c>ImageAlign</c> and
     /// <c>TextImageRelation</c>, <c>FlatStyle</c> with <c>FlatAppearance</c>, <c>AutoEllipsis</c>,
     /// <c>Padding</c> and <c>UseVisualStyleBackColor</c>. A double click is two clicks, as on the
-    /// standard box. The factory sets the size for the text and font it is given and leaves
+    /// standard box. <c>CheckAlign</c> puts the box on the right when it is one of the right-hand
+    /// alignments (<c>TopRight</c>, <c>MiddleRight</c>, <c>BottomRight</c>) - the label then stays on the
+    /// left and the box sits at the right edge, the way settings lists are often laid out; the box is
+    /// always centered vertically. The factory sets the size for the text and font it is given and leaves
     /// <c>AutoSize</c> off (a table cell that is laid out several times is steadier with a fixed
     /// size); with <c>AutoSize</c> on, the size follows <c>Text</c> and <c>Font</c> by itself.
     /// <para>
@@ -62,6 +65,14 @@ namespace ErikwnkWFUI.Controls
             {
                 return Helpers.Dpi.Scale(value96, Dpi);
             }
+        }
+
+        // The box is on the right with one of the right-hand CheckAlign values (shared with the radio button).
+        internal static bool IsBoxOnRight(ContentAlignment checkAlign)
+        {
+            return checkAlign == ContentAlignment.TopRight
+                || checkAlign == ContentAlignment.MiddleRight
+                || checkAlign == ContentAlignment.BottomRight;
         }
 
         private Metrics GetMetrics()
@@ -374,9 +385,9 @@ namespace ErikwnkWFUI.Controls
             Metrics metrics = GetMetrics();
             bool hasText = !string.IsNullOrEmpty(Text);
 
-            int boxX = hasText
-                ? metrics.BoxLeftMargin
-                : (Width - metrics.BoxSize) / 2;
+            int boxX = !hasText
+                ? (Width - metrics.BoxSize) / 2
+                : IsBoxOnRight(CheckAlign) ? Width - metrics.BoxLeftMargin - metrics.BoxSize : metrics.BoxLeftMargin;
             int boxY = (Height - metrics.BoxSize) / 2;
             Rectangle boxRect = new Rectangle(boxX, boxY, metrics.BoxSize, metrics.BoxSize);
 
@@ -466,8 +477,11 @@ namespace ErikwnkWFUI.Controls
             if (string.IsNullOrEmpty(Text))
                 return;
 
-            int glyphColumn = GetMetrics().GlyphColumnWidth;
-            Rectangle textArea = new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
+            Metrics metrics = GetMetrics();
+            int glyphColumn = metrics.GlyphColumnWidth;
+            Rectangle textArea = IsBoxOnRight(CheckAlign)
+                ? new Rectangle(metrics.BoxLeftMargin, 0, Width - glyphColumn, Height)
+                : new Rectangle(glyphColumn, 0, Width - glyphColumn, Height);
 
             // Disabled text is the contrasting color blended toward the background, as on
             // buttons: the fixed DisabledGray of the box is too faint for text on the
@@ -507,7 +521,9 @@ namespace ErikwnkWFUI.Controls
             else
             {
                 int textWidth = TextRenderer.MeasureText(Text, Font).Width;
-                int width = System.Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
+                int width = IsBoxOnRight(CheckAlign)
+                    ? Width - 2
+                    : System.Math.Min(Width - 2, metrics.GlyphColumnWidth + textWidth + 2);
                 area = new Rectangle(1, 1, width, Height - 2);
             }
 

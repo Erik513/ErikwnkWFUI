@@ -379,12 +379,11 @@ public class CheckBoxBehaviorTests : IDisposable
     // ---- what the library draws its own way: these properties are ignored ----
 
     [Fact]
-    public void CheckAlign_TextAlign_RightToLeft_AndAppearance_AreIgnored_TheBoxIsAlwaysOnTheLeft()
+    public void TextAlign_RightToLeft_AndAppearance_AreIgnored()
     {
         using System.Windows.Forms.CheckBox box = Create(true);
         using Bitmap before = Draw(box);
 
-        box.CheckAlign = ContentAlignment.MiddleRight;
         box.TextAlign = ContentAlignment.BottomRight;
         box.RightToLeft = RightToLeft.Yes;
         box.Appearance = Appearance.Button;
@@ -392,6 +391,40 @@ public class CheckBoxBehaviorTests : IDisposable
         using Bitmap after = Draw(box);
 
         Assert.True(SamePixels(before, after), "one of the ignored properties changed the picture");
+    }
+
+    [Theory]
+    [InlineData(ContentAlignment.TopRight)]
+    [InlineData(ContentAlignment.MiddleRight)]
+    [InlineData(ContentAlignment.BottomRight)]
+    public void ARightHandCheckAlign_PutsTheBoxOnTheRight_AndTheOthersLeaveItOnTheLeft(ContentAlignment align)
+    {
+        using System.Windows.Forms.CheckBox box = Create(true);
+        box.Width = 200;
+        using Bitmap left = Draw(box);
+
+        box.CheckAlign = align;
+        using Bitmap right = Draw(box);
+
+        Assert.False(SamePixels(left, right));
+        Assert.True(HasInk(left, new Rectangle(0, 0, 24, box.Height)), "the box is on the left by default");
+        Assert.True(HasInk(right, new Rectangle(box.Width - 24, 0, 24, box.Height)), "the box is at the right edge");
+
+        box.CheckAlign = ContentAlignment.TopLeft;
+        using Bitmap back = Draw(box);
+        Assert.True(SamePixels(left, back));
+    }
+
+    private static bool HasInk(Bitmap picture, Rectangle area)
+    {
+        Color back = picture.GetPixel(area.Left, 0);
+
+        for (int x = area.Left; x < area.Right; x++)
+            for (int y = area.Top; y < area.Bottom; y++)
+                if (picture.GetPixel(x, y) != back)
+                    return true;
+
+        return false;
     }
 
     [Fact]

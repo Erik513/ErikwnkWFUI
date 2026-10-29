@@ -28,6 +28,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
         private readonly ThemeColor _borderColor;
+        private readonly ThemeColor _titleColor = new ThemeColor(() => UIColors.TextPrimary);
 
         public GroupBox()
         {
@@ -60,6 +61,35 @@ namespace ErikwnkWFUI.Controls
 
                 Invalidate();
             }
+        }
+
+        /// <summary>
+        /// The color of the title: the primary text color of the theme until it is set; <see cref="Color.Empty"/> gives that back.
+        /// (<c>ForeColor</c> is not used: it is inherited from the parent and so cannot tell a color chosen for the title from the
+        /// one of the form.) A disabled box shows it faded.
+        /// </summary>
+        public Color TitleColor
+        {
+            get { return _titleColor.Value; }
+            set
+            {
+                if (value.IsEmpty)
+                    _titleColor.Reset();
+                else
+                    _titleColor.Set(value);
+
+                Invalidate();
+            }
+        }
+
+        private bool ShouldSerializeTitleColor()
+        {
+            return _titleColor.IsSet;
+        }
+
+        private void ResetTitleColor()
+        {
+            TitleColor = Color.Empty;
         }
 
         private bool ShouldSerializeBorderColor()
@@ -116,8 +146,8 @@ namespace ErikwnkWFUI.Controls
         private Color GetTitleColor(Color surface)
         {
             return Enabled
-                ? UIColors.TextPrimary
-                : UIColors.BlendToward(UIColors.GetContrastingForeColor(surface), surface, 0.35);
+                ? _titleColor.Value
+                : UIColors.BlendToward(_titleColor.Value, surface, 0.5);
         }
 
         protected override void OnEnabledChanged(EventArgs e)
