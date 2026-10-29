@@ -49,11 +49,11 @@ namespace ErikwnkWFUI.Showcase
 
             table.AddSection("Duration");
 
-            foreach (PopupDuration duration in new[] { PopupDuration.Short, PopupDuration.Medium, PopupDuration.Long })
+            foreach (PopupDuration duration in new[] { PopupDuration.Short, PopupDuration.Medium, PopupDuration.Long, PopupDuration.UntilClicked })
             {
                 PopupDuration shown = duration;
                 table.AddRow(
-                    duration == PopupDuration.Medium ? "Medium (default)" : duration.ToString(),
+                    duration == PopupDuration.Medium ? "Medium (default)" : duration == PopupDuration.UntilClicked ? "UntilClicked (a click closes it, a newer toast replaces it)" : duration.ToString(),
                     CreateToastButton(() => UIStyles.Toasts.ShowPrimary(SampleToastMessage, this, duration: shown, icon: ToastIcon.Success)));
             }
 
@@ -108,7 +108,8 @@ namespace ErikwnkWFUI.Showcase
             InfoPopupSection onLight = new InfoPopupSection("Light background", "The text turns black when white would not read.");
 
             table.AddRow("With a title", CreateToastButton(() => UIStyles.Toasts.ShowStandard(saved, this, accent, icon: ToastIcon.Success)));
-            table.AddRow("A long message", CreateToastButton(() => UIStyles.Toasts.ShowStandard(longMessage, this, accent, icon: ToastIcon.Success)));
+            // (A long text stays longer than its level: about 0.3 seconds a word, 8 at most - DurationGrowsWithText switches it off.)
+            table.AddRow("A long message (stays longer)", CreateToastButton(() => UIStyles.Toasts.ShowStandard(longMessage, this, accent, icon: ToastIcon.Success)));
             table.AddRow("Own colors", CreateToastButton(() => UIStyles.Toasts.ShowStandard(ownColors, this, icon: ToastIcon.Success)));
             table.AddRow("On a light color", CreateToastButton(() => UIStyles.Toasts.ShowStandard(onLight, this, UIStyles.Colors.Sets.Yellow, icon: ToastIcon.Success)));
         }

@@ -21,6 +21,7 @@ namespace ErikwnkWFUI.Forms
             public ToastIcon Icon;
             public string CustomSymbol;
             public ToastPosition Position;
+            public bool DurationGrowsWithText;
 
             // When it began to wait for its window.
             public DateTime Time;
@@ -101,6 +102,7 @@ namespace ErikwnkWFUI.Forms
             toast.ApplyDpi(OwnerDpi(owner));
             toast.Transparency = request.Transparency;
             toast.Duration = request.Duration;
+            toast.DurationGrowsWithText = request.DurationGrowsWithText;
             toast.Colors = request.Colors;
             toast.MessageIcon = request.Icon;
             toast.CustomSymbol = request.CustomSymbol;
@@ -112,7 +114,7 @@ namespace ErikwnkWFUI.Forms
                 PopupSupport.GetPlacementArea(owner),
                 Screen.FromControl(owner).WorkingArea);
 
-            toast._closeTimer.Start();
+            toast.StartCloseTimer();
             toast.Show(owner);
             toast.Follower.Attach(toast, owner);
         }

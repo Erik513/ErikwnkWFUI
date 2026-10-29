@@ -33,8 +33,11 @@ namespace ErikwnkWFUI.Forms
         /// <summary>How see-through the toasts are; medium by default.</summary>
         public PopupTransparency Transparency { get; set; } = PopupTransparency.Medium;
 
-        /// <summary>How long a toast stays; medium (2.5 seconds) by default.</summary>
+        /// <summary>How long a toast stays; medium (2.5 seconds) by default. <see cref="PopupDuration.UntilClicked"/> keeps it until it is clicked.</summary>
         public PopupDuration Duration { get; set; } = PopupDuration.Medium;
+
+        /// <summary>Whether a long text makes a toast stay longer than its <see cref="Duration"/> (about 0.3 seconds a word, 8 seconds at most); on by default. See <see cref="ToastForm.DurationGrowsWithText"/>.</summary>
+        public bool DurationGrowsWithText { get; set; } = true;
 
         /// <summary>How long to wait before a toast is shown; not at all by default.</summary>
         public PopupDelay Delay { get; set; } = PopupDelay.Instant;
@@ -51,13 +54,13 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Shows a toast with this message in <paramref name="owner"/>, at <see cref="Position"/>.</summary>
         public void Show(string message, Form owner)
         {
-            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position);
+            ToastForm.ShowToast(message, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position, DurationGrowsWithText);
         }
 
         /// <summary>Shows a toast with a title and a message (and their own colors) in <paramref name="owner"/>, at <see cref="Position"/>.</summary>
         public void Show(InfoPopupSection content, Form owner)
         {
-            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position);
+            ToastForm.ShowToast(content, owner, Colors, Transparency, Duration, Delay, Icon, CustomSymbol, Position, DurationGrowsWithText);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace ErikwnkWFUI.Forms
 {
     /// <summary>
     /// A small, rounded, self-dismissing toast: an optional symbol, an optional title and a
-    /// message. Call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition)"/>
+    /// message. Call the static <see cref="ShowToast(string, Form, UIColorSet, PopupTransparency, PopupDuration, PopupDelay, ToastIcon, string, ToastPosition, bool)"/>
     /// (or <c>UIStyles.Toasts</c>); a toast cannot be constructed directly. Only one toast shows
     /// at a time; a new one closes the one that is up.
     /// </summary>
@@ -41,13 +41,15 @@ namespace ErikwnkWFUI.Forms
     /// without a title and without a message shows nothing. An ampersand is shown as it is.
     /// </para>
     /// <para>
-    /// <b>Closing.</b> The toast closes itself after its <see cref="Duration"/>, or at once on a
-    /// click. A toast the mouse is on when its time is up stays until the mouse has left it.
+    /// <b>Closing.</b> The toast closes itself after its <see cref="Duration"/> (a long text makes it longer, see
+    /// <see cref="DurationGrowsWithText"/>), or at once on a click. A toast the mouse is on when its time is up stays until the mouse has
+    /// left it. With <see cref="PopupDuration.UntilClicked"/> it has no time at all: it stays until it is clicked (a small cross at its right
+    /// says so), until a newer toast replaces it or until its window closes.
     /// </para>
     /// <para>
     /// Compared with the balloon of a <c>NotifyIcon</c> (the standard notification): the text, a
-    /// title, a symbol, the colors and the time it stays are offered. Not offered: an event for
-    /// a click on the toast or for its closing, and a toast that stays until it is clicked.
+    /// title, a symbol, the colors, the time it stays and a toast that stays until it is clicked are offered. Not offered: an event for
+    /// a click on the toast or for its closing.
     /// </para>
     /// </remarks>
     // In three files: this one (the settings of one toast and its controls), ToastForm.Queue.cs (which toast is shown when)
@@ -68,6 +70,14 @@ namespace ErikwnkWFUI.Forms
         private const int TextRightPadding96 = 10;
         private const int IconSize96 = 30;
         private const int IconLeft96 = 10;
+
+        // The cross of a toast that stays until it is clicked: its room at the right of the text, and its distance to the corner.
+        private const int CloseSpace96 = 22;
+        private const int CloseInset96 = 6;
+
+        // The reading time of a long text: so long per word, as long as the longest time of a toast, at most.
+        private const int ReadingMillisecondsPerWord = 300;
+        private const int MaxReadingMilliseconds = 8000;
 
         // The height: at least this much above and below the text, a little slack for the lines of the label (they are a
         // bit higher than the measure), and the room between the title and the message.
@@ -90,6 +100,7 @@ namespace ErikwnkWFUI.Forms
         private Label _titleLabel;
         private Label _messageLabel;
         private Label _iconLabel;
+        private Label _closeLabel;
         private Font _iconFont;
         private InfoPopupSection _content = new InfoPopupSection(null, null);
         private Panel _contentPanel;
@@ -112,6 +123,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="icon">The symbol for the kind of message: none (the default), a check mark, an info, a warning or an error.</param>
         /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c> (<c>UIStyles.Symbols.Copy</c>, say); null (the default) uses <paramref name="icon"/>.</param>
         /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
+        /// <param name="durationGrowsWithText">Whether a long text makes the toast stay longer than <paramref name="duration"/> (about 0.3 seconds a word, 8 seconds at most; the level is the least time). On by default; see <see cref="DurationGrowsWithText"/>.</param>
         public static void ShowToast(
             string message,
             Form owner,
@@ -121,9 +133,10 @@ namespace ErikwnkWFUI.Forms
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
             string symbol = null,
-            ToastPosition position = ToastPosition.BelowCenter)
+            ToastPosition position = ToastPosition.BelowCenter,
+            bool durationGrowsWithText = true)
         {
-            ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay, icon, symbol, position);
+            ShowToast(new InfoPopupSection(null, message), owner, colors, transparency, duration, delay, icon, symbol, position, durationGrowsWithText);
         }
 
         /// <summary>Like the call with a message, but with a title above the message and, if wanted, own colors for each (<see cref="InfoPopupSection.HeaderColor"/> for the title, <see cref="InfoPopupSection.TextColor"/> for the message). A part left empty is not shown; with neither there is no toast.</summary>
@@ -136,6 +149,7 @@ namespace ErikwnkWFUI.Forms
         /// <param name="icon">The symbol for the kind of message; none by default.</param>
         /// <param name="symbol">Any other symbol instead of <paramref name="icon"/>, one of <c>UIStyles.Symbols</c>; null (the default) uses <paramref name="icon"/>.</param>
         /// <param name="position">Where the toast is shown in the window: below the middle (centered, in the lower part; the default), the middle, above the middle, or at the top or bottom, centered or in a corner; the corners and edges keep a fixed distance from the window's edge.</param>
+        /// <param name="durationGrowsWithText">Whether a long text makes the toast stay longer than <paramref name="duration"/> (about 0.3 seconds a word, 8 seconds at most; the level is the least time). On by default; see <see cref="DurationGrowsWithText"/>.</param>
         public static void ShowToast(
             InfoPopupSection content,
             Form owner,
@@ -145,7 +159,8 @@ namespace ErikwnkWFUI.Forms
             PopupDelay delay = PopupDelay.Instant,
             ToastIcon icon = ToastIcon.None,
             string symbol = null,
-            ToastPosition position = ToastPosition.BelowCenter)
+            ToastPosition position = ToastPosition.BelowCenter,
+            bool durationGrowsWithText = true)
         {
             InfoPopupSection[] kept = InfoPopupSection.Normalize(new[] { content });
 
@@ -161,7 +176,8 @@ namespace ErikwnkWFUI.Forms
                 Delay = delay,
                 Icon = icon,
                 CustomSymbol = symbol,
-                Position = position
+                Position = position,
+                DurationGrowsWithText = durationGrowsWithText
             };
 
             // A toast is often asked for when a task has finished, on another thread: it is shown
@@ -206,6 +222,9 @@ namespace ErikwnkWFUI.Forms
 
             if (_iconLabel != null)
                 _iconLabel.ForeColor = text;
+
+            if (_closeLabel != null)
+                _closeLabel.ForeColor = text;
 
             if (_titleLabel != null)
                 _titleLabel.ForeColor = _content.HeaderColor.IsEmpty ? text : _content.HeaderColor;
@@ -316,11 +335,18 @@ namespace ErikwnkWFUI.Forms
             Padding panel = _contentPanel.Padding;
 
             _contentPanel.Padding = new Padding(Dpi.Scale(ContentPaddingHorizontal96 + indent, _dpi), panel.Top, panel.Right, panel.Bottom);
-            _messageLabel.Padding = new Padding(0, 0, Dpi.Scale(TextRightPadding96, _dpi), 0);
+            // (A toast that stays until it is clicked keeps the room for its cross to the right of the text. Its own state, not the Visible of the
+            // label: a control of a window that is not shown yet is never Visible.)
+            int cross = _duration == PopupDuration.UntilClicked ? Dpi.Scale(CloseSpace96, _dpi) : 0;
+
+            _messageLabel.Padding = new Padding(0, 0, Dpi.Scale(TextRightPadding96, _dpi) + cross, 0);
             _titleLabel.Padding = _messageLabel.Padding;
         }
 
-        /// <summary>How long the toast stays before it closes itself.</summary>
+        /// <summary>
+        /// How long the toast stays before it closes itself. <see cref="PopupDuration.UntilClicked"/> has no time: the toast stays until it is clicked (and
+        /// shows a small cross at its right for that), until a newer toast replaces it or until its window closes.
+        /// </summary>
         public PopupDuration Duration
         {
             get { return _duration; }
@@ -328,12 +354,65 @@ namespace ErikwnkWFUI.Forms
             {
                 _duration = value;
 
-                if (_closeTimer != null)
+                if (_closeTimer != null && value != PopupDuration.UntilClicked)
                     _closeTimer.Interval = value.ToToastMilliseconds();
+
+                ApplyCloseLabel();
             }
         }
 
         private PopupDuration _duration = PopupDuration.Medium;
+
+        /// <summary>
+        /// Whether a long text makes the toast stay longer than its <see cref="Duration"/>: the level is the least time, and the time to read the title and
+        /// the message (about 0.3 seconds a word, 8 seconds at most) is the other. A short message keeps the time of its level. On by default; off gives
+        /// every toast exactly the time of its level.
+        /// </summary>
+        public bool DurationGrowsWithText { get; set; } = true;
+
+        // The time a toast stays when it is shown: its level, or the time to read its text where that is longer. 0 for a toast that stays until it is clicked.
+        internal int GetShownMilliseconds()
+        {
+            if (_duration == PopupDuration.UntilClicked)
+                return 0;
+
+            int level = _duration.ToToastMilliseconds();
+
+            if (!DurationGrowsWithText)
+                return level;
+
+            int words = CountWords(_content.Header) + CountWords(_content.Text);
+
+            return Math.Max(level, Math.Min(MaxReadingMilliseconds, words * ReadingMillisecondsPerWord));
+        }
+
+        private static int CountWords(string text)
+        {
+            return string.IsNullOrWhiteSpace(text) ? 0 : text.Split((char[])null, StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+
+        // Starts the time of the toast, when it is shown (a toast that stays until it is clicked has none).
+        internal void StartCloseTimer()
+        {
+            int milliseconds = GetShownMilliseconds();
+
+            if (milliseconds <= 0)
+                return;
+
+            _closeTimer.Interval = milliseconds;
+            _closeTimer.Start();
+        }
+
+        // The small cross of a toast that stays until it is clicked, and the room for it at the right of the text.
+        private void ApplyCloseLabel()
+        {
+            if (IsDisposed || _closeLabel == null)
+                return;
+
+            _closeLabel.Visible = _duration == PopupDuration.UntilClicked;
+            ApplyTextPadding();
+            FitToMessage();
+        }
 
         // The background is kept readable through the transparency.
         protected override void OnTransparencyChanged()
@@ -373,11 +452,14 @@ namespace ErikwnkWFUI.Forms
             _iconLabel = CreateIconLabel();
             _titleLabel = CreateTitleLabel();
             _messageLabel = CreateMessageLabel();
+            _closeLabel = CreateCloseLabel();
 
             // The one added last is docked first: the title at the top, then the message fills the rest.
             _contentPanel.Controls.Add(_iconLabel);
             _contentPanel.Controls.Add(_messageLabel);
             _contentPanel.Controls.Add(_titleLabel);
+            _contentPanel.Controls.Add(_closeLabel);
+            _closeLabel.BringToFront();
 
             Controls.Add(_contentPanel);
             ApplyColors();
@@ -416,6 +498,23 @@ namespace ErikwnkWFUI.Forms
                 Location = new Point(IconLeft96, 25),
                 TextAlign = ContentAlignment.MiddleCenter,
                 BackColor = Color.Transparent,
+                Visible = false
+            };
+        }
+
+        // A cross in the upper right corner (a label that is placed, like the symbol, so that nothing covers the text): shown only for a toast that
+        // stays until it is clicked, to say that it has to be.
+        private Label CreateCloseLabel()
+        {
+            return new Label
+            {
+                Text = "\u00D7",
+                Font = UIFonts.Title,
+                Size = new Size(CloseSpace96, CloseSpace96),
+                TextAlign = ContentAlignment.TopCenter,
+                BackColor = Color.Transparent,
+                AutoSize = false,
+                UseMnemonic = false,
                 Visible = false
             };
         }

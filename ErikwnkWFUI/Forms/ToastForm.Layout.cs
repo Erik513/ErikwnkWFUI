@@ -25,6 +25,7 @@ namespace ErikwnkWFUI.Forms
                 Dpi.Scale(ContentPaddingHorizontal96, dpi), Dpi.Scale(ContentPaddingVertical96, dpi),
                 Dpi.Scale(ContentPaddingHorizontal96, dpi), Dpi.Scale(ContentPaddingVertical96, dpi));
             _iconLabel.Size = new Size(Dpi.Scale(IconSize96, dpi), Dpi.Scale(IconSize96, dpi));
+            _closeLabel.Size = new Size(Dpi.Scale(CloseSpace96, dpi), Dpi.Scale(CloseSpace96, dpi));
             ApplyTextPadding();
             FitToMessage();
         }
@@ -65,6 +66,7 @@ namespace ErikwnkWFUI.Forms
             int vertical = Math.Max(0, (height - textHeight - slack) / 2);
             _contentPanel.Padding = new Padding(_contentPanel.Padding.Left, vertical, _contentPanel.Padding.Right, vertical);
             _iconLabel.Location = new Point(Dpi.Scale(IconLeft96, _dpi), (height - _iconLabel.Height) / 2);
+            _closeLabel.Location = new Point(width - _closeLabel.Width - Dpi.Scale(CloseInset96, _dpi), Dpi.Scale(CloseInset96, _dpi));
 
             // The picture of the window is made again (the controls in it are not the window itself, see PopupFormBase).
             Invalidate();
