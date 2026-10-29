@@ -318,4 +318,16 @@ public class InputFieldTests : IDisposable
         Assert.NotEqual(dark.ToArgb(), Edge(box).ToArgb());
         Assert.Equal(UIColors.GetOutlineColor(UIColors.BackgroundMedium).ToArgb(), Edge(box).ToArgb());
     }
+
+    [Fact]
+    public void AttachFrame_ToAControlThatAlreadyHasAWindow_TakesItOver_AndTheFrameCanBePaintedAgain()
+    {
+        using System.Windows.Forms.Panel panel = new System.Windows.Forms.Panel();
+        _ = panel.Handle;
+
+        Action redraw = InputField.AttachFrame(panel, () => true, () => Color.Red);
+
+        Assert.NotNull(redraw);
+        Assert.Null(Record.Exception(() => redraw()));
+    }
 }

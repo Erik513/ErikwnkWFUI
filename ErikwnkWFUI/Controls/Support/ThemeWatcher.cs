@@ -50,10 +50,23 @@ namespace ErikwnkWFUI.Controls
 
                 seen = UIColors.ThemeVersion;
 
-                if (control.InvokeRequired)
-                    control.BeginInvoke(onThemeChanged);
-                else
+                if (!control.InvokeRequired)
+                {
                     onThemeChanged();
+
+                    return;
+                }
+
+                // (Another thread changed the theme. The window can go between the check above and the post: the control is gone then, and
+                // there is nothing to update - the thread that changed the theme must not hear of it.)
+                try
+                {
+                    control.BeginInvoke(onThemeChanged);
+                }
+                catch (InvalidOperationException)
+                {
+                    // (This also covers ObjectDisposedException.)
+                }
             };
 
             Action listen = () =>

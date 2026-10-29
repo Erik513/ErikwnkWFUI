@@ -71,4 +71,28 @@ public class OutsideClickFilterTests
 
         Assert.Null(thrown);
     }
+
+    [Fact]
+    public void ADelegateThatIsNull_IsRefusedAtOnce_NotWithTheFirstMouseMessage()
+    {
+        Assert.Throws<ArgumentNullException>(() => new OutsideClickFilter(null!, () => { }));
+        Assert.Throws<ArgumentNullException>(() => new OutsideClickFilter(w => true, null!));
+    }
+
+    [Fact]
+    public void AClickOnTheFrameOfAWindow_CountsLikeAnyClick_ForTheLeftButtonOnlyAsWell()
+    {
+        const int WM_NCLBUTTONDOWN = 0x00A1;
+        const int WM_NCRBUTTONDOWN = 0x00A4;
+        int calls = 0;
+        OutsideClickFilter any = new OutsideClickFilter(w => true, () => calls++);
+        OutsideClickFilter left = new OutsideClickFilter(w => true, () => calls += 100, leftButtonOnly: true);
+
+        Send(any, WM_NCLBUTTONDOWN, (IntPtr)1);
+        Send(any, WM_NCRBUTTONDOWN, (IntPtr)1);
+        Send(left, WM_NCLBUTTONDOWN, (IntPtr)1);
+        Send(left, WM_NCRBUTTONDOWN, (IntPtr)1);
+
+        Assert.Equal(102, calls);
+    }
 }

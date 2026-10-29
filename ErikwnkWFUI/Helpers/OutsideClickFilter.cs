@@ -12,22 +12,24 @@ namespace ErikwnkWFUI.Helpers
     /// </summary>
     public sealed class OutsideClickFilter : IMessageFilter, IDisposable
     {
-
         private readonly Func<IntPtr, bool> _isOutside;
         private readonly Action _onOutsideClick;
         private readonly bool _leftButtonOnly;
         private bool _started;
 
+        /// <summary>Makes a filter; <see cref="Start"/> begins the watching.</summary>
         /// <param name="isOutside">Given the window the click went to: is that outside?</param>
         /// <param name="onOutsideClick">What to do about it.</param>
         /// <param name="leftButtonOnly">Watch only the left button (otherwise every button).</param>
+        /// <exception cref="ArgumentNullException"><paramref name="isOutside"/> or <paramref name="onOutsideClick"/> is null.</exception>
         public OutsideClickFilter(Func<IntPtr, bool> isOutside, Action onOutsideClick, bool leftButtonOnly = false)
         {
-            _isOutside = isOutside;
-            _onOutsideClick = onOutsideClick;
+            _isOutside = isOutside ?? throw new ArgumentNullException(nameof(isOutside));
+            _onOutsideClick = onOutsideClick ?? throw new ArgumentNullException(nameof(onOutsideClick));
             _leftButtonOnly = leftButtonOnly;
         }
 
+        /// <summary>Begins to watch the clicks of the application (on the thread that calls it, which needs a message loop). Does nothing when it already does.</summary>
         public void Start()
         {
             if (_started)
@@ -37,6 +39,7 @@ namespace ErikwnkWFUI.Helpers
             Application.AddMessageFilter(this);
         }
 
+        /// <summary>Stops watching. Does nothing when it does not.</summary>
         public void Stop()
         {
             if (!_started)
@@ -46,11 +49,13 @@ namespace ErikwnkWFUI.Helpers
             Application.RemoveMessageFilter(this);
         }
 
+        /// <summary>Stops watching (the same as <see cref="Stop"/>).</summary>
         public void Dispose()
         {
             Stop();
         }
 
+        /// <summary>Called by the message loop for every message: calls back for a button going down outside, and never swallows the message.</summary>
         public bool PreFilterMessage(ref Message m)
         {
             if (IsWatchedButtonDown(m.Msg) && _isOutside(m.HWnd))

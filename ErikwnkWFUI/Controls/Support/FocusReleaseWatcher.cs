@@ -40,7 +40,8 @@ namespace ErikwnkWFUI.Controls
         // the box itself), and not a drop-down menu of the library.
         internal bool IsOutsideClick(IntPtr window)
         {
-            if (!_isEnabled() || window == _owner.Handle)
+            // (Not _owner.Handle: that would make a window for a box that has none, and throws for a box that is gone.)
+            if (_owner.IsDisposed || !_owner.IsHandleCreated || !_isEnabled() || window == _owner.Handle)
                 return false;
 
             Control control = Control.FromHandle(window);

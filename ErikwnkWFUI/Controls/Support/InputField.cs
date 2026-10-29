@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Native;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;
@@ -84,13 +85,7 @@ namespace ErikwnkWFUI.Controls
         /// <summary>The color of the page a control stands on: the first opaque background of its parents.</summary>
         public static Color GetPageColor(Control control)
         {
-            for (Control parent = control.Parent; parent != null; parent = parent.Parent)
-            {
-                if (parent.BackColor.A == 255)
-                    return parent.BackColor;
-            }
-
-            return UIColors.BackgroundMedium;
+            return SurfaceColor.Of(control.Parent);
         }
 
         /// <summary>
