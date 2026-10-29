@@ -15,7 +15,7 @@ The checks of a unit:
   left out on purpose (said in the commit message).
 - **Table** - the unit's section of `CONTROLS.md` is right (`tools\Update-ControlTable.ps1`, `docs\control-notes.json` for what the code cannot say).
 
-Coverage before the work: fill in the column from the first full run of `tools\Run-Coverage.ps1` (phase 0).
+Coverage before the work: the column "Cov. before" is the first full run of `tools\Run-Coverage.ps1` (2026-10-29, 3918 tests, whole library 90.7 % = 17762 of 19587 lines); per unit it is the sum of the files of the unit and its factory, so the 85 % target is judged on the unit.
 
 ## Phase 0 - tools and starting point
 
@@ -23,7 +23,7 @@ Coverage before the work: fill in the column from the first full run of `tools\R
 |---|---|---|
 | 0.1 | Make the test suite reliable: find the cause of the hanging run of the `ErikwnkWFUI.Tests.Forms` namespace (state shared between tests: message filters, the toast queue, static events) | [x] |
 | 0.2 | One full run of the whole suite on the hidden desktop (announce it first; it is the only full run besides the last one) | [x] 3917 of 3918 green in 1 m 35 s (net8.0-windows); the one red test was fixed |
-| 0.3 | One full run of `tools\Run-Coverage.ps1`; write the "before" numbers into the column below | [ ] |
+| 0.3 | One full run of `tools\Run-Coverage.ps1`; write the "before" numbers into the column below | [x] 3918 of 3918 green in 1 m 49 s; 90.7 % of 19587 lines; under 85 %: ListView 61.3, FormDragHandle 42.4, AppUpdater 43.8, CheckGlyph 53.5, TitledListBox 79.8, ReadOnlyDataGridView 83.7, ListBox 84.6; unused (0 %): AppCurrency, ColumnHeaderPainting, TextDragDropHelper, UIColumn (obsolete alias), UIIcons |
 | 0.4 | Count the warnings of both targets (the library has none; the tests have none) and the files over 500 lines; write both down | [ ] |
 | 0.5 | Look at `CONTROLS.md` once as a whole: is anything missing in the generator (a kind of member, a default that shows `-` but could be shown)? | [ ] |
 
@@ -31,47 +31,47 @@ Coverage before the work: fill in the column from the first full run of `tools\R
 
 | # | Phase | Unit | Cov. before | Bugs | Refactor | Docs | Showcase | Tests >= 85 % | Table | Commit |
 |---|---|---|---:|---|---|---|---|---|---|---|
-| 1.1 | 1 Foundations | `UIColors`, `UIThemes`, `UIColorSet`, `UIAccentColors`, `UIFonts` | | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
-| 1.2 | 1 | `ThemeWatcher`, `ThemeColor`, `ColorSetHolder`, `SurfaceColor`, `InputField`, `FocusReleaseWatcher`, `OutsideClickFilter` | | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
-| 1.3 | 1 | Helpers (`Dpi`, `AnimationClock`, `FrameTicker`, `AnimationSettings`, `RoundedRectangle`, `LayeredWindow`, `WindowPlacementStore`, ...) | | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
-| 1.4 | 1 | Native (`NativeMethods`, `NativeControlTheme`) | | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
-| 1.5 | 1 | Localization (`UIStrings`, `AppCurrency`, `AppLocalization`; both languages complete, no unused keys) | | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
-| 1.6 | 1 | `UIStyles` as a whole: the same names and parameter order everywhere, the Standard / Primary / colors pattern, the factory classes without a gap (a script lists them) | | [ ] | [ ] | [ ] | - | [ ] | [ ] | [ ] |
-| 2.1 | 2 Simple controls | Buttons and symbols (`Button` factories, `SymbolButton`, `UIButtonPreset`, `UIStyles.Symbols`, theme toggle) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.3 | 2 | `CheckBox`, `BoxLabel`, `CheckGlyph` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.4 | 2 | `RadioButton`, `RadioGroup` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.5 | 2 | `GroupBox` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.6 | 2 | `ToggleSwitch` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.7 | 2 | `ProgressBar` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.8 | 2 | `SlimProgressBar` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 2.9 | 2 | `Spinner` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 3.1 | 3 Input | `TextField`, `LockableTextBox`, `PasswordTextBox` (text boxes) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 3.2 | 3 | `ComboBox` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 3.3 | 3 | `NumericUpDown` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 3.4 | 3 | `TrackBar` (with `ValuePopup`) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 3.5 | 3 | `VolumeControl` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.1 | 4 Containers | `Panel`, `CardPanel`, `PanelFrame` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.2 | 4 | `FlowLayoutPanel` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.4 | 4 | `MultiPanel` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.5 | 4 | `VersionPanel` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.6 | 4 | `TabControl`, `ReadOnlyTabControl` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.7 | 4 | `ContextMenuStrip` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.9 | 4 | `TitleBarControl` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 5.1 | 5 Lists and tables | `ListBox`, `TitledListBox` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 5.2 | 5 | `ListView` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 5.3 | 5 | `DataGridView`, `ReadOnlyDataGridView` (with the column helpers) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 5.4 | 5 | `PropertyTable`, `PropertyRow`, `PropertyColumn` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.1 | 6 Windows | `AppForm`, `FormOptions`, `FormSize`, `FormDragHandle`, `BorderlessResizeHandler` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.2 | 6 | `MessageBox`, `MessageBoxForm` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.3 | 6 | `InputBox`, `InputBoxForm` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.4 | 6 | `ProgressForm`, `ProgressBox` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.5 | 6 | `OptionsForm`, `OptionsPreset`, `UIAppearance` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.6 | 6 | `ToastForm`, `Toaster` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.7 | 6 | `InfoPopupForm`, `InfoPopupSection`, `PopupFormBase`, `PopupSupport` | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 6.8 | 6 | Update: `UpdatePrompt`, `UpdateAvailableForm`, `AppUpdater` (and `SelfUpdater` of ErikwnkCore: see the open items) | | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 1.1 | 1 Foundations | `UIColors`, `UIThemes`, `UIColorSet`, `UIAccentColors`, `UIFonts` | 99.3 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.2 | 1 | `ThemeWatcher`, `ThemeColor`, `ColorSetHolder`, `SurfaceColor`, `InputField`, `FocusReleaseWatcher`, `OutsideClickFilter` | 97.4 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.3 | 1 | Helpers (`Dpi`, `AnimationClock`, `FrameTicker`, `AnimationSettings`, `RoundedRectangle`, `LayeredWindow`, `WindowPlacementStore`, ...) | 72.7 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.4 | 1 | Native (`NativeMethods`, `NativeControlTheme`) | 80.3 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.5 | 1 | Localization (`UIStrings`, `AppCurrency`, `AppLocalization`; both languages complete, no unused keys) | 95.5 % | [ ] | [ ] | [ ] | - | [ ] | - | [ ] |
+| 1.6 | 1 | `UIStyles` as a whole: the same names and parameter order everywhere, the Standard / Primary / colors pattern, the factory classes without a gap (a script lists them) | 90.5 % | [ ] | [ ] | [ ] | - | [ ] | [ ] | [ ] |
+| 2.1 | 2 Simple controls | Buttons and symbols (`Button` factories, `SymbolButton`, `UIButtonPreset`, `UIStyles.Symbols`, theme toggle) | 98.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | 98.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.3 | 2 | `CheckBox`, `BoxLabel`, `CheckGlyph` | 91.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.4 | 2 | `RadioButton`, `RadioGroup` | 91.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.5 | 2 | `GroupBox` | 87.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.6 | 2 | `ToggleSwitch` | 99.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.7 | 2 | `ProgressBar` | 97.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.8 | 2 | `SlimProgressBar` | 95.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.9 | 2 | `Spinner` | 98.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.1 | 3 Input | `TextField`, `LockableTextBox`, `PasswordTextBox` (text boxes) | 94.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.2 | 3 | `ComboBox` | 96.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.3 | 3 | `NumericUpDown` | 98.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.4 | 3 | `TrackBar` (with `ValuePopup`) | 96.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.5 | 3 | `VolumeControl` | 98.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.1 | 4 Containers | `Panel`, `CardPanel`, `PanelFrame` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.2 | 4 | `FlowLayoutPanel` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | 99.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.4 | 4 | `MultiPanel` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.5 | 4 | `VersionPanel` | 93.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.6 | 4 | `TabControl`, `ReadOnlyTabControl` | 94.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.7 | 4 | `ContextMenuStrip` | 94.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | 97.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.9 | 4 | `TitleBarControl` | 91.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 5.1 | 5 Lists and tables | `ListBox`, `TitledListBox` | 83.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 5.2 | 5 | `ListView` | 61.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 5.3 | 5 | `DataGridView`, `ReadOnlyDataGridView` (with the column helpers) | 85.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 5.4 | 5 | `PropertyTable`, `PropertyRow`, `PropertyColumn` | 94.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.1 | 6 Windows | `AppForm`, `FormOptions`, `FormSize`, `FormDragHandle`, `BorderlessResizeHandler` | 83.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.2 | 6 | `MessageBox`, `MessageBoxForm` | 94.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.3 | 6 | `InputBox`, `InputBoxForm` | 95.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.4 | 6 | `ProgressForm`, `ProgressBox` | 95.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.5 | 6 | `OptionsForm`, `OptionsPreset`, `UIAppearance` | 97.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.6 | 6 | `ToastForm`, `Toaster` | 99.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.7 | 6 | `InfoPopupForm`, `InfoPopupSection`, `PopupFormBase`, `PopupSupport` | 98.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.8 | 6 | Update: `UpdatePrompt`, `UpdateAvailableForm`, `AppUpdater` (and `SelfUpdater` of ErikwnkCore: see the open items) | 87.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 
 ## Phase 7 - across the whole project
 
