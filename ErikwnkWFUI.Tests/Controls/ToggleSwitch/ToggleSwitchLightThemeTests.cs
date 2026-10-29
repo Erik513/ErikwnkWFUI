@@ -40,7 +40,7 @@ public class ToggleSwitchLightThemeTests : IDisposable
             using Form form = Show(toggle, light);
 
             Color track = toggle.InvokePrivate<Color>("GetBackgroundColor");
-            Color page = toggle.Parent.BackColor;
+            Color page = form.BackColor;
 
             if (light)
                 Assert.True(track.GetBrightness() < page.GetBrightness(), $"{track} on {page}");
