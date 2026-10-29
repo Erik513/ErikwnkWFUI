@@ -182,6 +182,26 @@ public class UpdatePromptEdgeTests : IDisposable
         Assert.Equal(plain, form.Width);
     }
 
+    // ---- the keyboard ----
+
+    [Fact]
+    public void TheKeyboardStartsOnUpdateNow_AndTheNotesAreNoTabStopWhileTheyAreClosed()
+    {
+        UpdateAvailableForm form = _host.Show(new UpdateAvailableForm("1", "2"));
+        form.ReleaseNotes = "text";
+        TextBox notes = All(form).OfType<TextBox>().First();
+
+        Assert.Same(form.AcceptButton, form.ActiveControl);
+        Assert.False(notes.Visible);
+
+        form.NotesExpanded = true;
+        Assert.True(notes.Visible);
+
+        form.NotesExpanded = false;
+        Assert.False(notes.Visible);
+        Assert.Same(form.AcceptButton, form.ActiveControl);
+    }
+
     // ---- an update that behaves strangely ----
 
     [Fact]

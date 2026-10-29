@@ -30,6 +30,8 @@ namespace ErikwnkWFUI.Forms
         private TextBox _notesBox;
         private Button _notesButton;
         private Button _skipButton;
+        private Button _updateButton;
+        private Panel _notesHost;
         private int _columnsWidth;
         private string _releaseNotes = "";
         private bool _notesExpanded;
@@ -152,18 +154,21 @@ namespace ErikwnkWFUI.Forms
             _notesBox.ScrollBars = ScrollBars.Vertical;
             _notesBox.Dock = DockStyle.Fill;
 
-            Panel notesHost = new Panel
+            // Shown only while the notes are open: closed, the row has no height, and a box that is only clipped away would still be
+            // a stop of the Tab key.
+            _notesHost = new Panel
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.Transparent,
-                Padding = new Padding(24, 0, 24, 8)
+                Padding = new Padding(24, 0, 24, 8),
+                Visible = false
             };
-            notesHost.Controls.Add(_notesBox);
+            _notesHost.Controls.Add(_notesBox);
 
             _buttonPanel = CreateButtonPanel();
 
             _mainLayout.Controls.Add(contentHost, 0, 0);
-            _mainLayout.Controls.Add(notesHost, 0, 1);
+            _mainLayout.Controls.Add(_notesHost, 0, 1);
             _mainLayout.Controls.Add(_buttonPanel, 0, 2);
 
             rootPanel.Controls.Add(_mainLayout);
@@ -172,6 +177,9 @@ namespace ErikwnkWFUI.Forms
             ContentPanel.Controls.Add(rootPanel);
 
             UpdateNotesButton();
+
+            // The keyboard starts on "Update now" (not on the box of the notes, which would show its focus frame at once).
+            ActiveControl = _updateButton;
         }
 
         private const int ButtonRowHeight = 60;
@@ -208,6 +216,7 @@ namespace ErikwnkWFUI.Forms
             }
 
             _mainLayout.RowStyles[1].Height = notesHeight;
+            _notesHost.Visible = _notesExpanded;
             Size = new Size(width, baseSize.Height + notesHeight);
             MinimumSize = Size;
             MaximumSize = Size;
@@ -336,6 +345,7 @@ namespace ErikwnkWFUI.Forms
             updateButton.Margin = new Padding(6, 0, 0, 0);
             updateButton.Click += OnUpdateButtonClick;
             AcceptButton = updateButton;
+            _updateButton = updateButton;
 
             buttonPanel.Controls.Add(left, 0, 0);
             buttonPanel.Controls.Add(laterButton, 1, 0);
