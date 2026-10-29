@@ -50,8 +50,8 @@ public class InputBoxTests : IDisposable
         Assert.Equal("Name?", standard.Prompt);
 
         UIStrings.Language = UILanguage.German;
-        Assert.Equal("Eingabe", UIStyles.Forms.CreateInputStandard("Name?").Text);
-        Assert.Equal("Eingabe", UIStyles.Forms.CreateInputPrimary("Name?").Text);
+        Assert.Equal("Eingabe", _host.Add(UIStyles.Forms.CreateInputStandard("Name?")).Text);
+        Assert.Equal("Eingabe", _host.Add(UIStyles.Forms.CreateInputPrimary("Name?")).Text);
     }
 
     [Fact]

@@ -64,8 +64,8 @@ public class ProgressFormTests : IDisposable
         Assert.Equal("Loading", standard.Status);
 
         UIStrings.Language = UILanguage.German;
-        Assert.Equal("Bitte warten", UIStyles.Forms.CreateProgressStandard().Text);
-        Assert.Equal("Bitte warten", UIStyles.Forms.CreateProgressPrimary().Text);
+        Assert.Equal("Bitte warten", _host.Add(UIStyles.Forms.CreateProgressStandard()).Text);
+        Assert.Equal("Bitte warten", _host.Add(UIStyles.Forms.CreateProgressPrimary()).Text);
     }
 
     [Fact]

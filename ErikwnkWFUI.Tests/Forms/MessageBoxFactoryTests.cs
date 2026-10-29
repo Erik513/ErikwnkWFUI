@@ -40,8 +40,8 @@ public class MessageBoxFactoryTests : IDisposable
         Assert.Equal(new Size(500, 220), standard.Size);
 
         UIStrings.Language = UILanguage.German;
-        Assert.Equal("Hinweis", UIStyles.Forms.CreateMessageStandard("x").Text);
-        Assert.Equal("Hinweis", UIStyles.Forms.CreateMessagePrimary("x").Text);
+        Assert.Equal("Hinweis", _host.Add(UIStyles.Forms.CreateMessageStandard("x")).Text);
+        Assert.Equal("Hinweis", _host.Add(UIStyles.Forms.CreateMessagePrimary("x")).Text);
     }
 
     [Fact]
