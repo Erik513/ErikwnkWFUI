@@ -170,11 +170,11 @@ namespace ErikwnkWFUI.Controls
             // a dark fill on a light field needs none.
             if (ContainsFocus && Enabled)
             {
-                // Two pixels, drawn inside the field: the fields are small, a thin frame is hardly seen.
+                // One pixel, drawn inside the field, like the line around the whole control (two pixels made a heavy ring in a field of 14 pixels).
                 // (Without a set the frame has the color of the one around the whole control, so the two match.)
                 Color frame = Colors == null ? InputField.GetFrameColor(this, null, true) : GetFocusColor(colors, fill);
 
-                using (Pen pen = new Pen(frame, Math.Max(2, Px(2))))
+                using (Pen pen = new Pen(frame, Math.Max(1, Px(1))))
                 {
                     pen.Alignment = PenAlignment.Inset;
                     g.DrawRectangle(pen, cell.X, cell.Y, cell.Width - 1, cell.Height - 1);

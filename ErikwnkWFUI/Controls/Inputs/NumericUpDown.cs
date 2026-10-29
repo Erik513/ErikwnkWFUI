@@ -17,7 +17,7 @@ namespace ErikwnkWFUI.Controls
     /// <para>
     /// <b>Look.</b> The two arrow fields take their fill and arrow from <see cref="Colors"/> for rest, hovered, pressed
     /// and disabled; a field whose fill is close to the color of the field gets a quiet outline. With the focus the fields
-    /// are framed in two pixels in the color of the set. The frame around the whole control is the border of
+    /// are framed in one pixel in the color of the set. The frame around the whole control is the border of
     /// <c>BorderStyle.FixedSingle</c> painted over in the library's colors (see <see cref="InputField"/>): a quiet outline,
     /// with the focus the color of the set. The number is moved to the middle of the box vertically. Everything is read
     /// while painting, so a change of the theme or the accent is followed live.
