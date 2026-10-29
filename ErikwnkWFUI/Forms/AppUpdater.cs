@@ -125,8 +125,7 @@ namespace ErikwnkWFUI.Forms
             if (_updateApplied)
                 return UpdateOutcome.Applied;
 
-            string displayedCurrentVersion =
-                currentVersion.Major + "." + currentVersion.Minor + "." + currentVersion.Build;
+            string displayedCurrentVersion = FormatVersion(currentVersion);
 
             UpdateOutcome outcome = await UpdatePrompt.ShowUpdateAvailableAsync(
                 displayedCurrentVersion,
@@ -222,9 +221,23 @@ namespace ErikwnkWFUI.Forms
             return prepared;
         }
 
+        // The version as the question shows it: three numbers; a version of two numbers has no build (-1 in .NET), which is 0 here.
+        internal static string FormatVersion(Version version)
+        {
+            return version.Major + "." + version.Minor + "." + Math.Max(version.Build, 0);
+        }
+
+        // Only a web page is opened in the browser: the address of a release comes from outside (the answer of GitHub, or a result that the
+        // program made itself), and the shell would start anything it is given.
+        internal static bool IsWebAddress(string address)
+        {
+            return Uri.TryCreate(address, UriKind.Absolute, out Uri uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+        }
+
         private static void OpenReleasePage(string releaseUrl)
         {
-            if (string.IsNullOrWhiteSpace(releaseUrl))
+            if (!IsWebAddress(releaseUrl))
             {
                 return;
             }

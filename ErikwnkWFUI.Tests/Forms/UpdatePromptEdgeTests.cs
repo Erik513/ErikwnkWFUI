@@ -209,6 +209,37 @@ public class UpdatePromptEdgeTests : IDisposable
         Assert.Empty(Application.OpenForms.OfType<UpdateAvailableForm>());
     }
 
+    [Theory]
+    [InlineData(1, 2, 3, 4, "1.2.3")]
+    [InlineData(1, 2, 0, 0, "1.2.0")]
+    public void TheCurrentVersion_IsShownWithThreeNumbers(int major, int minor, int build, int revision, string expected)
+    {
+        Assert.Equal(expected, AppUpdater.FormatVersion(new Version(major, minor, build, revision)));
+    }
+
+    [Fact]
+    public void AVersionOfTwoNumbers_HasNoMinusOneInTheQuestion()
+    {
+        Assert.Equal("1.2.0", AppUpdater.FormatVersion(new Version(1, 2)));
+        Assert.Equal("3.0.0", AppUpdater.FormatVersion(new Version(3, 0)));
+    }
+
+    [Theory]
+    [InlineData("https://github.com/owner/repo/releases/tag/v1.2.0", true)]
+    [InlineData("http://example.com/release", true)]
+    [InlineData("HTTPS://GITHUB.COM/x", true)]
+    [InlineData("file:///C:/Windows/System32/calc.exe", false)]
+    [InlineData("C:\\Windows\\System32\\calc.exe", false)]
+    [InlineData("calc.exe", false)]
+    [InlineData("ms-settings:", false)]
+    [InlineData("javascript:alert(1)", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    public void OnlyAWebAddress_IsOpenedAsTheReleasePage(string? address, bool expected)
+    {
+        Assert.Equal(expected, AppUpdater.IsWebAddress(address!));
+    }
+
     // ---- the progress window ----
 
     [Fact]
