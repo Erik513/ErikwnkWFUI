@@ -38,7 +38,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 1.5 | 1 | Localization (`UIStrings`, `AppCurrency`, `AppLocalization`; both languages complete, no unused keys) | 95.5 % | [x] | [x] | [x] | - | [x] | - | [ ] |
 | 1.6 | 1 | `UIStyles` as a whole: the same names and parameter order everywhere, the Standard / Primary / colors pattern, the factory classes without a gap (a script lists them) | 90.5 % | [x] | [x] | [x] | - | [x] | [x] | [ ] |
 | 2.1 | 2 Simple controls | Buttons and symbols (`Button` factories, `SymbolButton`, `UIButtonPreset`, `UIStyles.Symbols`, theme toggle) | 98.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [ ] |
-| 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | 98.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 2.2 | 2 | Labels (`Label`, `ScrollingLabel`) | 98.7 % | [x] | [ ] | [x] | [x] | [x] | [x] | [ ] |
 | 2.3 | 2 | `CheckBox`, `BoxLabel`, `CheckGlyph` | 91.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2.4 | 2 | `RadioButton`, `RadioGroup` | 91.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 2.5 | 2 | `GroupBox` | 87.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

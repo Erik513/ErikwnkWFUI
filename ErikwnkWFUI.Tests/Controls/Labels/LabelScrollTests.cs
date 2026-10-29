@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
+using ErikwnkWFUI.Tests.Helpers;
 using ErikwnkWFUI.Tests.Infrastructure;
 using static ErikwnkWFUI.Tests.Infrastructure.TestPictures;
 
@@ -514,5 +515,30 @@ public class LabelScrollTests : IDisposable
                 Assert.True(label.GetPrivateField<int>("_maxOffset") >= 0);
             }
         }
+    }
+
+    [Fact]
+    public void AFrameThatWasAskedForAndLostWithTheWindow_DoesNotLeaveTheTextStandingStill()
+    {
+        // (Every beat of the text asks the clock for the time once, so the number of calls is the number of frames.)
+        int calls = 0;
+        ScrollingLabel.Milliseconds = () =>
+        {
+            Interlocked.Increment(ref calls);
+
+            return _now;
+        };
+        ScrollingLabel label = Create();
+        Pump(100);
+
+        // Nothing handles messages for a moment: the clock has posted its frame and the label waits for it. The window is made again then (as when the
+        // label moves to another window), which throws the posted message away.
+        Thread.Sleep(150);
+        label.RecreateHandleForTest();
+        int before = Volatile.Read(ref calls);
+        Pump(500);
+
+        Assert.True(Volatile.Read(ref calls) - before >= 8, "only " + (Volatile.Read(ref calls) - before) + " frames after the window was made again");
+        Assert.True(Moving(label));
     }
 }

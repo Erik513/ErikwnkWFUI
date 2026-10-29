@@ -59,6 +59,11 @@ namespace ErikwnkWFUI.Controls
         // Like the standard label: a ForeColor that was set is the text color; set back to
         // empty, the label has its own color again. Read without one, it says the color the
         // text has when the label is enabled.
+        /// <summary>
+        /// The color of the text. Without one that was set it is the color of the kind of label (or of its color set), moved lighter or darker where
+        /// the page behind it needs that to read, and it follows a change of the theme or of the accent. Set a color to take it over; set it to
+        /// <c>Color.Empty</c> for the color of the library again. A disabled label is drawn in the one gray of the library, whatever this says.
+        /// </summary>
         public override Color ForeColor
         {
             get { return GetEnabledTextColor(); }
@@ -123,6 +128,7 @@ namespace ErikwnkWFUI.Controls
 
         // ---- painting ----
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             if (!Enabled)

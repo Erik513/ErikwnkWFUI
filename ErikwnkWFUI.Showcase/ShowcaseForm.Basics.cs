@@ -567,18 +567,34 @@ namespace ErikwnkWFUI.Showcase
             // rest at both ends, or endlessly in one direction, coming again behind a gap and a separator.
             const string longText = "This text is much longer than the label it is shown in, so it rests at its start, moves to its end, rests there and moves back again - and a label that is disabled shows the start with an ellipsis instead.";
 
-            table.AddRow("CreatePrimary (scroll: BackAndForth)",
-                PropertyColumn.Percent(UIStyles.Labels.CreatePrimary(longText, scroll: LabelScroll.BackAndForth()), TwoColumnPercent));
+            // Each row as on every page: enabled on the left, disabled on the right (a disabled label does not move: it shows the start of its text with an ellipsis).
+            AddTwoColumnRow(table, "CreatePrimary (scroll: BackAndForth)",
+                CreateScrolling(longText, LabelScroll.BackAndForth(), enabled: true),
+                CreateScrolling(longText, LabelScroll.BackAndForth(), enabled: false));
 
-            // Endless moves whether the text fits or not: a long text, and (second column) a short one that
-            // keeps the room of the label.
             AddTwoColumnRow(table, "CreatePrimary (scroll: Endless)",
-                UIStyles.Labels.CreatePrimary(longText, scroll: LabelScroll.Endless()),
-                UIStyles.Labels.CreatePrimary("Short text", scroll: LabelScroll.Endless()));
+                CreateScrolling(longText, LabelScroll.Endless(), enabled: true),
+                CreateScrolling(longText, LabelScroll.Endless(), enabled: false));
 
-            // Several texts, one behind the other: the same room after each of them, the separator in its middle.
-            table.AddRow("CreatePrimary (scroll: Endless, texts)",
-                PropertyColumn.Percent(UIStyles.Labels.CreatePrimary("", scroll: LabelScroll.Endless(new[] { "First message", "Second message", "Third" })), TwoColumnPercent));
+            // Endless moves whether the text fits or not: a short text keeps the room of the label.
+            AddTwoColumnRow(table, "CreatePrimary (scroll: Endless, short text)",
+                CreateScrolling("Short text", LabelScroll.Endless(), enabled: true),
+                CreateScrolling("Short text", LabelScroll.Endless(), enabled: false));
+
+            // Several texts, one behind the other: the same room after each of them, the separator in its middle (disabled: the texts joined by the separator).
+            LabelScroll several = LabelScroll.Endless(new[] { "First message", "Second message", "Third" });
+
+            AddTwoColumnRow(table, "CreatePrimary (scroll: Endless, texts)",
+                CreateScrolling("", several, enabled: true),
+                CreateScrolling("", several, enabled: false));
+        }
+
+        private static Label CreateScrolling(string text, LabelScroll scroll, bool enabled)
+        {
+            Label label = UIStyles.Labels.CreatePrimary(text, scroll: scroll);
+            label.Enabled = enabled;
+
+            return label;
         }
 
         // One row: the label, and the same label disabled in the second column.

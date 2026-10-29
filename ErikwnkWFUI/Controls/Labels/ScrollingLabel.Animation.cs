@@ -53,6 +53,7 @@ namespace ErikwnkWFUI.Controls
                 Interlocked.Exchange(ref _framePending, 0);
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_NEXT_PICTURE)
@@ -173,18 +174,21 @@ namespace ErikwnkWFUI.Controls
 
         // ---- what the label is told ----
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
             _hovered = true;
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
             _hovered = false;
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -196,6 +200,7 @@ namespace ErikwnkWFUI.Controls
             Restart();
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -204,6 +209,7 @@ namespace ErikwnkWFUI.Controls
 
         // A size is changed again and again while a window is resized: the text must not jump back to its
         // start each time. The measure is made again, the place in the movement stays (as far as it still exists).
+        /// <inheritdoc/>
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -227,12 +233,14 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnPaddingChanged(EventArgs e)
         {
             base.OnPaddingChanged(e);
             Restart();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -244,6 +252,7 @@ namespace ErikwnkWFUI.Controls
 
         // A label hidden by itself, or a window shown again, comes here; a window that is hidden does not tell
         // its labels (see MakeFrame).
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -253,16 +262,23 @@ namespace ErikwnkWFUI.Controls
             Restart();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             _postHandle = Handle;
+
+            // A frame that was asked for went with the old window (the posted message is thrown away when a window is destroyed, as when the label
+            // moves to another window): the new one does not wait for it, or the text would stand still for ever.
+            Interlocked.Exchange(ref _framePending, 0);
             Restart();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _postHandle = IntPtr.Zero;
+            Interlocked.Exchange(ref _framePending, 0);
             _hovered = false;
 
             if (_animating)
@@ -273,6 +289,7 @@ namespace ErikwnkWFUI.Controls
             base.OnHandleDestroyed(e);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
