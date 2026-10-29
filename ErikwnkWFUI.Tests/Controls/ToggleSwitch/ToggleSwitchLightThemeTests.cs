@@ -30,6 +30,25 @@ public class ToggleSwitchLightThemeTests : IDisposable
         }
     }
 
+    [Fact]
+    public void TheOffTrack_IsADarkerThanThePageInTheLightTheme_AndLighterInTheDarkTheme()
+    {
+        foreach (bool light in new[] { false, true })
+        {
+            UIColors.ApplyTheme(light ? UIThemes.Light : UIThemes.Dark);
+            using ToggleSwitch toggle = UIStyles.ToggleSwitches.CreateStandard(false);
+            using Form form = Show(toggle, light);
+
+            Color track = toggle.InvokePrivate<Color>("GetBackgroundColor");
+            Color page = toggle.Parent.BackColor;
+
+            if (light)
+                Assert.True(track.GetBrightness() < page.GetBrightness(), $"{track} on {page}");
+            else
+                Assert.True(track.GetBrightness() > page.GetBrightness(), $"{track} on {page}");
+        }
+    }
+
     private static ToggleSwitch Disabled(bool isChecked)
     {
         ToggleSwitch toggle = UIStyles.ToggleSwitches.CreatePrimary(isChecked);

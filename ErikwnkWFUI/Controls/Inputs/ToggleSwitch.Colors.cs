@@ -48,9 +48,20 @@ namespace ErikwnkWFUI.Controls
             if (_position >= 1)
                 return GetCheckedColor();
 
-            // BackgroundLight, not BackgroundMedium: that one is pure white in the light theme, where the track would vanish into its
-            // surroundings. BackgroundLight is a visible light gray there (and subtly lighter than the surface in the dark theme).
-            return Mix(UIStyles.Colors.BackgroundLight, GetCheckedColor());
+            return Mix(GetOffTrackColor(), GetCheckedColor());
+        }
+
+        // The track while the switch is off: a little lighter than the surface in a dark theme; on a light surface (where BackgroundLight is
+        // practically white, and the track looked like a hole in the page) a little darker than it.
+        private const double LightSurfaceOffTrackShade = 0.04;
+
+        private Color GetOffTrackColor()
+        {
+            Color surface = SurfaceColor.Of(this);
+
+            return UIColors.IsLight(surface)
+                ? UIColors.BlendToward(surface, UIColors.Black, LightSurfaceOffTrackShade)
+                : UIStyles.Colors.BackgroundLight;
         }
 
         // A disabled switch is quiet in both states and in both themes, quieter than an enabled one that is off: the off track is the surface
@@ -58,7 +69,7 @@ namespace ErikwnkWFUI.Controls
         // can still be told apart by the track as well as by the knob - and the knob is white taken a good way toward the track.
         private const double DisabledOnContrast = 2.2;
 
-        private const double DisabledKnobBlend = 0.45;
+        private const double DisabledKnobBlend = 0.35;
 
         private Color GetDisabledTrackColor()
         {
