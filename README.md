@@ -206,6 +206,38 @@ MessageBox.Show("Done.", size: FormSize.Small);                                 
 The old names `StyledForm`, `StyledFormOptions`, `StyledFormType` and `StyledOptionsForm` still work but are obsolete: they are `AppForm`, `FormOptions`
 (its presets `CreateStandard`, `CreateDialog` and `CreateSettings` are the same) and `OptionsForm`; the type is not needed any more.
 
+## Message box
+
+`MessageBox.Show` is the themed box of Windows: it returns the button that was clicked, or the safe one (No, Cancel, Abort or OK, as the set
+has it) when the window is closed without a button. The box that stands behind it is made by `UIStyles.Forms.CreateMessageStandard` /
+`CreateMessagePrimary` (`colors:` for the title bar, `size:`), so a program can also set things on it before `ShowDialog`.
+
+```csharp
+MessageBox.Show("Done.");
+MessageBox.Show("Delete it?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+// Retry/Cancel and Abort/Retry/Ignore too; own texts replace the symbols; a null entry keeps the usual one.
+MessageBox.Show("Save the changes?", buttons: MessageBoxButtons.YesNoCancel, buttonTexts: new[] { "Save", "Discard", null });
+
+// The text of an exception under a "Details" button, and the sound of the icon.
+MessageBox.Show("Could not save.", icon: MessageBoxIcon.Error, details: exception.ToString(), playSound: true);
+
+// A check box ("Do not ask again"): isChecked is what it starts with and what the user left it at.
+bool dontAsk = false;
+MessageBox.ShowWithCheckBox("Delete it?", "Do not ask again", ref dontAsk, buttons: MessageBoxButtons.YesNo);
+
+// A help button: set on the form, the dialog stays open while HelpClicked is raised.
+var box = UIStyles.Forms.CreateMessageStandard("Needs a key.", icon: MessageBoxIcon.Info);
+box.ShowHelpButton = true;
+box.HelpClicked += (s, e) => OpenHelp();
+box.ShowDialog(this);
+```
+
+The safe button has the focus first and answers Enter from anywhere in the window (`defaultButton:` names another one: `Button1`, `Button2`,
+`Button3`); Escape closes the box with the safe result - also a box with only OK. A long message makes the window higher (up to the screen) and then
+scrolls; the window gets wider when help, details and the buttons do not fit side by side. Ctrl+C copies the text of the box in the form the box of
+Windows uses. A `&` in an own button text makes the next letter its access key (`&&` is a letter). The texts follow a change of the language while
+the box is open; a title or button text that was given stays as it is.
 ## Panels
 
 `UIStyles.Panels` are the surfaces a layout is built from: `CreateStandard` (the usual
