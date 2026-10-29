@@ -482,6 +482,30 @@ public class ProgressFormTests : IDisposable
     }
 
     [Fact]
+    public void Run_AClickOnCancel_DoesNotCloseTheWindowWhileTheTaskStillRuns_AndTheOutcomeIsCancelled()
+    {
+        // A real click (PerformClick): the form's cancel button would otherwise carry DialogResult.Cancel and close the window at once.
+        bool taskEnded = false;
+        bool? windowOpenAtTheEndOfTheTask = null;
+        using System.Windows.Forms.Timer timer = ActOnOpenForm(form => CancelButton(form).PerformClick());
+
+        ProgressOutcome outcome = ProgressBox.Run(
+            "Loading",
+            async (progress, token) =>
+            {
+                // A task that notices the cancellation late.
+                await Task.Delay(400);
+                windowOpenAtTheEndOfTheTask = Application.OpenForms.OfType<ProgressForm>().Any();
+                taskEnded = true;
+                token.ThrowIfCancellationRequested();
+            },
+            cancelable: true);
+
+        Assert.True(taskEnded, "Run returned before the task had ended");
+        Assert.True(windowOpenAtTheEndOfTheTask);
+        Assert.Equal(ProgressOutcome.Cancelled, outcome);
+    }
+    [Fact]
     public void Run_AnExceptionOfTheTask_IsThrownAfterTheWindowHasClosed()
     {
         InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>

@@ -12,7 +12,12 @@ using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 
 namespace ErikwnkWFUI.Forms
 {
-    /// <summary>The dialog behind <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> - prefer calling that over constructing this directly: it shows this dialog and then, when the user chose to update, the progress of the download. After <c>ShowDialog</c> <see cref="UpdateChosen"/> says whether "Update now" was clicked.</summary>
+    /// <summary>
+    /// The dialog behind <c>UpdatePrompt.ShowUpdateAvailableAsync</c> - prefer calling that over constructing this directly: it shows this dialog
+    /// and then, when the user chose to update, the progress of the download. After <c>ShowDialog</c> <see cref="UpdateChosen"/> says whether
+    /// "Update now" was clicked and <see cref="SkipChosen"/> whether "Skip this version" was. <see cref="ReleaseNotes"/> adds a "What's new" button
+    /// that opens the text of the release under the versions.
+    /// </summary>
     public class UpdateAvailableForm : AppForm
     {
         private readonly FormSizeOption _size;
@@ -21,9 +26,20 @@ namespace ErikwnkWFUI.Forms
 
         private Control _promptContent;
         private Control _buttonPanel;
+        private TableLayoutPanel _mainLayout;
+        private TextBox _notesBox;
+        private Button _notesButton;
+        private Button _skipButton;
+        private int _columnsWidth;
+        private string _releaseNotes = "";
+        private bool _notesExpanded;
+        private bool _allowSkip;
 
-        /// <summary>Whether the user clicked "Update now" (the dialog is closed with <c>DialogResult.Yes</c> then); false for Later and for closing it.</summary>
+        /// <summary>Whether the user clicked "Update now" (the dialog is closed with <c>DialogResult.Yes</c> then); false for Later, Skip and for closing it.</summary>
         public bool UpdateChosen { get; private set; }
+
+        /// <summary>Whether the user clicked "Skip this version" (the dialog is closed with <c>DialogResult.Ignore</c> then). The button is there only with <see cref="AllowSkip"/>.</summary>
+        public bool SkipChosen { get; private set; }
 
         /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
         /// <param name="latestVersion">The new version.</param>
@@ -54,38 +70,72 @@ namespace ErikwnkWFUI.Forms
             _latestVersion = latestVersion ?? "";
             _size = size ?? FormSize.Medium;
 
-            ConfigureForm();
-            BuildLayout();
-        }
-
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-        }
-
-        private void ConfigureForm()
-        {
             ShowInTaskbar = false;
+            BuildLayout();
+            LayoutContent();
+        }
 
-            Size dialogSize = _size.Resolve(FormKind.Update);
+        /// <summary>The text of the release ("What's new"): with it the window has a "What's new" button that opens the text under the versions. Empty (the default) has no button. Plain text; the Markdown of a GitHub release is shown as it is written.</summary>
+        public string ReleaseNotes
+        {
+            get { return _releaseNotes; }
+            set
+            {
+                _releaseNotes = value == null ? "" : value.Trim();
+                _notesBox.Text = _releaseNotes.Replace("\r\n", "\n").Replace("\n", "\r\n");
+                _notesButton.Visible = _releaseNotes.Length > 0;
 
-            Size = dialogSize;
-            MinimumSize = dialogSize;
-            MaximumSize = dialogSize;
+                if (_releaseNotes.Length == 0)
+                    _notesExpanded = false;
+
+                UpdateNotesButton();
+                LayoutContent();
+            }
+        }
+
+        /// <summary>Whether the text of <see cref="ReleaseNotes"/> is open (the window is higher then). Closed by default.</summary>
+        public bool NotesExpanded
+        {
+            get { return _notesExpanded; }
+            set
+            {
+                bool expanded = value && _releaseNotes.Length > 0;
+
+                if (expanded == _notesExpanded)
+                    return;
+
+                _notesExpanded = expanded;
+                UpdateNotesButton();
+                LayoutContent();
+            }
+        }
+
+        /// <summary>Whether the window has a "Skip this version" button (the program then does not ask again for this version). Off by default.</summary>
+        public bool AllowSkip
+        {
+            get { return _allowSkip; }
+            set
+            {
+                _allowSkip = value;
+                _skipButton.Visible = value;
+                LayoutContent();
+            }
         }
 
         private void BuildLayout()
         {
             Panel rootPanel = UIStyles.Panels.CreateMedium();
 
-            TableLayoutPanel mainLayout = UITableLayoutPanelFactory.CreateStandard(1, 2);
-            mainLayout.Dock = DockStyle.Fill;
-            ThemeWatcher.FollowBackColor(mainLayout, () => UIColors.BackgroundMedium);
-            mainLayout.Padding = new Padding(0);
-            mainLayout.Margin = new Padding(0);
-            mainLayout.RowStyles.Clear();
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 60));
+            // Rows: the versions (the rest of the room), the text of the release (closed: none) and the buttons.
+            _mainLayout = UITableLayoutPanelFactory.CreateStandard(1, 3);
+            _mainLayout.Dock = DockStyle.Fill;
+            ThemeWatcher.FollowBackColor(_mainLayout, () => UIColors.BackgroundMedium);
+            _mainLayout.Padding = new Padding(0);
+            _mainLayout.Margin = new Padding(0);
+            _mainLayout.RowStyles.Clear();
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 0));
+            _mainLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, ButtonRowHeight));
 
             Panel contentHost = new Panel
             {
@@ -96,15 +146,87 @@ namespace ErikwnkWFUI.Forms
             _promptContent = CreatePromptContent();
             contentHost.Controls.Add(_promptContent);
 
+            _notesBox = UIStyles.TextBoxes.CreateStandard("");
+            _notesBox.Multiline = true;
+            _notesBox.ReadOnly = true;
+            _notesBox.ScrollBars = ScrollBars.Vertical;
+            _notesBox.Dock = DockStyle.Fill;
+
+            Panel notesHost = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BackColor = Color.Transparent,
+                Padding = new Padding(24, 0, 24, 8)
+            };
+            notesHost.Controls.Add(_notesBox);
+
             _buttonPanel = CreateButtonPanel();
 
-            mainLayout.Controls.Add(contentHost, 0, 0);
-            mainLayout.Controls.Add(_buttonPanel, 0, 1);
+            _mainLayout.Controls.Add(contentHost, 0, 0);
+            _mainLayout.Controls.Add(notesHost, 0, 1);
+            _mainLayout.Controls.Add(_buttonPanel, 0, 2);
 
-            rootPanel.Controls.Add(mainLayout);
+            rootPanel.Controls.Add(_mainLayout);
 
             ContentPanel.Controls.Clear();
             ContentPanel.Controls.Add(rootPanel);
+
+            UpdateNotesButton();
+        }
+
+        private const int ButtonRowHeight = 60;
+
+        // The size of the window: the size that was asked for, higher by the room of the release notes when they are open, and wider when the
+        // buttons of the left (What's new, Skip) and the two of the right do not fit side by side (an own size is kept).
+        private void LayoutContent()
+        {
+            if (_buttonPanel == null)
+                return;
+
+            Size baseSize = _size.Resolve(FormKind.Update);
+            int notesHeight = _notesExpanded ? GetNotesHeight() : 0;
+            int width = baseSize.Width;
+
+            MinimumSize = Size.Empty;
+            MaximumSize = Size.Empty;
+
+            if (!_size.Custom.HasValue)
+            {
+                // The frame is measured with the window at the width of its size (the sizes of the parts are only then up to date).
+                Size = new Size(width, Height);
+
+                // (Their own state, not Visible: a control of a window that is not shown yet is never Visible.)
+                int left = (_releaseNotes.Length > 0 ? _notesButton.Width : 0) + (_allowSkip ? _skipButton.Width : 0);
+                int frame = Width - ContentPanel.ClientSize.Width;
+                width = Math.Max(width, frame + _buttonPanel.Padding.Horizontal + left + _columnsWidth + 8);
+            }
+
+            _mainLayout.RowStyles[1].Height = notesHeight;
+            Size = new Size(width, baseSize.Height + notesHeight);
+            MinimumSize = Size;
+            MaximumSize = Size;
+
+            KeepOnScreen();
+        }
+
+        private int GetNotesHeight()
+        {
+            if (_size.Custom.HasValue)
+                return 110;
+
+            return _size.Preset == FormSize.Small ? 80 : _size.Preset == FormSize.Large ? 130 : 100;
+        }
+
+        // A window that has become higher (the notes were opened) does not reach below the screen.
+        private void KeepOnScreen()
+        {
+            if (!IsHandleCreated || WindowState != FormWindowState.Normal)
+                return;
+
+            Rectangle area = Screen.FromControl(this).WorkingArea;
+
+            if (Bottom > area.Bottom)
+                Top = Math.Max(area.Top, area.Bottom - Height);
         }
 
         // The panel and the top-down layout both of the window's contents are built from.
@@ -165,6 +287,7 @@ namespace ErikwnkWFUI.Forms
             string updateText = UIStrings.Get("Update.UpdateNow");
             int laterButtonWidth = Math.Max(80, TextRenderer.MeasureText(laterText, UIFonts.Normal).Width + 50);
             int updateButtonWidth = Math.Max(100, TextRenderer.MeasureText(updateText, UIFonts.Normal).Width + 50);
+            _columnsWidth = laterButtonWidth + updateButtonWidth;
 
             buttonPanel.ColumnStyles.Clear();
             buttonPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -173,6 +296,26 @@ namespace ErikwnkWFUI.Forms
 
             buttonPanel.RowStyles.Clear();
             buttonPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+            // At the left: the buttons that are there only when they are wanted (the release notes, Skip). Docked from the last one added: the
+            // button of the notes stands at the very left.
+            Panel left = new Panel { Dock = DockStyle.Fill, BackColor = Color.Transparent, Margin = new Padding(0) };
+
+            _skipButton = UIButtonFactory.CreateStandard(UIStrings.Get("Update.Skip"), "", new Size(100, 30));
+            _skipButton.Dock = DockStyle.Left;
+            _skipButton.Margin = new Padding(0);
+            _skipButton.Width = FitWidth(_skipButton);
+            _skipButton.Visible = false;
+            _skipButton.Click += OnSkipButtonClick;
+
+            _notesButton = UIButtonFactory.CreateStandard("", "", new Size(100, 30));
+            _notesButton.Dock = DockStyle.Left;
+            _notesButton.Margin = new Padding(0, 0, 6, 0);
+            _notesButton.Visible = false;
+            _notesButton.Click += (sender, e) => NotesExpanded = !NotesExpanded;
+
+            left.Controls.Add(_skipButton);
+            left.Controls.Add(_notesButton);
 
             Button laterButton = UIButtonFactory.CreateStandard(
                 laterText, "", new Size(laterButtonWidth, 30));
@@ -188,10 +331,26 @@ namespace ErikwnkWFUI.Forms
             updateButton.Click += OnUpdateButtonClick;
             AcceptButton = updateButton;
 
+            buttonPanel.Controls.Add(left, 0, 0);
             buttonPanel.Controls.Add(laterButton, 1, 0);
             buttonPanel.Controls.Add(updateButton, 2, 0);
 
             return buttonPanel;
+        }
+
+        // A button as wide as its text needs.
+        private static int FitWidth(Button button)
+        {
+            return Math.Max(70, TextRenderer.MeasureText(button.Text, button.Font, Size.Empty, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix).Width + 28);
+        }
+
+        private void UpdateNotesButton()
+        {
+            if (_notesButton == null)
+                return;
+
+            _notesButton.Text = UIStrings.Get("Update.WhatsNew") + (_notesExpanded ? " ▴" : " ▾");
+            _notesButton.Width = FitWidth(_notesButton) + 6;
         }
 
         private void OnUpdateButtonClick(object sender, EventArgs e)
@@ -199,6 +358,13 @@ namespace ErikwnkWFUI.Forms
             // The dialog ends; what comes next (the download) is shown by a ProgressForm.
             UpdateChosen = true;
             DialogResult = DialogResult.Yes;
+            Close();
+        }
+
+        private void OnSkipButtonClick(object sender, EventArgs e)
+        {
+            SkipChosen = true;
+            DialogResult = DialogResult.Ignore;
             Close();
         }
     }

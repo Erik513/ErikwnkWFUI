@@ -128,7 +128,11 @@ namespace ErikwnkWFUI.Forms
             // buttons of the set do not fit side by side (an own size is kept).
             if (!_size.Custom.HasValue)
             {
-                int left = (_detailsButton.Visible ? _detailsButton.Width : 0) + (_helpButton.Visible ? _helpButton.Width : 0);
+                // The frame is measured with the window at the width of its size (the sizes of the parts are only then up to date).
+                Size = new Size(width, Height);
+
+                // (Their own state, not Visible: a control of a window that is not shown yet is never Visible.)
+                int left = (_details.Length > 0 ? _detailsButton.Width : 0) + (_helpShown ? _helpButton.Width : 0);
                 int frame = Width - ContentPanel.ClientSize.Width;
                 width = Math.Max(width, frame + preset.ButtonPanelPadding.Horizontal + left + _columnsWidth + 8);
             }

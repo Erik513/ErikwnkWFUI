@@ -1,6 +1,6 @@
 ﻿namespace ErikwnkWFUI.Forms
 {
-    /// <summary>How an <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> dialog ended.</summary>
+    /// <summary>How an <c>UpdatePrompt.ShowUpdateAvailableAsync</c> dialog ended.</summary>
     public enum UpdateOutcome
     {
         /// <summary>Closed without clicking "Update now".</summary>
@@ -8,6 +8,10 @@
         /// <summary>applyUpdateAsync returned true.</summary>
         Applied,
         /// <summary>applyUpdateAsync returned false or threw.</summary>
-        Failed
+        Failed,
+        /// <summary>The user clicked "Skip this version" (only with <c>allowSkip</c>): the program should not ask again for this version.</summary>
+        Skipped,
+        /// <summary>The user cancelled the download (only when it can be cancelled).</summary>
+        Cancelled
     }
 }

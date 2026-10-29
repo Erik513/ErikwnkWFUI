@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using System.Threading;
 using ErikwnkCore;
 using ErikwnkWFUI.Forms;
 using ErikwnkWFUI.Localization;
@@ -109,17 +110,152 @@ public class UpdatePromptTests : IDisposable
         Assert.Empty(Application.OpenForms.OfType<ProgressForm>());
     }
 
-    [Fact]
-    public void AnUpdateThatReturnsFalse_OrThrows_GivesFailed_AndTheWindowIsClosed()
+    // The failed window stays with its message (the user reads it and closes it); the test reads it and closes it.
+    private static Action<ProgressForm> CloseFailed(List<string> messages)
     {
-        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick()))
+        return progress =>
+        {
+            if (progress.State != ProgressState.Failed)
+                return;
+
+            messages.Add(progress.Status);
+            progress.Close();
+        };
+    }
+
+    [Fact]
+    public void AnUpdateThatReturnsFalse_OrThrows_GivesFailed_TheWindowSaysSoUntilItIsClosed()
+    {
+        List<string> messages = new List<string>();
+
+        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick(), CloseFailed(messages)))
             Assert.Equal(UpdateOutcome.Failed, Show(progress => Task.FromResult(false)));
 
-        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick()))
-            Assert.Equal(UpdateOutcome.Failed, Show(progress => throw new InvalidOperationException("The download failed.")));
+        // An exception of the update: the window has the words of the library, not those of the exception.
+        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick(), CloseFailed(messages)))
+            Assert.Equal(UpdateOutcome.Failed, Show(progress => throw new InvalidOperationException("Name resolution failed.")));
 
+        Assert.Equal(new[] { "The update could not be downloaded.", "The update could not be downloaded." }, messages);
         Assert.Empty(Application.OpenForms.OfType<ProgressForm>());
         Assert.Empty(Application.OpenForms.OfType<UpdateAvailableForm>());
+    }
+
+    [Fact]
+    public void AMessageThatWasGiven_IsWhatAFailedWindowSays_AndItFollowsTheLanguageOtherwise()
+    {
+        List<string> messages = new List<string>();
+
+        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick(), CloseFailed(messages)))
+            UpdatePrompt.ShowUpdateAvailableAsync("1.0.0", "1.1.0", progress => Task.FromResult(false), failureMessage: "Own words.").Wait();
+
+        UIStrings.Language = UILanguage.German;
+
+        using (System.Windows.Forms.Timer timer = Act(prompt => prompt.AcceptButton!.PerformClick(), CloseFailed(messages)))
+            Show(progress => Task.FromResult(false));
+
+        Assert.Equal(new[] { "Own words.", "Das Update konnte nicht heruntergeladen werden." }, messages);
+    }
+
+    [Fact]
+    public void SkipThisVersion_GivesSkipped_AndTheUpdateIsNeverStarted_TheButtonIsThereOnlyWhenWanted()
+    {
+        bool started = false;
+        bool? skipShownByDefault = null;
+
+        using (System.Windows.Forms.Timer timer = Act(prompt => { skipShownByDefault = prompt.AllowSkip; prompt.CancelButton!.PerformClick(); }))
+            UpdatePrompt.ShowUpdateAvailableAsync("1.0.0", "1.1.0", progress => { started = true; return Task.FromResult(true); }).Wait();
+
+        Assert.False(skipShownByDefault);
+
+        UpdateOutcome outcome;
+
+        using (System.Windows.Forms.Timer timer = Act(prompt =>
+        {
+            Button skip = prompt.GetPrivateField<Button>("_skipButton")!;
+            Assert.True(skip.Visible);
+            skip.PerformClick();
+        }))
+            outcome = UpdatePrompt.ShowUpdateAvailableAsync("1.0.0", "1.1.0", progress => { started = true; return Task.FromResult(true); }, allowSkip: true).Result;
+
+        Assert.Equal(UpdateOutcome.Skipped, outcome);
+        Assert.False(started);
+        Assert.Empty(Application.OpenForms.OfType<ProgressForm>());
+    }
+
+    [Fact]
+    public void TheDownloadCanBeCancelled_AndTheOutcomeSaysSo_AnUpdateThatCannotBeCancelledHasNoButtonForIt()
+    {
+        UpdateOutcome outcome;
+        bool tokenWasCancelled = false;
+
+        using (System.Windows.Forms.Timer timer = Act(
+            prompt => prompt.AcceptButton!.PerformClick(),
+            progress => progress.GetPrivateField<Button>("_cancelButton")!.PerformClick()))
+        {
+            outcome = UpdatePrompt.ShowUpdateAvailableAsync(
+                "1.0.0",
+                "1.1.0",
+                async (progress, token) =>
+                {
+                    try
+                    {
+                        await Task.Delay(5000, token);
+                    }
+                    finally
+                    {
+                        tokenWasCancelled = token.IsCancellationRequested;
+                    }
+
+                    return true;
+                }).Result;
+        }
+
+        Assert.Equal(UpdateOutcome.Cancelled, outcome);
+        Assert.True(tokenWasCancelled);
+
+        // A download that reports "false" after the token was cancelled is a cancelled one too, not a failed one.
+        using (System.Windows.Forms.Timer timer = Act(
+            prompt => prompt.AcceptButton!.PerformClick(),
+            progress => progress.GetPrivateField<Button>("_cancelButton")!.PerformClick()))
+        {
+            outcome = UpdatePrompt.ShowUpdateAvailableAsync(
+                "1.0.0",
+                "1.1.0",
+                async (progress, token) =>
+                {
+                    while (!token.IsCancellationRequested)
+                        await Task.Delay(20);
+
+                    return false;
+                }).Result;
+        }
+
+        Assert.Equal(UpdateOutcome.Cancelled, outcome);
+
+        // Without the button (cancelable: false, and the old overload) the window cannot be cancelled.
+        bool? cancelVisible = null;
+
+        using (System.Windows.Forms.Timer timer = Act(
+            prompt => prompt.AcceptButton!.PerformClick(),
+            progress => cancelVisible = progress.GetPrivateField<Button>("_cancelButton")!.Visible))
+            Show(async progress => { await Task.Delay(150); return true; });
+
+        Assert.False(cancelVisible);
+    }
+
+    [Fact]
+    public void TheDownloadWindow_ShowsTheTimeAndThePercent()
+    {
+        bool? showTime = null;
+        bool? showPercentage = null;
+
+        using (System.Windows.Forms.Timer timer = Act(
+            prompt => prompt.AcceptButton!.PerformClick(),
+            progress => { showTime = progress.ShowTime; showPercentage = progress.ShowPercentage; }))
+            Show(async progress => { await Task.Delay(150); return true; });
+
+        Assert.True(showTime);
+        Assert.True(showPercentage);
     }
 
     [Fact]

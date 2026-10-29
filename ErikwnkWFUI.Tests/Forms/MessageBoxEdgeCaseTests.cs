@@ -219,4 +219,20 @@ public class MessageBoxEdgeCaseTests : IDisposable
             Assert.True(detailsBounds.Right <= firstButton.Left, where + ": details " + detailsBounds + ", first button " + firstButton);
             Assert.True(help.Right <= details.Left + 1, where);
         }
+    }
+    [Fact]
+    public void DetailsAndHelp_AlsoMakeTheWindowWideEnough_BeforeItIsShown()
+    {
+        // Not through the host: the box is laid out when it is made, as it is when a program makes it and shows it later.
+        foreach (FormSize size in new[] { FormSize.Small, FormSize.Medium, FormSize.Large })
+        {
+            using MessageBoxForm form = UIStyles.Forms.CreateMessageStandard("x", buttons: MessageBoxButtons.AbortRetryIgnore, details: "d", size: size);
+            form.ShowHelpButton = true;
+
+            Button details = form.GetPrivateField<Button>("_detailsButton")!;
+            Button help = form.GetPrivateField<Button>("_helpButton")!;
+            int needed = details.Width + help.Width + Buttons(form).Sum(b => b.Width) + 8;
+
+            Assert.True(form.ContentPanel.ClientSize.Width >= needed, size + ": " + form.ContentPanel.ClientSize.Width + " for " + needed);
+        }
     }}

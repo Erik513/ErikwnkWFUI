@@ -71,16 +71,26 @@ namespace ErikwnkWFUI.Forms
         /// </summary>
         public async Task<UpdateCheckResult> CheckForUpdateAsync(Version currentVersion, TimeSpan checkTimeout)
         {
+            return (await CheckAsync(currentVersion, checkTimeout)).Result;
+        }
+
+        /// <summary>
+        /// The same silent check, but it says how it went: <see cref="UpdateCheckStatus.Available"/> with the release, <see cref="UpdateCheckStatus.UpToDate"/>
+        /// or <see cref="UpdateCheckStatus.Failed"/> (offline, too slow, a bad answer) - what a "Check for updates" button needs to tell the user "You are up
+        /// to date" or "The check did not work". Never shows any UI and never throws.
+        /// </summary>
+        public async Task<UpdateCheck> CheckAsync(Version currentVersion, TimeSpan checkTimeout)
+        {
             try
             {
                 using (CancellationTokenSource timeout = new CancellationTokenSource(checkTimeout))
                 {
-                    return await _updateChecker.CheckForUpdateAsync(currentVersion, timeout.Token);
+                    return await _updateChecker.CheckAsync(currentVersion, timeout.Token);
                 }
             }
             catch
             {
-                return null;
+                return new UpdateCheck(UpdateCheckStatus.Failed);
             }
         }
 
@@ -89,9 +99,19 @@ namespace ErikwnkWFUI.Forms
         /// the silent <see cref="CheckForUpdateAsync(Version, TimeSpan)"/> - the
         /// same dialog+download+failure-handling flow the combined overload uses
         /// internally, just callable on its own (from a one-time startup notice, or
-        /// later from an update button click). Returns how the dialog ended.
+        /// later from an update button click). The question has a "What's new" button when the release has a text, and a
+        /// "Skip this version" button with <paramref name="allowSkip"/> (<see cref="UpdateOutcome.Skipped"/>: the program should remember the version and not ask
+        /// again); the download can be cancelled (<see cref="UpdateOutcome.Cancelled"/>). After a successful download the program exits here, so the swap
+        /// helper can finish the job; after a failed one the progress window shows the message and, once it is closed, the release page opens.
+        /// Returns how the dialog ended.
         /// </summary>
-        public async Task<UpdateOutcome> ShowUpdatePromptAsync(UpdateCheckResult result, Version currentVersion, Form owner)
+        /// <param name="result">The release, from the silent check.</param>
+        /// <param name="currentVersion">The version that runs now.</param>
+        /// <param name="owner">The window the dialogs stand over (null: the middle of the screen).</param>
+        /// <param name="allowSkip">Whether the question has a "Skip this version" button.</param>
+        /// <param name="colors">A color set for the title bar of the question; null is the normal dark one.</param>
+        /// <param name="size">The size of the question: one of the three or an own <c>Size</c>.</param>
+        public async Task<UpdateOutcome> ShowUpdatePromptAsync(UpdateCheckResult result, Version currentVersion, Form owner, bool allowSkip = false, UIColorSet colors = null, FormSizeOption? size = null)
         {
             string displayedCurrentVersion =
                 currentVersion.Major + "." + currentVersion.Minor + "." + currentVersion.Build;
@@ -99,21 +119,23 @@ namespace ErikwnkWFUI.Forms
             UpdateOutcome outcome = await UpdatePrompt.ShowUpdateAvailableAsync(
                 displayedCurrentVersion,
                 result.LatestVersion.ToString(),
-                progress => ApplyUpdateAsync(result, progress),
-                owner);
+                (progress, token) => ApplyUpdateAsync(result, progress, token),
+                owner,
+                null,
+                colors,
+                size,
+                result.ReleaseNotes,
+                allowSkip,
+                true,
+                UIStrings.Get("Update.DownloadFailedMessage"));
 
+            // The update is in place: the program ends here, on the thread of the window, so that the swap helper can finish the job.
+            if (outcome == UpdateOutcome.Applied)
+                Application.Exit();
+
+            // The progress window has said what went wrong; the release page is the way on.
             if (outcome == UpdateOutcome.Failed)
-            {
-                MessageBox.Show(
-                    UIStrings.Get("Update.DownloadFailedMessage"),
-                    UIStrings.Get("Update.Title"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning,
-                    owner,
-                    FormSize.Small);
-
                 OpenReleasePage(result.ReleaseUrl);
-            }
 
             return outcome;
         }
@@ -160,7 +182,7 @@ namespace ErikwnkWFUI.Forms
             return button;
         }
 
-        private async Task<bool> ApplyUpdateAsync(UpdateCheckResult result, IProgress<int> downloadProgress)
+        private async Task<bool> ApplyUpdateAsync(UpdateCheckResult result, IProgress<int> downloadProgress, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(result.DownloadUrl))
             {
@@ -170,12 +192,11 @@ namespace ErikwnkWFUI.Forms
             bool prepared = await _selfUpdater.DownloadAndPrepareUpdateAsync(
                 result.DownloadUrl,
                 downloadProgress,
-                CancellationToken.None);
+                cancellationToken);
 
-            if (prepared)
-            {
-                Application.Exit();
-            }
+            // The download reports a cancelled task as a failed one: say what it was.
+            if (!prepared)
+                cancellationToken.ThrowIfCancellationRequested();
 
             return prepared;
         }

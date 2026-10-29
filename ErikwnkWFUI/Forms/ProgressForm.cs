@@ -459,6 +459,10 @@ namespace ErikwnkWFUI.Forms
 
             _cancelButton.Visible = ButtonShown;
             CancelButton = ButtonShown ? _cancelButton : null;
+
+            // Assigning CancelButton gives the button DialogResult.Cancel, and a click would close the window at once, while the task still runs:
+            // the window stays until the task has ended (it closes itself then); Cancel only asks the task to stop.
+            _cancelButton.DialogResult = DialogResult.None;
             _cancelButton.Text = ended ? UIStrings.Get("ProgressForm.Close") : CancelButtonText;
 
             // Cancelling asked once: the button is dead until the task has ended and it closes the window.
