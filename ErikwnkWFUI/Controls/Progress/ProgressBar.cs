@@ -395,7 +395,7 @@ namespace ErikwnkWFUI.Controls
 
         internal int GetTextPadding()
         {
-            return (int)Math.Round(TextPaddingAt96Dpi * DeviceDpi / 96.0);
+            return Dpi.Scale(TextPaddingAt96Dpi, DeviceDpi);
         }
 
         protected override void OnHandleCreated(EventArgs e)

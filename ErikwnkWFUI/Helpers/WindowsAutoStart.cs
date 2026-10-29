@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -22,7 +21,7 @@ namespace ErikwnkWFUI.Helpers
         /// <summary>The name of the entry: the name of the program (its entry assembly).</summary>
         public static string ApplicationName
         {
-            get { return Assembly.GetEntryAssembly()?.GetName().Name ?? "Program"; }
+            get { return EntryAssemblyName.Get(); }
         }
 
         /// <summary>Whether the program starts with Windows: an entry that is there and points to this program, and that the user has not switched off in Task Manager.</summary>

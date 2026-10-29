@@ -123,7 +123,9 @@ what is left open.
   subscribe to `LanguageChanged` (doubled or two jobs?); one shared helper for "measure the text, let the window grow up to the screen, then scroll"
   that is written three times (`InputBoxForm`, `ProgressForm`, `MessageBoxForm`); a Showcase "playground" whose comboboxes build a factory call, a
   live control and a copy button.
-- The hanging run of the `Forms` test namespace (phase 0.1).
+- The hang of the full run (phases 0.1 and 1.3): a test that makes a control and does not dispose it leaves it on `UIStrings.LanguageChanged`; a later language switch from another test thread touches its window and blocks. Found and fixed so far: InputBoxTests, MessageBoxFactoryTests, ProgressFormTests (0.1), TextBoxEdgeCaseTests (1.3). Rule: every control a test makes is disposed (host or `using`). Proposal still open: `UIStrings` calls the handlers of controls whose window belongs to another thread with `BeginInvoke`, so a switch from any thread is safe and a forgotten control cannot block it.
+- `ListBoxEdgeCaseTests.ADoubleClick_KeepsTheItemSelected_AndRaisesDoubleClick` failed once in a full run and passes alone (3x): WinForms checks `WindowFromPoint` on a mouse up, so a window of a parallel test over the point may take the click. Look at it in unit 5.1.
+- `ClipboardAccess`: the 9 lines of `SystemClipboard` (the wrapper of the real clipboard) are never run by a test on purpose; that file group stays under 85 %.
 - `ProgressBox.Run` has no colors parameter (`ProgressForm.BarColors` exists since round one; the title bar color set has none for the box).
 - **SelfUpdater / updater (ErikwnkCore):** no checksum or signature of the download (needs a hash in the release, for example a `.sha256` asset) and no
   https / host check of `downloadUrl`; programs in `C:\Program Files` cannot be swapped by a normal user (`Move-Item` fails silently, the old exe

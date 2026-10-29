@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI
@@ -22,7 +22,7 @@ namespace ErikwnkWFUI
         /// </summary>
         public static bool RememberAppearance()
         {
-            string program = Assembly.GetEntryAssembly()?.GetName().Name ?? "Program";
+            string program = EntryAssemblyName.Get();
             string folder = AppearanceDirectory ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ErikwnkWFUI", program);
 
             _appearancePath = Path.Combine(folder, "appearance.json");

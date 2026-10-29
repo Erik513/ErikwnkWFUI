@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Windows.Forms;
 
 namespace ErikwnkWFUI.Helpers
@@ -101,7 +100,7 @@ namespace ErikwnkWFUI.Helpers
             if (Directory != null)
                 return Directory;
 
-            string program = Assembly.GetEntryAssembly()?.GetName().Name ?? "Program";
+            string program = EntryAssemblyName.Get();
 
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ErikwnkWFUI", program);
         }

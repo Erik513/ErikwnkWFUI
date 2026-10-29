@@ -49,7 +49,7 @@ namespace ErikwnkWFUI.Helpers
         /// <summary>Limits the lines of the tooltip to <see cref="MaxWidthAt96Dpi"/> pixels, scaled to the screen of its owner.</summary>
         public static void Limit(ToolTip toolTip, Control owner)
         {
-            Set(toolTip, (int)Math.Round(MaxWidthAt96Dpi * owner.DeviceDpi / 96.0));
+            Set(toolTip, Dpi.Scale(MaxWidthAt96Dpi, owner.DeviceDpi));
         }
 
         /// <summary>Sets the limit in the window of the tooltip, if it has a limit; makes the window if it does not exist yet.</summary>

@@ -94,6 +94,9 @@ namespace ErikwnkWFUI.Helpers
             }
         }
 
+        /// <summary>Waits for the display and gives 0 when it did (the seam of the tests: a test can make it fail, throw or return at once).</summary>
+        internal static Func<int> Flush = () => DwmFlush();
+
         // When the last beat was, in milliseconds.
         private static double _lastBeat;
 
@@ -115,7 +118,7 @@ namespace ErikwnkWFUI.Helpers
 
                 try
                 {
-                    result = DwmFlush();
+                    result = Flush();
                 }
                 catch (Exception)
                 {
