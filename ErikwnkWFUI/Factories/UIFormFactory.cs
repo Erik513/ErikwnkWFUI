@@ -37,6 +37,15 @@ namespace ErikwnkWFUI.Factories
             return form;
         }
 
+        // The window that asks whether to update: the same, made as an UpdateAvailableForm (a dialog whose title bar has the color set, or the accent for the primary one).
+        public static UpdateAvailableForm CreateUpdateAvailable(FormOptions options, UIColorSet colors, string currentVersion, string latestVersion, FormSizeOption? size)
+        {
+            if (colors != null)
+                options.Colors = colors;
+
+            return new UpdateAvailableForm(options, currentVersion, latestVersion, size);
+        }
+
         // The progress dialog: the same, made as a ProgressForm (a dialog; with no title it has the one of the language).
         public static ProgressForm CreateProgress(FormOptions options, UIColorSet colors, string status, bool cancelable, FormSizeOption? size)
         {

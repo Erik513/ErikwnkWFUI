@@ -95,7 +95,8 @@ namespace ErikwnkWFUI.Forms
         Input,
         Progress,
         Options,
-        MessageBox
+        MessageBox,
+        Update
     }
 
     // The sizes (for 96 dpi) of each kind of window. For the dialogs whose height follows the content (Input, Progress, Options) only the
@@ -120,6 +121,8 @@ namespace ErikwnkWFUI.Forms
                     return new[] { new Size(380, 0), new Size(480, 0), new Size(640, 0) }[index];
                 case FormKind.Options:
                     return new[] { new Size(420, 0), new Size(520, 0), new Size(680, 0) }[index];
+                case FormKind.Update:
+                    return new[] { new Size(360, 170), new Size(420, 190), new Size(560, 250) }[index];
                 default:
                     return new[] { new Size(380, 160), new Size(500, 220), new Size(700, 320) }[index];
             }

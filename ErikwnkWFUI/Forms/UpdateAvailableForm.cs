@@ -15,8 +15,7 @@ namespace ErikwnkWFUI.Forms
     /// <summary>The dialog behind <see cref="UpdatePrompt.ShowUpdateAvailableAsync"/> - prefer calling that over constructing this directly: it shows this dialog and then, when the user chose to update, the progress of the download. After <c>ShowDialog</c> <see cref="UpdateChosen"/> says whether "Update now" was clicked.</summary>
     public class UpdateAvailableForm : AppForm
     {
-        private static readonly Size DialogSize = new Size(420, 190);
-
+        private readonly FormSizeOption _size;
         private readonly string _currentVersion;
         private readonly string _latestVersion;
 
@@ -26,17 +25,34 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Whether the user clicked "Update now" (the dialog is closed with <c>DialogResult.Yes</c> then); false for Later and for closing it.</summary>
         public bool UpdateChosen { get; private set; }
 
+        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+        /// <param name="latestVersion">The new version.</param>
+        /// <param name="title">The title of the window ("Update available" or "Update verfügbar" when none is given).</param>
+        /// <param name="size">One of the three sizes (<see cref="FormSize.Medium"/> by default) or an own <see cref="Size"/>; in pixels as they are.</param>
         public UpdateAvailableForm(
             string currentVersion,
             string latestVersion,
-            string title = null)
-            : base(FormOptions.CreateDialog(
-                title: title ?? UIStrings.Get("Update.AvailableTitle"),
-                titleTextAlign: ContentAlignment.MiddleLeft,
-                icon: SystemIcons.Information.ToBitmap()))
+            string title = null,
+            FormSizeOption? size = null)
+            : this(
+                FormOptions.CreateDialog(
+                    title: title ?? UIStrings.Get("Update.AvailableTitle"),
+                    titleTextAlign: ContentAlignment.MiddleLeft,
+                    icon: MessageBoxForm.GetTitleBarIcon(MessageBoxIcon.Info)),
+                currentVersion,
+                latestVersion,
+                size)
+        {
+        }
+
+        // The window with the options it is given (a dialog made by FormOptions, with the color set or the accent of the title bar): what
+        // UIStyles.Forms.CreateUpdateAvailableStandard / CreateUpdateAvailablePrimary make.
+        internal UpdateAvailableForm(FormOptions options, string currentVersion, string latestVersion, FormSizeOption? size)
+            : base(options)
         {
             _currentVersion = currentVersion ?? "";
             _latestVersion = latestVersion ?? "";
+            _size = size ?? FormSize.Medium;
 
             ConfigureForm();
             BuildLayout();
@@ -51,9 +67,11 @@ namespace ErikwnkWFUI.Forms
         {
             ShowInTaskbar = false;
 
-            Size = DialogSize;
-            MinimumSize = DialogSize;
-            MaximumSize = DialogSize;
+            Size dialogSize = _size.Resolve(FormKind.Update);
+
+            Size = dialogSize;
+            MinimumSize = dialogSize;
+            MaximumSize = dialogSize;
         }
 
         private void BuildLayout()

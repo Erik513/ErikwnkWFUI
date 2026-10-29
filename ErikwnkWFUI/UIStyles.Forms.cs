@@ -167,6 +167,41 @@ namespace ErikwnkWFUI
             }
 
             /// <summary>
+            /// The window that tells the user a new version is there (<see cref="ErikwnkWFUI.Forms.UpdateAvailableForm"/>): the two versions and the buttons
+            /// "Later" and "Update now". Show it with <c>ShowDialog</c>; <c>UpdateChosen</c> says whether "Update now" was clicked.
+            /// <see cref="ErikwnkWFUI.Forms.UpdatePrompt.ShowUpdateAvailableAsync"/> does all of it, with the download that follows.
+            /// </summary>
+            /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+            /// <param name="latestVersion">The new version.</param>
+            /// <param name="title">The title of the window ("Update available" or "Update verfügbar" when none is given).</param>
+            /// <param name="colors">A color set for the title bar; null (the default) is the normal dark one.</param>
+            /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
+            public static ErikwnkWFUI.Forms.UpdateAvailableForm CreateUpdateAvailableStandard(string currentVersion, string latestVersion, string title = null, UIColorSet colors = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateUpdateAvailable(UpdateOptions(title, false), colors, currentVersion, latestVersion, size);
+            }
+
+            /// <summary>The window that tells the user a new version is there, with the title bar in a very dark shade of the accent.</summary>
+            /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+            /// <param name="latestVersion">The new version.</param>
+            /// <param name="title">The title of the window ("Update available" or "Update verfügbar" when none is given).</param>
+            /// <param name="size">One of the three sizes (<c>FormSize.Medium</c> by default) or an own <c>Size</c>, in pixels as they are.</param>
+            public static ErikwnkWFUI.Forms.UpdateAvailableForm CreateUpdateAvailablePrimary(string currentVersion, string latestVersion, string title = null, ErikwnkWFUI.Forms.FormSizeOption? size = null)
+            {
+                return UIFormFactory.CreateUpdateAvailable(UpdateOptions(title, true), null, currentVersion, latestVersion, size);
+            }
+
+            // The options of the update window: a dialog (the Primary one with the accent in the title bar) with the information icon in the bar.
+            private static ErikwnkWFUI.Forms.FormOptions UpdateOptions(string title, bool primary)
+            {
+                string text = title ?? Localization.UIStrings.Get("Update.AvailableTitle");
+                System.Drawing.Image barIcon = ErikwnkWFUI.Forms.MessageBoxForm.GetTitleBarIcon(ErikwnkWFUI.Forms.MessageBoxIcon.Info);
+
+                return primary
+                    ? ErikwnkWFUI.Forms.FormOptions.CreateDialogPrimary(text, ContentAlignment.MiddleLeft, barIcon)
+                    : ErikwnkWFUI.Forms.FormOptions.CreateDialog(text, ContentAlignment.MiddleLeft, null, barIcon);
+            }
+            /// <summary>
             /// A progress dialog (<see cref="ErikwnkWFUI.Forms.ProgressForm"/>): a text and a progress bar, which the task fills with <c>Report</c> (from
             /// any thread). The user cannot close it; the program does, when the task is done. <see cref="ErikwnkWFUI.Forms.ProgressBox.Run"/> does all
             /// of it in one call.

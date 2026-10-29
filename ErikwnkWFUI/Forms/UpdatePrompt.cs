@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ErikwnkWFUI.Localization;
+using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Forms
 {
@@ -13,17 +14,28 @@ namespace ErikwnkWFUI.Forms
         /// user cannot close that window. Returns how it ended: <see cref="UpdateOutcome.Declined"/> (Later, or the dialog was closed),
         /// <see cref="UpdateOutcome.Applied"/> or <see cref="UpdateOutcome.Failed"/> (applyUpdateAsync returned false or threw).
         /// </summary>
+        /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
+        /// <param name="latestVersion">The new version.</param>
+        /// <param name="applyUpdateAsync">Downloads and prepares the update, reporting 0 to 100; true when it is ready.</param>
+        /// <param name="owner">The window it stands over (null: the middle of the screen).</param>
+        /// <param name="title">The title of the windows ("Update available" or "Update verfügbar" when none is given).</param>
+        /// <param name="colors">A color set for the title bar of the question; null is the normal dark one.</param>
+        /// <param name="size">The size of the question: one of the three or an own <c>Size</c>, in pixels as they are.</param>
         public static Task<UpdateOutcome> ShowUpdateAvailableAsync(
             string currentVersion,
             string latestVersion,
             Func<IProgress<int>, Task<bool>> applyUpdateAsync,
             Form owner = null,
-            string title = null)
+            string title = null,
+            UIColorSet colors = null,
+            FormSizeOption? size = null)
         {
-            using (UpdateAvailableForm form = new UpdateAvailableForm(
+            using (UpdateAvailableForm form = UIStyles.Forms.CreateUpdateAvailableStandard(
                 currentVersion,
                 latestVersion,
-                title ?? UIStrings.Get("Update.AvailableTitle")))
+                title,
+                colors,
+                size))
             {
                 if (owner != null)
                 {
