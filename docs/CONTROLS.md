@@ -4,7 +4,9 @@
 
 What every control and window of the library has of its own: properties (the default is that of a new control in the dark theme with the blue
 accent; `-` where it depends on the screen or is not a plain value), events and methods, and the `UIStyles` factory methods that make it. A control keeps
-everything else of its standard WinForms base class; the properties it **ignores** (draws its own way) are listed per control.
+everything else of its standard WinForms base class; the properties it **ignores** (draws its own way) are listed per control. A type without a
+constructor that takes no parameters shows the defaults of its standard factory called with its default arguments. After the controls come the other
+public types (helpers, static entry points, enumerations) and at the end the factory classes.
 
 ## Index
 
@@ -174,13 +176,13 @@ Made by `UIStyles.ListBoxes` (see the end of this file).
 | `DeselectOnOutsideClick` | `bool` | `true` | get, set | Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default. |
 | `DisabledBackColor` | `Color` | `#191919` | get, set | Background color for an item where `IsItemDisabled` returns true. (The selected item of a list that is disabled as a whole shows the selection color dimmed.) |
 | `DisabledForeColor` | `Color` | `#6E6E6E` | get, set | Text color for an item where `IsItemDisabled` returns true, and for every item of a list that is disabled as a whole. Left alone it is worked out from the background the text is on (light or dark, blended toward it); set to `Empty` to have it worked out again. |
-| `DisplayTextProvider` | `Func<Object, String>` | - | get, set | Computes each item's display text from the item itself, e.g. `o => ((Track)o).Title`. Takes priority over `DisplayMember`; without it the text is what the standard list box makes of an item (`DisplayMember`, `FormatString`, or `item.ToString()`). |
+| `DisplayTextProvider` | `Func<object, string>` | - | get, set | Computes each item's display text from the item itself, e.g. `o => ((Track)o).Title`. Takes priority over `DisplayMember`; without it the text is what the standard list box makes of an item (`DisplayMember`, `FormatString`, or `item.ToString()`). |
 | `DragHandleColor` | `Color` | `#8C8C8C` | get, set | Color of the drag-handle glyph shown on the right of each item when `AllowReorder` is true. Left alone each item has the handle in a quiet version of its own text color (so it reads on a selected item in any color too); set to a color to have that one on every item, `Empty` to have it worked out again. |
 | `DragIndicatorColor` | `Color` | `#5A5A5A` | get, set | Color of the horizontal line shown at the drop position while dragging an item to reorder it. Defaults to a fixed, neutral gray (`BorderLight`), matching this control's own `SelectedBackColor` - set this explicitly (e.g. to `Primary`) for an accent-colored indicator instead. |
 | `ForeColor` | `Color` | `#F0F0F0` | get, set | The text color of the items (see `ItemForeColor`), as in the standard list box. |
 | `HoverBackColor` | `Color` | `#333333` | get, set | Background color of the item currently under the mouse (not shown while the list is disabled or an item is being dragged). Left alone it is the row's own color a little way toward the text color - a step lighter on the dark theme, darker on the light one, so it shows on both (this reads the color of an even row); set to a color to have that one on every row, `Empty` to have it worked out again. |
-| `IconProvider` | `Func<Object, Image>` | - | get, set | Optional per-item icon, drawn to the left of the display text. |
-| `IsItemDisabled` | `Func<Object, Boolean>` | - | get, set | Optional per-item disabled look (grayed out): only how the item is drawn. The item can still be clicked, selected and dragged like any other. Independent of the whole control's own `Enabled`. |
+| `IconProvider` | `Func<object, Image>` | - | get, set | Optional per-item icon, drawn to the left of the display text. |
+| `IsItemDisabled` | `Func<object, bool>` | - | get, set | Optional per-item disabled look (grayed out): only how the item is drawn. The item can still be clicked, selected and dragged like any other. Independent of the whole control's own `Enabled`. |
 | `ItemBackColor` | `Color` | `#232323` | get, set | Background color of a normal (not selected/hovered/disabled) item. Odd/even rows alternate between this and a slightly darker shade of it. |
 | `ItemForeColor` | `Color` | `#F0F0F0` | get, set | Text color of a normal (not selected/disabled) item. The same as `ForeColor`. |
 | `ItemHeight` | `int` | `35` | get, set | Row height in pixels. Replaces the inherited `ItemHeight` (so the internal default stays in sync, and a height of 0 is not accepted). |
@@ -347,18 +349,20 @@ The progress bar of `UIStyles.ProgressBars`. It is the standard `ProgressBar` (`
 
 Made by `UIStyles.ProgressBars` (see the end of this file).
 
+The defaults below are those of `UIStyles.ProgressBars.CreateStandard()`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `BackColor` | `Color` | - | get, set | The color of the track. By default the recessed surface of the theme (it follows a change of the theme). Set a color for another one. `Transparent` - which a `ProgressBar` cannot have itself - makes the bar look transparent: the track takes the color of the panel it lies on, also when that changes (and in both themes). `Empty` gives the default back. Independent of `BorderStyle`. |
-| `BorderColor` | `Color` | - | get, set | The color of the border (see `BorderStyle`). By default the quiet line of the library for the panel the bar lies on (as the frame of a panel): the gray of the theme, moved only as far as the panel needs to keep it seen (1.5:1); it follows the panel and the theme. Set a color for another one, `Empty` gives the default back. |
-| `BorderStyle` | `BorderStyle` | - | get, set | The thin border around the bar: `FixedSingle` (the default; `Fixed3D` looks the same) or `None`, where the bar has no frame of its own and its edge is the track. Only the border: the color of the track is `BackColor`, which can be transparent. |
-| `PercentageAlign` | `HorizontalAlignment` | - | get, set | Where the percentage stands on the bar: left, centered or right (the default); see `TextAlign`. It keeps the room of its widest form ("100 %") when it is drawn apart from the text. |
-| `ShowFullTextToolTip` | `bool` | - | get, set | Whether a tooltip shows the whole `Text` while the mouse is on the bar and the text is cut with an ellipsis or moves (on by default); a text that is shown whole has none. |
-| `ShowPercentage` | `bool` | - | get, set | Whether the value is written on the bar as a percentage ("42%" in English, "42 %" in German; off by default). With a `Text` the text stands on the left and the percentage on the right (see `TextAlign` and `PercentageAlign`). Not in the `Marquee` style, which has no value. |
-| `Text` | `string` | - | get, set | A text written on the bar (for a message about the state, like "Uploading ..."); empty by default. It is in the colors that can be read on the track and on the fill, on whatever fill level the bar has. |
-| `TextAlign` | `HorizontalAlignment` | - | get, set | Where the `Text` stands on the bar: left (the default), centered or right. At the same place as the percentage (`PercentageAlign`) both are one text, "Upload – 42%"; at another place they are drawn apart, for instance the text left and the percentage right. |
-| `TextColor` | `Color` | - | get, set | The color of the `Text` and the percentage where they stand on the track. `Empty` (the default) is the one that reads best on the track (4.5:1); a disabled bar has the quiet text color of the library in any case. |
-| `TextOnFillColor` | `Color` | - | get, set | The color of the `Text` and the percentage where they stand on the fill. `Empty` (the default) is the one that reads best on the fill (4.5:1). The text is drawn in both colors, each where it is, so that it can be read at any fill level: choose the two to read on the track and on the fill. |
+| `BackColor` | `Color` | `#232323` | get, set | The color of the track. By default the recessed surface of the theme (it follows a change of the theme). Set a color for another one. `Transparent` - which a `ProgressBar` cannot have itself - makes the bar look transparent: the track takes the color of the panel it lies on, also when that changes (and in both themes). `Empty` gives the default back. Independent of `BorderStyle`. |
+| `BorderColor` | `Color` | `#464646` | get, set | The color of the border (see `BorderStyle`). By default the quiet line of the library for the panel the bar lies on (as the frame of a panel): the gray of the theme, moved only as far as the panel needs to keep it seen (1.5:1); it follows the panel and the theme. Set a color for another one, `Empty` gives the default back. |
+| `BorderStyle` | `BorderStyle` | `FixedSingle` | get, set | The thin border around the bar: `FixedSingle` (the default; `Fixed3D` looks the same) or `None`, where the bar has no frame of its own and its edge is the track. Only the border: the color of the track is `BackColor`, which can be transparent. |
+| `PercentageAlign` | `HorizontalAlignment` | `Right` | get, set | Where the percentage stands on the bar: left, centered or right (the default); see `TextAlign`. It keeps the room of its widest form ("100 %") when it is drawn apart from the text. |
+| `ShowFullTextToolTip` | `bool` | `true` | get, set | Whether a tooltip shows the whole `Text` while the mouse is on the bar and the text is cut with an ellipsis or moves (on by default); a text that is shown whole has none. |
+| `ShowPercentage` | `bool` | `false` | get, set | Whether the value is written on the bar as a percentage ("42%" in English, "42 %" in German; off by default). With a `Text` the text stands on the left and the percentage on the right (see `TextAlign` and `PercentageAlign`). Not in the `Marquee` style, which has no value. |
+| `Text` | `string` | `""` | get, set | A text written on the bar (for a message about the state, like "Uploading ..."); empty by default. It is in the colors that can be read on the track and on the fill, on whatever fill level the bar has. |
+| `TextAlign` | `HorizontalAlignment` | `Left` | get, set | Where the `Text` stands on the bar: left (the default), centered or right. At the same place as the percentage (`PercentageAlign`) both are one text, "Upload – 42%"; at another place they are drawn apart, for instance the text left and the percentage right. |
+| `TextColor` | `Color` | `Empty` | get, set | The color of the `Text` and the percentage where they stand on the track. `Empty` (the default) is the one that reads best on the track (4.5:1); a disabled bar has the quiet text color of the library in any case. |
+| `TextOnFillColor` | `Color` | `Empty` | get, set | The color of the `Text` and the percentage where they stand on the fill. `Empty` (the default) is the one that reads best on the fill (4.5:1). The text is drawn in both colors, each where it is, so that it can be read at any fill level: choose the two to read on the track and on the fill. |
 | `TextScroll` | `LabelScroll` | - | get, set | How a `Text` that is too long for its place moves instead of ending in an ellipsis: `None` (the default: it is cut with "..."), `LabelScroll.BackAndForth()` (to its end, a rest, back) or `LabelScroll.Endless()` - the same values as for a label (speed, pause, direction, separator, pause while the mouse is on the bar). The percentage does not move: it stays where it is, and a text that stood together with it stands apart from it while it moves, the percentage at the right end. The text moves only while it does not fit, the bar is shown and enabled, and Windows lets windows animate (Settings, Accessibility). Several texts (`Texts`) are not supported here: use `Text`. |
 
 
@@ -377,15 +381,15 @@ Made by `UIStyles.PropertyTables` (see the end of this file).
 
 | Method | Description |
 |---|---|
-| `AddRow(Func<String> labelText, Control[] controls)` | A row whose label follows the language (as `AddSection`), with editors that share the width. |
-| `AddRow(Func<String> labelText, PropertyColumn[] columns)` |  |
+| `AddRow(Func<string> labelText, Control[] controls)` | A row whose label follows the language (as `AddSection`), with editors that share the width. |
+| `AddRow(Func<string> labelText, PropertyColumn[] columns)` |  |
 | `AddRow(string labelText, Control[] controls)` | Adds a row: a label on the left, one or more editor controls sharing the remaining width equally on the right (each gets `Auto` sizing). Use the `AddRow` overload instead if the controls need different widths. The row is 42 pixels high (the overloads with a row height: that high at least), or as high as its highest editor needs; a longer label wraps onto a second line. Returns the handle of the row. |
 | `AddRow(string labelText, PropertyColumn[] columns)` | Adds a row with explicit per-column sizing (a column may hold no control) - see `Auto`/`Absolute`/`Percent`. |
-| `AddRow(Func<String> labelText, int rowHeight, Control[] controls)` |  |
-| `AddRow(Func<String> labelText, int rowHeight, PropertyColumn[] columns)` |  |
+| `AddRow(Func<string> labelText, int rowHeight, Control[] controls)` |  |
+| `AddRow(Func<string> labelText, int rowHeight, PropertyColumn[] columns)` |  |
 | `AddRow(string labelText, int rowHeight, Control[] controls)` |  |
 | `AddRow(string labelText, int rowHeight, PropertyColumn[] columns)` |  |
-| `AddSection(Func<String> title)` | A section whose title follows the language: `title` is asked now and again each time the language changes (`UIStyles.LanguageChanged`) - for a program's own texts. |
+| `AddSection(Func<string> title)` | A section whose title follows the language: `title` is asked now and again each time the language changes (`UIStyles.LanguageChanged`) - for a program's own texts. |
 | `AddSection(string title)` | Adds a full-width section header row; the handle can hide or disable it. |
 | `ClearRows()` | Removes every row and section, leaving an empty table. The editor controls added via `AddRow` are only detached - `Dispose` is NOT called on them, so they keep whatever state they had (text, selection, checked state, ...) and can be re-added afterward via a fresh AddRow. Handy for rebuilding a table live (e.g. on a language switch, re-adding the same controls with new labels) without losing in-progress editor state; if a caller genuinely wants the old controls gone for good, dispose them explicitly first. Everything the table built itself (labels, cells) is disposed, and the `PropertyRow` handles of the old rows do nothing any more. |
 
@@ -479,17 +483,19 @@ The label of the library, made by `UIStyles.Labels`: the standard `Label` in the
 
 Made by `UIStyles.Labels` (see the end of this file).
 
+The defaults below are those of `UIStyles.Labels.CreateStandard()`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `ForeColor` | `Color` | - | get, set |  |
+| `ForeColor` | `Color` | `#B4B4B4` | get, set |  |
 | `Scroll` | `LabelScroll` | - | get, set | All of the above in one value: set to take over every setting at once (the movement starts over once), read to get the settings the label has now. Null is no movement. |
-| `ScrollDirection` | `LabelScrollDirection` | - | get, set | Which way the text moves in the endless mode: to the left (the default) or to the right. Back and forth always starts to the left. |
-| `ScrollMode` | `LabelScrollMode` | - | get, set | Whether and how a text that is too long for the label moves instead of ending in an ellipsis: not at all (the default), back and forth with a rest at both ends, or endlessly in one direction. A text that fits stands still. It applies to a text of one line in a label that is enabled; a disabled label shows the start of the text with an ellipsis. A label with `AutoSize` is as big as its text, so back and forth does not move it; endless does, and the size of the label stays what AutoSize makes it (a label with a maximum width wraps its text and does not move). With several texts (`Texts`) AutoSize is not of much use: the label is as wide as all the texts together, so there is little left to move. While the text moves it starts at the left whatever `TextAlign` says (the vertical place is kept), and right-to-left is not supported (as everywhere in the library). An image of the label is not shown while the text moves, only while it stands still. |
-| `ScrollPause` | `LabelScrollPause` | - | get, set | How long the text rests at the start and at the end when it moves back and forth: a short time, a medium one (the default) or a long one. |
-| `ScrollPauseOnHover` | `bool` | - | get, set | Whether the moving text stands still while the mouse is on the label, so that it can be read. Off by default. |
-| `ScrollSeparator` | `LabelScrollSeparator` | - | get, set | The sign between the end of the text and its next appearance in the endless mode: a dot (the default), a bar, a diamond or none. |
-| `ScrollSpeed` | `LabelScrollSpeed` | - | get, set | How fast the moving text moves: slowly, at a medium speed (the default) or fast. |
-| `ShowFullTextToolTip` | `bool` | - | get, set | Whether a tooltip shows the whole text while the mouse is on the label and the text moves because it is too long for the label (on by default). A text that fits has none, and neither has one that does not move (a standard label with `AutoEllipsis` has a tooltip of its own). |
+| `ScrollDirection` | `LabelScrollDirection` | `Left` | get, set | Which way the text moves in the endless mode: to the left (the default) or to the right. Back and forth always starts to the left. |
+| `ScrollMode` | `LabelScrollMode` | `None` | get, set | Whether and how a text that is too long for the label moves instead of ending in an ellipsis: not at all (the default), back and forth with a rest at both ends, or endlessly in one direction. A text that fits stands still. It applies to a text of one line in a label that is enabled; a disabled label shows the start of the text with an ellipsis. A label with `AutoSize` is as big as its text, so back and forth does not move it; endless does, and the size of the label stays what AutoSize makes it (a label with a maximum width wraps its text and does not move). With several texts (`Texts`) AutoSize is not of much use: the label is as wide as all the texts together, so there is little left to move. While the text moves it starts at the left whatever `TextAlign` says (the vertical place is kept), and right-to-left is not supported (as everywhere in the library). An image of the label is not shown while the text moves, only while it stands still. |
+| `ScrollPause` | `LabelScrollPause` | `Medium` | get, set | How long the text rests at the start and at the end when it moves back and forth: a short time, a medium one (the default) or a long one. |
+| `ScrollPauseOnHover` | `bool` | `false` | get, set | Whether the moving text stands still while the mouse is on the label, so that it can be read. Off by default. |
+| `ScrollSeparator` | `LabelScrollSeparator` | `Dot` | get, set | The sign between the end of the text and its next appearance in the endless mode: a dot (the default), a bar, a diamond or none. |
+| `ScrollSpeed` | `LabelScrollSpeed` | `Medium` | get, set | How fast the moving text moves: slowly, at a medium speed (the default) or fast. |
+| `ShowFullTextToolTip` | `bool` | `true` | get, set | Whether a tooltip shows the whole text while the mouse is on the label and the text moves because it is too long for the label (on by default). A text that fits has none, and neither has one that does not move (a standard label with `AutoEllipsis` has a tooltip of its own). |
 
 
 ## SlimProgressBar
@@ -658,12 +664,12 @@ Made by `UIStyles.TitledListBoxes` (see the end of this file).
 | `BorderColor` | `Color` | `#464646` | get, set | The color of the frame around the title and the list: the one of `InnerListBox` (the neutral gray border color in every variant; set it for another color). |
 | `ColumnWidth` | `int` | `0` | get, set |  |
 | `ContextMenuStrip` | `ContextMenuStrip` | - | get, set | The context menu of the list (a right click on an item or on the room below the items). |
-| `DataSource` | `Object` | - | get, set |  |
+| `DataSource` | `object` | - | get, set |  |
 | `DeselectOnOutsideClick` | `bool` | `true` | get, set | Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default. |
 | `DisabledBackColor` | `Color` | `#191919` | get, set |  |
 | `DisabledForeColor` | `Color` | `#6E6E6E` | get, set |  |
 | `DisplayMember` | `string` | `""` | get, set |  |
-| `DisplayTextProvider` | `Func<Object, String>` | - | get, set |  |
+| `DisplayTextProvider` | `Func<object, string>` | - | get, set |  |
 | `DragHandleColor` | `Color` | `#8C8C8C` | get, set |  |
 | `DragIndicatorColor` | `Color` | `#5A5A5A` | get, set |  |
 | `Font` | `Font` | - | get, set | The font of the items (as on the list box; the title has `HeaderFont`). |
@@ -676,10 +682,10 @@ Made by `UIStyles.TitledListBoxes` (see the end of this file).
 | `HeaderHeight` | `int` | `30` | get, set | Height of the title bar in pixels (30 at 96 dpi by default, more on a screen with more dots per inch). |
 | `HeaderTextAlign` | `ContentAlignment` | `MiddleLeft` | get, set | Where the title stands in its bar (left and centered vertically by default). |
 | `HoverBackColor` | `Color` | `#333333` | get, set |  |
-| `IconProvider` | `Func<Object, Image>` | - | get, set |  |
+| `IconProvider` | `Func<object, Image>` | - | get, set |  |
 | `InnerListBox` | `ListBox` | - | get | The wrapped list box - use this for anything (events, colors, ...) not already proxied by a member on this class. |
 | `IntegralHeight` | `bool` | `false` | get, set |  |
-| `IsItemDisabled` | `Func<Object, Boolean>` | - | get, set |  |
+| `IsItemDisabled` | `Func<object, bool>` | - | get, set |  |
 | `ItemBackColor` | `Color` | `#232323` | get, set |  |
 | `ItemForeColor` | `Color` | `#F0F0F0` | get, set |  |
 | `ItemHeight` | `int` | `35` | get, set |  |
@@ -690,9 +696,9 @@ Made by `UIStyles.TitledListBoxes` (see the end of this file).
 | `SelectedForeColor` | `Color` | `#F0F0F0` | get, set |  |
 | `SelectedIndex` | `int` | `-1` | get, set |  |
 | `SelectedIndices` | `SelectedIndexCollection` | - | get |  |
-| `SelectedItem` | `Object` | - | get, set |  |
+| `SelectedItem` | `object` | - | get, set |  |
 | `SelectedItems` | `SelectedObjectCollection` | - | get |  |
-| `SelectedValue` | `Object` | - | get, set |  |
+| `SelectedValue` | `object` | - | get, set |  |
 | `SelectionMode` | `SelectionMode` | `One` | get, set |  |
 | `ShowEnumeration` | `bool` | `false` | get, set |  |
 | `Sorted` | `bool` | `false` | get, set |  |
@@ -720,7 +726,7 @@ Made by `UIStyles.TitledListBoxes` (see the end of this file).
 | `FindStringExact(string text)` |  |
 | `Focus()` | Gives the focus to the list. |
 | `GetItemRectangle(int index)` |  |
-| `GetItemText(Object item)` |  |
+| `GetItemText(object item)` |  |
 | `GetSelected(int index)` |  |
 | `IndexFromPoint(Point point)` |  |
 | `MoveItem(int fromIndex, int toIndex)` |  |
@@ -760,7 +766,7 @@ Made by `UIStyles.TrackBars` (see the end of this file).
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
 | `Colors` | `UIColorSet` | - | get, set | The colors of the filled part and the thumb: the `Hover` color of the set is the main color (Green is the usual green, the primary set the accent). Null (the default) is a neutral gray; `UIStyles.TrackBars.CreatePrimary` makes one that follows the accent; `UIStyles.TrackBars.CreateStandard(colors: ...)` takes a color set or simply a color. The popup has the same colors unless `ValuePopupColors` says otherwise. Not written by the designer (a set is code). |
-| `FormatValue` | `Func<Double, String>` | - | get, set | How a value is written for the popup and for a screen reader. By default as a number with up to two decimals, the decimal sign by the language of the library (not the culture of the computer); `FormatPercent` writes a value from 0 to 1 as whole percent. Null gives the default back. |
+| `FormatValue` | `Func<double, string>` | - | get, set | How a value is written for the popup and for a screen reader. By default as a number with up to two decimals, the decimal sign by the language of the library (not the culture of the computer); `FormatPercent` writes a value from 0 to 1 as whole percent. Null gives the default back. |
 | `IsDragging` | `bool` | `false` | get | True while the user is dragging the thumb - callers can pause external updates. |
 | `LargeChange` | `double` | `0.1` | get, set | How far Page Up and Page Down move the value. 0 or less (the default) is a tenth of the range. |
 | `Maximum` | `double` | `1` | get, set | The top of the range (1 by default); it is always above `Minimum`. A `Value` above it is lowered to it; not a number and infinity are ignored. |
@@ -834,14 +840,16 @@ A `Form` with ErikwnkWFUI's own title bar (`TitleBar`) instead of the native Win
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateStandard()`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `BorderColor` | `Color` | - | get, set | The color of the thin edge around the window (a window with the native frame has none): black - the darkest background of the theme, which follows a change of the theme - for every window until a color is set; `Empty` goes back to that. The title bar and the version strip have their own colors (`Colors`). |
-| `CloseEnabled` | `bool` | - | get, set | Whether the user can close the window (`CloseEnabled`): with false the close button is greyed out, the entry of the system menu is too, and Alt+F4, the taskbar and Escape do not close it. `Close()` of the program still does (and so does a plain close message, as "End task" sends it). Can be changed while the window is open (a window that has finished its work lets the user close it). The native frame cannot grey out its button: there the click is only without effect. |
+| `BorderColor` | `Color` | `#0A0A0A` | get, set | The color of the thin edge around the window (a window with the native frame has none): black - the darkest background of the theme, which follows a change of the theme - for every window until a color is set; `Empty` goes back to that. The title bar and the version strip have their own colors (`Colors`). |
+| `CloseEnabled` | `bool` | `true` | get, set | Whether the user can close the window (`CloseEnabled`): with false the close button is greyed out, the entry of the system menu is too, and Alt+F4, the taskbar and Escape do not close it. `Close()` of the program still does (and so does a plain close message, as "End task" sends it). Can be changed while the window is open (a window that has finished its work lets the user close it). The native frame cannot grey out its button: there the click is only without effect. |
 | `ContentPanel` | `Panel` | - | get | The panel below the title bar - add your own UI here. |
 | `FormIcon` | `Image` | - | get, set | Shorthand for `TitleBar.IconImage` - the small logo shown at the top-left of the title bar, not the OS-level icon (see `WindowIcon` for that). |
-| `FormTitle` | `string` | - | get, set | The title of the window: the `Text` (taskbar, Alt-Tab) and the title bar show the same text, whichever of the two is set. `TitleBar.Title` changes the bar alone. |
-| `RememberBoundsKey` | `string` | - | get, set | A name under which the window remembers its position and size between runs (`RememberBoundsKey`): it is saved when the window is closed and restored when it opens, as long as it is still on a screen that is there. Use one name per window of the program. Null (the default) remembers nothing. A fixed-size window remembers only its position. Set it before the window is shown. |
+| `FormTitle` | `string` | `""` | get, set | The title of the window: the `Text` (taskbar, Alt-Tab) and the title bar show the same text, whichever of the two is set. `TitleBar.Title` changes the bar alone. |
+| `RememberBoundsKey` | `string` | `null` | get, set | A name under which the window remembers its position and size between runs (`RememberBoundsKey`): it is saved when the window is closed and restored when it opens, as long as it is still on a screen that is there. Use one name per window of the program. Null (the default) remembers nothing. A fixed-size window remembers only its position. Set it before the window is shown. |
 | `TitleBar` | `TitleBarControl` | - | get | The title bar itself - reach through here for anything not already proxied by `FormTitle`/`FormIcon`, e.g. `TitleBar.TitleForeColor`. |
 | `VersionLabel` | `Label` | - | get | The reserved bottom-right version strip, or null when `VersionText` wasn't set - reach through here to restyle it (font, color) after construction. |
 | `VersionStrip` | `FlowLayoutPanel` | - | get | The reserved bottom-right strip holding `VersionLabel`, or null when it wasn't reserved at all (see `VersionText`). Flows right-to-left, so `VersionStrip.Controls.Add(someControl)` places it directly to the left of the version text - e.g. an `CreateUpdateAvailableButton` button. |
@@ -891,19 +899,21 @@ The themed replacement for the input box of Visual Basic: a small dialog with a 
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateInputStandard("")`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `AllowEmpty` | `bool` | - | get, set | Whether OK also accepts an empty text. By default it does not: OK does nothing until something is typed. |
-| `CancelButtonText` | `string` | - | get, set | The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library. |
-| `ErrorText` | `string` | - | get, set | A message in red over the box, for an entry that was not right (for instance "wrong password" when the program asks again). It is taken away when the user types, and `Validator` sets it. Empty (the default) shows none. |
-| `Hint` | `string` | - | get, set | A short note in small gray letters under the prompt (what is wanted, an example ...); empty (the default) shows none. |
+| `AllowEmpty` | `bool` | `false` | get, set | Whether OK also accepts an empty text. By default it does not: OK does nothing until something is typed. |
+| `CancelButtonText` | `string` | `"Cancel"` | get, set | The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library. |
+| `ErrorText` | `string` | `""` | get, set | A message in red over the box, for an entry that was not right (for instance "wrong password" when the program asks again). It is taken away when the user types, and `Validator` sets it. Empty (the default) shows none. |
+| `Hint` | `string` | `""` | get, set | A short note in small gray letters under the prompt (what is wanted, an example ...); empty (the default) shows none. |
 | `InputTextBox` | `TextBox` | - | get | The box the user types into, for what is not covered here (an input filter ...). |
-| `MaxLength` | `int` | - | get, set | The most characters the box takes; 0 (the default) is no limit beyond the one of Windows. |
-| `OkButtonText` | `string` | - | get, set | The text of the OK button: "OK", or null for the text of the library. |
-| `Prompt` | `string` | - | get, set | The text above the box; the window grows or shrinks to it. |
-| `TrimValue` | `bool` | - | get, set | Whether the spaces at the beginning and the end of the text are cut off: `Value` and the text that `Validator` sees are without them, and a text of spaces only counts as empty. Off by default (a password may begin with a space). |
-| `Validator` | `Func<String, String>` | - | get, set | Checks the text when OK is clicked: returns null when it is fine, otherwise the message that is shown in red over the box (the window stays open, the text is selected). Null (the default) accepts every text that is not empty. It is not asked for an empty text unless `AllowEmpty` is set, and it gets the trimmed text when `TrimValue` is set. An exception in it is not caught. |
-| `Value` | `string` | - | get | The text that was entered, once the dialog was closed with OK (what the user accepted); empty before. |
+| `MaxLength` | `int` | `0` | get, set | The most characters the box takes; 0 (the default) is no limit beyond the one of Windows. |
+| `OkButtonText` | `string` | `"OK"` | get, set | The text of the OK button: "OK", or null for the text of the library. |
+| `Prompt` | `string` | `""` | get, set | The text above the box; the window grows or shrinks to it. |
+| `TrimValue` | `bool` | `false` | get, set | Whether the spaces at the beginning and the end of the text are cut off: `Value` and the text that `Validator` sees are without them, and a text of spaces only counts as empty. Off by default (a password may begin with a space). |
+| `Validator` | `Func<string, string>` | - | get, set | Checks the text when OK is clicked: returns null when it is fine, otherwise the message that is shown in red over the box (the window stays open, the text is selected). Null (the default) accepts every text that is not empty. It is not asked for an empty text unless `AllowEmpty` is set, and it gets the trimmed text when `TrimValue` is set. An exception in it is not caught. |
+| `Value` | `string` | `""` | get | The text that was entered, once the dialog was closed with OK (what the user accepted); empty before. |
 
 
 ## MessageBoxForm
@@ -914,14 +924,16 @@ The dialog behind `MessageBox`: a text (it scrolls when it does not fit), an ico
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateMessageStandard("")`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `CheckBoxChecked` | `bool` | - | get, set | Whether the check box is checked. |
-| `CheckBoxText` | `string` | - | get, set | A check box under the message ("Do not ask again", "Apply to all"); empty (the default) has none. What the user did with it is `CheckBoxChecked` once the dialog has ended. |
-| `Details` | `string` | - | get, set | A text under the message that the user opens with the "Details" button (the text of an exception, say); empty (the default) has no button. |
-| `DetailsExpanded` | `bool` | - | get, set | Whether the text of `Details` is open (the window is higher then). Closed by default. |
-| `PlaySound` | `bool` | - | get, set | Whether the sound of the icon is played when the window opens (the sounds of Windows for information, warning, error and question). Off by default. |
-| `ShowHelpButton` | `bool` | - | get, set | Whether the box has a help button (a question mark at the left of the buttons) that raises `HelpClicked`. Off by default. |
+| `CheckBoxChecked` | `bool` | `false` | get, set | Whether the check box is checked. |
+| `CheckBoxText` | `string` | `""` | get, set | A check box under the message ("Do not ask again", "Apply to all"); empty (the default) has none. What the user did with it is `CheckBoxChecked` once the dialog has ended. |
+| `Details` | `string` | `""` | get, set | A text under the message that the user opens with the "Details" button (the text of an exception, say); empty (the default) has no button. |
+| `DetailsExpanded` | `bool` | `false` | get, set | Whether the text of `Details` is open (the window is higher then). Closed by default. |
+| `PlaySound` | `bool` | `false` | get, set | Whether the sound of the icon is played when the window opens (the sounds of Windows for information, warning, error and question). Off by default. |
+| `ShowHelpButton` | `bool` | `false` | get, set | Whether the box has a help button (a question mark at the left of the buttons) that raises `HelpClicked`. Off by default. |
 
 | Event | Handler | Description |
 |---|---|---|
@@ -940,19 +952,21 @@ A settings window built around a `PropertyTable`: add your own rows to `Property
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateOptionsStandard()`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `CancelButtonText` | `string` | - | get, set | The text of the Cancel button, as `SaveButtonText`. |
+| `CancelButtonText` | `string` | `"Cancel"` | get, set | The text of the Cancel button, as `SaveButtonText`. |
 | `PropertyTable` | `PropertyTable` | - | get | Add your option rows here, then call `FitToContent`. |
-| `SaveButtonText` | `string` | - | get, set | The text of the Save button: "Save" or "Speichern", by the language of the library (it follows a change of the language while the window is open). A text set here is shown as it is; null goes back to the language of the library. |
-| `SelectedAccentColor` | `Color` | - | get | The accent color that is applied now. |
-| `SelectedAlwaysOnTop` | `bool` | - | get | Whether the window that owns this one (the main window) is always on top now. |
-| `SelectedLanguage` | `UILanguage` | - | get | The language of the library that is applied now. |
-| `SelectedStartWithWindows` | `bool` | - | get | Whether the program is to start with Windows: what the switch says (written when the user saves), or - without that option - what Windows has. |
+| `SaveButtonText` | `string` | `"Save"` | get, set | The text of the Save button: "Save" or "Speichern", by the language of the library (it follows a change of the language while the window is open). A text set here is shown as it is; null goes back to the language of the library. |
+| `SelectedAccentColor` | `Color` | `#005A9E` | get | The accent color that is applied now. |
+| `SelectedAlwaysOnTop` | `bool` | `false` | get | Whether the window that owns this one (the main window) is always on top now. |
+| `SelectedLanguage` | `UILanguage` | `English` | get | The language of the library that is applied now. |
+| `SelectedStartWithWindows` | `bool` | `false` | get | Whether the program is to start with Windows: what the switch says (written when the user saves), or - without that option - what Windows has. |
 | `SelectedTheme` | `UIColorTheme` | - | get | The theme that is applied now (dark or light). |
-| `ShowButtons` | `bool` | - | get, set | Whether the window has the buttons Save and Cancel (the default). Without them it is for settings that are applied at once: the user closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons. The options of the library that were chosen stay then. |
-| `ShowToasts` | `bool` | - | get, set | Whether the window tells the user by a toast, in the language of the library, that the settings were saved ("Settings saved", over the window that owns this one - none without an owner) and that the defaults were restored (over this window). The default. |
-| `StartWithWindowsArguments` | `string` | - | get, set | Arguments the program is started with when it starts with Windows (null: none), so it can tell that it was not started by the user - to stay in the tray, say. Used when `StartWithWindows` is saved. |
+| `ShowButtons` | `bool` | `true` | get, set | Whether the window has the buttons Save and Cancel (the default). Without them it is for settings that are applied at once: the user closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons. The options of the library that were chosen stay then. |
+| `ShowToasts` | `bool` | `true` | get, set | Whether the window tells the user by a toast, in the language of the library, that the settings were saved ("Settings saved", over the window that owns this one - none without an owner) and that the defaults were restored (over this window). The default. |
+| `StartWithWindowsArguments` | `string` | `null` | get, set | Arguments the program is started with when it starts with Windows (null: none), so it can tell that it was not started by the user - to stay in the tray, say. Used when `StartWithWindows` is saved. |
 
 | Event | Handler | Description |
 |---|---|---|
@@ -974,19 +988,21 @@ A small dialog that shows how far a task has come: a text (`Status`) and a progr
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateProgressStandard()`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
 | `BarColors` | `UIColorSet` | - | get, set | The colors of the bar while the task runs (its main color, as `UIStyles.ProgressBars.CreateStandard(colors)` uses it): for example `UIStyles.Colors.Sets.Green` for an update, as green as its Update now button. Null (the default) is the color set of the window when it has one, else the accent. Once the task has ended the bar is green (`Succeed`) or red (`Fail`) whatever this is. Set it on the thread of the window. |
-| `CancelButtonText` | `string` | - | get, set | The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library. When the task has ended (`Succeed`, `Fail`) the button says "Close" whatever this is. |
-| `Cancelable` | `bool` | - | get, set | Whether the window has a Cancel button, which Escape presses too. Cancelling only asks: `IsCancelled` and `CancellationToken` say so, and the task stops and the program closes the window. |
+| `CancelButtonText` | `string` | `"Cancel"` | get, set | The text of the Cancel button ("Cancel" or "Abbrechen"), or null for the text of the library. When the task has ended (`Succeed`, `Fail`) the button says "Close" whatever this is. |
+| `Cancelable` | `bool` | `false` | get, set | Whether the window has a Cancel button, which Escape presses too. Cancelling only asks: `IsCancelled` and `CancellationToken` say so, and the task stops and the program closes the window. |
 | `CancellationToken` | `CancellationToken` | - | get | Is cancelled when the user asks to stop: give it to the task, which looks at it (or passes it on) and ends. |
-| `IsCancelled` | `bool` | - | get | Whether the user has asked to stop. |
-| `IsIndeterminate` | `bool` | - | get, set | Whether the bar just moves, because nobody can tell how long the task takes (the percentage is not shown then). |
-| `Percent` | `int` | - | get, set | How far the task has come, 0 to 100 (a value outside is cut to it); setting it turns `IsIndeterminate` off. Can be set from any thread. Once the task has ended (`Succeed`, `Fail`) nothing changes any more: late reports are ignored. |
-| `ShowPercentage` | `bool` | - | get, set | Whether the percentage is written on the bar (the default); a bar that just moves has none. |
-| `ShowTime` | `bool` | - | get, set | Whether a gray line under the bar says how much time has passed and - when the percentage is known and the task has been running for a moment - how much is left, as an estimate ("0:12 elapsed · about 0:35 left"). Off by default. |
-| `State` | `ProgressState` | - | get | Whether the task is still running or has ended with `Succeed` or `Fail`. |
-| `Status` | `string` | - | get, set | The text above the bar ("Downloading ..."); the window grows or shrinks to it. Can be set from any thread. |
+| `IsCancelled` | `bool` | `false` | get | Whether the user has asked to stop. |
+| `IsIndeterminate` | `bool` | `false` | get, set | Whether the bar just moves, because nobody can tell how long the task takes (the percentage is not shown then). |
+| `Percent` | `int` | `0` | get, set | How far the task has come, 0 to 100 (a value outside is cut to it); setting it turns `IsIndeterminate` off. Can be set from any thread. Once the task has ended (`Succeed`, `Fail`) nothing changes any more: late reports are ignored. |
+| `ShowPercentage` | `bool` | `true` | get, set | Whether the percentage is written on the bar (the default); a bar that just moves has none. |
+| `ShowTime` | `bool` | `false` | get, set | Whether a gray line under the bar says how much time has passed and - when the percentage is known and the task has been running for a moment - how much is left, as an estimate ("0:12 elapsed · about 0:35 left"). Off by default. |
+| `State` | `ProgressState` | `Running` | get | Whether the task is still running or has ended with `Succeed` or `Fail`. |
+| `Status` | `string` | `""` | get, set | The text above the bar ("Downloading ..."); the window grows or shrinks to it. Can be set from any thread. |
 
 | Event | Handler | Description |
 |---|---|---|
@@ -1048,14 +1064,92 @@ The dialog behind `UpdatePrompt.ShowUpdateAvailableAsync` - prefer calling that 
 
 Made by `UIStyles.Forms` (see the end of this file).
 
+The defaults below are those of `UIStyles.Forms.CreateUpdateAvailableStandard("", "")`: the type has no constructor without parameters.
+
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
-| `AllowSkip` | `bool` | - | get, set | Whether the window has a "Skip this version" button (the program then does not ask again for this version). Off by default. |
-| `NotesExpanded` | `bool` | - | get, set | Whether the text of `ReleaseNotes` is open (the window is higher then). Closed by default. |
-| `ReleaseNotes` | `string` | - | get, set | The text of the release ("What's new"): with it the window has a "What's new" button that opens the text under the versions. Empty (the default) has no button. Plain text; the Markdown of a GitHub release is shown as it is written. |
-| `SkipChosen` | `bool` | - | get | Whether the user clicked "Skip this version" (the dialog is closed with `DialogResult.Ignore` then). The button is there only with `AllowSkip`. |
-| `UpdateChosen` | `bool` | - | get | Whether the user clicked "Update now" (the dialog is closed with `DialogResult.Yes` then); false for Later, Skip and for closing it. |
+| `AllowSkip` | `bool` | `false` | get, set | Whether the window has a "Skip this version" button (the program then does not ask again for this version). Off by default. |
+| `NotesExpanded` | `bool` | `false` | get, set | Whether the text of `ReleaseNotes` is open (the window is higher then). Closed by default. |
+| `ReleaseNotes` | `string` | `""` | get, set | The text of the release ("What's new"): with it the window has a "What's new" button that opens the text under the versions. Empty (the default) has no button. Plain text; the Markdown of a GitHub release is shown as it is written. |
+| `SkipChosen` | `bool` | `false` | get | Whether the user clicked "Skip this version" (the dialog is closed with `DialogResult.Ignore` then). The button is there only with `AllowSkip`. |
+| `UpdateChosen` | `bool` | `false` | get | Whether the user clicked "Update now" (the dialog is closed with `DialogResult.Yes` then); false for Later, Skip and for closing it. |
 
+
+## Other public types
+
+Helpers, static entry points and the like that are not controls. The enumerations follow with their values.
+
+| Type | Kind | Namespace | Description |
+|---|---|---|---|
+| `AppCurrencyFormatter` | static class | ErikwnkWFUI | Formats amounts for a chosen currency - deliberately independent of AppLanguage/AppLocalization. Someone reading German text doesn't necessarily want US number formatting just because they picked Dollar, and vice versa, so this only controls the currency symbol and its own number format, not the rest of the UI. |
+| `UIStyles` | static class | ErikwnkWFUI | The single entry point for ErikwnkWFUI's control factories and styling - start here rather than the individual classes under `Factories`/`Styles` (most of which are internal). Each nested class below (`UIStyles.Buttons`, `UIStyles.Labels`, ...) mirrors one control type with a set of `Create*` factory methods that return a pre-themed, ready-to-add WinForms control. See `UIStyles.Colors` for how to customize the color scheme (accent color and/or full light/dark theme) and `UIStyles.Language`/`UIStyles.SetLanguage` for switching the language of built-in dialog text. |
+| `LabelScroll` | class | Controls | How the text of a `ScrollingLabel` moves when it is too long for the label, all in one value to hand to `UIStyles.Labels` (or to `Scroll`): `LabelScroll.Endless()`, `LabelScroll.BackAndForth(LabelScrollSpeed.Fast)`. It cannot be changed; one value can serve any number of labels. |
+| `PropertyColumn` | class | Controls | Pairs a `Control` (or a null placeholder) with a `TableLayoutPanel` column width, for `PropertyTable`'s multi-column row overloads. Build one with `Auto`, `Absolute`, or `Percent` rather than constructing it directly. |
+| `PropertyRow` | class | Controls | A row (or section header) of a `PropertyTable`, as `AddRow` and `AddSection` return it: it can be hidden or disabled later, for an option that depends on another one. After `ClearRows` the row is gone and the handle does nothing any more. |
+| `RadioGroup` | class | Controls | One choice among several radio buttons that do not have to share a parent: the standard grouping works only for buttons in the same container, which is awkward in a table layout or when a choice is spread over several panels. Put the buttons into a group; selecting one clears the others, and `SelectionChanged` tells the new choice once. |
+| `TabAddingEventArgs` | class | Controls | Data for `TabAdding`. |
+| `TabClosingEventArgs` | class | Controls | Data for `TabClosing`. |
+| `TabRenameStartingEventArgs` | class | Controls | Data for `TabRenameStarting`. |
+| `TabRenamedEventArgs` | class | Controls | Data for `TabRenamed`. |
+| `TabRenamingEventArgs` | class | Controls | Data for `TabRenaming`. |
+| `TabRightClickEventArgs` | class | Controls | Data for `TabRightClick`. |
+| `UIColumn` (obsolete) | class | Controls | The old name of `PropertyColumn`: `UIColumn.Percent(...)`, `Absolute` and `Auto` still work (and give a `PropertyColumn`); code that declares a variable of the type `UIColumn` has to use `PropertyColumn`. It is removed once the projects that use it have been changed. |
+| `AppUpdater` | class | Forms | Self-contained "check for update" flow for apps hosting their releases on GitHub. Provides all the UI itself (prompt, progress, failure message) and only needs the repo coordinates and a couple of HttpClients to talk to ErikwnkCore.Updater - the consuming app never touches that library directly. |
+| `FormOptions` | class | Forms | Everything that can be set for an `AppForm`. Start from one of the factory methods and change single properties from there, rather than writing `new FormOptions { ... }`: the presets keep related properties together (a dialog has no maximize button AND cannot be maximized by dragging, and closes with Escape). `CreateStandard` is a resizable window, `CreateDialog` a fixed-size one with only the close button, `CreateSettings` a dialog with the version of the program; the `CreatePrimary...` ones have the frame in the accent. `UIStyles.Forms` makes the window itself from such options. |
+| `FormSizeOption` | struct | Forms | The size of a window or dialog: one of the three `FormSize` values or an own `Size`, one parameter for both - `size: FormSize.Small` or `size: new Size(500, 300)` (both convert by themselves). An own size is for 96 dpi like the ready-made ones. For a dialog whose height follows its content (input box, progress dialog, options window) the width is the one that is given, and the height is the least height: the content decides when it needs more. |
+| `InfoPopupSection` | class | Forms | One block of content for `InfoPopupForm`: a header, a text, or both. A part left null or empty is not shown. |
+| `InputBox` | static class | Forms | The themed replacement for the input box of Visual Basic - call `Show`. It is shown as a dialog and returns what the user typed. |
+| `MessageBox` | static class | Forms | ErikwnkWFUI's themed replacement for `MessageBox` - call `Show`. |
+| `PopupFormBase` | abstract class | Forms | What `InfoPopupForm` and `ToastForm` have in common: a borderless window that is never in the taskbar, never takes the activation, has smoothly rounded corners and a thin line around it (and, as Windows 11 would give a window it rounds itself, no shadow), is see-through by a `PopupTransparency` and moves with the window it belongs to. |
+| `ProgressBox` | static class | Forms | Shows a progress dialog while a task runs - call `Run`. It is shown as a dialog and closes by itself when the task is done. |
+| `StyledFormOptions` (obsolete) | class | Forms | The old name of `FormOptions`: its factory methods still work (and give a `FormOptions`); code that declares a variable of the type `StyledFormOptions` has to use `FormOptions`. |
+| `Toaster` | class | Forms | The settings of a toast kept as properties, to show toasts with them again and again (like `InfoPopupForm` keeps its settings): created with `UIStyles.Toasts.CreateStandard` or `CreatePrimary`, changed at any time, used by every toast it shows from then on. A toast that is already up is not changed. It holds no window of its own, so it needs no disposing; the toasts it shows are `ToastForm`s with all their rules (one at a time, waiting for the window). |
+| `UpdatePrompt` | static class | Forms | The windows of an update: the question "a new version is available" and, after "Update now", the progress of the download. Both are modal and have to be shown from the thread of the application's windows (the UI thread). |
+| `BorderlessResizeHandler` | class | Helpers | Restores edge/corner resize cursors and dragging for a borderless (`None`) form, which loses that automatically along with its native frame. `AppForm` already wires this up for you when its Borderless/Resizable options are both true - construct one directly only if you're building a borderless window from scratch instead of deriving from AppForm. |
+| `OutsideClickFilter` | class | Helpers | Watches the whole application for a mouse button going down and calls back when `isOutside` says it landed somewhere that counts as "elsewhere" for the owner. Never swallows the click. Start it when the owner needs it, stop it (or dispose it) when done. |
+| `TextDragDropHelper` | static class | Helpers | Helper for adding drag and drop support to controls. TextDragDropHelper.EnableTextDragDrop( txtPath, text => txtPath.Text = text); |
+| `ToolTipActivationFix` | static class | Helpers | Works around a WinForms/Windows quirk where a `ToolTip` can silently stop popping up once its owning top-level window has lost and regained focus (e.g. Alt-Tab) - the native tooltip control's internal activation state gets left off and normal mouse hover no longer reactivates it. Toggling `Active` off then on again resets that state; this hooks it automatically to the owning `Form`'s `Activated` event, following the control through reparenting. |
+| `WindowsAutoStart` | static class | Helpers | Whether the program starts when the user signs in to Windows: the entry of the program in the "Run" key of the user (`HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run`), named like the program. It needs no rights of an administrator and is the same list Windows shows in Task Manager, "Startup apps". The state lives in Windows, not in the program's own settings. A program that the user has switched off in Task Manager ("Startup apps") is not started with Windows, whatever the Run key says: `IsEnabled` says so, and `Set` switches it on again. |
+| `UIAccentColors` | static class | Styles | A curated palette of base colors for `SetAccent`, picked at roughly the same brightness/saturation as `Blue` (the default) so every choice produces a comparably good set of derived light/dark shades. Not exhaustive - SetAccent takes any Color, this is just a ready-made "pick one" set for a color-picker UI. |
+| `UIAppearance` | class | Styles | What the user chose to make the library look like: theme, accent color and language - the part of the settings that belongs to the library. Only plain values (an enum, a text, an enum), so it can be a member of the program's own settings class and be written with whatever the program writes its settings with; or it is kept in a file of its own with `Save` and `Load`. `Capture` reads what is applied now, `Apply` applies it. |
+| `UIButtonPreset` | class | Styles | A ready-made design for a symbol button: which symbol it carries and in which colors. Pass one to `UIStyles.Buttons.CreateSymbol` and the button gets both. The library's own are in `UIStyles.Buttons.Presets` (Add, Delete, Save ...); your own are made with the constructor, or from one of those with `WithSymbol` / `WithColors`, and can be defined once and used everywhere. |
+| `UIColorSet` | class | Styles | Every color a control needs to show one colored look in all of its states: the fill at rest, hovered, pressed and disabled, and the text color that reads best on each of them. Get one from the ready-made `UIStyles.Colors.Sets` (Orange, Teal, Purple ...) or build one from any color with `UIStyles.Colors.CreateSet`; a control that accepts a set then needs nothing else. |
+| `UIColorTheme` | class | Styles | The set of base surface colors (backgrounds, text, borders, hover/active tints) that make up a theme - everything except the accent color, which is set independently via `SetAccent` so any accent can be combined with either theme. Property names describe each color's role (e.g. "the default control surface"), not its literal shade - in `Light`, "BackgroundLighter" still means "the most raised/active surface", even though it holds a darker RGB value than "BackgroundMedium" there (you can't go lighter than white, so the light theme's hover/press feedback works by adding a bit of gray instead). Defaults to today's dark values, so creating one and overriding just a few properties still yields a complete, usable theme. |
+| `UIColors` | static class | Styles |  |
+| `UIFonts` | static class | Styles | The fonts used across ErikwnkWFUI's controls - fixed, not part of the theme system. |
+| `UIIcons` | static class | Styles |  |
+| `UIThemes` | static class | Styles | Ready-to-use base themes for `ApplyTheme`. Dark matches ErikwnkWFUI's original, always-has-been-the-default palette exactly (applying it is a no-op unless something else already changed the theme). Light is a from-scratch light palette, not a per-channel inversion of Dark - see the note on `UIColorTheme` about why the same role can hold a lighter or darker RGB value depending on which theme is active. |
+
+| Enumeration | Values | Description |
+|---|---|---|
+| `AppCurrency` | `Euro`, `Dollar` |  |
+| `CellBorderLines` | `All`, `OuterOnly`, `InnerOnly` | Which lines of a table with `CellBorderStyle.Single` are shown (`CellBorderLines`). |
+| `CopyConfirmationStyle` | `Toast`, `ToolTip`, `None` | How `ListView` confirms a Ctrl+C/Ctrl+Shift+C copy. |
+| `LabelScrollDirection` | `Left`, `Right` | Which way the text of a `ScrollingLabel` moves in the endless mode. |
+| `LabelScrollMode` | `None`, `BackAndForth`, `Endless` | Whether and how the text of a `ScrollingLabel` moves when it is too long for the label. |
+| `LabelScrollPause` | `Short`, `Medium`, `Long` | How long the text of a `ScrollingLabel` rests at its start and at its end while it scrolls: 1, 2.2 or 4 seconds. |
+| `LabelScrollSeparator` | `Dot`, `Bar`, `Diamond`, `None` | The sign between the end of the text and its next appearance in the endless mode. |
+| `LabelScrollSpeed` | `Slow`, `Medium`, `Fast` | How fast the text of a `ScrollingLabel` moves while it scrolls: 25, 45 or 90 pixels per second. |
+| `SlimProgressBarTextPosition` | `Above`, `Below`, `Left`, `Right` | Where the text of a `SlimProgressBar` is placed in relation to the bar. |
+| `SpinnerSpeed` | `Slow`, `Medium`, `Fast` | How fast the arc of a `Spinner` turns: a turn in about 2, 1.2 or 0.7 seconds. |
+| `SpinnerTextPosition` | `Right`, `Left`, `Above`, `Below` | Where the text of a `Spinner` is placed in relation to the ring. |
+| `FormSize` | `Small`, `Medium`, `Large` | The three sizes every window and dialog of the library can have. What a size means depends on the kind of window: a normal window is larger than a dialog, a progress dialog is wider than an input box is high, and so on (see `FormSizeOption`); the sizes are given for 96 dpi and scaled to the screen. |
+| `MessageBoxButtons` | `OK`, `OKCancel`, `YesNo`, `YesNoCancel`, `RetryCancel`, `AbortRetryIgnore` | Which buttons a `MessageBox` shows. |
+| `MessageBoxDefault` | `Safe`, `Button1`, `Button2`, `Button3` | Which button of a `MessageBox` has the focus first (and answers Enter). |
+| `MessageBoxIcon` | `None`, `Info`, `Warning`, `Error`, `Question`, `Success` | Which icon a `MessageBox` shows in its title bar. |
+| `MessageBoxSize` (obsolete) | `Small`, `Medium`, `Large` | Overall size preset for a `MessageBox`. Use `FormSize`, the one size setting of all the windows. |
+| `OptionsPreset` | `Theme`, `AccentColor`, `Language`, `AlwaysOnTop`, `StartWithWindows`, `ResetToDefaults` | A ready-made option of the library for an `OptionsForm`: `AddOption(OptionsPreset.Language)` puts the row with its choice into the table, and the window applies it as it is chosen. What the user chose stays when the window is closed with Save and is taken back when it is closed without (Cancel, Escape, the close button). |
+| `PopupDelay` | `Instant`, `Short`, `Medium`, `Long` | How long a popup waits before it shows: a hover `InfoPopupForm` (default medium, so passing the mouse over items shows nothing) or a `ToastForm` (default instant). |
+| `PopupDuration` | `Short`, `Medium`, `Long`, `UntilClicked` | How long a popup stays before it closes itself: a `ToastForm` 1.5, 2.5 or 4 seconds, an `InfoPopupForm` 3, 5 or 8 seconds (it is read, not just seen). A toast whose text is long stays longer (see `DurationGrowsWithText`), and `UntilClicked` keeps it until it is clicked. |
+| `PopupTransparency` | `Opaque`, `Low`, `Medium`, `High` | How see-through a popup (`InfoPopupForm`, `ToastForm`) is. |
+| `ProgressOutcome` | `Completed`, `Cancelled` | How `Run` ended. |
+| `ProgressState` | `Running`, `Succeeded`, `Failed` | Where a `ProgressForm` is: still working, or finished with `Succeed` or `Fail`. |
+| `StyledFormType` (obsolete) | `Standard`, `Dialog`, `Settings` | Only `Settings` did something (the version strip); `CreateSettings` does it now. |
+| `ToastIcon` | `None`, `Success`, `Info`, `Warning`, `Error` | The symbol at the left of a `ToastForm`: it tells at a glance what kind of message it is. |
+| `ToastPosition` | `BelowCenter`, `Center`, `AboveCenter`, `TopCenter`, `BottomCenter`, `TopLeft`, `TopRight`, `BottomLeft`, `BottomRight` | Where a `ToastForm` is shown inside the window it belongs to. The positions at an edge or in a corner keep a fixed distance from the edge, they never touch it. |
+| `UpdateOutcome` | `Declined`, `Applied`, `Failed`, `Skipped`, `Cancelled` | How an `UpdatePrompt.ShowUpdateAvailableAsync` dialog ended. |
+| `UILanguage` | `English`, `German` | The language of the built-in dialogs and tooltips - see `UIStyles.Language`. |
+| `UIThemeKind` | `Dark`, `Light` | The two ready-made themes by name, so they can be kept in a settings file. |
 
 ## UIStyles factory classes
 
@@ -1065,14 +1159,14 @@ Flat, themed `Button`s with a caption: `UIStyles.Buttons.CreateStandard` (neutra
 
 | Method | Description |
 |---|---|
-| `CreateGreen(string text = "", string tooltip = "", Size`? size = null, bool isIcon = false)` | A green button, for confirming. |
-| `CreatePrimary(string text = "", string tooltip = "", Size`? size = null, bool isIcon = false)` | The main button of a screen, in the current accent color. |
-| `CreateRed(string text = "", string tooltip = "", Size`? size = null, bool isIcon = false)` | A red button, for deleting or other destructive actions. |
-| `CreateStandard(string text = "", string tooltip = "", Size`? size = null, bool isIcon = false, UIColorSet colors = null)` | The neutral button. |
-| `CreateSymbol(UIButtonPreset preset, string tooltip = "", Size`? size = null)` | Makes a symbol button from a ready-made design - the simplest way. The `preset` already says which symbol the button carries and in which colors; you only add what the button is for (the tooltip) and, if the standard 30 x 30 is not what you want, its size. |
-| `CreateSymbol(string symbol, string tooltip = "", Size`? size = null, UIColorSet colors = null)` | Makes a symbol button when you want to choose the symbol and the colors yourself: any symbol from `UIStyles.Symbols` (or a symbol of your own), in the neutral look or in the colors of a color set. |
-| `CreateThemeToggle(Size`? size = null, UIColorSet colors = null)` | A button that switches the theme, and does all of it by itself: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for the dark one), switches the theme with `UIColors.ApplyTheme` when it is clicked, and shows the new state - also when the theme is changed by anything else (the options window, your own code). Its tooltip and its name for the screen reader say what a click does, in the language of the library, and follow a change of it. It takes no focus, like a button of a tool bar. Add a handler to `Click` (it runs after the theme has been switched) to keep the choice, say `UIAppearance.Capture().Save(path)`. |
-| `CreateThemeTogglePrimary(Size`? size = null)` | The button that switches the theme (see `UIStyles.Buttons.CreateThemeToggle`) in the accent color (it follows a change of the accent). |
+| `CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)` | A green button, for confirming. |
+| `CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)` | The main button of a screen, in the current accent color. |
+| `CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)` | A red button, for deleting or other destructive actions. |
+| `CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false, UIColorSet colors = null)` | The neutral button. |
+| `CreateSymbol(UIButtonPreset preset, string tooltip = "", Size? size = null)` | Makes a symbol button from a ready-made design - the simplest way. The `preset` already says which symbol the button carries and in which colors; you only add what the button is for (the tooltip) and, if the standard 30 x 30 is not what you want, its size. |
+| `CreateSymbol(string symbol, string tooltip = "", Size? size = null, UIColorSet colors = null)` | Makes a symbol button when you want to choose the symbol and the colors yourself: any symbol from `UIStyles.Symbols` (or a symbol of your own), in the neutral look or in the colors of a color set. |
+| `CreateThemeToggle(Size? size = null, UIColorSet colors = null)` | A button that switches the theme, and does all of it by itself: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for the dark one), switches the theme with `UIColors.ApplyTheme` when it is clicked, and shows the new state - also when the theme is changed by anything else (the options window, your own code). Its tooltip and its name for the screen reader say what a click does, in the language of the library, and follow a change of it. It takes no focus, like a button of a tool bar. Add a handler to `Click` (it runs after the theme has been switched) to keep the choice, say `UIAppearance.Capture().Save(path)`. |
+| `CreateThemeTogglePrimary(Size? size = null)` | The button that switches the theme (see `UIStyles.Buttons.CreateThemeToggle`) in the accent color (it follows a change of the accent). |
 | `UpdateTooltip(Button button, string tooltip)` | Changes the tooltip text of a button made by this class, for example after a language switch. A button created without a tooltip gets one with the first text that is not empty. |
 
 ### UIStyles.CheckBoxes
@@ -1106,7 +1200,7 @@ A themed `ComboBox`: the closed box, the rows and the frame of the open list fol
 |---|---|
 | `CreatePrimary(ComboBoxStyle comboBoxStyle = DropDownList)` | Like `UIStyles.ComboBoxes.CreateStandard` but with the selected row in the current accent instead of the neutral gray - mirrors `UIStyles.Buttons.CreatePrimary`. |
 | `CreateStandard(ComboBoxStyle comboBoxStyle = DropDownList, UIColorSet colors = null)` | A themed combo box; the selected (or hovered) row of the list is the neutral gray. |
-| `ReplaceItems(ComboBox comboBox, IEnumerable<Object> items, bool keepSelection = true)` | Clears the items of `comboBox` and fills it from `items` - for example because a language switch changed the texts - and selects again what was selected before, by its POSITION in the list (so the same choices in the same order are assumed, only relabeled). `SelectedIndexChanged` can be raised once by the clearing and once by the selecting. |
+| `ReplaceItems(ComboBox comboBox, IEnumerable<object> items, bool keepSelection = true)` | Clears the items of `comboBox` and fills it from `items` - for example because a language switch changed the texts - and selects again what was selected before, by its POSITION in the list (so the same choices in the same order are assumed, only relabeled). `SelectedIndexChanged` can be raised once by the clearing and once by the selecting. |
 
 ### UIStyles.ContextMenuStrips
 
@@ -1123,10 +1217,10 @@ A themed `DataGridView` for data bound via `DataSource` - the control to reach f
 
 | Method | Description |
 |---|---|
-| `CreatePrimary(Object dataSource = null)` | Like `UIStyles.DataGridViews.CreateStandard` but framed in the current accent color instead of the fixed neutral border - mirrors `UIStyles.ListViews.CreatePrimary`. |
-| `CreateReadOnlyPrimary(Object dataSource = null)` | Like `UIStyles.DataGridViews.CreateReadOnlyStandard` but framed in the current accent color instead of the fixed neutral border - the read-only counterpart to `UIStyles.DataGridViews.CreatePrimary`. |
-| `CreateReadOnlyStandard(Object dataSource = null, UIColorSet colors = null)` | The display-only variant - column-header sorting, but no editing. Use `UIStyles.DataGridViews.CreateStandard` instead for a grid that needs to be editable. |
-| `CreateStandard(Object dataSource = null, UIColorSet colors = null)` | The editable variant - row adding/deleting, an optional delete-row column, clipboard cut/copy/paste, and a right-click context menu. Use `UIStyles.DataGridViews.CreateReadOnlyStandard` instead for a grid that only ever shows data. |
+| `CreatePrimary(object dataSource = null)` | Like `UIStyles.DataGridViews.CreateStandard` but framed in the current accent color instead of the fixed neutral border - mirrors `UIStyles.ListViews.CreatePrimary`. |
+| `CreateReadOnlyPrimary(object dataSource = null)` | Like `UIStyles.DataGridViews.CreateReadOnlyStandard` but framed in the current accent color instead of the fixed neutral border - the read-only counterpart to `UIStyles.DataGridViews.CreatePrimary`. |
+| `CreateReadOnlyStandard(object dataSource = null, UIColorSet colors = null)` | The display-only variant - column-header sorting, but no editing. Use `UIStyles.DataGridViews.CreateStandard` instead for a grid that needs to be editable. |
+| `CreateStandard(object dataSource = null, UIColorSet colors = null)` | The editable variant - row adding/deleting, an optional delete-row column, clipboard cut/copy/paste, and a right-click context menu. Use `UIStyles.DataGridViews.CreateReadOnlyStandard` instead for a grid that only ever shows data. |
 
 ### UIStyles.FlowLayoutPanels
 
@@ -1150,22 +1244,22 @@ Windows with the title bar of the library, ready to use: `UIStyles.Forms.CreateS
 
 | Method | Description |
 |---|---|
-| `CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A fixed-size dialog with the title bar in a very dark shade of the accent. |
-| `CreateDialogStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A fixed-size dialog: only the close button, and it cannot be maximized by dragging. |
-| `CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false, string placeholder = "", FormSizeOption`? size = null)` | An input box with the title bar in a very dark shade of the accent. |
-| `CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null, string placeholder = "", FormSizeOption`? size = null)` | An input box (`InputBoxForm`): a small dialog with a prompt, one text box and OK / Cancel. Show it with `ShowDialog`; after OK the text is in `Value`. `Show` does all of it in one call. |
-| `CreateMessagePrimary(string message, string title = null, MessageBoxButtons buttons = OK, MessageBoxIcon icon = Info, FormSizeOption`? size = null, string details = null, MessageBoxDefault defaultButton = Safe, String[] buttonTexts = null, bool playSound = false)` | A message box with the title bar in a very dark shade of the accent. |
-| `CreateMessageStandard(string message, string title = null, MessageBoxButtons buttons = OK, MessageBoxIcon icon = Info, UIColorSet colors = null, FormSizeOption`? size = null, string details = null, MessageBoxDefault defaultButton = Safe, String[] buttonTexts = null, bool playSound = false)` | A message box (`MessageBoxForm`): a dialog with a text, an icon in the title bar and buttons. Show it with `ShowDialog` and read `DialogResult`; `MessageBox.Show` does all of it in one call. |
-| `CreateOptionsPrimary(string title = null, OptionsPreset[] presets = null, FormSizeOption`? size = null)` | An options window with the title bar in a very dark shade of the accent. |
-| `CreateOptionsStandard(string title = null, UIColorSet colors = null, OptionsPreset[] presets = null, FormSizeOption`? size = null)` | A settings window around a property table, with the buttons Save and Cancel and the version of the program at the bottom (`OptionsForm`): it starts with the ready-made options of the library (theme, accent color, language, always on top), then add rows to its `PropertyTable` and call `FitToContent()`. |
-| `CreatePrimary(string title = "", ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A resizable window with the title bar in a very dark shade of the accent. |
-| `CreateProgressPrimary(string status = "", string title = null, bool cancelable = false, FormSizeOption`? size = null)` | A progress dialog with the title bar in a very dark shade of the accent. |
-| `CreateProgressStandard(string status = "", string title = null, bool cancelable = false, UIColorSet colors = null, FormSizeOption`? size = null)` | A progress dialog (`ProgressForm`): a text and a progress bar, which the task fills with `Report` (from any thread). The user cannot close it; the program does, when the task is done. `Run` does all of it in one call. |
-| `CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = MiddleLeft, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A settings window with the title bar in a very dark shade of the accent. |
-| `CreateSettingsStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleLeft, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A dialog like `UIStyles.Forms.CreateDialogStandard` with the version of the program (the entry assembly) in a strip at the bottom. |
-| `CreateStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption`? size = null)` | A resizable window with minimize, maximize and close. |
-| `CreateUpdateAvailablePrimary(string currentVersion, string latestVersion, string title = null, FormSizeOption`? size = null, string releaseNotes = null, bool allowSkip = false)` | The window that tells the user a new version is there, with the title bar in a very dark shade of the accent. |
-| `CreateUpdateAvailableStandard(string currentVersion, string latestVersion, string title = null, UIColorSet colors = null, FormSizeOption`? size = null, string releaseNotes = null, bool allowSkip = false)` | The window that tells the user a new version is there (`UpdateAvailableForm`): the two versions and the buttons "Later" and "Update now". Show it with `ShowDialog`; `UpdateChosen` says whether "Update now" was clicked. `UpdatePrompt.ShowUpdateAvailableAsync` does all of it, with the download that follows. |
+| `CreateDialogPrimary(string title = "", ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A fixed-size dialog with the title bar in a very dark shade of the accent. |
+| `CreateDialogStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A fixed-size dialog: only the close button, and it cannot be maximized by dragging. |
+| `CreateInputPrimary(string prompt, string title = null, string text = "", bool password = false, string placeholder = "", FormSizeOption? size = null)` | An input box with the title bar in a very dark shade of the accent. |
+| `CreateInputStandard(string prompt, string title = null, string text = "", bool password = false, UIColorSet colors = null, string placeholder = "", FormSizeOption? size = null)` | An input box (`InputBoxForm`): a small dialog with a prompt, one text box and OK / Cancel. Show it with `ShowDialog`; after OK the text is in `Value`. `Show` does all of it in one call. |
+| `CreateMessagePrimary(string message, string title = null, MessageBoxButtons buttons = OK, MessageBoxIcon icon = Info, FormSizeOption? size = null, string details = null, MessageBoxDefault defaultButton = Safe, String[] buttonTexts = null, bool playSound = false)` | A message box with the title bar in a very dark shade of the accent. |
+| `CreateMessageStandard(string message, string title = null, MessageBoxButtons buttons = OK, MessageBoxIcon icon = Info, UIColorSet colors = null, FormSizeOption? size = null, string details = null, MessageBoxDefault defaultButton = Safe, String[] buttonTexts = null, bool playSound = false)` | A message box (`MessageBoxForm`): a dialog with a text, an icon in the title bar and buttons. Show it with `ShowDialog` and read `DialogResult`; `MessageBox.Show` does all of it in one call. |
+| `CreateOptionsPrimary(string title = null, OptionsPreset[] presets = null, FormSizeOption? size = null)` | An options window with the title bar in a very dark shade of the accent. |
+| `CreateOptionsStandard(string title = null, UIColorSet colors = null, OptionsPreset[] presets = null, FormSizeOption? size = null)` | A settings window around a property table, with the buttons Save and Cancel and the version of the program at the bottom (`OptionsForm`): it starts with the ready-made options of the library (theme, accent color, language, always on top), then add rows to its `PropertyTable` and call `FitToContent()`. |
+| `CreatePrimary(string title = "", ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A resizable window with the title bar in a very dark shade of the accent. |
+| `CreateProgressPrimary(string status = "", string title = null, bool cancelable = false, FormSizeOption? size = null)` | A progress dialog with the title bar in a very dark shade of the accent. |
+| `CreateProgressStandard(string status = "", string title = null, bool cancelable = false, UIColorSet colors = null, FormSizeOption? size = null)` | A progress dialog (`ProgressForm`): a text and a progress bar, which the task fills with `Report` (from any thread). The user cannot close it; the program does, when the task is done. `Run` does all of it in one call. |
+| `CreateSettingsPrimary(string title = "", ContentAlignment titleTextAlign = MiddleLeft, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A settings window with the title bar in a very dark shade of the accent. |
+| `CreateSettingsStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleLeft, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A dialog like `UIStyles.Forms.CreateDialogStandard` with the version of the program (the entry assembly) in a strip at the bottom. |
+| `CreateStandard(string title = "", UIColorSet colors = null, ContentAlignment titleTextAlign = MiddleCenter, Image icon = null, Icon windowIcon = null, FormSizeOption? size = null)` | A resizable window with minimize, maximize and close. |
+| `CreateUpdateAvailablePrimary(string currentVersion, string latestVersion, string title = null, FormSizeOption? size = null, string releaseNotes = null, bool allowSkip = false)` | The window that tells the user a new version is there, with the title bar in a very dark shade of the accent. |
+| `CreateUpdateAvailableStandard(string currentVersion, string latestVersion, string title = null, UIColorSet colors = null, FormSizeOption? size = null, string releaseNotes = null, bool allowSkip = false)` | The window that tells the user a new version is there (`UpdateAvailableForm`): the two versions and the buttons "Later" and "Update now". Show it with `ShowDialog`; `UpdateChosen` says whether "Update now" was clicked. `UpdatePrompt.ShowUpdateAvailableAsync` does all of it, with the download that follows. |
 
 ### UIStyles.GroupBoxes
 
@@ -1190,8 +1284,8 @@ A small, borderless popup with extra info next to a control or the mouse: blocks
 
 | Method | Description |
 |---|---|
-| `CreatePrimary(Size`? fixedSize = null, PopupTransparency transparency = Medium, PopupDuration duration = Medium, PopupDelay delay = Medium)` | Like `UIStyles.InfoPopups.CreateStandard` but in the current accent color instead of the neutral gray - mirrors `UIStyles.Buttons.CreatePrimary`. |
-| `CreateStandard(UIColorSet colors = null, Size`? fixedSize = null, PopupTransparency transparency = Medium, PopupDuration duration = Medium, PopupDelay delay = Medium)` | A popup in the neutral gray. |
+| `CreatePrimary(Size? fixedSize = null, PopupTransparency transparency = Medium, PopupDuration duration = Medium, PopupDelay delay = Medium)` | Like `UIStyles.InfoPopups.CreateStandard` but in the current accent color instead of the neutral gray - mirrors `UIStyles.Buttons.CreatePrimary`. |
+| `CreateStandard(UIColorSet colors = null, Size? fixedSize = null, PopupTransparency transparency = Medium, PopupDuration duration = Medium, PopupDelay delay = Medium)` | A popup in the neutral gray. |
 
 ### UIStyles.Labels
 
@@ -1385,8 +1479,8 @@ iOS-style on/off `ToggleSwitch`es: `CreateStandard` is gray while it is on, `Cre
 
 | Method | Description |
 |---|---|
-| `CreatePrimary(bool isChecked = true, string tooltipChecked = null, string tooltipUnchecked = null, Size`? size = null)` | Same, but the switch follows the theme accent while it is on (the other parameters as there). |
-| `CreateStandard(bool isChecked = true, string tooltipChecked = null, string tooltipUnchecked = null, UIColorSet colors = null, Size`? size = null)` | A switch that is gray while it is on, or in the colors of a color set. |
+| `CreatePrimary(bool isChecked = true, string tooltipChecked = null, string tooltipUnchecked = null, Size? size = null)` | Same, but the switch follows the theme accent while it is on (the other parameters as there). |
+| `CreateStandard(bool isChecked = true, string tooltipChecked = null, string tooltipUnchecked = null, UIColorSet colors = null, Size? size = null)` | A switch that is gray while it is on, or in the colors of a color set. |
 
 ### UIStyles.ToolTips
 
@@ -1402,8 +1496,8 @@ A slim, theme-matching horizontal `TrackBar`; with the value popup and a percent
 
 | Method | Description |
 |---|---|
-| `CreatePrimary(double value = 0, double maximum = 1, bool showValuePopup = false, Func<Double, String> formatValue = null, UIColorSet popupColors = null)` | Same, but the fill and thumb follow the theme accent (`value`, `maximum`, `showValuePopup`, `formatValue` and `popupColors` as there). |
-| `CreateStandard(double value = 0, double maximum = 1, UIColorSet colors = null, bool showValuePopup = false, Func<Double, String> formatValue = null, UIColorSet popupColors = null)` | A neutral-gray slider, or one in the color of a color set; any other color: pass it as `colors` (a color set, or simply a color). |
+| `CreatePrimary(double value = 0, double maximum = 1, bool showValuePopup = false, Func<double, string> formatValue = null, UIColorSet popupColors = null)` | Same, but the fill and thumb follow the theme accent (`value`, `maximum`, `showValuePopup`, `formatValue` and `popupColors` as there). |
+| `CreateStandard(double value = 0, double maximum = 1, UIColorSet colors = null, bool showValuePopup = false, Func<double, string> formatValue = null, UIColorSet popupColors = null)` | A neutral-gray slider, or one in the color of a color set; any other color: pass it as `colors` (a color set, or simply a color). |
 
 ### UIStyles.VersionPanels
 
@@ -1420,6 +1514,6 @@ A `VolumeControl` for audio: a mute button (a loudspeaker, crossed out while it 
 
 | Method | Description |
 |---|---|
-| `CreatePrimary(double volume = 1, Size`? size = null, bool showPercentage = false, IAudioVolume target = null)` | Same, but the slider and its popup follow the theme accent (`volume`, `size`, `showPercentage` and `target` as there). |
-| `CreateStandard(double volume = 1, UIColorSet colors = null, Size`? size = null, bool showPercentage = false, IAudioVolume target = null)` | A volume control with a gray slider, or one in the color of a color set. |
+| `CreatePrimary(double volume = 1, Size? size = null, bool showPercentage = false, IAudioVolume target = null)` | Same, but the slider and its popup follow the theme accent (`volume`, `size`, `showPercentage` and `target` as there). |
+| `CreateStandard(double volume = 1, UIColorSet colors = null, Size? size = null, bool showPercentage = false, IAudioVolume target = null)` | A volume control with a gray slider, or one in the color of a color set. |
 

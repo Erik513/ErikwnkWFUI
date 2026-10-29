@@ -62,7 +62,9 @@ internal static class ControlTableGenerator
             text.AppendLine();
             text.AppendLine("What every control and window of the library has of its own: properties (the default is that of a new control in the dark theme with the blue");
             text.AppendLine("accent; `-` where it depends on the screen or is not a plain value), events and methods, and the `UIStyles` factory methods that make it. A control keeps");
-            text.AppendLine("everything else of its standard WinForms base class; the properties it **ignores** (draws its own way) are listed per control.");
+            text.AppendLine("everything else of its standard WinForms base class; the properties it **ignores** (draws its own way) are listed per control. A type without a");
+            text.AppendLine("constructor that takes no parameters shows the defaults of its standard factory called with its default arguments. After the controls come the other");
+            text.AppendLine("public types (helpers, static entry points, enumerations) and at the end the factory classes.");
             text.AppendLine();
             text.AppendLine("## Index");
             text.AppendLine();
@@ -77,6 +79,8 @@ internal static class ControlTableGenerator
 
             foreach (Type type in controls)
                 AppendControl(text, type, docs, notes, factories);
+
+            AppendOtherTypes(text, docs, controls);
 
             text.AppendLine();
             text.AppendLine("## UIStyles factory classes");
@@ -128,6 +132,13 @@ internal static class ControlTableGenerator
             text.AppendLine(note!.Notes).AppendLine();
 
         object? instance = TryCreate(type);
+        string? madeBy = null;
+
+        if (instance == null)
+            instance = TryCreateByFactory(type, factories, out madeBy);
+
+        if (madeBy != null)
+            text.AppendLine($"The defaults below are those of `{madeBy}`: the type has no constructor without parameters.").AppendLine();
 
         try
         {
@@ -260,6 +271,49 @@ internal static class ControlTableGenerator
         text.AppendLine();
     }
 
+    // ---- the other public types
+
+    private static void AppendOtherTypes(StringBuilder text, XmlDocumentation docs, IReadOnlyList<Type> controls)
+    {
+        Type[] others = typeof(UIStyles).Assembly.GetExportedTypes()
+            .Where(type => !type.IsNested && !controls.Contains(type) && !typeof(Delegate).IsAssignableFrom(type))
+            .OrderBy(type => type.Namespace, StringComparer.Ordinal)
+            .ThenBy(type => type.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        text.AppendLine();
+        text.AppendLine("## Other public types");
+        text.AppendLine();
+        text.AppendLine("Helpers, static entry points and the like that are not controls. The enumerations follow with their values.");
+        text.AppendLine();
+        text.AppendLine("| Type | Kind | Namespace | Description |");
+        text.AppendLine("|---|---|---|---|");
+
+        foreach (Type type in others.Where(type => !type.IsEnum))
+            text.AppendLine($"| `{type.Name}`{(type.GetCustomAttribute<ObsoleteAttribute>() != null ? " (obsolete)" : "")} | {KindOf(type)} | {type.Namespace!.Replace("ErikwnkWFUI.", "")} | {Cell(docs.Summary("T:" + type.FullName))} |");
+
+        text.AppendLine();
+        text.AppendLine("| Enumeration | Values | Description |");
+        text.AppendLine("|---|---|---|");
+
+        foreach (Type type in others.Where(type => type.IsEnum))
+            text.AppendLine($"| `{type.Name}`{(type.GetCustomAttribute<ObsoleteAttribute>() != null ? " (obsolete)" : "")} | {string.Join(", ", Enum.GetNames(type).Select(name => "`" + name + "`"))} | {Cell(docs.Summary("T:" + type.FullName))} |");
+    }
+
+    private static string KindOf(Type type)
+    {
+        if (type.IsInterface)
+            return "interface";
+
+        if (type.IsValueType)
+            return "struct";
+
+        if (type.IsAbstract && type.IsSealed)
+            return "static class";
+
+        return type.IsAbstract ? "abstract class" : "class";
+    }
+
     // ---- reading the types
 
     private static object? TryCreate(Type type)
@@ -272,6 +326,50 @@ internal static class ControlTableGenerator
         {
             return null;
         }
+    }
+
+    // For a type without a constructor that takes no parameters (the progress bar, the windows): the standard factory that returns this type (or the
+    // standard control it derives from, which the progress bar's factory does), called with its default arguments (a required text gets an empty one).
+    private static object? TryCreateByFactory(Type type, List<Type> factories, out string? madeBy)
+    {
+        madeBy = null;
+
+        IEnumerable<(Type Factory, MethodInfo Method)> candidates = factories
+            .SelectMany(factory => factory.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly).Select(method => (Factory: factory, Method: method)))
+            .Where(candidate => candidate.Method.ReturnType.IsAssignableFrom(type) && candidate.Method.Name.StartsWith("Create", StringComparison.Ordinal) && candidate.Method.Name.EndsWith("Standard", StringComparison.Ordinal))
+            .OrderBy(candidate => candidate.Method.GetParameters().Count(parameter => !parameter.HasDefaultValue));
+
+        foreach ((Type factory, MethodInfo method) in candidates)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            object?[] arguments = parameters.Select(parameter => parameter.HasDefaultValue ? parameter.DefaultValue : parameter.ParameterType == typeof(string) ? "" : null).ToArray();
+
+            try
+            {
+                object? instance = method.Invoke(null, arguments);
+
+                if (instance != null && !type.IsInstanceOfType(instance))
+                {
+                    (instance as IDisposable)?.Dispose();
+
+                    continue;
+                }
+
+                if (instance != null)
+                {
+                    string required = string.Join(", ", parameters.Where(parameter => !parameter.HasDefaultValue).Select(_ => "\"\""));
+                    madeBy = $"UIStyles.{factory.Name}.{method.Name}({required})";
+
+                    return instance;
+                }
+            }
+            catch
+            {
+                // the next candidate
+            }
+        }
+
+        return null;
     }
 
     // A plain value only: what a new control has on a machine of any screen scaling. Sizes, fonts, positions and objects depend on the screen.
@@ -307,24 +405,37 @@ internal static class ControlTableGenerator
 
     private static string TypeName(Type type)
     {
+        return "`" + PlainTypeName(type) + "`";
+    }
+
+    // The name as C# writes it: the keywords (bool, string ...), T? for a nullable value and the arguments of a generic type the same way.
+    private static string PlainTypeName(Type type)
+    {
         Type? nullable = Nullable.GetUnderlyingType(type);
 
         if (nullable != null)
-            return TypeName(nullable) + "?";
+            return PlainTypeName(nullable) + "?";
 
         if (type.IsGenericType)
-            return "`" + type.Name.Split('`')[0] + "<" + string.Join(", ", type.GetGenericArguments().Select(argument => argument.Name)) + ">`";
+            return type.Name.Split('`')[0] + "<" + string.Join(", ", type.GetGenericArguments().Select(PlainTypeName)) + ">";
 
         return type switch
         {
-            _ when type == typeof(bool) => "`bool`",
-            _ when type == typeof(int) => "`int`",
-            _ when type == typeof(string) => "`string`",
-            _ when type == typeof(double) => "`double`",
-            _ when type == typeof(float) => "`float`",
-            _ when type == typeof(decimal) => "`decimal`",
-            _ when type == typeof(void) => "`void`",
-            _ => "`" + type.Name + "`"
+            _ when type == typeof(bool) => "bool",
+            _ when type == typeof(int) => "int",
+            _ when type == typeof(string) => "string",
+            _ when type == typeof(double) => "double",
+            _ when type == typeof(float) => "float",
+            _ when type == typeof(decimal) => "decimal",
+            _ when type == typeof(void) => "void",
+            _ when type == typeof(object) => "object",
+            _ when type == typeof(long) => "long",
+            _ when type == typeof(short) => "short",
+            _ when type == typeof(byte) => "byte",
+            _ when type == typeof(char) => "char",
+            _ when type == typeof(uint) => "uint",
+            _ when type == typeof(ulong) => "ulong",
+            _ => type.Name
         };
     }
 
@@ -332,7 +443,7 @@ internal static class ControlTableGenerator
     {
         IEnumerable<string> parameters = method.GetParameters().Select(parameter =>
         {
-            string text = TypeName(parameter.ParameterType).Trim('`') + " " + parameter.Name;
+            string text = PlainTypeName(parameter.ParameterType) + " " + parameter.Name;
 
             if (withDefaults && parameter.HasDefaultValue)
                 text += " = " + FormatDefault(parameter.DefaultValue);
