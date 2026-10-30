@@ -72,10 +72,21 @@ namespace ErikwnkWFUI.Controls
         private SlimProgressBarTextPosition _textPosition = SlimProgressBarTextPosition.Above;
         private ProgressBarStyle _style = ProgressBarStyle.Continuous;
 
-        /// <summary>Makes a bar 4 pixels high in the default range 0 to 100, at 0, with the colors of the theme; the factories (<c>UIStyles.SlimProgressBars</c>) make the usual ones.</summary>
+        /// <summary>Whether the Tab key stops on the bar. By default not: a bar only shows something and cannot be used.</summary>
+        [System.ComponentModel.DefaultValue(false)]
+        public new bool TabStop
+        {
+            get { return base.TabStop; }
+            set { base.TabStop = value; }
+        }
+
+        /// <summary>Makes a bar 4 pixels high in the default range 0 to 100, at 0, with the colors of the theme; the factories (<c>UIStyles.SlimProgressBars</c>) make the usual ones.</summary>        public SlimProgressBar()
         public SlimProgressBar()
         {
             SetStyle(ControlStyleSets.OwnerDrawn, true);
+
+            // A bar only shows something: the Tab key does not stop on it.
+            TabStop = false;
 
             Height = DefaultHeight;
 

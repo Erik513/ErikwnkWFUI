@@ -45,6 +45,9 @@ namespace ErikwnkWFUI.Controls
         {
             _useStatusGradient = useStatusGradient;
 
+            // A bar only shows something: the Tab key does not stop on it.
+            TabStop = false;
+
             // The native bar ignores ForeColor and BackColor while visual styles are on, so it is not used for painting at all.
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
 
