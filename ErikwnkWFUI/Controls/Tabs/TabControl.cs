@@ -268,6 +268,7 @@ namespace ErikwnkWFUI.Controls
             set => _selectTabOnRightClick = value;
         }
 
+        /// <summary>Makes a tab control with the look of the theme; the factories (<c>UIStyles.TabControls</c>) make the usual ones.</summary>
         public TabControl()
         {
             UIStrings.LanguageChanged += OnUIStringsLanguageChanged;

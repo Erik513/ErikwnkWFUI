@@ -8,6 +8,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="TabControl.TabAdding"/>.</summary>
     public class TabAddingEventArgs : CancelEventArgs
     {
+        /// <summary>Makes the arguments for the tab that is about to be added.</summary>
         public TabAddingEventArgs(TabPage tabPage)
         {
             TabPage = tabPage;
@@ -20,6 +21,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="TabControl.TabClosing"/>.</summary>
     public class TabClosingEventArgs : CancelEventArgs
     {
+        /// <summary>Makes the arguments for the tab that is about to be closed.</summary>
         public TabClosingEventArgs(TabPage tabPage)
         {
             TabPage = tabPage;
@@ -32,6 +34,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="ReadOnlyTabControl.TabRightClick"/>.</summary>
     public class TabRightClickEventArgs : EventArgs
     {
+        /// <summary>Makes the arguments for a right click on a tab, at a place in the control.</summary>
         public TabRightClickEventArgs(TabPage tabPage, int tabIndex, Point location)
         {
             TabPage = tabPage;
@@ -52,6 +55,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="TabControl.TabRenaming"/>.</summary>
     public class TabRenamingEventArgs : CancelEventArgs
     {
+        /// <summary>Makes the arguments for a tab that is about to get a new name.</summary>
         public TabRenamingEventArgs(TabPage tabPage, string oldName, string newName)
         {
             TabPage = tabPage;
@@ -72,6 +76,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="TabControl.TabRenamed"/>.</summary>
     public class TabRenamedEventArgs : EventArgs
     {
+        /// <summary>Makes the arguments for a tab that has got a new name.</summary>
         public TabRenamedEventArgs(TabPage tabPage, string oldName)
         {
             TabPage = tabPage;
@@ -88,6 +93,7 @@ namespace ErikwnkWFUI.Controls
     /// <summary>Data for <see cref="TabControl.TabRenameStarting"/>.</summary>
     public class TabRenameStartingEventArgs : CancelEventArgs
     {
+        /// <summary>Makes the arguments for a tab whose renaming is about to start.</summary>
         public TabRenameStartingEventArgs(TabPage tabPage, int tabIndex)
         {
             TabPage = tabPage;

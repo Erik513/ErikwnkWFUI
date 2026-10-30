@@ -120,12 +120,14 @@ namespace ErikwnkWFUI.Controls
                 base.BackColor = track;
         }
 
+        /// <inheritdoc/>
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
             ApplyTrack();
         }
 
+        /// <inheritdoc/>
         protected override void OnParentBackColorChanged(EventArgs e)
         {
             base.OnParentBackColorChanged(e);
@@ -247,18 +249,21 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
             _textScroller.SetHovered(true);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
             _textScroller.SetHovered(false);
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -334,6 +339,7 @@ namespace ErikwnkWFUI.Controls
         // The bar draws itself: the native control paints in WM_PAINT without the Paint event, ignores the colors while visual styles are
         // on, and shows nothing for the marquee style with them off. UserPaint makes WM_PAINT reach OnPaint (the native control still
         // asks for a repaint when the value changes: Value, Step, PerformStep and Increment need nothing here).
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -401,6 +407,7 @@ namespace ErikwnkWFUI.Controls
             return Dpi.Scale(TextPaddingAt96Dpi, DeviceDpi);
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -420,6 +427,7 @@ namespace ErikwnkWFUI.Controls
             _marquee.Update();
         }
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -429,6 +437,7 @@ namespace ErikwnkWFUI.Controls
             _marquee.Update();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -438,6 +447,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

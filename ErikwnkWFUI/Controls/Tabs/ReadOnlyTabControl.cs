@@ -388,6 +388,7 @@ namespace ErikwnkWFUI.Controls
             return lightSurface ? UIColors.BackgroundDarkElevated : UIColors.BackgroundLight;
         }
 
+        /// <summary>Makes a tab control with the look of the theme whose tabs cannot be added, closed or renamed.</summary>
         public ReadOnlyTabControl()
         {
             // First, before anything below can resize the control: on the

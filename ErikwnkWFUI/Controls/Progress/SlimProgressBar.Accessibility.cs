@@ -10,6 +10,7 @@ namespace ErikwnkWFUI.Controls
     public partial class SlimProgressBar
     {
         // A screen reader asks for the value of a progress bar: the percentage ("42%"), and the text as its name unless a name was set.
+        /// <inheritdoc/>
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new SlimProgressBarAccessibleObject(this);

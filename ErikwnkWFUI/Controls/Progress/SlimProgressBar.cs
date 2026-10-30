@@ -229,6 +229,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -238,24 +239,28 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnParentBackColorChanged(EventArgs e)
         {
             base.OnParentBackColorChanged(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             _marquee.Update();
         }
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -265,6 +270,7 @@ namespace ErikwnkWFUI.Controls
             _marquee.Update();
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -306,6 +312,7 @@ namespace ErikwnkWFUI.Controls
             _fullTextToolTip.Update(Text, cut);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

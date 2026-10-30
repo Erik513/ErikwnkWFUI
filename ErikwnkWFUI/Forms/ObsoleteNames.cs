@@ -11,6 +11,7 @@ namespace ErikwnkWFUI.Forms
     [Obsolete("Use AppForm (the same, a name that says what it is).")]
     public class StyledForm : AppForm
     {
+        /// <summary>Makes the form; see <see cref="AppForm"/>.</summary>
         public StyledForm(FormOptions options = null)
             : base(options)
         {
@@ -31,8 +32,11 @@ namespace ErikwnkWFUI.Forms
     [Obsolete("Use FormOptions.CreateStandard/CreateDialog/CreateSettings (or UIStyles.Forms) - the type is not needed any more.")]
     public enum StyledFormType
     {
+        /// <summary>A plain window.</summary>
         Standard,
+        /// <summary>A dialog.</summary>
         Dialog,
+        /// <summary>A window with the version strip.</summary>
         Settings
     }
 

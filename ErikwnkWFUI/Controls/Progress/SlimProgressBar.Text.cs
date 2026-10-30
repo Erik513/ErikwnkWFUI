@@ -126,24 +126,28 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
             _textScroller.SetHovered(true);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
             _textScroller.SetHovered(false);
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
             Relayout();
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
