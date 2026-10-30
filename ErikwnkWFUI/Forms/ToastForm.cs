@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -197,6 +198,8 @@ namespace ErikwnkWFUI.Forms
         /// or black. Left null, the neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
         /// <c>UIStyles.Toasts.ShowPrimary</c> makes one in the accent color.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return _colors; }
@@ -234,6 +237,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>The symbol at the left of the toast; none by default, then the text has the whole width.</summary>
+        [DefaultValue(ToastIcon.None)]
         public ToastIcon MessageIcon
         {
             get { return _icon; }
@@ -257,6 +261,7 @@ namespace ErikwnkWFUI.Forms
         /// <c>UIStyles.Symbols.Copy</c>) or a character of your own that the symbol font has.
         /// Null or empty (the default) uses <see cref="MessageIcon"/>.
         /// </summary>
+        [DefaultValue(null)]
         public string CustomSymbol
         {
             get { return _customSymbol; }
@@ -347,6 +352,7 @@ namespace ErikwnkWFUI.Forms
         /// How long the toast stays before it closes itself. <see cref="PopupDuration.UntilClicked"/> has no time: the toast stays until it is clicked (and
         /// shows a small cross at its right for that), until a newer toast replaces it or until its window closes.
         /// </summary>
+        [DefaultValue(PopupDuration.Medium)]
         public PopupDuration Duration
         {
             get { return _duration; }
@@ -368,6 +374,7 @@ namespace ErikwnkWFUI.Forms
         /// the message (about 0.3 seconds a word, 8 seconds at most) is the other. A short message keeps the time of its level. On by default; off gives
         /// every toast exactly the time of its level.
         /// </summary>
+        [DefaultValue(true)]
         public bool DurationGrowsWithText { get; set; } = true;
 
         // The time a toast stays when it is shown: its level, or the time to read its text where that is longer. 0 for a toast that stays until it is clicked.
@@ -415,11 +422,13 @@ namespace ErikwnkWFUI.Forms
         }
 
         // The background is kept readable through the transparency.
+        /// <inheritdoc/>
         protected override void OnTransparencyChanged()
         {
             ApplyColors();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

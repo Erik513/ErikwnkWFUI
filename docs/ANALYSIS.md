@@ -69,7 +69,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 6.3 | 6 | `InputBox`, `InputBoxForm` | 95.1 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.4 | 6 | `ProgressForm`, `ProgressBox` | 95.9 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.5 | 6 | `OptionsForm`, `OptionsPreset`, `UIAppearance` | 97.6 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
-| 6.6 | 6 | `ToastForm`, `Toaster` | 99.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.6 | 6 | `ToastForm`, `Toaster` | 99.4 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.7 | 6 | `InfoPopupForm`, `InfoPopupSection`, `PopupFormBase`, `PopupSupport` | 98.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 6.8 | 6 | Update: `UpdatePrompt`, `UpdateAvailableForm`, `AppUpdater` (and `SelfUpdater` of ErikwnkCore: see the open items) | 87.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 
