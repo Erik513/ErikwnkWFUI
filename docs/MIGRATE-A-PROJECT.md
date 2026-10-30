@@ -4,6 +4,14 @@
 `C:\Users\Kosta\source\repos\ErikwnkWFUI\docs\MIGRATE-A-PROJECT.md` and migrate this project."* Everything
 you need is here and in the files named here. Do not ask the user for what is written down.
 
+## Scope: ONE project - the one of this chat
+
+Each project has its own chat. **Every step below is for the project of THIS chat only** (the one whose folder
+is the working directory of the chat): build it, search it, change it, report on it. Do **not** open, search,
+build or change any other project, not even to "check" or to "prepare" it - the other chats do their own.
+Where this brief says "the project", it means this one. The table at the end lists all projects only so that you
+know which names to expect in yours: read only the row of your own project.
+
 ## Working rules (the user's)
 
 - Answer the user in **German**; code, comments and documents in English (as the project does it).
@@ -11,7 +19,7 @@ you need is here and in the files named here. Do not ask the user for what is wr
 - Do not take the focus of the user's screen: build and run tests (hidden or off-screen), do not show windows
   on the real screen without asking first.
 - Keep the PC responsive: no repeated full builds, announce a heavy step.
-- Change **this project only**. Do not edit the library (`..\ErikwnkWFUI`) - the one exception is the feedback
+- Change **this project only** (see the scope above). Do not edit the library (`..\ErikwnkWFUI`) - the one exception is the feedback
   file below. If the library is wrong, write it down there.
 
 ## What happened
@@ -30,7 +38,7 @@ Read these, in this order (all in `C:\Users\Kosta\source\repos\ErikwnkWFUI`):
 
 ## Steps
 
-1. **Find out** which projects and target frameworks there are (`*.csproj`, `net48` and/or `net8.0-windows`).
+1. **Find out** which projects (of *this* solution) and target frameworks there are (`*.csproj`, `net48` and/or `net8.0-windows`).
    Build once and keep the list of errors and of `[Obsolete]` warnings (`CS0618`). Do not run the program yet.
 2. **Fix the errors** with the table "Gone (no alias)" of `MIGRATION.md`. Where it is not clear what the new name
    does, read the source or `CONTROLS.md` instead of guessing.
@@ -62,7 +70,7 @@ of `MIGRATION.md` that is wrong - append to
 the heading of this project, one bullet each: *what you found, where (file:line in the project), what would
 help*. Do not fix the library yourself. If nothing: write "nothing" under the heading.
 
-## Projects that use the library (found on 2026-10-30)
+## Projects that use the library (found on 2026-10-30) - read only your own row
 
 All reference `..\..\ErikwnkWFUI\ErikwnkWFUI\ErikwnkWFUI.csproj`. Obsolete or removed names the search found
 (candidates: check that the name really is the library's):
