@@ -64,7 +64,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 5.2 | 5 | `ListView` | 88.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 5.3 | 5 | `DataGridView`, `ReadOnlyDataGridView` (with the column helpers) | 86.5 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 5.4 | 5 | `PropertyTable`, `PropertyRow`, `PropertyColumn` | 94.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 6.1 | 6 Windows | `AppForm`, `FormOptions`, `FormSize`, `FormDragHandle`, `BorderlessResizeHandler` | 83.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.1 | 6 Windows | `AppForm`, `FormOptions`, `FormSize`, `FormDragHandle`, `BorderlessResizeHandler` | 95.0 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.2 | 6 | `MessageBox`, `MessageBoxForm` | 94.2 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 6.3 | 6 | `InputBox`, `InputBoxForm` | 95.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 6.4 | 6 | `ProgressForm`, `ProgressBox` | 95.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

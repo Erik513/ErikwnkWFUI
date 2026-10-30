@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -14,8 +15,10 @@ namespace ErikwnkWFUI.Forms
         /// window of the program. Null (the default) remembers nothing. A fixed-size window remembers only its position. Set it before the
         /// window is shown.
         /// </summary>
+        [DefaultValue(null)]
         public string RememberBoundsKey { get; set; }
 
+        /// <inheritdoc/>
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -62,6 +65,7 @@ namespace ErikwnkWFUI.Forms
                 WindowState = FormWindowState.Maximized;
         }
 
+        /// <inheritdoc/>
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             base.OnFormClosed(e);

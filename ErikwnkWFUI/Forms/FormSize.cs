@@ -49,11 +49,13 @@ namespace ErikwnkWFUI.Forms
             get { return _custom.HasValue ? FormSize.Medium : _size; }
         }
 
+        /// <summary>A ready-made size is a size option.</summary>
         public static implicit operator FormSizeOption(FormSize size)
         {
             return new FormSizeOption(size, null);
         }
 
+        /// <summary>A size of your own (in pixels at 96 dpi) is a size option.</summary>
         public static implicit operator FormSizeOption(Size size)
         {
             return new FormSizeOption(FormSize.Medium, size);
@@ -65,21 +67,25 @@ namespace ErikwnkWFUI.Forms
             return _custom ?? FormSizes.Get(kind, _size);
         }
 
+        /// <summary>Whether the other option is the same ready-made size or the same own size.</summary>
         public bool Equals(FormSizeOption other)
         {
             return _size == other._size && _custom == other._custom;
         }
 
+        /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             return obj is FormSizeOption && Equals((FormSizeOption)obj);
         }
 
+        /// <inheritdoc/>
         public override int GetHashCode()
         {
             return _custom.HasValue ? _custom.Value.GetHashCode() : (int)_size;
         }
 
+        /// <inheritdoc/>
         public override string ToString()
         {
             return _custom.HasValue ? _custom.Value.Width + " x " + _custom.Value.Height : _size.ToString();

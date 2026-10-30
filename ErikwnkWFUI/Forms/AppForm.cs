@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -36,6 +37,8 @@ namespace ErikwnkWFUI.Forms
         private Icon _ownIcon;
 
         /// <summary>The panel below the title bar - add your own UI here.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Panel ContentPanel
         {
             get { return _contentPanel; }
@@ -49,6 +52,8 @@ namespace ErikwnkWFUI.Forms
         /// directly to the left of the version text - e.g. an
         /// <see cref="AppUpdater.CreateUpdateAvailableButton(ErikwnkCore.Updater.UpdateCheckResult, System.Version, Form)"/> button.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FlowLayoutPanel VersionStrip
         {
             get { return _versionStrip; }
@@ -59,6 +64,8 @@ namespace ErikwnkWFUI.Forms
         /// <see cref="FormOptions.VersionText"/> wasn't set - reach
         /// through here to restyle it (font, color) after construction.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Label VersionLabel
         {
             get { return _versionLabel; }
@@ -69,6 +76,8 @@ namespace ErikwnkWFUI.Forms
         /// already proxied by <see cref="FormTitle"/>/<see cref="FormIcon"/>,
         /// e.g. <c>TitleBar.TitleForeColor</c>.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TitleBarControl TitleBar
         {
             get { return _titleBar; }
@@ -89,18 +98,32 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        // The designer writes the color only where it was set (the default is the black of the theme, followed, not stored).
+        private bool ShouldSerializeBorderColor()
+        {
+            return !_borderColor.IsEmpty;
+        }
+
+        private void ResetBorderColor()
+        {
+            BorderColor = Color.Empty;
+        }
+
         private Color ResolveBorderColor()
         {
             return _borderColor.IsEmpty ? UIColors.BackgroundBlack : _borderColor;
         }
 
         /// <summary>The title of the window: the <see cref="Form.Text"/> (taskbar, Alt-Tab) and the title bar show the same text, whichever of the two is set. <c>TitleBar.Title</c> changes the bar alone.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string FormTitle
         {
             get { return Text; }
             set { Text = value ?? ""; }
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -110,6 +133,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Shorthand for <c>TitleBar.IconImage</c> - the small logo shown at the top-left of the title bar, not the OS-level icon (see <see cref="FormOptions.WindowIcon"/> for that).</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Image FormIcon
         {
             get { return _titleBar.IconImage; }
@@ -281,6 +306,7 @@ namespace ErikwnkWFUI.Forms
 
         // A window without a frame has no minimize box for the system: a click on its button in the taskbar would not minimize it. The window
         // that has a minimize button of its own gets the style (nothing is drawn for it).
+        /// <inheritdoc/>
         protected override CreateParams CreateParams
         {
             get
@@ -304,6 +330,7 @@ namespace ErikwnkWFUI.Forms
         /// while the window is open (a window that has finished its work lets the user close it). The native frame cannot grey out its button:
         /// there the click is only without effect.
         /// </summary>
+        [DefaultValue(true)]
         public bool CloseEnabled
         {
             get { return _closeEnabled; }
@@ -315,6 +342,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         // Escape closes a dialog that has no cancel button of its own (a text box that is being edited, or a list that is open, takes the key first).
+        /// <inheritdoc/>
         protected override bool ProcessDialogKey(Keys keyData)
         {
             if (keyData == Keys.Escape && _closeOnEscape && _closeEnabled && CancelButton == null)
@@ -327,6 +355,7 @@ namespace ErikwnkWFUI.Forms
             return base.ProcessDialogKey(keyData);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             // The bar that is not in the window (native frame) is not disposed with the controls.
@@ -396,6 +425,7 @@ namespace ErikwnkWFUI.Forms
         private const int WmSysCommand = 0x0112;
         private const int ScClose = 0xF060;
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             // What the user does to close the window (Alt+F4, the taskbar, the system menu) comes as this command; it is not carried out while

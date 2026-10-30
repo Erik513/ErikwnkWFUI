@@ -17,6 +17,7 @@ namespace ErikwnkWFUI.Forms
         private LibraryMenu _openMenu;
 
         // Right-click on the title bar, or Alt+Space (the keys of the native one).
+        /// <inheritdoc/>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == (Keys.Alt | Keys.Space) && TitleBar != null && TitleBar.Parent == this)

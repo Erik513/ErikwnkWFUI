@@ -30,6 +30,8 @@ namespace ErikwnkWFUI.Helpers
 
         private readonly Form _form;
 
+        /// <summary>Gives a window without a frame the edges and corners that resize it with the mouse.</summary>
+        /// <param name="form">The window.</param>
         public BorderlessResizeHandler(Form form)
         {
             _form = form;

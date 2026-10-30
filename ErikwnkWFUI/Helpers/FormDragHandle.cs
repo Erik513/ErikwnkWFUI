@@ -19,6 +19,16 @@ namespace ErikwnkWFUI.Helpers
         private Point _mouseDownPosition;
         private bool _isRestoringFromMaximized;
 
+        // Where the mouse is, and what moves the window (the system's own loop of moving a window, which runs until the button is let go): the tests
+        // put the mouse elsewhere and do not start that loop.
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+
+        internal Action<Form> StartNativeMove = form =>
+        {
+            ReleaseCapture();
+            SendMessage(form.Handle, WmNcLeftButtonDown, HtCaption, 0);
+        };
+
         public Control DragHandle { get; private set; }
 
         public bool AllowWindowSnapAndMaximize { get; set; }
@@ -84,7 +94,7 @@ namespace ErikwnkWFUI.Helpers
             }
 
             _mouseDown = true;
-            _mouseDownPosition = Cursor.Position;
+            _mouseDownPosition = CursorPosition();
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -97,7 +107,7 @@ namespace ErikwnkWFUI.Helpers
             if (form == null)
                 return;
 
-            Point cursor = Cursor.Position;
+            Point cursor = CursorPosition();
 
             int dragDistance =
                 Math.Abs(cursor.X - _mouseDownPosition.X) +
@@ -138,7 +148,7 @@ namespace ErikwnkWFUI.Helpers
             {
                 if (!form.IsDisposed)
                 {
-                    Point cursor = Cursor.Position;
+                    Point cursor = CursorPosition();
                     Screen screen = Screen.FromPoint(cursor);
 
                     form.Location = new Point(
@@ -157,8 +167,7 @@ namespace ErikwnkWFUI.Helpers
             if (form == null)
                 return;
 
-            ReleaseCapture();
-            SendMessage(form.Handle, WmNcLeftButtonDown, HtCaption, 0);
+            StartNativeMove(form);
 
             SnapToTopIfNeeded(form);
             KeepFormOnScreen(form);
@@ -190,7 +199,7 @@ namespace ErikwnkWFUI.Helpers
             if (form == null || form.WindowState == FormWindowState.Maximized)
                 return;
 
-            Point cursor = Cursor.Position;
+            Point cursor = CursorPosition();
             Screen screen = Screen.FromPoint(cursor);
             Rectangle area = screen.WorkingArea;
 
