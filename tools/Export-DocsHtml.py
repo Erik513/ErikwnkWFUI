@@ -24,10 +24,10 @@ DOC = ''        # the id of the file that is being made: every anchor of the pag
 STYLE = """
 :root { color-scheme: light dark;
   --bg:#f4f6fa; --panel:#ffffff; --fg:#1b2330; --muted:#5d6b7e; --line:#dde3ec; --soft:#eef2f8; --link:#1d5fd1; --accent:#2f6bff;
-  --good:#1f9d57; --warn:#d98a00; --bad:#d64545; --open:#c9d2df; --shadow:0 1px 2px rgba(20,30,50,.06), 0 4px 16px rgba(20,30,50,.05); }
+  --good:#1f9d57; --warn:#d98a00; --bad:#d64545; --open:#c9d2df; --full:#2b7de9; --shadow:0 1px 2px rgba(20,30,50,.06), 0 4px 16px rgba(20,30,50,.05); }
 @media (prefers-color-scheme: dark) { :root {
   --bg:#0e131b; --panel:#151c27; --fg:#e4eaf3; --muted:#93a1b5; --line:#263041; --soft:#1a2230; --link:#6ea2ff; --accent:#5b8dff;
-  --good:#3ccf83; --warn:#f0b13a; --bad:#ff7070; --open:#33404f; --shadow:0 1px 2px rgba(0,0,0,.4); } }
+  --good:#3ccf83; --warn:#f0b13a; --bad:#ff7070; --open:#33404f; --full:#5aa2ff; --shadow:0 1px 2px rgba(0,0,0,.4); } }
 * { box-sizing:border-box; }
 html { scroll-behavior:smooth; }
 body { background:var(--bg); color:var(--fg); font:15px/1.6 "Segoe UI Variable", "Segoe UI", system-ui, sans-serif; margin:0; }
@@ -378,7 +378,7 @@ def coverage_chart(units):
     for index, unit in enumerate(rows):
         x = left + index * slot + slot * 0.18
         w = slot * 0.64
-        color = 'var(--good)' if unit['cov'] >= 85 else 'var(--bad)'
+        color = 'var(--full)' if unit['cov'] >= 99.95 else 'var(--good)' if unit['cov'] >= 85 else 'var(--bad)'
         state = unit_state(unit)
         parts.append('<g><title>%s %s: %.1f %%</title><rect x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="3" fill="%s" opacity="%s"/></g>' % (
             unit['n'], html.escape(unit['name']), unit['cov'], x, y(unit['cov']), w, y(0) - y(unit['cov']), color, '1' if state == 'done' else '.45'))
@@ -448,7 +448,7 @@ def overview():
     out.append('<div class="panel"><h3>Every unit and step</h3><div class="units">%s</div><p class="note">Green: finished. Amber: begun. Grey: not begun. Point at a unit for its name.</p></div>' % tiles)
 
     out.append('<div class="panel wide"><h3>Coverage of the tests per unit (lines, in %%)</h3>%s'
-               '<p class="note">The coverage of each unit after the work (the last full run). Faint bars: the unit is not finished.%s</p></div>' % (
+               '<p class="note">The coverage of each unit after the work (the last full run); blue: all lines covered. Faint bars: the unit is not finished.%s</p></div>' % (
                    coverage_chart(units),
                    ' Under the target: %s.' % ', '.join('%s (%.1f %%)' % (u['n'], u['cov']) for u in below) if below else ''))
     out.append('</div>')
