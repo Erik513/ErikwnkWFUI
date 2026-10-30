@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace ErikwnkWFUI.Controls
 {
@@ -11,6 +12,7 @@ namespace ErikwnkWFUI.Controls
         private string _suffix = "";
 
         /// <summary>Text shown before the number in the field (for example "$ "); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
+        [DefaultValue("")]
         public string Prefix
         {
             get { return _prefix; }
@@ -22,6 +24,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Text shown after the number in the field (for example " %" or " px"); the <see cref="System.Windows.Forms.NumericUpDown.Value"/> stays the plain number. Empty by default.</summary>
+        [DefaultValue("")]
         public string Suffix
         {
             get { return _suffix; }
@@ -32,6 +35,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void UpdateEditText()
         {
             base.UpdateEditText();
@@ -55,6 +59,7 @@ namespace ErikwnkWFUI.Controls
         // What the user typed may still carry the prefix and the suffix (or have lost a space of them): they are taken
         // off before the number is read (the standard control reads it when the field is left and before an arrow
         // steps), and put back afterwards.
+        /// <inheritdoc/>
         protected override void ValidateEditText()
         {
             // Putting the bare number into the field validates again (the standard control does that for a text set by
@@ -79,6 +84,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         public override void UpButton()
         {
             TakeOffAffixes();
@@ -86,6 +92,7 @@ namespace ErikwnkWFUI.Controls
             PutOnAffixes();
         }
 
+        /// <inheritdoc/>
         public override void DownButton()
         {
             TakeOffAffixes();

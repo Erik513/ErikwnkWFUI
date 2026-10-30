@@ -63,6 +63,20 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // Where the mouse is (the tests put it elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+
+        // The arrow field under the mouse is worked out from where the mouse is, for the moments when no mouse message says it.
+        private void RefreshHotField()
+        {
+            if (_buttons == null || !_buttons.IsHandleCreated)
+                return;
+
+            Point point = _buttons.PointToClient(CursorPosition());
+
+            SetHotField(_buttons.ClientRectangle.Contains(point) ? GetField(point) : -1);
+        }
+
         private void SetHotField(int field)
         {
             if (_hotField == field)
@@ -223,6 +237,7 @@ namespace ErikwnkWFUI.Controls
                 _owner = owner;
             }
 
+            /// <inheritdoc/>
             protected override void WndProc(ref Message m)
             {
                 switch (m.Msg)

@@ -74,6 +74,40 @@ public class NumericUpDownEdgeCaseTests : IDisposable
 
     private static int Hot(WfuiNumericUpDown box) => box.GetPrivateField<int>("_hotField");
 
+    [Fact]
+    public void ABoxThatIsEnabledAgain_LooksAtTheMouse_ForTheArrowFieldUnderIt()
+    {
+        WfuiNumericUpDown box = Show();
+        Control buttons = Buttons(box);
+
+        // (The mouse is on the lower field while the box is disabled, which gives it no MouseLeave: enabled again, the field is hot at once.)
+        box.CursorPosition = () => buttons.PointToScreen(new Point(buttons.Width / 2, Lower(box)));
+        box.Enabled = false;
+        Assert.Equal(-1, Hot(box));
+        box.Enabled = true;
+        Assert.Equal(1, Hot(box));
+
+        box.Enabled = false;
+        box.CursorPosition = () => new Point(-9000, -9000);
+        box.Enabled = true;
+        Assert.Equal(-1, Hot(box));
+    }
+
+    [Fact]
+    public void TheColorSet_IsCode_AndTheDefaultsOfTheDesignerAreTheOnesTheBoxHas()
+    {
+        using WfuiNumericUpDown box = new WfuiNumericUpDown();
+        System.ComponentModel.PropertyDescriptorCollection properties = System.ComponentModel.TypeDescriptor.GetProperties(box);
+
+        Assert.False(properties["Colors"]!.IsBrowsable);
+
+        foreach (System.ComponentModel.PropertyDescriptor property in properties)
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(box)), property.Name + " is not its default");
+        }
+    }
+
     // ---- other mouse buttons, double click ----
 
     [Theory]

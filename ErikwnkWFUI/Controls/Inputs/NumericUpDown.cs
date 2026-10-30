@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -71,6 +72,7 @@ namespace ErikwnkWFUI.Controls
         private int _shiftedTop = int.MinValue;
         private int _appliedShift;
 
+        /// <summary>Makes a field with arrows in the neutral look of the theme; <c>UIStyles.NumericUpDowns</c> makes the usual ones.</summary>
         public NumericUpDown()
         {
             _buttons = FindButtons();
@@ -109,6 +111,8 @@ namespace ErikwnkWFUI.Controls
         /// Left null, the neutral look of the theme: the gray set of the library on a dark theme, pale gray fields with a dark
         /// arrow on a light one; <c>UIStyles.NumericUpDowns.CreatePrimary</c> makes one in the accent color.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return _colorSet.Value; }
@@ -134,12 +138,14 @@ namespace ErikwnkWFUI.Controls
             return Dpi.Scale(this, value96, DpiOverride);
         }
 
+        /// <inheritdoc/>
         protected override void OnEnter(EventArgs e)
         {
             base.OnEnter(e);
             RepaintAll();
         }
 
+        /// <inheritdoc/>
         protected override void OnLeave(EventArgs e)
         {
             base.OnLeave(e);
@@ -148,6 +154,7 @@ namespace ErikwnkWFUI.Controls
 
         // The standard control draws a ring around its text field (black when it is disabled); what lies outside the two
         // children is painted over in the field's color.
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -162,12 +169,18 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
 
             _hotField = -1;
             _pressedField = -1;
+
+            // (A disabled control gets no MouseLeave, and an enabled one no MouseMove before the mouse moves: it is looked at where the mouse is.)
+            if (Enabled)
+                RefreshHotField();
+
             RepaintAll();
         }
 
