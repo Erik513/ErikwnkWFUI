@@ -71,7 +71,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 6.5 | 6 | `OptionsForm`, `OptionsPreset`, `UIAppearance` | 97.6 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.6 | 6 | `ToastForm`, `Toaster` | 99.4 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 | 6.7 | 6 | `InfoPopupForm`, `InfoPopupSection`, `PopupFormBase`, `PopupSupport` | 97.0 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
-| 6.8 | 6 | Update: `UpdatePrompt`, `UpdateAvailableForm`, `AppUpdater` (and `SelfUpdater` of ErikwnkCore: see the open items) | 87.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 6.8 | 6 | Update: `UpdatePrompt`, `UpdateAvailableForm`, `AppUpdater` (and `SelfUpdater` of ErikwnkCore: see the open items) | 90.9 % | [x] | [x] | [x] | - | [x] | [x] | [x] |
 
 ## Phase 7 - across the whole project
 

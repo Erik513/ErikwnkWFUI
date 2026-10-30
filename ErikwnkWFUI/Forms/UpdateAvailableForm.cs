@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using ErikwnkWFUI.Controls;
 using System.Drawing;
 using System.Threading.Tasks;
@@ -44,9 +45,13 @@ namespace ErikwnkWFUI.Forms
         private bool _allowSkip;
 
         /// <summary>Whether the user clicked "Update now" (the dialog is closed with <c>DialogResult.Yes</c> then); false for Later, Skip and for closing it.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool UpdateChosen { get; private set; }
 
         /// <summary>Whether the user clicked "Skip this version" (the dialog is closed with <c>DialogResult.Ignore</c> then). The button is there only with <see cref="AllowSkip"/>.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SkipChosen { get; private set; }
 
         /// <param name="currentVersion">The version that runs now, as it is shown ("1.2.0").</param>
@@ -88,6 +93,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>The text of the release ("What's new"): with it the window has a "What's new" button that opens the text under the versions. Empty (the default) has no button. Plain text; the Markdown of a GitHub release is shown as it is written.</summary>
+        [DefaultValue("")]
         public string ReleaseNotes
         {
             get { return _releaseNotes; }
@@ -106,6 +112,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the text of <see cref="ReleaseNotes"/> is open (the window is higher then). Closed by default.</summary>
+        [DefaultValue(false)]
         public bool NotesExpanded
         {
             get { return _notesExpanded; }
@@ -123,6 +130,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the window has a "Skip this version" button (the program then does not ask again for this version). Off by default.</summary>
+        [DefaultValue(false)]
         public bool AllowSkip
         {
             get { return _allowSkip; }
@@ -281,6 +289,7 @@ namespace ErikwnkWFUI.Forms
                 _notesBox.ScrollBars = wanted;
         }
 
+        /// <inheritdoc/>
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -454,6 +463,7 @@ namespace ErikwnkWFUI.Forms
             LayoutContent();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -492,4 +502,4 @@ namespace ErikwnkWFUI.Forms
             Close();
         }
     }
-}
+}
