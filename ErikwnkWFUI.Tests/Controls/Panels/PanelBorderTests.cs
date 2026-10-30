@@ -483,9 +483,9 @@ public class PanelBorderTests : IDisposable
     }
 
     [Fact]
-    public void TheDesigner_WritesTheBorderColorOnlyWhereItWasSet_ForThePanelAndTheCard()
+    public void TheDesigner_WritesTheBorderColorOnlyWhereItWasSet_ForThePanelTheCardAndTheFlowPanel()
     {
-        foreach (Control control in new Control[] { new ErikwnkWFUI.Controls.Panel(), new CardPanel() })
+        foreach (Control control in new Control[] { new ErikwnkWFUI.Controls.Panel(), new CardPanel(), new ErikwnkWFUI.Controls.FlowLayoutPanel() })
         {
             using (control)
             {
