@@ -77,6 +77,9 @@ what is left open.
   control that no test reaches. A *control* is every file that starts with its name (`ListBox.cs`, `ListBox.Drag.cs`).
 - `tools\Update-ControlTable.ps1` regenerates `CONTROLS.md` (generator: `ErikwnkWFUI.Tests\Docs\ControlTableGenerator.cs`, text that the code cannot
   say: `docs\control-notes.json` with the ignored standard properties and the factory class of a control whose name differs).
+- `tools\Export-DocsHtml.py` (`py -3 tools/Export-DocsHtml.py`) makes `docs/html/ErikwnkWFUI-docs.html`, one page of README, ANALYSIS, CONTROLS and ROUND-TWO with a directory, charts of
+  the progress and the coverage, and a reload every 20 seconds, for the user (who has no Markdown preview). Run it after every unit, once the row in `ANALYSIS.md` is ticked;
+  the folder is not under version control.
 - `build-and-test.ps1` (repo root): builds both targets, runs the tests, rebuilds the Showcase (`-SkipTests`, `-SkipShowcase`). Close a running Showcase
   first: it locks `ErikwnkWFUI.dll` (the user sometimes has it open in the debugger; then build the library and the tests only and say so).
 - **Rendering for a look** (no screen capture): a temporary test file (`ErikwnkWFUI.Tests\Forms\TmpShotTests.cs`, delete it afterwards) that makes the controls
