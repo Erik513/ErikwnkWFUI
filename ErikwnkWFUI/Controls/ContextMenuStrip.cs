@@ -30,6 +30,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ThemeColor _borderColor = new ThemeColor(() => UIColors.GetOutlineColor(UIColors.BackgroundMediumElevated));
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
+        /// <summary>Makes a menu in the library's look, in the neutral gray; <c>UIStyles.ContextMenuStrips</c> makes the usual ones.</summary>
         public ContextMenuStrip()
         {
             // The highlighted item: the set's hover color (brought to where its text reads), or
@@ -51,6 +52,8 @@ namespace ErikwnkWFUI.Controls
         /// <c>UIStyles.ContextMenuStrips.CreatePrimary</c> makes one in the accent color. A
         /// <see cref="SelectionBackColor"/> set explicitly wins over the set's hover color.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return ResolvedColors; }
@@ -90,6 +93,29 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The designer writes a color only where it was set (the defaults follow the theme, they are not stored).
+        private bool ShouldSerializeSelectionBackColor()
+        {
+            return _selectionBackColor.IsSet;
+        }
+
+        private void ResetSelectionBackColor()
+        {
+            _selectionBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            _borderColor.Reset();
+            Invalidate();
+        }
+
         // The highlight follows a color that is asked for again each time (the owner control's own, which follows its set
         // and the theme): a menu that is built into a list view, a grid or a tab control takes it from there instead of
         // being handed a color at every change.
@@ -118,6 +144,7 @@ namespace ErikwnkWFUI.Controls
         // image and check margins of this menu. They are set on the whole tree at every opening,
         // not once when an item is added, because items can still come until the menu shows. After the Opening event,
         // not before: that is where applications fill a menu on demand.
+        /// <inheritdoc/>
         protected override void OnOpening(CancelEventArgs e)
         {
             base.OnOpening(e);

@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.ComponentModel;
+using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Tests.Infrastructure;
@@ -176,5 +177,67 @@ public class ContextMenuStripRenderingTests
         Color result = menu.Renderer.InvokePrivate<Color>("GetForeColor", item);
 
         Assert.Equal(UIColors.TextPrimary, result);
+    }
+
+    [Fact]
+    public void TheDesigner_WritesTheTwoColorsOnlyWhereTheyWereSet_AndDoesNotSeeTheSet()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
+        PropertyDescriptorCollection properties = TypeDescriptor.GetProperties(menu);
+
+        Assert.False(properties["Colors"]!.IsBrowsable);
+
+        foreach (string name in new[] { "SelectionBackColor", "BorderColor" })
+        {
+            PropertyDescriptor property = properties[name]!;
+
+            Assert.False(property.ShouldSerializeValue(menu), name + " writes the color of the theme");
+            property.SetValue(menu, Color.Magenta);
+            Assert.True(property.ShouldSerializeValue(menu), name);
+            property.ResetValue(menu);
+            Assert.False(property.ShouldSerializeValue(menu), name);
+        }
+    }
+
+    [Fact]
+    public void AHighlightThatIsAskedForAgainEachTime_IsFollowed_UntilOneIsSet()
+    {
+        using WfuiContextMenuStrip menu = new WfuiContextMenuStrip();
+        Color owner = Color.Orange;
+
+        menu.FollowSelectionBackColor(() => owner);
+        Assert.Equal(Color.Orange, menu.SelectionBackColor);
+
+        owner = Color.Teal;
+        Assert.Equal(Color.Teal, menu.SelectionBackColor);
+
+        menu.SelectionBackColor = Color.Magenta;
+        Assert.Equal(Color.Magenta, menu.SelectionBackColor);
+    }
+
+    [Fact]
+    public void AMenuThatIsPainted_UsesTheColorsForTextArrowsAndTheStates()
+    {
+        UIColorSet set = UIStyles.Colors.Sets.Blue;
+
+        foreach (UIColorSet? colors in new UIColorSet?[] { null, set })
+        {
+            using WfuiContextMenuStrip menu = new WfuiContextMenuStrip { Colors = colors };
+            ToolStripMenuItem open = new ToolStripMenuItem("Open") { Checked = true };
+            ToolStripMenuItem sub = new ToolStripMenuItem("More");
+            sub.DropDownItems.Add("Inside");
+            menu.Items.AddRange(new ToolStripItem[] { open, new ToolStripSeparator(), sub, new ToolStripMenuItem("Off") { Enabled = false } });
+            _ = menu.Handle;
+
+            // (The states of an item are painted while the menu is painted: the selected one and the one whose submenu is open.)
+            menu.Items[0].Select();
+            using (Bitmap selected = new Bitmap(menu.Width, menu.Height))
+                menu.DrawToBitmap(selected, new Rectangle(Point.Empty, menu.Size));
+            sub.Select();
+            sub.ShowDropDown();
+            using (Bitmap pressed = new Bitmap(menu.Width, menu.Height))
+                menu.DrawToBitmap(pressed, new Rectangle(Point.Empty, menu.Size));
+            sub.HideDropDown();
+        }
     }
 }
