@@ -8,6 +8,7 @@ namespace ErikwnkWFUI.Controls
     // the colors are in ListBox.cs, the painting in ListBox.Drawing.cs.
     public partial class ListBox
     {
+        /// <inheritdoc/>
         protected override void OnDragLeave(EventArgs e)
         {
             InvalidateDragIndicator();
@@ -17,6 +18,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDragLeave(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnDragOver(DragEventArgs drgevent)
         {
             // Only a drag that started on one of the handles of this list is a reordering; anything else that is
@@ -45,6 +47,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDragOver(drgevent);
         }
 
+        /// <inheritdoc/>
         protected override void OnDragDrop(DragEventArgs drgevent)
         {
             Point point = PointToClient(new Point(drgevent.X, drgevent.Y));
@@ -64,6 +67,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDragDrop(drgevent);
         }
 
+        /// <inheritdoc/>
         protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
         {
             gfbevent.UseDefaultCursors = false;

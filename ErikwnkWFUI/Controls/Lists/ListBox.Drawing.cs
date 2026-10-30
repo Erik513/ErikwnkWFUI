@@ -9,6 +9,7 @@ namespace ErikwnkWFUI.Controls
     // an item has in which state. The settings, the mouse and the colors' properties are in ListBox.cs.
     public partial class ListBox
     {
+        /// <inheritdoc/>
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
             if (e.Index < 0)

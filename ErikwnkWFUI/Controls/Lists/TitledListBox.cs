@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -30,16 +31,24 @@ namespace ErikwnkWFUI.Controls
         private readonly Label _titleLabel;
         private readonly ListBox _listBox;
 
+        /// <summary>Raised when the selected item changes (the same event of the list inside, with this control as the sender).</summary>
         public event EventHandler SelectedIndexChanged;
+        /// <summary>Raised after a drag-to-reorder moves an item (see <see cref="ListBox.ItemsReordered"/>).</summary>
         public event EventHandler ItemsReordered;
 
         // These events of the list box say this control is the sender, like the ones above.
+        /// <summary>Raised when the selected value changes.</summary>
         public event EventHandler SelectedValueChanged;
+        /// <summary>Raised when the data source changes.</summary>
         public event EventHandler DataSourceChanged;
+        /// <summary>Raised when the display member changes.</summary>
         public event EventHandler DisplayMemberChanged;
+        /// <summary>Raised when the value member changes.</summary>
         public event EventHandler ValueMemberChanged;
+        /// <summary>Raised after an item is painted, to paint on top of it (see <see cref="ListBox"/>).</summary>
         public event DrawItemEventHandler DrawItem;
 
+        /// <summary>Makes a list with no title bar, in the look of <see cref="ListBox"/>; <c>UIStyles.TitledListBoxes</c> makes the usual ones.</summary>
         public TitledListBox()
             : this(null, false, false, null, ContentAlignment.MiddleLeft)
         {
@@ -87,6 +96,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The title in the bar above the list; the bar is not shown while it is empty.</summary>
+        [DefaultValue("")]
         public string Title
         {
             get { return _titleLabel.Text; }
@@ -157,6 +167,7 @@ namespace ErikwnkWFUI.Controls
         // A seam for the tests: pretends another screen (0 is the real one).
         internal int DpiOverride;
 
+        /// <inheritdoc/>
         protected override void OnDpiChangedAfterParent(EventArgs e)
         {
             base.OnDpiChangedAfterParent(e);
@@ -205,6 +216,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Where the title stands in its bar (left and centered vertically by default).</summary>
+        [DefaultValue(ContentAlignment.MiddleLeft)]
         public ContentAlignment HeaderTextAlign
         {
             get { return _titleLabel.TextAlign; }
@@ -213,6 +225,60 @@ namespace ErikwnkWFUI.Controls
                 _titleLabel.TextAlign = value;
                 _titleLabel.Padding = GetHeaderPadding(value);
             }
+        }
+
+        // The designer writes a color, the height or the font of the title bar only where it was set (the defaults follow the theme and the screen,
+        // they are not stored); Reset gives the default back.
+        private bool ShouldSerializeHeaderBackColor()
+        {
+            return _headerBackColor.IsSet;
+        }
+
+        private void ResetHeaderBackColor()
+        {
+            HeaderBackColor = Color.Empty;
+        }
+
+        private bool ShouldSerializeHeaderForeColor()
+        {
+            return _headerForeColor.IsSet;
+        }
+
+        private void ResetHeaderForeColor()
+        {
+            HeaderForeColor = Color.Empty;
+        }
+
+        private bool ShouldSerializeHeaderHeight()
+        {
+            return _headerHeightWasSet;
+        }
+
+        private void ResetHeaderHeight()
+        {
+            _headerHeightWasSet = false;
+            _headerPanel.Height = Px(DefaultHeaderHeight);
+        }
+
+        private bool ShouldSerializeHeaderFont()
+        {
+            return !_titleLabel.Font.Equals(UIFonts.Title);
+        }
+
+        private void ResetHeaderFont()
+        {
+            _titleLabel.Font = UIFonts.Title;
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return InnerShouldSerialize("BorderColor");
+        }
+
+        private void ResetBorderColor()
+        {
+            InnerReset("BorderColor");
+            ApplyBorderColor();
         }
 
         private void ConfigureControl()

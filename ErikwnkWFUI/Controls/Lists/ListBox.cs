@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
 using System.Windows.Forms;
@@ -111,6 +112,8 @@ namespace ErikwnkWFUI.Controls
         /// box makes of an item (<c>DisplayMember</c>, <c>FormatString</c>, or
         /// <c>item.ToString()</c>).
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<object, string> DisplayTextProvider
         {
             get => _displayTextProvider;
@@ -122,6 +125,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Prefixes each item with its 1-based position ("1.", "2.", ...).</summary>
+        [DefaultValue(false)]
         public bool ShowEnumeration
         {
             get => _showEnumeration;
@@ -133,6 +137,8 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Optional per-item icon, drawn to the left of the display text.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<object, Image> IconProvider
         {
             get => _iconProvider;
@@ -147,6 +153,8 @@ namespace ErikwnkWFUI.Controls
         /// Optional per-item disabled <b>look</b> (grayed out): only how the item is drawn. The item can still be
         /// clicked, selected and dragged like any other. Independent of the whole control's own <see cref="Control.Enabled"/>.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<object, bool> IsItemDisabled
         {
             get => _isItemDisabled;
@@ -166,6 +174,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Whether items can be dragged to reorder them (drag handle on the right of each item) - also controls <see cref="Control.AllowDrop"/>. Not with <c>MultiColumn</c>, <c>Sorted</c> or a <c>DataSource</c>.</summary>
+        [DefaultValue(true)]
         public bool AllowReorder
         {
             get => _allowReorder;
@@ -352,6 +361,145 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The designer writes a color only where it was set (the defaults follow the theme, they are not stored); Reset gives the default back.
+        private bool ShouldSerializeDragIndicatorColor()
+        {
+            return _dragIndicatorColor.IsSet;
+        }
+
+        private void ResetDragIndicatorColor()
+        {
+            _dragIndicatorColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeDisabledBackColor()
+        {
+            return _disabledBackColor.IsSet;
+        }
+
+        private void ResetDisabledBackColor()
+        {
+            _disabledBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeSelectedBackColor()
+        {
+            return _selectedBackColor.IsSet;
+        }
+
+        private void ResetSelectedBackColor()
+        {
+            _selectedBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeItemBackColor()
+        {
+            return _itemBackColor.IsSet;
+        }
+
+        private void ResetItemBackColor()
+        {
+            _itemBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeItemForeColor()
+        {
+            return _itemForeColor.IsSet;
+        }
+
+        private void ResetItemForeColor()
+        {
+            _itemForeColor.Reset();
+            base.ForeColor = _itemForeColor.Value;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeForeColor()
+        {
+            return _itemForeColor.IsSet;
+        }
+
+        private void ResetForeColor()
+        {
+            _itemForeColor.Reset();
+            base.ForeColor = _itemForeColor.Value;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeDisabledForeColor()
+        {
+            return _disabledForeColor.HasValue;
+        }
+
+        private void ResetDisabledForeColor()
+        {
+            _disabledForeColor = null;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeSelectedForeColor()
+        {
+            return _selectedForeColor.HasValue;
+        }
+
+        private void ResetSelectedForeColor()
+        {
+            _selectedForeColor = null;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeHoverBackColor()
+        {
+            return _hoverBackColor.HasValue;
+        }
+
+        private void ResetHoverBackColor()
+        {
+            _hoverBackColor = null;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeDragHandleColor()
+        {
+            return _dragHandleColor.HasValue;
+        }
+
+        private void ResetDragHandleColor()
+        {
+            _dragHandleColor = null;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeItemHeight()
+        {
+            return _itemHeightWasSet;
+        }
+
+        private void ResetItemHeight()
+        {
+            _itemHeightWasSet = false;
+            _itemHeight = Dpi.Scale(this, BaseItemHeight, 0);
+            base.ItemHeight = _itemHeight;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeBackColor()
+        {
+            return _backColorWasSet;
+        }
+
+        private void ResetBackColor()
+        {
+            _backColorWasSet = false;
+            base.BackColor = UIColors.BackgroundMedium;
+            Invalidate();
+        }
+
+        /// <summary>Makes a list of single lines in the library's look, with the drag handles for reordering; <c>UIStyles.ListBoxes</c> makes the usual ones.</summary>
         public ListBox()
         {
             ThemeWatcher.Attach(this, OnThemeChanged);
@@ -418,6 +566,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -428,6 +577,7 @@ namespace ErikwnkWFUI.Controls
 
         // On a screen with more dots per inch the rows are higher: the default height of an item is 35 pixels at 96 dpi.
         // A height that was set stays as it was set.
+        /// <inheritdoc/>
         protected override void OnDpiChangedAfterParent(EventArgs e)
         {
             base.OnDpiChangedAfterParent(e);
@@ -453,6 +603,7 @@ namespace ErikwnkWFUI.Controls
         // A seam for the tests: pretends another screen (0 is the real one).
         internal int DpiOverride;
 
+        /// <inheritdoc/>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             UpdateHoverIndex(e.Location);
@@ -464,6 +615,7 @@ namespace ErikwnkWFUI.Controls
         // The native list selects the item on WM_LBUTTONDOWN, before OnMouseDown runs: from there SelectedIndex is already
         // the new one. The state before the click (is this the selected item? what is under the mouse?) is only to be
         // seen in the message itself, so it is taken here, before the base class handles it.
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_LBUTTONDOWN)
@@ -487,6 +639,7 @@ namespace ErikwnkWFUI.Controls
                 UpdateHoverIndex(PointToClient(Cursor.Position));
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             // A list that is switched off is not under the mouse any more, and not when it is back on either until the
@@ -518,6 +671,7 @@ namespace ErikwnkWFUI.Controls
             _pendingToggleDeselectIndex = index != -1 && index == SelectedIndex ? index : -1;
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             // What was under the mouse when it was pressed - not what is there now: the native list may have scrolled
@@ -542,6 +696,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseDown(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             ResetDragState();
@@ -564,6 +719,7 @@ namespace ErikwnkWFUI.Controls
             base.OnMouseUp(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             if (_isDragging)

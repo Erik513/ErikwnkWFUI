@@ -30,6 +30,17 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            _borderColor.Reset();
+            RedrawFrame();
+        }
+
         internal void RedrawFrame()
         {
             if (IsHandleCreated)
@@ -73,4 +84,4 @@ namespace ErikwnkWFUI.Controls
                 PaintBorder(m.WParam);
         }
     }
-}
+}

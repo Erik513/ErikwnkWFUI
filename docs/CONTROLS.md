@@ -133,7 +133,7 @@ Made by `UIStyles.DataGridViews` (see the end of this file).
 
 `ErikwnkWFUI.Controls.FlowLayoutPanel` - based on `FlowLayoutPanel`
 
-The flow layout panel of `UIStyles.FlowLayoutPanels`: the standard `FlowLayoutPanel`, drawn without flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color (`BorderStyle`, `BorderColor`). Everything else is the standard control. Named `FlowLayoutPanel` so that it does not clash with the standard class in the files that use both namespaces.
+The flow layout panel of `UIStyles.FlowLayoutPanels`: the standard `FlowLayoutPanel`, drawn without flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color (`BorderStyle`, `BorderColor`). Everything else is the standard control. It has the name of the standard class: in a file that uses both namespaces name it in full or with a `using` alias; the factories hand it back as a standard `FlowLayoutPanel`.
 
 Made by `UIStyles.FlowLayoutPanels` (see the end of this file).
 
@@ -333,7 +333,7 @@ Made by `UIStyles.NumericUpDowns` (see the end of this file).
 
 `ErikwnkWFUI.Controls.Panel` - based on `Panel`
 
-The panel of `UIStyles.Panels`: the standard `Panel`, drawn without flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color (`BorderStyle`, `BorderColor`). Everything else - `AutoScroll`, `AutoSize`, `BackgroundImage`, `Padding` - is the standard control. Named `Panel` (not `Panel`) so that it does not clash with the standard class in the files that use both namespaces; the factories hand it back as a `Panel`.
+The panel of `UIStyles.Panels`: the standard `Panel`, drawn without flicker, with the scroll bars in the style of the theme and with an optional frame in the library's color (`BorderStyle`, `BorderColor`). Everything else - `AutoScroll`, `AutoSize`, `BackgroundImage`, `Padding` - is the standard control. It has the name of the standard class: in a file that uses both namespaces name it in full or with a `using` alias; the factories hand it back as a standard `Panel`.
 
 Made by `UIStyles.Panels` (see the end of this file).
 
@@ -600,7 +600,7 @@ Made by `UIStyles.TabControls` (see the end of this file).
 
 `ErikwnkWFUI.Controls.TableLayoutPanel` - based on `TableLayoutPanel`
 
-The table layout panel of `UIStyles.TableLayoutPanels`: the standard `TableLayoutPanel`, drawn without flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color (`BorderStyle`, `BorderColor`) and with the lines of `CellBorderStyle.Single` in colors of the library (`CellBorderColor`, `InnerCellBorderColor`, `OuterCellBorderColor`) of which the ones to show can be chosen (`CellBorderLines`). Everything else is the standard control. Named `TableLayoutPanel` so that it does not clash with the standard class in the files that use both namespaces.
+The table layout panel of `UIStyles.TableLayoutPanels`: the standard `TableLayoutPanel`, drawn without flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color (`BorderStyle`, `BorderColor`) and with the lines of `CellBorderStyle.Single` in colors of the library (`CellBorderColor`, `InnerCellBorderColor`, `OuterCellBorderColor`) of which the ones to show can be chosen (`CellBorderLines`). Everything else is the standard control. It has the name of the standard class: in a file that uses both namespaces name it in full or with a `using` alias; the factories hand it back as a standard `TableLayoutPanel`.
 
 Made by `UIStyles.TableLayoutPanels` (see the end of this file).
 
@@ -639,17 +639,17 @@ A custom-drawn window title bar: logo, title text, minimize/maximize/ close butt
 | Property | Type | Default | Access | Description |
 |---|---|---|---|---|
 | `IconImage` | `Image` | - | get, set | The small logo at the top-left, or null to hide it entirely (default). See ErikwnkWFUI/README.md for how to load this from your own embedded resources. |
-| `ShowCloseButton` | `bool` | - | get, set |  |
-| `ShowMaximizeButton` | `bool` | - | get, set |  |
-| `ShowMinimizeButton` | `bool` | - | get, set |  |
+| `ShowCloseButton` | `bool` | - | get, set | Whether the close button is there (true by default). |
+| `ShowMaximizeButton` | `bool` | - | get, set | Whether the maximize / restore button is there (true by default). |
+| `ShowMinimizeButton` | `bool` | - | get, set | Whether the minimize button is there (true by default). |
 | `Title` | `string` | - | get, set | The window title text. |
 | `TitleForeColor` | `Color` | - | get, set | The title text's color. |
-| `TitleTextAlign` | `ContentAlignment` | - | get, set |  |
+| `TitleTextAlign` | `ContentAlignment` | - | get, set | Where the title stands in the room that the logo and the buttons leave: left, centered (the default) or right. |
 
 | Method | Description |
 |---|---|
-| `DisposeDragHandle()` |  |
-| `UpdateMaximizeButton(bool isMaximized)` |  |
+| `DisposeDragHandle()` | Lets go of the handles that drag the window by the bar (also done when the bar is disposed). |
+| `UpdateMaximizeButton(bool isMaximized)` | Makes the maximize button show what it does now: restore while the window is maximized, maximize otherwise (the bar does it by itself; for a window that has no bar of this kind). |
 
 
 ## TitledListBox
@@ -710,13 +710,13 @@ Made by `UIStyles.TitledListBoxes` (see the end of this file).
 
 | Event | Handler | Description |
 |---|---|---|
-| `DataSourceChanged` | `EventHandler` |  |
-| `DisplayMemberChanged` | `EventHandler` |  |
-| `DrawItem` | `DrawItemEventHandler` |  |
-| `ItemsReordered` | `EventHandler` |  |
-| `SelectedIndexChanged` | `EventHandler` |  |
-| `SelectedValueChanged` | `EventHandler` |  |
-| `ValueMemberChanged` | `EventHandler` |  |
+| `DataSourceChanged` | `EventHandler` | Raised when the data source changes. |
+| `DisplayMemberChanged` | `EventHandler` | Raised when the display member changes. |
+| `DrawItem` | `DrawItemEventHandler` | Raised after an item is painted, to paint on top of it (see `ListBox`). |
+| `ItemsReordered` | `EventHandler` | Raised after a drag-to-reorder moves an item (see `ItemsReordered`). |
+| `SelectedIndexChanged` | `EventHandler` | Raised when the selected item changes (the same event of the list inside, with this control as the sender). |
+| `SelectedValueChanged` | `EventHandler` | Raised when the selected value changes. |
+| `ValueMemberChanged` | `EventHandler` | Raised when the value member changes. |
 
 | Method | Description |
 |---|---|
