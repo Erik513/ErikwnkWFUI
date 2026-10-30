@@ -6,6 +6,7 @@ namespace ErikwnkWFUI.Controls
     // Selection and keys while disabled tabs may not be selected.
     public partial class ReadOnlyTabControl
     {
+        /// <inheritdoc/>
         protected override void OnSelecting(TabControlCancelEventArgs e)
         {
             // Before the event goes out, so a handler sees it already refused.
@@ -20,6 +21,7 @@ namespace ErikwnkWFUI.Controls
         // Arrow keys along the strip. Natively they would step onto a disabled
         // tab, be refused and stay put, never getting past it - so they skip
         // disabled tabs here instead.
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (!_allowSelectingDisabledTabs && !e.Control && !e.Alt)
@@ -41,6 +43,7 @@ namespace ErikwnkWFUI.Controls
 
         // Ctrl+Tab, Ctrl+Shift+Tab and Ctrl+PageDown / Ctrl+PageUp, which
         // the tab control turns into a selection change itself.
+        /// <inheritdoc/>
         protected override bool ProcessKeyPreview(ref Message m)
         {
             if (!_allowSelectingDisabledTabs && m.Msg == WM_KEYDOWN && (ModifierKeys & Keys.Control) != 0)

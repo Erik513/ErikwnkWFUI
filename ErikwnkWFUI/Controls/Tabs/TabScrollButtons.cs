@@ -160,6 +160,7 @@ namespace ErikwnkWFUI.Controls
             Marshal.StructureToPtr(position, m.LParam, false);
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             switch (m.Msg)

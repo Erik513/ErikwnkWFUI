@@ -8,6 +8,7 @@ namespace ErikwnkWFUI.Controls
     // The themed drawing: page area, tabs, accent, content.
     public partial class ReadOnlyTabControl
     {
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             DrawHeaderBackground(e.Graphics);

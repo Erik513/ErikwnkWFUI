@@ -81,6 +81,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // On a screen with another scaling the slot has another size: the list of slots is made anew.
+        /// <inheritdoc/>
         protected override void OnDpiChangedAfterParent(EventArgs e)
         {
             base.OnDpiChangedAfterParent(e);
@@ -94,6 +95,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void DrawTabImage(Graphics graphics, int index, Image image, Rectangle bounds, Color foreColor)
         {
             // The slot image is transparent - the padlock goes in its place.
@@ -109,6 +111,7 @@ namespace ErikwnkWFUI.Controls
         // The native tab leaves about 12 px of padding on each side of its
         // content. The padlock and the name together sit a few pixels left of
         // the center, which closes up the gap on the left.
+        /// <inheritdoc/>
         protected override int GetTabContentOffset(int index)
         {
             return ImageList == _lockSlots && _lockSlots != null && IsSlotImage(index) ? -Px(LockContentShift96) : 0;
@@ -121,6 +124,7 @@ namespace ErikwnkWFUI.Controls
 
         // With an image list of the application's own there is no slot, so
         // the padlock goes to the right end of the tab.
+        /// <inheritdoc/>
         protected override void DrawTabOverlay(Graphics graphics, int index, Rectangle bounds, Color foreColor)
         {
             if (!_showLockIcon || index < 0 || index >= TabCount || !IsLocked(TabPages[index]))
@@ -190,6 +194,7 @@ namespace ErikwnkWFUI.Controls
 
         // The tooltip over a tab: what the base says (the full name of a cut-off
         // tab) and, below it, what is locked.
+        /// <inheritdoc/>
         protected override string GetTabToolTipText(int index)
         {
             string name = base.GetTabToolTipText(index);

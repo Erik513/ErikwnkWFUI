@@ -36,6 +36,16 @@ namespace ErikwnkWFUI.Controls
             set { _contextMenuSelectionColor.Set(value); }
         }
 
+        private bool ShouldSerializeContextMenuSelectionColor()
+        {
+            return _contextMenuSelectionColor.IsSet;
+        }
+
+        private void ResetContextMenuSelectionColor()
+        {
+            _contextMenuSelectionColor.Reset();
+        }
+
         // The library's own menu, in place while any of the Allow... switches
         // is on - unless the application assigned a menu of its own, which
         // always wins.

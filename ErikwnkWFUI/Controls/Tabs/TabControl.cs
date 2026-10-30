@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -99,6 +100,7 @@ namespace ErikwnkWFUI.Controls
         public event EventHandler<TabRenamedEventArgs> TabRenamed;
 
         /// <summary>Lets the user rename tabs - from the right-click menu and, see <see cref="RenameTabOnDoubleClick"/>, by double-clicking. On by default.</summary>
+        [DefaultValue(true)]
         public bool AllowUserToRenameTabs
         {
             get => _allowUserToRenameTabs;
@@ -115,6 +117,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Whether a double-click on a tab starts renaming it (needs <see cref="AllowUserToRenameTabs"/>). On by default.</summary>
+        [DefaultValue(true)]
         public bool RenameTabOnDoubleClick
         {
             get => _renameTabOnDoubleClick;
@@ -122,6 +125,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Whether a tab added from the menu starts out in rename mode, so it can be named right away. Off by default.</summary>
+        [DefaultValue(false)]
         public bool RenameTabAfterAdding
         {
             get => _renameTabAfterAdding;
@@ -183,6 +187,7 @@ namespace ErikwnkWFUI.Controls
         /// fit. 40 by default; must be at least 1. Names that are already
         /// longer are left as they are until they are edited.
         /// </summary>
+        [DefaultValue(DefaultMaxTabNameLength)]
         public int MaxTabNameLength
         {
             get => _maxTabNameLength;
@@ -211,6 +216,7 @@ namespace ErikwnkWFUI.Controls
         /// were locked first have taken an image index of the control's own list,
         /// which would then point into yours.
         /// </summary>
+        [DefaultValue(true)]
         public bool ShowLockIcon
         {
             get => _showLockIcon;
@@ -223,9 +229,11 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Whether a tab's name is being edited right now.</summary>
+        [Browsable(false)]
         public bool IsRenamingTab => _renameBox != null;
 
         /// <summary>Lets the user add tabs from the right-click menu. On by default.</summary>
+        [DefaultValue(true)]
         public bool AllowUserToAddTabs
         {
             get => _allowUserToAddTabs;
@@ -237,6 +245,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Lets the user close tabs from the right-click menu - never the last one. On by default.</summary>
+        [DefaultValue(true)]
         public bool AllowUserToCloseTabs
         {
             get => _allowUserToCloseTabs;
@@ -252,6 +261,7 @@ namespace ErikwnkWFUI.Controls
         /// tab the menu acts on. On by default; switch it off for the
         /// standard control's behavior, where only a left-click selects.
         /// </summary>
+        [DefaultValue(true)]
         public bool SelectTabOnRightClick
         {
             get => _selectTabOnRightClick;
@@ -267,6 +277,7 @@ namespace ErikwnkWFUI.Controls
             AllowUserToRenameTabs = true;
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -295,6 +306,7 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
+        /// <inheritdoc/>
         protected override void OnControlAdded(ControlEventArgs e)
         {
             base.OnControlAdded(e);
@@ -305,6 +317,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnControlRemoved(ControlEventArgs e)
         {
             base.OnControlRemoved(e);
@@ -315,6 +328,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDoubleClick(MouseEventArgs e)
         {
             base.OnMouseDoubleClick(e);
@@ -333,18 +347,21 @@ namespace ErikwnkWFUI.Controls
         // Anything that moves the tabs, or changes which one is selected,
         // ends the edit - the box would be left over a tab it no longer
         // belongs to.
+        /// <inheritdoc/>
         protected override void OnSelectedIndexChanged(EventArgs e)
         {
             EndRename(commit: true);
             base.OnSelectedIndexChanged(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnResize(EventArgs e)
         {
             EndRename(commit: true);
             base.OnResize(e);
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             // The strip scrolling moves every tab.
@@ -356,6 +373,7 @@ namespace ErikwnkWFUI.Controls
             base.WndProc(ref m);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)

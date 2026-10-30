@@ -211,6 +211,120 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The designer writes a color only where it was set (the defaults follow the theme, they are not stored); Reset gives the default back.
+        private bool ShouldSerializeHeaderBackColor()
+        {
+            return _headerBackColor.IsSet;
+        }
+
+        private void ResetHeaderBackColor()
+        {
+            _headerBackColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeTabBackColor()
+        {
+            return _tabBackColor.IsSet;
+        }
+
+        private void ResetTabBackColor()
+        {
+            _tabBackColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeHoverTabBackColor()
+        {
+            return _hoverTabBackColor.IsSet;
+        }
+
+        private void ResetHoverTabBackColor()
+        {
+            _hoverTabBackColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeSelectedTabBackColor()
+        {
+            return _selectedTabBackColor.IsSet;
+        }
+
+        private void ResetSelectedTabBackColor()
+        {
+            _selectedTabBackColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeTabForeColor()
+        {
+            return _tabForeColor.IsSet;
+        }
+
+        private void ResetTabForeColor()
+        {
+            _tabForeColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeSelectedTabForeColor()
+        {
+            return _selectedTabForeColor.IsSet;
+        }
+
+        private void ResetSelectedTabForeColor()
+        {
+            _selectedTabForeColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeDisabledTabForeColor()
+        {
+            return _disabledTabForeColor.IsSet;
+        }
+
+        private void ResetDisabledTabForeColor()
+        {
+            _disabledTabForeColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeSelectedTabIndicatorColor()
+        {
+            return _accentColor.IsSet;
+        }
+
+        private void ResetSelectedTabIndicatorColor()
+        {
+            _accentColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            _borderColor.Reset();
+            Repaint();
+        }
+
+        private bool ShouldSerializePageBackColor()
+        {
+            return _pageBackColor.IsSet;
+        }
+
+        private void ResetPageBackColor()
+        {
+            Color previous = _pageBackColor.Value;
+            _pageBackColor.Reset();
+            _followedPageBackColor = _pageBackColor.Value;
+            ApplyPageBackColor(previous);
+            Repaint();
+        }
+
         /// <summary>
         /// Whether a tab whose page is disabled can be selected. On by
         /// default, like the standard control, where a disabled page can
@@ -219,6 +333,7 @@ namespace ErikwnkWFUI.Controls
         /// arrow keys and Ctrl+Tab skip over it. A tab that is selected when
         /// its page gets disabled stays selected.
         /// </summary>
+        [DefaultValue(true)]
         public bool AllowSelectingDisabledTabs
         {
             get => _allowSelectingDisabledTabs;
@@ -252,6 +367,7 @@ namespace ErikwnkWFUI.Controls
 
         // The styles that make button tabs are taken from the window itself too: the Appearance of the base class can still
         // be reached through a reference typed as the standard TabControl.
+        /// <inheritdoc/>
         protected override CreateParams CreateParams
         {
             get
@@ -319,6 +435,7 @@ namespace ErikwnkWFUI.Controls
             Repaint();
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
@@ -340,6 +457,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -347,6 +465,7 @@ namespace ErikwnkWFUI.Controls
             _scrollButtons.AttachTo(Handle);
         }
 
+        /// <inheritdoc/>
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
@@ -358,6 +477,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -380,6 +500,7 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
+        /// <inheritdoc/>
         protected override void OnControlAdded(ControlEventArgs e)
         {
             base.OnControlAdded(e);
@@ -390,6 +511,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnParentBackColorChanged(EventArgs e)
         {
             base.OnParentBackColorChanged(e);
@@ -397,6 +519,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
@@ -418,6 +541,7 @@ namespace ErikwnkWFUI.Controls
             TabRightClick?.Invoke(this, e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -428,6 +552,7 @@ namespace ErikwnkWFUI.Controls
             UpdateTabToolTip(index);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -436,6 +561,7 @@ namespace ErikwnkWFUI.Controls
             UpdateTabToolTip(-1);
         }
 
+        /// <inheritdoc/>
         protected override void OnSelectedIndexChanged(EventArgs e)
         {
             base.OnSelectedIndexChanged(e);
@@ -443,6 +569,7 @@ namespace ErikwnkWFUI.Controls
             Repaint();
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
@@ -450,6 +577,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
@@ -457,6 +585,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -464,11 +593,32 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
 
+            RefreshHoveredTab();
             Invalidate();
+        }
+
+        /// <inheritdoc/>
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            RefreshHoveredTab();
+        }
+
+        // Where the mouse is (the tests put it elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+
+        // A control that was disabled or hidden got no MouseLeave, and one that is enabled or shown again no MouseMove before the mouse moves: the tab
+        // under the mouse is worked out from where the mouse is, so that no tab stays hovered with the mouse elsewhere, nor lacks it with the mouse on it.
+        private void RefreshHoveredTab()
+        {
+            bool look = Enabled && Visible && HotTrack && IsHandleCreated;
+
+            SetHoveredTabIndex(look ? GetTabIndexAt(PointToClient(CursorPosition())) : -1);
         }
 
         /// <summary>Redraws the control and its scroll arrows.</summary>
