@@ -197,7 +197,7 @@ namespace ErikwnkWFUI.Controls
         public override Size GetPreferredSize(Size proposedSize)
         {
             if (!HasText)
-                return new Size(Width, DefaultHeight);
+                return new Size(Width, StripHeight);
 
             Size line = ProgressBarPainting.MeasureText(ProgressBarPainting.Compose(Text, ShowsPercentage, WidestPercent), Font);
 

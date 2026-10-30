@@ -19,13 +19,15 @@ namespace ErikwnkWFUI.Controls
     /// </summary>
     public class TitleBarControl : System.Windows.Forms.Panel
     {
-        private const int TitleBarHeight = 30;
+        private const int TitleBarHeight96 = 30;
+
+        private int TitleBarHeight => Dpi.Scale(this, TitleBarHeight96);
         private const double TitleTextContrast = 4.5;
-        private const int IconSize = TitleBarHeight;
+        private int IconSize => TitleBarHeight;
         private const int IconLeftMargin = 0;
         private const int TitleHorizontalPadding = 10;
 
-        private static readonly Size ButtonSize = new Size(42, 30);
+        private Size ButtonSize => new Size(Dpi.Scale(this, 42), TitleBarHeight);
 
         private readonly bool _allowWindowSnapAndMaximize;
 

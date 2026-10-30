@@ -46,7 +46,7 @@ namespace ErikwnkWFUI.Controls
         private const int DefaultHeight = 4;
 
         // The strip keeps this height when there is a text next to it; the rest of the control is the text.
-        private const int StripHeight = DefaultHeight;
+        private int StripHeight => Dpi.Scale(this, DefaultHeight);
         private const int TextGap = 2;
         private const int SideGap = 8;
         private const int MinimumSideStripWidth = 40;
@@ -88,7 +88,7 @@ namespace ErikwnkWFUI.Controls
             // A bar only shows something: the Tab key does not stop on it.
             TabStop = false;
 
-            Height = DefaultHeight;
+            Height = StripHeight;
 
             _trackColor = new ThemeColor(() => UIColors.GetLineColor(GetSurface()));
             _fillColor = new ThemeColor(() => base.ForeColor);

@@ -34,7 +34,7 @@ namespace ErikwnkWFUI.Controls
         {
             SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
 
-            Size = new Size(24, 24);
+            Size = new Size(Dpi.Scale(this, 24), Dpi.Scale(this, 24));
             BackColor = Color.Transparent;
             TabStop = false;
 

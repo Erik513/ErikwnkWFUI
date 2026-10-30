@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Factories
@@ -66,11 +67,11 @@ namespace ErikwnkWFUI.Factories
 
         private static Spinner Configure(int size, int thickness)
         {
-            return new Spinner
-            {
-                Size = new Size(size, size),
-                Thickness = thickness
-            };
+            // (The size is given for 96 dpi, like every measure of the library.)
+            Spinner spinner = new Spinner { Thickness = thickness };
+            spinner.Size = new Size(Dpi.Scale(spinner, size), Dpi.Scale(spinner, size));
+
+            return spinner;
         }
 
         private static Spinner WithPercentage(Spinner spinner)

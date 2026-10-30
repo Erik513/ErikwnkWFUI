@@ -106,8 +106,8 @@ namespace ErikwnkWFUI.Factories
             // Its own kind of button: it draws the symbol itself, centered on
             // what is actually visible of it (see SymbolButton).
             Button button = colors != null
-                ? CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetColoredLook(colors, 1))
-                : CreateButton<SymbolButton>(symbol, tooltip, buttonSize, true, GetStandardLook);
+                ? CreateButton<SymbolButton>(symbol, tooltip, size, true, GetColoredLook(colors, 1))
+                : CreateButton<SymbolButton>(symbol, tooltip, size, true, GetStandardLook);
 
             float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
             string family = UIStyles.Symbols.GetFontName(symbol);
@@ -185,7 +185,7 @@ namespace ErikwnkWFUI.Factories
             ButtonLook look = getLook();
 
             button.Text = text ?? "";
-            button.Size = size ?? DefaultButtonSize;
+            button.Size = size ?? new Size(Dpi.Scale(button, DefaultButtonSize.Width), Dpi.Scale(button, DefaultButtonSize.Height));
             button.FlatStyle = FlatStyle.Flat;
             button.BackColor = look.BackColor;
             button.ForeColor = look.ForeColor;
