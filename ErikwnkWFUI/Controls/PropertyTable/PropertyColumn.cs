@@ -17,6 +17,7 @@ namespace ErikwnkWFUI.Controls
         /// <summary>How wide the column is (absolute pixels, or a share of what the absolute columns leave).</summary>
         public ColumnStyle Style { get; private set; }
 
+        /// <summary>For a column of another kind (see <see cref="UIColumn"/>); the ones of the table are made with <see cref="Auto"/>, <see cref="Absolute"/> and <see cref="Percent"/>.</summary>
         protected PropertyColumn(
             Control control,
             ColumnStyle style)

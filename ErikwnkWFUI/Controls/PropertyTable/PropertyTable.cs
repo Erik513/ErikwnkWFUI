@@ -38,6 +38,7 @@ namespace ErikwnkWFUI.Controls
         private bool _listensToLanguage;
         private int _dpiOverride;
 
+        /// <summary>Makes an empty table of rows (a label and its controls) that docks at the top and grows with its rows; <c>UIStyles.PropertyTables</c> makes the usual ones.</summary>
         public PropertyTable()
         {
             Dock = DockStyle.Top;
@@ -107,6 +108,7 @@ namespace ErikwnkWFUI.Controls
                 row.Rescale(Scale);
         }
 
+        /// <inheritdoc/>
         protected override void OnDpiChangedAfterParent(EventArgs e)
         {
             base.OnDpiChangedAfterParent(e);
@@ -221,6 +223,7 @@ namespace ErikwnkWFUI.Controls
                 row.RefreshText();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing && _listensToLanguage)

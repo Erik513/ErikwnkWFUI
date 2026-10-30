@@ -153,4 +153,55 @@ public class PropertyTableRowTests : IDisposable
         foreach (string text in new[] { "Short", LongText })
             Assert.Null(Record.Exception(() => LabelOf(table, text).InvokePrivate("OnMouseEnter", EventArgs.Empty)));
     }
+
+    [Fact]
+    public void TheTextOfARow_CanBeReadAndChanged_AndFollowsASourceThatIsAskedForAgain()
+    {
+        PropertyTable table = _host.Show(new PropertyTable());
+        PropertyRow row = table.AddRow("First", new Button());
+        Assert.Equal("First", row.Text);
+
+        row.Text = "Other";
+        Assert.Equal("Other", row.Text);
+        row.Text = null!;
+        Assert.Equal("", row.Text);
+
+        string current = "one";
+        int assigned = 0;
+        row.TextSource = () => current;
+        Assert.Equal("one", row.Text);
+
+        current = "two";
+        row.InvokePrivate("RefreshText");
+        Assert.Equal("two", row.Text);
+        Assert.NotNull(row.TextSource);
+
+        row.TextSource = null!;
+        current = "three";
+        row.InvokePrivate("RefreshText");
+        Assert.Equal("two", row.Text);
+        Assert.Equal(0, assigned);
+    }
+
+    [Fact]
+    public void ARowWithNoControlsAtAll_HasNoTextAndIsEnabled()
+    {
+        PropertyTable table = _host.Show(new PropertyTable());
+        PropertyRow section = table.AddSection("Section");
+
+        Assert.Equal("Section", section.Text);
+        Assert.True(section.Enabled);
+    }
+
+    [Fact]
+    public void TheDesigner_DoesNotSeeTheColorSet_AndKnowsTheLabelWidth()
+    {
+        using PropertyTable table = new PropertyTable();
+        System.ComponentModel.PropertyDescriptorCollection properties = System.ComponentModel.TypeDescriptor.GetProperties(table);
+
+        Assert.False(properties["Colors"]!.IsBrowsable);
+        Assert.False(properties["LabelWidth"]!.ShouldSerializeValue(table));
+        properties["LabelWidth"]!.SetValue(table, 200);
+        Assert.True(properties["LabelWidth"]!.ShouldSerializeValue(table));
+    }
 }
