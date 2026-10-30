@@ -324,9 +324,10 @@ def read_units():
                 continue
             c = cells(line)
             number = c[0]
-            if len(c) >= 11:
-                coverage = re.match(r'^([\d.,]+)\s*%', c[3])
-                ticks = [True if t == '[x]' else None if t == '-' else False for t in c[4:11]]
+            if len(c) >= 12:
+                # c[3] is the coverage before the work, c[4] the one after it (the last run: tools/Update-UnitCoverage.py).
+                coverage = re.match(r'^([\d.,]+)\s*%', c[4])
+                ticks = [True if t == '[x]' else None if t == '-' else False for t in c[5:12]]
                 name = re.sub(r'`', '', c[2])
                 units.append({'n': number, 'phase': int(number.split('.')[0]), 'name': name,
                               'cov': float(coverage.group(1).replace(',', '.')) if coverage else None, 'ticks': ticks})
@@ -447,7 +448,7 @@ def overview():
     out.append('<div class="panel"><h3>Every unit and step</h3><div class="units">%s</div><p class="note">Green: finished. Amber: begun. Grey: not begun. Point at a unit for its name.</p></div>' % tiles)
 
     out.append('<div class="panel wide"><h3>Coverage of the tests per unit (lines, in %%)</h3>%s'
-               '<p class="note">The latest measured value of each unit (for a unit not begun: the one measured before). Faint bars: the unit is not finished.%s</p></div>' % (
+               '<p class="note">The coverage of each unit after the work (the last full run). Faint bars: the unit is not finished.%s</p></div>' % (
                    coverage_chart(units),
                    ' Under the target: %s.' % ', '.join('%s (%.1f %%)' % (u['n'], u['cov']) for u in below) if below else ''))
     out.append('</div>')
