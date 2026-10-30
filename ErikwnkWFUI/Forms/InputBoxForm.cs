@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -45,24 +46,31 @@ namespace ErikwnkWFUI.Forms
         private string _cancelText;
 
         /// <summary>The text that was entered, once the dialog was closed with OK (what the user accepted); empty before.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Value { get; private set; } = "";
 
         /// <summary>The box the user types into, for what is not covered here (an input filter ...).</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TextBox InputTextBox
         {
             get { return _textBox; }
         }
 
         /// <summary>Whether OK also accepts an empty text. By default it does not: OK does nothing until something is typed.</summary>
+        [DefaultValue(false)]
         public bool AllowEmpty { get; set; }
 
         /// <summary>
         /// Whether the spaces at the beginning and the end of the text are cut off: <see cref="Value"/> and the text that <see cref="Validator"/> sees
         /// are without them, and a text of spaces only counts as empty. Off by default (a password may begin with a space).
         /// </summary>
+        [DefaultValue(false)]
         public bool TrimValue { get; set; }
 
         /// <summary>The most characters the box takes; 0 (the default) is no limit beyond the one of Windows.</summary>
+        [DefaultValue(0)]
         public int MaxLength
         {
             // 32767 is the limit that a single-line text box has by itself.
@@ -75,9 +83,12 @@ namespace ErikwnkWFUI.Forms
         /// window stays open, the text is selected). Null (the default) accepts every text that is not empty. It is not asked for an empty text
         /// unless <see cref="AllowEmpty"/> is set, and it gets the trimmed text when <see cref="TrimValue"/> is set. An exception in it is not caught.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Func<string, string> Validator { get; set; }
 
         /// <summary>The text above the box; the window grows or shrinks to it.</summary>
+        [DefaultValue("")]
         public string Prompt
         {
             get { return _promptLabel.Text; }
@@ -89,6 +100,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>A short note in small gray letters under the prompt (what is wanted, an example ...); empty (the default) shows none.</summary>
+        [DefaultValue("")]
         public string Hint
         {
             get { return _hintLabel.Text; }
@@ -103,6 +115,7 @@ namespace ErikwnkWFUI.Forms
         /// A message in red over the box, for an entry that was not right (for instance "wrong password" when the program asks again). It
         /// is taken away when the user types, and <see cref="Validator"/> sets it. Empty (the default) shows none.
         /// </summary>
+        [DefaultValue("")]
         public string ErrorText
         {
             get { return _errorLabel.Text; }
@@ -219,6 +232,7 @@ namespace ErikwnkWFUI.Forms
             Close();
         }
 
+        /// <inheritdoc/>
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -241,6 +255,7 @@ namespace ErikwnkWFUI.Forms
                 FormTitle = UIStrings.Get("InputBox.Title");
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -266,6 +281,7 @@ namespace ErikwnkWFUI.Forms
             return Dpi.Scale(this, value96, _dpiOverride);
         }
 
+        /// <inheritdoc/>
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);
