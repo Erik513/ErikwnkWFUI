@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -14,8 +15,9 @@ namespace ErikwnkWFUI.Controls
     /// flicker, with the scroll bars in the style of the theme, with an optional frame in the library's color
     /// (<see cref="System.Windows.Forms.Panel.BorderStyle"/>, <see cref="BorderColor"/>) and with the lines of <c>CellBorderStyle.Single</c> in colors of the
     /// library (<see cref="CellBorderColor"/>, <see cref="InnerCellBorderColor"/>, <see cref="OuterCellBorderColor"/>) of which the
-    /// ones to show can be chosen (<see cref="CellBorderLines"/>). Everything else is the standard control. Named
-    /// <c>TableLayoutPanel</c> so that it does not clash with the standard class in the files that use both namespaces.
+    /// ones to show can be chosen (<see cref="CellBorderLines"/>). Everything else is the standard control. It has the
+    /// name of the standard class: in a file that uses both namespaces name it in full or with a <c>using</c> alias; the factories hand it back as a
+    /// standard <see cref="System.Windows.Forms.TableLayoutPanel"/>.
     /// </summary>
     public class TableLayoutPanel : System.Windows.Forms.TableLayoutPanel
     {
@@ -102,6 +104,7 @@ namespace ErikwnkWFUI.Controls
         /// pixel in their place (the layout does not change), painted in the background of the table or - with a transparent
         /// table - of what lies behind it. A background image is not repainted there.
         /// </summary>
+        [DefaultValue(CellBorderLines.All)]
         public CellBorderLines CellBorderLines
         {
             get { return _cellBorderLines; }
@@ -112,12 +115,55 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The designer writes a color only where it was set (the defaults are followed, not stored).
+        private bool ShouldSerializeBorderColor()
+        {
+            return _frame.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            BorderColor = Color.Empty;
+        }
+
+        private bool ShouldSerializeCellBorderColor()
+        {
+            return _cellBorderColor.IsSet;
+        }
+
+        private void ResetCellBorderColor()
+        {
+            CellBorderColor = Color.Empty;
+        }
+
+        private bool ShouldSerializeInnerCellBorderColor()
+        {
+            return _innerCellBorderColor.IsSet;
+        }
+
+        private void ResetInnerCellBorderColor()
+        {
+            InnerCellBorderColor = Color.Empty;
+        }
+
+        private bool ShouldSerializeOuterCellBorderColor()
+        {
+            return _outerCellBorderColor.IsSet;
+        }
+
+        private void ResetOuterCellBorderColor()
+        {
+            OuterCellBorderColor = Color.Empty;
+        }
+
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
             _frame.AfterWindowMessage(ref m);
         }
 
+        /// <summary>Makes a table without frame and without lines, drawn without flicker; <c>UIStyles.TableLayoutPanels</c> makes the usual ones.</summary>
         public TableLayoutPanel()
         {
             _frame = new PanelFrame(this);
@@ -131,6 +177,7 @@ namespace ErikwnkWFUI.Controls
 
         // The cells are noted while the table paints its background (the system draws its lines after them, so they are
         // painted over in OnPaint).
+        /// <inheritdoc/>
         protected override void OnCellPaint(TableLayoutCellPaintEventArgs e)
         {
             base.OnCellPaint(e);
@@ -138,12 +185,14 @@ namespace ErikwnkWFUI.Controls
         }
 
         // (The table paints its cells and its lines with the background, before OnPaint.)
+        /// <inheritdoc/>
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
             _cells.Clear();
             base.OnPaintBackground(pevent);
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             // The lines belong to the background: what a Paint handler of the application draws comes over them, not under.

@@ -513,4 +513,25 @@ public class PanelBorderTests : IDisposable
                 Assert.True(Equals(attribute.Value, property.GetValue(card)), property.Name + " is not its default");
         }
     }
+
+    [Fact]
+    public void TheDesigner_WritesTheColorsOfTheTableOnlyWhereTheyWereSet_AndKnowsTheDefaultOfTheLines()
+    {
+        using ErikwnkWFUI.Controls.TableLayoutPanel table = new ErikwnkWFUI.Controls.TableLayoutPanel();
+
+        foreach (string name in new[] { "BorderColor", "CellBorderColor", "InnerCellBorderColor", "OuterCellBorderColor" })
+        {
+            System.ComponentModel.PropertyDescriptor property = System.ComponentModel.TypeDescriptor.GetProperties(table)[name]!;
+
+            Assert.False(property.ShouldSerializeValue(table), name + " writes the color of the theme");
+
+            property.SetValue(table, Color.Magenta);
+            Assert.True(property.ShouldSerializeValue(table), name);
+
+            property.ResetValue(table);
+            Assert.False(property.ShouldSerializeValue(table), name);
+        }
+
+        Assert.False(System.ComponentModel.TypeDescriptor.GetProperties(table)["CellBorderLines"]!.ShouldSerializeValue(table));
+    }
 }

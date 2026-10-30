@@ -53,7 +53,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 3.5 | 3 | `VolumeControl` | 97.9 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.1 | 4 Containers | `Panel`, `CardPanel`, `PanelFrame` | 100 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.2 | 4 | `FlowLayoutPanel` | 94.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | 99.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | 99.3 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.4 | 4 | `MultiPanel` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.5 | 4 | `VersionPanel` | 93.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.6 | 4 | `TabControl`, `ReadOnlyTabControl` | 94.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
