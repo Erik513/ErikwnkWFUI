@@ -308,7 +308,7 @@ def render_list(block, source):
 
 # ---- the overview: worked out from the tables of ANALYSIS.md ----
 
-PHASE_NAMES = {1: 'Foundations', 2: 'Simple controls', 3: 'Input', 4: 'Containers', 5: 'Lists and tables', 6: 'Windows'}
+PHASE_NAMES = {0: 'Tools and starting point', 7: 'Across the project', 8: 'Before the push', 1: 'Foundations', 2: 'Simple controls', 3: 'Input', 4: 'Containers', 5: 'Lists and tables', 6: 'Windows'}
 CHECKS = ['Bugs', 'Refactor', 'Docs', 'Showcase', 'Tests', 'Table', 'Commit']
 
 
@@ -422,11 +422,12 @@ def overview():
                '<span style="--c:var(--good)">%d finished</span><span style="--c:var(--warn)">%d under way</span><span style="--c:var(--open)">%d not begun</span></div></div></div>' % (
                    donut(counts, total), counts['done'], counts['part'], counts['open']))
     bars = []
-    for phase in sorted(set(u['phase'] for u in units)):
-        group = [u for u in units if u['phase'] == phase]
+    for phase in sorted(set(u['phase'] for u in units) | set(s['phase'] for s in steps)):
+        # Phases 1 to 6 are units with seven checks, phases 0, 7 and 8 are single steps: a step is finished when it is ticked.
+        group = [u for u in units if u['phase'] == phase] or [s for s in steps if s['phase'] == phase]
         n = float(len(group))
-        done = sum(1 for u in group if unit_state(u) == 'done')
-        part = sum(1 for u in group if unit_state(u) == 'part')
+        done = sum(1 for g in group if (unit_state(g) == 'done' if 'ticks' in g else g['done']))
+        part = sum(1 for g in group if 'ticks' in g and unit_state(g) == 'part')
         bars.append('<div class="row"><span>%d &middot; %s</span><div class="track"><i style="width:%.1f%%;background:var(--good)"></i>'
                     '<i style="width:%.1f%%;background:var(--warn)"></i></div><span class="num">%d / %d</span></div>' % (
                         phase, PHASE_NAMES.get(phase, ''), 100 * done / n, 100 * part / n, done, len(group)))
@@ -442,7 +443,8 @@ def overview():
     out.append('<div class="panel bars"><h3>The checks</h3>%s</div>' % ''.join(checks))
 
     tiles = ''.join('<span class="unit %s" title="%s %s">%s</span>' % (unit_state(u), u['n'], html.escape(u['name']), u['n']) for u in units)
-    out.append('<div class="panel"><h3>Every unit</h3><div class="units">%s</div><p class="note">Green: finished. Amber: begun. Grey: not begun. Point at a unit for its name.</p></div>' % tiles)
+    tiles += ''.join('<span class="unit %s" title="step %s">%s</span>' % ('done' if s['done'] else 'open', s['n'], s['n']) for s in steps)
+    out.append('<div class="panel"><h3>Every unit and step</h3><div class="units">%s</div><p class="note">Green: finished. Amber: begun. Grey: not begun. Point at a unit for its name.</p></div>' % tiles)
 
     out.append('<div class="panel wide"><h3>Coverage of the tests per unit (lines, in %%)</h3>%s'
                '<p class="note">The latest measured value of each unit (for a unit not begun: the one measured before). Faint bars: the unit is not finished.%s</p></div>' % (

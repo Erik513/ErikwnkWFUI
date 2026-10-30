@@ -117,8 +117,8 @@ public class ListBoxEdgeCaseTests : IDisposable
             Press(listBox, WM_LBUTTONDBLCLK, WM_LBUTTONUP, 1);
         }
 
-        Assert.Equal(1, listBox.SelectedIndex);
-        Assert.Equal(1, doubleClicks);
+        Assert.True(listBox.SelectedIndex == 1, "SelectedIndex=" + listBox.SelectedIndex + " doubleClicks=" + doubleClicks + " itemHeight=" + listBox.ItemHeight + " dpi=" + listBox.DeviceDpi + " item1=" + listBox.GetItemRectangle(1) + " keys=" + Control.ModifierKeys);
+        Assert.True(doubleClicks == 1, "doubleClicks=" + doubleClicks + " keys=" + Control.ModifierKeys + " buttons=" + Control.MouseButtons + " time=" + SystemInformation.DoubleClickTime + " visible=" + listBox.Visible + " handle=" + listBox.IsHandleCreated + " enabled=" + listBox.Enabled + " parentEnabled=" + listBox.Parent?.Enabled + " foreground=" + listBox.FindForm()?.Visible);
     }
 
     [Fact]

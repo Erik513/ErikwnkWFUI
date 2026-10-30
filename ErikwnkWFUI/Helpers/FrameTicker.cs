@@ -35,6 +35,12 @@ namespace ErikwnkWFUI.Helpers
         private long _framePendingSince;
         private long _lastStep;
 
+        // The thread of the control (the one that made the ticker): the steps are posted to it by its synchronization context. They are not
+        // given to the control with BeginInvoke from the thread of the clock: a control that is disposed meanwhile would have its window made
+        // again by that call, on the wrong thread, while the other thread disposes it ("Dispose() cannot be called while CreateHandle() is
+        // running"), and the window would stay.
+        private readonly SynchronizationContext _context = SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
+
         public FrameTicker(Control owner, Action<double> step)
         {
             _owner = owner;
@@ -93,7 +99,10 @@ namespace ErikwnkWFUI.Helpers
 
             try
             {
-                _owner.BeginInvoke(new Action(MakeStep));
+                if (_context != null)
+                    _context.Post(state => MakeStep(), null);
+                else
+                    _owner.BeginInvoke(new Action(MakeStep));
             }
             catch (Exception)
             {

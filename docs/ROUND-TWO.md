@@ -125,6 +125,15 @@ what is left open.
   the faint muted gray in the light theme (disabled text); `UILanguage` / `AppLanguage` to unify; `UIStyles.cs` only forwards `LanguageChanged` to `UIStrings` (checked in 1.6: not doubled, `UIStyles.Localize` subscribes per control and lets go on `Disposed`)); one shared helper for "measure the text, let the window grow up to the screen, then scroll"
   that is written three times (`InputBoxForm`, `ProgressForm`, `MessageBoxForm`); a Showcase "playground" whose comboboxes build a factory call, a
   live control and a copy button.
+- **`BeginInvoke` of a control from another thread, while that control is disposed (found in 7.4, net48):** `Control.BeginInvoke` makes the window again when
+  it was destroyed between the check and the call, on the calling thread, and the other thread then fails to dispose the control ("Dispose() cannot be
+  called while CreateHandle() is running"); the window stays. `FrameTicker` (the clock thread) is fixed: it posts the step through a
+  `WindowsFormsSynchronizationContext` of the thread that made it, not with `BeginInvoke`. The same pattern is still in the handlers of static events
+  that can be raised on another thread (`UIStrings.LanguageChanged` in `ProgressBar`, `SlimProgressBar`, `PropertyTable`; `ThemeWatcher`;
+  `VolumeControl.Target`; `ProgressForm.Report` from a worker thread): one helper that posts through the context would close all of them (to decide with
+  the user, together with the proposal about the `UIStrings` handlers).
+- The double click test of the list box (`ListBoxEdgeCaseTests.ADoubleClick_...`) fails now and then in a full run on `net8.0-windows` (not alone, not on
+  every run); its message now says the index, the item height, the dpi and the keys when it does. Cause not found.
 - The hang of the full run (phases 0.1 and 1.3): a test that makes a control and does not dispose it leaves it on `UIStrings.LanguageChanged`; a later language switch from another test thread touches its window and blocks. Found and fixed so far: InputBoxTests, MessageBoxFactoryTests, ProgressFormTests (0.1), TextBoxEdgeCaseTests (1.3). Rule: every control a test makes is disposed (host or `using`). Proposal still open: `UIStrings` calls the handlers of controls whose window belongs to another thread with `BeginInvoke`, so a switch from any thread is safe and a forgotten control cannot block it.
 - `ListBoxEdgeCaseTests.ADoubleClick_KeepsTheItemSelected_AndRaisesDoubleClick` failed once in a full run and passes alone (3x): WinForms checks `WindowFromPoint` on a mouse up, so a window of a parallel test over the point may take the click. Look at it in unit 5.1.
 - The buttons are not scaled to the screen (found in 2.1, check in 7.5): `UIButtonFactory.DefaultButtonSize` is 30 x 30 pixels and the symbol size is `height * 13/30` points, both as for 96 dpi. At 150 % a 30 px button holds a symbol that is 1.5 times as big in pixels. A fix would scale size and symbol with `DeviceDpi` when the window is made (like the other self-drawn controls do with `Dpi.Scale`).
