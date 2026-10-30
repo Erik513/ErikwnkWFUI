@@ -55,6 +55,7 @@ namespace ErikwnkWFUI.Controls
             get { return Dpi.Scale(this, ThumbRadius96, DpiOverride); }
         }
 
+        /// <summary>Makes a slider from 0 to 1 at 0, 20 pixels high, in the neutral gray; <c>UIStyles.TrackBars</c> makes the usual ones.</summary>
         public TrackBar()
         {
             // Everything is read while painting: a change of the theme only needs a repaint.
@@ -106,6 +107,7 @@ namespace ErikwnkWFUI.Controls
             return _minimum * (1 - fraction) + _maximum * fraction;
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
@@ -140,6 +142,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

@@ -9,9 +9,13 @@ namespace ErikwnkWFUI.Controls
     public partial class TrackBar
     {
         private int _grabOffset;
+
+        // Where the mouse is (the tests put it elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
         private bool _dragging;
         private bool _hover;
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -34,6 +38,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -43,6 +48,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
@@ -67,6 +73,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             base.OnMouseCaptureChanged(e);
@@ -76,12 +83,13 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
 
             // A disabled control gets no MouseLeave: whether the mouse is over it is looked at again, or the thumb would stay big.
-            _hover = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(Cursor.Position));
+            _hover = Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(CursorPosition()));
 
             if (!Enabled)
             {
@@ -93,16 +101,16 @@ namespace ErikwnkWFUI.Controls
         }
 
         // A control that is hidden under the mouse gets no MouseLeave either.
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
 
-            if (!Visible)
-            {
-                _hover = false;
-            }
+            // (Shown again, the mouse may be over it, and no MouseEnter says so before it moves.)
+            _hover = Visible && Enabled && IsHandleCreated && ClientRectangle.Contains(PointToClient(CursorPosition()));
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             // (No DragEnded: whoever listens may be on its way out as well.)
@@ -111,6 +119,7 @@ namespace ErikwnkWFUI.Controls
             base.OnHandleDestroyed(e);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -119,6 +128,7 @@ namespace ErikwnkWFUI.Controls
             _valuePopup.MouseEnter(IsDragging);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -127,6 +137,7 @@ namespace ErikwnkWFUI.Controls
             _valuePopup.MouseLeave(IsDragging);
         }
 
+        /// <inheritdoc/>
         protected override bool IsInputKey(Keys keyData)
         {
             if (keyData == Keys.Left || keyData == Keys.Right || keyData == Keys.Up || keyData == Keys.Down
@@ -140,6 +151,7 @@ namespace ErikwnkWFUI.Controls
 
         // As on the original: left and down make it less, right and up more, by SmallChange; Page Down and Up by LargeChange;
         // Home and End go to the ends. A disabled slider does not move.
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -181,6 +193,7 @@ namespace ErikwnkWFUI.Controls
 
         // A step of the wheel moves the value by SmallChange (up = more) while the slider has the focus, as on the original; the
         // parent does not scroll with it then.
+        /// <inheritdoc/>
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
@@ -211,6 +224,7 @@ namespace ErikwnkWFUI.Controls
             SetValueFromUser(_value + delta / (double)SystemInformation.MouseWheelScrollDelta * SmallChange);
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);

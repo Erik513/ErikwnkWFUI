@@ -116,7 +116,13 @@ namespace ErikwnkWFUI.Controls
         private double Fraction
         {
             // (Halved first: the width of a range from the lowest to the highest number would be too big for a double.)
-            get { return (_value / 2 - _minimum / 2) / (_maximum / 2 - _minimum / 2); }
+            get
+            {
+                double range = _maximum / 2 - _minimum / 2;
+
+                // (A range that the numbers cannot tell apart - far from zero - has the thumb at its start, not at "not a number".)
+                return range > 0 ? (_value / 2 - _minimum / 2) / range : 0;
+            }
         }
 
         /// <summary>Pixel x of the thumb centre - for positioning something (e.g. a value popup) over it.</summary>

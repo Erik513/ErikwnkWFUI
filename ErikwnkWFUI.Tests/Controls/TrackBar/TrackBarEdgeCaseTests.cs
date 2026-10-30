@@ -402,6 +402,49 @@ public class TrackBarEdgeCaseTests
     }
 
     [Fact]
+    public void ASliderThatIsShownOrEnabledAgain_LooksAtTheMouse()
+    {
+        using TrackBar bar = new TrackBar();
+        using Form host = Show(bar);
+
+        // (The mouse is over the slider while it is hidden or disabled, which gives it no MouseLeave: it is hovered again at once.)
+        bar.CursorPosition = () => bar.PointToScreen(new Point(30, 10));
+        bar.Visible = false;
+        bar.Visible = true;
+        Assert.True(bar.GetPrivateField<bool>("_hover"));
+
+        bar.Enabled = false;
+        Assert.False(bar.GetPrivateField<bool>("_hover"));
+        bar.Enabled = true;
+        Assert.True(bar.GetPrivateField<bool>("_hover"));
+    }
+
+    [Fact]
+    public void ARangeThatTheNumbersCannotTellApart_HasTheThumbAtItsStart_NotAtNotANumber()
+    {
+        using TrackBar bar = new TrackBar { Minimum = 1e20, Maximum = 1e20 };
+        using Form host = Show(bar);
+
+        System.Reflection.BindingFlags hidden = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        Assert.Equal(0.0, (double)typeof(TrackBar).GetProperty("Fraction", hidden)!.GetValue(bar)!);
+        Assert.Equal(bar.TrackInsetPixels, (int)typeof(TrackBar).GetProperty("ThumbCenterX", hidden)!.GetValue(bar)!);
+
+        using (Bitmap picture = Draw(bar)) { }
+    }
+
+    [Fact]
+    public void TheDefaultsTheDesignerKnows_AreTheOnesTheSliderHas()
+    {
+        using TrackBar bar = new TrackBar();
+
+        foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(bar))
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(bar)), property.Name + " is not its default");
+        }
+    }
+
+    [Fact]
     public void OnlyTheKeysThatMoveTheValue_ShowThePopupWhenLetGo()
     {
         using TrackBar bar = new TrackBar { ShowValuePopup = true };

@@ -78,6 +78,7 @@ namespace ErikwnkWFUI.Controls
                 || key == Keys.PageUp || key == Keys.PageDown || key == Keys.Home || key == Keys.End;
         }
 
+        /// <inheritdoc/>
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);

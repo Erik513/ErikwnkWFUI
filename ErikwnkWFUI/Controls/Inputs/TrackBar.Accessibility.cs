@@ -5,6 +5,7 @@ namespace ErikwnkWFUI.Controls
     // What a screen reader is told about the slider.
     public partial class TrackBar
     {
+        /// <inheritdoc/>
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new TrackBarAccessibleObject(this);
