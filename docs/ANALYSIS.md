@@ -90,7 +90,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 
 | # | Step | Done |
 |---|---|---|
-| 8.1 | Remove dead code, files and texts that the analysis found | [ ] |
+| 8.1 | Remove dead code, files and texts that the analysis found | [x] Checked with the compiler (IDE0051, IDE0052, IDE0060, IDE0005, CS0169, CS0414 switched on for one build): 49 unused `using` lines in 33 files removed; the only unused private member (`ListBox.GetTextColor`) is a seam that the tests call, so it stays; no unused field, parameter or file; every text of `UIStrings` is used (the accent names are built from a prefix). Both targets build without a warning. |
 | 8.2 | Warnings and XML-doc warnings (`CS1591` on for the whole library) at 0 on both targets | [ ] |
 | 8.3 | Decide with the user about the `[Obsolete]` aliases (list in ROUND-TWO.md); remove them only when the user says his projects are migrated | [ ] |
 | 8.4 | One full run of the whole suite on both targets, and one full coverage run: "after" next to "before" | [ ] |

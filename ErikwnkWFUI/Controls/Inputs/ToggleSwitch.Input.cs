@@ -1,9 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;

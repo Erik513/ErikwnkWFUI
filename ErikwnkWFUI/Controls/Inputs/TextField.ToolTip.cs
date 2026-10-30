@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using static ErikwnkWFUI.Native.NativeMethods;

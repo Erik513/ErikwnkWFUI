@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Localization;

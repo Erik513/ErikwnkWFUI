@@ -7,7 +7,6 @@ using System.Linq;
 using System.Windows.Forms;
 using ErikwnkCore;
 using ErikwnkWFUI.Controls;
-using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;

@@ -5,7 +5,6 @@ using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
-using ErikwnkWFUI.Styles;
 using Panel = System.Windows.Forms.Panel;
 
 namespace ErikwnkWFUI.Forms

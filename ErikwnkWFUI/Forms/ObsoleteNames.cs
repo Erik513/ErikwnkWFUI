@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using ErikwnkWFUI.Helpers;
 
 #pragma warning disable CS0618

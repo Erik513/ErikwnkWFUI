@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 
 namespace ErikwnkWFUI.Controls

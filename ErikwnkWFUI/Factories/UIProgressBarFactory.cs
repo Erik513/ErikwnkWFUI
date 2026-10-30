@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Styles;
-using static ErikwnkWFUI.Native.NativeMethods;
 using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace ErikwnkWFUI.Factories

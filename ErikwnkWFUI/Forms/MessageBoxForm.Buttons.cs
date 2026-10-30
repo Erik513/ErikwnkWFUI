@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Controls;
@@ -10,7 +9,6 @@ using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
 using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 using Panel = System.Windows.Forms.Panel;
-using CheckBox = System.Windows.Forms.CheckBox;
 
 namespace ErikwnkWFUI.Forms
 {

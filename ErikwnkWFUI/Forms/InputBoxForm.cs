@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Localization;
-using ErikwnkWFUI.Styles;
 using Button = System.Windows.Forms.Button;
 using Label = System.Windows.Forms.Label;
 using TextBox = System.Windows.Forms.TextBox;

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
-using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Localization;
 using ErikwnkWFUI.Styles;
 
 namespace ErikwnkWFUI.Controls

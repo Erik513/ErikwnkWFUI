@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 using ErikwnkWFUI.Helpers;
-using ErikwnkWFUI.Controls;
 using System.Drawing;
 using System.Windows.Forms;
-using ErikwnkWFUI.Factories;
 using ErikwnkWFUI.Styles;
 using ErikwnkWFUI.Localization;
-using TableLayoutPanel = System.Windows.Forms.TableLayoutPanel;
 using Panel = System.Windows.Forms.Panel;
 using CheckBox = System.Windows.Forms.CheckBox;
 
