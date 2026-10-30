@@ -545,3 +545,9 @@ project.) Pass the result to `FormOptions.Icon` or
   large fonts are not followed: the controls scale with the DPI of the screen
   and with the `Font` you set, their other sizes are fixed. Check a window with
   large text yourself before you ship it.
+
+## More documents
+
+- [CHANGELOG.md](CHANGELOG.md) - what changed.
+- [docs/MIGRATION.md](docs/MIGRATION.md) - how to move a project to this version.
+- [docs/CONTROLS.md](docs/CONTROLS.md) - every control, property and default (made by `tools\Update-ControlTable.ps1`).
