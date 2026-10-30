@@ -84,7 +84,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 7.5 | DPI 125 / 150 / 200 % on the real screen (ask first; the QuietForm method in ROUND-TWO.md) for the self-drawn controls | - Skipped for now at the request of the user (it needs a window on the real screen at 125, 150 and 200 %); still to do before the push. Known from the earlier units: the buttons, the title bar (30 px), the spinner (24 x 24) and the slim bar (4 px) are not scaled to the screen |
 | 7.6 | Accessibility: `AccessibleName` / role / state of the controls and keyboard reach (Tab order, mnemonics) | [x] Done 2026-10-30: roles, names, disabled state and Tab stops of the standard controls are tested (AccessibilityTests). Found: ProgressBar and SlimProgressBar were Tab stops (nothing to use) - now not. Text-less controls (switch, slider, ring) have no name unless the program sets AccessibleName. | [ ] |
 | 7.7 | Performance with many controls (a table of 500 check boxes, a list with 10 000 items, many toasts) | [x] Done 2026-10-30: PerformanceTests - 500 check boxes, a list of 10 000 items (add, paint, scroll, select) and 50 toasts run in well under a second on both targets (budgets of 3 to 8 s catch only a quadratic step). No bug found. | [ ] |
-| 7.8 | The right-to-left and large-font behavior is written down (it is not supported library-wide: say so in the README) | [ ] |
+| 7.8 | The right-to-left and large-font behavior is written down (it is not supported library-wide: say so in the README) | [x] Done 2026-10-30: README "Known limitations" says that right-to-left layouts and the Windows text-size setting are not followed. | [ ] |
 
 ## Phase 8 - before the push
 

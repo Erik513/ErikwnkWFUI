@@ -538,4 +538,10 @@ project.) Pass the result to `FormOptions.Icon` or
   controls read their colors and texts again (see `ThemeChanged` above). What the
   application draws or colors itself has to follow by hand, and a color that was
   set on a control by hand stays as it was set.
-- Right-to-left layouts are not supported.
+- Right-to-left layouts are not supported: a few controls read `RightToLeft`
+  for the drawing of their own parts, but the library neither tests nor
+  promises a mirrored window.
+- The text-size setting of Windows (Settings, Accessibility, Text size) and very
+  large fonts are not followed: the controls scale with the DPI of the screen
+  and with the `Font` you set, their other sizes are fixed. Check a window with
+  large text yourself before you ship it.
