@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Factories;
@@ -66,6 +67,7 @@ namespace ErikwnkWFUI.Controls
         private HorizontalAlignment _titleAlignment = HorizontalAlignment.Left;
         private bool _building = true;
 
+        /// <summary>Makes a multi panel without pages, a card with the arrows in the neutral look; <c>UIStyles.MultiPanels</c> makes the usual ones.</summary>
         public MultiPanel()
             : this(null)
         {
@@ -100,12 +102,16 @@ namespace ErikwnkWFUI.Controls
         public event EventHandler SelectedIndexChanged;
 
         /// <summary>The pages, in the order of their addition.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ReadOnlyCollection<MultiPanelPage> Pages
         {
             get { return _pages.AsReadOnly(); }
         }
 
         /// <summary>The number of pages.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int PageCount
         {
             get { return _pages.Count; }
@@ -113,6 +119,8 @@ namespace ErikwnkWFUI.Controls
 
         /// <summary>The index of the page that is shown; -1 while there is no page. The first page added is shown at once.</summary>
         /// <exception cref="ArgumentOutOfRangeException">The index is not that of a page (-1 only while there is none).</exception>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -126,12 +134,15 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The page that is shown; null while there is no page.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public MultiPanelPage SelectedPage
         {
             get { return _selectedIndex < 0 ? null : _pages[_selectedIndex]; }
         }
 
         /// <summary>Whether the number of the page is shown at the left of the header, like "3/12" (off by default).</summary>
+        [DefaultValue(false)]
         public bool ShowPageCount
         {
             get { return _showPageCount; }
@@ -146,6 +157,7 @@ namespace ErikwnkWFUI.Controls
         /// Whether a thin line separates the header from the page (off by default). It has the <see cref="CardPanel.BorderColor"/> of
         /// the multi panel, and the page area starts a little lower to leave room for it.
         /// </summary>
+        [DefaultValue(false)]
         public bool ShowHeaderLine
         {
             get { return _showHeaderLine; }
@@ -158,6 +170,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>Where the title stands between the page count and the arrows: left (the default), center or right.</summary>
+        [DefaultValue(HorizontalAlignment.Left)]
         public HorizontalAlignment TitleAlignment
         {
             get { return _titleAlignment; }
@@ -250,6 +263,7 @@ namespace ErikwnkWFUI.Controls
             _nextButton.AccessibleName = UIStrings.Get("MultiPanel.NextPage");
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -359,6 +373,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnControlAdded(ControlEventArgs e)
         {
             base.OnControlAdded(e);
@@ -371,6 +386,7 @@ namespace ErikwnkWFUI.Controls
             throw new InvalidOperationException("Controls are put on the pages of a MultiPanel (AddPage), not on the multi panel itself.");
         }
 
+        /// <inheritdoc/>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             bool forward = keyData == (Keys.Control | Keys.PageDown) || keyData == (Keys.Control | Keys.Tab);
@@ -387,6 +403,7 @@ namespace ErikwnkWFUI.Controls
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -394,6 +411,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnLayout(LayoutEventArgs levent)
         {
             base.OnLayout(levent);
@@ -413,6 +431,7 @@ namespace ErikwnkWFUI.Controls
             _previousButton.SetBounds(nextLeft - gap - size, top, size, size);
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);

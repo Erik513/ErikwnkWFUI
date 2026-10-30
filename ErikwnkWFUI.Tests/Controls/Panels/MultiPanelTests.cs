@@ -234,4 +234,23 @@ public class MultiPanelTests : MultiPanelTestBase
     {
         Assert.Empty(typeof(MultiPanelPage).GetConstructors(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance));
     }
+
+    [Fact]
+    public void TheDesigner_DoesNotSeeThePagesAndTheSelection_AndKnowsTheDefaults()
+    {
+        using MultiPanel panel = new MultiPanel();
+        System.ComponentModel.PropertyDescriptorCollection properties = System.ComponentModel.TypeDescriptor.GetProperties(panel);
+
+        foreach (string name in new[] { "Pages", "PageCount", "SelectedIndex", "SelectedPage" })
+        {
+            Assert.False(properties[name]!.IsBrowsable, name);
+            Assert.Equal(System.ComponentModel.DesignerSerializationVisibility.Hidden, properties[name]!.Attributes.OfType<System.ComponentModel.DesignerSerializationVisibilityAttribute>().Single().Visibility);
+        }
+
+        foreach (System.ComponentModel.PropertyDescriptor property in properties)
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute && property.Name != "CornerRadius")
+                Assert.True(Equals(attribute.Value, property.GetValue(panel)), property.Name + " is not its default");
+        }
+    }
 }
