@@ -11,6 +11,7 @@ namespace ErikwnkWFUI.Controls
     // The windows of the system behind the box: the open list (its handle, its frame), the messages of the box itself and its text field.
     public partial class ComboBox
     {
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -45,6 +46,7 @@ namespace ErikwnkWFUI.Controls
             return GetComboBoxInfo(Handle, ref info) ? info.hwndList : IntPtr.Zero;
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _listFrame.ReleaseHandle();
@@ -62,6 +64,7 @@ namespace ErikwnkWFUI.Controls
                 _owner = owner;
             }
 
+            /// <inheritdoc/>
             protected override void WndProc(ref Message m)
             {
                 base.WndProc(ref m);
@@ -100,6 +103,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             if (OwnsClosedPainting || OwnsEditableFramePainting)

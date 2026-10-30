@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -50,6 +51,7 @@ namespace ErikwnkWFUI.Controls
         private bool _lastInputWasMouse;
         private readonly ColorSetHolder _colorSet = new ColorSetHolder();
 
+        /// <summary>Makes a drop-down list in the library's look; <c>UIStyles.ComboBoxes</c> makes the usual ones.</summary>
         public ComboBox()
         {
             // The colors are read while painting: a change of the theme needs a repaint (the box colors the factory
@@ -82,6 +84,8 @@ namespace ErikwnkWFUI.Controls
         /// other controls for the row; <c>UIStyles.ComboBoxes.CreatePrimary</c> makes one in the
         /// accent color.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return ResolvedColors; }
@@ -118,6 +122,7 @@ namespace ErikwnkWFUI.Controls
             get { return DropDownStyle == ComboBoxStyle.DropDown && !DesignMode; }
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -141,6 +146,7 @@ namespace ErikwnkWFUI.Controls
 
         // ---- the states that change the look ----
 
+        /// <inheritdoc/>
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -148,6 +154,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -155,6 +162,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -162,6 +170,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
@@ -169,6 +178,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnDropDown(EventArgs e)
         {
             base.OnDropDown(e);
@@ -178,6 +188,7 @@ namespace ErikwnkWFUI.Controls
         // While the list was open the mouse was over the list, not the box, and the box got
         // no MouseLeave: after a pick it would still look hovered until the mouse came back
         // and left. So the hover is worked out again from where the mouse is now.
+        /// <inheritdoc/>
         protected override void OnDropDownClosed(EventArgs e)
         {
             base.OnDropDownClosed(e);
@@ -190,6 +201,7 @@ namespace ErikwnkWFUI.Controls
             return IsHandleCreated && ClientRectangle.Contains(PointToClient(MousePosition));
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
@@ -199,12 +211,14 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -215,12 +229,14 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnSelectedIndexChanged(EventArgs e)
         {
             base.OnSelectedIndexChanged(e);
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnDropDownStyleChanged(EventArgs e)
         {
             base.OnDropDownStyleChanged(e);
@@ -228,12 +244,12 @@ namespace ErikwnkWFUI.Controls
         }
 
         // Hidden, a box gets no MouseLeave: shown again it must not still look hovered.
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
 
-            if (!Visible)
-                _isHot = false;
+            _isHot = Visible && Enabled && IsMouseOver();
         }
     }
 }

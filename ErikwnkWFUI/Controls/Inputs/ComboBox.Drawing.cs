@@ -11,6 +11,7 @@ namespace ErikwnkWFUI.Controls
     {
         // ---- the rows of the list ----
 
+        /// <inheritdoc/>
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
             // On a focus change the system repaints the selection field of the closed box

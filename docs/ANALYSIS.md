@@ -47,7 +47,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 2.8 | 2 | `SlimProgressBar` | 97.1 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 2.9 | 2 | `Spinner` | 98.3 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3.1 | 3 Input | `TextField`, `LockableTextBox`, `PasswordTextBox` (text boxes) | 95.0 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 3.2 | 3 | `ComboBox` | 96.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 3.2 | 3 | `ComboBox` | 95.6 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3.3 | 3 | `NumericUpDown` | 98.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3.4 | 3 | `TrackBar` (with `ValuePopup`) | 96.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 3.5 | 3 | `VolumeControl` | 98.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
