@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Styles;
@@ -26,6 +27,7 @@ namespace ErikwnkWFUI.Controls
         /// <see cref="System.Windows.Forms.DataGridView.AllowUserToDeleteRows"/>:
         /// clicking the button does nothing while that's false.
         /// </summary>
+        [DefaultValue(false)]
         public bool ShowDeleteRowColumn
         {
             get => _deleteRowColumn != null;
@@ -89,6 +91,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
             base.OnColumnAdded(e);
@@ -116,6 +119,7 @@ namespace ErikwnkWFUI.Controls
         // DataGridViewButtonColumn, so a genuine cell click is what
         // triggers deletion here, not CellContentClick (that event is
         // specific to button/checkbox column content).
+        /// <inheritdoc/>
         protected override void OnCellClick(DataGridViewCellEventArgs e)
         {
             base.OnCellClick(e);
@@ -140,6 +144,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
         {
             base.OnCellFormatting(e);
@@ -173,6 +178,7 @@ namespace ErikwnkWFUI.Controls
             e.CellStyle.SelectionForeColor = foreColor;
         }
 
+        /// <inheritdoc/>
         protected override void OnCellMouseEnter(DataGridViewCellEventArgs e)
         {
             base.OnCellMouseEnter(e);
@@ -186,6 +192,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnCellMouseLeave(DataGridViewCellEventArgs e)
         {
             base.OnCellMouseLeave(e);
@@ -204,6 +211,7 @@ namespace ErikwnkWFUI.Controls
         // hovered row itself gets deleted, or a sort reorders things
         // underneath the cursor), so the stale hover index is dropped
         // rather than risking it landing on the wrong row afterward.
+        /// <inheritdoc/>
         protected override void OnApplyingBatchedDataSourceChange()
         {
             base.OnApplyingBatchedDataSourceChange();

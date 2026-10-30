@@ -112,6 +112,7 @@ namespace ErikwnkWFUI.Controls
         // it the exact same SelectionBackColor/ForeColor as its own resting
         // colors means it never actually LOOKS selected, reading as a
         // passive label instead of a normal data cell.
+        /// <inheritdoc/>
         protected override void OnCellFormatting(DataGridViewCellFormattingEventArgs e)
         {
             base.OnCellFormatting(e);
@@ -130,6 +131,7 @@ namespace ErikwnkWFUI.Controls
         // native SortGlyphDirection glyph is never set on a column (see
         // CycleSort): it does paint, in a style of its own, and the two
         // overlap into a "bowtie" blob.
+        /// <inheritdoc/>
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             base.OnCellPainting(e);
@@ -188,6 +190,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -195,6 +198,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
@@ -274,6 +278,7 @@ namespace ErikwnkWFUI.Controls
 
         // Where the two scroll bars meet is a square the standard grid fills with the system's
         // button color - a white block on the dark grid. Painted over in the grid's own color.
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);

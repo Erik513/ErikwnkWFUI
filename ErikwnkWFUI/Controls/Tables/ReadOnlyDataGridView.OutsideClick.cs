@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
 
@@ -11,8 +12,10 @@ namespace ErikwnkWFUI.Controls
         private OutsideClickFilter _outsideClickDeselectFilter;
 
         /// <summary>Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default; a grid whose cell is being edited keeps its selection.</summary>
+        [DefaultValue(true)]
         public bool DeselectOnOutsideClick { get; set; } = true;
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -23,6 +26,7 @@ namespace ErikwnkWFUI.Controls
             _outsideClickDeselectFilter.Start();
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             if (_outsideClickDeselectFilter != null)
@@ -47,4 +51,4 @@ namespace ErikwnkWFUI.Controls
             CurrentCell = null;
         }
     }
-}
+}

@@ -21,6 +21,7 @@ namespace ErikwnkWFUI.Controls
         // grid from the list (a paste) shows it as a real blank row. Leaving the row is the point to settle that:
         // RowValidating and CellEndEdit commit a real edit before RowLeave, so CancelNew is then a no-op for a row that was
         // typed into. Deferred with BeginInvoke, since CancelNew changes the list and would re-enter this handling.
+        /// <inheritdoc/>
         protected override void OnRowLeave(DataGridViewCellEventArgs e)
         {
             base.OnRowLeave(e);

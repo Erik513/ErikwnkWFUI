@@ -443,7 +443,7 @@ Made by `UIStyles.DataGridViews` (see the end of this file).
 
 | Method | Description |
 |---|---|
-| `IsColumnReorderable(int columnIndex)` |  |
+| `IsColumnReorderable(int columnIndex)` | Whether the user can drag this column to another place (see `AllowColumnReordering` and `SetColumnReorderable`). |
 | `IsColumnResizable(int columnIndex)` | Mirrors `IsColumnResizable` - see `AllowColumnResizing`/`SetColumnResizable`. |
 | `SetColumnReorderable(int columnIndex, bool reorderable)` | Configurable per column, independent of `AllowColumnReordering`: a column can be pinned in place (e.g. `DataGridView`'s own delete-row column, always pinned rightmost) while the rest can still be freely dragged into a new order. |
 | `SetColumnResizable(int columnIndex, bool resizable)` | Configurable per column, independent of `AllowColumnResizing`: a column can be locked at its current width entirely (e.g. `DataGridView`'s own delete-row column) while the rest can still be freely resized. Mirrors `SetColumnResizable`. |

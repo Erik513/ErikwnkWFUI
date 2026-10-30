@@ -9,6 +9,7 @@ namespace ErikwnkWFUI.Controls
     {
         // The base class claims Ctrl+C this way. Returning true keeps Ctrl+V and Ctrl+X from being taken as an unclaimed
         // shortcut and routes them to OnKeyDown below.
+        /// <inheritdoc/>
         protected override bool IsInputKey(Keys keyData)
         {
             // Like OnKeyDown: on a ReadOnly grid the keys are not claimed, so they pass on as before.
@@ -51,6 +52,7 @@ namespace ErikwnkWFUI.Controls
 
         // Not in ProcessDataGridViewKey like Delete: the base OnKeyDown forwards only a fixed set of keys there
         // (navigation, C), and V and X are not among them. They are taken here, before base.OnKeyDown.
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Control && !IsCurrentCellInEditMode && !ReadOnly)
@@ -78,6 +80,7 @@ namespace ErikwnkWFUI.Controls
         // - the delete column's (its "X" can be selected in a drag, but means nothing),
         // - the "type here to add a row" placeholder's (it stays selectable, see OnRowLeave, but copying it would put a
         //   blank row on the clipboard).
+        /// <inheritdoc/>
         public override DataObject GetClipboardContent()
         {
             return ExcludingSelectedCells(IsExcludedFromDataSelection, () => base.GetClipboardContent());

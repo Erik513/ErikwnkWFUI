@@ -11,6 +11,7 @@ namespace ErikwnkWFUI.Controls
     public partial class ReadOnlyDataGridView
     {
 
+        /// <inheritdoc/>
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             base.OnDataBindingComplete(e);
@@ -91,6 +92,7 @@ namespace ErikwnkWFUI.Controls
         // and the enumeration column was left showing stale numbers (and
         // no number at all for the newly-committed row) until some
         // unrelated sort/insert/delete happened to trigger a renumber.
+        /// <inheritdoc/>
         protected override void OnUserAddedRow(DataGridViewRowEventArgs e)
         {
             base.OnUserAddedRow(e);
@@ -163,6 +165,7 @@ namespace ErikwnkWFUI.Controls
         // runs). Snapshotting list at that point would already include
         // them at the tail, and the trailing copy loop below would then
         // re-add that same tail - duplicating every one of newItems once.
+        /// <summary>Puts new items into a bound list at a place, for a subclass that edits the rows (the items that were there are given as a snapshot, see <see cref="SnapshotItems"/>).</summary>
         protected static void InsertItemsAt(
             IList list, List<object> originalItems, int insertAtIndex, IEnumerable<object> newItems)
         {
@@ -188,6 +191,7 @@ namespace ErikwnkWFUI.Controls
         // The snapshot InsertItemsAt's own originalItems parameter expects
         // - must be taken BEFORE any AddNew() call the caller makes, per
         // InsertItemsAt's own remarks above on why.
+        /// <summary>Copies the items of a list before a row is added (see <see cref="InsertItemsAt"/>).</summary>
         protected static List<object> SnapshotItems(IList list)
         {
             List<object> items = new List<object>(list.Count);
@@ -215,6 +219,7 @@ namespace ErikwnkWFUI.Controls
         // as the first row flashing "selected". Protected (not private)
         // so a subclass's own editing operations can share this exact
         // same batching, not just this class's own sorting.
+        /// <summary>Runs a change of the data source as one batch, with the grid not painting and its selection kept, so that a sort or an edit does not flash.</summary>
         protected void ApplyBatchedDataSourceChange(Action mutate)
         {
             OnApplyingBatchedDataSourceChange();
@@ -299,6 +304,7 @@ namespace ErikwnkWFUI.Controls
         // and no mouse-move means no fresh OnCellMouseEnter/Leave to
         // correct a now-stale index. This class itself has no such state
         // of its own, so the base implementation is empty.
+        /// <summary>Called while a batched change of the data source is applied (see <see cref="ApplyBatchedDataSourceChange"/>); nothing here, for a subclass that keeps state about rows.</summary>
         protected virtual void OnApplyingBatchedDataSourceChange()
         {
         }

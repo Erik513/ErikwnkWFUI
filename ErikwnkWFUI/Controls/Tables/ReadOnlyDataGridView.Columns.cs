@@ -22,6 +22,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <summary>Whether the user can drag this column to another place (see <see cref="AllowColumnReordering"/> and <see cref="SetColumnReorderable"/>).</summary>
         public bool IsColumnReorderable(int columnIndex)
         {
             return _columnReordering.IsAllowed(columnIndex);
@@ -48,6 +49,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnCellMouseDown(DataGridViewCellMouseEventArgs e)
         {
             // Captured BEFORE base.OnCellMouseDown below, not after -
@@ -143,6 +145,7 @@ namespace ErikwnkWFUI.Controls
         // reasoning as OnMouseUp/OnMouseMove already needed it for ending/
         // continuing a resize. e.Y < ColumnHeadersHeight stands in for
         // "RowIndex == -1" here, since MouseEventArgs has no such thing.
+        /// <inheritdoc/>
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
@@ -199,6 +202,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnCellMouseMove(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseMove(e);
@@ -224,6 +228,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnCellMouseUp(DataGridViewCellMouseEventArgs e)
         {
             base.OnCellMouseUp(e);
@@ -259,6 +264,7 @@ namespace ErikwnkWFUI.Controls
         // ends up. OnMouseMove's own button-state check (see its own
         // remarks) is the other half of this same fix, for the case where
         // even this somehow doesn't run before the cursor moves again.
+        /// <inheritdoc/>
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
@@ -282,6 +288,7 @@ namespace ErikwnkWFUI.Controls
         // cursor back to Default mid-drag would fight the still-accurate
         // VSplit hint for no reason; EndColumnResize's own reset already
         // covers the moment the drag actually ends, wherever that is.
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -305,6 +312,7 @@ namespace ErikwnkWFUI.Controls
         // for it. Any OTHER column's right edge still has the NEXT
         // column's own cell sitting there to catch it, which is why only
         // the last column ever showed this.
+        /// <inheritdoc/>
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
@@ -403,6 +411,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnDragOver(DragEventArgs drgevent)
         {
             if (!_columnDrag.IsDragging)
@@ -423,6 +432,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnDragDrop(DragEventArgs drgevent)
         {
             if (_columnDrag.HasTarget)
@@ -434,6 +444,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
         {
             if (_columnDrag.IsDragging)
@@ -464,6 +475,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnColumnRemoved(DataGridViewColumnEventArgs e)
         {
             base.OnColumnRemoved(e);
@@ -471,6 +483,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnColumnDisplayIndexChanged(DataGridViewColumnEventArgs e)
         {
             base.OnColumnDisplayIndexChanged(e);

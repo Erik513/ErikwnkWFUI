@@ -31,6 +31,7 @@ namespace ErikwnkWFUI.Controls
         // The base class's own IsSystemColumn (the enumeration column) plus
         // this class's delete-row button - see ReadOnlyDataGridView's own
         // remarks on what "system column" means everywhere it's used.
+        /// <inheritdoc/>
         protected override bool IsSystemColumn(int columnIndex)
         {
             return base.IsSystemColumn(columnIndex) || (_deleteRowColumn != null && columnIndex == _deleteRowColumn.Index);
@@ -44,6 +45,7 @@ namespace ErikwnkWFUI.Controls
             return IsSystemColumn(cell.ColumnIndex) || IsPlaceholderRowIndex(cell.RowIndex);
         }
 
+        /// <summary>Makes an editable grid in the library's look; <c>UIStyles.DataGridViews</c> makes the usual ones.</summary>
         public DataGridView()
         {
             // ReadOnlyDataGridView is display-only; this is the editable grid. AllowUserToDeleteRows is also the switch for
@@ -56,6 +58,7 @@ namespace ErikwnkWFUI.Controls
             AddEditingMenuItems();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

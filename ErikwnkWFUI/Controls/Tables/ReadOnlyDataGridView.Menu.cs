@@ -21,6 +21,7 @@ namespace ErikwnkWFUI.Controls
         // the enumeration column on top before the real, native copy runs,
         // so SelectedCells.Count below is already correct for whichever of
         // the two (or both) actually applies.
+        /// <inheritdoc/>
         public override DataObject GetClipboardContent()
         {
             return ExcludingSelectedCells(cell => IsEnumerationColumn(cell.ColumnIndex), () =>
@@ -43,6 +44,7 @@ namespace ErikwnkWFUI.Controls
         // straight past it to the native implementation, skipping the
         // enumeration-column exclusion entirely whenever both this and
         // ShowEnumeration are in play together.
+        /// <summary>Runs <paramref name="action"/> with the cells for which <paramref name="exclude"/> says true taken out of the selection, and puts them back.</summary>
         protected T ExcludingSelectedCells<T>(Predicate<DataGridViewCell> exclude, Func<T> action)
         {
             List<DataGridViewCell> excludedCells = new List<DataGridViewCell>();
@@ -131,6 +133,7 @@ namespace ErikwnkWFUI.Controls
         // messages actually got displayed - i.e. only the ones that survive
         // the suppression check above - without being able to observe calls
         // RunWithSuppressedActionConfirmation swallowed.
+        /// <summary>Shows the confirmation of an action; only the ones that are not suppressed come here (a subclass can watch them).</summary>
         protected virtual void OnActionConfirmation(string message)
         {
             CopyConfirmationDisplay.Show(ActionConfirmation, message, this, _copyConfirmationToolTip, ToastColors);
@@ -344,6 +347,7 @@ namespace ErikwnkWFUI.Controls
         // rows/columns selected via their headers, which this control's
         // cell selection never produces, so it has to be asked for
         // explicitly (then put back, so a plain Ctrl+C is unaffected).
+        /// <summary>Copies the selected cells to the clipboard, with the header texts when <paramref name="includeHeader"/> is true.</summary>
         protected void CopySelectionToClipboard(bool includeHeader = false)
         {
             if (SelectedCells.Count == 0)
@@ -394,6 +398,7 @@ namespace ErikwnkWFUI.Controls
 
         // Ctrl+A goes through the same path as the menu entry. Not while a
         // cell is being edited - there it selects the text in the editor.
+        /// <inheritdoc/>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.A && !IsCurrentCellInEditMode)

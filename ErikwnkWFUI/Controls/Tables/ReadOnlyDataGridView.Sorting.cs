@@ -34,6 +34,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnColumnHeaderMouseClick(DataGridViewCellMouseEventArgs e)
         {
             base.OnColumnHeaderMouseClick(e);

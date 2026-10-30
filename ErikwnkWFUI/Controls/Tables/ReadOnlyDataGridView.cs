@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -240,6 +241,7 @@ namespace ErikwnkWFUI.Controls
         /// property is deliberately left false (see the constructor); this
         /// one governs the owned implementation instead.
         /// </remarks>
+        [DefaultValue(true)]
         public bool AllowColumnReordering
         {
             get => _columnReordering.AllowedByDefault;
@@ -289,6 +291,7 @@ namespace ErikwnkWFUI.Controls
         /// ordinary column silently read back as "not resizable" the
         /// moment the native switch went false.
         /// </remarks>
+        [DefaultValue(true)]
         public bool AllowColumnResizing
         {
             get => _columnResizing.AllowedByDefault;
@@ -316,6 +319,7 @@ namespace ErikwnkWFUI.Controls
         /// there." This default is comfortably larger than that radius on
         /// either side, so the overlap that causes it is never reachable.
         /// </remarks>
+        [DefaultValue(DefaultMinimumColumnWidth)]
         public int MinimumColumnWidth
         {
             get => _minimumColumnWidth;
@@ -348,6 +352,7 @@ namespace ErikwnkWFUI.Controls
         /// (any time; before or after adding it) - <see cref="DataGridView"/>'s
         /// own optional delete-row column relies on the same thing.
         /// </remarks>
+        [DefaultValue(true)]
         public bool SortingEnabled { get; set; } = true;
 
 
@@ -360,6 +365,7 @@ namespace ErikwnkWFUI.Controls
         /// named more broadly here since this control has more than just
         /// copying to confirm. Defaults to <see cref="CopyConfirmationStyle.Toast"/>.
         /// </summary>
+        [DefaultValue(CopyConfirmationStyle.Toast)]
         public CopyConfirmationStyle ActionConfirmation { get; set; } = CopyConfirmationStyle.Toast;
 
         /// <summary>
@@ -367,6 +373,8 @@ namespace ErikwnkWFUI.Controls
         /// <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>), null for the neutral gray. Until it is set it follows the look of the grid:
         /// gray for the standard one, the color of the set of the factories' <c>colors</c>, the accent for <c>CreatePrimary</c>.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet ToastColors
         {
             get { return _toastColors.Value; }
@@ -397,6 +405,7 @@ namespace ErikwnkWFUI.Controls
         /// the current row count needs - 150 rows gets a column sized for
         /// "150", not padded for some arbitrary maximum.
         /// </summary>
+        [DefaultValue(false)]
         public bool ShowEnumeration
         {
             get => _enumerationColumn != null;
@@ -451,6 +460,7 @@ namespace ErikwnkWFUI.Controls
         private const int EnumerationColumnPadding = 20;
 
 
+        /// <summary>Makes a grid in the library's look, read only, with the context menu to copy and select; <c>UIStyles.DataGridViews</c> makes the usual ones.</summary>
         public ReadOnlyDataGridView()
         {
             _followedBackgroundColor = BackgroundColor = UIColors.BackgroundDark;
@@ -546,10 +556,13 @@ namespace ErikwnkWFUI.Controls
         // NewRowIndex itself can move between the click and whenever the
         // menu's Opening handler or an item's click actually runs (e.g. the
         // click itself may already have advanced it).
+        /// <summary>The row the context menu was opened on (-1: none); a snapshot taken at the click.</summary>
         protected int _contextMenuRowIndex = -1;
 
+        /// <summary>The column the context menu was opened on (-1: none).</summary>
         protected int _contextMenuColumnIndex = -1;
 
+        /// <summary>Whether the row the context menu was opened on was the placeholder row for a new row.</summary>
         protected bool _contextMenuRowWasPlaceholder;
 
 
@@ -572,6 +585,7 @@ namespace ErikwnkWFUI.Controls
         // caused real bugs (paste crashes, vanishing/duplicate rows,
         // insert-above/below silently no-opping), which is the whole reason
         // this exists now.
+        /// <summary>Whether the row is the placeholder row for a new row.</summary>
         protected bool IsPlaceholderRowIndex(int rowIndex)
         {
             return rowIndex >= 0 && rowIndex == NewRowIndex;
@@ -584,12 +598,101 @@ namespace ErikwnkWFUI.Controls
         // copy/paste/right-click action would otherwise treat it like an
         // ordinary data column. ReadOnly alone only blocks editing, none of
         // these.
+        /// <summary>Whether the column is one of the library's own (the numbers, the delete button), which the user cannot select, sort or move.</summary>
         protected virtual bool IsSystemColumn(int columnIndex)
         {
             return IsEnumerationColumn(columnIndex);
         }
 
 
+        // The designer writes a color only where it was set (the defaults follow the theme, they are not stored); Reset gives the default back.
+        private bool ShouldSerializeContextMenuSelectionColor()
+        {
+            return _contextMenuSelectionColor.IsSet;
+        }
+
+        private void ResetContextMenuSelectionColor()
+        {
+            _contextMenuSelectionColor.Reset();
+        }
+
+        private bool ShouldSerializeHeaderBackColor()
+        {
+            return _headerBackColor.IsSet;
+        }
+
+        private void ResetHeaderBackColor()
+        {
+            _headerBackColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeHeaderForeColor()
+        {
+            return _headerForeColor.IsSet;
+        }
+
+        private void ResetHeaderForeColor()
+        {
+            _headerForeColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            _borderColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeRowBackColor()
+        {
+            return _rowBackColor.IsSet;
+        }
+
+        private void ResetRowBackColor()
+        {
+            _rowBackColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeRowForeColor()
+        {
+            return _rowForeColor.IsSet;
+        }
+
+        private void ResetRowForeColor()
+        {
+            _rowForeColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeSelectionBackColor()
+        {
+            return _selectionBackColor.IsSet;
+        }
+
+        private void ResetSelectionBackColor()
+        {
+            _selectionBackColor.Reset();
+            ApplyStyles();
+        }
+
+        private bool ShouldSerializeColumnReorderIndicatorColor()
+        {
+            return _columnReorderIndicatorColor.IsSet;
+        }
+
+        private void ResetColumnReorderIndicatorColor()
+        {
+            _columnReorderIndicatorColor.Reset();
+        }
+
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -633,6 +736,7 @@ namespace ErikwnkWFUI.Controls
         }
 
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -667,6 +771,7 @@ namespace ErikwnkWFUI.Controls
         private Color[] _followedLinkColors = new Color[3];
 
 
+        /// <inheritdoc/>
         protected override void OnColumnAdded(DataGridViewColumnEventArgs e)
         {
             base.OnColumnAdded(e);
@@ -759,6 +864,7 @@ namespace ErikwnkWFUI.Controls
         private bool _selectionRepaintPending;
 
 
+        /// <inheritdoc/>
         protected override void OnSelectionChanged(EventArgs e)
         {
             base.OnSelectionChanged(e);
