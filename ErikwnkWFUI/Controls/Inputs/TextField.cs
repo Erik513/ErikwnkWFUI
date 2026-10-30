@@ -25,6 +25,7 @@ namespace ErikwnkWFUI.Controls
 
         private readonly Action _redrawFrame;
 
+        /// <summary>Makes a box with the frame of the library, in the colors of the theme; <c>UIStyles.TextBoxes</c> makes the usual ones.</summary>
         public TextField()
         {
             // The border of BorderStyle.FixedSingle is part of the window outside its client area, in the system's gray: the library paints
@@ -67,6 +68,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnTextChanged(EventArgs e)
         {
             base.OnTextChanged(e);
@@ -74,6 +76,7 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(_innerHot);
         }
 
+        /// <inheritdoc/>
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
@@ -81,6 +84,7 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnLostFocus(EventArgs e)
         {
             base.OnLostFocus(e);
@@ -88,16 +92,20 @@ namespace ErikwnkWFUI.Controls
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
 
             if (!Enabled)
                 ResetInnerState();
+            else
+                RefreshInnerHot();
 
             Invalidate();
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
@@ -105,6 +113,7 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(_innerHot);
         }
 
+        /// <inheritdoc/>
         protected override void OnSizeChanged(EventArgs e)
         {
             base.OnSizeChanged(e);
@@ -112,6 +121,7 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(_innerHot);
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -121,6 +131,7 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(_innerHot);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -155,6 +166,7 @@ namespace ErikwnkWFUI.Controls
 
         // ---- painting over what the system painted, the formatting rectangle of the text ----
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             if (HandleInnerButtonMessage(ref m))

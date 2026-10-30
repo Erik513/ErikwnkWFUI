@@ -21,6 +21,7 @@ namespace ErikwnkWFUI.Controls
         /// A hint that is shown in the muted color while the box is empty and has not the focus (as the placeholder of a web page); it is
         /// painted over the box and never is its <see cref="TextBoxBase.Text"/>. Empty (the default) is none.
         /// </summary>
+        [DefaultValue("")]
         public string Placeholder
         {
             get { return _placeholder; }

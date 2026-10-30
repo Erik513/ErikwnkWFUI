@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 
 namespace ErikwnkWFUI.Controls
@@ -9,6 +10,7 @@ namespace ErikwnkWFUI.Controls
         private FocusReleaseWatcher _clickWatcher;
 
         /// <summary>Whether a click with the left mouse button on something else in the window takes the focus out of the box. On by default.</summary>
+        [DefaultValue(true)]
         public bool ReleaseFocusOnOutsideClick { get; set; } = true;
 
         private void StartWatchingClicks()
@@ -25,4 +27,4 @@ namespace ErikwnkWFUI.Controls
                 _clickWatcher.Stop();
         }
     }
-}
+}

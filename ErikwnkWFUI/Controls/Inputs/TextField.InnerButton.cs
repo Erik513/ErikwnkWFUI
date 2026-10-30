@@ -107,6 +107,7 @@ namespace ErikwnkWFUI.Controls
             SendMessage(Handle, EM_SETMARGINS, (IntPtr)(EC_LEFTMARGIN | EC_RIGHTMARGIN), (IntPtr)((right << 16) | left));
         }
 
+        /// <inheritdoc/>
         protected override void OnBorderStyleChanged(EventArgs e)
         {
             base.OnBorderStyleChanged(e);
@@ -178,16 +179,31 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(hot);
         }
 
+        // Where the mouse is (the tests put it elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+
+        // A box that was disabled or hidden got no MouseLeave, and one that is enabled or shown again no MouseEnter: whether the mouse is over the
+        // button is looked at again, so that it does not look hot with the mouse elsewhere, nor cold with the mouse on it.
+        internal void RefreshInnerHot()
+        {
+            if (IsHandleCreated && _innerGlyph != null)
+                UpdateInnerHot(PointToClient(CursorPosition()));
+        }
+
         // A disabled box gets no MouseLeave, and a window that takes the mouse away no release: nothing stays hot or pressed
         // (see also OnEnabledChanged of the box).
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
 
             if (!Visible)
                 ResetInnerState();
+            else
+                RefreshInnerHot();
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
             base.OnMouseCaptureChanged(e);
@@ -207,6 +223,7 @@ namespace ErikwnkWFUI.Controls
             UpdateToolTip(false);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
@@ -219,6 +236,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Raises <see cref="InnerClick"/>; a box with a button in it (the pencil, the eye) does what the button does here.</summary>
         protected virtual void OnInnerClick()
         {
             InnerClick?.Invoke(this, EventArgs.Empty);

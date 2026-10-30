@@ -18,6 +18,7 @@ namespace ErikwnkWFUI.Controls
 
         private bool _shown;
 
+        /// <summary>Makes a box that hides what is typed, with the eye in it.</summary>
         public PasswordTextBox()
         {
             PasswordChar = Dot;
@@ -39,6 +40,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // The keyboard shows and hides the password too (the eye is painted by the box and is not seen by a screen reader): Alt+F8.
+        /// <inheritdoc/>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == (Keys.Alt | Keys.F8) && Enabled)
@@ -51,6 +53,7 @@ namespace ErikwnkWFUI.Controls
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
+        /// <inheritdoc/>
         protected override void OnInnerClick()
         {
             base.OnInnerClick();
@@ -69,6 +72,7 @@ namespace ErikwnkWFUI.Controls
             ShowEyeState();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

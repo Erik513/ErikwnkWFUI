@@ -216,6 +216,43 @@ public class TextBoxEdgeCaseTests : IDisposable
     }
 
     [Fact]
+    public void ABoxThatIsEnabledOrShownAgain_LooksAtTheMouse_ForTheButtonInTheBox()
+    {
+        TextField box = (TextField)_host.Show(UIStyles.TextBoxes.CreatePassword("abc"));
+        Rectangle button = (Rectangle)box.GetType().GetProperty("InnerBounds", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.GetValue(box)!;
+
+        // (The mouse is on the button while the box is disabled, which gives it no MouseLeave: enabled again, the button is hot at once.)
+        box.CursorPosition = () => box.PointToScreen(new Point(button.Left + 5, button.Top + 5));
+        box.Enabled = false;
+        Assert.False(box.GetPrivateField<bool>("_innerHot"));
+        box.Enabled = true;
+        Assert.True(box.GetPrivateField<bool>("_innerHot"));
+
+        // (The mouse went away while the box was hidden: shown again, the button is not hot.)
+        box.Visible = false;
+        box.CursorPosition = () => new Point(-9000, -9000);
+        box.Visible = true;
+        Assert.False(box.GetPrivateField<bool>("_innerHot"));
+    }
+
+    [Fact]
+    public void TheDesignerKnows_TheDefaultsTheBoxesHave()
+    {
+        foreach (TextBox box in new TextBox[] { new TextField(), new LockableTextBox(), (TextBox)(object)new PasswordTextBox() })
+        {
+            using (box)
+            {
+                // (ReadOnly: a lockable box is locked, PasswordChar: a password box hides - which the designer writes, as it should.)
+                foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(box))
+                {
+                    if (property.Name != "ReadOnly" && property.Name != "PasswordChar" && property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                        Assert.True(Equals(attribute.Value, property.GetValue(box)), box.GetType().Name + "." + property.Name + " is not its default");
+                }
+            }
+        }
+    }
+
+    [Fact]
     public void ADisabledPasswordBox_DoesNotRespondToTheEye()
     {
         TextBox box = _host.Show(UIStyles.TextBoxes.CreatePassword("abc"));

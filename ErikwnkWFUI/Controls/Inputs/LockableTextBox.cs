@@ -19,6 +19,7 @@ namespace ErikwnkWFUI.Controls
         private bool _locked = true;
         private string _textBeforeEdit = "";
 
+        /// <summary>Makes a box that is locked, with the pencil in it; <c>UIStyles.TextBoxes.CreateLockable</c> makes the usual one.</summary>
         public LockableTextBox()
         {
             ReadOnly = true;
@@ -107,6 +108,7 @@ namespace ErikwnkWFUI.Controls
             InnerToolTip = UIStrings.Get(_locked ? "TextBox.Edit" : "TextBox.Accept");
         }
 
+        /// <inheritdoc/>
         protected override void OnInnerClick()
         {
             base.OnInnerClick();
@@ -119,6 +121,7 @@ namespace ErikwnkWFUI.Controls
 
         // The keys: F2 or Enter start the editing of a locked box; Enter accepts and Escape cancels while it is being edited (a box of
         // several lines keeps Enter for a new line: Ctrl+Enter accepts there).
+        /// <inheritdoc/>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (_locked)
@@ -155,6 +158,7 @@ namespace ErikwnkWFUI.Controls
             ShowLockState();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
