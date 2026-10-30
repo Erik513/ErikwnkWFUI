@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -41,6 +42,7 @@ namespace ErikwnkWFUI.Forms
         internal OwnerFollower Follower { get; } = new OwnerFollower();
 
         /// <summary>How see-through the popup is: not at all, slightly, clearly (the default) or strongly.</summary>
+        [DefaultValue(PopupTransparency.Medium)]
         public PopupTransparency Transparency
         {
             get { return _transparency; }
@@ -60,6 +62,8 @@ namespace ErikwnkWFUI.Forms
         /// How opaque the whole popup is, from 0 (not there) to 1 (not see-through). Hides the opacity of the form, which
         /// is not used here (see the remarks of the class).
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public new double Opacity
         {
             get { return _opacity; }
@@ -97,12 +101,14 @@ namespace ErikwnkWFUI.Forms
 
         // A popup must never take the activation away from the window it is shown for (the window
         // of a slider that is being dragged, say).
+        /// <inheritdoc/>
         protected override bool ShowWithoutActivation
         {
             get { return true; }
         }
 
         // The same for a click on the popup: it does not activate either. And the picture of the window comes from us.
+        /// <inheritdoc/>
         protected override CreateParams CreateParams
         {
             get
@@ -202,6 +208,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -209,6 +216,7 @@ namespace ErikwnkWFUI.Forms
             UpdateLayer();
         }
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -218,12 +226,14 @@ namespace ErikwnkWFUI.Forms
         // A layered window shows the picture Windows was given, not what it paints itself: whenever something in the
         // window (or the window itself) is invalidated - a text, a color, the size - the picture is made again. (A paint
         // message would be the natural moment, but it does not come for a window that was hidden or shown meanwhile.)
+        /// <inheritdoc/>
         protected override void OnInvalidated(InvalidateEventArgs e)
         {
             base.OnInvalidated(e);
             UpdateLayer();
         }
 
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             // What the window paints itself is not shown: the message is answered, nothing more.
@@ -240,6 +250,7 @@ namespace ErikwnkWFUI.Forms
             base.WndProc(ref m);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

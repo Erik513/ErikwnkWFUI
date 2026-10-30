@@ -6,7 +6,9 @@ namespace ErikwnkWFUI.Forms
     /// <summary>One block of content for <see cref="InfoPopupForm"/>: a header, a text, or both. A part left null or empty is not shown.</summary>
     public class InfoPopupSection
     {
+        /// <summary>The header, in bold above the text; null or empty: none.</summary>
         public string Header { get; set; }
+        /// <summary>The text; null or empty: none.</summary>
         public string Text { get; set; }
 
         /// <summary>The color of the header. Left empty, it is white, or black on a background too light for white.</summary>
@@ -15,6 +17,9 @@ namespace ErikwnkWFUI.Forms
         /// <summary>The color of the text. Left empty, it is white, or black on a background too light for white.</summary>
         public Color TextColor { get; set; }
 
+        /// <summary>Makes a block with a header and a text, either of which may be left null.</summary>
+        /// <param name="header">The header.</param>
+        /// <param name="text">The text.</param>
         public InfoPopupSection(string header, string text)
         {
             Header = header;

@@ -1,4 +1,5 @@
-﻿using ErikwnkWFUI.Controls;
+﻿using System.ComponentModel;
+using ErikwnkWFUI.Controls;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Styles;
 using System;
@@ -112,6 +113,7 @@ namespace ErikwnkWFUI.Forms
         private Size _fixedSize = Size.Empty;
 
 
+        /// <summary>Makes a popup without content; <c>UIStyles.InfoPopups</c> makes the usual ones.</summary>
         public InfoPopupForm()
         {
             DoubleBuffered = true;
@@ -141,6 +143,7 @@ namespace ErikwnkWFUI.Forms
         /// How long <see cref="ShowAtMouseDelayed(Control, Point, InfoPopupSection[])"/> waits before it shows the popup: not at all,
         /// 0.2, 0.4 (the default) or 0.8 seconds.
         /// </summary>
+        [DefaultValue(PopupDelay.Medium)]
         public PopupDelay Delay
         {
             get { return _delay; }
@@ -159,6 +162,7 @@ namespace ErikwnkWFUI.Forms
         /// (the default) or 8 seconds. Every show call starts the time again, so a popup that
         /// is shown from a MouseMove handler stays while the mouse moves over its control.
         /// </summary>
+        [DefaultValue(PopupDuration.Medium)]
         public PopupDuration Duration
         {
             get { return _duration; }
@@ -172,6 +176,7 @@ namespace ErikwnkWFUI.Forms
         }
 
 
+        /// <inheritdoc/>
         protected override void OnTransparencyChanged()
         {
             BackColor = GetBackColor();
@@ -183,6 +188,8 @@ namespace ErikwnkWFUI.Forms
         /// neutral gray (<c>UIStyles.Colors.Sets.Gray</c>);
         /// <c>UIStyles.InfoPopups.CreatePrimary</c> makes one in the accent color.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet Colors
         {
             get { return _colorSet.Value; }
@@ -217,6 +224,7 @@ namespace ErikwnkWFUI.Forms
         /// one short value that changes while the popup is shown ("9%" and "100%" must not
         /// resize it). Empty (the default) sizes the popup to its content. In pixels.
         /// </summary>
+        [DefaultValue(typeof(Size), "0, 0")]
         public Size FixedSize
         {
             get { return _fixedSize; }
@@ -420,6 +428,7 @@ namespace ErikwnkWFUI.Forms
         }
 
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -478,12 +487,14 @@ namespace ErikwnkWFUI.Forms
         }
 
 
+        /// <inheritdoc/>
         protected override int CornerRadius96
         {
             get { return IsFixed ? 6 : 12; }
         }
 
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

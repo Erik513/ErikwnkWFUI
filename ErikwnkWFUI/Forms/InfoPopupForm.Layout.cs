@@ -139,6 +139,7 @@ namespace ErikwnkWFUI.Forms
         }
 
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
