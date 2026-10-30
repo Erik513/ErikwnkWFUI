@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using ErikwnkWFUI.Helpers;
 using ErikwnkWFUI.Controls;
@@ -112,6 +113,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>A text under the message that the user opens with the "Details" button (the text of an exception, say); empty (the default) has no button.</summary>
+        [DefaultValue("")]
         public string Details
         {
             get { return _details; }
@@ -133,6 +135,7 @@ namespace ErikwnkWFUI.Forms
         /// A check box under the message ("Do not ask again", "Apply to all"); empty (the default) has none. What the user did with it is
         /// <see cref="CheckBoxChecked"/> once the dialog has ended.
         /// </summary>
+        [DefaultValue("")]
         public string CheckBoxText
         {
             get { return _checkBox == null ? "" : _checkBox.Text; }
@@ -145,6 +148,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the check box is checked.</summary>
+        [DefaultValue(false)]
         public bool CheckBoxChecked
         {
             get { return _checkBox != null && _checkBox.Checked; }
@@ -166,9 +170,11 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the sound of the icon is played when the window opens (the sounds of Windows for information, warning, error and question). Off by default.</summary>
+        [DefaultValue(false)]
         public bool PlaySound { get; set; }
 
         /// <summary>Whether the box has a help button (a question mark at the left of the buttons) that raises <see cref="HelpClicked"/>. Off by default.</summary>
+        [DefaultValue(false)]
         public bool ShowHelpButton
         {
             get { return _helpShown; }
@@ -183,6 +189,7 @@ namespace ErikwnkWFUI.Forms
         /// <summary>Raised when the help button is clicked; the dialog stays open.</summary>
         public event EventHandler HelpClicked;
 
+        /// <inheritdoc/>
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
@@ -212,6 +219,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the text of <see cref="Details"/> is open (the window is higher then). Closed by default.</summary>
+        [DefaultValue(false)]
         public bool DetailsExpanded
         {
             get { return _detailsExpanded; }
@@ -252,6 +260,7 @@ namespace ErikwnkWFUI.Forms
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             EnsureDialogResult();
@@ -277,6 +286,7 @@ namespace ErikwnkWFUI.Forms
             return text.ToString();
         }
 
+        /// <inheritdoc/>
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             // (Text that is selected in the details is copied by the box itself.)

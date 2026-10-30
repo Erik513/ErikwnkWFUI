@@ -144,6 +144,7 @@ namespace ErikwnkWFUI.Forms
             LayoutContent();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)

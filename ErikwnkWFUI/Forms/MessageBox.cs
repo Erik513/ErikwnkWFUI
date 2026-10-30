@@ -17,22 +17,34 @@ namespace ErikwnkWFUI.Forms
     /// <summary>Which buttons a <see cref="MessageBox"/> shows.</summary>
     public enum MessageBoxButtons
     {
+        /// <summary>An OK button.</summary>
         OK,
+        /// <summary>OK and Cancel.</summary>
         OKCancel,
+        /// <summary>Yes and No.</summary>
         YesNo,
+        /// <summary>Yes, No and Cancel.</summary>
         YesNoCancel,
+        /// <summary>Retry and Cancel.</summary>
         RetryCancel,
+        /// <summary>Abort, Retry and Ignore.</summary>
         AbortRetryIgnore
     }
 
     /// <summary>Which icon a <see cref="MessageBox"/> shows in its title bar.</summary>
     public enum MessageBoxIcon
     {
+        /// <summary>No icon.</summary>
         None,
+        /// <summary>An information icon.</summary>
         Info,
+        /// <summary>A warning icon.</summary>
         Warning,
+        /// <summary>An error icon.</summary>
         Error,
+        /// <summary>A question icon.</summary>
         Question,
+        /// <summary>A success icon (a check mark).</summary>
         Success
     }
 
@@ -56,8 +68,11 @@ namespace ErikwnkWFUI.Forms
     [Obsolete("Use FormSize (the same three sizes, for every window and dialog of the library).")]
     public enum MessageBoxSize
     {
+        /// <summary>The small size.</summary>
         Small,
+        /// <summary>The medium size.</summary>
         Medium,
+        /// <summary>The large size.</summary>
         Large
     }
 
