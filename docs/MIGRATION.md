@@ -4,6 +4,8 @@ For the projects that use ErikwnkWFUI (each one is changed in its own chat). Go 
 what stops the build, then what only looks or behaves differently, then what can be made simpler.
 The full list of changes is in [../CHANGELOG.md](../CHANGELOG.md).
 
+A chat that migrates a project reads [MIGRATE-A-PROJECT.md](MIGRATE-A-PROJECT.md) (the brief) and writes its findings to [MIGRATION-FEEDBACK.md](MIGRATION-FEEDBACK.md).
+
 ## 1. Build the project and follow the compiler
 
 Names with an `[Obsolete]` alias still compile (with a warning); the others are gone.
