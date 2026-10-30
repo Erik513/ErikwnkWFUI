@@ -58,8 +58,8 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 4.5 | 4 | `VersionPanel` | 98.8 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.6 | 4 | `TabControl`, `ReadOnlyTabControl` | 94.1 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.7 | 4 | `ContextMenuStrip` | 98.3 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | 97.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
-| 4.9 | 4 | `TitleBarControl` | 91.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | 98.1 % | [x] | [x] | [x] | - | [x] | - | [x] |
+| 4.9 | 4 | `TitleBarControl` | 98.4 % | [x] | [x] | [x] | [x] | [x] | - | [x] |
 | 5.1 | 5 Lists and tables | `ListBox`, `TitledListBox` | 83.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 5.2 | 5 | `ListView` | 61.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 5.3 | 5 | `DataGridView`, `ReadOnlyDataGridView` (with the column helpers) | 85.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

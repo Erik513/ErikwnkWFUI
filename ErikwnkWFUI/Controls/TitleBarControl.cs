@@ -92,6 +92,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Where the title stands in the room that the logo and the buttons leave: left, centered (the default) or right.</summary>
         public ContentAlignment TitleTextAlign
         {
             get { return _titleLabel.TextAlign; }
@@ -102,6 +103,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Whether the minimize button is there (true by default).</summary>
         public bool ShowMinimizeButton
         {
             get { return _minimizeButton.Visible; }
@@ -112,6 +114,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Whether the maximize / restore button is there (true by default).</summary>
         public bool ShowMaximizeButton
         {
             get { return _maximizeButton.Visible; }
@@ -122,6 +125,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Whether the close button is there (true by default).</summary>
         public bool ShowCloseButton
         {
             get { return _closeButton.Visible; }
@@ -133,6 +137,15 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>allowWindowSnapAndMaximize controls both double-click-to-maximize and drag-to-top-of-screen-to-maximize.</summary>
+        /// <summary>Makes the bar, 30 pixels high and docked at the top, with logo, title and the three window buttons.</summary>
+        /// <param name="icon">The logo at the left; null for none.</param>
+        /// <param name="title">The title.</param>
+        /// <param name="titleTextAlign">Where the title stands.</param>
+        /// <param name="showMinimizeButton">Whether the minimize button is there.</param>
+        /// <param name="showMaximizeButton">Whether the maximize button is there.</param>
+        /// <param name="showCloseButton">Whether the close button is there.</param>
+        /// <param name="allowWindowSnapAndMaximize">Whether a double click and dragging to the top of the screen maximize the window.</param>
+        /// <param name="backColor">The color of the bar; the one of the theme when left out (it follows the theme then).</param>
         public TitleBarControl(
             Image icon = null,
             string title = "",
@@ -224,6 +237,8 @@ namespace ErikwnkWFUI.Controls
         }
 
         // While maximized the button restores the window, and says so.
+        /// <summary>Makes the maximize button show what it does now: restore while the window is maximized, maximize otherwise (the bar does it by itself; for a window that has no bar of this kind).</summary>
+        /// <param name="isMaximized">Whether the window is maximized.</param>
         public void UpdateMaximizeButton(bool isMaximized)
         {
             if (_maximizeButton == null)
@@ -239,6 +254,7 @@ namespace ErikwnkWFUI.Controls
             return UIStrings.Get(_isMaximized ? "TitleBar.Restore" : "TitleBar.Maximize");
         }
 
+        /// <summary>Lets go of the handles that drag the window by the bar (also done when the bar is disposed).</summary>
         public void DisposeDragHandle()
         {
             if (_titleBarDragHandle != null)
@@ -260,6 +276,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnVisibleChanged(EventArgs e)
         {
             base.OnVisibleChanged(e);
@@ -267,9 +284,11 @@ namespace ErikwnkWFUI.Controls
             if (!Visible)
                 return;
 
+            AttachToParentFormWhenReady();
             RunWhenHandleReady(UpdateLayout);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -545,11 +564,11 @@ namespace ErikwnkWFUI.Controls
         {
             Form form = FindForm();
 
+            // Not in a window yet: nothing is asked again here (a bar with a window but no form would ask for ever). It is looked for again when the bar
+            // gets a parent, a window of its own, or is shown.
             if (form == null)
-            {
-                RunWhenHandleReady(AttachToParentFormWhenReady);
                 return;
-            }
+
 
             if (_parentForm == form)
             {
