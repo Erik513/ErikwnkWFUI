@@ -293,4 +293,35 @@ public class VersionPanelTests : IDisposable
             UIColors.SetAccent(accent);
         }
     }
+
+    [Fact]
+    public void TheDesigner_WritesTheVersionTextOnlyWhereItWasSet_AndDoesNotSeeTheUpdateState()
+    {
+        using VersionPanel panel = new VersionPanel();
+        System.ComponentModel.PropertyDescriptorCollection properties = System.ComponentModel.TypeDescriptor.GetProperties(panel);
+        System.ComponentModel.PropertyDescriptor text = properties["VersionText"]!;
+
+        // (The default is the version of the program that runs - at design time that of the designer, which must not be written into the code.)
+        Assert.False(text.ShouldSerializeValue(panel));
+        text.SetValue(panel, "v9.9.9");
+        Assert.True(text.ShouldSerializeValue(panel));
+        text.ResetValue(panel);
+        Assert.False(text.ShouldSerializeValue(panel));
+        Assert.NotEqual("v9.9.9", panel.VersionText);
+
+        Assert.False(properties["UpdateAvailable"]!.IsBrowsable);
+    }
+
+    [Fact]
+    public void ADisabledStrip_AndAChangeOfTheFont_ArePainted()
+    {
+        using VersionPanel panel = new VersionPanel { VersionText = "v1.2.3", Width = 200 };
+        using Form host = OffscreenForm.Show(panel, new Size(220, 40), Color.Black, new Point(5, 5));
+
+        panel.Enabled = false;
+        panel.Font = new Font(panel.Font.FontFamily, 14);
+
+        using Bitmap picture = TestPictures.Draw(panel);
+        Assert.Equal(200, picture.Width);
+    }
 }

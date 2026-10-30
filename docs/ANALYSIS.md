@@ -55,7 +55,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 4.2 | 4 | `FlowLayoutPanel` | 94.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | 99.3 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.4 | 4 | `MultiPanel` | 100 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 4.5 | 4 | `VersionPanel` | 93.3 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.5 | 4 | `VersionPanel` | 98.8 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.6 | 4 | `TabControl`, `ReadOnlyTabControl` | 94.5 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.7 | 4 | `ContextMenuStrip` | 94.7 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | 97.9 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

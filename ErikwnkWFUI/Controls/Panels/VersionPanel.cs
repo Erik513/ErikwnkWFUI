@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -30,8 +31,10 @@ namespace ErikwnkWFUI.Controls
         private const double DisabledFade = 0.5;
 
         private string _versionText = EntryAssemblyVersion.GetText() ?? string.Empty;
+        private bool _versionTextSet;
         private Button _updateButton;
 
+        /// <summary>Makes a strip 24 pixels high with the version of the program at its right end; <c>UIStyles.VersionPanels</c> makes the usual ones.</summary>
         public VersionPanel()
         {
             Height = Dpi.Scale(this, Height96);
@@ -46,12 +49,29 @@ namespace ErikwnkWFUI.Controls
             set
             {
                 _versionText = value ?? string.Empty;
+                _versionTextSet = true;
                 PerformLayout();
                 Invalidate();
             }
         }
 
+        // The designer writes the text only where it was set: the default is the version of the program that runs, which at design time is the
+        // one of the designer, and must not be written into the code.
+        private bool ShouldSerializeVersionText()
+        {
+            return _versionTextSet;
+        }
+
+        private void ResetVersionText()
+        {
+            _versionText = EntryAssemblyVersion.GetText() ?? string.Empty;
+            _versionTextSet = false;
+            PerformLayout();
+            Invalidate();
+        }
+
         /// <summary>Whether the update button is there (an update was announced with <see cref="ShowUpdate"/> or found by <see cref="CheckForUpdateAsync"/>).</summary>
+        [Browsable(false)]
         public bool UpdateAvailable
         {
             get { return _updateButton != null; }
@@ -119,6 +139,7 @@ namespace ErikwnkWFUI.Controls
             return true;
         }
 
+        /// <inheritdoc/>
         protected override void OnLayout(LayoutEventArgs levent)
         {
             base.OnLayout(levent);
@@ -136,6 +157,7 @@ namespace ErikwnkWFUI.Controls
             _updateButton.Location = new Point(textLeft - _updateButton.Width, (ClientSize.Height - _updateButton.Height) / 2);
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -156,6 +178,7 @@ namespace ErikwnkWFUI.Controls
             TextRenderer.DrawText(e.Graphics, _versionText, UIFonts.Small, area, text, TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             base.OnFontChanged(e);
