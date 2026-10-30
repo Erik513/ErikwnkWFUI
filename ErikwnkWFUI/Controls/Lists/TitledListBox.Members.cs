@@ -125,7 +125,8 @@ namespace ErikwnkWFUI.Controls
             return InnerShouldSerialize("ForeColor");
         }
 
-        private void ResetForeColor()
+        /// <inheritdoc/>
+        public override void ResetForeColor()
         {
             InnerReset("ForeColor");
         }

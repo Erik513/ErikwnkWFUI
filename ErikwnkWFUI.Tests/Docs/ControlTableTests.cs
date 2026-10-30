@@ -15,6 +15,10 @@ public class ControlTableTests
     [Fact]
     public void ControlsMd_IsCurrent()
     {
+#if NETFRAMEWORK
+        // (The table is made on .NET 8 - the .NET Framework has other members and defaults here and there, e.g. no PlaceholderText.)
+        return;
+#else
         string expected = ControlTableGenerator.Build();
 
         if (Environment.GetEnvironmentVariable("UPDATE_CONTROLS_MD") == "1")
@@ -31,6 +35,7 @@ public class ControlTableTests
         Assert.True(
             expected == actual,
             "docs/CONTROLS.md is out of date (a control, a property, a default or a comment changed): run tools\\Update-ControlTable.ps1 and commit the file.");
+#endif
     }
 
     [Fact]
@@ -52,4 +57,4 @@ public class ControlTableTests
     {
         Assert.Equal(ControlTableGenerator.Build(), ControlTableGenerator.Build());
     }
-}
+}

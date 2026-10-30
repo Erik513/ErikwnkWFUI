@@ -29,7 +29,7 @@ public class UIStringsTests
 
     private static IEnumerable<string> Placeholders(string text)
     {
-        return Regex.Matches(text, @"\{(\d+)[^}]*\}").Select(match => match.Groups[1].Value).OrderBy(value => value).ToList();
+        return Regex.Matches(text, @"\{(\d+)[^}]*\}").Cast<Match>().Select(match => match.Groups[1].Value).OrderBy(value => value).ToList();
     }
 
     [Fact]

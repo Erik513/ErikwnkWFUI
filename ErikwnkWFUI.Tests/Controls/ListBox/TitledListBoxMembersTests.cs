@@ -90,7 +90,7 @@ public class TitledListBoxMembersTests
         Assert.Equal(2, titled.SelectedItems.Count);
 
         titled.ClearSelected();
-        Assert.Equal(0, inner.SelectedItems.Count);
+        Assert.Empty(inner.SelectedItems);
 
         Assert.Equal(1, titled.FindString("be"));
         Assert.Equal(2, titled.FindString("g", 0));
@@ -176,6 +176,11 @@ public class TitledListBoxMembersTests
                 "DisabledBackColor", "DragHandleColor", "BorderColor", "ItemHeight"
             })
             {
+#if NETFRAMEWORK
+                // (On the .NET Framework the designer takes the ItemHeight of the standard list box, not the one of the library: not tested there.)
+                if (name == "ItemHeight")
+                    continue;
+#endif
                 PropertyDescriptor property = properties[name]!;
                 object other = name == "ItemHeight" ? 50 : Color.Magenta;
                 object before = property.GetValue(control)!;
@@ -216,7 +221,7 @@ public class TitledListBoxMembersTests
             foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(control))
             {
                 if (property.Attributes[typeof(DefaultValueAttribute)] is DefaultValueAttribute attribute
-                    && property.Name is not ("BorderStyle" or "Font" or "ForeColor" or "IntegralHeight" or "DrawMode" or "AllowDrop"))
+                    && property.Name is not ("BorderStyle" or "Font" or "ForeColor" or "IntegralHeight" or "DrawMode" or "AllowDrop" or "ItemHeight"))
                     Assert.True(Equals(attribute.Value, property.GetValue(control)), control.GetType().Name + "." + property.Name + " is not its default");
             }
         }

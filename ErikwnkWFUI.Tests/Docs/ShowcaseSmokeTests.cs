@@ -88,6 +88,10 @@ public class ShowcaseSmokeTests : IDisposable
     [Fact]
     public void EveryPageOfTheShowcase_BuildsAndPaints_InBothThemesAndBothLanguages()
     {
+#if NETFRAMEWORK
+        // (The Showcase is a program for .NET 8 only: it cannot be loaded into the .NET Framework.)
+        return;
+#else
         string? path = FindShowcase();
 
         Assert.True(path != null, "ErikwnkWFUI.Showcase is not built (build the solution first)");
@@ -158,5 +162,6 @@ public class ShowcaseSmokeTests : IDisposable
 
         Assert.True(pages > 20, "the pages were not found: " + pages);
         Assert.True(problems.Count == 0, string.Join("\n", problems.Select(p => p.GetType().Name + ": " + p.Message + "\n" + p.StackTrace)));
+#endif
     }
 }

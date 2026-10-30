@@ -423,7 +423,8 @@ namespace ErikwnkWFUI.Controls
             return _itemForeColor.IsSet;
         }
 
-        private void ResetForeColor()
+        /// <inheritdoc/>
+        public override void ResetForeColor()
         {
             _itemForeColor.Reset();
             base.ForeColor = _itemForeColor.Value;
@@ -492,7 +493,8 @@ namespace ErikwnkWFUI.Controls
             return _backColorWasSet;
         }
 
-        private void ResetBackColor()
+        /// <inheritdoc/>
+        public override void ResetBackColor()
         {
             _backColorWasSet = false;
             base.BackColor = UIColors.BackgroundMedium;

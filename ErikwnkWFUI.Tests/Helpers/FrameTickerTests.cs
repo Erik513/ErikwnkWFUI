@@ -142,4 +142,36 @@ public class FrameTickerTests
 
         Assert.True(steps >= 5, "only " + steps + " steps after the window was made again");
     }
+
+    [Fact]
+    public void ADisposedTicker_DoesNotStartAgain_NorPutItselfBackOnTheClock()
+    {
+        using Control owner = new Control();
+        using Form host = Show(owner);
+        int before = AnimationClock.Count;
+        FrameTicker ticker = new FrameTicker(owner, steps => { });
+
+        ticker.Dispose();
+        ticker.Start();
+
+        Assert.False(ticker.IsRunning);
+        Assert.False(ticker.IsOnClock);
+        Assert.Equal(before, AnimationClock.Count);
+    }
+
+    [Fact]
+    public void ABarThatIsDisposedWhileItsFormGoes_LeavesNothingOnTheClock()
+    {
+        int before = AnimationClock.Count;
+        ErikwnkWFUI.Controls.SlimProgressBar bar = ErikwnkWFUI.UIStyles.SlimProgressBars.CreatePrimary();
+        bar.Style = ProgressBarStyle.Marquee;
+        Form host = Show(bar);
+        Pump(60);
+
+        host.Dispose();
+        Pump(60);
+
+        Assert.True(bar.IsDisposed);
+        Assert.Equal(before, AnimationClock.Count);
+    }
 }

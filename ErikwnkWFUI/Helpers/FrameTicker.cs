@@ -29,6 +29,7 @@ namespace ErikwnkWFUI.Helpers
         private readonly Timer _poll = new Timer { Interval = HiddenPollMilliseconds };
 
         private volatile bool _running;
+        private volatile bool _disposed;
         private bool _onClock;
         private int _framePending;
         private long _framePendingSince;
@@ -56,7 +57,9 @@ namespace ErikwnkWFUI.Helpers
         /// <summary>Starts it; the first step is the one after the first beat.</summary>
         public void Start()
         {
-            if (_running)
+            // (A ticker that was disposed does not start again: the control that owns it can still be asked about its visibility while it is
+            // being disposed, and would put the ticker back on the clock, where nothing would ever take it off.)
+            if (_running || _disposed)
                 return;
 
             _running = true;
@@ -163,6 +166,7 @@ namespace ErikwnkWFUI.Helpers
 
         public void Dispose()
         {
+            _disposed = true;
             Stop();
             _poll.Dispose();
         }

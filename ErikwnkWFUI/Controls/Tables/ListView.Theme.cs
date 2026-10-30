@@ -128,7 +128,8 @@ namespace ErikwnkWFUI.Controls
             return _rowForeColor.IsSet;
         }
 
-        private void ResetForeColor()
+        /// <inheritdoc/>
+        public override void ResetForeColor()
         {
             _rowForeColor.Reset();
             base.ForeColor = RowForeColor;
@@ -140,7 +141,8 @@ namespace ErikwnkWFUI.Controls
             return _backColorWasSet;
         }
 
-        private void ResetBackColor()
+        /// <inheritdoc/>
+        public override void ResetBackColor()
         {
             _backColorWasSet = false;
             base.BackColor = UIColors.BackgroundDark;
