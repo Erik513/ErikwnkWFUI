@@ -285,7 +285,7 @@ theme. A card does not scroll itself - put a panel with `AutoScroll` in it.
 ```csharp
 var surface = UIStyles.Panels.CreateElevated();
 var card = UIStyles.Panels.CreateCardStandard();
-var table = (TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);
+var table = (ErikwnkWFUI.Controls.TableLayoutPanel)UIStyles.TableLayoutPanels.CreateStandard(3, 2);   // the factories hand back the standard type; the cast reaches CellBorderLines
 table.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
 table.CellBorderLines = CellBorderLines.InnerOnly;
 ```
@@ -338,7 +338,7 @@ action of unknown duration) and more: a `Text` (a message about the state) and `
 move them). A text that is too long ends in an ellipsis or moves with `TextScroll` (as in a label); a tooltip shows it whole.
 
 ```csharp
-var bar = UIStyles.ProgressBars.CreatePrimary();
+var bar = (ErikwnkWFUI.Controls.ProgressBar)UIStyles.ProgressBars.CreatePrimary();   // the factories hand back the standard type; the cast reaches Text and ShowPercentage
 bar.Text = "Uploading";
 bar.ShowPercentage = true;
 bar.Value = 42;
@@ -492,7 +492,7 @@ AppLocalization.Register(AppLanguage.German, new Dictionary<string, string> { ["
 
 table.AddRow(() => AppLocalization.Get("deck.mode"), combo);            // a row of a property table (also AddSection(() => ...))
 UIStyles.Localize(label, () => AppLocalization.Get("deck.mode"));       // any control: its Text now and at every change
-UIStyles.Localize(button, b => b.AccessibleName = Loc.S("deck.tip"));   // anything else it shows
+UIStyles.Localize(button, b => b.AccessibleName = AppLocalization.Get("deck.tip"));   // anything else it shows
 ```
 
 The function can ask any source (`AppLocalization.Get`, a class of your own, ...). The table and the control listen themselves and stop when they

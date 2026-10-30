@@ -67,10 +67,10 @@ namespace ErikwnkWFUI.Showcase
 
             blocks.Add(Heading("Windows and dialogs"));
             blocks.Add(Paragraph(
-                "AppForm is the base of every window: borderless, with the library's own title bar, resizable and draggable. MessageBox, ToastForm " +
+                "AppForm is the base of every window (UIStyles.Forms makes one): borderless, with the library's own title bar, resizable and draggable. MessageBox, ToastForm " +
                 "and InfoPopupForm are the matching dialogs and popups - try MessageBox on the Forms tab (Message box page), ToastForm and InfoPopupForm on their own tabs."));
             blocks.Add(Code(
-                "using (var form = new AppForm(\"My App\"))\n" +
+                "using (var form = UIStyles.Forms.CreateStandard(\"My App\"))\n" +
                 "{\n" +
                 "    form.ContentPanel.Controls.Add(save);\n" +
                 "    Application.Run(form);\n" +
@@ -80,7 +80,7 @@ namespace ErikwnkWFUI.Showcase
             blocks.Add(Paragraph(
                 "- Disabled controls get a muted look of their own; look at the last column of most tabs.\n" +
                 "- Most controls also have properties for a one-off color change on a single instance.\n" +
-                "- The drop-down list of a ComboBox is drawn by Windows and keeps the system colors."));
+                "- The drop-down list of a ComboBox opens in a window of Windows; its rows and its frame are drawn by the library."));
 
             Panel scroll = UIStyles.Panels.CreateMedium();
             scroll.Dock = DockStyle.Fill;

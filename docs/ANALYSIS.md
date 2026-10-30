@@ -77,7 +77,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 
 | # | Step | Done |
 |---|---|---|
-| 7.1 | Read the whole README and the Showcase Guide page as a stranger: every example compiles and is right, every sentence is still true | [ ] |
+| 7.1 | Read the whole README and the Showcase Guide page as a stranger: every example compiles and is right, every sentence is still true | [x] All 24 examples of the README compile (checked in a project of their own against the library); all 166 names in backticks exist. Fixed: the cast of the table and the progress bar (the factories hand back the standard type), `Loc.S` of another program in the localization example, the Guide of the Showcase (`new AppForm("My App")` does not exist; the ComboBox note was out of date) |
 | 7.2 | Showcase shell: tabs, theme and accent bar, the order of the pages, the Guide; the pages build without an exception in both themes and both languages | [ ] |
 | 7.3 | `net48` equal to `net8.0-windows`: build and the whole test project on both targets | [ ] |
 | 7.4 | GDI and window handle leaks: tests that create and dispose each control a few hundred times and compare `GetGuiResources` / handle counts | [ ] |
