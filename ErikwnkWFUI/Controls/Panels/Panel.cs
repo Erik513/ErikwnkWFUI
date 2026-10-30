@@ -7,8 +7,8 @@ namespace ErikwnkWFUI.Controls
     /// <summary>
     /// The panel of <c>UIStyles.Panels</c>: the standard <see cref="Panel"/>, drawn without flicker, with the scroll bars in the
     /// style of the theme and with an optional frame in the library's color (<see cref="System.Windows.Forms.Panel.BorderStyle"/>, <see cref="BorderColor"/>).
-    /// Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is the standard control. Named <c>Panel</c> (not <c>Panel</c>) so that it does not clash with the standard class in
-    /// the files that use both namespaces; the factories hand it back as a <see cref="Panel"/>.
+    /// Everything else - <c>AutoScroll</c>, <c>AutoSize</c>, <c>BackgroundImage</c>, <c>Padding</c> - is the standard control. It has the name of the standard class: in a file that uses both namespaces name it in full
+    /// or with a <c>using</c> alias; the factories hand it back as a standard <see cref="System.Windows.Forms.Panel"/>.
     /// </summary>
     public class Panel : System.Windows.Forms.Panel
     {
@@ -25,12 +25,25 @@ namespace ErikwnkWFUI.Controls
             set { _frame.Color = value; }
         }
 
+        // The designer writes the color only where it was set (the default is followed, not stored).
+        private bool ShouldSerializeBorderColor()
+        {
+            return _frame.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            BorderColor = Color.Empty;
+        }
+
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             base.WndProc(ref m);
             _frame.AfterWindowMessage(ref m);
         }
 
+        /// <summary>Makes a panel without a frame, drawn without flicker; <c>UIStyles.Panels</c> makes the usual ones.</summary>
         public Panel()
         {
             _frame = new PanelFrame(this);

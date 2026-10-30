@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -30,6 +31,7 @@ namespace ErikwnkWFUI.Controls
         private int _cornerRadius = DefaultCornerRadius96;
         private BorderStyle _borderStyle = BorderStyle.FixedSingle;
 
+        /// <summary>Makes a card with rounded corners (8 pixels at 96 dpi) and a thin line; <c>UIStyles.Panels.CreateCardStandard</c> makes the usual ones.</summary>
         public CardPanel()
         {
             SetStyle(ControlStyleSets.OwnerDrawn | ControlStyles.SupportsTransparentBackColor, true);
@@ -47,6 +49,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         /// <summary>The radius of the rounded corners at 96 dpi (scaled with the screen); 8 by default, 0 gives square corners.</summary>
+        [DefaultValue(DefaultCornerRadius96)]
         public int CornerRadius
         {
             get { return _cornerRadius; }
@@ -63,6 +66,7 @@ namespace ErikwnkWFUI.Controls
         /// have the system draw a rectangular frame over the rounded corners (the panel's own is always none; do not set it through
         /// a <see cref="Panel"/> variable).
         /// </summary>
+        [DefaultValue(BorderStyle.FixedSingle)]
         public new BorderStyle BorderStyle
         {
             get { return _borderStyle; }
@@ -88,7 +92,19 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        // The designer writes the color only where it was set (the default is followed, not stored).
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            BorderColor = Color.Empty;
+        }
+
         // The corners show what is behind the card; the shape is painted over it.
+        /// <inheritdoc/>
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
             if (Parent != null)
@@ -105,6 +121,7 @@ namespace ErikwnkWFUI.Controls
             pevent.Graphics.SmoothingMode = previous;
         }
 
+        /// <inheritdoc/>
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);

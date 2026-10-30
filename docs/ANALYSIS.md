@@ -51,7 +51,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 3.3 | 3 | `NumericUpDown` | 98.0 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3.4 | 3 | `TrackBar` (with `ValuePopup`) | 96.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 3.5 | 3 | `VolumeControl` | 97.9 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 4.1 | 4 Containers | `Panel`, `CardPanel`, `PanelFrame` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 4.1 | 4 Containers | `Panel`, `CardPanel`, `PanelFrame` | 100 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 4.2 | 4 | `FlowLayoutPanel` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.3 | 4 | `TableLayoutPanel` (with `CellBorderLines`) | 99.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 4.4 | 4 | `MultiPanel` | 100.0 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

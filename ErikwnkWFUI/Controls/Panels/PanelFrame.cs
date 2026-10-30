@@ -36,6 +36,12 @@ namespace ErikwnkWFUI.Controls
                 NativeControlTheme.PaintScrollBarCorner(_panel);
         }
 
+        /// <summary>Whether a color was set (else the frame follows the theme).</summary>
+        public bool IsSet
+        {
+            get { return _color.IsSet; }
+        }
+
         /// <summary>The color of the frame; follows the theme until it is set.</summary>
         public Color Color
         {

@@ -481,4 +481,36 @@ public class PanelBorderTests : IDisposable
         Assert.Equal(Color.Magenta.ToArgb(), Opaque(picture.GetPixel(columns[0], rows[1] + 3)).ToArgb());
         Assert.Equal(Color.Magenta.ToArgb(), Opaque(picture.GetPixel(columns[1], rows[1] + 3)).ToArgb());
     }
+
+    [Fact]
+    public void TheDesigner_WritesTheBorderColorOnlyWhereItWasSet_ForThePanelAndTheCard()
+    {
+        foreach (Control control in new Control[] { new ErikwnkWFUI.Controls.Panel(), new CardPanel() })
+        {
+            using (control)
+            {
+                System.ComponentModel.PropertyDescriptor property = System.ComponentModel.TypeDescriptor.GetProperties(control)["BorderColor"]!;
+
+                Assert.False(property.ShouldSerializeValue(control), control.GetType().Name + " writes the color of the theme");
+
+                property.SetValue(control, Color.Magenta);
+                Assert.True(property.ShouldSerializeValue(control));
+
+                property.ResetValue(control);
+                Assert.False(property.ShouldSerializeValue(control));
+            }
+        }
+    }
+
+    [Fact]
+    public void TheDefaultsTheDesignerKnows_AreTheOnesTheCardHas()
+    {
+        using CardPanel card = new CardPanel();
+
+        foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(card))
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(card)), property.Name + " is not its default");
+        }
+    }
 }
