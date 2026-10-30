@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
@@ -144,6 +145,8 @@ namespace ErikwnkWFUI.Forms
         /// when it has one, else the accent. Once the task has ended the bar is green (<see cref="Succeed"/>) or red (<see cref="Fail"/>) whatever this is.
         /// Set it on the thread of the window.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet BarColors
         {
             get { return _barColors; }
@@ -171,6 +174,8 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>The text above the bar ("Downloading ..."); the window grows or shrinks to it. Can be set from any thread.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public string Status
         {
             get { lock (_lock) return _status; }
@@ -192,6 +197,7 @@ namespace ErikwnkWFUI.Forms
         /// How far the task has come, 0 to 100 (a value outside is cut to it); setting it turns <see cref="IsIndeterminate"/> off. Can be set from
         /// any thread. Once the task has ended (<see cref="Succeed"/>, <see cref="Fail"/>) nothing changes any more: late reports are ignored.
         /// </summary>
+        [DefaultValue(0)]
         public int Percent
         {
             get { lock (_lock) return _percent; }
@@ -211,6 +217,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the bar just moves, because nobody can tell how long the task takes (the percentage is not shown then).</summary>
+        [DefaultValue(false)]
         public bool IsIndeterminate
         {
             get { lock (_lock) return _indeterminate; }
@@ -229,6 +236,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the percentage is written on the bar (the default); a bar that just moves has none.</summary>
+        [DefaultValue(true)]
         public bool ShowPercentage
         {
             get { return _showPercentage; }
@@ -243,6 +251,7 @@ namespace ErikwnkWFUI.Forms
         /// Whether a gray line under the bar says how much time has passed and - when the percentage is known and the task has been running for
         /// a moment - how much is left, as an estimate ("0:12 elapsed · about 0:35 left"). Off by default.
         /// </summary>
+        [DefaultValue(false)]
         public bool ShowTime
         {
             get { return _showTime; }
@@ -258,6 +267,7 @@ namespace ErikwnkWFUI.Forms
         /// Whether the window has a Cancel button, which Escape presses too. Cancelling only asks: <see cref="IsCancelled"/> and
         /// <see cref="CancellationToken"/> say so, and the task stops and the program closes the window.
         /// </summary>
+        [DefaultValue(false)]
         public bool Cancelable
         {
             get { return _cancelable; }
@@ -284,18 +294,24 @@ namespace ErikwnkWFUI.Forms
         }
 
         /// <summary>Whether the user has asked to stop.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsCancelled
         {
             get { return _cancellation.IsCancellationRequested; }
         }
 
         /// <summary>Is cancelled when the user asks to stop: give it to the task, which looks at it (or passes it on) and ends.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public CancellationToken CancellationToken
         {
             get { return _cancellation.Token; }
         }
 
         /// <summary>Whether the task is still running or has ended with <see cref="Succeed"/> or <see cref="Fail"/>.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ProgressState State
         {
             get { lock (_lock) return _state; }
@@ -569,6 +585,7 @@ namespace ErikwnkWFUI.Forms
                 : string.Format("{0}:{1:00}", duration.Minutes, duration.Seconds);
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -591,6 +608,7 @@ namespace ErikwnkWFUI.Forms
                 FormTitle = UIStrings.Get("ProgressForm.Title");
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -620,6 +638,7 @@ namespace ErikwnkWFUI.Forms
             return Dpi.Scale(this, value96, _dpiOverride);
         }
 
+        /// <inheritdoc/>
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);
