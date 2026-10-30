@@ -250,4 +250,20 @@ public class VolumeControlEdgeCaseTests
         Assert.True(control.IsDisposed);
         host.Dispose();
     }
+
+    [Fact]
+    public void TheDefaultsTheDesignerKnows_AreTheOnesTheControlHas_AndTheColorsAreCode()
+    {
+        using VolumeControl control = new VolumeControl();
+        System.ComponentModel.PropertyDescriptorCollection properties = System.ComponentModel.TypeDescriptor.GetProperties(control);
+
+        Assert.False(properties["Colors"]!.IsBrowsable);
+        Assert.False(properties["Target"]!.IsBrowsable);
+
+        foreach (System.ComponentModel.PropertyDescriptor property in properties)
+        {
+            if (property.Attributes[typeof(System.ComponentModel.DefaultValueAttribute)] is System.ComponentModel.DefaultValueAttribute attribute)
+                Assert.True(Equals(attribute.Value, property.GetValue(control)), property.Name + " is not its default");
+        }
+    }
 }

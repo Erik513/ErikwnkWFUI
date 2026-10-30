@@ -54,6 +54,7 @@ namespace ErikwnkWFUI.Controls
         // The number beside the slider; made when ShowPercentage is first switched on.
         private Label _percent;
 
+        /// <summary>Makes a control 150 x 30 pixels at full volume, not muted; <c>UIStyles.VolumeControls</c> makes the usual ones.</summary>
         public VolumeControl()
         {
             BackColor = Color.Transparent;
@@ -249,6 +250,7 @@ namespace ErikwnkWFUI.Controls
             _slider.StepByWheel(e.Delta);
         }
 
+        /// <inheritdoc/>
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
@@ -325,6 +327,7 @@ namespace ErikwnkWFUI.Controls
                 PerformLayout();
         }
 
+        /// <inheritdoc/>
         protected override void OnLayout(LayoutEventArgs levent)
         {
             base.OnLayout(levent);
@@ -357,6 +360,7 @@ namespace ErikwnkWFUI.Controls
             _slider.SetBounds(left, (height - sliderHeight) / 2, Math.Max(1, ClientSize.Width - left - percentWidth), sliderHeight);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
