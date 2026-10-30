@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Controls;
@@ -48,6 +49,8 @@ namespace ErikwnkWFUI.Forms
         private string _cancelText;
 
         /// <summary>Add your option rows here, then call <see cref="FitToContent"/>.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public PropertyTable PropertyTable
         {
             get { return _propertyTable; }
@@ -83,6 +86,7 @@ namespace ErikwnkWFUI.Forms
         /// closes it with the close button of the title bar or Escape, and there is no Enter and Escape handling of buttons. The options of the
         /// library that were chosen stay then.
         /// </summary>
+        [DefaultValue(true)]
         public bool ShowButtons
         {
             get { return _showButtons; }
@@ -207,6 +211,7 @@ namespace ErikwnkWFUI.Forms
             RefreshOptionTexts();
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -235,6 +240,7 @@ namespace ErikwnkWFUI.Forms
             return Dpi.Scale(this, value96, _dpiOverride);
         }
 
+        /// <inheritdoc/>
         protected override void OnDpiChanged(DpiChangedEventArgs e)
         {
             base.OnDpiChanged(e);

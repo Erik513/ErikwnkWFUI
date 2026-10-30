@@ -11,7 +11,10 @@ namespace ErikwnkWFUI.Styles
     /// <summary>The two ready-made themes by name, so they can be kept in a settings file.</summary>
     public enum UIThemeKind
     {
+        /// <summary>The dark theme.</summary>
         Dark,
+
+        /// <summary>The light theme.</summary>
         Light
     }
 

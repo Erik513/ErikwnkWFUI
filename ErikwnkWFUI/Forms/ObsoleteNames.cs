@@ -61,6 +61,8 @@ namespace ErikwnkWFUI.Forms
     [Obsolete("Use OptionsForm (the same).")]
     public class StyledOptionsForm : OptionsForm
     {
+        /// <summary>Makes an options window; the same as <see cref="OptionsForm"/>.</summary>
+        /// <param name="title">The title of the window.</param>
         public StyledOptionsForm(string title = "Options")
             : base(title)
         {

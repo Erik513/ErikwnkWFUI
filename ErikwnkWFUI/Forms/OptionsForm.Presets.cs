@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -54,24 +55,32 @@ namespace ErikwnkWFUI.Forms
         private bool _originalTopMost;
 
         /// <summary>The theme that is applied now (dark or light).</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorTheme SelectedTheme
         {
             get { return UIColors.IsLight(UIColors.BackgroundMedium) ? UIThemes.Light : UIThemes.Dark; }
         }
 
         /// <summary>The accent color that is applied now.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Color SelectedAccentColor
         {
             get { return UIColors.Primary; }
         }
 
         /// <summary>The language of the library that is applied now.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UILanguage SelectedLanguage
         {
             get { return UIStrings.Language; }
         }
 
         /// <summary>Whether the program is to start with Windows: what the switch says (written when the user saves), or - without that option - what Windows has.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SelectedStartWithWindows
         {
             get { return _startSwitch != null ? _startSwitch.Checked : WindowsAutoStart.IsEnabled(); }
@@ -81,18 +90,22 @@ namespace ErikwnkWFUI.Forms
         /// Arguments the program is started with when it starts with Windows (null: none), so it can tell that it was not started by the user
         /// - to stay in the tray, say. Used when <see cref="OptionsPreset.StartWithWindows"/> is saved.
         /// </summary>
+        [DefaultValue(null)]
         public string StartWithWindowsArguments { get; set; }
 
         /// <summary>
         /// Whether the window tells the user by a toast, in the language of the library, that the settings were saved ("Settings saved", over the
         /// window that owns this one - none without an owner) and that the defaults were restored (over this window). The default.
         /// </summary>
+        [DefaultValue(true)]
         public bool ShowToasts { get; set; } = true;
 
         /// <summary>Raised after the button of <see cref="OptionsPreset.ResetToDefaults"/> has put the options of the library back: reset your own rows here.</summary>
         public event EventHandler DefaultsRestored;
 
         /// <summary>Whether the window that owns this one (the main window) is always on top now.</summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool SelectedAlwaysOnTop
         {
             get
@@ -292,6 +305,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         // The owner (the window the always-on-top switch acts on) is only known when the window is shown, not when it is made.
+        /// <inheritdoc/>
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
@@ -299,6 +313,7 @@ namespace ErikwnkWFUI.Forms
         }
 
         // Closed without Save: what the user tried is taken back.
+        /// <inheritdoc/>
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
             base.OnFormClosed(e);
