@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -83,6 +84,10 @@ namespace ErikwnkWFUI.Controls
         private readonly Timer _toggleDeselectSettleTimer;
         private int _toggleDeselectWatchIndex = -1;
         private bool _isRowRangeDragging;
+
+        // Where the mouse is and which buttons are down (the tests put them elsewhere).
+        internal Func<Point> CursorPosition = () => Cursor.Position;
+        internal Func<MouseButtons> PressedButtons = () => Control.MouseButtons;
         private int _rowRangeDragAnchorIndex = -1;
         private int _rowRangeDragLastAppliedIndex = -1;
         private readonly Timer _rowRangeDragPollTimer;
@@ -134,6 +139,7 @@ namespace ErikwnkWFUI.Controls
         /// a real <c>SmallImageList</c> for per-item icons while this is
         /// set; the two would fight over the same slot.
         /// </summary>
+        [DefaultValue(0)]
         public int RowHeight
         {
             get { return _rowHeightImageList?.ImageSize.Height ?? 0; }
@@ -158,6 +164,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Makes a list of rows with columns in the library's look; <c>UIStyles.ListViews</c> makes the usual ones.</summary>
         public ListView()
         {
             // The system's own dark scroll bars on a dark theme. The other dark style for lists (ItemsView) would make
@@ -178,7 +185,7 @@ namespace ErikwnkWFUI.Controls
             DragDropSupport.EnableDropIfSta(this);
             BorderStyle = BorderStyle.None;
             base.BackColor = UIColors.BackgroundDark;
-            ForeColor = RowForeColor;
+            base.ForeColor = RowForeColor;
             Font = UIFonts.Normal;
             // Clickable, so that ColumnClick is raised for sorting (SortingEnabled); the owner-drawn header has no native
             // "pressed" look.
@@ -223,6 +230,7 @@ namespace ErikwnkWFUI.Controls
             _outsideClickDeselectFilter = new OutsideClickFilter(IsOutsideClickThatDeselects, DeselectAll, leftButtonOnly: true);
         }
 
+        /// <inheritdoc/>
         protected override void Dispose(bool disposing)
         {
             if (disposing)
@@ -243,6 +251,7 @@ namespace ErikwnkWFUI.Controls
             base.Dispose(disposing);
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -276,6 +285,7 @@ namespace ErikwnkWFUI.Controls
             BeginInvoke(new MethodInvoker(Invalidate));
         }
 
+        /// <inheritdoc/>
         protected override void OnHandleDestroyed(EventArgs e)
         {
             _headerInputSubclass?.ReleaseHandle();
@@ -287,6 +297,7 @@ namespace ErikwnkWFUI.Controls
 
         // Scrolling can leave a stray gray edge behind for a frame (native partial-repaint artifact on an owner-drawn
         // control) - forcing a full repaint on every scroll message gets rid of it.
+        /// <inheritdoc/>
         protected override void WndProc(ref Message m)
         {
             if (m.Msg == WM_VSCROLL || m.Msg == WM_HSCROLL || m.Msg == WM_MOUSEWHEEL)

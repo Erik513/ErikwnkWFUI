@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System.ComponentModel;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace ErikwnkWFUI.Controls
         /// to true. Turn a single column off instead via
         /// <see cref="SetColumnSortable"/> if only that one shouldn't sort.
         /// </summary>
+        [DefaultValue(true)]
         public bool SortingEnabled { get; set; } = true;
 
         /// <summary>
@@ -36,6 +38,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>Whether a click on the header of this column sorts the list by it (see <see cref="SortingEnabled"/> and <see cref="SetColumnSortable"/>).</summary>
         public bool IsColumnSortable(int columnIndex)
         {
             return SortingEnabled && !_nonSortableColumns.Contains(columnIndex);
@@ -58,6 +61,7 @@ namespace ErikwnkWFUI.Controls
             SortComparerRegistry.Set(_columnSortComparers, column, comparer);
         }
 
+        /// <inheritdoc/>
         protected override void OnColumnClick(ColumnClickEventArgs e)
         {
             base.OnColumnClick(e);

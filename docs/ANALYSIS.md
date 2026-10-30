@@ -61,7 +61,7 @@ Coverage before the work: the column "Cov. before" is the first full run of `too
 | 4.8 | 4 | ToolTips (`UIStyles.ToolTips`, `FullTextToolTip`, `ToolTipActivationFix`) | 98.1 % | [x] | [x] | [x] | - | [x] | - | [x] |
 | 4.9 | 4 | `TitleBarControl` | 98.4 % | [x] | [x] | [x] | [x] | [x] | - | [x] |
 | 5.1 | 5 Lists and tables | `ListBox`, `TitledListBox` | 89.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
-| 5.2 | 5 | `ListView` | 61.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
+| 5.2 | 5 | `ListView` | 88.4 % | [x] | [x] | [x] | [x] | [x] | [x] | [x] |
 | 5.3 | 5 | `DataGridView`, `ReadOnlyDataGridView` (with the column helpers) | 85.1 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 5.4 | 5 | `PropertyTable`, `PropertyRow`, `PropertyColumn` | 94.4 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |
 | 6.1 | 6 Windows | `AppForm`, `FormOptions`, `FormSize`, `FormDragHandle`, `BorderlessResizeHandler` | 83.6 % | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] | [ ] |

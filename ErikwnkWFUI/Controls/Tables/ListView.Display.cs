@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using ErikwnkWFUI.Helpers;
@@ -23,6 +24,7 @@ namespace ErikwnkWFUI.Controls
         /// <see cref="AllowColumnReordering"/> and <see cref="AllowSelection"/> where the list only shows). A column
         /// that is made wider makes the list wider (<see cref="AllowColumnResizing"/> keeps them as they are).
         /// </summary>
+        [DefaultValue(0)]
         public int FixedRowCount
         {
             get { return _fixedRowCount; }
@@ -41,6 +43,7 @@ namespace ErikwnkWFUI.Controls
         /// content (a vertical one makes the list wider, a horizontal one higher, as far as the maximum allows),
         /// so it never covers part of the content. Off by default. <see cref="FixedRowCount"/> overrules it.
         /// </summary>
+        [DefaultValue(false)]
         public bool AutoSizeToContent
         {
             get { return _autoSizeToContent; }
@@ -51,6 +54,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         public override Size MaximumSize
         {
             get { return base.MaximumSize; }
@@ -71,6 +75,7 @@ namespace ErikwnkWFUI.Controls
         /// Whether a row can be selected (by the mouse or the keyboard). True by default; a list that only shows
         /// its rows can turn it off, so a click does not highlight anything.
         /// </summary>
+        [DefaultValue(true)]
         public bool AllowSelection
         {
             get { return _allowSelection; }
@@ -83,6 +88,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
         {
             base.OnItemSelectionChanged(e);
@@ -92,6 +98,7 @@ namespace ErikwnkWFUI.Controls
         }
 
         // A list that is as big as its content is always exactly that, whatever size is asked for.
+        /// <inheritdoc/>
         protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
         {
             if (IsSizedToContent)
@@ -133,6 +140,7 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <inheritdoc/>
         protected override void OnFontChanged(EventArgs e)
         {
             // The bold header font of the old font is not the one for the new.
@@ -143,6 +151,7 @@ namespace ErikwnkWFUI.Controls
             RequestFixedSize();
         }
 
+        /// <inheritdoc/>
         protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
         {
             base.OnColumnWidthChanged(e);

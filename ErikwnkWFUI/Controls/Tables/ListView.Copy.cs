@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -15,6 +16,7 @@ namespace ErikwnkWFUI.Controls
     {
 
         /// <summary>How a Ctrl+C/Ctrl+Shift+C copy is confirmed. Defaults to <see cref="CopyConfirmationStyle.Toast"/> (unchanged from before this existed).</summary>
+        [DefaultValue(CopyConfirmationStyle.Toast)]
         public CopyConfirmationStyle CopyConfirmation { get; set; } = CopyConfirmationStyle.Toast;
 
         /// <summary>
@@ -22,6 +24,8 @@ namespace ErikwnkWFUI.Controls
         /// <c>UIStyles.Colors.CreateSet(color)</c> or a <c>Color</c>), null for the neutral gray. Until it is set it follows the look of the list:
         /// gray for the standard one, the color of the set of <c>CreateStandard(colors)</c>, the accent for <c>CreatePrimary</c>.
         /// </summary>
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public UIColorSet ToastColors
         {
             get { return _toastColors.Value; }
@@ -31,6 +35,7 @@ namespace ErikwnkWFUI.Controls
         private readonly ColorSetHolder _toastColors = new ColorSetHolder();
 
         /// <summary>Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default.</summary>
+        [DefaultValue(true)]
         public bool DeselectOnOutsideClick { get; set; } = true;
 
         // The menu has the shape and the wording of the DataGridViews': Copy, Copy with header | Copy all, Copy all with

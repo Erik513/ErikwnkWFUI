@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ namespace ErikwnkWFUI.Controls
         /// whichever this allows; false overrides everything. Defaults to
         /// true.
         /// </summary>
+        [DefaultValue(true)]
         public bool AllowColumnResizing
         {
             get => _columnResizing.AllowedByDefault;
@@ -40,6 +42,7 @@ namespace ErikwnkWFUI.Controls
         /// column among whichever this allows; false overrides everything.
         /// Defaults to true.
         /// </summary>
+        [DefaultValue(true)]
         public bool AllowColumnReordering
         {
             get => _columnReordering.AllowedByDefault;
@@ -56,6 +59,7 @@ namespace ErikwnkWFUI.Controls
             _columnResizing.SetAllowed(columnIndex, resizable);
         }
 
+        /// <summary>Whether the user can resize this column with the mouse (see <see cref="AllowColumnResizing"/> and <see cref="SetColumnResizable"/>).</summary>
         public bool IsColumnResizable(int columnIndex)
         {
             return _columnResizing.IsAllowed(columnIndex);
@@ -71,6 +75,7 @@ namespace ErikwnkWFUI.Controls
             _columnReordering.SetAllowed(columnIndex, reorderable);
         }
 
+        /// <summary>Whether the user can drag this column to another place (see <see cref="AllowColumnReordering"/> and <see cref="SetColumnReorderable"/>).</summary>
         public bool IsColumnReorderable(int columnIndex)
         {
             return _columnReordering.IsAllowed(columnIndex);
@@ -217,6 +222,7 @@ namespace ErikwnkWFUI.Controls
             _headerInputSubclass?.InvalidateHeaderNow();
         }
 
+        /// <inheritdoc/>
         protected override void OnDragOver(DragEventArgs drgevent)
         {
             var point = PointToClient(new Point(drgevent.X, drgevent.Y));
@@ -230,6 +236,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDragOver(drgevent);
         }
 
+        /// <inheritdoc/>
         protected override void OnDragDrop(DragEventArgs drgevent)
         {
             if (_columnDrag.HasTarget)
@@ -240,6 +247,7 @@ namespace ErikwnkWFUI.Controls
             base.OnDragDrop(drgevent);
         }
 
+        /// <inheritdoc/>
         protected override void OnGiveFeedback(GiveFeedbackEventArgs gfbevent)
         {
             gfbevent.UseDefaultCursors = false;

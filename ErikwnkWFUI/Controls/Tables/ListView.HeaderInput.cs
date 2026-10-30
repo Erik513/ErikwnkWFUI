@@ -54,11 +54,11 @@ namespace ErikwnkWFUI.Controls
                 {
                     if (m.Msg == WM_MOUSEMOVE || m.Msg == WM_LBUTTONUP)
                     {
-                        if (m.Msg == WM_LBUTTONUP || (Control.MouseButtons & MouseButtons.Left) != 0)
+                        if (m.Msg == WM_LBUTTONUP || (_owner.PressedButtons() & MouseButtons.Left) != 0)
                         {
                             ApplyResize();
                         }
-                        if (m.Msg == WM_LBUTTONUP || (Control.MouseButtons & MouseButtons.Left) == 0)
+                        if (m.Msg == WM_LBUTTONUP || (_owner.PressedButtons() & MouseButtons.Left) == 0)
                         {
                             EndResize();
                         }
@@ -77,7 +77,7 @@ namespace ErikwnkWFUI.Controls
                 // (see below) let the resize cursor flicker in between.
                 // The mouse move at such a divider is not handed to the header at all (it would set its resize
                 // cursor on the way): no button is down then, so there is nothing for it to track.
-                if (m.Msg == WM_MOUSEMOVE && _resizingColumn == null && (Control.MouseButtons & MouseButtons.Left) == 0
+                if (m.Msg == WM_MOUSEMOVE && _resizingColumn == null && (_owner.PressedButtons() & MouseButtons.Left) == 0
                     && _owner.IsNearNonResizableColumnBorder(GetX(m.LParam)))
                 {
                     Cursor.Current = Cursors.Default;
@@ -171,7 +171,7 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 _resizingColumn = _owner.Columns[hit.Item];
-                _resizeStartScreenX = Cursor.Position.X;
+                _resizeStartScreenX = _owner.CursorPosition().X;
                 _resizeStartWidth = _resizingColumn.Width;
                 SetCapture(Handle);
                 Cursor.Current = Cursors.SizeWE;
@@ -189,7 +189,7 @@ namespace ErikwnkWFUI.Controls
 
                 // A scrolling header changes client coordinates; screen deltas stay 1:1.
                 int width = Math.Max(_owner.GetEffectiveMinimumWidth(column.Index),
-                    _resizeStartWidth + Cursor.Position.X - _resizeStartScreenX);
+                    _resizeStartWidth + _owner.CursorPosition().X - _resizeStartScreenX);
                 if (column.Width != width)
                 {
                     column.Width = width;
@@ -220,7 +220,7 @@ namespace ErikwnkWFUI.Controls
                 if (!GetWindowRect(Handle, out NativeRect window))
                     return false;
 
-                return _owner.IsNearNonResizableColumnBorder(Cursor.Position.X - window.Left);
+                return _owner.IsNearNonResizableColumnBorder(_owner.CursorPosition().X - window.Left);
             }
 
             // The mouse move itself sets the header's resize cursor too, so the arrow is set again after it.
@@ -259,12 +259,12 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 _pendingColumnIndex = clickedColumn.Index;
-                _pendingStartX = Cursor.Position.X;
+                _pendingStartX = _owner.CursorPosition().X;
             }
 
             private void OnMouseMove()
             {
-                if ((Control.MouseButtons & MouseButtons.Left) == 0)
+                if ((_owner.PressedButtons() & MouseButtons.Left) == 0)
                 {
                     CancelPendingReorder();
                     return;
@@ -276,7 +276,7 @@ namespace ErikwnkWFUI.Controls
                 }
 
                 // (The screen position is used: the header's own coordinates move when the list scrolls during the drag.)
-                if (Math.Abs(Cursor.Position.X - _pendingStartX) < SystemInformation.DragSize.Width)
+                if (Math.Abs(_owner.CursorPosition().X - _pendingStartX) < SystemInformation.DragSize.Width)
                 {
                     return;
                 }

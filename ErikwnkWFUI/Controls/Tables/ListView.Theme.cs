@@ -20,6 +20,144 @@ namespace ErikwnkWFUI.Controls
             }
         }
 
+        /// <summary>The text color of the rows (see <see cref="RowForeColor"/>, the same color); follows the theme until it is set.</summary>
+        public override Color ForeColor
+        {
+            get { return base.ForeColor; }
+            set
+            {
+                base.ForeColor = value;
+
+                if (!value.IsEmpty)
+                    _rowForeColor.Set(value);
+            }
+        }
+
+        // The designer writes a color or the font only where it was set (the defaults follow the theme, they are not stored); Reset gives the default back.
+        private bool ShouldSerializeRowBackColor()
+        {
+            return _rowBackColor.IsSet;
+        }
+
+        private void ResetRowBackColor()
+        {
+            _rowBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeSelectionOverlayColor()
+        {
+            return _selectionOverlayColor.IsSet;
+        }
+
+        private void ResetSelectionOverlayColor()
+        {
+            _selectionOverlayColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeColumnReorderIndicatorColor()
+        {
+            return _columnReorderIndicatorColor.IsSet;
+        }
+
+        private void ResetColumnReorderIndicatorColor()
+        {
+            _columnReorderIndicatorColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeBorderColor()
+        {
+            return _borderColor.IsSet;
+        }
+
+        private void ResetBorderColor()
+        {
+            _borderColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeContextMenuSelectionColor()
+        {
+            return _contextMenuSelectionColor.IsSet;
+        }
+
+        private void ResetContextMenuSelectionColor()
+        {
+            _contextMenuSelectionColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeHeaderBackColor()
+        {
+            return _headerBackColor.IsSet;
+        }
+
+        private void ResetHeaderBackColor()
+        {
+            _headerBackColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeHeaderForeColor()
+        {
+            return _headerForeColor.IsSet;
+        }
+
+        private void ResetHeaderForeColor()
+        {
+            _headerForeColor.Reset();
+            Invalidate();
+        }
+
+        private bool ShouldSerializeRowForeColor()
+        {
+            return _rowForeColor.IsSet;
+        }
+
+        private void ResetRowForeColor()
+        {
+            _rowForeColor.Reset();
+            base.ForeColor = RowForeColor;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeForeColor()
+        {
+            return _rowForeColor.IsSet;
+        }
+
+        private void ResetForeColor()
+        {
+            _rowForeColor.Reset();
+            base.ForeColor = RowForeColor;
+            Invalidate();
+        }
+
+        private bool ShouldSerializeBackColor()
+        {
+            return _backColorWasSet;
+        }
+
+        private void ResetBackColor()
+        {
+            _backColorWasSet = false;
+            base.BackColor = UIColors.BackgroundDark;
+        }
+
+        private bool ShouldSerializeHeaderFont()
+        {
+            return _headerFontOverride != null;
+        }
+
+        private void ResetHeaderFont()
+        {
+            _headerFontOverride = null;
+            Invalidate();
+            RequestFixedSize();
+        }
+
         // The theme or the accent changed while the list is shown: what was not set by hand follows (the scroll bars
         // and the header's style through NativeControlTheme.Track), the list is painted anew.
         private void OnThemeChanged()
@@ -28,7 +166,7 @@ namespace ErikwnkWFUI.Controls
                 base.BackColor = UIColors.BackgroundDark;
 
             if (!_rowForeColor.IsSet)
-                ForeColor = RowForeColor;
+                base.ForeColor = RowForeColor;
 
             Invalidate(true);
         }
@@ -375,6 +513,7 @@ namespace ErikwnkWFUI.Controls
             return Enabled ? normalColor : UIColors.DisabledGray;
         }
 
+        /// <inheritdoc/>
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);

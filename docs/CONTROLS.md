@@ -222,6 +222,7 @@ Made by `UIStyles.ListViews` (see the end of this file).
 | `CopyConfirmation` | `CopyConfirmationStyle` | `Toast` | get, set | How a Ctrl+C/Ctrl+Shift+C copy is confirmed. Defaults to `Toast` (unchanged from before this existed). |
 | `DeselectOnOutsideClick` | `bool` | `true` | get, set | Whether a click with the left mouse button somewhere else in the window (not on a button, a tool bar or a menu) takes the selection away. On by default. |
 | `FixedRowCount` | `int` | `0` | get, set | The number of rows the list has room for: 0 (the default) is an ordinary list, one that is as big as it is made and scrolls. More than 0 makes it a display: it is exactly as wide as its columns and as high as the header and this many rows, whatever size it is given, so it never needs a scroll bar (a `MaximumSize` still limits it, as it does any control). Everything that does not change that size stays as it is: sorting, reordering the columns, selecting (switch them off with `SortingEnabled`, `AllowColumnReordering` and `AllowSelection` where the list only shows). A column that is made wider makes the list wider (`AllowColumnResizing` keeps them as they are). |
+| `ForeColor` | `Color` | `#F0F0F0` | get, set | The text color of the rows (see `RowForeColor`, the same color); follows the theme until it is set. |
 | `HeaderBackColor` | `Color` | `#191919` | get, set | Background color of the column header row. |
 | `HeaderFont` | `Font` | - | get, set | Font for the column header row - defaults to a bold version of `Font` if never set. Setting this to a larger size is also the way to make the native header band itself taller (there's no direct "header height" API on the underlying Win32 header control - it sizes itself from its own font metrics, same as row height below). The list holds the font it returns: a font that was set stays the caller's to dispose, one the list made goes with it - do not dispose what is read here. |
 | `HeaderForeColor` | `Color` | `#8C8C8C` | get, set | Text color of the column header row. |
@@ -237,9 +238,9 @@ Made by `UIStyles.ListViews` (see the end of this file).
 | Method | Description |
 |---|---|
 | `AutoFitColumnsToContent()` | Sizes every column to fit its current content and header text. Call this again after rebuilding the rows, since content driving the "right" width may have changed. |
-| `IsColumnReorderable(int columnIndex)` |  |
-| `IsColumnResizable(int columnIndex)` |  |
-| `IsColumnSortable(int columnIndex)` |  |
+| `IsColumnReorderable(int columnIndex)` | Whether the user can drag this column to another place (see `AllowColumnReordering` and `SetColumnReorderable`). |
+| `IsColumnResizable(int columnIndex)` | Whether the user can resize this column with the mouse (see `AllowColumnResizing` and `SetColumnResizable`). |
+| `IsColumnSortable(int columnIndex)` | Whether a click on the header of this column sorts the list by it (see `SortingEnabled` and `SetColumnSortable`). |
 | `SetColumnReorderable(int columnIndex, bool reorderable)` | Per-column override, independent of `AllowColumnReordering` - pins a column in place (e.g. a leading "Time" column) while the rest can still be dragged into a new order. |
 | `SetColumnResizable(int columnIndex, bool resizable)` | Per-column override, independent of `MinimumColumnWidth` - locks a column at its current width (e.g. a narrow status column) while others stay resizable. |
 | `SetColumnSortable(int columnIndex, bool sortable)` | Configurable per column, independent of `SortingEnabled` - a column can be excluded from sorting (e.g. one showing icons or actions rather than comparable data) while the rest stay sortable. |

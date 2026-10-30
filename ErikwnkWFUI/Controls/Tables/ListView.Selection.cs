@@ -150,14 +150,14 @@ namespace ErikwnkWFUI.Controls
                 return;
             }
 
-            if ((MouseButtons & MouseButtons.Left) == 0)
+            if ((PressedButtons() & MouseButtons.Left) == 0)
             {
                 _isRowRangeDragging = false;
                 _rowRangeDragPollTimer.Stop();
                 return;
             }
 
-            var location = PointToClient(Cursor.Position);
+            var location = PointToClient(CursorPosition());
 
             // (Only for the eye: GetNearestRowIndex clamps to the first and last row, the selection does not depend on this.)
             int direction = location.Y < _headerHeight ? -1 : location.Y >= ClientSize.Height ? 1 : 0;
