@@ -1,0 +1,343 @@
+﻿using System;
+using System.Drawing;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Helpers;
+using ErikwnkWFUI.Localization;
+using ErikwnkWFUI.Styles;
+
+namespace ErikwnkWFUI.Factories
+{
+    internal static class UIButtonFactory
+    {
+        private static readonly Size DefaultButtonSize = new Size(30, 30);
+
+        // 13 pt symbols on a 30 px button (UIFonts.Icon), scaled with the height.
+        private const float SymbolPointsPerPixel = 13f / 30f;
+
+        // The outline of every button except Standard. A fixed color, so
+        // they look the same on both themes (only Standard follows the theme).
+        private static readonly Color FixedBorderColor = Color.FromArgb(50, 50, 50);
+
+        // The tooltip each button got, so UpdateTooltip can change its text
+        // later (after a language switch, say).
+        private static readonly ConditionalWeakTable<Button, ToolTip> ToolTipsByButton =
+            new ConditionalWeakTable<Button, ToolTip>();
+
+        public static Button CreateStandard(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
+        {
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetStandardLook);
+        }
+
+        // A button of the title bar of a window, as in a modern window: flat, in the color of the bar (no fill and no outline of its own), with the
+        // symbol in the color of the title, and a quiet lighter or darker fill only under the mouse; the close button turns red then. The symbol is the
+        // text of a plain button, drawn as on every standard button (not by the SymbolButton). Like the buttons of a native title bar it is never
+        // given the focus (a click would leave it with the thick focus border) and not reached by the Tab key. The bar is asked again each time, so a
+        // change of the theme or of the accent is followed.
+        public static Button CreateCaptionButton(string text, string tooltip, Size size, Func<Color> bar, Func<UIColorSet> colors, bool isClose)
+        {
+            Button button = CreateButton<CaptionButton>(text, tooltip, size, false, GetCaptionLook(bar, colors, isClose));
+            button.TabStop = false;
+            button.Padding = new Padding(0);
+
+            // The symbols are drawn in the symbol font (the same for all three, whatever the text font can show: the minimize and maximize
+            // symbols are not in it, and a plain button would show a box).
+            Font font = new Font(UIStyles.Symbols.GetFontName(text), CaptionSymbolPoints);
+            button.Font = font;
+            button.Disposed += delegate { font.Dispose(); };
+
+            return button;
+        }
+
+        private const float CaptionSymbolPoints = 10f;
+        private const double CaptionHoverBlend = 0.16;
+        private const double CaptionPressedBlend = 0.30;
+        private const double CaptionTextContrast = 4.5;
+
+        private static readonly Color CaptionCloseHover = Color.FromArgb(196, 43, 28);
+        private static readonly Color CaptionClosePressed = Color.FromArgb(160, 34, 22);
+
+        private static Func<ButtonLook> GetCaptionLook(Func<Color> bar, Func<UIColorSet> getColors, bool isClose)
+        {
+            return () =>
+            {
+                Color back = bar();
+                Color text = UIColors.EnsureContrast(getColors != null ? getColors().BasicText : UIColors.TextPrimary, back, CaptionTextContrast);
+
+                if (isClose)
+                    return new ButtonLook(back, text, back, 0, CaptionCloseHover, CaptionClosePressed, hoverForeColor: Color.White, pressedForeColor: Color.White);
+
+                return new ButtonLook(
+                    back, text, back, 0,
+                    UIColors.BlendToward(back, text, CaptionHoverBlend), UIColors.BlendToward(back, text, CaptionPressedBlend),
+                    hoverForeColor: text, pressedForeColor: text);
+            };
+        }
+
+        // The neutral look: it follows the theme, so it is read again whenever the theme changes.
+        private static ButtonLook GetStandardLook()
+        {
+            return new ButtonLook(
+                UIColors.BackgroundMedium, UIColors.TextPrimary, GetStandardBorderColor(), 1,
+                UIColors.BackgroundLighter, UIColors.Primary);
+        }
+
+        // The one place a symbol button is made - UIStyles.Buttons.CreateSymbol
+        // (with a preset or with a symbol and colors) ends up here.
+        //
+        // - Look: the colors of the set, or the neutral look when there is none.
+        // - Symbol: drawn by SymbolButton, centered on what is actually visible of
+        //   the glyph. The font grows with the button: 13 pt at the standard 30 px
+        //   height, the size of UIFonts.Icon, proportionally larger or smaller
+        //   otherwise - and a bit smaller for the symbols that fill their whole cell
+        //   (UIStyles.Symbols.GetSizeFactor). Symbols from the Windows icon font get
+        //   that font instead of the usual one (UIStyles.Symbols.GetFontName decides).
+        public static Button CreateSymbol(string symbol, string tooltip, Size? size, UIColorSet colors)
+        {
+            return CreateSymbol(symbol, tooltip, size, colors == null ? (Func<UIColorSet>)null : () => colors);
+        }
+
+        // The same with a color set that is asked for again each time (the primary set follows the accent).
+        public static Button CreateSymbol(string symbol, string tooltip, Size? size, Func<UIColorSet> colors)
+        {
+            Size buttonSize = size ?? DefaultButtonSize;
+
+            // Its own kind of button: it draws the symbol itself, centered on
+            // what is actually visible of it (see SymbolButton).
+            Button button = colors != null
+                ? CreateButton<SymbolButton>(symbol, tooltip, size, true, GetColoredLook(colors, 1))
+                : CreateButton<SymbolButton>(symbol, tooltip, size, true, GetStandardLook);
+
+            float points = buttonSize.Height * SymbolPointsPerPixel * UIStyles.Symbols.GetSizeFactor(symbol);
+            string family = UIStyles.Symbols.GetFontName(symbol);
+
+            // At the standard size, in the usual symbol font and at full size, it is
+            // the shared icon font already (and a font equal to the current one would
+            // not be taken over anyway).
+            if (family == UIFonts.Icon.FontFamily.Name && Math.Abs(points - UIFonts.Icon.Size) < 0.01f)
+                return button;
+
+            Font font = new Font(family, points);
+            button.Font = font;
+            button.Disposed += delegate { font.Dispose(); };
+
+            return button;
+        }
+
+        // A button in the colors of a set: the fill and the text for every
+        // state come from the set. The outline is the fixed one, so it looks
+        // the same on both themes.
+        public static Button CreateColored(string text, string tooltip, Size? size, bool isIcon, UIColorSet colors)
+        {
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => colors, 1));
+        }
+
+        // The look of a color set. The set is asked for again whenever the theme or the accent changes (the primary set
+        // follows the accent).
+        private static Func<ButtonLook> GetColoredLook(Func<UIColorSet> getColors, int borderSize)
+        {
+            return () =>
+            {
+                UIColorSet colors = getColors();
+
+                return new ButtonLook(
+                    colors.Basic, colors.BasicText, FixedBorderColor, borderSize,
+                    colors.Hover, colors.Pressed,
+                    hoverForeColor: colors.HoverText,
+                    pressedForeColor: colors.PressedText,
+                    disabledBackColor: colors.Disabled,
+                    disabledForeColor: colors.DisabledText);
+            };
+        }
+
+        // On a dark theme the fill is told apart by a quiet outline. A light
+        // theme needs a stronger one, or the button melts into the page.
+        private static Color GetStandardBorderColor()
+        {
+            return UIColors.IsLight(UIColors.BackgroundMedium) ? UIColors.BorderLight : UIColors.BorderDark;
+        }
+
+        // Primary, Green and Red are the color sets of the same name, so their
+        // text on every state (and the disabled look) is worked out by the set -
+        // the same as CreateStandard(colors: ...) - and follows the accent for
+        // Primary, even a bright one.
+        public static Button CreatePrimary(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
+        {
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIColors.PrimarySet, 0));
+        }
+
+        public static Button CreateGreen(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
+        {
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIStyles.Colors.Sets.Green, 1));
+        }
+
+        public static Button CreateRed(string text = "", string tooltip = "", Size? size = null, bool isIcon = false)
+        {
+            return CreateButton<Button>(text, tooltip, size, isIcon, GetColoredLook(() => UIStyles.Colors.Sets.Red, 1));
+        }
+
+        // The one place a button is put together; the type says what kind (a plain button, or the SymbolButton).
+        private static TButton CreateButton<TButton>(string text, string tooltip, Size? size, bool isIcon, Func<ButtonLook> getLook)
+            where TButton : Button, new()
+        {
+            TButton button = new TButton();
+            ButtonLook look = getLook();
+
+            button.Text = text ?? "";
+            button.Size = size ?? new Size(Dpi.Scale(button, DefaultButtonSize.Width), Dpi.Scale(button, DefaultButtonSize.Height));
+            button.FlatStyle = FlatStyle.Flat;
+            button.BackColor = look.BackColor;
+            button.ForeColor = look.ForeColor;
+            button.Font = isIcon ? UIFonts.Icon : UIFonts.Normal;
+            button.TabStop = true;
+            button.Cursor = Cursors.Hand;
+            button.Margin = new Padding(0);
+            button.Padding = isIcon ? new Padding(0) : new Padding(6, 0, 6, 0);
+            button.TextAlign = ContentAlignment.MiddleCenter;
+
+            button.FlatAppearance.BorderSize = look.BorderSize;
+            button.FlatAppearance.BorderColor = look.BorderColor;
+            button.FlatAppearance.MouseOverBackColor = look.MouseOverBackColor;
+            button.FlatAppearance.MouseDownBackColor = look.MouseDownBackColor;
+
+            ButtonLookBehavior.Attach(button, getLook);
+            AddToolTip(button, tooltip);
+
+            // A button that shows only a symbol is read out as that character by a
+            // screen reader; what it does is in the tooltip.
+            if (isIcon && !string.IsNullOrWhiteSpace(tooltip))
+                button.AccessibleName = tooltip;
+
+            button.Paint += OnButtonPaint;
+
+            return button;
+        }
+
+        // The framework paints the text of a disabled button in its own embossed
+        // colors and ignores ForeColor, which comes out barely readable. So the
+        // text is drawn once more on top, in the muted color SetEnabledStyle
+        // chose. Enabled buttons draw fine on their own.
+        private static void OnButtonPaint(object sender, PaintEventArgs e)
+        {
+            Button button = (Button)sender;
+
+            if (button is SymbolButton || button.Enabled || string.IsNullOrEmpty(button.Text))
+                return;
+
+            Rectangle textArea = Rectangle.Inflate(button.ClientRectangle, -2, -2);
+
+            using (SolidBrush backBrush = new SolidBrush(button.BackColor))
+                e.Graphics.FillRectangle(backBrush, textArea);
+
+            TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis;
+
+            // A button that does not use mnemonics shows "&" as it is.
+            if (!button.UseMnemonic)
+                flags |= TextFormatFlags.NoPrefix;
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                button.Text,
+                button.Font,
+                button.ClientRectangle,
+                button.ForeColor,
+                flags);
+        }
+
+        private static void AddToolTip(Button button, string tooltip)
+        {
+            if (button == null || string.IsNullOrWhiteSpace(tooltip))
+                return;
+
+            ToolTip toolTip = UIToolTipFactory.CreateToolTip();
+            toolTip.SetToolTip(button, tooltip);
+            toolTip.ReviveOnFormActivate(button);
+            ToolTipsByButton.Add(button, toolTip);
+
+            button.Disposed += delegate
+            {
+                toolTip.Dispose();
+            };
+        }
+
+        // A symbol button that switches the theme: it shows the symbol of the theme a click leads to (the sun for the light one, the moon for
+        // the dark one), applies that theme itself, takes no focus (like a tool bar button) and follows a change of the theme - made by itself or
+        // by anything else - and of the language (its tooltip and its name for the screen reader say what a click does).
+        public static Button CreateThemeToggle(Size? size, Func<UIColorSet> colors)
+        {
+            Button button = CreateSymbol(UIStyles.Symbols.Sun, "", size, colors);
+            ((SymbolButton)button).TakeNoFocus();
+
+            Action update = () => ShowThemeToggleState(button);
+
+            button.Click += (sender, e) =>
+            {
+                UIColors.ApplyTheme(IsLightTheme() ? UIThemes.Dark : UIThemes.Light);
+                update();
+            };
+
+            ThemeWatcher.Attach(button, update);
+
+            EventHandler languageChanged = (sender, e) => update();
+            UIStrings.LanguageChanged += languageChanged;
+            button.Disposed += (sender, e) => UIStrings.LanguageChanged -= languageChanged;
+
+            update();
+
+            return button;
+        }
+
+        private static bool IsLightTheme()
+        {
+            return UIColors.IsLight(UIColors.BackgroundMedium);
+        }
+
+        // The symbol and the tooltip say what a click does: the sun switches to the light theme, the moon to the dark one.
+        private static void ShowThemeToggleState(Button button)
+        {
+            if (button.IsDisposed)
+                return;
+
+            bool toLight = !IsLightTheme();
+            string text = UIStrings.Get(toLight ? "OptionsForm.SwitchToLight" : "OptionsForm.SwitchToDark");
+
+            button.Text = toLight ? UIStyles.Symbols.Sun : UIStyles.Symbols.Moon;
+            button.AccessibleName = text;
+            UpdateTooltip(button, text);
+        }
+
+        /// <summary>
+        /// Changes an already-created button's tooltip text - e.g. to
+        /// re-translate it after a language switch. A button that was made
+        /// without a tooltip gets one with the first text that is not empty;
+        /// an empty text for a button without one does nothing.
+        /// </summary>
+        public static void UpdateTooltip(Button button, string tooltip)
+        {
+            if (button == null)
+                return;
+
+            ToolTip toolTip;
+            if (!ToolTipsByButton.TryGetValue(button, out toolTip))
+            {
+                if (string.IsNullOrWhiteSpace(tooltip))
+                    return;
+
+                AddToolTip(button, tooltip);
+
+                // A button that shows only a symbol has no other name for a screen reader (see CreateButton).
+                if (button is SymbolButton && string.IsNullOrEmpty(button.AccessibleName))
+                    button.AccessibleName = tooltip;
+
+                return;
+            }
+
+            // The accessible name is the tooltip for a symbol button: it follows.
+            if (button.AccessibleName == toolTip.GetToolTip(button))
+                button.AccessibleName = tooltip ?? "";
+
+            toolTip.SetToolTip(button, tooltip ?? "");
+        }
+    }
+}

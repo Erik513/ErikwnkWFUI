@@ -1,0 +1,58 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <RootNamespace>ErikwnkWFUI</RootNamespace>
+    <AssemblyName>ErikwnkWFUI</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <!-- Ships ErikwnkWFUI.xml next to the DLL so a consuming project sees
+         IntelliSense tooltips from this library's XML doc comments -
+         without this, /// <summary> comments only ever help someone
+         reading this source, never someone who just added a DLL
+         reference. CS1591 ("missing XML comment for publicly visible
+         type or member") is on: every public member has a comment
+         (an override may use <inheritdoc/>), so a new one without it
+         shows as a warning. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <!-- Silences CA1416 "only supported on windows" warnings on the
+       net8.0-windows leg - every WinForms API call here is already
+       Windows-only by definition on this TFM (Microsoft.NET.Sdk +
+       UseWindowsForms doesn't auto-emit the assembly-level
+       [SupportedOSPlatform] attribute the way Microsoft.NET.Sdk.WindowsDesktop
+       would), so the warning has no information value. Meaningless/ignored
+       on net48. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <SupportedOSPlatformVersion>7.0</SupportedOSPlatformVersion>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+
+  <!-- Unlike net8.0-windows, the classic .NET Framework SDK-style target
+       doesn't implicitly reference these (UseWindowsForms only covers
+       System.Windows.Forms) - same set the old-style csproj listed
+       explicitly. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <!-- ErikwnkCore is referenced as a sibling project (..\..\ErikwnkCore next
+       to this repository) on both targets. It builds for net48 and net8.0
+       itself, and brings its own package dependencies along. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\ErikwnkCore\ErikwnkCore\ErikwnkCore.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Icons\IconWeb.png" />
+    <EmbeddedResource Include="Icons\IconFolder.png" />
+    <EmbeddedResource Include="Icons\IconDocument.png" />
+    <EmbeddedResource Include="Icons\IconApplication.png" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>ErikwnkWFUI.Showcase</RootNamespace>
+    <AssemblyName>ErikwnkWFUI.Showcase</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ErikwnkWFUI\ErikwnkWFUI.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,60 @@
+﻿using System.Drawing;
+
+namespace ErikwnkWFUI.Styles
+{
+    /// <summary>
+    /// The set of base surface colors (backgrounds, text, borders, hover/active
+    /// tints) that make up a theme - everything except the accent color, which
+    /// is set independently via <see cref="UIColors.SetAccent"/> so any accent
+    /// can be combined with either theme. Property names describe each color's
+    /// role (e.g. "the default control surface"), not its literal shade - in
+    /// <see cref="UIThemes.Light"/>, "BackgroundLighter" still means "the most
+    /// raised/active surface", even though it holds a darker RGB value than
+    /// "BackgroundMedium" there (you can't go lighter than white, so the light
+    /// theme's hover/press feedback works by adding a bit of gray instead).
+    /// Defaults to today's dark values, so creating one and overriding just a
+    /// few properties still yields a complete, usable theme.
+    /// </summary>
+    public class UIColorTheme
+    {
+        /// <summary>The value of <see cref="UIColors.BackgroundBlack"/> in this theme.</summary>
+        public Color BackgroundBlack { get; set; } = Color.FromArgb(10, 10, 10);
+        /// <summary>The value of <see cref="UIColors.BackgroundDark"/> in this theme.</summary>
+        public Color BackgroundDark { get; set; } = Color.FromArgb(20, 20, 20);
+        /// <summary>The value of <see cref="UIColors.BackgroundDarkElevated"/> in this theme.</summary>
+        public Color BackgroundDarkElevated { get; set; } = Color.FromArgb(25, 25, 25);
+        /// <summary>The value of <see cref="UIColors.BackgroundMedium"/> in this theme.</summary>
+        public Color BackgroundMedium { get; set; } = Color.FromArgb(35, 35, 35);
+        /// <summary>The value of <see cref="UIColors.BackgroundMediumElevated"/> in this theme.</summary>
+        public Color BackgroundMediumElevated { get; set; } = Color.FromArgb(40, 40, 40);
+        /// <summary>The value of <see cref="UIColors.BackgroundLight"/> in this theme.</summary>
+        public Color BackgroundLight { get; set; } = Color.FromArgb(50, 50, 50);
+        /// <summary>The value of <see cref="UIColors.BackgroundLighter"/> in this theme.</summary>
+        public Color BackgroundLighter { get; set; } = Color.FromArgb(60, 60, 60);
+
+        /// <summary>The value of <see cref="UIColors.TextPrimary"/> in this theme.</summary>
+        public Color TextPrimary { get; set; } = Color.FromArgb(240, 240, 240);
+        /// <summary>The value of <see cref="UIColors.TextPrimaryDim"/> in this theme.</summary>
+        public Color TextPrimaryDim { get; set; } = Color.FromArgb(220, 220, 220);
+        /// <summary>The value of <see cref="UIColors.TextSecondary"/> in this theme.</summary>
+        public Color TextSecondary { get; set; } = Color.FromArgb(180, 180, 180);
+        /// <summary>The value of <see cref="UIColors.TextTertiary"/> in this theme.</summary>
+        public Color TextTertiary { get; set; } = Color.FromArgb(140, 140, 140);
+        /// <summary>The value of <see cref="UIColors.TextDisabled"/> in this theme.</summary>
+        public Color TextDisabled { get; set; } = Color.FromArgb(110, 110, 110);
+        /// <summary>The value of <see cref="UIColors.TextMuted"/> in this theme.</summary>
+        public Color TextMuted { get; set; } = Color.FromArgb(120, 120, 120);
+
+        /// <summary>The value of <see cref="UIColors.BorderDark"/> in this theme.</summary>
+        public Color BorderDark { get; set; } = Color.FromArgb(50, 50, 50);
+        /// <summary>The value of <see cref="UIColors.BorderMedium"/> in this theme.</summary>
+        public Color BorderMedium { get; set; } = Color.FromArgb(70, 70, 70);
+        /// <summary>The value of <see cref="UIColors.BorderLight"/> in this theme.</summary>
+        public Color BorderLight { get; set; } = Color.FromArgb(90, 90, 90);
+
+        /// <summary>The value of <see cref="UIColors.HoverOverlay"/> in this theme.</summary>
+        public Color HoverOverlay { get; set; } = Color.FromArgb(30, 30, 30, 80);
+        /// <summary>The value of <see cref="UIColors.ActiveOverlay"/> in this theme.</summary>
+        public Color ActiveOverlay { get; set; } = Color.FromArgb(40, 40, 40, 120);
+    }
+}

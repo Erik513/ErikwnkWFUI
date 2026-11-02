@@ -1,0 +1,358 @@
+﻿using System.Drawing;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Windows.Forms;
+using ErikwnkWFUI.Controls;
+using ErikwnkWFUI.Forms;
+using ErikwnkWFUI.Localization;
+using ErikwnkWFUI.Tests.Infrastructure;
+using LibraryMenu = ErikwnkWFUI.Controls.ContextMenuStrip;
+
+namespace ErikwnkWFUI.Tests.Forms;
+
+/// <summary>An AppForm in the cases around the normal one: its buttons, the double click, the edges to resize by, the version strip and what is cleaned up.</summary>
+[Collection(AccentColorTestCollection.Name)]
+public class AppFormEdgeCaseTests : IDisposable
+{
+    private const int WmNcHitTest = 0x84;
+    private const int HtClient = 1;
+    private const int HtLeft = 10;
+    private const int HtTopLeft = 13;
+    private const int HtBottomRight = 17;
+
+    private readonly AppFormHost _host = new AppFormHost(60);
+
+    public void Dispose()
+    {
+        _host.Dispose();
+    }
+
+    // Lets the tests ask where a point of the window leads (what the mouse is over at the edges).
+    private sealed class HitForm : AppForm
+    {
+        public HitForm(FormOptions options)
+            : base(options)
+        {
+        }
+
+        public int HitTest(Point clientPoint)
+        {
+            Point screen = PointToScreen(clientPoint);
+            IntPtr lParam = (IntPtr)((screen.Y << 16) | (screen.X & 0xFFFF));
+            Message message = Message.Create(Handle, WmNcHitTest, IntPtr.Zero, lParam);
+            WndProc(ref message);
+
+            return (int)message.Result;
+        }
+    }
+
+    // (The buttons of the title bar take no focus, so PerformClick does nothing: they are clicked by the mouse.)
+    private static void Click(Button button)
+    {
+        button.InvokePrivate("OnClick", EventArgs.Empty);
+    }
+
+    private static Button BarButton(AppForm form, string field)
+    {
+        return form.TitleBar.GetPrivateField<Button>(field)!;
+    }
+
+    [Fact]
+    public void WithoutOptions_TheFormIsAStandardWindow()
+    {
+        AppForm none = _host.Show(new AppForm());
+        AppForm nothing = _host.Show(new AppForm(null));
+
+        Assert.Equal("", none.Text);
+        Assert.True(none.TitleBar.ShowMinimizeButton && none.TitleBar.ShowMaximizeButton && none.TitleBar.ShowCloseButton);
+        Assert.Equal(FormBorderStyle.None, nothing.FormBorderStyle);
+        Assert.Same(none.TitleBar.Parent, none);
+    }
+
+    [Fact]
+    public void AnAmpersandInTheTitle_IsShownAsItIs()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Save & exit"));
+        Label title = form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
+
+        Assert.Equal("Save & exit", title.Text);
+        Assert.False(title.UseMnemonic);
+    }
+
+    [Fact]
+    public void TheIconOfTheOptions_IsTheOneOfTheWindow_AndTheLogoOfTheBarComesFromTheOptionsOrTheProperty()
+    {
+        using Icon icon = SystemIcons.Information;
+        using Bitmap logo = new Bitmap(16, 16);
+        FormOptions options = FormOptions.CreateStandard("Window", icon: logo, windowIcon: icon);
+        AppForm form = _host.Show(new AppForm(options));
+
+        Assert.True(form.ShowIcon);
+        Assert.Equal(icon.Handle, form.Icon!.Handle);
+        Assert.Same(logo, form.FormIcon);
+
+        form.FormIcon = null!;
+        Assert.Null(form.TitleBar.IconImage);
+    }
+
+    [Fact]
+    public void TheButtonsOfTheBar_MinimizeMaximizeRestoreAndClose()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        bool closed = false;
+        form.FormClosed += (sender, e) => closed = true;
+
+        Click(BarButton(form, "_maximizeButton"));
+        TestPictures.Pump(60);
+        Assert.Equal(FormWindowState.Maximized, form.WindowState);
+        Assert.Equal(UIStyles.Symbols.Restore, BarButton(form, "_maximizeButton").Text);
+
+        Click(BarButton(form, "_maximizeButton"));
+        TestPictures.Pump(60);
+        Assert.Equal(FormWindowState.Normal, form.WindowState);
+        Assert.Equal(UIStyles.Symbols.Maximize, BarButton(form, "_maximizeButton").Text);
+
+        Click(BarButton(form, "_minimizeButton"));
+        Assert.Equal(FormWindowState.Minimized, form.WindowState);
+
+        form.WindowState = FormWindowState.Normal;
+        Click(BarButton(form, "_closeButton"));
+        Assert.True(closed);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [Fact]
+    public void TheButtonsOfTheBar_NeverTakeTheFocus_SoNoThickFocusBorderStaysAfterAClick()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        Button inContent = new Button { Text = "In the content" };
+        form.ContentPanel.Controls.Add(inContent);
+        form.ActiveControl = inContent;
+
+        foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+        {
+            Assert.False(BarButton(form, field).CanSelect);
+            Assert.False(BarButton(form, field).TabStop);
+        }
+
+        // A click with the mouse: the system sends the button the press and the release.
+        Button maximize = BarButton(form, "_maximizeButton");
+        SendMessage(maximize.Handle, 0x0201, (IntPtr)1, (IntPtr)((5 << 16) | 5));
+        SendMessage(maximize.Handle, 0x0202, IntPtr.Zero, (IntPtr)((5 << 16) | 5));
+        TestPictures.Pump(100);
+
+        Assert.Equal(FormWindowState.Maximized, form.WindowState);
+        Assert.False(maximize.Focused);
+        Assert.NotSame(maximize, form.ActiveControl);
+        Assert.Same(inContent, form.ActiveControl);
+    }
+
+    // The row in which the first mark of the title is drawn (the label as a picture).
+    private static int FirstInkRow(Label title)
+    {
+        using Bitmap picture = new Bitmap(title.Width, title.Height);
+        title.DrawToBitmap(picture, new Rectangle(Point.Empty, title.Size));
+
+        for (int y = 0; y < picture.Height; y++)
+        {
+            for (int x = 0; x < picture.Width; x++)
+            {
+                if (picture.GetPixel(x, y).ToArgb() != title.BackColor.ToArgb())
+                    return y;
+            }
+        }
+
+        return -1;
+    }
+
+    [Fact]
+    public void TheTitle_StaysOnTheSameLine_WhetherOrNotItIsCutShortWithDots()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("A rather long title of a window that has to be cut"));
+        Label title = form.TitleBar.GetPrivateField<Label>("_titleLabel")!;
+
+        form.ClientSize = new Size(900, 200);
+        Application.DoEvents();
+        int whole = FirstInkRow(title);
+
+        foreach (int width in new[] { 500, 400, 320, 270 })
+        {
+            form.ClientSize = new Size(width, 200);
+            Application.DoEvents();
+
+            Assert.Equal(whole, FirstInkRow(title));
+        }
+    }
+
+    [Fact]
+    public void TheButtonsOfTheBar_AreInThePictureOfTheWholeWindow()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        form.Size = new Size(420, 160);
+        TestPictures.Pump(100);
+
+        using Bitmap picture = new Bitmap(form.Width, form.Height);
+        form.DrawToBitmap(picture, new Rectangle(Point.Empty, form.Size));
+
+        foreach (string field in new[] { "_minimizeButton", "_maximizeButton", "_closeButton" })
+        {
+            Button button = BarButton(form, field);
+            Rectangle area = form.RectangleToClient(button.RectangleToScreen(button.ClientRectangle));
+            int marks = 0;
+
+            for (int y = area.Top; y < area.Bottom; y++)
+            {
+                for (int x = area.Left; x < area.Right; x++)
+                {
+                    if (picture.GetPixel(x, y).ToArgb() != form.TitleBar.BackColor.ToArgb())
+                        marks++;
+                }
+            }
+
+            Assert.True(marks > 5, "nothing of the " + field + " is in the picture of the window");
+        }
+    }
+
+    [Fact]
+    public void ADoubleClickOnTheBar_MaximizesAWindow_ButNotADialog()
+    {
+        AppForm window = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        AppForm dialog = _host.Show(UIStyles.Forms.CreateDialogStandard("Dialog"));
+
+        foreach (AppForm form in new[] { window, dialog })
+            form.TitleBar.InvokePrivate("OnMouseDown", new MouseEventArgs(MouseButtons.Left, 2, 50, 10, 0));
+
+        TestPictures.Pump(250);
+
+        Assert.Equal(FormWindowState.Maximized, window.WindowState);
+        Assert.Equal(FormWindowState.Normal, dialog.WindowState);
+    }
+
+    [Fact]
+    public void TheEdgesOfAResizableWindow_LeadToTheResizeCursors_TheMiddleDoesNot()
+    {
+        HitForm form = _host.Show(new HitForm(FormOptions.CreateStandard("Window")));
+        form.ClientSize = new Size(400, 300);
+        Application.DoEvents();
+
+        Assert.Equal(HtLeft, form.HitTest(new Point(2, 150)));
+        Assert.Equal(HtTopLeft, form.HitTest(new Point(2, 2)));
+        Assert.Equal(HtBottomRight, form.HitTest(new Point(form.ClientSize.Width - 2, form.ClientSize.Height - 2)));
+        Assert.Equal(HtClient, form.HitTest(new Point(200, 150)));
+    }
+
+    [Fact]
+    public void ADialog_AndAMaximizedWindow_HaveNoEdgesToResizeBy()
+    {
+        HitForm dialog = _host.Show(new HitForm(FormOptions.CreateDialog("Dialog")));
+        HitForm window = _host.Show(new HitForm(FormOptions.CreateStandard("Window")));
+        window.WindowState = FormWindowState.Maximized;
+        TestPictures.Pump(60);
+
+        Assert.Equal(HtClient, dialog.HitTest(new Point(2, 100)));
+        Assert.Equal(HtClient, window.HitTest(new Point(2, 100)));
+    }
+
+    [Fact]
+    public void TheVersionStrip_HasTheTextAtItsRight_AndWhatIsAddedStandsLeftOfIt_AndNoTextMeansNoStrip()
+    {
+        FormOptions options = FormOptions.CreateStandard("Window");
+        options.VersionText = "v1.2.3";
+        AppForm form = _host.Show(new AppForm(options));
+        Button update = new Button { Text = "Update", AutoSize = true };
+
+        form.VersionStrip!.Controls.Add(update);
+        form.PerformLayout();
+        TestPictures.Pump(60);
+
+        Assert.Equal("v1.2.3", form.VersionLabel.Text);
+        Assert.True(update.Left < form.VersionLabel.Left);
+
+        // Whatever is in the strip stands in the middle of its height: the text, a 20 px button, and a 24 px one.
+        Button symbolButton = new Button { Size = new Size(22, 20), Margin = new Padding(6, 0, 0, 9) };
+        form.VersionStrip.Controls.Add(symbolButton);
+        form.VersionStrip.PerformLayout();
+        TestPictures.Pump(100);
+
+        foreach (Control inStrip in form.VersionStrip.Controls.Cast<Control>())
+            Assert.Equal((form.VersionStrip.ClientSize.Height - inStrip.Height) / 2, inStrip.Top);
+
+        Assert.Null(_host.Show(UIStyles.Forms.CreateStandard("Plain")).VersionStrip);
+
+        options.VersionText = "";
+        Assert.Null(_host.Show(new AppForm(options)).VersionStrip);
+    }
+
+    [Fact]
+    public void TheTitleBar_StopsListeningToTheLanguage_WhenTheFormIsDisposed()
+    {
+        FieldInfo? field = typeof(UIStrings).GetField("LanguageChanged", BindingFlags.NonPublic | BindingFlags.Static);
+        int Listeners() => ((Delegate?)field?.GetValue(null))?.GetInvocationList().Length ?? 0;
+        int before = Listeners();
+
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        Assert.True(Listeners() > before);
+
+        form.Dispose();
+
+        Assert.Equal(before, Listeners());
+    }
+
+    [Fact]
+    public void ACloseEntryOfTheSystemMenu_ClosesTheWindow_AndTheOpenMenuGoesWithIt()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+        form.ShowSystemMenu(new Point(100, 100));
+        LibraryMenu menu = form.GetPrivateField<LibraryMenu>("_openMenu")!;
+        ToolStripMenuItem close = menu.Items.Cast<ToolStripItem>().OfType<ToolStripMenuItem>().Last();
+
+        Assert.Null(Record.Exception(() => close.PerformClick()));
+
+        Assert.True(form.IsDisposed);
+        Assert.True(menu.IsDisposed);
+    }
+
+    [Fact]
+    public void OpeningTheSystemMenuTwice_LeavesOnlyTheNewOne()
+    {
+        AppForm form = _host.Show(UIStyles.Forms.CreateStandard("Window"));
+
+        form.ShowSystemMenu(new Point(100, 100));
+        LibraryMenu first = form.GetPrivateField<LibraryMenu>("_openMenu")!;
+        form.ShowSystemMenu(new Point(120, 120));
+
+        Assert.True(first.IsDisposed);
+        Assert.False(form.GetPrivateField<LibraryMenu>("_openMenu")!.IsDisposed);
+    }
+
+    [Fact]
+    public void TheIconThatTheWindowTookFromTheProgram_IsDisposedWithIt_ButAGivenIconIsNot()
+    {
+        AppForm own = UIStyles.Forms.CreateStandard("Own icon");
+        Icon? extracted = own.GetPrivateField<Icon>("_ownIcon");
+
+        own.Dispose();
+
+        if (extracted != null)
+            Assert.Throws<ObjectDisposedException>(() => extracted.Handle);
+
+        using Icon given = (Icon)SystemIcons.Information.Clone();
+        AppForm withGiven = new AppForm(FormOptions.CreateStandard("Given", windowIcon: given));
+        withGiven.Dispose();
+
+        Assert.True(given.Handle != IntPtr.Zero);
+    }
+
+    [Fact]
+    public void DisposingTwice_AndDisposingAFormThatWasNeverShown_AreFine()
+    {
+        AppForm never = UIStyles.Forms.CreateSettingsStandard("Never shown");
+        AppForm shown = _host.Show(UIStyles.Forms.CreateStandard("Shown"));
+
+        Assert.Null(Record.Exception(() => never.Dispose()));
+        Assert.Null(Record.Exception(() => shown.Dispose()));
+        Assert.Null(Record.Exception(() => shown.Dispose()));
+    }
+}

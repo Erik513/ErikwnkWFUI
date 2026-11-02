@@ -1,0 +1,93 @@
+﻿using ErikwnkWFUI.Styles;
+using System;
+using System.Drawing;
+
+namespace ErikwnkWFUI.Tests.Infrastructure;
+
+/// <summary>
+/// WCAG 2.1 contrast-ratio math (https://www.w3.org/TR/WCAG21/#contrast-minimum) -
+/// shared across every control's own readability tests instead of each one
+/// re-deriving the same relative-luminance formula. WHICH color pairs
+/// actually need checking stays per control (each control's own colors
+/// mean something different) - this only ever answers "given these two
+/// colors, what's their contrast ratio", the same way ColumnLayoutMath only
+/// ever answers pure layout math for whichever columns a caller hands it.
+/// Deliberately its own thing, not a copy of UIColors.GetContrastingForeColor's
+/// internal RelativeLuminance - that one is a cheap, unweighted heuristic
+/// good enough for picking "dark or light text", not a real ratio; this is
+/// the actual, gamma-corrected WCAG formula, precise enough to assert a
+/// numeric pass/fail bar against.
+/// </summary>
+internal static class ColorContrastHelper
+{
+    // WCAG AA minimums - normal text needs the stricter ratio; large text
+    // (≥18pt, or ≥14pt bold) and non-text UI components/graphics only need
+    // the lower one. Callers pick whichever applies to what they're
+    // actually checking.
+    public const double MinimumRatioNormalText = 4.5;
+    public const double MinimumRatioLargeTextOrUiComponents = 3.0;
+
+    public static double GetContrastRatio(Color first, Color second)
+    {
+        double firstLuminance = GetRelativeLuminance(first);
+        double secondLuminance = GetRelativeLuminance(second);
+        double lighter = Math.Max(firstLuminance, secondLuminance);
+        double darker = Math.Min(firstLuminance, secondLuminance);
+
+        return (lighter + 0.05) / (darker + 0.05);
+    }
+
+    public static bool MeetsMinimumContrast(Color foreground, Color background, double minimumRatio)
+    {
+        return GetContrastRatio(foreground, background) >= RequiredRatio(foreground, background, minimumRatio);
+    }
+
+    /// <summary>
+    /// The ratio a pair of colors has to reach: <paramref name="minimum"/>, except for light text on a color (yellow, orange, ...). There the
+    /// library has decided that only white is a surface for dark text - white on a bright yellow or orange stays readable at 2:1 to 3:1 -
+    /// so the check only keeps such a text from fading away (the floor of the library, 1.5:1).
+    /// </summary>
+    public static double RequiredRatio(Color foreground, Color background, double minimum)
+    {
+        bool lightTextOnAColor = UIColors.IsLight(foreground) && UIColors.IsColored(background);
+
+        return lightTextOnAColor ? Math.Min(minimum, UIColors.ColoredLightTextMinimum) : minimum;
+    }
+
+    /// <summary>
+    /// Standard alpha "over" compositing - what a translucent overlay
+    /// (e.g. ListView's own SelectionOverlayColor, painted on TOP of a
+    /// row's own color rather than replacing it) actually looks like once
+    /// blended with whatever's underneath, since GetContrastRatio itself
+    /// only makes sense for two already-opaque colors. <paramref name="background"/>
+    /// is assumed fully opaque, same as every real background this gets
+    /// used against.
+    /// </summary>
+    public static Color Composite(Color foreground, Color background)
+    {
+        double alpha = foreground.A / 255.0;
+        int red = (int)Math.Round((foreground.R * alpha) + (background.R * (1 - alpha)));
+        int green = (int)Math.Round((foreground.G * alpha) + (background.G * (1 - alpha)));
+        int blue = (int)Math.Round((foreground.B * alpha) + (background.B * (1 - alpha)));
+
+        return Color.FromArgb(red, green, blue);
+    }
+
+    private static double GetRelativeLuminance(Color color)
+    {
+        double red = ToLinear(color.R);
+        double green = ToLinear(color.G);
+        double blue = ToLinear(color.B);
+
+        return (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+    }
+
+    private static double ToLinear(byte channel)
+    {
+        double normalized = channel / 255.0;
+
+        return normalized <= 0.03928
+            ? normalized / 12.92
+            : Math.Pow((normalized + 0.055) / 1.055, 2.4);
+    }
+}

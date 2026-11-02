@@ -1,0 +1,245 @@
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Forms;
+using ErikwnkWFUI.Tests.Infrastructure;
+using WfuiDataGridView = ErikwnkWFUI.Controls.DataGridView;
+using WfuiReadOnlyDataGridView = ErikwnkWFUI.Controls.ReadOnlyDataGridView;
+
+namespace ErikwnkWFUI.Tests.Controls.DataGridView;
+
+/// <summary>
+/// Column reordering is hand-rolled (mirroring ListView's own - see
+/// ReadOnlyDataGridView.AllowColumnReordering) via a MouseDown/MouseMove
+/// threshold check that starts a real DoDragDrop once exceeded - that part
+/// needs an actual OLE drag and isn't practical to drive headlessly. These
+/// tests instead cover the pieces that don't need a live drag.
+///
+/// MoveColumnToDisplayIndex delegates to the shared ColumnLayoutMath, and
+/// Is/Set/AllowColumnReorderable to the shared ColumnFeatureSwitch (see
+/// ColumnLayoutMathTests/ColumnFeatureSwitchTests, in the parent Controls
+/// test folder) - the full scenario matrix for both is covered there once
+/// instead of per control; this file keeps just one test each confirming
+/// this control's own methods actually delegate to them.
+/// </summary>
+public class DataGridViewColumnReorderTests
+{
+    // Where the drag of a column title stands (the grid keeps it in one object).
+    private static ErikwnkWFUI.Controls.ColumnDragState Drag(WfuiReadOnlyDataGridView grid)
+    {
+        return grid.GetPrivateField<ErikwnkWFUI.Controls.ColumnDragState>("_columnDrag")!;
+    }
+
+    [Fact]
+    public void MoveColumnToDisplayIndex_MovesColumnToTheEnd()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+
+        Assert.Equal(0, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(1, grid.Columns["Value"]!.DisplayIndex);
+
+        // Moving column 0 ("Name") to "insert before display index 2" (i.e.
+        // past the last column) puts it after "Value".
+        grid.InvokePrivate("MoveColumnToDisplayIndex", 0, 2);
+
+        Assert.Equal(1, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(0, grid.Columns["Value"]!.DisplayIndex);
+    }
+
+    [Fact]
+    public void SetColumnReorderable_False_MakesOnlyThatColumnNotReorderable()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+
+        grid.SetColumnReorderable(0, false);
+
+        Assert.False(grid.IsColumnReorderable(0));
+        Assert.True(grid.IsColumnReorderable(1));
+
+        // Reversible, same as ListView's own SetColumnReorderable.
+        grid.SetColumnReorderable(0, true);
+        Assert.True(grid.IsColumnReorderable(0));
+    }
+
+    [Fact]
+    public void NativeAllowUserToOrderColumns_StaysFalse()
+    {
+        // Reordering is entirely hand-rolled so the drag feedback can use
+        // this control's own accent color (see AllowColumnReordering's own
+        // remarks) - the native switch must stay off, or WinForms' own
+        // unthemeable drag would kick in as well/instead.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+
+        Assert.False(grid.AllowUserToOrderColumns);
+    }
+
+    [Fact]
+    public void DeleteRowColumn_IsNotReorderable()
+    {
+        // Regression test: the delete-row column is pinned rightmost
+        // (OnColumnAdded) regardless of what's added afterward - dragging
+        // it to reorder would just fight that pinning right back on the
+        // very next repaint/column-added, so it's excluded up front.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+
+        grid.ShowDeleteRowColumn = true;
+
+        Assert.False(grid.IsColumnReorderable(grid.Columns["__deleteRow"]!.Index));
+        Assert.True(grid.IsColumnReorderable(grid.Columns["Name"]!.Index));
+    }
+
+    // OnDragOver/OnDragDrop themselves don't need a live drag - only
+    // starting one (BeginColumnDragDrop's own DoDragDrop call, and the
+    // MouseDown/MouseMove threshold check that leads to it) does, per this
+    // class's own remarks above. These drive the two handlers directly via
+    // reflection, with the drag-state fields BeginColumnDragDrop would have
+    // set filled in by hand instead - PointToScreen/PointToClient round-trip
+    // correctly off this control's own real (if invisible) window handle,
+    // so a chosen CONTROL-relative x can be turned into the SCREEN-relative
+    // one DragEventArgs actually carries.
+    [Fact]
+    public void OnDragOver_TracksTheInsertionIndex_AndAllowsTheMove()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        Drag(grid).IsDragging = true;
+        Drag(grid).ColumnIndex = 1;
+
+        // x=0 always resolves to "insert before display index 0", the same
+        // width-independent extreme ReadOnlyDataGridViewEnumerationTests'
+        // own GetColumnDropInsertionIndex tests rely on.
+        Point screenPoint = grid.PointToScreen(new Point(0, 5));
+        DragEventArgs args = new DragEventArgs(
+            new DataObject(), 0, screenPoint.X, screenPoint.Y, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(DragDropEffects.Move, args.Effect);
+        Assert.Equal(0, Drag(grid).InsertBeforeDisplayIndex);
+    }
+
+    [Fact]
+    public void OnDragOver_FarPastTheLastColumn_TracksInsertionAfterEveryColumn()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        Drag(grid).IsDragging = true;
+        Drag(grid).ColumnIndex = 0;
+
+        Point screenPoint = grid.PointToScreen(new Point(100_000, 5));
+        DragEventArgs args = new DragEventArgs(
+            new DataObject(), 0, screenPoint.X, screenPoint.Y, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(2, Drag(grid).InsertBeforeDisplayIndex);
+    }
+
+    [Fact]
+    public void OnDragOver_NoDragInProgress_LeavesInsertionIndexAndEffectUntouched()
+    {
+        // Guards against a drag-over event arriving from something OTHER
+        // than this control's own hand-rolled column drag (e.g. a file
+        // dropped from Explorer) - must not touch state or claim the drop.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.None);
+
+        grid.InvokePrivate("OnDragOver", args);
+
+        Assert.Equal(DragDropEffects.None, args.Effect);
+        Assert.Equal(-1, Drag(grid).InsertBeforeDisplayIndex);
+    }
+
+    [Fact]
+    public void OnDragDrop_MovesTheDraggedColumnToTheTrackedInsertionIndex()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        Drag(grid).ColumnIndex = 0; // "Name"
+        Drag(grid).InsertBeforeDisplayIndex = 2; // past "Value"
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
+
+        grid.InvokePrivate("OnDragDrop", args);
+
+        Assert.Equal(1, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(0, grid.Columns["Value"]!.DisplayIndex);
+    }
+
+    [Fact]
+    public void OnDragDrop_WithoutAPriorDragOver_DoesNotMoveAnyColumn()
+    {
+        // InsertBeforeDisplayIndex only ever becomes >= 0 via
+        // OnDragOver - a drop that never crossed this control's own
+        // OnDragOver first (its own DragEnter path handles nothing else)
+        // must not move anything.
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        Drag(grid).ColumnIndex = 0;
+
+        DragEventArgs args = new DragEventArgs(new DataObject(), 0, 0, 0, DragDropEffects.Move, DragDropEffects.Move);
+
+        grid.InvokePrivate("OnDragDrop", args);
+
+        Assert.Equal(0, grid.Columns["Name"]!.DisplayIndex);
+        Assert.Equal(1, grid.Columns["Value"]!.DisplayIndex);
+    }
+
+    // GetColumnsInDisplayOrder caches its own result (see its own
+    // remarks on why) - these three confirm the cache actually gets
+    // invalidated on every way that order/set can change, not just that
+    // a freshly-built grid resolves correctly (which would pass even with
+    // a cache that's never invalidated at all, since it'd still be
+    // correct the very first time).
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAColumnAddedAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.Columns.Add("Extra", "Extra");
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal(3, ordered.Count);
+        Assert.Contains(ordered, column => column.Name == "Extra");
+    }
+
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAColumnRemovedAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiDataGridView grid = GridTestHelpers.CreateGrid(items);
+        grid.ShowDeleteRowColumn = true;
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.ShowDeleteRowColumn = false; // removes the delete-row column
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal(2, ordered.Count);
+        Assert.DoesNotContain(ordered, column => column.Name == "__deleteRow");
+    }
+
+    [Fact]
+    public void GetColumnsInDisplayOrder_ReflectsAReorderAfterTheCacheWasAlreadyBuilt()
+    {
+        BindingList<TestItem> items = GridTestHelpers.CreateItems(("A", 1));
+        using WfuiReadOnlyDataGridView grid = GridTestHelpers.CreateReadOnlyGrid(items);
+        grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder"); // populates the cache
+
+        grid.InvokePrivate("MoveColumnToDisplayIndex", 0, 2); // "Name" moves after "Value"
+
+        List<DataGridViewColumn> ordered = grid.InvokePrivate<List<DataGridViewColumn>>("GetColumnsInDisplayOrder")!;
+
+        Assert.Equal("Value", ordered[0].Name);
+        Assert.Equal("Name", ordered[1].Name);
+    }
+}

@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Test coverage (tools\Run-Coverage.ps1)
+coverage/
+
+# Generated pages of the Markdown files (tools/Export-DocsHtml.py)
+docs/html/
